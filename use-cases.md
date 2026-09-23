@@ -340,11 +340,31 @@ Migration and isolation decisions use the fully resolved configuration, includin
 
 # 6. Concurrency and Safety Invariants
 
+Auto-migration is designed to be safe when multiple Spack instances run concurrently, whether on the same machine or accessing shared filesystems.
+
+## 6.1 Spack prefix migrations
+
 - Existing source data is preserved throughout all migration operations.
 - Installs and modules are never relocated.
-- GPG migration locks the destination parent and uses private atomic staging.
-- Environment migration locks the environments root, shared with managed environment creation.
-- License migration reports partial success rather than pretending to provide exclusive locking.
-- Failed GPG staging leaves no partially exposed destination.
+- GPG migration locks the destination parent and uses private atomic staging with atomic rename.
+- Environment migration locks the environments root (shared with `spack env create`), pre-checks all destinations, then copies.
+- License migration creates the destination directory and copies files individually; it reports partial success and stops on first conflict rather than claiming exclusive locking (since license files may be edited outside Spack).
+- Failed GPG or package repository staging leaves no partially exposed destination.
 - Generated configuration points to old sources whenever migration is incomplete or unsafe.
-- A layout scope prevents repeated automatic migration evaluation.
+- The layout scope prevents repeated automatic migration evaluation.
+
+## 6.2 Home directory migrations
+
+User config and package repositories are migrated from `~/.spack` independently of `$spack` prefix resources:
+
+- **User config** (`~/.spack` → `~/.config/spack`):
+  - Uses a sibling lock (`.spack-user-config-migration.lock` in `~/.config/`) to serialize concurrent migrations.
+  - Stages all config files to `.spack-config-staging` before atomically renaming to `spack`.
+  - Another Spack instance will never see partial config files; the directory appears atomically.
+
+- **Package repositories** (`~/.spack/package_repos` → `~/.local/state/spack/package_repos`):
+  - Uses a sibling lock (`.spack-package-repos-migration-lock`) to serialize concurrent migrations.
+  - Stages the entire tree to `.package-repos-migration` before atomically renaming.
+  - Another Spack instance will never see a partial repository tree.
+
+Both home directory migrations can run safely alongside any number of other Spack instances, whether they're using the old locations, the new locations, or attempting concurrent migrations.
