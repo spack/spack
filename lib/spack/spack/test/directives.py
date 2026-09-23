@@ -355,59 +355,56 @@ def test_remove_modify_skip_directives(mock_directive_class):
 
 
 def test_drop_all_versions(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_all_versions")
+    cls = spack.repo.PATH.get_pkg_class("drop-all-versions")
     assert len(cls.versions) == 0
 
 
 def test_drop_all_conflicts(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_all_conflicts")
+    cls = spack.repo.PATH.get_pkg_class("drop-all-conflicts")
     assert len(cls.conflicts) == 0
 
 
 def test_drop_all_depends_on(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_all_depends_on")
+    cls = spack.repo.PATH.get_pkg_class("drop-all-depends-on")
     assert len(cls.dependencies) == 0
 
 
 def test_drop_all_requires(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_all_requires")
+    cls = spack.repo.PATH.get_pkg_class("drop-all-requires")
     assert len(cls.dependencies) == 0
 
 
 def test_drop_version(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_version")
+    cls = spack.repo.PATH.get_pkg_class("drop-version")
     assert cls.versions == {spack.version.Version("1.2"): {}}
 
 
 def test_drop_conflict(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_conflict")
-    print(cls.conflicts)
+    cls = spack.repo.PATH.get_pkg_class("drop-conflict")
     assert cls.conflicts == {spack.spec.Spec("@1.0"): [(spack.spec.Spec("%gcc"), None)]}
 
 
 def test_drop_conflict_range(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_conflict_range")
+    cls = spack.repo.PATH.get_pkg_class("drop-conflict-range")
     assert cls.conflicts == {spack.spec.Spec("@3:4"): [(spack.spec.Spec("mpi"), None)]}
 
 
 def test_drop_depends_on(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_depends_on")
+    cls = spack.repo.PATH.get_pkg_class("drop-depends-on")
     assert cls.dependencies == {
-        spack.spec.Spec("@1.0"): {"mpi": spack.dependency.Dependency(cls, spack.spec.Spec("mpi"))}
+        spack.spec.Spec("@1.0"): {"mpi": spack.dependency.Dependency(spack.spec.Spec("mpi"))}
     }
 
 
 def test_drop_require(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_require")
-    print(f"cls.conflicts={cls.conflicts}")
-    print(f"cls.requirements={cls.requirements}")
+    cls = spack.repo.PATH.get_pkg_class("drop-require")
     assert cls.requirements == {
         spack.spec.Spec("@1.0"): [((spack.spec.Spec("mpi"),), "one_of", None)]
     }
 
 
 def test_drop_patch(mock_packages):
-    cls = spack.repo.PATH.get_pkg_class("drop_patch")
+    cls = spack.repo.PATH.get_pkg_class("drop-patch")
     leftover_patch = next(iter(cls.patches.values()))[0]
     assert leftover_patch.sha256 == "abc"
     assert cls.patches == {spack.spec.Spec("@1.0"): [leftover_patch]}

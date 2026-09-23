@@ -1265,7 +1265,6 @@ class DropDirectiveBase(ABC):
             )
             directive_dict.clear()
             directive_dict.update(filtered)
-            print("filtered: ", filtered)
 
         return _remove
 
@@ -1420,10 +1419,8 @@ def drop_require(spec: SpecType, when: WhenType = None):
 def drop_version(ver: Union[str, int]):
     """Try to remove a specific version from a package."""
     version = StandardVersion.from_string(str(ver))
-    print("_drop_version top, version:", version)
 
     def _drop_version(pkg):
-        print("_drop_version inner, version:", version)
         try:
             del pkg.versions[version]
         except KeyError:

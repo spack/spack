@@ -186,8 +186,6 @@ class DirectiveMeta(type):
                 ]
             ]
         ):
-            print("dicts_involved: ", dicts_involved)
-            print("directives_involved: ", directives_involved)
             return sorted(dicts_involved)[::-1], sorted(directives_involved)[::-1]
         return sorted(dicts_involved), sorted(directives_involved)
 
@@ -273,7 +271,6 @@ class directive:
 
     def __call__(self, decorated_function: Callable[P, R]) -> Callable[P, R]:
         directive_names.append(decorated_function.__name__)
-        print("decorated_function.__name__: ", decorated_function.__name__)
         DirectiveMeta.register_directive(decorated_function.__name__, self.dicts)
 
         @functools.wraps(decorated_function)
