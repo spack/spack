@@ -791,14 +791,17 @@ def print_setup_info(*info):
 
     Args:
         info (list): list of things to print: comma-separated list
-            of ``"csh"``, ``"sh"``, or ``"modules"``
+            of ``"csh"``, ``"sh"``, or ``"modules"``. Can also include
+            ``"skip_missing_modules"`` to silently skip missing module roots
+            instead of raising an error.
 
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
     """
-    from spack.modules.common import root_path
+    from spack.modules.common import ModulesError, root_path
 
     shell = "csh" if "csh" in info else "sh"
+    skip_missing_modules = "skip_missing_modules" in info
 
     def shell_set(var, value):
         if shell == "sh":
@@ -814,8 +817,16 @@ def print_setup_info(*info):
     # print roots for all module systems
     module_to_roots = {"tcl": list(), "lmod": list()}
     for name in module_to_roots.keys():
-        path = root_path(name, "default")
-        module_to_roots[name].append(path)
+        try:
+            path = root_path(name, "default")
+            module_to_roots[name].append(path)
+        except ModulesError:
+            if skip_missing_modules:
+                # Silently skip when called from setup scripts
+                pass
+            else:
+                # Re-raise when called explicitly by user
+                raise
 
     other_spack_instances = spack.config.CONFIG.get("upstreams") or {}
     for install_properties in other_spack_instances.values():

@@ -333,7 +333,7 @@ for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
 done
 
 if [ -z "${SPACK_SKIP_MODULES+x}" ] && { type module > /dev/null 2>&1 || type use > /dev/null 2>&1; }; then
-    stdout="$(command spack --print-shell-vars sh)" || return
+    stdout="$(command spack --print-shell-vars sh,skip_missing_modules)" || return
     eval "$stdout"
 
     #
