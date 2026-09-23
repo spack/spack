@@ -1012,17 +1012,28 @@ def _main(argv=None):
         env.manifest.prepare_config_scope()
         spack.environment.environment.set_active_environment(env)
 
-    # add the environment
-    if env:
-        add_environment_scope()
+    def add_env_and_option_based_scopes():
+        """Add environment, -C scopes, command_line scope, and command-line options to CONFIG.
 
-    # Push scopes from the command line last
-    if args.config_scopes:
-        add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
-    spack.config.CONFIG.push_scope(
-        spack.config.InternalConfigScope("command_line"), priority=ConfigScopePriority.COMMAND_LINE
-    )
-    setup_main_options(args)
+        This adds configuration scopes that come from:
+        - Environment activation (via -e flag or SPACK_ENV)
+        - Command-line config directories (via -C flag)
+        - Command-line options that set config values (--debug, --mock, etc.)
+        """
+        # add the environment
+        if env:
+            add_environment_scope()
+
+        # Push scopes from the command line last
+        if args.config_scopes:
+            add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
+        spack.config.CONFIG.push_scope(
+            spack.config.InternalConfigScope("command_line"), priority=ConfigScopePriority.COMMAND_LINE
+        )
+        setup_main_options(args)
+
+    # Initial setup of environment and option-based config scopes
+    add_env_and_option_based_scopes()
 
     # ------------------------------------------------------------------------
     # Things that require configuration should go below here
@@ -1067,6 +1078,8 @@ def _main(argv=None):
         if config_changed:
             # Reload config to pick up new layout scope and/or user config changes
             spack.config.CONFIG = spack.config.create()
+            # Re-add environment and option-based scopes that were set before migration
+            add_env_and_option_based_scopes()
             # Reinitialize global singletons that depend on CONFIG
             spack.config.reinitialize_global_state()
 
