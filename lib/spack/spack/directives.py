@@ -1414,7 +1414,6 @@ def drop_require(spec: SpecType, when: WhenType = None):
     return DropRequire(spec, when).remove()
 
 
-# @directive(supports_when=False)
 @directive("versions", supports_when=False)
 def drop_version(ver: Union[str, int]):
     """Try to remove a specific version from a package."""

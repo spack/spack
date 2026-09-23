@@ -4,6 +4,7 @@
 
 import collections
 import functools
+import itertools
 from typing import Any, Callable, Dict, Iterator, List, Set, Tuple, Type, TypeVar, Union
 
 from spack.vendor.typing_extensions import ParamSpec
@@ -44,8 +45,18 @@ class DirectiveMeta(type):
     _directive_dict_names: Set[str] = set()
     #: Directives grouped by directive function name (e.g. "depends_on", "version", etc.). On
     #: the metaclass this is the staging queue of the class body being executed; on a package
-    #: class it holds only the directives declared in that class's own body.
-    _directives_to_be_executed: Dict[str, List[Callable]] = collections.defaultdict(list)
+    #: class it holds only the directives declared in that class's own body. Each entry is a
+    #: ``(sequence, directive)`` pair; ``sequence`` records declaration order. Combined with a
+    #: class's MRO position (see :meth:`_ordered_directives`) it lets non-commutative directives
+    #: (e.g. ``drop_version`` must run after the ``version`` it removes) execute in the right
+    #: order even though they are grouped here by name.
+    _directives_to_be_executed: Dict[str, List[Tuple[int, Callable]]] = collections.defaultdict(
+        list
+    )
+    #: Monotonic counter stamping each queued directive with its declaration order. Only the
+    #: relative order within a single class body is relied upon; inheritance order is handled
+    #: separately by MRO position, so this counter is never reset.
+    _directive_sequence: Iterator[int] = itertools.count()
     #: Stack of when constraints from `with when(...)` context managers
     _when_constraints_stack: List[str] = []
     #: Stack of default args from `with default_args(...)` context managers
@@ -79,7 +90,7 @@ class DirectiveMeta(type):
             # Historically, maintainers was not a directive. They were simply set as class
             # attributes `maintainers = ["alice", "bob"]`. Therefore, we execute these directives
             # eagerly.
-            for directive in DirectiveMeta._queued_directives(cls, "maintainers"):
+            for _, directive in DirectiveMeta._queued_directives(cls, "maintainers"):
                 directive(cls)
         super(DirectiveMeta, cls).__init__(name, bases, attr_dict)
 
@@ -91,13 +102,35 @@ class DirectiveMeta(type):
             DirectiveMeta._dict_to_directives[d].append(name)
 
     @staticmethod
-    def _queued_directives(cls: type, name: str) -> Iterator[Callable]:
-        """Directives of the given name queued for cls: base classes first, each class in the
-        MRO once."""
+    def _queued_directives(cls: type, name: str) -> Iterator[Tuple[int, Callable]]:
+        """``(sequence, directive)`` pairs of the given name queued for cls: base classes first,
+        each class in the MRO once. ``sequence`` orders directives within a single class body."""
         for klass in reversed(cls.__mro__):
             own = klass.__dict__.get("_directives_to_be_executed")
             if own:
                 yield from own.get(name, ())
+
+    @staticmethod
+    def _ordered_directives(cls: type, names: List[str]) -> Iterator[Callable]:
+        """Directives of any of the given ``names`` queued for ``cls``, yielded in the order they
+        should execute: by MRO position first (base classes before derived, following the MRO)
+        and by source-declaration sequence within each class body second. Ordering within a class
+        matters for non-commutative directives (e.g. ``drop_version`` must run after the
+        ``version`` it removes); the MRO term keeps inheritance order well-defined even for
+        multiple inheritance, where declaration order alone would disagree with the MRO."""
+        runnable = []
+        # reversed(__mro__) => most-base class first; its enumerate index orders classes so that
+        # a base always runs before a derived class, matching the resolution order.
+        for mro_index, klass in enumerate(reversed(cls.__mro__)):
+            own = klass.__dict__.get("_directives_to_be_executed")
+            if not own:
+                continue
+            for name in names:
+                for sequence, directive in own.get(name, ()):
+                    runnable.append((mro_index, sequence, directive))
+        runnable.sort(key=lambda item: (item[0], item[1]))
+        for _, _, directive in runnable:
+            yield directive
 
     @staticmethod
     def _get_descriptor(name: str) -> "DirectiveDictDescriptor":
@@ -140,16 +173,23 @@ class DirectiveMeta(type):
         elif callable(value):  # directives are always callable
             # Remove directives args from the exec queue
             for lst in DirectiveMeta._directives_to_be_executed.values():
-                for i, directive in enumerate(lst):
+                for i, (_, directive) in enumerate(lst):
                     if value is directive:
                         del lst[i]
                         break
 
     @staticmethod
     def _get_execution_plan(target_dict: str) -> Tuple[List[str], List[str]]:
-        """Calculates the closure of dicts and directives needed to populate target_dict."""
+        """Calculates the closure of dicts and directives needed to populate target_dict.
+
+        Returns ``(dicts_involved, directives_involved)``. The order of ``directives_involved``
+        is *not* meaningful: directives are executed in source-declaration order at run time
+        (see :meth:`DirectiveDictDescriptor.__get__`), not in the order returned here. This
+        matters for directives that are not commutative -- e.g. ``drop_version`` must run after
+        the ``version`` it removes -- which name-based ordering could not express.
+        """
         dicts_involved = {target_dict}
-        directives_involved = set()
+        directives_involved: Set[str] = set()
         stack = [target_dict]
 
         while stack:
@@ -166,27 +206,8 @@ class DirectiveMeta(type):
                         dicts_involved.add(other_dict)
                         stack.append(other_dict)
 
-        # This is a hack; drop_version is usually run after version but the
-        # sorting messes that up.  This still isn't technically correct since
-        # the user could have drop_version and drop_versions in the same
-        # package and the ordering could potentially be lost by the sorting.
-        if any(
-            [
-                val in directives_involved
-                for val in [
-                    # "drop_all_conflicts",
-                    # "drop_all_depends_on",
-                    "drop_all_requires",
-                    "drop_all_versions",
-                    # "drop_conflict",
-                    # "drop_depends_on",
-                    "drop_patch",
-                    "drop_require",
-                    "drop_version",
-                ]
-            ]
-        ):
-            return sorted(dicts_involved)[::-1], sorted(directives_involved)[::-1]
+        # Sorting only gives a deterministic (but otherwise arbitrary) result; execution order
+        # is decided per-instance in __get__ using each directive's source-order sequence.
         return sorted(dicts_involved), sorted(directives_involved)
 
 
@@ -208,10 +229,11 @@ class DirectiveDictDescriptor:
             if getattr(objtype, f"_{dictionary}") is None:
                 setattr(objtype, f"_{dictionary}", {})
 
-        # Populate these dictionaries by running all directives that modify them
-        for directive_name in self.directives_to_run:
-            for directive in DirectiveMeta._queued_directives(objtype, directive_name):
-                directive(objtype)
+        # Run every queued directive that modifies the dicts in this closure, in source-
+        # declaration order. This lets non-commutative directives such as drop_version (which
+        # must run after the version it removes) execute correctly regardless of directive name.
+        for directive in DirectiveMeta._ordered_directives(objtype, self.directives_to_run):
+            directive(objtype)
 
         return getattr(objtype, self.private_name)
 
@@ -304,7 +326,10 @@ class directive:
 
             result = decorated_function(*args, **kwargs)
 
-            DirectiveMeta._directives_to_be_executed[decorated_function.__name__].append(result)
+            sequence = next(DirectiveMeta._directive_sequence)
+            DirectiveMeta._directives_to_be_executed[decorated_function.__name__].append(
+                (sequence, result)
+            )
 
             # wrapped function returns same result as original so that we can nest directives
             return result

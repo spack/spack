@@ -16,6 +16,7 @@ from spack.directives import (
     conflicts,
     depends_on,
     deprecated,
+    drop_version,
     extends,
     patch,
     version,
@@ -444,8 +445,11 @@ def test_directive_descriptor_init():
 
     # when specifying patches on dependencies with `depends_on` and `extends`, the `pkg.patches`
     # dict is not affects -- they are stored on a Dependency object.
+    # NOTE: the order of `directives_to_run` is not meaningful -- directives are executed in
+    # source-declaration order at run time (see DirectiveDictDescriptor.__get__), so this list
+    # is only sorted for determinism.
     patches = DirectiveDictDescriptor("patches")
-    assert patches.directives_to_run == ["patch", "drop_patch"]
+    assert patches.directives_to_run == ["drop_patch", "patch"]
     assert patches.dicts_to_init == ["patches"]
 
 
@@ -470,6 +474,35 @@ def test_directive_laziness():
     # The dependencies dict is populated with the expected entries
     assert "foo" in dependencies[spack.spec.Spec()]
     assert "bar" in dependencies[spack.spec.Spec("+bar")]
+
+
+def test_non_commutative_directives_run_in_source_order():
+    """Regression test: directives are executed in source-declaration order, not sorted by
+    directive name. This matters for non-commutative directives such as ``drop_version``, which
+    must run *after* the ``version`` it targets. A name-based ordering (e.g. sorting, which puts
+    ``drop_version`` before ``version``) gets this wrong."""
+
+    # drop_version declared AFTER the version: the version is removed.
+    class DropAfter(metaclass=DirectiveMeta):
+        name = "drop-after"
+        version("1.0")
+        version("2.0")
+        drop_version("1.0")
+
+    assert spack.version.Version("1.0") not in DropAfter.versions  # type: ignore
+    assert spack.version.Version("2.0") in DropAfter.versions  # type: ignore
+
+    # drop_version declared BEFORE the version it names: the drop runs first (no-op, nothing to
+    # remove yet), then the version is added, so it survives. If directives were reordered by
+    # name, drop_version would incorrectly run after version and delete it.
+    class DropBefore(metaclass=DirectiveMeta):
+        name = "drop-before"
+        drop_version("1.0")
+        version("1.0")
+        version("2.0")
+
+    assert spack.version.Version("1.0") in DropBefore.versions  # type: ignore
+    assert spack.version.Version("2.0") in DropBefore.versions  # type: ignore
 
 
 def test_patched_dependencies_sets_class_attribute():
