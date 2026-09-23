@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 from argparse import ArgumentParser
+from typing import Tuple
 
 import spack.config
 import spack.paths
@@ -65,7 +66,7 @@ def _isolate_include_config(new_user_path):
 
 def _setup_isolate_scope(
     new_user_path, overwrite: bool, target_config_existed: bool, reuse_old: bool
-) -> tuple[str, str]:
+) -> Tuple[str, str]:
     """Set up the isolate scope directories and include.yaml.
 
     Returns:
