@@ -352,6 +352,7 @@ Auto-migration is designed to be safe when multiple Spack instances run concurre
 - Failed GPG or package repository staging leaves no partially exposed destination.
 - Generated configuration points to old sources whenever migration is incomplete or unsafe.
 - The layout scope prevents repeated automatic migration evaluation.
+- The layout scope directory (`$spack/etc/spack/layout/`) inherits permissions from its parent directory (`$spack/etc/spack/`), ensuring proper access in shared installations where multiple users need to read and write the layout scope.
 
 ## 6.2 Home directory migrations
 

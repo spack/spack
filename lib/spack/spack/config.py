@@ -2424,7 +2424,8 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     # Write configuration to layout scope
     layout_scope_path = _layout_scope_path()
     config_path = os.path.join(layout_scope_path, "config.yaml")
-    filesystem.mkdirp(os.path.dirname(config_path))
+    # Inherit permissions from parent ($spack/etc/spack) for shared installations
+    filesystem.mkdirp(layout_scope_path, default_perms="parents")
 
     # Config to write to the layout scope
     scope_config: Dict[str, Any] = {}
