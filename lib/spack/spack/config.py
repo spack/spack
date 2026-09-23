@@ -2015,28 +2015,46 @@ def _do_migrate_user_config(
         )
         return False
 
-    # Perform migration
-    os.makedirs(new_config_location, exist_ok=True)
-    tty.debug(f"Migrating config files from {old_location} to {new_config_location}")
+    # Use staging directory to make migration atomic
+    config_parent = os.path.dirname(new_config_location)
+    staging_path = os.path.join(config_parent, ".spack-config-staging")
 
-    for config_file in config_files:
-        old_path = os.path.join(old_location, config_file)
-        new_path = os.path.join(new_config_location, config_file)
+    # Clean up any stale staging directory from a previous failed attempt
+    if os.path.exists(staging_path):
+        shutil.rmtree(staging_path, ignore_errors=True)
 
-        # Process paths using migrate command logic (handles the 4 path rewriting rules)
-        modified_data = process_config_file_paths(old_path, old_location, new_config_location)
+    try:
+        # Perform migration to staging directory
+        os.makedirs(staging_path, exist_ok=True)
+        tty.debug(f"Migrating config files from {old_location} to {new_config_location}")
 
-        # Ensure parent directory exists
-        os.makedirs(os.path.dirname(new_path), exist_ok=True)
+        for config_file in config_files:
+            old_path = os.path.join(old_location, config_file)
+            staging_file_path = os.path.join(staging_path, config_file)
 
-        if modified_data is not None:
-            with open(new_path, "w", encoding="utf-8") as f:
-                syaml.dump(modified_data, f)
-        else:
-            shutil.copy2(old_path, new_path)
+            # Process paths using migrate command logic (handles the 4 path rewriting rules)
+            # Pass new_config_location (not staging_path) so paths are rewritten for final
+            # destination
+            modified_data = process_config_file_paths(old_path, old_location, new_config_location)
 
-    tty.debug(f"User config migrated from {old_location} to {new_config_location}")
-    return True
+            # Ensure parent directory exists in staging
+            os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
+
+            if modified_data is not None:
+                with open(staging_file_path, "w", encoding="utf-8") as f:
+                    syaml.dump(modified_data, f)
+            else:
+                shutil.copy2(old_path, staging_file_path)
+
+        # Atomically rename staging to final destination
+        os.rename(staging_path, new_config_location)
+        tty.debug(f"User config migrated from {old_location} to {new_config_location}")
+        return True
+    except (OSError, shutil.Error) as e:
+        tty.warn(f"Failed to migrate user config: {e}")
+        if os.path.exists(staging_path):
+            shutil.rmtree(staging_path, ignore_errors=True)
+        return False
 
 
 def _migrate_package_repositories() -> bool:

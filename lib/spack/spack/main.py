@@ -1028,7 +1028,8 @@ def _main(argv=None):
         if args.config_scopes:
             add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
         spack.config.CONFIG.push_scope(
-            spack.config.InternalConfigScope("command_line"), priority=ConfigScopePriority.COMMAND_LINE
+            spack.config.InternalConfigScope("command_line"),
+            priority=ConfigScopePriority.COMMAND_LINE,
         )
         setup_main_options(args)
 
