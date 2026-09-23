@@ -214,9 +214,13 @@ def relocate_macho_binaries(path_names, prefix_to_prefix):
         _modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
 
 
-def relocate_elf_binaries(binaries: Iterable[str], prefix_to_prefix: Dict[str, str]) -> None:
+def relocate_elf_binaries(
+    binaries: Iterable[str],
+    prefix_to_prefix: Dict[str, str],
+    rpath_transform: Optional[elf.RpathTransform] = None,
+) -> None:
     """Take a list of binaries, and an ordered prefix to prefix mapping, and update the rpaths
-    accordingly."""
+    accordingly. If given, ``rpath_transform`` is applied to the rpaths before the mapping."""
 
     # Transform to binary string
     prefix_to_prefix_bin = {
@@ -225,7 +229,9 @@ def relocate_elf_binaries(binaries: Iterable[str], prefix_to_prefix: Dict[str, s
 
     for path in binaries:
         try:
-            elf.substitute_rpath_and_pt_interp_in_place_or_raise(path, prefix_to_prefix_bin)
+            elf.substitute_rpath_and_pt_interp_in_place_or_raise(
+                path, prefix_to_prefix_bin, rpath_transform
+            )
         except elf.ElfCStringUpdatesFailed as e:
             # Fall back to `patchelf --set-rpath ... --set-interpreter ...`
             rpaths = e.rpath.new_value.decode("utf-8").split(":") if e.rpath else []

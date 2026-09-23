@@ -26,6 +26,7 @@ import spack.package_base
 import spack.patch
 import spack.repo
 import spack.store
+import spack.util.elf
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
@@ -1064,3 +1065,38 @@ def test_install_spliced_from_binary_relocates_to_external_replacement(
         content = f.read()
     assert f"splice-h: {external_prefix}splice-z" in content
     assert str(original_spec["splice-h"].prefix) not in content
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="RPATH relocation is tested on ELF only")
+@pytest.mark.requires_executables("gcc")
+def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
+    mutable_mock_env_path,
+    temporary_store: Store,
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    installer_variant,
+):
+    """Tests that installing a spliced spec from a binary cache drops the RPATH entries of nodes
+    that are not in the spliced DAG.
+
+    rpath-mid+leaf depends on rpath-leaf, and the replacement rpath-mid~leaf does not, so the
+    RPATH of the spliced root must have no entry for rpath-leaf.
+    """
+    original_spec = spack.concretize.concretize_one("rpath-root ^rpath-mid+leaf")
+    replacement = spack.concretize.concretize_one("rpath-mid~leaf")
+
+    spack.installer_dispatch.create_installer([original_spec.package]).install()
+    SpackCommand("buildcache")(
+        "push", "--unsigned", "--update-index", temporary_mirror, str(original_spec)
+    )
+    SpackCommand("uninstall")("-ay")
+
+    spliced = original_spec.splice(replacement, transitive=True)
+    spack.installer_dispatch.create_installer([replacement.package]).install()
+    spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
+
+    rpaths = spack.util.elf.get_rpaths(os.path.join(spliced.prefix.bin, "app")) or []
+    assert sorted(rpaths) == sorted(
+        [spliced.prefix.lib, spliced["rpath-mid"].prefix.lib, spliced["rpath-other"].prefix.lib]
+    )
