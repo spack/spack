@@ -190,15 +190,15 @@ def _do_isolate(args):
     )
 
     if os.path.exists(config_path):
-        raise Exception(f"Config path {config_path} already exists: "
-                        "`spack isolate` doesn't have a place to generate "
-                        "config without a conflict")
+        raise Exception(
+            f"Config path {config_path} already exists: "
+            "`spack isolate` doesn't have a place to generate "
+            "config without a conflict"
+        )
 
     if any(spack.config._detect_old_resources().values()):
         spack.config._do_migrate(
-            is_isolate_command=True,
-            config_path=config_path,
-            isolate_target=destination,
+            is_isolate_command=True, config_path=config_path, isolate_target=destination
         )
         # No need to reload CONFIG here: this process exits immediately, and
         # the generated scopes are loaded by the next Spack invocation.
