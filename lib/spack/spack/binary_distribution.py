@@ -574,16 +574,19 @@ def file_matches(f: IO[bytes], regex: spack.util.lang.PatternBytes) -> bool:
         f.seek(0)
 
 
-def specs_to_relocate(spec: spack.spec.Spec) -> List[spack.spec.Spec]:
+def specs_to_relocate(
+    spec: spack.spec.Spec, include_externals: bool = False
+) -> List[spack.spec.Spec]:
     """Return the set of specs that may be referenced in the install prefix of the provided spec.
-    We currently include non-external transitive link and direct run dependencies."""
+    We currently include transitive link and direct run dependencies, and externals among them
+    only if ``include_externals`` is True."""
     specs = [
         s
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link", order="breadth", key=traverse.by_dag_hash),
             spec.dependencies(deptype="run"),
         )
-        if not s.external
+        if include_externals or not s.external
     ]
     return list(spack.util.lang.dedupe(specs, key=lambda s: s.dag_hash()))
 
@@ -1932,8 +1935,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # for nodes not in the build_spec without any explicit check for whether the spec is spliced.
     # An analog in this algorithm is any spec that shares a name or provides the same virtuals in
     # the context of the relevant root spec. This ensures that the analog for a spec s is the spec
-    # that s replaced when we spliced.
-    relocation_specs = specs_to_relocate(spec)
+    # that s replaced when we spliced. Externals are included so that a spliced-in external gets a
+    # mapping from the old prefix of its analog.
+    relocation_specs = specs_to_relocate(spec, include_externals=True)
     build_spec_ids = {id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)}
     for s in relocation_specs:
         analog = s
