@@ -1867,14 +1867,14 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             remote = output.strip()
                         except spack.util.executable.ProcessError:
                             pass
-                        if force_discard:
-                            spack.util.git.force_checkout_branch(
-                                self.branch, remote=remote, depth=depth, git_exe=git
-                            )
-                        else:
-                            spack.util.git.pull_checkout_branch(
-                                self.branch, remote=remote, depth=depth, git_exe=git
-                            )
+
+                        spack.util.git.pull_checkout_branch(
+                            self.branch,
+                            remote=remote,
+                            depth=depth,
+                            git_exe=git,
+                            force_discard=force_discard,
+                        )
 
             except spack.util.executable.ProcessError:
                 self.error = f"Failed to {'update' if update else 'clone'} repository {self.name}"
