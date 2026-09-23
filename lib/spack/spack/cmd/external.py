@@ -211,9 +211,9 @@ def external_find(args):
 def packages_to_search_for(
     *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]]
 ):
-    result = list({
-        pkg for tag in tags for pkg in spack.repo.PATH.packages_with_tags(tag, full=True)
-    })
+    result = list(
+        {pkg for tag in tags for pkg in spack.repo.PATH.packages_with_tags(tag, full=True)}
+    )
 
     if names:
         # Match both fully qualified and unqualified
