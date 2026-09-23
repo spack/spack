@@ -141,11 +141,8 @@ def _init_packages_yaml(
     config: Configuration, *, repo: spack.repo.RepoPath, scope: Optional[str]
 ) -> None:
     new_compilers = find_compilers(config=config, repo=repo, scope=scope)
-    if not new_compilers:
-        raise NoAvailableCompilerError(
-            "no compiler configured, and Spack cannot find working compilers in PATH"
-        )
-    tty.info("Compilers have been configured automatically from PATH inspection")
+    if new_compilers:
+        tty.info("Compilers have been configured automatically from PATH inspection")
 
 
 def all_compilers_from(

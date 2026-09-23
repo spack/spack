@@ -8,8 +8,7 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.variant
 from spack.error import SpackError
-from spack.spec import Spec
-from spack.spec_parser import expand_toolchains
+from spack.spec import Spec, expand_toolchains
 
 
 class SpecList:

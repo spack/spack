@@ -168,7 +168,7 @@ sep_re = re.escape(os.sep)
 valid_environment_name_re = rf"^\w[{sep_re}\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-CURRENT_LOCKFILE_VERSION = 7
+CURRENT_LOCKFILE_VERSION = 8
 
 
 READER_CLS = {
@@ -179,6 +179,7 @@ READER_CLS = {
     5: spack.spec.SpecfileV4,
     6: spack.spec.SpecfileV5,
     7: spack.spec.SpecfileV5,
+    8: spack.spec.SpecfileV6,
 }
 
 
@@ -2378,7 +2379,6 @@ class Environment:
 
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
-        lockfile_version = CURRENT_LOCKFILE_VERSION if self.has_groups() else 6
         concrete_specs = self._concrete_specs_dict()
         root_specs = self._concrete_roots_dict()
 
@@ -2395,7 +2395,7 @@ class Environment:
             # metadata about the format
             "_meta": {
                 "file-type": "spack-lockfile",
-                "lockfile-version": lockfile_version,
+                "lockfile-version": CURRENT_LOCKFILE_VERSION,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
             # spack version information
@@ -2541,6 +2541,10 @@ class Environment:
                 _, bhash, _ = reader.extract_build_spec_info_from_node_dict(node_dict)
                 specs_by_hash[lockfile_key]._build_spec = specs_by_hash[bhash]
 
+        # The DAG is wired by hand above, so reconstruct what spec formats before v6 omit
+        if reader.SPEC_VERSION < 6:
+            spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=spack.repo.PATH)
+
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to
         # keep.  This is only required as long as we support older lockfile
@@ -2622,7 +2626,8 @@ class Environment:
 
     def _add_to_environment_repository(self, spec_node: Spec) -> None:
         """Add the root node of the spec to the environment repository"""
-        namespace: str = spec_node.namespace
+        namespace = spec_node.namespace
+        assert namespace is not None
         repository = spack.repo.create_or_construct(
             root=os.path.join(self.repos_path, namespace),
             namespace=namespace,

@@ -12,7 +12,8 @@ Here is the EBNF grammar for a spec::
     node          = [name] { node_option } | filename
     node_option   = @version_list | variant | hash
 
-    edge_properties = [ { key_value | when=quoted_spec } [ when=spec ] ]
+    edge_properties = edge_group { edge_group }
+    edge_group      = [ { key_value | when=quoted_spec } [ when=spec ] ]
     quoted_spec     = " spec " | ' spec '
 
     virtual_assignment = id { , id } = (id | namespace id)
@@ -55,10 +56,12 @@ value is a package name, is a virtual assignment ``%c,cxx=gcc`` rather than a va
 anonymous dependency (write ``%* foo=bar`` for the latter). ``*`` is the name of an anonymous
 node.
 
-The ``when=`` edge property is a condition on the edge, and its value is a spec that extends up
-to the closing bracket, so it must be the last edge property: ``^[virtuals=mpi when=+mpi] mpich``.
-A quoted condition, ``^[when='+mpi' virtuals=mpi] mpich``, is a value like any other and can
-precede other edge properties.
+The ``when=`` edge property is a condition on the edge, and its unquoted value is a spec that
+extends up to the closing bracket: in ``^[virtuals=mpi when=+mpi] mpich`` the condition is
+``+mpi``, while in ``^[when=+mpi virtuals=mpi] mpich`` the ``virtuals=mpi`` pair is part of the
+condition. Edge properties following an unquoted condition go in a separate bracket group,
+``^[when=+mpi][virtuals=mpi] mpich``, or the condition can be quoted,
+``^[when='+mpi' virtuals=mpi] mpich``, making it a value like any other.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put
 whitespace space before ``-variant`` for it to be tokenized properly.  You can
@@ -71,7 +74,7 @@ expansion when it is the first character in an id typed on the command line.
 import os
 import re
 import sys
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type
 
 import spack.deptypes
 import spack.error
@@ -83,10 +86,6 @@ from spack.util.tty import color
 
 if TYPE_CHECKING:
     import spack.spec
-
-# Cannot use from spack.spec import Spec due to circularities, so we lazily
-# import it inline and bind it here to avoid expensive local imports
-Spec: Optional[Type["spack.spec.Spec"]] = None
 
 #: Valid name for specs and variants. Here we are not using
 #: the previous ``w[\w.-]*`` since that would match most
@@ -168,38 +167,17 @@ class SpecTokenizationError(spack.error.SpecSyntaxError):
         super().__init__(message)
 
 
-def parse(text: str, *, toolchains: Optional[Dict] = None) -> List["spack.spec.Spec"]:
-    """Parse text into a list of strings
-
-    Args:
-        text: text to be parsed
-        toolchains: optional toolchain definitions to expand after parsing
-
-    Return:
-        List of specs
-    """
-    specs = SpecParser(text).all_specs()
-    if toolchains:
-        cache: Dict[str, "spack.spec.Spec"] = {}
-        for spec in specs:
-            expand_toolchains(spec, toolchains, _cache=cache)
-    return specs
-
-
 def parse_one_or_raise(
-    text: str,
-    initial_spec: Optional["spack.spec.Spec"] = None,
-    *,
-    toolchains: Optional[Dict] = None,
+    text: str, spec_cls: Type["spack.spec.Spec"], initial_spec: Optional["spack.spec.Spec"] = None
 ) -> "spack.spec.Spec":
     """Parse exactly one spec from text and return it, or raise
 
     Args:
         text: text to be parsed
+        spec_cls: class used to construct the spec nodes
         initial_spec: buffer where to parse the spec. If None a new one will be created.
-        toolchains: optional toolchain definitions to expand after parsing
     """
-    parser = SpecParser(text)
+    parser = SpecParser(text, spec_cls)
     result = parser.next_spec(initial_spec)
 
     if parser.curr:
@@ -217,88 +195,7 @@ def parse_one_or_raise(
     if result is None:
         raise ValueError("expected a single spec, but got none")
 
-    if toolchains:
-        expand_toolchains(result, toolchains)
-
     return result
-
-
-def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> "spack.spec.Spec":
-    """Parse a toolchain config entry (string or list) into a Spec."""
-    if isinstance(toolchain_config, str):
-        toolchain = parse_one_or_raise(toolchain_config)
-        _ensure_all_direct_edges(toolchain)
-    else:
-        from spack.spec import EMPTY_SPEC, Spec
-
-        toolchain = Spec()
-        for entry in toolchain_config:
-            toolchain_part = parse_one_or_raise(entry["spec"])
-            when = entry.get("when", "")
-            _ensure_all_direct_edges(toolchain_part)
-
-            if when:
-                when_spec = Spec(when)
-                for edge in toolchain_part.traverse_edges():
-                    if edge.when is EMPTY_SPEC:
-                        edge.when = when_spec.copy()
-                    else:
-                        edge.when.constrain(when_spec)
-            toolchain.constrain(toolchain_part)
-    return toolchain
-
-
-def _ensure_all_direct_edges(constraint: "spack.spec.Spec") -> None:
-    """Validate that a toolchain spec only has direct (%) edges."""
-    for edge in constraint.traverse_edges(root=False):
-        if not edge.direct:
-            raise spack.error.SpecError(
-                f"cannot use '^' in toolchain definitions, and the current "
-                f"toolchain contains '{edge.format()}'"
-            )
-
-
-def expand_toolchains(
-    spec: "spack.spec.Spec",
-    toolchains: Dict,
-    *,
-    _cache: Optional[Dict[str, "spack.spec.Spec"]] = None,
-) -> None:
-    """Replace toolchain placeholder deps with expanded toolchain constraints.
-
-    Walks every node in the spec DAG. For each node, finds direct dependency
-    edges whose child name is a key in ``toolchains``. Removes the placeholder
-    edge, parses the toolchain config, copies with the edge's propagation
-    policy, and constrains the node.
-    """
-    if _cache is None:
-        _cache = {}
-
-    for node in list(spec.traverse()):
-        for edge in list(node.edges_to_dependencies()):
-            if not edge.direct:
-                continue
-            name = edge.spec.name
-            if name not in toolchains:
-                continue
-
-            # Remove the placeholder edge (both directions)
-            node._dependencies[name].remove(edge)
-            if not node._dependencies[name]:
-                del node._dependencies[name]
-            edge.spec._dependents[node.name].remove(edge)
-            if not edge.spec._dependents[node.name]:
-                del edge.spec._dependents[node.name]
-
-            # Parse and cache toolchain
-            if name not in _cache:
-                _cache[name] = _parse_toolchain_config(toolchains[name])
-
-            propagation = edge.propagation
-            propagation_arg = None if propagation != PropagationPolicy.PREFERENCE else propagation
-            # Copy so each usage gets a distinct object (solver depends on this)
-            toolchain = _cache[name].copy(propagation=propagation_arg)
-            node.constrain(toolchain)
 
 
 class SpecParsingError(spack.error.SpecSyntaxError):
@@ -361,6 +258,7 @@ _EDGE_VIRTUALS = "edge_virtuals"
 _EDGE_SUBSTITUTE = "edge_substitute"
 _END_EDGE_VIRTUALS = "end_edge_virtuals"
 _END_EDGE_SUBSTITUTE = "end_edge_substitute"
+_EDGE_REOPEN = "edge_reopen"
 _VERSION_LIST = "version_list"
 _BV_PREFIX = "bv_prefix"
 _BV_NAME = "bv_name"
@@ -385,11 +283,15 @@ _MISPLACED_VIRTUAL_ASSIGNMENT = re.compile(rf"{_VIRTUALS_LIST}={_SUBSTITUTE}")
 #: Token kind -> regex. FAST_SPEC_REGEX is the ``|``-alternation of these in order: tokens are
 #: tried top to bottom, so more specific tokens come first (e.g. FILENAME before package names).
 SPEC_TOKENS: Dict[str, str] = {
-    # ``]`` closing edge properties, optionally fused with a virtual assignment, e.g.
+    # ``]`` closing edge properties, optionally fused with a ``[`` opening another group of
+    # edge properties, e.g. ``^[when=+mpi][virtuals=mpi]``, or with a virtual assignment, e.g.
     # ``^[deptypes=link] mpi=openmpi``
     _END_EDGE_PROPERTIES: (
         r"\]"
-        rf"(?:\s*(?P<{_END_EDGE_VIRTUALS}>{_VIRTUALS_LIST})=(?P<{_END_EDGE_SUBSTITUTE}>{_SUBSTITUTE}))?"
+        r"(?:"
+        rf"(?P<{_EDGE_REOPEN}>\s*\[)"
+        rf"|(?:\s*(?P<{_END_EDGE_VIRTUALS}>{_VIRTUALS_LIST})=(?P<{_END_EDGE_SUBSTITUTE}>{_SUBSTITUTE}))?"
+        r")"
     ),
     # ``^`` (transitive), ``%`` (direct) or ``%%`` (direct, propagated) dependency
     _DEPENDENCY: (
@@ -452,10 +354,11 @@ class SpecParser:
       where the token cannot appear at the current point in the grammar.
     """
 
-    __slots__ = "literal_str", "scanner", "curr", "next"
+    __slots__ = "literal_str", "spec_cls", "scanner", "curr", "next"
 
-    def __init__(self, literal_str: str):
+    def __init__(self, literal_str: str, spec_cls: Type["spack.spec.Spec"]):
         self.literal_str = literal_str.rstrip()
+        self.spec_cls = spec_cls
         self.scanner = FAST_SPEC_REGEX.scanner(self.literal_str)  # type: ignore[attr-defined]
         self.curr = self.scanner.match()
         self.next = self.scanner.match()
@@ -554,12 +457,17 @@ class SpecParser:
                             if name not in ("deptypes", "virtuals"):
                                 msg = (
                                     "the only edge attributes that are currently accepted are "
-                                    '"deptypes", "virtuals", and a "when=<spec>" condition, '
-                                    "which must be the last unless quoted"
+                                    '"deptypes", "virtuals", and a "when=<spec>" condition; an '
+                                    "unquoted condition extends to the closing bracket, so put "
+                                    "attributes after it in a separate bracket group"
                                 )
                                 self._raise_parsing_error(msg)
                             value = strip_quotes(self.curr.group(_KV_VALUE))
-                            attributes[name] = [v.strip() for v in value.split(",")]
+                            # Repeated attributes combine: virtuals or deptypes accumulate
+                            # when specs constrain
+                            attributes.setdefault(name, []).extend(
+                                v.strip() for v in value.split(",")
+                            )
                             self.curr, self.next = self.next, self.scanner.match()
 
                         elif kind == _KEY_VALUE_PAIR or kind == _WHEN:
@@ -570,7 +478,9 @@ class SpecParser:
                             value = self.curr.group(_KV_VALUE) if kind == _KEY_VALUE_PAIR else ""
                             if value[:1] in ("'", '"'):
                                 try:
-                                    condition = parse_one_or_raise(strip_quotes(value))
+                                    condition = parse_one_or_raise(
+                                        strip_quotes(value), self.spec_cls
+                                    )
                                 except ValueError:
                                     msg = "expected a single spec as the when= condition"
                                     self._raise_parsing_error(msg)
@@ -586,14 +496,19 @@ class SpecParser:
                                 parsed = self.next_spec()
                                 assert parsed is not None  # there is a token, so there is a spec
                                 condition = parsed
-                            # Repeated attributes combine: conditions are constrained, like
-                            # virtuals accumulate and deptypes are or-ed
+                            # Repeated conditions combine too, by constraining
                             if conditions is None:
                                 conditions = condition
                             else:
                                 conditions.constrain(condition)
 
                         elif kind == _END_EDGE_PROPERTIES:
+                            # ][ opens another group of edge properties, as in
+                            # ^[when=+mpi][virtuals=mpi]: keep collecting attributes
+                            if self.curr.group(_EDGE_REOPEN):
+                                self.curr, self.next = self.next, self.scanner.match()
+                                continue
+
                             # Closing ], optionally fused with a virtual assignment, as in
                             # ^[deptypes=link] mpi=openmpi
                             virtuals_str = self.curr.group(_END_EDGE_VIRTUALS)
@@ -704,14 +619,7 @@ class SpecParser:
         self, initial_spec: Optional["spack.spec.Spec"] = None, initial_name: Optional[str] = None
     ) -> "spack.spec.Spec":
         """Parse a single spec node"""
-        spec = initial_spec
-        if spec is None:
-            global Spec
-            if Spec is None:
-                from spack.spec import Spec as _Spec
-
-                Spec = _Spec  # just `from spack.spec import Spec` is insufficient for mypy
-            spec = Spec()
+        spec = self.spec_cls() if initial_spec is None else initial_spec
 
         # The lookahead is shifted in locals for speed and written back on return
         curr, next, scanner = self.curr, self.next, self.scanner
@@ -741,7 +649,7 @@ class SpecParser:
                 # A spec file is a complete node: read it and return
                 if not os.path.exists(value):
                     raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
-                spec._dup(spack.spec.Spec.from_specfile(value))
+                spec._dup(self.spec_cls.from_specfile(value))
                 self.curr, self.next = next, scanner.match()
                 return spec
             elif kind == _UNEXPECTED:

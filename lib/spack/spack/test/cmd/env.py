@@ -3027,7 +3027,7 @@ def test_stack_combinatorial_view(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() and current_dir.is_dir()
 
 
@@ -3040,7 +3040,7 @@ def test_stack_view_select(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is spec.satisfies("target=x86_64")
 
 
@@ -3053,7 +3053,7 @@ def test_stack_view_exclude(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not spec.satisfies("callpath")
 
 
@@ -3070,7 +3070,7 @@ def test_stack_view_select_and_exclude(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3090,7 +3090,7 @@ def test_view_link_roots(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             expected_exists = spec in test.roots() and (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3172,7 +3172,7 @@ def test_view_link_all(installed_environment, template_combinatorial_env, tmp_pa
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() == (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3311,7 +3311,7 @@ def test_stack_view_multiple_views(installed_environment, tmp_path: pathlib.Path
         for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = comb_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = comb_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not spec.satisfies("target=core2")
 
 
@@ -4673,7 +4673,7 @@ spack:
 
         for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             # no specs will exist in the included view projection
-            base_dir = view_dir / f"{spec.architecture.target}"
+            base_dir = view_dir / f"{spec.target}"
             included_dir = base_dir / f"{spec.name}-{spec.version}-from-view"
             assert not included_dir.exists()
 
@@ -4681,7 +4681,7 @@ spack:
             # are also not cmake (excluded in the environment view) should exist
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not (
                 spec.satisfies("cmake") or spec.satisfies("target=core2")
             )

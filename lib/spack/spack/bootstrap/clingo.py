@@ -205,8 +205,9 @@ class ClingoBootstrapConcretizer:
             if "libc" in edge.virtuals:
                 edge.spec = self.host_libc
 
+        spack.repo.freeze_provided_virtuals([s], repo=self.repo)
         spack.spec._inject_patches_variant(s, repo=self.repo)
-        spack.spec.finalize_concretization([s], repo=self.repo)
+        spack.spec.assign_hashes([s], repo=self.repo)
 
         # Work around the fact that the installer calls Spec.dependents() and
         # we modified edges inconsistently
