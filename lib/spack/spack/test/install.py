@@ -1019,3 +1019,48 @@ def test_install_gate_reports_only_the_labels_not_allowed(
     message = str(exc_info.value)
     assert "GHSA-aaaa-bbbb-cccc" in message
     assert "CVE-2026-0002" not in message
+
+
+@pytest.mark.not_on_windows("lacking windows support for binary installs")
+@pytest.mark.regression("50560")
+def test_install_spliced_from_binary_relocates_to_external_replacement(
+    mutable_mock_env_path,
+    temporary_store: Store,
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    mutable_config: Configuration,
+    tmp_path: pathlib.Path,
+    installer_variant,
+):
+    """Tests that installing a spliced spec from a binary cache rewrites text files to the prefix
+    of an external replacement.
+
+    This models a binary of axom built against a Spack-installed mpich, installed with a splice of
+    a system mpich. splice-t writes the prefix of splice-h to a text file.
+    """
+    external_prefix = tmp_path / "external-splice-h"
+    external_prefix.mkdir()
+    original_spec = spack.concretize.concretize_one("splice-t")
+    with mutable_config.override(
+        "packages:splice-h",
+        {
+            "buildable": False,
+            "externals": [{"spec": "splice-h@1.0.2+foo", "prefix": str(external_prefix)}],
+        },
+    ):
+        replacement = spack.concretize.concretize_one("splice-h+foo")
+
+    spack.installer_dispatch.create_installer([original_spec.package]).install()
+    SpackCommand("buildcache")(
+        "push", "--unsigned", "--update-index", temporary_mirror, str(original_spec)
+    )
+    SpackCommand("uninstall")("-ay")
+
+    spliced = original_spec.splice(replacement, transitive=True)
+    spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
+
+    with open(os.path.join(spliced.prefix, "splice-t"), encoding="utf-8") as f:
+        content = f.read()
+    assert f"splice-h: {external_prefix}splice-z" in content
+    assert str(original_spec["splice-h"].prefix) not in content

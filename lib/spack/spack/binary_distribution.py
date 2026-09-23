@@ -574,16 +574,19 @@ def file_matches(f: IO[bytes], regex: spack.util.lang.PatternBytes) -> bool:
         f.seek(0)
 
 
-def specs_to_relocate(spec: spack.spec.Spec) -> List[spack.spec.Spec]:
+def specs_to_relocate(
+    spec: spack.spec.Spec, include_externals: bool = False
+) -> List[spack.spec.Spec]:
     """Return the set of specs that may be referenced in the install prefix of the provided spec.
-    We currently include non-external transitive link and direct run dependencies."""
+    We currently include transitive link and direct run dependencies, and externals among them
+    only if ``include_externals`` is True."""
     specs = [
         s
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link", order="breadth", key=traverse.by_dag_hash),
             spec.dependencies(deptype="run"),
         )
-        if not s.external
+        if include_externals or not s.external
     ]
     return list(spack.util.lang.dedupe(specs, key=lambda s: s.dag_hash()))
 
@@ -1974,8 +1977,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # If the spec is spliced, we need to handle the simultaneous mapping from the old install_tree
     # to the new install_tree and from the build_spec to the spliced spec. Nodes the splice did
     # not change keep their hash. For the others, the old prefix is the one of their analog: the
-    # node of the build_spec they replaced.
-    relocation_specs = specs_to_relocate(spec)
+    # node of the build_spec they replaced. Externals are included so that a spliced-in external
+    # gets a mapping from the old prefix of its analog.
+    relocation_specs = specs_to_relocate(spec, include_externals=True)
     splice_analogs = _SpliceAnalogs(spec) if spec.spliced else None
     for s in relocation_specs:
         analog = s
