@@ -627,8 +627,8 @@ For example, to see the fully merged ``config.yaml``, you can type:
      - $tempdir/$user/spack-stage
      - $cache_home/stage
      - $spack/var/spack/stage
-     source_cache: $data_home/cache
-     misc_cache: $state_home/cache
+     source_cache: $data_home/downloads
+     misc_cache: $state_home/$spack_instance_id/cache
      locks: true
 
 Likewise, this will show the fully merged ``packages.yaml``:
@@ -670,8 +670,8 @@ If you do not know why Spack is behaving a certain way, this command can help yo
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $cache_home/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $data_home/cache
-   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $state_home/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $data_home/downloads
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $state_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
 You can see above that the ``build_jobs`` and ``debug`` settings are built-in and are not overridden by a configuration file.

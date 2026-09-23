@@ -132,7 +132,7 @@ The existence of the layout scope means that this evaluation has completed, incl
 
 - If `config:license_dir` uses the new default, Spack attempts to copy license entries to the shared default.
 - Entries are processed in sorted (alphabetical) order for deterministic behavior across platforms.
-- Entries are copied individually and are not removed from the old location.
+- Entries are copied individually; successfully migrated entries are moved into `$spack/.migration-backup`.
 - Migration stops at the first collision or failure; successfully copied entries before that point remain.
 - Migration does not use a destination lock because license files may be edited outside Spack.
 - If migration is abandoned or incomplete, the old license directory remains configured in layout.
@@ -147,6 +147,7 @@ The existence of the layout scope means that this evaluation has completed, incl
 - Views are excluded from the copy.
 - Environments are processed in sorted (alphabetical) order.
 - If a copy operation fails despite passing upfront checks and holding the lock, migration stops and leaves partial state for investigation rather than attempting cleanup.
+- Successfully migrated environments are moved into `$spack/.migration-backup`.
 - If migration is abandoned, the old environments root remains configured.
 
 ## 3.5 GPG data
@@ -159,7 +160,7 @@ Spack migrates both the GPG keyring (`config:gpg_path`) and the GPG keys directo
 - If it is unset and both configured GPG paths use the new defaults, Spack may migrate both directories.
 - Destinations must not already exist; keyrings are never merged.
 - Migration copies both directories to private sibling staging directories (keyring with mode `0700`), then atomically renames them into place.
-- Failed staging is removed and sources are never modified.
+- Failed staging is removed; successfully migrated sources are moved into `$spack/.migration-backup`.
 - If either migration fails, both the old GPG keyring path and old GPG keys path are recorded in layout, keeping both in their original locations.
 - Custom configured GPG paths are left untouched.
 
@@ -176,7 +177,7 @@ After a normal migration attempt creates the layout scope:
 
 ## 3.7 Undoing auto-migration
 
-For resources that were actually migrated, `spack migrate --undo` can use migration backups to restore portable resources to their old locations, subject to conflict checks.
+For resources that were actually migrated, `spack migrate undo` can use migration backups to restore portable resources to their old locations, subject to conflict checks.
 
 - Existing installs and modules need no physical restoration because they were never moved.
 - Shared destinations are not removed automatically because other Spack instances may use them.
