@@ -8,11 +8,11 @@ import pathlib
 import pytest
 
 import spack.concretize
-import spack.config
+from spack.config import Configuration
 from spack.fetch_strategy import HgFetchStrategy
-from spack.llnl.util.filesystem import mkdirp, touch, working_dir
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.version import Version
 
 # Test functionality covered is supported on Windows, but currently failing
@@ -25,7 +25,9 @@ pytestmark = [
 
 @pytest.mark.parametrize("type_of_test", ["default", "rev0"])
 @pytest.mark.parametrize("secure", [True, False])
-def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_repo, monkeypatch):
+def test_fetch(
+    type_of_test, secure, mock_hg_repository, config: Configuration, mutable_mock_repo, monkeypatch
+):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with
@@ -45,7 +47,7 @@ def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_re
 
     # Enter the stage directory and check some properties
     with s.package.stage:
-        with spack.config.override("config:verify_ssl", secure):
+        with config.override("config:verify_ssl", secure):
             s.package.do_stage()
 
         with working_dir(s.package.stage.source_path):
@@ -70,12 +72,12 @@ def test_fetch(type_of_test, secure, mock_hg_repository, config, mutable_mock_re
             assert h() == t.revision
 
 
-def test_hg_extra_fetch(tmp_path: pathlib.Path):
+def test_hg_extra_fetch(tmp_path: pathlib.Path, config):
     """Ensure a fetch after expanding is effectively a no-op."""
     testpath = str(tmp_path)
 
     fetcher = HgFetchStrategy(hg="file:///not-a-real-hg-repo")
-    with Stage(fetcher, path=testpath) as stage:
+    with stage_from_config(fetcher, path=testpath, config=config) as stage:
         source_path = stage.source_path
         mkdirp(source_path)
         fetcher.fetch()

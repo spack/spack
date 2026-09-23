@@ -7,13 +7,13 @@ import pytest
 
 import spack.concretize
 import spack.error
-import spack.repo
 import spack.spec
 import spack.variant
+from spack.repo import RepoPath
 from spack.spec import Spec, VariantMap
 from spack.variant import (
     BoolValuedVariant,
-    DuplicateVariantError,
+    ConditionalValue,
     InconsistentValidationError,
     InvalidVariantValueError,
     MultipleValuesInExclusiveVariantError,
@@ -414,45 +414,17 @@ class TestVariant:
 
 
 class TestVariantMapTest:
-    def test_invalid_values(self) -> None:
-        # Value with invalid type
+    def test_set(self) -> None:
+        # All three types of variants are accepted, keyed by their own name
         a = VariantMap()
-        with pytest.raises(TypeError):
-            a["foo"] = 2
+        a.set(BoolValuedVariant("foo", True))
+        a.set(SingleValuedVariant("bar", "baz"))
+        a.set(MultiValuedVariant("foobar", ("a", "b", "c", "d", "e")))
+        assert list(a) == ["foo", "bar", "foobar"]
 
-        # Duplicate variant
-        a["foo"] = MultiValuedVariant("foo", ("bar", "baz"))
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = MultiValuedVariant("foo", ("bar",))
-
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = SingleValuedVariant("foo", "bar")
-
-        with pytest.raises(DuplicateVariantError):
-            a["foo"] = BoolValuedVariant("foo", True)
-
-        # Non matching names between key and vspec.name
-        with pytest.raises(KeyError):
-            a["bar"] = MultiValuedVariant("foo", ("bar",))
-
-    def test_set_item(self) -> None:
-        # Check that all the three types of variants are accepted
-        a = VariantMap()
-
-        a["foo"] = BoolValuedVariant("foo", True)
-        a["bar"] = SingleValuedVariant("bar", "baz")
-        a["foobar"] = MultiValuedVariant("foobar", ("a", "b", "c", "d", "e"))
-
-    def test_substitute(self) -> None:
-        # Check substitution of a key that exists
-        a = VariantMap()
-        a["foo"] = BoolValuedVariant("foo", True)
-        a.substitute(SingleValuedVariant("foo", "bar"))
-
-        # Trying to substitute something that is not
-        # in the map will raise a KeyError
-        with pytest.raises(KeyError):
-            a.substitute(BoolValuedVariant("bar", True))
+        # An entry already under that name is replaced
+        a.set(SingleValuedVariant("foo", "bar"))
+        assert a["foo"] == SingleValuedVariant("foo", "bar")
 
     def test_satisfies_and_constrain(self) -> None:
         # foo=bar foobar=fee feebar=foo
@@ -601,8 +573,8 @@ def test_wild_card_valued_variants_equivalent_to_str():
     assert str_output.value == wild_output.value
 
 
-def test_variant_definitions(mock_packages):
-    pkg = spack.repo.PATH.get_pkg_class("variant-values")
+def test_variant_definitions(mock_packages: RepoPath):
+    pkg = mock_packages.get_pkg_class("variant-values")
 
     # two variant names
     assert len(pkg.variant_names()) == 2
@@ -652,8 +624,8 @@ def test_variant_definitions(mock_packages):
         ("variant-values-override", "baz", "@4.0", [0]),
     ],
 )
-def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+def test_prevalidate_variant_value(mock_packages: RepoPath, pkg_name, value, spec, def_ids):
+    pkg = mock_packages.get_pkg_class(pkg_name)
 
     all_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
@@ -682,8 +654,8 @@ def test_prevalidate_variant_value(mock_packages, pkg_name, value, spec, def_ids
         ("variant-values-override", "foo", "@4.0"),
     ],
 )
-def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+def test_strict_invalid_variant_values(mock_packages: RepoPath, pkg_name, value, spec):
+    pkg = mock_packages.get_pkg_class(pkg_name)
 
     with pytest.raises(spack.variant.InvalidVariantValueError):
         spack.variant.prevalidate_variant_value(
@@ -703,9 +675,9 @@ def test_strict_invalid_variant_values(mock_packages, pkg_name, value, spec):
     ],
 )
 def test_concretize_variant_default_with_multiple_defs(
-    mock_packages, config, pkg_name, spec, satisfies, def_id
+    mock_packages: RepoPath, config, pkg_name, spec, satisfies, def_id
 ):
-    pkg = spack.repo.PATH.get_pkg_class(pkg_name)
+    pkg = mock_packages.get_pkg_class(pkg_name)
     pkg_defs = [vdef for _, vdef in pkg.variant_definitions("v")]
 
     spec = spack.concretize.concretize_one(f"{pkg_name}{spec}")
@@ -879,6 +851,33 @@ def test_patches_variant():
     assert not Spec("patches:=abcdef").satisfies("patches:=abcdefghi")
 
 
+def test_patches_variant_prefix_intersects_and_constrains():
+    """Prefix matching applies to intersection too, so a spec that satisfies a prefix also
+    overlaps it and can be constrained by it."""
+    assert Spec("patches:=abcdef").intersects("patches=ab")
+    assert Spec("patches=ab").intersects("patches:=abcdef")
+    assert not Spec("patches:=abcdef").intersects("patches=xyz")
+    assert not Spec("patches:=abcdef").intersects("patches=abcdefghi")
+
+    s = Spec("patches:=abcdef")
+    assert s.constrain("patches=ab") is False
+    assert s.variants["patches"].values == ("abcdef",)
+
+    s = Spec("patches=ab")
+    assert s.constrain("patches:=abcdef") is True
+    assert s.variants["patches"].values == ("abcdef",)
+
+
+def test_patches_variant_round_trips_through_str():
+    """A concrete-flagged patches variant prints its full checksums, so the string form
+    parses back into an equal spec."""
+    checksum_a, checksum_b = "a1" * 32, "b2" * 32
+    s = Spec(f"patches:={checksum_a},{checksum_b}")
+    round_tripped = Spec(str(s))
+    assert round_tripped == s
+    assert round_tripped.satisfies(s) and s.satisfies(round_tripped)
+
+
 def test_constrain_narrowing():
     s = Spec("foo=*")
     assert s.variants["foo"].type == spack.variant.VariantType.MULTI
@@ -886,3 +885,36 @@ def test_constrain_narrowing():
     s.constrain("+foo")
     assert s.variants["foo"].type == spack.variant.VariantType.BOOL
     assert s.variants["foo"].concrete
+
+
+@pytest.mark.parametrize(
+    "when,expected",
+    [
+        # No constraint: every value that is not statically disabled
+        (None, ("always", "old", "new")),
+        # Constraints selecting one of the two conditional values
+        (Spec("@1.0"), ("always", "old")),
+        (Spec("@2.0"), ("always", "new")),
+        # A constraint that doesn't decide the condition either way
+        (Spec("+foo"), ("always",)),
+    ],
+)
+def test_possible_values_unwraps_conditional_values(when, expected):
+    vdef = Variant(
+        "flavor",
+        default="new",
+        description="",
+        values=(
+            "always",
+            ConditionalValue("old", when=Spec("@:1")),
+            ConditionalValue("new", when=Spec("@2:")),
+            ConditionalValue("never", when=None),
+        ),
+    )
+    assert vdef.possible_values(when=when) == expected
+
+
+def test_possible_values_when_checked_by_a_validator():
+    vdef = Variant("flavor", default="1", description="", values=int)
+    assert vdef.values_defined_by_validator()
+    assert vdef.possible_values() is None

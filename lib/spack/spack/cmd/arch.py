@@ -4,14 +4,12 @@
 
 import argparse
 import collections
-import warnings
 
 import spack.vendor.archspec.cpu
 
-import spack.llnl.util.tty.colify as colify
-import spack.llnl.util.tty.color as color
 import spack.platforms
 import spack.spec
+from spack.util.tty import colify, color
 
 description = "print architecture information about this machine"
 section = "config"
@@ -37,7 +35,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--generic", action="store_true", help="print feature level (x86_64_v3, armv8.4a, ...)"
     )
     parts = subparser.add_mutually_exclusive_group()
-    parts2 = subparser.add_mutually_exclusive_group()
     parts.add_argument(
         "-p", "--platform", action="store_true", default=False, help="print only the platform"
     )
@@ -50,12 +47,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     parts.add_argument(
         "-t", "--target", action="store_true", default=False, help="print only the target"
-    )
-    parts2.add_argument(
-        "-f", "--frontend", action="store_true", default=False, help="print frontend (DEPRECATED)"
-    )
-    parts2.add_argument(
-        "-b", "--backend", action="store_true", default=False, help="print backend (DEPRECATED)"
     )
 
 
@@ -84,7 +75,7 @@ def display_targets(targets):
         for family, group in by_family.items():
             vendor = color.colorize(r"@*B{" + vendor + r"}")
             family = color.colorize(r"@*B{" + family + r"}")
-            header = " - ".join([vendor, family])
+            header = f"{vendor} - {family}"
             group = sorted(group, key=lambda x: len(x.ancestors))
             display_target_group(header, group)
 
@@ -98,11 +89,6 @@ def arch(parser, args):
     if args.known_targets:
         display_targets(spack.vendor.archspec.cpu.TARGETS)
         return
-
-    if args.frontend:
-        warnings.warn("the argument --frontend is deprecated, and will be removed in Spack v1.0")
-    elif args.backend:
-        warnings.warn("the argument --backend is deprecated, and will be removed in Spack v1.0")
 
     host_platform = spack.platforms.host()
     host_os = host_platform.default_operating_system()

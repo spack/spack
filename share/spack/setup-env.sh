@@ -232,10 +232,10 @@ _spack_determine_shell() {
         # If procfs is present this seems a more reliable
         # way to detect the current shell
         _sp_exe=$(readlink /proc/$$/exe)
-        # Qemu emulation has _sp_exe point to the emulator
-        if [ "${_sp_exe##*qemu*}" != "${_sp_exe}" ]; then
-            _sp_exe=$(cat /proc/$$/comm)
-        fi
+        # Emulation (qemu/rosetta) can have _sp_exe point to the emulator, not the shell
+        case "$_sp_exe" in
+            *qemu*|*rosetta*) _sp_exe=$(cat /proc/$$/comm) ;;
+        esac
         # Shell may contain number, like zsh5 instead of zsh
         basename ${_sp_exe} | tr -d '0123456789'
     elif [ -n "${BASH:-}" ]; then

@@ -9,6 +9,10 @@
 
 .. _rocmpackage:
 
+.. index::
+   single: mixin; ROCm
+   single: ROCmPackage
+
 ROCm
 ------
 

@@ -8,7 +8,7 @@ import sys
 import pytest
 
 import spack.util.editor as ed
-from spack.llnl.util.filesystem import set_executable
+from spack.util.filesystem import set_executable
 
 pytestmark = [
     pytest.mark.usefixtures("working_env"),

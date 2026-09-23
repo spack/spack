@@ -7,6 +7,11 @@
    :description lang=en:
       Learn how to chain Spack installations by pointing one Spack instance to another to use its installed packages.
 
+.. index::
+   single: install tree; chaining
+   single: upstream; configuring
+   single: upstreams.yaml
+
 Chaining Spack Installations (upstreams.yaml)
 =============================================
 

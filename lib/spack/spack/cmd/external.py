@@ -11,15 +11,15 @@ from typing import List, Optional, Set
 import spack
 import spack.cmd
 import spack.config
-import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify as colify
 import spack.package_base
 import spack.repo
 import spack.spec
+from spack import cray_manifest
 from spack.cmd.common import arguments
+from spack.util import tty
+from spack.util.tty import colify
 
 description = "manage external packages in Spack configuration"
 section = "config"
@@ -47,7 +47,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     find_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope("packages"),
+        default=lambda: spack.config.CONFIG.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
     find_parser.add_argument(
@@ -131,11 +131,14 @@ def external_find(args):
         names=args.packages, tags=args.tags, exclude=args.exclude
     )
     detected_packages = spack.detection.by_path(
-        candidate_packages, path_hints=args.path, max_workers=args.jobs
+        candidate_packages, repo=spack.repo.PATH, path_hints=args.path, max_workers=args.jobs
     )
 
     new_specs = spack.detection.update_configuration(
-        detected_packages, scope=args.scope, buildable=not args.not_buildable
+        detected_packages,
+        config=spack.config.CONFIG,
+        scope=args.scope,
+        buildable=not args.not_buildable,
     )
 
     # If the user runs `spack external find --not-buildable mpich` we also mark `mpi` non-buildable

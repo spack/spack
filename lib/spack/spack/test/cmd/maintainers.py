@@ -7,7 +7,7 @@ import re
 import pytest
 
 import spack.main
-import spack.repo
+from spack.repo import RepoPath
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
@@ -15,6 +15,7 @@ maintainers = spack.main.SpackCommand("maintainers")
 
 MAINTAINED_PACKAGES = [
     "gcc-runtime",
+    "invalid-maintainer",
     "maintainers-1",
     "maintainers-2",
     "maintainers-3",
@@ -33,9 +34,9 @@ def test_maintained():
     assert out == MAINTAINED_PACKAGES
 
 
-def test_unmaintained():
+def test_unmaintained(mock_packages: RepoPath):
     out = split(maintainers("--unmaintained"))
-    assert out == sorted(set(spack.repo.all_package_names()) - set(MAINTAINED_PACKAGES))
+    assert out == sorted(set(mock_packages.all_package_names()) - set(MAINTAINED_PACKAGES))
 
 
 def test_all():
@@ -43,6 +44,9 @@ def test_all():
     assert out == [
         "gcc-runtime:",
         "haampie",
+        "invalid-maintainer:",
+        "github_user1,",
+        "github_user2",
         "maintainers-1:",
         "user1,",
         "user2",
@@ -66,6 +70,10 @@ def test_all():
 def test_all_by_user():
     out = split(maintainers("--all", "--by-user"))
     assert out == [
+        "github_user1:",
+        "invalid-maintainer",
+        "github_user2:",
+        "invalid-maintainer",
         "haampie:",
         "gcc-runtime",
         "user0:",

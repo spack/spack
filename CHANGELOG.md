@@ -1,3 +1,257 @@
+# v1.2.0 (2026-06-21)
+
+`v1.2.0` is a major feature release. The main changes you'll notice are the **new,
+parallel installer** and the **many performance improvements** we've added. There are
+also usability features like **concretization groups**, and security features like
+**experimental build sandboxing** and **SBOM generation**.
+
+## Major new features
+
+1. **New installer**
+
+   Spack `v1.2.0` defaults to the new installer, which is a completely rewritten package
+   installer designed for better performance and improved user experience. This was an
+   experimental feature in `v1.1.0`. The new installer takes advantage of much more
+   build parallelism by scheduling multiple package builds concurrently and sharing
+   their work dynamically using a jobserver.
+
+   The most visible change is the new interactive Terminal User Interface (TUI). It
+   shows an overview of all active, concurrently running builds, and lets you follow
+   logs of specific builds by pressing `v`, `n` (next), or `p` (previous).
+
+   The new installer is a single-threaded, event-driven build scheduler using
+   non-blocking I/O. A single `spack install` process exploits DAG-level parallelism by
+   scheduling independent package builds concurrently. All concurrent builds share a
+   jobserver (a POSIX pipe) set up by Spack to manage composable parallelism, which
+   allows builds to dynamically share work up to a job limit. For example, while one
+   package is restricted to a single-threaded configure step, other, more parallel
+   builds can claim the idle jobs. The new installer also optimizes database writes,
+   which is noticeable when installing many packages from a binary cache.
+
+   See [the docs](https://spack.readthedocs.io/en/latest/installing.html) and this
+   [talk from HPSFCon2026](https://youtu.be/zJ3S9CFJ5ZM?si=UdsPTlGOJ9YxPyZP) for more
+   details.
+
+2. **Concretization Groups**
+
+   A single environment can now have named groups of specs with their own local
+   concretization preferences and dependencies. You can use this to control
+   concretization order, e.g. if you need to bootstrap a compiler to build certain
+   applications:
+
+   ```yaml
+   spack:
+     specs:
+     - group: compiler
+       specs:
+       - gcc@15.2
+
+     - group: apps
+       needs: [compiler]
+       specs:
+       - hdf5 %gcc@15.2
+       - libtree %gcc@15.2
+   ```
+
+   Or, you can use it to provide different targets, variants, or other preferences for
+   specific groups:
+
+   ```yaml
+   spack:
+     specs:
+     - group: apps-x86_64_v3
+       specs:
+       - gromacs
+       - quantum-espresso
+       override:
+         packages:
+           all:
+             prefer:
+             - target=x86_64_v3
+
+     - group: apps-x86_64_v4
+       specs:
+       - gromacs
+       - quantum-espresso
+       override:
+         packages:
+           all:
+             prefer:
+             - target=x86_64_v4
+   ```
+
+   Each group is concretized independently, and concrete specs from dependency groups
+   are included in each group's solve. Previously, workflows like these required multiple
+   environments. See the
+   [environment docs](https://spack.readthedocs.io/en/latest/environments.html#spec-groups)
+   and #51891, #52244, #52489 for more information.
+
+3. **Concretization Caching**
+
+   You should notice a significant speedup when running the same concretization multiple
+   times. Spack now caches concretization results and can detect when a solve will be
+   the same. For example, if you run:
+
+   ```console
+   spack spec hdf5
+   spack install hdf5
+   ```
+
+   Spack now only has to concretize `hdf5` one time. Concretization caching was
+   introduced as an experimental feature in `v1.1.0`, and it is now enabled by default.
+
+4. **Generate SBOMs during package installation**
+
+   Software Bills of Materials (SBOMs) are standardized files that list the components,
+   dependencies, and licenses included in an installation. They are gaining traction in
+   the security world, as they can be consumed and analyzed by tools to detect CVEs and
+   other software compliance issues.
+
+   Spack now automatically generates SPDX 2.3 SBOMs at install time. The files can be
+   found in the `$prefix/.spack/sbom` directory, where `$prefix` is a package's
+   installation prefix. Spack SBOMs currently contain the NTIA Minimum Elements
+   (supplier, component name, version, unique identifiers, and dependency relationships)
+   where the information is available from Spack metadata.
+
+   More in
+   [the docs](https://spack.readthedocs.io/en/latest/advanced_topics.html#software-bill-of-materials-sbom)
+   and #51760.
+
+5. **New command:** `spack isolate`
+
+   `spack isolate` provides a mechanism for isolating a single Spack instance from
+   `~/.spack`. It modifies the current Spack instance by setting the `user`
+   configuration scope to use a custom path, and it uses an `isolate` configuration
+   scope to move caches and stages that usually default to `~/.spack` to the custom
+   location, as well.
+
+   There are three ways to use it:
+   1. `spack isolate --self` will modify Spack to only write to its own prefix (i.e.,
+      the `$spack` directory);
+   2. `spack isolate --path PATH` will modify Spack to only write to a custom `PATH` of
+      your choosing; and
+   3. `spack isolate --undo` will revert Spack's internal config and undo the isolation.
+
+   See
+   [the documentation](https://spack.readthedocs.io/en/latest/configuration.html#spack-isolate)
+   for more.
+
+
+## Experimental sandboxing
+
+Spack v1.2 adds experimental support for
+[Linux Landlock](https://docs.kernel.org/userspace-api/landlock.html) as a sandbox.
+Linux Landlock is a relatively new kernel feature (5.13+) that allows a process to
+self-restrict its file system read/write/execute permissions further. It is a very
+lightweight syscall that does not require root privileges or support for unprivileged
+namespaces (as is typical for container runtimes).
+
+Landlock is a good fit for Spack, as it allows us to deny write access to all
+directories except the build stage and install prefix, while giving read/execute
+permissions only to the build stage and dependency prefixes. Users can specify further
+executables, libraries, and directories to be readable, writeable or executable. Looking
+forward (Spack v1.3), we aim to make the sandbox default to enable fully reproducible,
+isolated, unprivileged builds.
+
+See #52334 for more details.
+
+## Deprecations and potentially breaking changes
+* GPG commands would previously silently trust keys by default. They now require a `--yes-to-all`
+  argument, and by default they will interactively prompt for trust (#52430)
+* deprecate `spack gpg verify` and `spack gpg sign` as unnecessary (#52431)
+* spack install: deprecate `--dont-restage` (#51604)
+* `main.py`: deprecate --pdb, drop SIGINT handler (#52281)
+* `main.py`: deprecate --profile flags (#52301)
+* `spack compiler`: remove deprecated `--mixed-toolchain` option (#51726)
+* `include_concrete:` is now deprecated in favor of `include: [spack.lock]` (#51900)
+
+## Other notable changes
+
+### Core development
+* `spack style` now uses `ruff` instead of `flake8`, `isort`, and `black` (#52156)
+* we now provide python 3.14 binaries for bootstrapping (#51580)
+
+### Improved error messages
+* solver: error out early for non-existing and deprecated versions (#51555)
+* solver: improve version constraint error messages (#51926)
+* solver: remove internal errors in the solver (#51642)
+
+### Performance improvements
+* views: collapse unique subtrees in symlink case (#52135)
+* solver: simplify encoding of versions (#51591)
+* solver: manually optimize trigger_node projections (#51605)
+* solver: optimize the encoding of the model (#51612)
+* solver: reduce grounding size of satisfied/2 facts (#51625)
+* solver: avoid repeated external "parsing" (#51653)
+* solver: improve the number of cache hits for triggers and effects (#51863)
+* solver: improve version encoding (#51872)
+* solver: simplify and improve encoding of variants (#51988)
+* `asp.py`: do not sort pkg.dependencies and versions (#51632)
+* `asp.py`: move Spec.__str__ out of loop (#51629)
+* `Spec.format`: speed up common case (#51630)
+* Avoid expensive module level code (#51650)
+* Git Fetch: Optimize clone for single commits (#51577)
+* `ctest_log_parser.py`: faster and sequential (#52249)
+* `setup-env.sh`: speed up when no module command (#52245)
+
+### Concretizer improvements
+* solver now supports clingo v6 (#52411)
+* solver: prefer best compiler above one with no penalty on variants (take 2) (#52109)
+* solver: match glibc constraints by hash (#51559)
+* solver: exclude externals from deprecation penalties (#51764)
+* solver: deterministic concretization with non-default variant values (#51780)
+* solver: fix variant penalty for variants defined with a validator function (#51844)
+* solver: account for variant penalties correctly when only one of multiple values is "set" (#51847)
+* solver: requiring at least a subset of default values of a multivalued variant should not influence concretization (#51851)
+* solver: don't give a penalty for compiler reuse on compilers (#51744)
+
+### UI and commands
+* Include/exclude specs from binary caches (mirrors) (#52371)
+* `spack config`: add `--group` option (#52025)
+* add command `spack location --view` (#52177)
+* log parser: `tail -n` like support (#52279)
+* `spack repo remove`: allow removing from unspecified scope (#51563)
+* Add `--profile-file filename` option to save cProfile stats. (#51543)
+* spack repo: add show-version-updates command (#52170)
+* spack repo list: machine readable output with --json (#51950)
+* Allow env variables in package_attributes (#52450)
+* Show `[b]` in `spack concretize` and other commands when a package is not installed
+  but is available from a binary cache (#52493)
+
+## Notable bugfixes
+* bugfix: don't stop early when other spack process is installing (#51539)
+* macos: allow installing binaries from older os (#52390)
+* solver: disable compiler mixing per-language (#51796)
+* solver: fix rule for virtuals that are provided together (#52021)
+* solver: fix bugs with multiple intel-oneapi-compilers versions (#52441)
+* solver: fix issue with conditional language dependencies (#51692)
+
+## Package API
+
+This version of Spack supports Package API `v2.5`. The main differences are:
+
+* `v2.5`: Packages can use `hip-lang` and `cuda-lang` virtuals.
+* `v2.4`: Packages can contain specs with `%%` (though we don't advise it).
+* `v2.3`: `version()` supports a `git_sparse_paths` argument.
+* `v2.2`: shipped with Spack `v1.0`.
+
+Note that the `2026.06.0` packages release still uses `v2.2`, which is compatible with
+Spack `v1.0`. We will bump the package repository version when we start using newer
+features.
+
+See [the package API](https://spack.readthedocs.io/en/latest/package_api.html) for more.
+
+## Spack community stats
+
+* 592 commits to `spack`, 2,426 commits to `spack-packages`
+* 8,611 packages in the 2026.06.0 release, 302 new since 2025.11.0
+* 362 people contributed to this release
+* 354 committers to packages
+* 37 committers to core
+
+See the [2026.06.0 release](https://github.com/spack/spack-packages/releases/tag/v2026.06.0) of [spack-packages](https://github.com/spack/spack-packages/) for more details.
+
+
 # v1.1.1 (2026-01-14)
 
 ## Usability and performance enhancements
@@ -53,7 +307,7 @@
 
 2. **Customizable configuration** (#51162)
 
-   All configuration now stems from `$spack/etc/spack` and `$spack/etc/spack/defaults`, so the owner of a Spack instance can have full control over what configuration scopes exist.
+   All configuration now stems from `$spack/etc/spack` and `$spack/etc/spack/defaults`, so the owner of a spack instance can have full control over what configuration scopes exist.
 
    * Scopes included in configuration can be named, and the builtin `site`, `user`, `system`, etc. scopes are now defined in configuration rather than hard-coded.
    * `$spack/etc/spack/defaults` is the lowest priority.
@@ -191,7 +445,7 @@
 * `--variants-by-name` no longer used (#51450)
 * `spack env create`: allow creation from env or env dir (#51433)
 
-## Notable Bugfixes
+## Notable bugfixes
 * mirror: clean up stage when retrying (#43519)
 * Many smaller concretization fixes (#51361, #51355, #51341, #51347, #51282, #51190, #51226, #51065, #51064, #51074)
 * Bugfix for failed multi-node parallel installations (#50933)

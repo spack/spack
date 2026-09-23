@@ -4,8 +4,8 @@
 import pytest
 
 import spack.container.images
-import spack.llnl.util.filesystem as fs
 import spack.main
+import spack.util.filesystem as fs
 
 containerize = spack.main.SpackCommand("containerize")
 

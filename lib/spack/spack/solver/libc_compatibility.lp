@@ -22,11 +22,12 @@ error(100, "Cannot reuse {0} since we cannot determine libc compatibility", Reus
      not attr("compatible_libc", node(R, ReusedPackage), LibcPackage, LibcVersion).
 
 % In case we don't need a provider for libc, ensure there's at least one compatible libc on the host
+has_compatible_libc(PackageNode) :- attr("compatible_libc", PackageNode, _, _).
 error(100, "Cannot reuse {0} since we cannot determine libc compatibility", ReusedPackage)
-  :- not provider(_, node(0, "libc")),
+  :- not has_provider(node(0, "libc")),
      concrete(node(R, ReusedPackage)),
      attr("needs_libc", node(R, ReusedPackage)),
-     not attr("compatible_libc", node(R, ReusedPackage), _, _).
+     not has_compatible_libc(node(R, ReusedPackage)).
 
 % The libc provider must be one that a compiler can target
 :- will_build_packages(),

@@ -5,9 +5,9 @@ import re
 
 import pytest
 
-import spack.repo
 from spack.cmd.url import name_parsed_correctly, url_summary, version_parsed_correctly
 from spack.main import SpackCommand
+from spack.repo import RepoPath
 from spack.url import UndetectableVersionError
 
 url = SpackCommand("url")
@@ -115,9 +115,9 @@ def test_url_summary(mock_packages):
     assert out_correct_versions == correct_versions
 
 
-def test_url_stats(mock_packages):
+def test_url_stats(mock_packages: RepoPath):
     output = url("stats")
-    npkgs = "%d packages" % len(spack.repo.all_package_names())
+    npkgs = "%d packages" % len(mock_packages.all_package_names())
     assert npkgs in output
     assert "url" in output
     assert "git" in output
@@ -126,7 +126,7 @@ def test_url_stats(mock_packages):
     assert "resources" in output
 
     output = url("stats", "--show-issues")
-    npkgs = "%d packages" % len(spack.repo.all_package_names())
+    npkgs = "%d packages" % len(mock_packages.all_package_names())
     assert npkgs in output
     assert "url" in output
     assert "git" in output

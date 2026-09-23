@@ -16,9 +16,9 @@ from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple
 from urllib.request import Request
 
 import spack.config
-import spack.llnl.util.lang
 import spack.mirrors.mirror
 import spack.tokenize
+import spack.util.lang
 import spack.util.web
 
 from .image import ImageReference
@@ -28,7 +28,7 @@ def _urlopen():
     opener = create_opener()
 
     def dispatch_open(fullurl, data=None, timeout=None):
-        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        timeout = timeout or spack.config.CONFIG.get("config:connect_timeout", 10)
         return opener.open(fullurl, data, timeout)
 
     return dispatch_open
@@ -38,7 +38,7 @@ OpenType = Callable[..., HTTPResponse]
 MaybeOpen = Optional[OpenType]
 
 #: Opener that automatically uses OCI authentication based on mirror config
-urlopen: OpenType = spack.llnl.util.lang.Singleton(_urlopen)
+urlopen: OpenType = spack.util.lang.Singleton(_urlopen)
 
 
 SP = r" "

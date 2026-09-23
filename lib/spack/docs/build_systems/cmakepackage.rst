@@ -9,6 +9,10 @@
 
 .. _cmakepackage:
 
+.. index::
+   single: build system; CMake
+   single: CMakePackage
+
 CMake
 ------
 

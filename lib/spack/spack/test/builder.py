@@ -8,9 +8,10 @@ import pytest
 
 import spack.builder
 import spack.concretize
+import spack.error
 import spack.paths
 import spack.repo
-from spack.llnl.util.filesystem import touch
+from spack.util.filesystem import touch
 
 
 @pytest.fixture()
@@ -76,7 +77,9 @@ def builder_test_repository(config):
 )
 @pytest.mark.usefixtures("builder_test_repository", "config")
 @pytest.mark.disable_clean_stage_check
-def test_callbacks_and_installation_procedure(spec_str, expected_values, working_env):
+def test_callbacks_and_installation_procedure(
+    spec_str, expected_values, working_env, temporary_store
+):
     """Test the correct execution of callbacks and installation procedures for packages."""
     s = spack.concretize.concretize_one(spec_str)
     builder = spack.builder.create(s.package)
@@ -111,7 +114,7 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
 @pytest.mark.regression("33928")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 @pytest.mark.disable_clean_stage_check
-def test_build_time_tests_are_executed_from_default_builder():
+def test_build_time_tests_are_executed_from_default_builder(temporary_store):
     s = spack.concretize.concretize_one("old-style-autotools")
     builder = spack.builder.create(s.package)
     builder.pkg.run_tests = True
@@ -152,7 +155,9 @@ def test_monkey_patching_test_log_file():
 # Windows context manager's __exit__ fails with ValueError ("I/O operation
 # on closed file").
 @pytest.mark.not_on_windows("Does not run on windows")
-def test_install_time_test_callback(tmp_path: pathlib.Path, config, mock_packages, mock_stage):
+def test_install_time_test_callback(
+    tmp_path: pathlib.Path, config, mock_packages, mock_stage, temporary_store
+):
     """Confirm able to run stand-alone test as a post-install callback."""
     s = spack.concretize.concretize_one("py-test-callback")
     builder = spack.builder.create(s.package)
@@ -233,3 +238,46 @@ def test_builder_when_inheriting_just_package(working_env):
     # The derived class doesn't redefine a builder, so we should
     # get the builder of the base class.
     assert type(base_builder) is type(derived_builder)
+
+
+@pytest.mark.usefixtures("builder_test_repository", "config")
+def test_get_builder_class_accepts_objects_and_classes():
+    """Tests that get_builder_class works on both package objects and package classes."""
+    pkg_cls = spack.repo.PATH.get_pkg_class("callbacks")
+    builder_cls = spack.builder.get_builder_class(pkg_cls, "GenericBuilder")
+
+    # The builder is defined in the package module, so it is found from the class
+    assert builder_cls is not None
+    assert spack.repo.is_package_module(builder_cls.__module__)
+
+    # ... and an object of that class gives the same answer
+    pkg = spack.concretize.concretize_one("callbacks").package
+    assert spack.builder.get_builder_class(pkg, "GenericBuilder") is builder_cls
+
+    # Derived packages that don't redefine a builder get it from the base package module
+    derived_cls = spack.repo.PATH.get_pkg_class("inheritance-only-package")
+    assert spack.builder.get_builder_class(derived_cls, "GenericBuilder") is builder_cls
+
+    # Names that are not defined in any package module are not builders
+    assert spack.builder.get_builder_class(pkg_cls, "UnknownBuilder") is None
+
+
+def test_register_builder_rejects_duplicate_names():
+    """A build system name can be registered by only one builder class."""
+
+    @spack.builder.register_builder("test-duplicate")
+    class FirstBuilder:
+        pass
+
+    try:
+        # re-registering the same class is idempotent
+        assert spack.builder.register_builder("test-duplicate")(FirstBuilder) is FirstBuilder
+
+        with pytest.raises(spack.error.SpackError, match="already registered"):
+
+            @spack.builder.register_builder("test-duplicate")
+            class SecondBuilder:
+                pass
+
+    finally:
+        del spack.builder.BUILDER_CLS["test-duplicate"]

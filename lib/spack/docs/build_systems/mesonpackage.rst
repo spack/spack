@@ -9,6 +9,10 @@
 
 .. _mesonpackage:
 
+.. index::
+   single: build system; Meson
+   single: MesonPackage
+
 Meson
 ------
 

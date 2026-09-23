@@ -66,10 +66,8 @@ def test_no_version_match(pkg_name):
         ("", "boolean_false_first", "True"),
     ],
 )
-def test_multimethod_calls(
-    pkg_name, constraint_str, method_name, expected_result, default_mock_concretization
-):
-    s = default_mock_concretization(f"{pkg_name}{constraint_str}")
+def test_multimethod_calls(pkg_name, constraint_str, method_name, expected_result):
+    s = spack.concretize.concretize_one(f"{pkg_name}{constraint_str}")
     msg = f"Method {method_name} from {s} is giving a wrong result"
     assert getattr(s.package, method_name)() == expected_result, msg
 

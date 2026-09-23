@@ -12,7 +12,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
 
 import spack.builder
-import spack.llnl.util.tty as _tty
+import spack.util.tty as _tty
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
     MakeExecutable,
@@ -32,9 +32,8 @@ from spack.builder import (
     execute_install_time_tests,
     register_builder,
 )
-from spack.compilers.config import find_compilers
 from spack.compilers.libraries import CompilerPropertyDetector, compiler_spec
-from spack.config import determine_number_of_jobs
+from spack.config import determine_number_of_jobs, get_user
 from spack.deptypes import ALL_TYPES as all_deptypes
 from spack.directives import (
     build_system,
@@ -42,6 +41,7 @@ from spack.directives import (
     conditional,
     conflicts,
     depends_on,
+    deprecated,
     drop_all_conflicts,
     drop_all_depends_on,
     drop_all_requires,
@@ -80,7 +80,29 @@ from spack.install_test import (
     install_test_root,
     test_part,
 )
-from spack.llnl.util.filesystem import (
+from spack.mixins import filter_compiler_wrappers
+from spack.multimethod import default_args, when
+from spack.operating_systems.linux_distro import kernel_version
+from spack.operating_systems.mac_os import macos_version
+from spack.package_base import PackageBase, make_package_test_rpath, on_package_attributes
+from spack.package_completions import (
+    bash_completion_path,
+    fish_completion_path,
+    zsh_completion_path,
+)
+from spack.package_test import compare_output, compare_output_file, compile_c_and_execute
+from spack.paths import spack_script
+from spack.phase_callbacks import run_after, run_before
+from spack.platforms import host as host_platform
+from spack.spec import Spec
+from spack.url import substitute_version as substitute_version_in_url
+from spack.user_environment import environment_modifications_for_specs
+from spack.util.elf import delete_needed_from_elf, delete_rpath, get_elf_compat, parse_elf
+from spack.util.environment import EnvironmentModifications, set_env
+from spack.util.environment import filter_system_paths as _filter_system_paths
+from spack.util.environment import is_system_path as _is_system_path
+from spack.util.executable import Executable, ProcessError, which, which_string
+from spack.util.filesystem import (
     FileFilter,
     FileList,
     HeaderList,
@@ -98,6 +120,7 @@ from spack.llnl.util.filesystem import (
     find_headers,
     find_libraries,
     find_system_libraries,
+    fix_darwin_install_name,
     force_remove,
     force_symlink,
     has_shebang,
@@ -121,35 +144,11 @@ from spack.llnl.util.filesystem import (
     windows_sfn,
     working_dir,
 )
-from spack.llnl.util.lang import ClassProperty, classproperty, dedupe, memoized
-from spack.llnl.util.link_tree import LinkTree
-from spack.mixins import filter_compiler_wrappers
-from spack.multimethod import default_args, when
-from spack.operating_systems.linux_distro import kernel_version
-from spack.operating_systems.mac_os import macos_version
-from spack.package_base import PackageBase, make_package_test_rpath, on_package_attributes
-from spack.package_completions import (
-    bash_completion_path,
-    fish_completion_path,
-    zsh_completion_path,
-)
-from spack.package_test import compare_output, compare_output_file, compile_c_and_execute
-from spack.paths import spack_script
-from spack.phase_callbacks import run_after, run_before
-from spack.platforms import host as host_platform
-from spack.spec import Spec
-from spack.url import substitute_version as substitute_version_in_url
-from spack.user_environment import environment_modifications_for_specs
-from spack.util.elf import delete_needed_from_elf, delete_rpath, get_elf_compat, parse_elf
-from spack.util.environment import EnvironmentModifications, set_env
-from spack.util.environment import filter_system_paths as _filter_system_paths
-from spack.util.environment import is_system_path as _is_system_path
-from spack.util.executable import Executable, ProcessError, which, which_string
-from spack.util.filesystem import fix_darwin_install_name
+from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.libc import libc_from_dynamic_linker, parse_dynamic_linker
+from spack.util.link_tree import LinkTree
 from spack.util.module_cmd import get_path_args_from_module_line
 from spack.util.module_cmd import module as module_command
-from spack.util.path import get_user
 from spack.util.prefix import Prefix
 from spack.util.url import join as join_url
 from spack.util.windows_registry import HKEY, WindowsRegistryView
@@ -164,9 +163,6 @@ cd = chdir
 
 #: Alias for :func:`os.getcwd`
 pwd = getcwd
-
-#: Alias for :func:`os.rename`
-rename = rename
 
 #: Alias for :func:`os.makedirs`
 makedirs = makedirs
@@ -234,6 +230,22 @@ def filter_system_paths(paths: Iterable[str]) -> List[str]:
         "spack.package.filter_system_paths is deprecated", category=SpackAPIWarning, stacklevel=2
     )
     return _filter_system_paths(paths)
+
+
+def find_compilers(path_hints: Optional[List[str]] = None) -> List[Spec]:
+    """Searches for compilers in the paths given as argument, and adds the new ones to the
+    configuration. Returns the list of new compilers.
+
+    Args:
+        path_hints: list of path hints where to look for. A sensible default based on the ``PATH``
+            environment variable will be used if the value is None
+    """
+    # Local imports to avoid polluting the package API
+    import spack.config
+    import spack.repo
+    from spack.compilers.config import find_compilers as _find_compilers
+
+    return _find_compilers(path_hints, config=spack.config.CONFIG, repo=spack.repo.PATH)
 
 
 #: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
@@ -455,6 +467,7 @@ api: Dict[str, Tuple[str, ...]] = {
         "substitute_version_in_url",
         "windows_sfn",
     ),
+    "v2.6": ("deprecated",),
 }
 
 # Splatting does not work for static analysis tools.
@@ -633,6 +646,7 @@ __all__ = [
     "static_library_suffix",
     "substitute_version_in_url",
     "windows_sfn",
+    "deprecated",
 ]
 
 # These are just here for editor support; they may be set when the build env is set up.

@@ -9,6 +9,10 @@
 
 .. _perlpackage:
 
+.. index::
+   single: build system; Perl
+   single: PerlPackage
+
 Perl
 ------
 

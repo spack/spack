@@ -10,7 +10,7 @@ import spack.cmd
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
+from spack.util import tty
 
 from ..enums import InstallRecordStatus
 

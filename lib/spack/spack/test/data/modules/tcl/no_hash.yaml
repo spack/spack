@@ -1,0 +1,14 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+  hash_length: 0
+
+  hierarchical: true
+
+  core_compilers:
+    - 'clang@3.3'
+
+  hierarchy:
+    - mpi

@@ -4,16 +4,17 @@
 
 import os
 import pathlib
+import types
 
 import pytest
 
 import spack.caches
 import spack.cmd.clean
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.package_base
 import spack.stage
 import spack.store
+import spack.util.filesystem as fs
 
 clean = spack.main.SpackCommand("clean")
 
@@ -32,7 +33,8 @@ def mock_calls_for_clean(monkeypatch):
 
     monkeypatch.setattr(spack.package_base.PackageBase, "do_clean", Counter("package"))
     monkeypatch.setattr(spack.stage, "purge", Counter("stages"))
-    monkeypatch.setattr(spack.caches.FETCH_CACHE, "destroy", Counter("downloads"), raising=False)
+    downloads = types.SimpleNamespace(destroy=Counter("downloads"))
+    monkeypatch.setattr(spack.caches, "fetch_cache", lambda config: downloads)
     monkeypatch.setattr(spack.caches.MISC_CACHE, "destroy", Counter("caches"))
     monkeypatch.setattr(spack.store.STORE.failure_tracker, "clear_all", Counter("failures"))
     monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
@@ -59,8 +61,12 @@ all_effects = ["stages", "downloads", "caches", "failures", "python_cache", "boo
         ("", []),
     ],
 )
-def test_function_calls(command_line, effects, mock_calls_for_clean, mutable_config):
-    mutable_config.set("bootstrap", {"root": "fake"})
+def test_function_calls(
+    command_line, effects, mock_calls_for_clean, mutable_config, tmp_path: pathlib.Path
+):
+    # Redirect only where it is read, so the other cases keep the store clingo is bootstrapped in
+    if "bootstrap" in effects:
+        mutable_config.set("bootstrap:root", str(tmp_path / "bootstrap"))
 
     # Call the command with the supplied command line
     clean(command_line)

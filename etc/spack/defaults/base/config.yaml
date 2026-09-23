@@ -170,6 +170,21 @@ config:
   # Which installer to use: "old" or "new".
   installer: new
 
+  # Restrict filesystem and network access during builds. The stage directory,
+  # install prefix, and system temp directory are always writable.
+  # Spack-installed dependency prefixes are always readable. Use the allow_read
+  # and allow_write lists to grant additional permissions to other paths.
+  # This feature is only available on Linux kernels with Landlock support, and
+  # only works with the new installer.
+  sandbox:
+    enable: false
+    # Allow TCP network access during the build phase.
+    allow_network: true
+    # Additional paths with read and execute permissions.
+    allow_read: []
+    # Additional paths with write and execute permissions.
+    allow_write: []
+
   # If set to true, Spack will use ccache to cache C compiles.
   ccache: false
 

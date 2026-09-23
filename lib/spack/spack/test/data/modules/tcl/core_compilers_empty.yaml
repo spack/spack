@@ -1,0 +1,9 @@
+enable:
+  - tcl
+tcl:
+  hierarchical: true
+  all:
+    autoload: none
+  core_compilers: []
+  hierarchy:
+    - mpi

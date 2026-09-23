@@ -7,20 +7,25 @@ import re
 import sys
 
 import spack
+import spack.binary_distribution
 import spack.cmd
 import spack.cmd.spec
+import spack.concretize
 import spack.config
-import spack.environment
-import spack.hash_types as ht
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
+import spack.context
 import spack.package_base
-import spack.solver.asp as asp
 import spack.spec
+from spack.active_environment import active_environment
+from spack.solver import asp
+from spack.solver.error import format_unsolved
+from spack.solver.result import OptimizationKind
+from spack.util import tty
+from spack.util.tty import color
 
 description = "concretize a specs using an ASP solver"
 section = "developer"
 level = "long"
+
 
 #: output options
 show_options = ("asp", "opt", "output", "solutions")
@@ -61,7 +66,20 @@ def _process_result(result, show, required_format, kwargs):
         maxlen = max(len(s.name) for s in result.criteria)
         color.cprint("@*{  Priority  Value  Criterion}")
 
+        # Width of a data row past its 2-space indent, matching the row format below:
+        # 8-wide priority + 2 gap + 5-wide value + 2 gap + maxlen-wide criterion name.
+        divider_width = 8 + 2 + 5 + 2 + maxlen
+        prev_band = None
+
         for i, criterion in enumerate(result.criteria, 1):
+            # Criteria are grouped into priority bands; print a header when the band changes.
+            band = criterion.band
+            if band != prev_band:
+                label = f"-- {band}"
+                dashes = "-" * max(0, divider_width - len(label) - 1)
+                color.cprint(f"  @*{{{label}}} @K{{{dashes}}}")
+                prev_band = band
+
             value = f"@K{{{criterion.value:>5}}}"
             grey_out = True
             if criterion.value > 0:
@@ -70,9 +88,9 @@ def _process_result(result, show, required_format, kwargs):
 
             if grey_out:
                 lc = "@K"
-            elif criterion.kind == asp.OptimizationKind.CONCRETE:
+            elif criterion.kind == OptimizationKind.CONCRETE:
                 lc = "@b"
-            elif criterion.kind == asp.OptimizationKind.BUILD:
+            elif criterion.kind == OptimizationKind.BUILD:
                 lc = "@g"
             else:
                 lc = "@y"
@@ -93,36 +111,46 @@ def _process_result(result, show, required_format, kwargs):
                 # With -y, just print YAML to output.
                 if required_format == "yaml":
                     # use write because to_yaml already has a newline.
-                    sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
+                    sys.stdout.write(spec.to_yaml())
                 elif required_format == "json":
-                    sys.stdout.write(spec.to_json(hash=ht.dag_hash))
+                    print(spec.to_json())
+                else:
+                    print(spec.format(required_format))
         else:
-            sys.stdout.write(spack.spec.tree(result.specs, color=sys.stdout.isatty(), **kwargs))
+            tree_str = spack.spec.tree(
+                result.specs, color=color.get_color_when(sys.stdout), **kwargs
+            )
+            sys.stdout.write(tree_str)
         print()
 
     if result.unsolved_specs and "solutions" in show:
-        tty.msg(asp.Result.format_unsolved(result.unsolved_specs))
+        tty.msg(format_unsolved(result.unsolved_specs))
 
 
 def solve(parser, args):
     # these are the same options as `spack spec`
-    install_status_fn = spack.spec.Spec.install_status
-
     fmt = spack.spec.DISPLAY_FORMAT
     if args.namespaces:
         fmt = "{namespace}." + fmt
+
+    show_status = args.install_status
+    if show_status:
+        spack.binary_distribution.load_buildcache_index()
+        status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+    else:
+        status_fn = None
 
     kwargs = {
         "cover": args.cover,
         "format": fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
-        "status_fn": install_status_fn if args.install_status else None,
+        "status_fn": status_fn,
         "hashes": args.long or args.very_long,
-        "highlight_version_fn": (
+        "version_style_fn": (
             spack.package_base.non_preferred_version if args.non_defaults else None
         ),
-        "highlight_variant_fn": (
+        "variant_style_fn": (
             spack.package_base.non_default_variant if args.non_defaults else None
         ),
     }
@@ -142,28 +170,26 @@ def solve(parser, args):
     required_format = args.format
 
     # If we have an active environment, pick the specs from there
-    env = spack.environment.active_environment()
+    env = active_environment()
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs)
     elif env:
         specs = list(env.user_specs)
     else:
-        tty.die("spack solve requires at least one spec or an active environment")
+        args.subparser.error("requires at least one spec or an active environment")
 
-    solver = asp.Solver()
+    # Early exit in case of empty environment
+    if not specs:
+        return
+
+    spack.concretize.ensure_compilers_in_configuration()
+    solver = asp.Solver(context=spack.context.default())
     output = sys.stdout if "asp" in show else None
     setup_only = set(show) == {"asp"}
-    unify = spack.config.get("concretizer:unify")
-    allow_deprecated = spack.config.get("config:deprecated", False)
+    unify = spack.config.CONFIG.get("concretizer:unify")
     if unify == "when_possible":
         for idx, result in enumerate(
-            solver.solve_in_rounds(
-                specs,
-                out=output,
-                timers=args.timers,
-                stats=args.stats,
-                allow_deprecated=allow_deprecated,
-            )
+            solver.solve_in_rounds(specs, out=output, timers=args.timers, stats=args.stats)
         ):
             if "solutions" in show:
                 tty.msg("ROUND {0}".format(idx))
@@ -176,12 +202,7 @@ def solve(parser, args):
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         result = solver.solve(
-            specs,
-            out=output,
-            timers=args.timers,
-            stats=args.stats,
-            setup_only=setup_only,
-            allow_deprecated=allow_deprecated,
+            specs, out=output, timers=args.timers, stats=args.stats, setup_only=setup_only
         )
         if not setup_only:
             _process_result(result, show, required_format, kwargs)
@@ -189,12 +210,7 @@ def solve(parser, args):
         for spec in specs:
             tty.msg("SOLVING SPEC:", spec)
             result = solver.solve(
-                [spec],
-                out=output,
-                timers=args.timers,
-                stats=args.stats,
-                setup_only=setup_only,
-                allow_deprecated=allow_deprecated,
+                [spec], out=output, timers=args.timers, stats=args.stats, setup_only=setup_only
             )
             if not setup_only:
                 _process_result(result, show, required_format, kwargs)

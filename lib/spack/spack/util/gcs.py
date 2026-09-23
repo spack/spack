@@ -15,7 +15,7 @@ from typing import List
 from urllib.error import URLError
 from urllib.request import BaseHandler
 
-import spack.llnl.util.tty as tty
+from spack.util import tty
 
 
 def gcs_client():
@@ -228,13 +228,18 @@ class GCSBlob:
 
 def gcs_open(req, *args, **kwargs):
     """Open a reader stream to a blob object on GCS"""
-    url = urllib.parse.urlparse(req.get_full_url())
-    gcsblob = GCSBlob(url)
+    from google.api_core.exceptions import GoogleAPIError
 
-    if not gcsblob.exists():
-        raise URLError("GCS blob {0} does not exist".format(gcsblob.blob_path))
-    stream = gcsblob.get_blob_byte_stream()
-    headers = gcsblob.get_blob_headers()
+    url = urllib.parse.urlparse(req.get_full_url())
+    try:
+        gcsblob = GCSBlob(url)
+
+        if not gcsblob.exists():
+            raise URLError("GCS blob {0} does not exist".format(gcsblob.blob_path))
+        stream = gcsblob.get_blob_byte_stream()
+        headers = gcsblob.get_blob_headers()
+    except GoogleAPIError as e:
+        raise URLError(e) from e
 
     return urllib.response.addinfourl(stream, headers, url)
 

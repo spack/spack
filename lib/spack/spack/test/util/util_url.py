@@ -12,7 +12,7 @@ import pytest
 
 import spack.util.path
 import spack.util.url as url_util
-from spack.llnl.util.filesystem import working_dir
+from spack.util.filesystem import working_dir
 
 
 def test_url_local_file_path(tmp_path: pathlib.Path):

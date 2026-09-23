@@ -30,6 +30,7 @@ from typing import (
     Iterator,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Set,
     Tuple,
@@ -42,23 +43,22 @@ import spack
 import spack.caches
 import spack.config
 import spack.error
-import spack.llnl.path
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.patch
 import spack.paths
 import spack.provider_index
 import spack.tag
 import spack.util.executable
 import spack.util.file_cache
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.hash
 import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.filesystem import working_dir
-from spack.llnl.util.lang import Singleton, memoized
+from spack.util import tty
+from spack.util.filesystem import working_dir
+from spack.util.lang import Singleton, ensure_unwrapped
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -72,10 +72,20 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
 
 
-def package_repository_lock() -> spack.util.lock.Lock:
+def repo_or_default(repo: Optional["RepoPath"]) -> "RepoPath":
+    """Return ``repo``, or the process-wide repositories when none was injected.
+
+    Call sites using this still read a process global; they are the ones left to convert to a
+    required argument.
+    """
+    return repo if repo is not None else PATH
+
+
+def package_repository_lock(config: spack.config.Configuration) -> spack.util.lock.Lock:
     """Lock for process safety when cloning remote package repositories"""
     return spack.util.lock.Lock(
-        os.path.join(spack.paths.user_cache_path, "package-repository.lock")
+        os.path.join(spack.paths.user_cache_path, "package-repository.lock"),
+        enable=config.get("config:locks", True),
     )
 
 
@@ -254,10 +264,9 @@ def list_packages(rev: str, repo: "Repo") -> List[str]:
     ]
 
     # take the directory names with one-level-deep package files
+    naming_scheme = nm.get_naming_scheme(repo.package_api)
     package_names = [
-        nm.pkg_dir_to_pkg_name(line[0], repo.package_api)
-        for line in package_paths
-        if len(line) == 2
+        naming_scheme.pkg_dir_to_pkg_name(line[0]) for line in package_paths if len(line) == 2
     ]
 
     return sorted(set(package_names))
@@ -295,11 +304,12 @@ def get_all_package_diffs(type: str, repo: "Repo", rev1="HEAD^1", rev2="HEAD") -
 
     lines = [] if not out else re.split(r"\s+", out)
     changed: Set[str] = set()
+    naming_scheme = nm.get_naming_scheme(repo.package_api)
     for path in lines:
         dir_name, _, _ = path.partition("/")
-        if not nm.valid_module_name(dir_name, repo.package_api):
+        if not naming_scheme.valid_module_name(dir_name):
             continue
-        pkg_name = nm.pkg_dir_to_pkg_name(dir_name, repo.package_api)
+        pkg_name = naming_scheme.pkg_dir_to_pkg_name(dir_name)
         if pkg_name not in added and pkg_name not in removed:
             changed.add(pkg_name)
 
@@ -414,6 +424,7 @@ class FastPackageChecker(Mapping[str, float]):
         cache: Dict[str, float] = {}
         # Don't use os.path.join in the loop cause it's slow and redundant.
         package_py_suffix = f"{os.path.sep}{package_file_name}"
+        naming_scheme = nm.get_naming_scheme(self.package_api)
 
         # Use a file descriptor for the packages directory to avoid repeated path resolution.
         with _directory_fd(self.packages_path) as fd, os.scandir(self.packages_path) as entries:
@@ -442,7 +453,7 @@ class FastPackageChecker(Mapping[str, float]):
 
                 # Only consider package.py files in directories that are valid module names under
                 # the current package API
-                if not nm.valid_module_name(entry.name, self.package_api):
+                if not naming_scheme.valid_module_name(entry.name):
                     x, y = self.package_api
                     pkg_file = os.path.join(self.packages_path, entry.name, package_file_name)
                     tty.warn(
@@ -452,7 +463,7 @@ class FastPackageChecker(Mapping[str, float]):
                     continue
 
                 # Store the mtime by package name.
-                cache[nm.pkg_dir_to_pkg_name(entry.name, self.package_api)] = sinfo.st_mtime
+                cache[naming_scheme.pkg_dir_to_pkg_name(entry.name)] = sinfo.st_mtime
 
         return cache
 
@@ -600,7 +611,7 @@ class RepoIndex:
         self._checker: Optional[FastPackageChecker] = None
         self.packages_path = packages_path
         if sys.platform == "win32":
-            self.packages_path = spack.llnl.path.convert_to_posix_path(self.packages_path)
+            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers: Dict[str, Indexer] = {}
@@ -694,6 +705,18 @@ class RepoIndex:
         return True
 
 
+def package_attributes_overrides(config: spack.config.Configuration) -> Dict[str, Any]:
+    """Extract per-package attribute overrides from the packages config section."""
+    return {
+        pkg_name: {
+            k: spack.config.substitute_path_variables(v) if isinstance(v, str) else v
+            for k, v in data["package_attributes"].items()
+        }
+        for pkg_name, data in config.get_config("packages").items()
+        if pkg_name != "all" and "package_attributes" in data
+    }
+
+
 class RepoPath:
     """A RepoPath is a list of Repo instances that function as one.
 
@@ -709,6 +732,10 @@ class RepoPath:
         self._patch_index: Optional[spack.patch.PatchCache] = None
         self._index_is_fresh: bool = False
         self._tag_index: Optional[spack.tag.TagIndex] = None
+
+        # Package names by include_virtuals, dropped when the search path changes
+        self._package_names: Dict[bool, List[str]] = {}
+        self._package_names_set: Dict[bool, Set[str]] = {}
 
         for repo in repos:
             self.put_last(repo)
@@ -729,18 +756,25 @@ class RepoPath:
         return repo_path
 
     @staticmethod
-    def from_config(config: spack.config.Configuration) -> "RepoPath":
-        """Create a RepoPath from a configuration object."""
-        overrides = {
-            pkg_name: data["package_attributes"]
-            for pkg_name, data in config.get_config("packages").items()
-            if pkg_name != "all" and "package_attributes" in data
-        }
+    def from_config(
+        config: spack.config.Configuration,
+        *,
+        cache: Optional[spack.util.file_cache.FileCache] = None,
+    ) -> "RepoPath":
+        """Create a RepoPath from a configuration object.
+
+        Args:
+            config: configuration describing the repositories to load.
+            cache: file cache backing the package indexes. If None, the global
+                ``spack.caches.MISC_CACHE`` is used.
+        """
+        if cache is None:
+            cache = spack.caches.MISC_CACHE
 
         return RepoPath.from_descriptors(
-            descriptors=RepoDescriptors.from_config(lock=package_repository_lock(), config=config),
-            cache=spack.caches.MISC_CACHE,
-            overrides=overrides,
+            descriptors=RepoDescriptors.from_config(config),
+            cache=cache,
+            overrides=package_attributes_overrides(config),
         )
 
     def enable(self) -> None:
@@ -758,10 +792,6 @@ class RepoPath:
             if p in sys.path:
                 sys.path.remove(p)
 
-    def ensure_unwrapped(self) -> "RepoPath":
-        """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
-        return self
-
     def put_first(self, repo: Union["Repo", "RepoPath"]) -> None:
         """Add repo first in the search path."""
         if isinstance(repo, RepoPath):
@@ -771,6 +801,7 @@ class RepoPath:
 
         self.repos.insert(0, repo)
         self.by_namespace[repo.namespace] = repo
+        self._forget_package_names()
 
     def put_last(self, repo):
         """Add repo last in the search path."""
@@ -780,6 +811,7 @@ class RepoPath:
             return
 
         self.repos.append(repo)
+        self._forget_package_names()
 
         # don't mask any higher-precedence repos with same namespace
         if repo.namespace not in self.by_namespace:
@@ -789,6 +821,7 @@ class RepoPath:
         """Remove a repo from the search path."""
         if repo in self.repos:
             self.repos.remove(repo)
+            self._forget_package_names()
 
     def get_repo(self, namespace: str) -> "Repo":
         """Get a repository by namespace."""
@@ -800,17 +833,22 @@ class RepoPath:
         """Get the first repo in precedence order."""
         return self.repos[0] if self.repos else None
 
-    @memoized
-    def _all_package_names_set(self, include_virtuals) -> Set[str]:
-        return {name for repo in self.repos for name in repo.all_package_names(include_virtuals)}
+    def _forget_package_names(self) -> None:
+        self._package_names.clear()
+        self._package_names_set.clear()
 
-    @memoized
-    def _all_package_names(self, include_virtuals: bool) -> List[str]:
-        """Return all unique package names in all repositories."""
-        return sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
+    def _all_package_names_set(self, include_virtuals: bool) -> Set[str]:
+        if include_virtuals not in self._package_names_set:
+            result = {n for repo in self.repos for n in repo.all_package_names(include_virtuals)}
+            self._package_names_set[include_virtuals] = result
+        return self._package_names_set[include_virtuals]
 
     def all_package_names(self, include_virtuals: bool = False) -> List[str]:
-        return self._all_package_names(include_virtuals)
+        """Return all unique package names in all repositories."""
+        if include_virtuals not in self._package_names:
+            result = sorted(self._all_package_names_set(include_virtuals), key=lambda n: n.lower())
+            self._package_names[include_virtuals] = result
+        return self._package_names[include_virtuals]
 
     def package_path(self, name: str) -> str:
         """Get path to package.py file for this repo."""
@@ -1123,7 +1161,7 @@ class Repo:
         """
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
-        self.root = spack.util.path.canonicalize_path(root)
+        self.root = spack.config.canonicalize_path(root)
 
         # check and raise BadRepoError on fail.
         def check(condition, msg):
@@ -1138,6 +1176,7 @@ class Repo:
         config = self._read_config()
 
         self.package_api = _parse_package_api_version(config)
+        self.naming_scheme = nm.get_naming_scheme(self.package_api)
         self.subdirectory = _validate_and_normalize_subdir(
             config.get("subdirectory", packages_dir_name), root, self.package_api
         )
@@ -1151,6 +1190,10 @@ class Repo:
 
         # The parent dir of spack_repo/ which should be added to sys.path for api v2.x
         self.python_path: Optional[str] = None
+
+        #: (git url, checkout root) when this repo was constructed from a git-configured
+        #: repository; None otherwise.
+        self.remote_info: Optional[RemoteInfo] = None
 
         if self.package_api < (2, 0):
             check(
@@ -1194,7 +1237,7 @@ class Repo:
 
             # check that all subdirectories are valid module names
             check(
-                all(nm.valid_module_name(x, self.package_api) for x in self.namespace.split(".")),
+                all(self.naming_scheme.valid_module_name(x) for x in self.namespace.split(".")),
                 f"Invalid namespace '{self.namespace}' in repo '{self.root}'",
             )
 
@@ -1214,6 +1257,9 @@ class Repo:
 
         # Maps that goes from package name to corresponding file stat
         self._fast_package_checker: Optional[FastPackageChecker] = None
+
+        # Package classes by name, without namespace, before overrides are applied
+        self._pkg_classes: Dict[str, Type["spack.package_base.PackageBase"]] = {}
 
         # Indexes for this repository, computed lazily
         self._repo_index: Optional[RepoIndex] = None
@@ -1238,7 +1284,7 @@ class Repo:
         * ``foo_bar_baz`` -> ``foo_bar_baz``, ``foo-bar-baz``, ``foo_bar-baz``, ``foo-bar_baz``
         """
         if self.package_api >= (2, 0):
-            if nm.pkg_dir_to_pkg_name(import_name, package_api=self.package_api) in self:
+            if self.naming_scheme.pkg_dir_to_pkg_name(import_name) in self:
                 return import_name
             return None
 
@@ -1385,7 +1431,7 @@ class Repo:
         """Given a package name, get the directory containing its package.py file."""
         _, unqualified_name = self.partition_package_name(pkg_name)
         return os.path.join(
-            self.packages_path, nm.pkg_name_to_pkg_dir(unqualified_name, self.package_api)
+            self.packages_path, self.naming_scheme.pkg_name_to_pkg_dir(unqualified_name)
         )
 
     def filename_for_package_name(self, pkg_name: str) -> str:
@@ -1416,7 +1462,7 @@ class Repo:
     def package_path(self, name: str) -> str:
         """Get path to package.py file for this repo."""
         return os.path.join(
-            self.packages_path, nm.pkg_name_to_pkg_dir(name, self.package_api), package_file_name
+            self.packages_path, self.naming_scheme.pkg_name_to_pkg_dir(name), package_file_name
         )
 
     def all_package_paths(self) -> Generator[str, None, None]:
@@ -1469,15 +1515,9 @@ class Repo:
         """
         return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
-    def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
-        """Get the class for the package out of its module.
-
-        First loads (or fetches from cache) a module for the
-        package. Then extracts the package class from the module
-        according to Spack's naming convention.
-        """
-        _, pkg_name = self.partition_package_name(pkg_name)
-        fullname = f"{self.full_namespace}.{nm.pkg_name_to_pkg_dir(pkg_name, self.package_api)}"
+    def _resolve_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
+        """Import the module for a package name without namespace, and return its class."""
+        fullname = f"{self.full_namespace}.{self.naming_scheme.pkg_name_to_pkg_dir(pkg_name)}"
         if self.package_api >= (2, 0):
             fullname += ".package"
 
@@ -1500,6 +1540,20 @@ class Repo:
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
             tty.die(f"{pkg_name}.{class_name} is not a class")
+
+        return cls
+
+    def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
+        """Get the class for the package out of its module.
+
+        First loads (or fetches from cache) a module for the
+        package. Then extracts the package class from the module
+        according to Spack's naming convention.
+        """
+        _, pkg_name = self.partition_package_name(pkg_name)
+        cls = self._pkg_classes.get(pkg_name)
+        if cls is None:
+            cls = self._pkg_classes[pkg_name] = self._resolve_pkg_class(pkg_name)
 
         # Early exit if no overrides to apply or undo
         if (
@@ -1615,7 +1669,7 @@ def get_repo_yaml_dir(
     namespace_components = namespace.split(".")
 
     if not all(nm.valid_module_name(n, package_api=package_api) for n in namespace_components):
-        raise InvalidNamespaceError(f"'{namespace}' is not a valid namespace." % namespace)
+        raise InvalidNamespaceError(f"'{namespace}' is not a valid namespace.")
 
     return os.path.join(root, "spack_repo", *namespace_components), namespace
 
@@ -1631,7 +1685,7 @@ def create_repo(
     If the namespace is not provided, use basename of root.
     Return the canonicalized path and namespace of the created repository.
     """
-    root = spack.util.path.canonicalize_path(root)
+    root = spack.config.canonicalize_path(root)
     repo_yaml_dir, namespace = get_repo_yaml_dir(os.path.abspath(root), namespace, package_api)
 
     existed = True
@@ -1684,6 +1738,13 @@ def from_path(path: str) -> Repo:
 
 
 MaybeExecutable = Optional[spack.util.executable.Executable]
+
+
+class RemoteInfo(NamedTuple):
+    #: authoritative git url of the repository this repo was checked out from
+    url: str
+    #: checkout root (the RemoteRepoDescriptor.destination)
+    root: str
 
 
 class RepoDescriptor:
@@ -1931,29 +1992,14 @@ class RemoteRepoDescriptor(RepoDescriptor):
                 continue
             path = os.path.join(self.destination, subpath)
             try:
-                repos[path] = Repo(path, cache=cache, overrides=overrides)
+                repo = Repo(path, cache=cache, overrides=overrides)
             except RepoError as e:
                 repos[path] = e
+                continue
+            if repo.python_path:
+                repo.remote_info = RemoteInfo(self.repository, self.destination)
+            repos[path] = repo
         return repos
-
-
-class BrokenRepoDescriptor(RepoDescriptor):
-    """A descriptor for a broken repository, used to indicate errors in the configuration that
-    aren't fatal until the repository is used."""
-
-    def __init__(self, name: Optional[str], error: str) -> None:
-        super().__init__(name)
-        self.error = error
-
-    def initialize(
-        self, fetch: bool = True, git: Optional[spack.util.executable.Executable] = None
-    ) -> None:
-        pass
-
-    def construct(
-        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Union[Repo, Exception]]:
-        return {self.name or "<unknown>": Exception(self.error)}
 
 
 class RepoDescriptors(Mapping[str, RepoDescriptor]):
@@ -1978,9 +2024,8 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
         return f"RepoDescriptors({self.descriptors!r})"
 
     @staticmethod
-    def from_config(
-        lock: spack.util.lock.Lock, config: spack.config.Configuration, scope=None
-    ) -> "RepoDescriptors":
+    def from_config(config: spack.config.Configuration, scope=None) -> "RepoDescriptors":
+        lock = package_repository_lock(config)
         return RepoDescriptors(
             {
                 name: parse_config_descriptor(name, cfg, lock)
@@ -2043,7 +2088,7 @@ def parse_config_descriptor(
 
     """
     if isinstance(descriptor, str):
-        return LocalRepoDescriptor(name, spack.util.path.canonicalize_path(descriptor))
+        return LocalRepoDescriptor(name, spack.config.canonicalize_path(descriptor))
 
     # Should be the case due to config validation.
     assert isinstance(descriptor, dict), "Repository descriptor must be a string or a dictionary"
@@ -2066,7 +2111,7 @@ def parse_config_descriptor(
         dir_name = spack.util.hash.b32_hash(repository)[-7:]
         destination = os.path.join(spack.paths.package_repos_path, dir_name)
     else:
-        destination = spack.util.path.canonicalize_path(destination)
+        destination = spack.config.canonicalize_path(destination)
 
     return RemoteRepoDescriptor(
         name=name,
@@ -2093,9 +2138,11 @@ def create_or_construct(
     return from_path(repo_yaml_dir)
 
 
-def create_and_enable(config: spack.config.Configuration) -> RepoPath:
+def create_and_enable(
+    config: spack.config.Configuration, *, cache: Optional[spack.util.file_cache.FileCache] = None
+) -> RepoPath:
     """Immediately call enable() on the created RepoPath instance."""
-    repo_path = RepoPath.from_config(config)
+    repo_path = RepoPath.from_config(config, cache=cache)
     repo_path.enable()
     return repo_path
 
@@ -2109,16 +2156,14 @@ REPOS_FINDER = ReposFinder()
 sys.meta_path.append(REPOS_FINDER)
 
 
-def all_package_names(include_virtuals=False):
-    """Convenience wrapper around ``spack.repo.all_package_names()``."""
-    return PATH.all_package_names(include_virtuals)
-
-
 @contextlib.contextmanager
 def use_repositories(
     *paths_and_repos: Union[str, Repo], override: bool = True
 ) -> Generator[RepoPath, None, None]:
     """Use the repositories passed as arguments within the context manager.
+
+    ``Repo`` instances are used as-is; paths are constructed into fresh ``Repo`` instances,
+    with ``package_attributes`` overrides from the current configuration applied.
 
     Args:
         *paths_and_repos: paths to the repositories to be used, or
@@ -2128,13 +2173,29 @@ def use_repositories(
     Returns:
         Corresponding RepoPath object
     """
-    paths = {getattr(x, "root", x): getattr(x, "root", x) for x in paths_and_repos}
+    # Materialize the lazy PATH singleton before pushing the new scope, since its factory
+    # reads the configuration.
+    old_repo = ensure_unwrapped(PATH)
+    overrides = package_attributes_overrides(spack.config.CONFIG)
+    new_repos = [
+        x
+        if isinstance(x, Repo)
+        else Repo(
+            spack.config.canonicalize_path(x), cache=spack.caches.MISC_CACHE, overrides=overrides
+        )
+        for x in paths_and_repos
+    ]
+    paths = {r.root: r.root for r in new_repos}
+    if not override:
+        new_repos.extend(r for r in old_repo.repos if r.root not in paths)
+    new_repo = RepoPath(*new_repos)
+    # The scope is pushed only to keep the repos config section in sync with the enabled
+    # repositories: subprocess state transfer and environment activation read it.
     scope_name = f"use-repo-{uuid.uuid4()}"
     repos_key = "repos:" if override else "repos"
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    old_repo, new_repo = PATH, RepoPath.from_config(spack.config.CONFIG)
     old_repo.disable()
     enable_repo(new_repo)
     try:
@@ -2154,10 +2215,6 @@ def enable_repo(repo_path: RepoPath) -> None:
 
 class RepoError(spack.error.SpackError):
     """Superclass for repository-related errors."""
-
-
-class NoRepoConfiguredError(RepoError):
-    """Raised when there are no repositories configured."""
 
 
 class InvalidNamespaceError(RepoError):
@@ -2210,7 +2267,7 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Use 'spack create' to create a new package."
 
                 if not repo:
-                    repo = PATH.ensure_unwrapped()
+                    repo = ensure_unwrapped(PATH)
 
                 # We need to compare the base package name
                 pkg_name = name_from_fullname(name)

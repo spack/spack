@@ -5,8 +5,8 @@ import pathlib
 
 import spack.concretize
 import spack.environment as ev
-from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
+from spack.util.filesystem import working_dir
 
 undevelop = SpackCommand("undevelop")
 env = SpackCommand("env")

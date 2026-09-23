@@ -5,9 +5,9 @@
 import argparse
 import os
 
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.color as color
 import spack.repo
+from spack.util import tty
+from spack.util.tty import color
 
 description = "list downloadable resources (tarballs, repos, patches)"
 section = "query"

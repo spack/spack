@@ -18,7 +18,7 @@ into the intermediate representation.
 import re
 import uuid
 import warnings
-from typing import Any, Callable, Dict, List, NamedTuple, Tuple, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from spack.vendor.typing_extensions import TypedDict
 
@@ -26,8 +26,9 @@ import spack.archspec
 import spack.deptypes
 import spack.repo
 import spack.spec
+import spack.variant as vt
 from spack.error import SpackError
-from spack.llnl.util import tty
+from spack.util import tty
 
 
 class DependencyDict(TypedDict, total=False):
@@ -74,33 +75,61 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
     return result
 
 
-def complete_architecture(node: spack.spec.Spec) -> None:
+def complete_architecture(node: spack.spec.Spec, repo: spack.repo.RepoPath) -> None:
     """Completes a node with architecture information.
 
     Undefined targets are set to the default host target family (e.g. ``x86_64``).
     The operating system and platform are set based on the current host.
+
+    Args:
+        node: spec to complete.
+        repo: package repository to query.
     """
     if node.architecture:
         if not node.architecture.target:
             node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
         node.architecture.complete_with_defaults()
     else:
-        node.constrain(spack.spec.Spec.default_arch())
+        node.architecture = spack.spec.ArchSpec.default_arch()
         node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
 
-    node.namespace = spack.repo.PATH.repo_for_pkg(node.name).namespace
+    node.namespace = repo.repo_for_pkg(node.name).namespace
     for flag_type in spack.spec.FlagMap.valid_compiler_flags():
         node.compiler_flags.setdefault(flag_type, [])
 
 
-def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
+def _default_variant_value(node: spack.spec.Spec, vdef: vt.Variant) -> Optional[vt.VariantValue]:
+    """Returns the default value of a variant definition, restricted to the values that are
+    available for this node, or None if no value is available.
+    """
+    default, available = vdef.make_default(), vdef.possible_values(when=node)
+    if available is None:
+        return default
+
+    selected = tuple(value for value in default.values if value in available)
+    if len(selected) == len(default.values):
+        return default
+    elif selected:
+        return vdef.make_variant(*selected)
+    elif vdef.multi or not available:
+        return None
+    return vdef.make_variant(available[0])
+
+
+def complete_variants_and_architecture(node: spack.spec.Spec, repo: spack.repo.RepoPath) -> None:
     """Completes a node with variants and architecture information.
 
     Architecture is completed first, delegating to ``complete_architecture``.
-    Variants are then added to the node, using their default value.
+    Variants are then added to the node, using their default value where possible.
+    For conditional variant values, the evaluation is greedy and may currently fail if the
+    conditional value is gated on another variant.
+
+    Args:
+        node: spec to complete.
+        repo: package repository to query.
     """
-    complete_architecture(node)
-    pkg_class = spack.repo.PATH.get_pkg_class(node.name)
+    complete_architecture(node, repo)
+    pkg_class = repo.get_pkg_class(node.name)
     variants_dict = pkg_class.variants.copy()
     changed = True
 
@@ -114,8 +143,11 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
             variants_dict.pop(when)
             for name, vdef in variants_by_name.items():
                 if name not in node.variants:
+                    default = _default_variant_value(node, vdef)
+                    if default is None:
+                        continue
                     # Cannot use Spec.constrain, because we lose information on the variant type
-                    node.variants[name] = vdef.make_default()
+                    node.variants.set(default)
                 elif (
                     node.variants[name].type != vdef.variant_type
                     and len(node.variants[name].values) == 1
@@ -124,7 +156,7 @@ def complete_variants_and_architecture(node: spack.spec.Spec) -> None:
                     # using the package definition, preserving the user-specified value.
                     existing = node.variants[name]
                     corrected = vdef.make_variant(*existing.values)
-                    node.variants.substitute(corrected)
+                    node.variants.set(corrected)
             changed = True
 
 
@@ -188,6 +220,9 @@ class ExternalSpecAndConfig(NamedTuple):
     config: ExternalDict
 
 
+CompleteNodeFn = Callable[[spack.spec.Spec, spack.repo.RepoPath], None]
+
+
 class ExternalSpecsParser:
     """Transforms a list of external dicts into a list of specs."""
 
@@ -195,21 +230,24 @@ class ExternalSpecsParser:
         self,
         external_dicts: List[ExternalDict],
         *,
-        complete_node: Callable[[spack.spec.Spec], None] = complete_variants_and_architecture,
+        repo: spack.repo.RepoPath,
+        complete_node: CompleteNodeFn = complete_variants_and_architecture,
         allow_nonexisting: bool = True,
     ):
         """Initializes a class to manage and process external specifications in ``packages.yaml``.
 
         Args:
             external_dicts: list of ExternalDict objects to provide external specifications.
-            complete_node: a callable that completes a node with missing variants, targets, etc.
-                Defaults to `complete_architecture`.
+            repo: package repository to query
+            complete_node: a callable ``(node, repo)`` that completes a node with missing variants,
+                targets, etc. It is invoked with this parser's ``repo``.
             allow_nonexisting: whether to allow non-existing packages. Defaults to True.
 
         Raises:
             spack.repo.UnknownPackageError: if a package does not exist,
                 and allow_nonexisting is False.
         """
+        self.repo = repo
         self.external_dicts = external_dicts
         self.specs_by_external_id: Dict[str, ExternalSpecAndConfig] = {}
         self.specs_by_name: Dict[str, List[ExternalSpecAndConfig]] = {}
@@ -227,8 +265,7 @@ class ExternalSpecsParser:
         # Attach dependencies to externals
         self._create_edges()
         # Mark the specs as concrete
-        for node in self.nodes:
-            node._finalize_concretization()
+        spack.spec.finalize_concretization(self.nodes, repo=self.repo)
 
     def _create_edges(self):
         for eid, entry in self.specs_by_external_id.items():
@@ -237,7 +274,7 @@ class ExternalSpecsParser:
             spec_str = current_dict["spec"]
 
             # Compute the dependency types for this spec
-            pkg_class, deptypes_by_package = spack.repo.PATH.get_pkg_class(current_node.name), {}
+            pkg_class, deptypes_by_package = self.repo.get_pkg_class(current_node.name), {}
             for when, by_name in pkg_class.dependencies.items():
                 if not current_node.satisfies(when):
                     continue
@@ -277,7 +314,7 @@ class ExternalSpecsParser:
                         if not dependency_node.intersects(name):
                             continue
                         depflag |= current_flag
-                        if spack.repo.PATH.is_virtual(name):
+                        if self.repo.is_virtual(name):
                             inferred_virtuals.append(name)
                     virtuals = tuple(inferred_virtuals)
                 elif depflag == spack.deptypes.NONE:
@@ -361,7 +398,7 @@ class ExternalSpecsParser:
                 warnings.warn(f"{e}{line_info}")
                 continue
 
-            package_exists = spack.repo.PATH.exists(node.name)
+            package_exists = self.repo.exists(node.name)
 
             # If we allow non-existing packages, just continue
             if not package_exists and self.allow_nonexisting:
@@ -379,10 +416,10 @@ class ExternalSpecsParser:
                     f"{line_info}{other_line_info}"
                 )
 
-            self.complete_node(node)
+            self.complete_node(node, self.repo)
 
             # Add a Python dependency to Python extensions that don't specify it
-            pkg_class = spack.repo.PATH.get_pkg_class(node.name)
+            pkg_class = self.repo.get_pkg_class(node.name)
             if (
                 "dependencies" not in external_dict
                 and not node.dependencies()
@@ -419,9 +456,9 @@ class ExternalSpecsParser:
         return result
 
 
-def external_spec(config: ExternalDict) -> spack.spec.Spec:
+def external_spec(config: ExternalDict, *, repo: spack.repo.RepoPath) -> spack.spec.Spec:
     """Returns an external spec from a dictionary representation."""
-    return ExternalSpecsParser([config]).all_specs()[0]
+    return ExternalSpecsParser([config], repo=repo).all_specs()[0]
 
 
 class DuplicateExternalError(SpackError):

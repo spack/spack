@@ -16,15 +16,16 @@ import warnings
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import spack.error
-import spack.llnl.util.filesystem
-import spack.llnl.util.lang
-import spack.llnl.util.tty
+import spack.repo
 import spack.spec
 import spack.util.elf as elf_utils
 import spack.util.environment
-import spack.util.environment as environment
+import spack.util.filesystem
+import spack.util.lang
 import spack.util.ld_so_conf
 import spack.util.parallel
+import spack.util.tty
+from spack.util import environment
 
 from .common import (
     WindowsCompilerExternalPaths,
@@ -75,7 +76,7 @@ def dedupe_paths(paths: List[str]) -> List[str]:
     seen: Dict[Tuple[int, int], str] = {}
 
     linked_parent_check = lambda x: any(
-        [spack.llnl.util.filesystem.islink(str(y)) for y in pathlib.Path(x).parents]
+        [spack.util.filesystem.islink(str(y)) for y in pathlib.Path(x).parents]
     )
 
     for path in paths:
@@ -85,7 +86,7 @@ def dedupe_paths(paths: List[str]) -> List[str]:
         # we also want to deprioritize paths if they contain a symlink in any parent
         # (not just the basedir): e.g. oneapi has "latest/bin",
         # where "latest" is a symlink to 2025.0"
-        elif not (spack.llnl.util.filesystem.islink(path) or linked_parent_check(path)):
+        elif not (spack.util.filesystem.islink(path) or linked_parent_check(path)):
             seen[identifier] = path
     return list(seen.values())
 
@@ -104,7 +105,7 @@ def executables_in_path(path_hints: List[str]) -> Dict[str, str]:
         path_hints: list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    search_paths = spack.llnl.util.filesystem.search_paths_for_executables(*path_hints)
+    search_paths = spack.util.filesystem.search_paths_for_executables(*path_hints)
     # Make use we don't doubly list /usr/lib and /lib etc
     return path_to_dict(dedupe_paths(search_paths))
 
@@ -115,11 +116,11 @@ def accept_elf(path, host_compat):
     # Fast path: assume libraries at least have .so in their basename.
     # Note: don't replace with splitext, because of libsmth.so.1.2.3 file names.
     if ".so" not in os.path.basename(path):
-        return spack.llnl.util.filesystem.is_readable_file(path)
+        return spack.util.filesystem.is_readable_file(path)
     try:
         return host_compat == elf_utils.get_elf_compat(path)
     except (OSError, elf_utils.ElfParsingError):
-        return spack.llnl.util.filesystem.is_readable_file(path)
+        return spack.util.filesystem.is_readable_file(path)
 
 
 def libraries_in_ld_and_system_library_path(
@@ -149,7 +150,7 @@ def libraries_in_ld_and_system_library_path(
             system paths are used.
     """
     if path_hints:
-        search_paths = spack.llnl.util.filesystem.search_paths_for_libraries(*path_hints)
+        search_paths = spack.util.filesystem.search_paths_for_libraries(*path_hints)
     else:
         search_paths = []
 
@@ -173,7 +174,7 @@ def libraries_in_ld_and_system_library_path(
         host_compat = elf_utils.get_elf_compat(sys.executable)
         accept = lambda path: accept_elf(path, host_compat)
     except (OSError, elf_utils.ElfParsingError):
-        accept = spack.llnl.util.filesystem.is_readable_file
+        accept = spack.util.filesystem.is_readable_file
 
     path_to_lib = {}
     # Reverse order of search directories so that a lib in the first
@@ -200,10 +201,10 @@ def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[s
     search_hints = (
         path_hints if path_hints is not None else spack.util.environment.get_path("PATH")
     )
-    search_paths = spack.llnl.util.filesystem.search_paths_for_libraries(*search_hints)
+    search_paths = spack.util.filesystem.search_paths_for_libraries(*search_hints)
     # on Windows, some libraries (.dlls) are found in the bin directory or sometimes
     # at the search root. Add both of those options to the search scheme
-    search_paths.extend(spack.llnl.util.filesystem.search_paths_for_executables(*search_hints))
+    search_paths.extend(spack.util.filesystem.search_paths_for_executables(*search_hints))
     if path_hints is None:
         # if no user provided path was given, add defaults to the search
         search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
@@ -271,7 +272,7 @@ class Finder:
         result = []
         resolved_specs: Dict[spack.spec.Spec, str] = {}  # spec -> prefix of first detection
         for candidate_path, items_in_prefix in _group_by_prefix(
-            spack.llnl.util.lang.dedupe(paths)
+            spack.util.lang.dedupe(paths)
         ).items():
             # TODO: multiple instances of a package can live in the same
             # prefix, and a package implementation can return multiple specs
@@ -294,12 +295,18 @@ class Finder:
 
             if not specs:
                 files = ", ".join(_convert_to_iterable(items_in_prefix))
-                spack.llnl.util.tty.debug(
+                spack.util.tty.debug(
                     f"The following files in {candidate_path} were decidedly not "
                     f"part of the package {pkg.name}: {files}"
                 )
 
             for spec in specs:
+                try:
+                    spack.spec.substitute_abstract_variants(spec, repo=repo_path)
+                except Exception as e:
+                    spack.util.tty.debug(f'Invalid detected spec "{spec}" [{e}]')
+                    continue
+
                 prefix = self.prefix_from_path(path=candidate_path)
                 if not prefix:
                     continue
@@ -375,7 +382,7 @@ class ExecutablesFinder(Finder):
         result = executable_prefix(path)
         if not result:
             msg = f"no bin/ dir found in {path}. Cannot add it as a Spack package"
-            spack.llnl.util.tty.debug(msg)
+            spack.util.tty.debug(msg)
         return result
 
 
@@ -408,13 +415,14 @@ class LibrariesFinder(Finder):
         result = library_prefix(path)
         if not result:
             msg = f"no lib/ or lib64/ dir found in {path}. Cannot add it as a Spack package"
-            spack.llnl.util.tty.debug(msg)
+            spack.util.tty.debug(msg)
         return result
 
 
 def by_path(
     packages_to_search: Iterable[str],
     *,
+    repo: spack.repo.RepoPath,
     path_hints: Optional[List[str]] = None,
     max_workers: Optional[int] = None,
 ) -> Dict[str, List["spack.spec.Spec"]]:
@@ -424,24 +432,23 @@ def by_path(
     Args:
         packages_to_search: list of packages to be detected. Each package can be either unqualified
             of fully qualified
+        repo: repository used to retrieve the package classes
         path_hints: initial list of paths to be searched
         max_workers: maximum number of workers to search for packages in parallel
     """
-    from spack.repo import PATH, partition_package_name
-
     # TODO: Packages should be able to define both .libraries and .executables in the future
     # TODO: determine_spec_details should get all relevant libraries and executables in one call
     executables_finder, libraries_finder = ExecutablesFinder(), LibrariesFinder()
     detected_specs_by_package: Dict[str, Tuple[concurrent.futures.Future, ...]] = {}
 
     result = collections.defaultdict(list)
-    repository = PATH.ensure_unwrapped()
+    repository = spack.util.lang.ensure_unwrapped(repo)
 
     executor: concurrent.futures.Executor
     if max_workers == 1:
         executor = spack.util.parallel.SequentialExecutor()
     else:
-        executor = spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False)
+        executor = spack.util.parallel.make_concurrent_executor(max_workers)
     with executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
@@ -463,14 +470,14 @@ def by_path(
                 try:
                     detected = future.result(timeout=DETECTION_TIMEOUT)
                     if detected:
-                        _, unqualified_name = partition_package_name(pkg_name)
+                        _, unqualified_name = spack.repo.partition_package_name(pkg_name)
                         result[unqualified_name].extend(detected)
                 except concurrent.futures.TimeoutError:
-                    spack.llnl.util.tty.debug(
+                    spack.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
                     )
                 except Exception:
-                    spack.llnl.util.tty.debug(
+                    spack.util.tty.debug(
                         f"[EXTERNAL DETECTION] Skipping {pkg_name}: {traceback.format_exc()}"
                     )
 

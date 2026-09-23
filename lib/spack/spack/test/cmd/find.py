@@ -18,13 +18,14 @@ import spack.package_base
 import spack.paths
 import spack.repo
 import spack.spec
-import spack.store
 import spack.user_environment as uenv
+from spack.database import Database
 from spack.enums import InstallRecordStatus
-from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
 from spack.test.utilities import SpackCommandArgs
+from spack.util.filesystem import working_dir
 from spack.util.pattern import Bunch
+from spack.version.git_ref_lookup import GitRefLookup
 
 find = SpackCommand("find")
 env = SpackCommand("env")
@@ -245,11 +246,7 @@ def test_find_format(database, config):
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
-    assert set(e[:-7] for e in elements) == {
-        "mpileaks-zmpi-",
-        "mpileaks-mpich-",
-        "mpileaks-mpich2-",
-    }
+    assert {e[:-7] for e in elements} == {"mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"}
 
     # hashes are in base32
     for e in elements:
@@ -434,12 +431,12 @@ spack:
     assert "libelf" in output
 
 
-def test_find_loaded(database, working_env):
+def test_find_loaded(database: Database, working_env):
     output = find("--loaded", "--group")
     assert output == ""
 
     os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join(
-        [x.dag_hash() for x in spack.store.STORE.db.query()]
+        [x.dag_hash() for x in database.query()]
     )
     output = find("--loaded")
     expected = find()
@@ -547,6 +544,19 @@ def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
     install("--fake", f"git-test-commit commit={commits[0]}")
     output = find(f"commit={commits[0]}")
     assert "git-test-commit" in output
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
+def test_find_based_on_git_ref(monkeypatch):
+    """A bare git ref query matches the installed spec built from that ref, whatever Spack
+    version was assigned to it, without a repository lookup."""
+    monkeypatch.setattr(GitRefLookup, "get", lambda self, ref: ("1.2", 0))
+    install("--fake", "git-test-commit@git.1.x")
+    monkeypatch.setattr(
+        GitRefLookup, "get", lambda self, ref: pytest.fail(f"unexpected git ref lookup of '{ref}'")
+    )
+    assert "git.1.x=1.2" in find("git-test-commit@git.1.x")
+    assert "No package matches" in find("git-test-commit@git.main", fail_on_error=False)
 
 
 @pytest.mark.usefixtures("mock_packages")

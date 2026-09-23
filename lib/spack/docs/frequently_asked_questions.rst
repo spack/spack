@@ -151,6 +151,30 @@ You can also be more specific about what compiler to use for a particular langua
 These input specs can be simplified using :doc:`toolchains_yaml`.
 See also :ref:`pitfalls-without-toolchains` for common mistakes to avoid.
 
+.. _faq-concretization-errors:
+
+How do I debug unexpected or failing concretization?
+-----------------------------------------------------
+
+``spack install`` and ``spack concretize`` may fail with a concretization error when the solver cannot find a package configuration that satisfies all constraints.
+
+Most of the time, the error message is structured and contains information about which requirements could not be met.
+It typically identifies the conflicting constraints and the files where they are defined (e.g., a ``packages.yaml`` entry or a ``conflicts()`` directive in a ``package.py``).
+If the cause is clear from the error, you can fix the offending entry directly.
+
+If it is not obvious *why* the solver made a particular decision -- for example, why it chose a specific version or variant -- run :ref:`spack-solve` to see the full optimization breakdown:
+
+.. code-block:: console
+
+   $ spack solve <spec>
+
+The output shows the optimization criteria and the weights assigned to each choice.
+This makes it possible to trace which preference or requirement is driving an unexpected result.
+See also :ref:`faq-concretizer-precedence` for an overview of how criteria are prioritized.
+
+For a deeper investigation of solver internals, see :ref:`debugging-concretization` in the developer guide.
+
 .. rubric:: Footnotes
 
 .. [#f1] The exact list of criteria can be retrieved with the :ref:`spack-solve` command.
+         See :ref:`faq-concretization-errors` for more information.

@@ -6,8 +6,8 @@
 import pytest
 
 import spack.concretize
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand, SpackCommandError
+from spack.old_installer import PackageInstaller
 
 extensions = SpackCommand("extensions")
 

@@ -121,6 +121,16 @@ dependencies_v4_plus = {
                         "type": "boolean",
                         "description": "Whether the dependency is direct (only on abstract specs)",
                     },
+                    "when": {
+                        "type": "string",
+                        "description": "Condition under which the dependency holds, as a spec "
+                        "string (only on abstract specs)",
+                    },
+                    "propagation": {
+                        "type": "string",
+                        "description": "Propagation policy of a direct dependency (only on "
+                        "abstract specs)",
+                    },
                 },
             },
         },
@@ -167,7 +177,19 @@ spec_node = {
         "propagate": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "List of variants to propagate (for abstract specs)",
+            "description": "List of compiler flag types to propagate (for abstract specs); "
+            "before the split into propagated_parameters it also listed variants",
+        },
+        "propagated_parameters": {
+            "type": "object",
+            "additionalProperties": True,
+            "description": "Propagated variants, i.e. ++foo or foo==bar (for abstract specs)",
+        },
+        "propagated_abstract": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of propagated multi-valued variants that are abstract, i.e. "
+            "foo==bar,baz instead of foo:==bar,baz (for abstract specs)",
         },
         "abstract": {
             "type": "array",
@@ -188,6 +210,24 @@ spec_node = {
             "dependencies)",
         },
         "namespace": {"type": "string", "description": "Package repository namespace"},
+        "abstract_hash": {
+            "type": "string",
+            "description": "Hash prefix of the concrete spec this refers to (for abstract specs)",
+        },
+        "compiler_flags": {
+            "type": "object",
+            "description": "Compiler flags with their propagation (for abstract specs). "
+            "Supersedes the flags under parameters",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["value"],
+                    "properties": {"value": {"type": "string"}, "propagate": {"type": "boolean"}},
+                },
+            },
+        },
         "parameters": {
             "type": "object",
             "additionalProperties": True,

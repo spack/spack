@@ -53,11 +53,10 @@ except ImportError:
     pass
 
 import spack.deptypes as dt
-import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.spec
 import spack.traverse as tr
+import spack.util.filesystem as fs
+import spack.util.lang
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -66,7 +65,8 @@ from spack.directory_layout import (
     DirectoryLayoutError,
     InconsistentInstallDirectoryError,
 )
-from spack.error import SpackError
+from spack.error import ExplicitDatabaseUpgradeError, SpackError
+from spack.util import tty
 from spack.util.crypto import bit_length
 from spack.util.socket import _gethostname
 
@@ -111,10 +111,6 @@ _DEFAULT_DB_LOCK_TIMEOUT = 120
 #: checking of the last high priority package) or holding on to a lock (to
 #: ensure a failed install is properly tracked).
 _DEFAULT_PKG_LOCK_TIMEOUT = None
-
-#: Types of dependencies tracked by the database
-#: We store by DAG hash, so we track the dependencies that the DAG hash includes.
-_TRACKED_DEPENDENCIES = ht.dag_hash.depflag
 
 #: Default list of fields written for each install record
 DEFAULT_INSTALL_RECORD_FIELDS = (
@@ -197,6 +193,18 @@ class InstallRecord:
         installation_time (datetime.datetime or None): time of the installation
     """
 
+    __slots__ = (
+        "spec",
+        "path",
+        "installed",
+        "ref_count",
+        "explicit",
+        "installation_time",
+        "deprecated_for",
+        "in_buildcache",
+        "origin",
+    )
+
     def __init__(
         self,
         spec: "spack.spec.Spec",
@@ -257,18 +265,6 @@ class InstallRecord:
         return InstallRecord(spec, **d)
 
 
-class ForbiddenLockError(SpackError):
-    """Raised when an upstream DB attempts to acquire a lock"""
-
-
-class ForbiddenLock:
-    def __getattr__(self, name):
-        raise ForbiddenLockError(f"Cannot access attribute '{name}' of lock")
-
-    def __reduce__(self):
-        return ForbiddenLock, tuple()
-
-
 class LockConfiguration(NamedTuple):
     """Data class to configure locks in Database objects
 
@@ -279,8 +275,8 @@ class LockConfiguration(NamedTuple):
     """
 
     enable: bool
-    database_timeout: Optional[int]
-    package_timeout: Optional[int]
+    database_timeout: Optional[float]
+    package_timeout: Optional[float]
 
 
 #: Configure a database to avoid using locks
@@ -332,9 +328,10 @@ def failures_lock_path(root_dir: Union[str, pathlib.Path]) -> pathlib.Path:
 class SpecLocker:
     """Manages acquiring and releasing read or write locks on concrete specs."""
 
-    def __init__(self, lock_path: Union[str, pathlib.Path], default_timeout: Optional[float]):
+    def __init__(self, lock_path: Union[str, pathlib.Path], lock_cfg: LockConfiguration):
         self.lock_path = pathlib.Path(lock_path)
-        self.default_timeout = default_timeout
+        self.default_timeout = lock_cfg.package_timeout
+        self._enable = lock_cfg.enable
 
         # Maps (spec.dag_hash(), spec.name) to the corresponding lock object
         self.locks: Dict[Tuple[str, str], lk.Lock] = {}
@@ -369,6 +366,7 @@ class SpecLocker:
             length=1,
             default_timeout=timeout,
             desc=spec.name,
+            enable=self._enable,
         )
 
     def has_lock(self, spec: "spack.spec.Spec") -> bool:
@@ -428,11 +426,11 @@ class FailureTracker:
     #: File for locking particular concrete spec hashes
     locker: SpecLocker
 
-    def __init__(self, root_dir: Union[str, pathlib.Path], default_timeout: Optional[float]):
+    def __init__(self, root_dir: Union[str, pathlib.Path], lock_cfg: LockConfiguration):
         #: Ensure a persistent location for dealing with parallel installation
         #: failures (e.g., across near-concurrent processes).
         self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
-        self.locker = SpecLocker(failures_lock_path(root_dir), default_timeout=default_timeout)
+        self.locker = SpecLocker(failures_lock_path(root_dir), lock_cfg=lock_cfg)
 
     def _ensure_parent_directories(self) -> None:
         """Ensure that parent directories of the FailureTracker exist.
@@ -611,9 +609,10 @@ class Database:
         self.db_lock_timeout = lock_cfg.database_timeout
         tty.debug(f"DATABASE LOCK TIMEOUT: {str(self.db_lock_timeout)}s")
 
-        self.lock: Union[ForbiddenLock, lk.Lock]
         if self.is_upstream:
-            self.lock = ForbiddenLock()
+            self.lock = lk.Lock.forbidden(
+                str(self._lock_path), "Cannot lock an upstream database", desc="database"
+            )
         else:
             self.lock = lk.Lock(
                 str(self._lock_path),
@@ -651,11 +650,26 @@ class Database:
 
     def write_transaction(self):
         """Get a write lock context manager for use in a ``with`` block."""
-        return self._write_transaction_impl(self.lock, acquire=self._read, release=self._write)
+        return self._write_transaction_impl(
+            self.lock, acquire=self._read_for_write, release=self._write
+        )
 
     def read_transaction(self):
         """Get a read lock context manager for use in a ``with`` block."""
         return self._read_transaction_impl(self.lock, acquire=self._read)
+
+    def try_write_transaction(self) -> lk.TryWriteTransaction:
+        """Non-blocking variant of :meth:`write_transaction`: the context manager yields True if
+        the write lock was acquired (the database is re-read from disk on entry and written back on
+        exit, unless an exception occurred), or False if acquiring the lock would block, in which
+        case the body must skip its work."""
+        return lk.TryWriteTransaction(self.lock, acquire=self._read_for_write, release=self._write)
+
+    def try_read_transaction(self) -> lk.TryReadTransaction:
+        """Non-blocking variant of :meth:`read_transaction`: the context manager yields True if the
+        read lock was acquired (the database is re-read from disk on entry), or False if acquiring
+        the lock would block, in which case the body must skip its work."""
+        return lk.TryReadTransaction(self.lock, acquire=self._read)
 
     def _write_to_file(self, stream):
         """Write out the database in JSON format to the stream passed
@@ -666,9 +680,7 @@ class Database:
         self._ensure_parent_directories()
 
         # map from per-spec hash code to installation record.
-        installs = dict(
-            (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
-        )
+        installs = {k: v.to_dict(include_fields=self.record_fields) for k, v in self._data.items()}
 
         # database includes installation list and version.
 
@@ -689,9 +701,9 @@ class Database:
         try:
             sjson.dump(database, stream)
         except (TypeError, ValueError) as e:
-            raise sjson.SpackJSONError("error writing JSON database:", str(e))
+            raise sjson.SpackJSONError("error writing JSON database:", e)
 
-    def _read_spec_from_dict(self, spec_reader, hash_key, installs, hash=ht.dag_hash):
+    def _read_spec_from_dict(self, spec_reader, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -706,7 +718,7 @@ class Database:
                 spec_dict[name]["hash"] = hash_key
         else:
             # new format, already a singleton
-            spec_dict[hash.name] = hash_key
+            spec_dict["hash"] = hash_key
 
         # Build spec from dict first.
         return spec_reader.from_node_dict(spec_dict)
@@ -790,27 +802,28 @@ class Database:
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _, virtuals, direct in spec_reader.read_specfile_dep_specs(
-                yaml_deps
-            ):
+            for dep in spec_reader.read_specfile_dep_specs(yaml_deps):
                 # It is important that we always check upstream installations in the same order,
                 # and that we always check the local installation first: if a downstream Spack
                 # installs a package then dependents in that installation could be using it. If a
                 # hash is installed locally and upstream, there isn't enough information to
                 # determine which one a local package depends on, so the convention ensures that
                 # this isn't an issue.
-                _, record = self.query_by_spec_hash(dhash, data=data)
+                _, record = self.query_by_spec_hash(dep.hash, data=data)
                 child = record.spec if record else None
 
                 if not child:
                     tty.warn(
                         f"Missing dependency not in database: "
-                        f"{spec.cformat('{name}{/hash:7}')} needs {dname}-{dhash[:7]}"
+                        f"{spec.cformat('{name}{/hash:7}')} needs {dep.name}-{dep.hash[:7]}"
                     )
                     continue
 
                 spec._add_dependency(
-                    child, depflag=dt.canonicalize(dtypes), virtuals=virtuals, direct=direct
+                    child,
+                    depflag=dt.canonicalize(dep.deptypes),
+                    virtuals=dep.virtuals,
+                    direct=dep.direct,
                 )
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
@@ -919,13 +932,12 @@ class Database:
         return installs
 
     def _handle_old_db_versions_read(self, check, db, *, reindex: bool):
-        if reindex is False and not self.is_upstream:
-            self.raise_explicit_database_upgrade_error()
-
         if not self.is_readable():
-            raise DatabaseNotReadableError(
-                f"cannot read database v{self.db_version} at {self.root}"
-            )
+            if reindex or self.is_upstream:
+                raise DatabaseNotReadableError(
+                    f"cannot read database v{self.db_version} at {self.root}"
+                )
+            self.raise_explicit_database_upgrade_error()
 
         return self._handle_current_version_read(check, db)
 
@@ -934,28 +946,19 @@ class Database:
         return (self.db_version, _DB_VERSION) in _REINDEX_NOT_NEEDED_ON_READ
 
     def raise_explicit_database_upgrade_error(self):
-        """Raises an ExplicitDatabaseUpgradeError with an appropriate message"""
+        """Raises an ExplicitDatabaseUpgradeError with version and path info"""
         raise ExplicitDatabaseUpgradeError(
-            f"database is v{self.db_version}, but Spack v{spack.__version__} needs v{_DB_VERSION}",
-            long_message=(
-                f"You will need to either:"
-                f"\n"
-                f"\n  1. Migrate the database to v{_DB_VERSION}, or"
-                f"\n  2. Use a new database by changing config:install_tree:root."
-                f"\n"
-                f"\nTo migrate the database at {self.root} "
-                f"\nto version {_DB_VERSION}, run:"
-                f"\n"
-                f"\n    spack reindex"
-                f"\n"
-                f"\nNOTE that if you do this, older Spack versions will no longer"
-                f"\nbe able to read the database. However, `spack reindex` will create a backup,"
-                f"\nin case you want to revert."
-                f"\n"
-                f"\nIf you still need your old database, you can instead run"
-                f"\n`spack config edit config` and set install_tree:root to a new location."
-            ),
+            self.db_version, _DB_VERSION, self.root, spack.spack_version
         )
+
+    def _raise_if_upgrade_needed(self) -> None:
+        if self._db_version is not None and self._db_version < _DB_VERSION:
+            self.raise_explicit_database_upgrade_error()
+
+    def ensure_latest_db_version(self) -> None:
+        """Raise if the index on disk needs ``spack reindex`` before it can be modified."""
+        with self.read_transaction():
+            self._raise_if_upgrade_needed()
 
     def reindex(self):
         """Build database index from scratch based on a directory layout.
@@ -1077,7 +1080,7 @@ class Database:
 
         # Finally update the ref counts
         for record in self._data.values():
-            for dep in record.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+            for dep in record.spec.dependencies():
                 dep_record = self._data.get(dep.dag_hash())
                 if dep_record:  # dep might be upstream
                     dep_record.ref_count += 1
@@ -1096,7 +1099,7 @@ class Database:
         counts: Dict[str, int] = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+            for dep in rec.spec.dependencies():
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -1143,6 +1146,7 @@ class Database:
             with open(temp_file, "w", encoding="utf-8") as f:
                 self._write_to_file(f)
             fs.rename(temp_file, str(self._index_path))
+            self._db_version = _DB_VERSION
 
             if _use_uuid:
                 with self._verifier_path.open("w", encoding="utf-8") as f:
@@ -1155,6 +1159,11 @@ class Database:
             if os.path.exists(temp_file):
                 os.remove(temp_file)
             raise
+
+    def _read_for_write(self) -> None:
+        """Like :meth:`_read`, but refuses an older index so it is never written back."""
+        self._read()
+        self._raise_if_upgrade_needed()
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
@@ -1174,9 +1183,8 @@ class Database:
                 except BaseException:
                     pass
             if (current_verifier != self.last_seen_verifier) or (current_verifier == ""):
-                self.last_seen_verifier = current_verifier
-                # Read from file if a database exists
                 self._read_from_stream(f)
+                self.last_seen_verifier = current_verifier
             elif self._state_is_inconsistent:
                 self._read_from_stream(f)
                 self._state_is_inconsistent = False
@@ -1210,14 +1218,14 @@ class Database:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
 
         key = spec.dag_hash()
-        spec_pkg_hash = spec._package_hash  # type: ignore[attr-defined]
+        spec_pkg_hash = spec._package_hash
         upstream, record = self.query_by_spec_hash(key)
         if upstream and record and record.installed:
             return
 
         installation_time = installation_time or _now()
 
-        for edge in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
+        for edge in spec.edges_to_dependencies():
             if edge.spec.dag_hash() in self._data:
                 continue
             self._add(
@@ -1268,7 +1276,7 @@ class Database:
             )
 
             # Connect dependencies from the DB to the new copy.
-            for dep in spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES):
+            for dep in spec.edges_to_dependencies():
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
                 assert record, f"Missing dependency {dep.spec.short_spec} in DB"
@@ -1318,6 +1326,40 @@ class Database:
         _, record = self.query_by_spec_hash(key)
         return record
 
+    def installed(self, spec: "spack.spec.Spec") -> bool:
+        """Return whether the spec is installed, locally or in an upstream."""
+        if not spec.concrete:
+            return False
+        try:
+            return self.get_record(spec).installed
+        except KeyError:
+            return False
+
+    def installed_upstream(self, spec: "spack.spec.Spec") -> bool:
+        """Return whether the spec is installed in an upstream database."""
+        if not spec.concrete:
+            return False
+        upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        return bool(upstream and record and record.installed)
+
+    def install_status(self, spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
+        """Return the installation status of a spec (helper for tree display)."""
+        if not spec.concrete:
+            return spack.spec.InstallStatus.absent
+
+        if spec.external:
+            return spack.spec.InstallStatus.external
+
+        upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        if not record:
+            return spack.spec.InstallStatus.absent
+        elif upstream and record.installed:
+            return spack.spec.InstallStatus.upstream
+        elif record.installed:
+            return spack.spec.InstallStatus.installed
+        else:
+            return spack.spec.InstallStatus.missing
+
     def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
         key = spec.dag_hash()
 
@@ -1332,7 +1374,7 @@ class Database:
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
 
-            for dep in spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+            for dep in spec.dependencies():
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec: "spack.spec.Spec") -> None:
@@ -1362,8 +1404,8 @@ class Database:
 
         # Remove any reference to this node from dependencies and
         # decrement the reference count
-        rec.spec.detach(deptype=_TRACKED_DEPENDENCIES)
-        for dep in rec.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
+        rec.spec.detach()
+        for dep in rec.spec.dependencies():
             self._decrement_ref_count(dep)
 
         if rec.deprecated_for:
@@ -1576,6 +1618,7 @@ class Database:
         hashes: Optional[Iterable[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
+        repo=None,
     ) -> List["spack.spec.Spec"]:
         installed = normalize_query(installed)
 
@@ -1641,7 +1684,7 @@ class Database:
             not results
             and query_spec is not None
             and deferred
-            and spack.repo.PATH.is_virtual(query_spec.name)
+            and spack.repo.repo_or_default(repo).is_virtual(query_spec.name)
         ):
             results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
@@ -1659,6 +1702,7 @@ class Database:
         hashes: Optional[List[str]] = None,
         in_buildcache: Optional[bool] = None,
         origin: Optional[str] = None,
+        repo=None,
     ) -> List["spack.spec.Spec"]:
         """Queries the local Spack database.
 
@@ -1705,6 +1749,7 @@ class Database:
                 hashes=hashes,
                 in_buildcache=in_buildcache,
                 origin=origin,
+                repo=repo,
             )
 
     def query(
@@ -1720,6 +1765,8 @@ class Database:
         hashes: Optional[List[str]] = None,
         origin: Optional[str] = None,
         install_tree: str = "all",
+        sort: bool = True,
+        repo=None,
     ) -> List["spack.spec.Spec"]:
         """Queries the Spack database including all upstream databases.
 
@@ -1753,40 +1800,20 @@ class Database:
             install_tree: query ``"all"`` (default), ``"local"``, ``"upstream"``, or upstream path
 
             origin: origin of the spec
+
+            sort: if ``True`` (default), sort the results. Sorting is relatively expensive, so
+                callers that do not care about order should pass ``False``.
         """
         valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
         if install_tree not in valid_trees:
-            msg = "Invalid install_tree argument to Database.query()\n"
-            msg += f"Try one of {', '.join(valid_trees)}"
-            tty.error(msg)
-            return []
-
-        upstream_results = []
-        upstreams = self.upstream_dbs
-        if install_tree not in ("all", "upstream"):
-            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
-        for upstream_db in upstreams:
-            # queries for upstream DBs need to *not* lock - we may not
-            # have permissions to do this and the upstream DBs won't know about
-            # us anyway (so e.g. they should never uninstall specs)
-            upstream_results.extend(
-                upstream_db._query(
-                    query_spec,
-                    predicate_fn=predicate_fn,
-                    installed=installed,
-                    explicit=explicit,
-                    start_date=start_date,
-                    end_date=end_date,
-                    hashes=hashes,
-                    in_buildcache=in_buildcache,
-                    origin=origin,
-                )
-                or []
+            raise ValueError(
+                f"Invalid install_tree argument to Database.query(). Try one of {valid_trees}"
             )
 
-        local_results: Set["spack.spec.Spec"] = set()
+        # Put local results first so that de-duplication below keeps them over upstream copies.
+        results: List["spack.spec.Spec"] = []
         if install_tree in ("all", "local") or self.root == install_tree:
-            local_results = set(
+            results.extend(
                 self.query_local(
                     query_spec,
                     predicate_fn=predicate_fn,
@@ -1797,11 +1824,45 @@ class Database:
                     hashes=hashes,
                     in_buildcache=in_buildcache,
                     origin=origin,
+                    repo=repo,
                 )
             )
 
-        results = list(local_results) + list(x for x in upstream_results if x not in local_results)
-        results.sort()  # type: ignore[call-arg,call-overload]
+        if install_tree in ("all", "upstream"):
+            upstreams = self.upstream_dbs
+        elif install_tree in ("local", self.root):
+            upstreams = []
+        else:
+            upstreams = [u for u in self.upstream_dbs if u.root == install_tree]
+
+        for upstream_db in upstreams:
+            # Queries on upstream databases must not take a lock. We may not have permission,
+            # and upstreams do not know about us anyway, so they never uninstall our specs.
+            results.extend(
+                upstream_db._query(
+                    query_spec,
+                    predicate_fn=predicate_fn,
+                    installed=installed,
+                    explicit=explicit,
+                    start_date=start_date,
+                    end_date=end_date,
+                    hashes=hashes,
+                    in_buildcache=in_buildcache,
+                    origin=origin,
+                    repo=repo,
+                )
+            )
+
+        # Drop duplicates only when more than one database contributed, since a spec can appear
+        # both locally and upstream.
+        if upstreams:
+            results = list(spack.util.lang.dedupe(results, key=lambda s: s.dag_hash()))
+
+        if sort:
+            # Sort by name first so the full sort runs on nearly sorted input and compares specs
+            # far fewer times.
+            results.sort(key=lambda s: s.name)
+            results.sort()
         return results
 
     def query_one(
@@ -1857,7 +1918,7 @@ class Database:
 
         with self.read_transaction():
             roots = [rec.spec for key, rec in self._data.items() if root(key, rec)]
-            needed = set(id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype))
+            needed = {id(spec) for spec in tr.traverse_nodes(roots, deptype=deptype)}
             return [
                 rec.spec
                 for rec in self._data.values()
@@ -1885,11 +1946,7 @@ class NoUpstreamVisitor:
 
     def neighbors(self, item: tr.EdgeAndDepth):
         # Prune edges from upstream nodes, only follow database tracked dependencies
-        return (
-            []
-            if self.is_upstream(item)
-            else item.edge.spec.edges_to_dependencies(depflag=_TRACKED_DEPENDENCIES)
-        )
+        return [] if self.is_upstream(item) else item.edge.spec.edges_to_dependencies()
 
 
 class UpstreamDatabaseLockingError(SpackError):
@@ -1923,10 +1980,6 @@ class InvalidDatabaseVersionError(SpackError):
     @property
     def database_version_message(self):
         return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
-
-
-class ExplicitDatabaseUpgradeError(SpackError):
-    """Raised to request an explicit DB upgrade to the user"""
 
 
 class DatabaseNotReadableError(SpackError):

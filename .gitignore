@@ -8,6 +8,7 @@
 /opt
 /share/spack/modules
 /share/spack/lmod
+.spack-env/
 # Debug logs
 spack-db.*
 *.in.log

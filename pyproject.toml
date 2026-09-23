@@ -19,6 +19,7 @@ dev = [
   "click",
   "ruff",
   "mypy",
+  "vendoring",
   "vermin",
 ]
 ci = ["pytest-cov", "codecov[toml]"]
@@ -55,13 +56,16 @@ test = "./bin/spack unit-test"
 features = ["dev", "ci"]
 
 [tool.ruff]
+fix = true
 target-version = "py37"
 line-length = 99
 extend-include = ["bin/spack"]
+force-exclude = true
 exclude = [
   "var/spack/environments",
   "lib/spack/spack/vendor",
   "opt/spack",
+  "*.md",
 ]
 src = ["lib"]
 

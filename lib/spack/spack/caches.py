@@ -4,69 +4,68 @@
 
 """Caches used by Spack to store data"""
 
-import os
 from typing import cast
 
 import spack.config
 import spack.fetch_strategy
-import spack.llnl.util.lang
 import spack.paths
 import spack.util.file_cache
-import spack.util.path
-from spack.llnl.util.filesystem import mkdirp
+import spack.util.lang
 
 
-def misc_cache_location():
+def misc_cache_location(*, config: spack.config.Configuration) -> str:
     """The ``MISC_CACHE`` is Spack's cache for small data.
 
     Currently the ``MISC_CACHE`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
-    path = spack.config.get("config:misc_cache", spack.paths.default_misc_cache_path)
-    return spack.util.path.canonicalize_path(path)
+    path = config.get("config:misc_cache", spack.paths.default_misc_cache_path)
+    return spack.config.canonicalize_path(path, config=config)
 
 
-def _misc_cache():
-    path = misc_cache_location()
-    return spack.util.file_cache.FileCache(path)
+def misc_cache(*, config: spack.config.Configuration) -> spack.util.file_cache.FileCache:
+    """Return a ``FileCache`` rooted at the misc-cache location derived from ``config``."""
+    return spack.util.file_cache.FileCache(
+        misc_cache_location(config=config), enable_lock=config.get("config:locks", True)
+    )
+
+
+def _create_global_misc_cache() -> spack.util.file_cache.FileCache:
+    """Build the misc cache from the global configuration."""
+    return misc_cache(config=spack.config.CONFIG)
 
 
 #: Spack's cache for small data
-MISC_CACHE = cast(spack.util.file_cache.FileCache, spack.llnl.util.lang.Singleton(_misc_cache))
+MISC_CACHE = cast(
+    spack.util.file_cache.FileCache, spack.util.lang.Singleton(_create_global_misc_cache)
+)
 
 
-def fetch_cache_location():
+def fetch_cache_location(*, config: spack.config.Configuration) -> str:
     """Filesystem cache of downloaded archives.
 
     This prevents Spack from repeatedly fetch the same files when
     building the same package different ways or multiple times.
     """
-    path = spack.config.get("config:source_cache")
+    path = config.get("config:source_cache")
     if not path:
         path = spack.paths.default_fetch_cache_path
-    path = spack.util.path.canonicalize_path(path)
-    return path
+    return spack.config.canonicalize_path(path, config=config)
 
 
-def _fetch_cache():
-    path = fetch_cache_location()
-    return spack.fetch_strategy.FsCache(path)
+def fetch_cache(config: spack.config.Configuration) -> spack.fetch_strategy.FsCache:
+    """Returns Spack's local cache for downloaded source archives, as configured in ``config``."""
+    return spack.fetch_strategy.FsCache(fetch_cache_location(config=config))
 
 
-class MirrorCache:
+class MirrorCache(spack.fetch_strategy.FsCacheBase):
     def __init__(self, root, skip_unstable_versions):
-        self.root = os.path.abspath(root)
+        super().__init__(root)
         self.skip_unstable_versions = skip_unstable_versions
 
     def store(self, fetcher, relative_dest):
-        """Fetch and relocate the fetcher's target into our mirror cache."""
+        """Fetch and relocate the fetcher's target into our mirror cache.
 
-        # Note this will archive package sources even if they would not
-        # normally be cached (e.g. the current tip of an hg/git branch)
-        dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
-        fetcher.archive(dst)
-
-
-#: Spack's local cache for downloaded source archives
-FETCH_CACHE = cast(spack.fetch_strategy.FsCache, spack.llnl.util.lang.Singleton(_fetch_cache))
+        Note: archives package sources even if not normally cached (e.g. tip of hg/git branch).
+        """
+        super().store(fetcher, relative_dest)

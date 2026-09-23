@@ -10,8 +10,8 @@
 
 from typing import Any, Dict
 
-#: Common properties for connection specification
-connection = {
+#: Properties that can be set at mirror-level and overridden for fetch/push directions
+overridable_per_direction = {
     "url": {
         "type": "string",
         "description": "URL pointing to the mirror directory, can be local filesystem "
@@ -54,10 +54,23 @@ connection = {
         "description": "Environment variable containing an access token for OCI registry "
         "authentication",
     },
+    "include_binary": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "List of spec patterns to include for this build cache. "
+        "If specified, only specs matching at least one pattern will be "
+        "pushed or pulled (default: all specs).",
+    },
+    "exclude_binary": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "List of spec patterns to exclude from this build cache "
+        "(default: exclude nothing).",
+    },
 }
 
 
-#: Mirror connection inside pull/push keys
+#: Mirror connection inside fetch/push keys
 fetch_and_push = {
     "description": "Mirror connection configuration for fetching or pushing packages, can be a"
     "simple URL string or detailed connection object",
@@ -71,18 +84,18 @@ fetch_and_push = {
             "description": "Detailed connection configuration with authentication and custom "
             "settings",
             "additionalProperties": False,
-            "properties": {**connection},
+            "properties": {**overridable_per_direction},
         },
     ],
 }
 
-#: Mirror connection when no pull/push keys are set
+#: Mirror connection when no fetch/push keys are set
 mirror_entry = {
     "type": "object",
     "description": "Mirror configuration entry supporting both source package archives and "
     "binary build caches with optional authentication",
     "additionalProperties": False,
-    "anyOf": [{"required": ["url"]}, {"required": ["fetch"]}, {"required": ["pull"]}],
+    "anyOf": [{"required": ["url"]}, {"required": ["fetch"]}, {"required": ["push"]}],
     "properties": {
         "source": {
             "type": "boolean",
@@ -113,7 +126,7 @@ mirror_entry = {
             "description": "Automatically push packages to this build cache immediately after "
             "they are installed locally",
         },
-        **connection,
+        **overridable_per_direction,
     },
 }
 

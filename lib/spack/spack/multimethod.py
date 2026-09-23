@@ -305,13 +305,6 @@ def default_args(**kwargs):
     spack.directives_meta.DirectiveMeta.pop_default_args()
 
 
-class MultiMethodError(spack.error.SpackError):
-    """Superclass for multimethod dispatch errors"""
-
-    def __init__(self, message):
-        super().__init__(message)
-
-
 class NoSuchMethodError(spack.error.SpackError):
     """Raised when we can't find a version of a multi-method."""
 

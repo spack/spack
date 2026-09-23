@@ -16,7 +16,10 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
 import spack.util.naming
+from spack.config import Configuration
+from spack.repo import RepoPath
 from spack.test.conftest import RepoBuilder
+from spack.util.lang import Singleton
 from spack.util.naming import valid_module_name
 
 
@@ -72,12 +75,12 @@ def test_repo_unknown_pkg(mutable_mock_repo):
         mutable_mock_repo.get_pkg_class("builtin_mock.nonexistentpackage")
 
 
-def test_repo_last_mtime(mock_packages):
+def test_repo_last_mtime(mock_packages: RepoPath):
     mtime_with_package_py = [
         (os.path.getmtime(p.module.__file__), p.module.__file__)
-        for p in spack.repo.PATH.all_package_classes()
+        for p in mock_packages.all_package_classes()
     ]
-    repo_mtime = spack.repo.PATH.last_mtime()
+    repo_mtime = mock_packages.last_mtime()
     max_mtime, max_file = max(mtime_with_package_py)
     if max_mtime > repo_mtime:
         modified_after = "\n    ".join(
@@ -98,9 +101,25 @@ def test_repo_invisibles(mutable_mock_repo, extra_repo):
 
 
 @pytest.mark.regression("24552")
-def test_all_package_names_is_cached_correctly(mock_packages):
-    assert "mpi" in spack.repo.all_package_names(include_virtuals=True)
-    assert "mpi" not in spack.repo.all_package_names(include_virtuals=False)
+def test_all_package_names_is_cached_correctly(mock_packages: RepoPath):
+    assert "mpi" in mock_packages.all_package_names(include_virtuals=True)
+    assert "mpi" not in mock_packages.all_package_names(include_virtuals=False)
+
+
+def test_all_package_names_is_updated_on_repo_changes(
+    mock_packages: RepoPath, repo_builder: RepoBuilder
+):
+    """Package names are cached, but changing the search path drops the cache."""
+    repo_builder.add_package("pkg-in-extra-repo")
+    extra_repo = spack.repo.from_path(repo_builder.root)
+    repos = RepoPath(*mock_packages.repos)
+    assert "pkg-in-extra-repo" not in repos.all_package_names()
+
+    repos.put_first(extra_repo)
+    assert "pkg-in-extra-repo" in repos.all_package_names()
+
+    repos.remove(extra_repo)
+    assert "pkg-in-extra-repo" not in repos.all_package_names()
 
 
 @pytest.mark.regression("29203")
@@ -113,6 +132,55 @@ def test_use_repositories_doesnt_change_class(mock_packages):
     with spack.repo.use_repositories(*current_paths):
         zlib_cls_inner = spack.repo.PATH.get_pkg_class("zlib")
     assert id(zlib_cls_inner) == id(zlib_cls_outer)
+
+
+def test_use_repositories_with_unmaterialized_path(
+    tmp_path: pathlib.Path, config: Configuration, monkeypatch
+):
+    """Tests that use_repositories restores the repositories from config even when the global
+    PATH singleton is materialized for the first time inside the context manager. Materializing
+    it after pushing the new repos scope onto the config would "save" the new repositories and
+    "restore" those same repositories on exit."""
+    (tmp_path / "packages").mkdir()
+    (tmp_path / "repo.yaml").write_text("repo:\n  namespace: myrepo\n")
+
+    monkeypatch.setattr(
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(config))
+    )
+
+    with spack.repo.use_repositories(str(tmp_path)) as repo:
+        assert [r.root for r in repo.repos] == [str(tmp_path)]
+
+    assert [r.root for r in spack.repo.PATH.repos] == [spack.paths.mock_packages_path]
+
+
+def test_env_activate_with_unmaterialized_path(
+    tmp_path: pathlib.Path, config: Configuration, monkeypatch
+):
+    """Tests that env deactivation restores the repositories from config even when activation
+    is the first to touch the global PATH singleton. Materializing it after pushing the env
+    config scope would "save" the env's repositories and "restore" them on deactivation."""
+    (tmp_path / "spack.yaml").write_text(
+        """\
+spack:
+  specs: []
+  repos:
+    extra: $spack/var/spack/test_repos/spack_repo/builder_test
+"""
+    )
+
+    monkeypatch.setattr(
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(config))
+    )
+
+    env = spack.environment.Environment(tmp_path)
+    spack.environment.activate(env)
+    try:
+        assert {r.namespace for r in spack.repo.PATH.repos} == {"builder_test", "builtin_mock"}
+    finally:
+        spack.environment.deactivate()
+
+    assert [r.namespace for r in spack.repo.PATH.repos] == ["builtin_mock"]
 
 
 def test_absolute_import_spack_packages_as_python_modules(mock_packages):
@@ -592,8 +660,8 @@ def test_repo_update(tmp_path: pathlib.Path):
     }
 
 
-def test_mock_builtin_repo(mock_packages):
-    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin_mock")
+def test_mock_builtin_repo(mock_packages: RepoPath):
+    assert spack.repo.builtin_repo() is mock_packages.get_repo("builtin_mock")
 
 
 def test_parse_config_descriptor_git_1(tmp_path: pathlib.Path):
@@ -960,7 +1028,7 @@ def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
             spack.repo.PATH.get_pkg_class("erroneous")
 
 
-def test_unknownpkgerror_match_fails():
+def test_unknownpkgerror_match_fails(mock_packages):
     """Ensure fails with basic message when get_close_matches fails."""
 
     def _get_close_matches(*args, **kwargs):

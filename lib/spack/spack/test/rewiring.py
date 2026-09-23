@@ -11,8 +11,8 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.rewiring
-import spack.store
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
+from spack.store import Store
 from spack.test.relocate import text_in_bin
 
 if sys.platform == "darwin":
@@ -33,7 +33,7 @@ def check_spliced_spec_prefixes(spliced_spec):
 
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
-def test_rewire_db(mock_fetch, install_mockery, transitive):
+def test_rewire_db(mock_fetch, temporary_store: Store, install_mockery, transitive):
     """Tests basic rewiring without binary executables."""
     spec = spack.concretize.concretize_one("splice-t^splice-h~foo")
     dep = spack.concretize.concretize_one("splice-h+foo")
@@ -47,7 +47,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
     assert os.path.exists(spliced_spec.prefix)
 
     # test that it made it into the database
-    rec = spack.store.STORE.db.get_record(spliced_spec)
+    rec = temporary_store.db.get_record(spliced_spec)
     installed_in_db = rec.installed if rec else False
     assert installed_in_db
 
@@ -57,7 +57,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
 
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
-def test_rewire_bin(mock_fetch, install_mockery, transitive):
+def test_rewire_bin(mock_fetch, temporary_store: Store, install_mockery, transitive):
     """Tests basic rewiring with binary executables."""
     spec = spack.concretize.concretize_one("quux")
     dep = spack.concretize.concretize_one("garply cflags=-g")
@@ -72,7 +72,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
     assert os.path.exists(spliced_spec.prefix)
 
     # test that it made it into the database
-    rec = spack.store.STORE.db.get_record(spliced_spec)
+    rec = temporary_store.db.get_record(spliced_spec)
     installed_in_db = rec.installed if rec else False
     assert installed_in_db
 
@@ -85,7 +85,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
 
 
 @pytest.mark.requires_executables(*required_executables)
-def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
+def test_rewire_writes_new_metadata(mock_fetch, temporary_store: Store, install_mockery):
     """Tests that new metadata was written during a rewire.
     Accuracy of metadata is left to other tests."""
     spec = spack.concretize.concretize_one("quux")
@@ -96,11 +96,11 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
 
     # test install manifests
     for node in spliced_spec.traverse(root=True):
-        spack.store.STORE.layout.ensure_installed(node)
+        temporary_store.layout.ensure_installed(node)
         manifest_file_path = os.path.join(
             node.prefix,
-            spack.store.STORE.layout.metadata_dir,
-            spack.store.STORE.layout.manifest_file_name,
+            temporary_store.layout.metadata_dir,
+            temporary_store.layout.manifest_file_name,
         )
         assert os.path.exists(manifest_file_path)
         orig_node = spec[node.name]
@@ -108,21 +108,19 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
             continue
         orig_manifest_file_path = os.path.join(
             orig_node.prefix,
-            spack.store.STORE.layout.metadata_dir,
-            spack.store.STORE.layout.manifest_file_name,
+            temporary_store.layout.metadata_dir,
+            temporary_store.layout.manifest_file_name,
         )
         assert os.path.exists(orig_manifest_file_path)
         assert not filecmp.cmp(orig_manifest_file_path, manifest_file_path, shallow=False)
         specfile_path = os.path.join(
-            node.prefix,
-            spack.store.STORE.layout.metadata_dir,
-            spack.store.STORE.layout.spec_file_name,
+            node.prefix, temporary_store.layout.metadata_dir, temporary_store.layout.spec_file_name
         )
         assert os.path.exists(specfile_path)
         orig_specfile_path = os.path.join(
             orig_node.prefix,
-            spack.store.STORE.layout.metadata_dir,
-            spack.store.STORE.layout.spec_file_name,
+            temporary_store.layout.metadata_dir,
+            temporary_store.layout.spec_file_name,
         )
         assert os.path.exists(orig_specfile_path)
         assert not filecmp.cmp(orig_specfile_path, specfile_path, shallow=False)
@@ -130,7 +128,7 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
 
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
-def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
+def test_uninstall_rewired_spec(mock_fetch, temporary_store: Store, install_mockery, transitive):
     """Test that rewired packages can be uninstalled as normal."""
     spec = spack.concretize.concretize_one("quux")
     dep = spack.concretize.concretize_one("garply cflags=-g")
@@ -138,7 +136,7 @@ def test_uninstall_rewired_spec(mock_fetch, install_mockery, transitive):
     spliced_spec = spec.splice(dep, transitive=transitive)
     spack.rewiring.rewire(spliced_spec)
     spliced_spec.package.do_uninstall()
-    assert len(spack.store.STORE.db.query(spliced_spec)) == 0
+    assert len(temporary_store.db.query(spliced_spec)) == 0
     assert not os.path.exists(spliced_spec.prefix)
 
 

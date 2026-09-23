@@ -9,6 +9,10 @@
 
 .. _bundlepackage:
 
+.. index::
+   single: bundle package
+   single: BundlePackage
+
 Bundle
 ------
 

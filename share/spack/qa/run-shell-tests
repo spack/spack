@@ -55,3 +55,7 @@ fish "$QA_DIR/setup-env-test.fish"
 # run csh and tcsh tests
 csh  "$QA_DIR/setup-env-test.csh"
 tcsh "$QA_DIR/setup-env-test.csh"
+
+# check that spack can help users edit an environment's manifest file
+# even when it has invalid configuration
+sh "$QA_DIR/test-env-cfg.sh"

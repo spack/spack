@@ -10,15 +10,15 @@ import sys
 from typing import Optional, Union
 
 import spack.config
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.git
 import spack.util.spack_json as sjson
 from spack.cmd import spack_is_git_repo
-from spack.llnl.util.filesystem import working_dir
-from spack.llnl.util.lang import pretty_date
-from spack.llnl.util.tty.colify import colify_table
+from spack.util import tty
 from spack.util.executable import ProcessError
+from spack.util.filesystem import working_dir
+from spack.util.lang import pretty_date
+from spack.util.tty.colify import colify_table
 
 description = "show contributors to packages"
 section = "query"
@@ -147,9 +147,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
 
     Returns: path to the package repository's git root directory or None
     """
-    descriptors = spack.repo.RepoDescriptors.from_config(
-        lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
-    )
+    descriptors = spack.repo.RepoDescriptors.from_config(spack.config.CONFIG)
     path = pathlib.Path(path)
     prefix: Optional[pathlib.Path] = None
     for _, desc in descriptors.items():
@@ -159,8 +157,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
             if (repo_dest / ".git").exists():
                 prefix = repo_dest
 
-                # TODO: replace check with `is_relative_to` once supported
-                if prefix and str(path).startswith(str(prefix)):
+                if prefix == path or prefix in path.parents:
                     return prefix
 
         # Handle the local repository case, making sure it's a spack repository.
@@ -169,8 +166,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
             if "spack_repo" in repo_path.parts:
                 prefix = git_prefix(repo_path)
 
-                # TODO: replace check with `is_relative_to` once supported
-                if prefix and str(path).startswith(str(prefix)):
+                if prefix == path or prefix in path.parents:
                     return prefix
 
     return None

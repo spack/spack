@@ -16,8 +16,9 @@ import spack.main
 import spack.paths
 import spack.repo
 from spack.cmd.style import _run_import_check, changed_files
-from spack.llnl.util.filesystem import FileFilter, working_dir
+from spack.repo import RepoPath
 from spack.util.executable import which
+from spack.util.filesystem import FileFilter, working_dir
 
 #: directory with sample style files
 style_data = os.path.join(spack.paths.test_path, "data", "style")
@@ -119,7 +120,7 @@ def test_changed_no_base(git, tmp_path: pathlib.Path, capfd):
         assert "This repository does not have a 'foobar'" in err
 
 
-def test_changed_files_all_files(mock_packages):
+def test_changed_files_all_files(mock_packages: RepoPath):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = {
         os.path.join(spack.paths.prefix, os.path.normpath(path))
@@ -130,7 +131,7 @@ def test_changed_files_all_files(mock_packages):
     assert len(files) > 500
 
     # a builtin package
-    zlib = spack.repo.PATH.get_pkg_class("zlib")
+    zlib = mock_packages.get_pkg_class("zlib")
     zlib_file = zlib.module.__file__
     if zlib_file.endswith("pyc"):
         zlib_file = zlib_file[:-1]
@@ -155,7 +156,7 @@ def test_bad_root(tmp_path: pathlib.Path):
     """Ensure that `spack style` doesn't run on non-spack directories."""
     output = style("--root", str(tmp_path), fail_on_error=False)
     assert "This does not look like a valid spack root" in output
-    assert style.returncode != 0
+    assert style.returncode == 1
 
 
 @pytest.fixture
@@ -223,7 +224,7 @@ def test_external_root(external_style_root):
     output = style("--root-relative", "--root", str(tmp_path), fail_on_error=False)
 
     # make sure it failed
-    assert style.returncode != 0
+    assert style.returncode == 1
 
     # ruff-check error
     assert "Import block is un-sorted or un-formatted\n --> lib/spack/spack/dummy.py" in output
@@ -272,7 +273,7 @@ def test_style_with_errors(ruff_package_with_errors):
         "--tool", "ruff-check", "--root-relative", ruff_package_with_errors, fail_on_error=False
     )
     assert root_relative in output
-    assert style.returncode != 0
+    assert style.returncode == 1
     assert "spack style found errors" in output
 
 
@@ -280,7 +281,7 @@ def test_style_with_errors(ruff_package_with_errors):
 def test_style_with_ruff_format(ruff_package_with_errors):
     output = style("--tool", "ruff-format", ruff_package_with_errors, fail_on_error=False)
     assert "ruff-format found errors" in output
-    assert style.returncode != 0
+    assert style.returncode == 1
     assert "spack style found errors" in output
 
 

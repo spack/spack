@@ -10,8 +10,8 @@ import runpy
 import sys
 
 import spack
-import spack.llnl.util.tty as tty
 import spack.repo
+from spack.util import tty
 
 description = "launch an interpreter as spack would launch a command"
 section = "developer"
@@ -71,11 +71,11 @@ def python(parser, args, unknown_args):
         return
 
     if unknown_args:
-        tty.die("Unknown arguments:", " ".join(unknown_args))
+        args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
 
     # Unexpected behavior from supplying both
     if args.python_command and args.python_args:
-        tty.die("You can only specify a command OR script, but not both.")
+        args.subparser.error("you can only specify a command OR script, but not both")
 
     # Ensure that spack.repo.PATH is initialized
     spack.repo.PATH.repos

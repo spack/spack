@@ -125,12 +125,38 @@ common_props = {
         "projection format",
     },
     "all": ref_module_file_configuration,
+    "hierarchical": {
+        "type": "boolean",
+        "description": "Organize module files in a hierarchical way",
+    },
+    "core_compilers": {
+        **array_of_strings,
+        "description": "List of core compilers that are always available at the top level of "
+        "the module hierarchy",
+    },
+    "hierarchy": {
+        **array_of_strings,
+        "description": "List of packages to use for building the module hierarchy "
+        "(typically compilers and MPI implementations)",
+    },
+    "core_specs": {
+        **array_of_strings,
+        "description": "List of specs that should be placed in the core level of the module "
+        "hierarchy regardless of dependencies",
+    },
+    "filter_hierarchy_specs": {
+        "type": "object",
+        "description": "Filter which specs are included at different levels of the module "
+        "hierarchy based on spec matching",
+        "additionalKeysAreSpecs": True,
+        "additionalProperties": array_of_strings,
+    },
 }
 
 tcl_configuration = {
     "type": "object",
     "default": {},
-    "description": "Configuration for TCL module files compatible with Environment Modules and "
+    "description": "Configuration for Tcl module files compatible with Environment Modules and "
     "Lmod",
     "additionalKeysAreSpecs": True,
     "properties": {**common_props},
@@ -140,34 +166,9 @@ tcl_configuration = {
 lmod_configuration = {
     "type": "object",
     "default": {},
-    "description": "Configuration for Lua module files compatible with Lmod hierarchical module "
-    "system",
+    "description": "Configuration for Lua module files compatible with Lmod system",
     "additionalKeysAreSpecs": True,
-    "properties": {
-        **common_props,
-        "core_compilers": {
-            **array_of_strings,
-            "description": "List of core compilers that are always available at the top level of "
-            "the Lmod hierarchy",
-        },
-        "hierarchy": {
-            **array_of_strings,
-            "description": "List of packages to use for building the Lmod module hierarchy "
-            "(typically compilers and MPI implementations)",
-        },
-        "core_specs": {
-            **array_of_strings,
-            "description": "List of specs that should be placed in the core level of the Lmod "
-            "hierarchy regardless of dependencies",
-        },
-        "filter_hierarchy_specs": {
-            "type": "object",
-            "description": "Filter which specs are included at different levels of the Lmod "
-            "hierarchy based on spec matching",
-            "additionalKeysAreSpecs": True,
-            "additionalProperties": array_of_strings,
-        },
-    },
+    "properties": {**common_props},
     "additionalProperties": ref_module_file_configuration,
 }
 
@@ -186,7 +187,7 @@ module_config_properties = {
         "type": "object",
         "description": "Custom root directories for different module file types",
         "properties": {
-            "tcl": {"type": "string", "description": "Root directory for TCL module files"},
+            "tcl": {"type": "string", "description": "Root directory for Tcl module files"},
             "lmod": {"type": "string", "description": "Root directory for Lmod module files"},
         },
     },
@@ -199,11 +200,11 @@ module_config_properties = {
     },
     "lmod": {
         **lmod_configuration,
-        "description": "Configuration for Lmod hierarchical module system",
+        "description": "Configuration for Lua module files compatible with Lmod",
     },
     "tcl": {
         **tcl_configuration,
-        "description": "Configuration for TCL module files compatible with Environment Modules",
+        "description": "Configuration for Tcl module files compatible with Environment Modules",
     },
     "prefix_inspections": {
         "type": "object",

@@ -37,6 +37,16 @@ Spack version |spack_version| supports package repositories with a Package API v
 Changelog
 ---------
 
+**v2.6** *(Spack v1.3.0)*
+
+* Added the :func:`~spack.package.deprecated` directive.
+  The concretizer raises a concretization error when a selected deprecation is not allowed by ``deprecation:allow`` in :ref:`packages.yaml <package-deprecations-config>`.
+
+**v2.5** *(Spack v1.2.0)*
+
+* Added ``cuda-lang`` and ``hip-lang`` as language virtuals, analogous to ``c``, ``cxx``, and ``fortran``.
+  Packages that use CUDA or HIP can now declare explicit language dependencies on these virtuals.
+
 **v2.4** *(Spack v1.0.3)*
 
 * The ``%%`` operator can be used on input specs to set propagated preferences, which is particularly useful for ``unify: false`` environments.
@@ -69,3 +79,4 @@ Spack Package API Reference
    :show-inheritance:
    :undoc-members:
    :no-value:
+   :no-index-entry:

@@ -17,11 +17,11 @@ from typing import List
 import pytest
 
 import spack.concretize
-import spack.config
 import spack.error
 import spack.main
 import spack.solver.asp
 import spack.spec
+from spack.config import Configuration
 
 version_error_messages = [
     "Cannot satisfy",
@@ -58,9 +58,11 @@ external_config = {
         (variant_error_messages, {}, "quantum-espresso+invino^fftw~mpi"),
     ],
 )
-def test_error_messages(error_messages, config_set, spec, mock_packages, mutable_config):
+def test_error_messages(
+    error_messages, config_set, spec, mock_packages, mutable_config: Configuration
+):
     for path, conf in config_set.items():
-        spack.config.set(path, conf)
+        mutable_config.set(path, conf)
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as e:
         _ = spack.concretize.concretize_one(spec)
@@ -72,11 +74,11 @@ def test_error_messages(error_messages, config_set, spec, mock_packages, mutable
 @pytest.mark.parametrize(
     "spec", ["deprecated-versions@1.1.0", "deprecated-client ^deprecated-versions@1.1.0"]
 )
-def test_deprecated_version_error(spec, mock_packages, mutable_config):
-    with pytest.raises(spack.solver.asp.DeprecatedVersionError, match="deprecated-versions@1.1.0"):
+def test_deprecated_version_error(spec, mock_packages, mutable_config: Configuration):
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError, match="deprecated"):
         _ = spack.concretize.concretize_one(spec)
 
-    spack.config.set("config:deprecated", True)
+    mutable_config.set("packages:all:deprecation:allow", [{"severity": "critical"}])
     spack.concretize.concretize_one(spec)
 
 
@@ -86,6 +88,27 @@ def test_deprecated_version_error(spec, mock_packages, mutable_config):
 def test_nonexistent_version_error(spec, mock_packages, mutable_config):
     with pytest.raises(spack.solver.asp.InvalidVersionError, match="deprecated-versions@99.9"):
         _ = spack.concretize.concretize_one(spec)
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        "mpileaks ^mpi target=x86_64",
+        "mpileaks %mpi target=x86_64",
+        "mpileaks ^mpi+debug",
+        "mpi cflags=-O2",
+    ],
+)
+def test_virtual_constrained_beyond_versions_error(spec, mock_packages, mutable_config):
+    # Virtual specs support only version constraints: anything else is reserved, since it could
+    # denote a property of the virtual or of its provider.
+    with pytest.raises(
+        spack.solver.asp.UnsatisfiableSpecError,
+        match="the virtual package 'mpi' supports only version constraints",
+    ) as e:
+        _ = spack.concretize.concretize_one(spec)
+
+    assert "cannot concretize" in str(e.value)
 
 
 def test_internal_error_handling_formatting(tmp_path: pathlib.Path):
@@ -174,6 +197,25 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
             ["mvapich2", "file_systems", "the value 'auto' is mutually exclusive"],
             id="variant_disjoint_sets",
         ),
+        # The requested platform is not the one Spack runs on. The error must name both.
+        pytest.param(
+            "libelf platform=linux",
+            ["'libelf platform=linux' is not compatible with this machine (platform=test)"],
+            id="platform_mismatch",
+        ),
+        # "fortan" is not a known virtual (typo of "fortran"). The error must name the
+        # unknown virtual and quote the originating spec, and must not be a generic internal error.
+        pytest.param(
+            "zlib %c,cxx,fortan=gcc",
+            ["fortan", "zlib %c,cxx,fortan=gcc", "not a known virtual"],
+            id="unknown_virtual_on_edge",
+        ),
+        # Two unknown virtuals on the same edge: both must appear in the single error raised.
+        pytest.param(
+            "zlib %c,fortan,cxxxx=gcc",
+            ["fortan", "cxxxx", "zlib %c,cxxxx,fortan=gcc"],
+            id="two_unknown_virtuals_on_edge",
+        ),
     ],
 )
 def test_input_spec_driven_errors(
@@ -185,6 +227,19 @@ def test_input_spec_driven_errors(
     with pytest.raises(spack.error.SpackError) as exc_info:
         spack.concretize.concretize_one(input_spec)
     assert_actionable_error(exc_info, *expected_parts)
+
+
+def test_target_not_compatible_with_host_error(mock_packages, mutable_config: Configuration):
+    """With host-compatible targets only, requesting a target from another family must name the
+    spec and say the machine cannot build for it, without a generic "conflicting values" message.
+    """
+    mutable_config.set("concretizer:targets:host_compatible", True)
+    with pytest.raises(spack.error.SpackError) as exc_info:
+        spack.concretize.concretize_one("libelf target=ppc64le")
+    assert_actionable_error(
+        exc_info, "'libelf target=ppc64le' is not compatible with this machine"
+    )
+    assert "Conflicting target values" not in str(exc_info.value)
 
 
 @pytest.mark.parametrize(
@@ -225,16 +280,36 @@ def test_input_spec_driven_errors(
             ["libelf"],
             id="requirement_unsatisfied_generic",
         ),
+        # A `require:` entry names a virtual that does not exist. The error must name the
+        # unknown virtual and quote the originating spec so the user can find and fix the
+        # config entry.
+        pytest.param(
+            {"packages:zlib": {"require": ["%[virtuals=fortan]gcc"]}},
+            "zlib",
+            ["fortan", "%[virtuals=fortan]gcc"],
+            id="unknown_virtual_in_requirement",
+        ),
+        # Two unknown virtuals in a single requirement spec: both must appear in the error.
+        pytest.param(
+            {"packages:zlib": {"require": ["%[virtuals=fortan,cxxxx]gcc"]}},
+            "zlib",
+            ["fortan", "cxxxx", "%[virtuals=fortan,cxxxx]gcc"],
+            id="two_unknown_virtuals_in_requirement",
+        ),
     ],
 )
 def test_config_driven_errors(
-    packages_config, input_spec: str, expected_parts: List[str], mock_packages, mutable_config
+    packages_config,
+    input_spec: str,
+    expected_parts: List[str],
+    mock_packages,
+    mutable_config: Configuration,
 ) -> None:
     """Tests errors caused by user configuration, e,g, a setting in packages.yaml. The message must
     identify the package and the config value to fix.
     """
     for path, conf in packages_config.items():
-        spack.config.set(path, conf)
+        mutable_config.set(path, conf)
 
     with pytest.raises(spack.error.SpackError) as exc_info:
         spack.concretize.concretize_one(input_spec)

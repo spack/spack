@@ -5,10 +5,10 @@
 
 import socket
 
-import spack.llnl.util.lang
+import spack.util.lang
 
 
-@spack.llnl.util.lang.memoized
+@spack.util.lang.memoized
 def _gethostname():
     """Memoized version of `getfqdn()`.
 

@@ -150,7 +150,7 @@ def test_create_template_bad_name(mock_test_repo, name, expected):
     """Test template creation with bad name options."""
     output = create("--skip-editor", "-n", name, fail_on_error=False)
     assert expected in output
-    assert create.returncode != 0
+    assert create.returncode == 1
 
 
 def test_build_system_guesser_no_stage():
@@ -205,7 +205,7 @@ def test_get_name_error(monkeypatch, capfd):
     assert "Couldn't guess a name" in str(captured)
 
 
-def test_no_url():
+def test_no_url(mock_test_repo):
     """Test creation of package without a URL."""
     create("--skip-editor", "-n", "create-new-package")
 

@@ -61,10 +61,6 @@ This command shows information about ``hdf5``, including a brief description, th
 
 As you can see, it's quite simple to gather basic information on packages before you install them!
 
-.. admonition:: Slowdown on the very first command
-   :class: warning
-
-   The first command you run with Spack may take a while, as Spack builds caches to speed up future commands.
 
 Installing your first package
 -----------------------------

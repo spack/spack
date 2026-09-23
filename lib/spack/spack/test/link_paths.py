@@ -37,10 +37,10 @@ def check_link_paths(filename, paths):
     actual = detected_paths
     expected = paths
 
-    missing_paths = list(x for x in expected if x not in actual)
+    missing_paths = [x for x in expected if x not in actual]
     assert not missing_paths
 
-    extra_paths = list(x for x in actual if x not in expected)
+    extra_paths = [x for x in actual if x not in expected]
     assert not extra_paths
 
     assert actual == expected

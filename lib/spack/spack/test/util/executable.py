@@ -9,9 +9,9 @@ from typing import List
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
 import spack.main
 import spack.util.executable as ex
+import spack.util.filesystem as fs
 from spack.hooks.sbang import filter_shebangs_in_directory
 
 

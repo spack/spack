@@ -1,0 +1,470 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+"""POSIX-specific terminal state, stdin reader, IPC channels, and job scheduling."""
+
+import sys
+
+if sys.platform == "win32":
+    # Also lets mypy skip this module when run on Windows.
+    raise ImportError("spack.installer.posix cannot be imported on Windows")
+
+import fcntl
+import functools
+import io
+import os
+import re
+import selectors
+import signal
+import tempfile
+import termios
+import tty
+import warnings
+from multiprocessing import Pipe, Process
+from multiprocessing.connection import Connection
+from typing import Callable, MutableMapping, Optional, Tuple
+
+import spack.spec
+import spack.util.tty
+from spack.installer.base import (
+    JOBSERVER_EVENT,
+    OUTPUT_BUFFER_SIZE,
+    SIGWINCH_EVENT,
+    STDIN_EVENT,
+    TEE_STOP,
+    BaseTerminalState,
+    BuildChannels,
+    JobServerBase,
+    Makeflags,
+    ProcessExitNotifier,
+    StdinReader,
+    Tee,
+)
+from spack.util.tty.log import _is_background_tty, ignore_signal
+
+
+class PosixTerminalState(BaseTerminalState):
+    """Manages terminal settings, stdin selector registration, and suspend/resume signals.
+
+    Installs a SIGTSTP handler that restores the terminal before suspending and re-applies it
+    on resume. After waking up it checks whether the process is in the foreground or background
+    and enables or suppresses interactive output accordingly.
+
+    Optional ``on_suspend`` / ``on_resume`` hooks are called just before the process suspends
+    and just after it wakes, allowing callers to pause and resume child processes."""
+
+    def __init__(
+        self,
+        selector: selectors.BaseSelector,
+        on_headless: Optional[Callable[[bool], None]] = None,
+        on_suspend: Optional[Callable[[], None]] = None,
+        on_resume: Optional[Callable[[], None]] = None,
+    ) -> None:
+        super().__init__(selector, on_headless, on_suspend, on_resume)
+        self.old_stdin_settings = termios.tcgetattr(sys.stdin)
+        self.sigwinch_r = -1
+        self.sigwinch_w = -1
+        self.stdin_reader = StdinReader(functools.partial(os.read, sys.stdin.fileno(), 1024))
+
+    def setup(self) -> None:
+        """Set cbreak mode, register stdin and signal pipes in the selector."""
+
+        # SIGWINCH self-pipe (stdout must be a tty too)
+        if sys.stdout.isatty():
+            self.sigwinch_r, self.sigwinch_w = os.pipe()
+            os.set_blocking(self.sigwinch_r, False)
+            os.set_blocking(self.sigwinch_w, False)
+            self.selector.register(self.sigwinch_r, selectors.EVENT_READ, SIGWINCH_EVENT)
+            self.old_sigwinch = signal.signal(signal.SIGWINCH, self._handle_sigwinch)
+        else:
+            self.old_sigwinch = None
+
+        self.old_sigtstp = signal.signal(signal.SIGTSTP, self._handle_sigtstp)
+
+        # Start correctly depending on whether we're foregrounded or backgrounded
+        self._set_headless(True)
+        if self._should_enter_foreground():
+            self.enter_foreground()
+
+    def teardown_input(self) -> None:
+        """Restore terminal settings and signal handlers, close pipes."""
+        with ignore_signal(signal.SIGTTOU):
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
+
+        for sig, old in ((signal.SIGTSTP, self.old_sigtstp), (signal.SIGWINCH, self.old_sigwinch)):
+            if old is not None:
+                try:
+                    signal.signal(sig, old)
+                except Exception as e:
+                    spack.util.tty.debug(f"Failed to restore signal handler for {sig}: {e}")
+
+        if sys.stdin.fileno() in self.selector.get_map():
+            self.selector.unregister(sys.stdin.fileno())
+
+        for fd in (self.sigwinch_r, self.sigwinch_w):
+            if fd < 0:
+                continue
+            if fd in self.selector.get_map():
+                self.selector.unregister(fd)
+            try:
+                os.close(fd)
+            except Exception as e:
+                spack.util.tty.debug(f"Failed to close sigwinch pipe {fd}: {e}")
+
+    def _handle_sigtstp(self, signum: int, frame: object) -> None:
+        """Restore terminal before suspending, then re-install handler after resume."""
+
+        # Restore terminal so the user's shell works normally while we're stopped.
+        with ignore_signal(signal.SIGTTOU):
+            termios.tcsetattr(sys.stdin, termios.TCSANOW, self.old_stdin_settings)
+
+        # Force headless mode before suspending so that enter_foreground() doesn't
+        # exit early when we resume, ensuring terminal settings are re-applied. This also
+        # invalidates the display so the first redraw after resume doesn't overwrite the
+        # shell's prompt / "$ fg" line.
+        self._set_headless(True)
+
+        # Actually suspend: reset to default handler then re-send SIGTSTP.
+        if self.on_suspend is not None:
+            self.on_suspend()
+        signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+        os.kill(os.getpid(), signal.SIGTSTP)
+
+        # Execution resumes here after SIGCONT. Re-install our handler.
+        signal.signal(signal.SIGTSTP, self._handle_sigtstp)
+
+        if self.on_resume is not None:
+            self.on_resume()
+        self.handle_continue()
+
+    def _handle_sigwinch(self, signum: int, frame: object) -> None:
+        try:
+            os.write(self.sigwinch_w, b"\x00")
+        except OSError:
+            pass
+
+    def enter_foreground(self) -> None:
+        """Restore interactive terminal mode."""
+        if not self.headless:
+            return
+
+        # We save old settings right before applying cbreak.
+        # If we started in the background, bash may have had the terminal in its own
+        # readline (raw) mode when __init__ ran. Waiting until we are foregrounded
+        # ensures we capture the shell's exported 'sane' configuration for this job.
+        self.old_stdin_settings = termios.tcgetattr(sys.stdin)
+
+        with ignore_signal(signal.SIGTTOU):
+            tty.setcbreak(sys.stdin.fileno())
+
+        if sys.stdin.fileno() not in self.selector.get_map():
+            self.selector.register(sys.stdin.fileno(), selectors.EVENT_READ, STDIN_EVENT)
+        self._set_headless(False)
+
+    def enter_background(self) -> None:
+        """Suppress output and stop reading stdin to avoid SIGTTIN/SIGTTOU."""
+        if sys.stdin.fileno() in self.selector.get_map():
+            self.selector.unregister(sys.stdin.fileno())
+        self._set_headless(True)
+
+    def handle_continue(self) -> None:
+        """Detect whether the process is in the foreground or background and adjust accordingly."""
+        if self._should_enter_foreground():
+            self.enter_foreground()
+        else:
+            self.enter_background()
+
+    def drain_sigwinch(self) -> None:
+        os.read(self.sigwinch_r, 64)
+
+    def _should_enter_foreground(self) -> bool:
+        return not _is_background_tty(sys.stdin)
+
+
+class PosixExitNotifier(ProcessExitNotifier):
+    """Process-exit notifier for POSIX: the multiprocessing sentinel fd is selector-watchable."""
+
+    def __init__(self, proc: Process) -> None:
+        self.proc = proc
+
+    @property
+    def fileobj(self) -> int:
+        return self.proc.sentinel
+
+
+def create_build_channels() -> BuildChannels:
+    """Create the channel pairs of a build. The state and output read ends are non-blocking so
+    the selector-based loop never blocks. The worker also receives the control write end, used to
+    stop its tee thread."""
+    state_r, state_w = Pipe(duplex=False)
+    output_r, output_w = Pipe(duplex=False)
+    control_r, control_w = Pipe(duplex=False)
+    os.set_blocking(output_r.fileno(), False)
+    os.set_blocking(state_r.fileno(), False)
+    return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, control_w)
+
+
+class PosixTee(Tee):
+    def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
+        """Forward log_r to log_file and parent (if echoing is enabled).
+        Echoing is enabled and disabled by reading 1 and 0 resp. from control.
+        Thread exit is triggered by EOF or by reading TEE_STOP from control."""
+        control_r = self.control_r.fileno()
+        parent_w = self.parent.fileno()
+        echo_on = False
+        stop = False
+        selector = selectors.DefaultSelector()
+        selector.register(log_r, selectors.EVENT_READ)
+        selector.register(control_r, selectors.EVENT_READ)
+
+        try:
+            with selector, log_file, open(parent_w, "wb", closefd=False) as parent:
+                while True:
+                    # If not done, block until log/control has data. If done, do one more iteration
+                    # to drain the log.
+                    events = selector.select(0 if stop else None)
+                    if stop and not events:
+                        return
+                    for key, _ in events:
+                        if key.fd == log_r:
+                            data = os.read(log_r, OUTPUT_BUFFER_SIZE)
+                            if not data:  # EOF: exit the thread
+                                return
+                            log_file.write(data)
+                            log_file.flush()
+                            if echo_on:
+                                parent.write(data)
+                                parent.flush()
+
+                        elif key.fd == control_r:
+                            control_data = os.read(control_r, 1)
+                            if not control_data or control_data == TEE_STOP:
+                                # EOF or TEE_STOP: exit the thread after draining the log.
+                                selector.unregister(control_r)
+                                stop = True
+                            else:
+                                echo_on = control_data == b"1"
+        except OSError:  # do not raise
+            pass
+        finally:
+            os.close(log_r)
+
+
+class FifoMakeflags(Makeflags):
+    """MAKEFLAGS in fifo style, which gmake 4.4 and later understand."""
+
+    __slots__ = ("fifo_path", "num_jobs")
+
+    def __init__(self, fifo_path: str, num_jobs: int) -> None:
+        self.fifo_path = fifo_path
+        self.num_jobs = num_jobs
+
+    def apply(self, env: MutableMapping[str, str]) -> None:
+        env["MAKEFLAGS"] = f" -j{self.num_jobs} --jobserver-auth=fifo:{self.fifo_path}"
+
+
+class PipeMakeflags(Makeflags):
+    """Compatibility wrapper for old gmake that requires a pipe-based jobserver.
+
+    Args:
+        fifo_path: path of the jobserver FIFO to open
+        flag: "--jobserver-auth" (gmake >= 4.0) or "--jobserver-fds" (gmake < 4.0)
+    """
+
+    __slots__ = ("fifo_path", "flag")
+
+    def __init__(self, fifo_path: str, flag: str) -> None:
+        self.fifo_path = fifo_path
+        self.flag = flag
+
+    def apply(self, env: MutableMapping[str, str]) -> None:
+        # O_NONBLOCK avoids block on open, but make needs blocking, so fcntl immediately clears it.
+        r = os.open(self.fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+        w = os.open(self.fifo_path, os.O_WRONLY)
+        fcntl.fcntl(r, fcntl.F_SETFL, fcntl.fcntl(r, fcntl.F_GETFL) & ~os.O_NONBLOCK)
+        os.set_inheritable(r, True)
+        os.set_inheritable(w, True)
+        # passing -jN here would make old gmake ignore the jobserver
+        env["MAKEFLAGS"] = f" -j {self.flag}={r},{w}"
+
+
+class PosixJobServer(JobServerBase):
+    """Attach to an existing POSIX FIFO-based jobserver or create one."""
+
+    def __init__(self, num_jobs: int, makeflags: Optional[str] = None) -> None:
+        super().__init__(num_jobs, makeflags)
+        #: Keep track of how many tokens Spack itself has acquired, which is used to release them.
+        self.tokens_acquired = 0
+        self.created = False
+        self.r, self.w, self.fifo_path = self._setup(makeflags)
+
+    def _setup(self, makeflags: Optional[str] = None) -> Tuple[int, int, str]:
+        fifo_path = get_jobserver_config(makeflags)
+
+        if fifo_path is not None:
+            # Try to attach to the existing FIFO-based jobserver.
+            open_attempt = open_existing_jobserver_fifo(fifo_path)
+            if open_attempt:
+                r, w = open_attempt
+                return r, w, fifo_path
+
+        # No existing jobserver we can connect to: create a FIFO-based one.
+        r, w, fifo_path = create_jobserver_fifo(self.num_jobs)
+        self.created = True
+        return r, w, fifo_path
+
+    def makeflags(self, gmake: Optional[spack.spec.Spec]) -> Makeflags:
+        if not gmake or gmake.satisfies("@4.4:"):
+            return FifoMakeflags(self.fifo_path, self.num_jobs)
+        flag = "--jobserver-auth" if gmake.satisfies("@4.0:") else "--jobserver-fds"
+        return PipeMakeflags(self.fifo_path, flag)
+
+    def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
+        if wake and self.r not in selector.get_map():
+            selector.register(self.r, selectors.EVENT_READ, JOBSERVER_EVENT)
+        elif not wake and self.r in selector.get_map():
+            selector.unregister(self.r)
+
+    def increase_parallelism(self) -> None:
+        if not self.created:
+            return
+        self.target_jobs += 1
+        # If a decrease was pending, don't add a token.
+        if self.target_jobs <= self.num_jobs:
+            return
+        os.write(self.w, b"+")
+        self.num_jobs += 1
+
+    def decrease_parallelism(self) -> None:
+        if not self.created or self.target_jobs <= 1:
+            return
+        self.target_jobs -= 1
+        self.maybe_discard_tokens()
+
+    def maybe_discard_tokens(self) -> None:
+        """Try to reduce parallelism to the target by discarding tokens."""
+        to_discard = self.num_jobs - self.target_jobs
+        if to_discard <= 0:
+            return
+        try:
+            # The read may return zero or just fewer bytes than requested; we'll try again later.
+            self.num_jobs -= len(os.read(self.r, to_discard))
+        except BlockingIOError:
+            pass
+
+    def acquire(self, jobs: int) -> int:
+        try:
+            num_acquired = len(os.read(self.r, jobs))
+            self.tokens_acquired += num_acquired
+            return num_acquired
+        except BlockingIOError:
+            return 0
+
+    def release(self) -> None:
+        # The last job to quit has an implicit token, so don't release if we have none.
+        if self.tokens_acquired == 0:
+            return
+        self.tokens_acquired -= 1
+        if self.target_jobs < self.num_jobs:
+            # If a decrease in parallelism is requested, discard a token instead of releasing it.
+            self.num_jobs -= 1
+        else:
+            os.write(self.w, b"+")
+
+    def close(self) -> None:
+        if self.created and self.num_jobs > 1:
+            if self.tokens_acquired != 0:
+                # It's a non-fatal internal error to close the jobserver with acquired tokens.
+                warnings.warn("Spack failed to release jobserver tokens", stacklevel=2)
+            else:
+                # Verify that all build processes released the tokens they acquired.
+                total = self.num_jobs - 1
+                drained = self.acquire(total)
+                if drained != total:
+                    n = total - drained
+                    warnings.warn(
+                        f"{n} jobserver {'token was' if n == 1 else 'tokens were'} not released "
+                        "by the build processes. This can indicate that the build ran with "
+                        "limited parallelism.",
+                        stacklevel=2,
+                    )
+
+        os.close(self.r)
+        os.close(self.w)
+
+        # Remove the FIFO if we created it.
+        if self.created:
+            try:
+                os.unlink(self.fifo_path)
+            except OSError:
+                pass
+            try:
+                os.rmdir(os.path.dirname(self.fifo_path))
+            except OSError:
+                pass
+
+
+def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[str]:
+    """Parse MAKEFLAGS for a FIFO-based jobserver, returning its path. Old-style pipe-based
+    jobservers are not recognized.
+
+    Args:
+        makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
+    """
+    makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
+    if not makeflags:
+        return None
+    # In case of multiple --jobserver-* flags, the last one wins, regardless of its format.
+    matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
+    if not matches:
+        return None
+    last_match = matches[-1]
+    return last_match[5:] if last_match.startswith("fifo:") else None
+
+
+def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
+    """Create a new jobserver FIFO with the specified number of job tokens."""
+    tmpdir = tempfile.mkdtemp()
+    fifo_path = os.path.join(tmpdir, "jobserver_fifo")
+
+    try:
+        os.mkfifo(fifo_path, 0o600)
+        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+        write_fd = os.open(fifo_path, os.O_WRONLY)
+        # write num_jobs - 1 tokens, because the first job is implicit
+        os.write(write_fd, b"+" * (num_jobs - 1))
+        return read_fd, write_fd, fifo_path
+    except Exception:
+        try:
+            os.unlink(fifo_path)
+        except OSError as e:
+            spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO: {e}", level=3)
+        try:
+            os.rmdir(tmpdir)
+        except OSError as e:
+            spack.util.tty.debug(f"Failed to remove POSIX jobserver FIFO dir: {e}", level=3)
+        raise
+
+
+def open_existing_jobserver_fifo(fifo_path: str) -> Optional[Tuple[int, int]]:
+    """Open an existing jobserver FIFO for reading and writing."""
+    try:
+        read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+        write_fd = os.open(fifo_path, os.O_WRONLY)
+        return read_fd, write_fd
+    except OSError:
+        return None
+
+
+def make_state_stream(state: Connection) -> io.TextIOWrapper:
+    """Wrap the write end of the state Pipe as a line-buffered text stream."""
+    return os.fdopen(state.fileno(), "w", buffering=1, closefd=False)
+
+
+def read_connection(conn: Connection, max_size: int = 4096) -> bytes:
+    return os.read(conn.fileno(), max_size)
+
+
+def write_connection(conn: Connection, data: bytes) -> None:
+    os.write(conn.fileno(), data)

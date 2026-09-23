@@ -17,6 +17,10 @@
 # serve to show the default.
 
 import os
+
+# Set this before importing sphinx.
+os.environ["SPHINX_APIDOC_OPTIONS"] = "members,undoc-members,show-inheritance,no-index-entry"
+
 import subprocess
 import sys
 from glob import glob
@@ -96,6 +100,8 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/vendor",
         "_spack_root/lib/spack/spack/test",
         "_spack_root/lib/spack/spack/package.py",
+        "_spack_root/lib/spack/spack/installer/windows.py",
+        "_spack_root/lib/spack/spack/util/win_acl.py",
     ]
 )
 sphinx_apidoc(
@@ -128,8 +134,8 @@ class CustomPygmentsBridge(PygmentsBridge):
 PygmentsBridge.html_formatter = NoWhitespaceHtmlFormatter
 
 
-from spack.llnl.util.lang import classproperty
-from spack.spec_parser import SpecTokens
+from spack.util.lang import classproperty
+from spack.spec_parser import SPEC_TOKENS
 
 # replace classproperty.__get__ to return `self` so Sphinx can document it correctly. Otherwise
 # it evaluates the callback, and it documents the result, which is not what we want.
@@ -174,31 +180,31 @@ class SpecLexer(RegexLexer):
             # New line terminates the spec string
             (r"\s*?$", Text, "#pop"),
             # Dependency, with optional virtual assignment specifier
-            (SpecTokens.START_EDGE_PROPERTIES.regex, Name.Variable, "edge_properties"),
-            (SpecTokens.DEPENDENCY.regex, Name.Variable),
+            (r"(?:(?:\^|\%\%|\%)\[)", Name.Variable, "edge_properties"),
+            (SPEC_TOKENS["DEPENDENCY"], Name.Variable),
             # versions
-            (SpecTokens.VERSION_HASH_PAIR.regex, Keyword.Pseudo),
-            (SpecTokens.GIT_VERSION.regex, Keyword.Pseudo),
-            (SpecTokens.VERSION.regex, Keyword.Pseudo),
+            (SPEC_TOKENS["VERSION"], Keyword.Pseudo),
             # variants
-            (SpecTokens.PROPAGATED_BOOL_VARIANT.regex, Name.Function),
-            (SpecTokens.BOOL_VARIANT.regex, Name.Function),
-            (SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex, Name.Function),
-            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
+            (SPEC_TOKENS["BOOL_VARIANT"], Name.Function),
+            (SPEC_TOKENS["KEY_VALUE_PAIR"], Name.Function),
             # filename
-            (SpecTokens.FILENAME.regex, Text),
+            (SPEC_TOKENS["FILENAME"], Text),
             # Package name
-            (SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex, Name.Class),
-            (SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex, Name.Class),
+            (SPEC_TOKENS["FULLY_QUALIFIED_PACKAGE_NAME"], Name.Class),
+            (SPEC_TOKENS["UNQUALIFIED_PACKAGE_NAME"], Name.Class),
             # DAG hash
-            (SpecTokens.DAG_HASH.regex, Text),
-            (SpecTokens.WS.regex, Text),
+            (SPEC_TOKENS["DAG_HASH"], Text),
+            (r"\s+", Text),
             # Also stop at unrecognized tokens (without consuming them)
             default("#pop"),
         ],
         "edge_properties": [
-            (SpecTokens.KEY_VALUE_PAIR.regex, Name.Function),
-            (SpecTokens.END_EDGE_PROPERTIES.regex, Name.Variable, "#pop"),
+            (SPEC_TOKENS["KEY_VALUE_PAIR"], Name.Function),
+            # An unquoted when= condition is a spec up to the closing bracket
+            (SPEC_TOKENS["WHEN"], Name.Function, "spec"),
+            (r"\]\s*\[", Name.Variable),
+            (SPEC_TOKENS["END_EDGE_PROPERTIES"], Name.Variable, "#pop"),
+            (r"\s+", Text),
         ],
     }
 
@@ -355,31 +361,28 @@ nitpick_ignore = [
     ("py:class", "posix.DirEntry"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
+    ("py:class", "spack.directives._Patch"),
     ("py:class", "spack.repo._PrependFileLoader"),
     # Spack classes that intersphinx is unable to resolve
+    ("py:class", "BuildStatus"),
     ("py:class", "GitOrStandardVersion"),
-    ("py:class", "spack.bootstrap._common.QueryInfo"),
-    ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
-    ("py:class", "spack.spec.ArchSpec"),
-    ("py:class", "spack.spec.DependencySpec"),
-    ("py:class", "spack.spec.InstallStatus"),
-    ("py:class", "spack.spec.SpecfileReaderBase"),
-    ("py:class", "spack.traverse.EdgeAndDepth"),
+    ("py:class", "spack.bootstrap._common.ExecutableInfo"),
     ("py:class", "spack.vendor.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.vendor.jinja2.Environment"),
     ("py:class", "SpecFiltersFactory"),
+    ("py:exc", "CoreCompilersNotFoundError"),
     # TypeVar that is not handled correctly
-    ("py:class", "spack.llnl.util.lang.ClassPropertyType"),
-    ("py:class", "spack.llnl.util.lang.K"),
-    ("py:class", "spack.llnl.util.lang.KT"),
-    ("py:class", "spack.llnl.util.lang.T"),
-    ("py:class", "spack.llnl.util.lang.V"),
-    ("py:class", "spack.llnl.util.lang.VT"),
-    ("py:obj", "spack.llnl.util.lang.ClassPropertyType"),
-    ("py:obj", "spack.llnl.util.lang.K"),
-    ("py:obj", "spack.llnl.util.lang.KT"),
-    ("py:obj", "spack.llnl.util.lang.V"),
-    ("py:obj", "spack.llnl.util.lang.VT"),
+    ("py:class", "spack.util.lang.ClassPropertyType"),
+    ("py:class", "spack.util.lang.K"),
+    ("py:class", "spack.util.lang.KT"),
+    ("py:class", "spack.util.lang.T"),
+    ("py:class", "spack.util.lang.V"),
+    ("py:class", "spack.util.lang.VT"),
+    ("py:obj", "spack.util.lang.ClassPropertyType"),
+    ("py:obj", "spack.util.lang.K"),
+    ("py:obj", "spack.util.lang.KT"),
+    ("py:obj", "spack.util.lang.V"),
+    ("py:obj", "spack.util.lang.VT"),
     ("py:class", "_P"),
     ("py:class", "spack.util.web._R"),
 ]

@@ -10,29 +10,29 @@ import re
 import subprocess
 import sys
 import textwrap
-from collections import Counter
-from typing import Generator, List, Optional, Sequence, Union
+from typing import Callable, Container, Generator, List, Optional, Sequence, Union
 
 import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
-import spack.llnl.string
-import spack.llnl.util.tty as tty
 import spack.paths
-import spack.repo
 import spack.spec
 import spack.spec_parser
 import spack.store
-import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.llnl.util.filesystem import join_path
-from spack.llnl.util.lang import attr_setdefault, index_by
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
+import spack.util.string
+from spack import traverse
+from spack.active_environment import active_environment
+from spack.concretize_ui import ConcretizerUI, TerminalUI
+from spack.util import tty
+from spack.util.filesystem import join_path
+from spack.util.lang import attr_setdefault, index_by
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 
 from ..enums import InstallRecordStatus
 
@@ -155,19 +155,30 @@ def get_command(cmd_name):
 
 
 def quote_kvp(string: str) -> str:
-    """For strings like ``name=value`` or ``name==value``, quote and escape the value if needed.
+    """For strings like ``name=value`` or ``name==value``, quote the value if needed.
 
     This is a compromise to respect quoting of key-value pairs on the CLI. The shell
     strips quotes from quoted arguments, so we cannot know *exactly* how CLI arguments
-    were quoted. To compensate, we re-add quotes around anything staritng with ``name=``
-    or ``name==``, and we assume the rest of the argument is the value. This covers the
-    common cases of passign flags, e.g., ``cflags="-O2 -g"`` on the command line.
-    """
+    were quoted. To compensate, we re-add quotes around anything starting with ``name=``
+    or ``name==`` whose value cannot be parsed as it is, and we assume the rest of the
+    argument is the value. This covers the common cases of passing flags, e.g.,
+    ``cflags="-O2 -g"`` on the command line.
+
+    There are many edge cases here, e.g. `when=@1.0` should not be quoted, cause it can be part
+    of a when condition instead of a key-value pair `when='@1.0'`. Therefore, use the parser to
+    decide if the value needs quoting."""
     match = spack.spec_parser.SPLIT_KVP.match(string)
     if not match:
         return string
 
     key, delim, value = match.groups()
+    try:
+        tokens = spack.spec_parser.SpecParser(string, spack.spec.Spec).tokens()
+    except spack.error.SpecSyntaxError:
+        pass
+    else:
+        if "".join(text for _, text, _ in tokens) == string:
+            return string
     return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}"
 
 
@@ -175,6 +186,7 @@ def parse_specs(
     args: Union[str, List[str]],
     concretize: bool = False,
     tests: spack.concretize.TestsType = False,
+    ui: Optional[ConcretizerUI] = None,
 ) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
@@ -183,69 +195,14 @@ def parse_specs(
     arg_string = " ".join([quote_kvp(arg) for arg in args])
 
     toolchains = spack.config.CONFIG.get("toolchains", {})
-    specs = spack.spec_parser.parse(arg_string, toolchains=toolchains)
+    specs = spack.spec.parse(arg_string, toolchains=toolchains)
     if not concretize:
         return specs
 
     to_concretize: List[spack.concretize.SpecPairInput] = [(s, None) for s in specs]
-    return _concretize_spec_pairs(to_concretize, tests=tests)
-
-
-def _concretize_spec_pairs(
-    to_concretize: List[spack.concretize.SpecPairInput], tests: spack.concretize.TestsType = False
-) -> List[spack.spec.Spec]:
-    """Helper method that concretizes abstract specs from a list of abstract,concrete pairs.
-
-    Any spec with a concrete spec associated with it will concretize to that spec. Any spec
-    with ``None`` for its concrete spec will be newly concretized. This method respects unification
-    rules from config."""
-    unify = spack.config.get("concretizer:unify", False)
-
-    # Special case for concretizing a single spec
-    if len(to_concretize) == 1:
-        abstract, concrete = to_concretize[0]
-        return [concrete or spack.concretize.concretize_one(abstract, tests=tests)]
-
-    # Special case if every spec is either concrete or has an abstract hash
-    if all(
-        concrete or abstract.concrete or abstract.abstract_hash
-        for abstract, concrete in to_concretize
-    ):
-        # Get all the concrete specs
-        ret = [
-            concrete or (abstract if abstract.concrete else abstract.lookup_hash())
-            for abstract, concrete in to_concretize
-        ]
-
-        # If unify: true, check that specs don't conflict
-        # Since all concrete, "when_possible" is not relevant
-        if unify is True:  # True, "when_possible", False are possible values
-            runtimes = spack.repo.PATH.packages_with_tags("runtime")
-            specs_per_name = Counter(
-                spec.name
-                for spec in traverse.traverse_nodes(
-                    ret, deptype=("link", "run"), key=traverse.by_dag_hash
-                )
-                if spec.name not in runtimes  # runtimes are allowed multiple times
-            )
-
-            conflicts = sorted(name for name, count in specs_per_name.items() if count > 1)
-            if conflicts:
-                raise spack.error.SpecError(
-                    "Specs conflict and `concretizer:unify` is configured true.",
-                    f"    specs depend on multiple versions of {', '.join(conflicts)}",
-                )
-        return ret
-
-    # Standard case
-    concretize_method = spack.concretize.concretize_separately  # unify: false
-    if unify is True:
-        concretize_method = spack.concretize.concretize_together
-    elif unify == "when_possible":
-        concretize_method = spack.concretize.concretize_together_when_possible
-
-    concretized = concretize_method(to_concretize, tests=tests)
-    return [concrete for _, concrete in concretized]
+    return spack.concretize.concretize_spec_pairs(
+        to_concretize, tests=tests, ui=ui or TerminalUI()
+    )
 
 
 def matching_spec_from_env(spec):
@@ -254,7 +211,7 @@ def matching_spec_from_env(spec):
     If no matching spec is found in the environment (or if no environment is
     active), this will return the given spec but concretized.
     """
-    env = ev.active_environment()
+    env = active_environment()
     if env:
         return env.matching_spec(spec) or spack.concretize.concretize_one(spec)
     else:
@@ -269,12 +226,14 @@ def matching_specs_from_env(specs):
     matching spec is found, this will return the given spec but concretized in the
     context of the active environment and other given specs, with unification rules applied.
     """
-    env = ev.active_environment()
+    env = active_environment()
     spec_pairs = [(spec, env.matching_spec(spec) if env else None) for spec in specs]
     additional_concrete_specs = (
         [(concrete, concrete) for _, concrete in env.concretized_specs()] if env else []
     )
-    return _concretize_spec_pairs(spec_pairs + additional_concrete_specs)[: len(spec_pairs)]
+    return spack.concretize.concretize_spec_pairs(
+        spec_pairs + additional_concrete_specs, ui=TerminalUI()
+    )[: len(spec_pairs)]
 
 
 def disambiguate_spec(
@@ -335,7 +294,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     format_string = (
         "{name}{@version}"
         "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
-        "{%compiler.name}{@compiler.version}"
+        "{compilers}"
     )
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
@@ -351,6 +310,28 @@ def gray_hash(spec, length):
         length = 32
     h = spec.dag_hash(length) if spec.concrete else "-" * length
     return colorize("@K{%s}" % h)
+
+
+def buildcache_status_fn(
+    available_hashes: Container[str],
+) -> Callable[["spack.spec.Spec"], "spack.spec.InstallStatus"]:
+    """Return a status_fn that marks not-installed specs present in a buildcache as [b].
+
+    Args:
+        available_hashes: any container supporting ``in`` lookups whose elements are dag hashes
+            known to be available in at least one buildcache.
+    """
+
+    def _status_fn(spec: "spack.spec.Spec") -> "spack.spec.InstallStatus":
+        status = spack.store.STORE.db.install_status(spec)
+        if (
+            status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
+            and spec.dag_hash() in available_hashes
+        ):
+            return spack.spec.InstallStatus.buildcache
+        return status
+
+    return _status_fn
 
 
 def display_specs_as_json(specs, deps=False):
@@ -486,7 +467,7 @@ def display_specs(specs, args=None, **kwargs):
         if flags:
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        hfmt = "{/abstract_hash}"
+        hfmt = "{ /abstract_hash}"
         format_string = nfmt + "{@version}" + vfmt + ffmt + hfmt
 
     if specfile_format:
@@ -575,7 +556,7 @@ def print_how_many_pkgs(specs, pkg_type="", suffix=""):
             category, e.g. if pkg_type is "installed" then the message
             would be "3 installed packages"
     """
-    tty.msg("%s" % spack.llnl.string.plural(len(specs), pkg_type + " package") + suffix)
+    tty.msg("%s" % spack.util.string.plural(len(specs), pkg_type + " package") + suffix)
 
 
 def spack_is_git_repo():
@@ -639,29 +620,26 @@ def extant_file(f):
     return f
 
 
-def require_active_env(cmd_name):
-    """Used by commands to get the active environment
+def require_active_env(parser):
+    """Used by commands to get the active environment.
 
-    If an environment is not found, print an error message that says the calling
-    command *needs* an active environment.
+    If an environment is not found, calls ``parser.error()`` which prints usage and exits.
 
     Arguments:
-        cmd_name (str): name of calling command
+        parser: the subparser for the command (typically ``args.subparser``)
 
     Returns:
         (spack.environment.Environment): the active environment
     """
-    env = ev.active_environment()
-
+    env = active_environment()
     if env:
         return env
-
-    tty.die(
-        "`spack %s` requires an environment" % cmd_name,
-        "activate an environment first:",
-        "    spack env activate ENV",
-        "or use:",
-        "    spack -e ENV %s ..." % cmd_name,
+    parser.error(
+        "requires an active environment\n"
+        "  activate an environment first:\n"
+        "      spack env activate ENV\n"
+        "  or use:\n"
+        "      spack -e ENV %s ..." % parser.prog.partition(" ")[2]
     )
 
 

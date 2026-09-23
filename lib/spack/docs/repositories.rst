@@ -7,7 +7,10 @@
    :description lang=en:
       Learn how to set up and manage package repositories in Spack, enabling you to maintain custom packages and override built-in ones.
 
-.. _repositories:
+.. index::
+   single: repo; configuring
+   single: repos.yaml; reference
+   :name: repositories
 
 Package Repositories (repos.yaml)
 =================================
@@ -109,6 +112,8 @@ You can point Spack to a repository on your local filesystem:
 
 Here, ``/path/to/my_repository_root`` should be the directory containing that repository's ``repo.yaml`` and ``packages/`` subdirectory.
 
+.. index:: git repo
+
 Git-based Repositories
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -119,6 +124,8 @@ Spack can clone and use repositories directly from Git URLs:
    repos:
      my_remote_repo: https://github.com/myorg/spack-custom-pkgs.git
 
+.. _automatic-repo-cloning:
+
 Automatic Cloning
 """""""""""""""""
 
@@ -128,6 +135,8 @@ By default, these repositories are cloned into a subdirectory within ``~/.spack/
 To change directories to the package repository, you can use ``spack cd --repo [name]``.
 To find where a repository is cloned, you can use ``spack location --repo [name]`` or ``spack repo list``.
 The ``name`` argument is optional; if omitted, Spack will use the first package repository in configuration order.
+
+.. _customizing-clone-location:
 
 Customizing Clone Location
 """"""""""""""""""""""""""
@@ -259,6 +268,9 @@ The default configuration in ``$spack/etc/spack/defaults/repos.yaml`` looks some
      builtin:
        git: https://github.com/spack/spack-packages.git
 
+.. index::
+   single: namespace; of a repository
+
 .. _namespaces:
 
 Namespaces
@@ -287,6 +299,8 @@ This accomplishes two things:
    The ``namespace`` defined in the package repository's ``repo.yaml`` is the **authoritative source** for the namespace.
    It is *not* derived from the local configuration in ``repos.yaml``.
    This means that the namespace is determined by the repository maintainer, not by the user or local configuration.
+
+.. index:: nested namespace
 
 Nested Namespaces for Organizations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -7,6 +7,7 @@ import os
 import sys
 
 from spack_repo.builtin_mock.build_systems.generic import Package
+from spack_repo.builtin_mock.packages.garply.package import c_compiler
 
 from spack.package import *
 
@@ -21,200 +22,52 @@ class Corge(Package):
     depends_on("quux")
 
     def install(self, spec, prefix):
-        corge_cc = """#include <iostream>
-#include <stdexcept>
-#include "corge.h"
-#include "corge_version.h"
-#include "quux/quux.h"
-
-const int Corge::version_major = corge_version_major;
-const int Corge::version_minor = corge_version_minor;
-
-Corge::Corge()
-{
-}
-
-int
-Corge::get_version() const
-{
-    return 10 * version_major + version_minor;
-}
-
-int
-Corge::corgegate() const
-{
-    int corge_version = get_version();
-    std::cout << "Corge::corgegate version " << corge_version
-              << " invoked" << std::endl;
-    std::cout << "Corge config directory = %s" <<std::endl;
-    Quux quux;
-    int quux_version = quux.quuxify();
-
-    if(quux_version != corge_version) {
-        throw std::runtime_error(
-              "Corge found an incompatible version of Garply.");
-    }
-
-    return corge_version;
-}
-"""
-        corge_h = """#ifndef CORGE_H_
-
-class Corge
-{
-private:
-    static const int version_major;
-    static const int version_minor;
-
-public:
-    Corge();
-    int get_version() const;
-    int corgegate() const;
-};
-
-#endif // CORGE_H_
-"""
-        corge_version_h = """
-const int corge_version_major = %s;
-const int corge_version_minor = %s;
-"""
-        corgegator_cc = """
-#include <iostream>
-#include "corge.h"
-
-int
-main(int argc, char* argv[])
-{
-    std::cout << "corgerator called with ";
-    if (argc == 0) {
-        std::cout << "no command-line arguments" << std::endl;
-    } else {
-        std::cout << "command-line arguments:";
-        for (int i = 0; i < argc; ++i) {
-            std::cout << " \"" << argv[i] << "\"";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "corgegating.."<<std::endl;
-    Corge corge;
-    corge.corgegate();
-    std::cout << "done."<<std::endl;
-    return 0;
-}
-"""
-        mkdirp("%s/corge" % prefix.include)
-        mkdirp("%s/corge" % self.stage.source_path)
-        with open("%s/corge_version.h" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(corge_version_h % (self.version[0], self.version[1:]))
-        with open("%s/corge/corge.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(corge_cc % prefix.config)
-        with open("%s/corge/corge.h" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(corge_h)
-        with open("%s/corge/corgegator.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(corgegator_cc)
-        gpp = which("g++")
-        if sys.platform == "darwin":
-            gpp = which("clang++")
-        gpp(
-            "-Dcorge_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-I%s" % spec["quux"].prefix.include,
-            "-I%s" % spec["garply"].prefix.include,
-            "-O2",
-            "-g",
-            "-DNDEBUG",
-            "-fPIC",
-            "-o",
-            "corge.cc.o",
-            "-c",
-            "corge/corge.cc",
-        )
-        gpp(
-            "-Dcorge_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-I%s" % spec["quux"].prefix.include,
-            "-I%s" % spec["garply"].prefix.include,
-            "-O2",
-            "-g",
-            "-DNDEBUG",
-            "-fPIC",
-            "-o",
-            "corgegator.cc.o",
-            "-c",
-            "corge/corgegator.cc",
-        )
-        if sys.platform == "darwin":
-            gpp(
-                "-fPIC",
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-dynamiclib",
-                "-install_name",
-                "@rpath/libcorge.dylib",
-                "-o",
-                "libcorge.dylib",
-                "corge.cc.o",
-                "-Wl,-rpath,%s" % spec["quux"].prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
-                "%s/libquux.dylib" % spec["quux"].prefix.lib64,
-                "%s/libgarply.dylib" % spec["garply"].prefix.lib64,
+        # Trivial C sources. The library embeds its install path both as an
+        # rpath (relocated by relocate_elf_binaries) and as a hard-coded
+        # .rodata string (relocated by relocate_text_bin), so both relocation
+        # code paths are exercised.
+        quux = spec["quux"].prefix
+        garply = spec["garply"].prefix
+        with open("corge.h", "w", encoding="utf-8") as f:
+            f.write("int corgegate(void);\n")
+        with open("corge.c", "w", encoding="utf-8") as f:
+            f.write(
+                '#include "corge.h"\n#include "quux/quux.h"\n'
+                'const char *corge_config = "%s";\n'
+                "int corgegate(void) { return quuxify(); }\n" % prefix.config
             )
-            gpp(
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-rdynamic",
-                "corgegator.cc.o",
-                "-o",
-                "corgegator",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "-Wl,-rpath,%s" % spec["quux"].prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
-                "libcorge.dylib",
-                "%s/libquux.dylib.3.0" % spec["quux"].prefix.lib64,
-                "%s/libgarply.dylib.3.0" % spec["garply"].prefix.lib64,
-            )
-            mkdirp(prefix.lib64)
-            copy("libcorge.dylib", "%s/libcorge.dylib" % prefix.lib64)
-            os.link("%s/libcorge.dylib" % prefix.lib64, "%s/libcorge.dylib.3.0" % prefix.lib64)
+        with open("corgegator.c", "w", encoding="utf-8") as f:
+            f.write('#include "corge.h"\nint main(void) { return corgegate(); }\n')
+
+        cc = c_compiler()
+        cc("-fPIC", "-O0", "-I%s" % quux.include, "-c", "corge.c", "-o", "corge.o")
+
+        mkdirp(prefix.lib64)
+        if sys.platform == "darwin":
+            lib = "libcorge.dylib"
+            quux_lib = os.path.join(quux.lib64, "libquux.dylib")
+            cc("-dynamiclib", "-install_name", "@rpath/" + lib, "-o", lib, "corge.o", quux_lib)
         else:
-            gpp(
-                "-fPIC",
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-shared",
-                "-Wl,-soname,libcorge.so",
-                "-o",
-                "libcorge.so",
-                "corge.cc.o",
-                "-Wl,-rpath,%s:%s::::" % (spec["quux"].prefix.lib64, spec["garply"].prefix.lib64),
-                "%s/libquux.so" % spec["quux"].prefix.lib64,
-                "%s/libgarply.so" % spec["garply"].prefix.lib64,
-            )
-            gpp(
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-rdynamic",
-                "corgegator.cc.o",
-                "-o",
-                "corgegator",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "-Wl,-rpath,%s" % spec["quux"].prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
-                "libcorge.so",
-                "%s/libquux.so.3.0" % spec["quux"].prefix.lib64,
-                "%s/libgarply.so.3.0" % spec["garply"].prefix.lib64,
-            )
-            mkdirp(prefix.lib64)
-            copy("libcorge.so", "%s/libcorge.so" % prefix.lib64)
-            os.link("%s/libcorge.so" % prefix.lib64, "%s/libcorge.so.3.0" % prefix.lib64)
-        copy("corgegator", "%s/corgegator" % prefix.lib64)
-        copy("%s/corge/corge.h" % self.stage.source_path, "%s/corge/corge.h" % prefix.include)
+            lib = "libcorge.so"
+            quux_lib = os.path.join(quux.lib64, "libquux.so")
+            garply_lib = os.path.join(garply.lib64, "libgarply.so")
+            cc("-shared", "-Wl,-soname,%s" % lib, "-o", lib, "corge.o", quux_lib, garply_lib)
+        cc(
+            "-o",
+            "corgegator",
+            "corgegator.c",
+            "-Wl,-rpath,%s" % prefix.lib64,
+            "-Wl,-rpath,%s" % quux.lib64,
+            "-Wl,-rpath,%s" % garply.lib64,
+            lib,
+        )
+        copy(lib, os.path.join(prefix.lib64, lib))
+        os.link(os.path.join(prefix.lib64, lib), os.path.join(prefix.lib64, lib + ".3.0"))
+        copy("corgegator", os.path.join(prefix.lib64, "corgegator"))
+
+        mkdirp("%s/corge" % prefix.include)
+        copy("corge.h", "%s/corge/corge.h" % prefix.include)
         mkdirp(prefix.bin)
-        copy("corge_version.h", "%s/corge_version.h" % prefix.bin)
         os.symlink("%s/corgegator" % prefix.lib64, "%s/corgegator" % prefix.bin)
-        os.symlink("%s/quuxifier" % spec["quux"].prefix.lib64, "%s/quuxifier" % prefix.bin)
-        os.symlink("%s/garplinator" % spec["garply"].prefix.lib64, "%s/garplinator" % prefix.bin)
+        os.symlink("%s/quuxifier" % quux.lib64, "%s/quuxifier" % prefix.bin)
+        os.symlink("%s/garplinator" % garply.lib64, "%s/garplinator" % prefix.bin)

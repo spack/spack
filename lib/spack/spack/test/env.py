@@ -13,20 +13,18 @@ import pytest
 
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.filesystem as fs
+import spack.package_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
-import spack.spec_parser
+import spack.util.filesystem as fs
+from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import (
-    EnvironmentManifestFile,
-    SpackEnvironmentViewError,
-    _error_on_nonempty_view_dir,
-)
+from spack.environment.environment import EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
+from spack.util.lang import Singleton, ensure_unwrapped
 
 pytestmark = [
     pytest.mark.not_on_windows("Envs are not supported on windows"),
@@ -66,7 +64,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
 
     # rewrite the hash
     old_hash, new_hash = env.concretized_roots[0].hash, "abc"
-    env.specs_by_hash[old_hash]._hash = new_hash  # type: ignore[attr-defined]
+    env.specs_by_hash[old_hash]._hash = new_hash
     env.concretized_roots[0].hash = new_hash
     env.specs_by_hash[new_hash] = env.specs_by_hash[old_hash]
     del env.specs_by_hash[old_hash]
@@ -79,7 +77,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     hashes = [x.hash for x in read_in.concretized_roots]
     assert hashes
     assert hashes[0] in read_in.specs_by_hash
-    _hash = read_in.specs_by_hash[hashes[0]]._hash  # type: ignore[attr-defined]
+    _hash = read_in.specs_by_hash[hashes[0]]._hash
     assert _hash == new_hash
 
 
@@ -291,7 +289,12 @@ spack:
       link_type: symlink
 """,
             "./another-view",
-            {"root": "./another-view", "select": ["%gcc"], "link_type": "symlink"},
+            {
+                "root": "./another-view",
+                "select": ["%gcc"],
+                "link_type": "symlink",
+                "link_dirs": True,
+            },
         ),
         (
             """
@@ -305,7 +308,7 @@ spack:
       link_type: symlink
 """,
             True,
-            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink"},
+            {"root": "./view-gcc", "select": ["%gcc"], "link_type": "symlink", "link_dirs": True},
         ),
     ],
 )
@@ -355,34 +358,6 @@ def test_environment_pickle(tmp_path: pathlib.Path):
     obj = pickle.dumps(env1)
     env2 = pickle.loads(obj)
     assert isinstance(env2, ev.Environment)
-
-
-def test_error_on_nonempty_view_dir(tmp_path: pathlib.Path):
-    """Error when the target is not an empty dir"""
-    with fs.working_dir(str(tmp_path)):
-        os.mkdir("empty_dir")
-        os.mkdir("nonempty_dir")
-        with open(os.path.join("nonempty_dir", "file"), "wb"):
-            pass
-        os.symlink("empty_dir", "symlinked_empty_dir")
-        os.symlink("does_not_exist", "broken_link")
-        os.symlink("broken_link", "file")
-
-        # This is OK.
-        _error_on_nonempty_view_dir("empty_dir")
-
-        # This is not OK.
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("nonempty_dir")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("symlinked_empty_dir")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("broken_link")
-
-        with pytest.raises(SpackEnvironmentViewError):
-            _error_on_nonempty_view_dir("file")
 
 
 def test_can_add_specs_to_environment_without_specs_attribute(tmp_path: pathlib.Path, config):
@@ -563,7 +538,9 @@ spack:
 
 
 @pytest.mark.parametrize("unify_in_config", [True, False, "when_possible"])
-def test_environment_config_scheme_used(tmp_path: pathlib.Path, unify_in_config):
+def test_environment_config_scheme_used(
+    mutable_config: Configuration, tmp_path: pathlib.Path, unify_in_config
+):
     """Tests that "unify" settings in lower configuration scopes is taken into account,
     if absent in spack.yaml.
     """
@@ -576,9 +553,9 @@ spack:
 """
     )
 
-    with spack.config.override("concretizer:unify", unify_in_config):
+    with mutable_config.override("concretizer:unify", unify_in_config):
         with ev.Environment(manifest.parent):
-            assert spack.config.CONFIG.get("concretizer:unify") == unify_in_config
+            assert mutable_config.get("concretizer:unify") == unify_in_config
 
 
 @pytest.mark.parametrize(
@@ -844,6 +821,43 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unif
     assert len(all_root_hashes) == 2
 
 
+def test_concretize_is_noop_for_concretized_namespaced_root(mutable_mock_env_path):
+    """Tests that a root spec with an explicit namespace is not reconcretized by a
+    repeated concretization.
+
+    The lockfile used to store roots in their default string format, which omits the
+    namespace. On re-read, the stored root no longer compared equal to the namespaced
+    user spec, so the spec was considered new and was reconcretized every time.
+    """
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+      specs:
+      - builtin_mock.pkg-a
+    """
+    )
+    env = ev.Environment(mutable_mock_env_path)
+    with env:
+        env.concretize()
+        env.write()
+    original_hashes = {x.hash for x in env.concretized_roots}
+
+    # Re-read the environment from the lockfile and concretize again
+    reread = ev.Environment(mutable_mock_env_path)
+    with reread:
+        newly_concretized = reread.concretize()
+
+    # The root was already concretized, so repeated concretization is a no-op
+    assert newly_concretized == []
+    assert len(reread.concretized_roots) == 1
+    assert not any(x.new for x in reread.concretized_roots)
+    assert {x.hash for x in reread.concretized_roots} == original_hashes
+
+    # The abstract root read from the lockfile retains its namespace
+    assert reread.concretized_roots[0].root == spack.spec.Spec("builtin_mock.pkg-a")
+
+
 @pytest.mark.regression("44216")
 def test_root_version_weights_for_old_versions(mutable_mock_env_path):
     """Tests that, when we select two old versions of root specs that have the same version
@@ -882,14 +896,56 @@ def test_env_view_on_empty_dir_is_fine(tmp_path: pathlib.Path, config, temporary
     env.concretize()
     env.install_all(fake=True)
     env.regenerate_views()
-    assert view_dir.is_symlink()
+    assert list(view_dir.iterdir())  # view dir should not be empty after regeneration
 
 
-def test_env_view_on_non_empty_dir_errors(tmp_path: pathlib.Path, config, temporary_store):
-    """Tests that creating a view pointing to a non-empty dir errors."""
+def test_view_projection_path_is_final_after_regenerate(
+    tmp_path: pathlib.Path, config, temporary_store, monkeypatch
+):
+    """Paths embedded into file *contents* by ``add_files_to_view`` (e.g. shebangs,
+    ``pyvenv.cfg``) must reference the final view directory, not the temporary directory
+    the view is built in. Regression test for views being built in a sibling staging dir
+    and renamed into place, which left dangling staging paths baked into files."""
+
+    original = spack.package_base.PackageBase.add_files_to_view
+
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
+        original(self, view, merge_map, skip_if_exists=skip_if_exists)
+        # Emulate packages like python that bake the projection into file contents.
+        projection = view.get_projection_for_spec(self.spec)
+        with open(os.path.join(projection, f"{self.name}.projection"), "w", encoding="utf-8") as f:
+            f.write(projection)
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "add_files_to_view", add_files_to_view)
+
     view_dir = tmp_path / "view"
-    view_dir.mkdir()
-    (view_dir / "file").write_text("")
+    env = ev.create_in_dir(tmp_path, with_view="view")
+    env.add("mpileaks")
+    env.concretize()
+    env.install_all(fake=True)
+    env.regenerate_views()
+
+    recorded = list(view_dir.glob("*.projection"))
+    assert recorded, "expected add_files_to_view to have written marker files"
+    for marker in recorded:
+        assert marker.read_text() == str(view_dir)
+
+    # No staging/backup siblings should be left behind after a successful regeneration.
+    assert not list(tmp_path.glob("view.new.*"))
+    assert not list(tmp_path.glob("view.old.*"))
+
+
+@pytest.mark.parametrize("as_file", [False, True], ids=["non_empty_dir", "plain_file"])
+def test_env_view_on_non_empty_dir_errors(
+    tmp_path: pathlib.Path, config, temporary_store, as_file: bool
+):
+    """Tests that creating a view pointing to a non-empty dir or plain file errors."""
+    view_dir = tmp_path / "view"
+    if as_file:
+        view_dir.write_text("")
+    else:
+        view_dir.mkdir()
+        (view_dir / "file").write_text("")
     env = ev.create_in_dir(tmp_path, with_view="view")
     env.add("mpileaks")
     env.concretize()
@@ -967,7 +1023,55 @@ def test_environment_from_name_or_dir(mutable_mock_env_path):
         _ = ev.environment_from_name_or_dir("fake-env")
 
 
-def test_env_include_configs(mutable_mock_env_path):
+def test_all_environment_names_ignores_env_contents(mutable_mock_env_path):
+    """Environments are leaves: listing must not descend into their contents."""
+    ev.create("test")
+    ev.create("group/nested")
+
+    # simulate a user keeping a stage directory inside a managed environment
+    stage = mutable_mock_env_path / "test" / "stage" / "spack-stage-foo-1-0-abcdef"
+    stage.mkdir(parents=True)
+    # even a stray manifest below an environment must not be listed as an environment
+    (stage / ev.manifest_name).write_text("spack:\n  specs: []\n")
+
+    assert ev.all_environment_names() == ["group/nested", "test"]
+
+
+def test_all_environment_names_handles_symlink_cycles(mutable_mock_env_path):
+    """Symlink cycles in the environment root must not hang the listing."""
+    ev.create("group/nested")
+    (mutable_mock_env_path / "group" / "loop").symlink_to(mutable_mock_env_path / "group")
+
+    assert ev.all_environment_names() == ["group/nested"]
+
+
+def test_all_environment_names_follows_symlinked_envs(mutable_mock_env_path, tmp_path):
+    """Symlinked environment dirs (e.g. from spack env track) are still listed."""
+    external = tmp_path / "external_env"
+    external.mkdir()
+    (external / ev.manifest_name).write_text("spack:\n  specs: []\n")
+
+    mutable_mock_env_path.mkdir(parents=True, exist_ok=True)
+    (mutable_mock_env_path / "tracked").symlink_to(external)
+
+    assert ev.all_environment_names() == ["tracked"]
+
+
+def test_cannot_create_env_nested_in_another_env(mutable_mock_env_path):
+    """Creating an environment inside an existing environment is an error."""
+    ev.create("outer")
+    with pytest.raises(ev.SpackEnvironmentError, match="inside existing environment 'outer'"):
+        ev.create("outer/inner")
+
+
+def test_cannot_create_env_above_another_env(mutable_mock_env_path):
+    """Creating an environment above an existing environment is an error."""
+    ev.create("group/inner")
+    with pytest.raises(ev.SpackEnvironmentError, match="would contain existing environment"):
+        ev.create("group")
+
+
+def test_env_include_configs(mutable_mock_env_path, mutable_config: Configuration):
     """check config and package values using new include schema"""
     env_path = mutable_mock_env_path
     env_path.mkdir()
@@ -1008,9 +1112,9 @@ spack:
 
     e = ev.Environment(env_path)
     with e.manifest.use_config():
-        assert not spack.config.get("config:verify_ssl")
-        python_reqs = spack.config.get("packages")["python"]["require"]
-        req_specs = set(x["spec"] for x in python_reqs)
+        assert not mutable_config.get("config:verify_ssl")
+        python_reqs = mutable_config.get("packages")["python"]["require"]
+        req_specs = {x["spec"] for x in python_reqs}
         assert req_specs == set(["@3.11:"])
 
 
@@ -1197,6 +1301,27 @@ spack:
     assert mpileaks_clang.satisfies("%[virtuals=mpi] mpich")
     assert not mpileaks_clang.satisfies("%[virtuals=mpi] zmpi")
     assert mpileaks_clang["mpich"].satisfies("%[virtuals=fortran] gcc")
+
+
+def test_matrix_exclude_from_environment_manifest(tmp_path: pathlib.Path, mutable_config):
+    """Tests that matrix excludes are preserved when the environment manifest is read."""
+    spack_yaml = """
+spack:
+  definitions:
+  - packages: [foo, bar]
+  specs:
+  - matrix:
+    - [$packages]
+    exclude:
+    - "bar"
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+
+    e = ev.Environment(tmp_path)
+
+    assert e.manifest.user_specs() == [{"matrix": [["$packages"]], "exclude": ["bar"]}]
+    assert e.user_specs.specs == [spack.spec.Spec("foo")]
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
@@ -1585,7 +1710,7 @@ def test_static_analysis_in_environments(spack_yaml, tmp_path, mutable_config):
 
 
 @pytest.mark.regression("51606")
-def test_ids_when_using_toolchain_twice_in_a_spec(tmp_path, mutable_config):
+def test_ids_when_using_toolchain_twice_in_a_spec(tmp_path, mutable_config: Configuration):
     """Tests that using the same toolchain twice in a spec constructs different objects"""
     spack_yaml = """
 spack:
@@ -1607,8 +1732,8 @@ spack:
     manifest.write_text(spack_yaml)
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
-        toolchains = spack.config.CONFIG.get("toolchains", {})
-        s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
+        toolchains = mutable_config.get("toolchains", {})
+        s = spack.spec.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
 
@@ -2133,3 +2258,95 @@ def test_unified_environment_with_mixed_compilers_and_fortran(tmp_path, config):
     assert mpich.satisfies("%fortran=gcc")
     assert openblas.satisfies("%c,fortran=gcc")
     assert mpich["fortran"].dag_hash() == openblas["fortran"].dag_hash()
+
+
+@pytest.mark.parametrize("enable_locks", [True, False])
+def test_environment_pickle_preserves_lock_state(
+    mutable_config: Configuration, enable_locks, tmp_path: pathlib.Path
+):
+    """Tests that an environment round-trips through pickle with its lock-enable state intact."""
+    with mutable_config.override("config:locks", enable_locks):
+        env = ev.create_in_dir(tmp_path)
+    original_enabled = env.txlock.enabled
+
+    blob = pickle.dumps(env)
+
+    # Flip the global config, then unpickle: the rebuilt transaction lock must keep the state
+    # that was pickled, not the (now different) global one.
+    with mutable_config.override("config:locks", not enable_locks):
+        restored = pickle.loads(blob)
+
+    assert restored.txlock.enabled == original_enabled
+
+
+def test_env_substitution_reaches_the_unwrapped_configuration(
+    mutable_mock_env_path, mutable_config, monkeypatch
+):
+    """``$env`` expands against the Configuration behind the ``CONFIG`` singleton.
+
+    Test fixtures bind ``CONFIG`` to a plain Configuration, so this test wraps it in a Singleton,
+    as it is in production.
+    """
+    env = ev.create("test_env_path_through_singleton")
+    monkeypatch.setattr(spack.config, "CONFIG", Singleton(lambda: mutable_config))
+
+    with ev.read("test_env_path_through_singleton"):
+        # If the env_path was attached to the singleton wrapper it won't be expanded
+        configuration = ensure_unwrapped(spack.config.CONFIG)
+        expanded = spack.config.canonicalize_path("$env/concretization", config=configuration)
+
+    assert expanded == os.path.join(env.path, "concretization")
+
+
+@pytest.mark.usefixtures("mutable_config")
+class TestLockfileWrites:
+    """The lockfile is only written when its content changes"""
+
+    @pytest.fixture
+    def lockfile(self, tmp_path: pathlib.Path) -> pathlib.Path:
+        (tmp_path / "spack.yaml").write_text("spack:\n  specs:\n  - mpileaks\n")
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
+            e.write()
+        return tmp_path / ev.lockfile_name
+
+    def test_unchanged_lockfile_is_not_rewritten(self, lockfile, monkeypatch):
+        def fail(*args, **kwargs):
+            raise AssertionError("the lockfile was rewritten")
+
+        monkeypatch.setattr(ev.environment.sjson, "dump", fail)
+        with ev.Environment(lockfile.parent) as e:
+            e.write()
+
+    def test_older_lockfile_keeps_its_version_until_reconcretized(self, lockfile):
+        data = json.loads(lockfile.read_text())
+        current = data["_meta"]["lockfile-version"]
+        data["_meta"]["lockfile-version"] = current - 1
+        lockfile.write_text(json.dumps(data))
+        before = lockfile.read_bytes()
+
+        with ev.Environment(lockfile.parent) as e:
+            e.write()
+        assert lockfile.read_bytes() == before
+
+        with ev.Environment(lockfile.parent) as e:
+            e.concretize(force=True)
+            e.write()
+        assert json.loads(lockfile.read_text())["_meta"]["lockfile-version"] == current
+
+    def test_lockfile_written_when_roots_change(self, lockfile):
+        def roots():
+            return {r["spec"] for r in json.loads(lockfile.read_text())["roots"]}
+
+        with ev.Environment(lockfile.parent) as e:
+            e.add("libelf")
+            e.concretize()
+            e.write()
+        assert roots() == {"mpileaks", "libelf"}
+
+        # Removing a root changes the lockfile without concretizing anything new
+        with ev.Environment(lockfile.parent) as e:
+            e.remove("libelf")
+            e.concretize()
+            e.write()
+        assert roots() == {"mpileaks"}

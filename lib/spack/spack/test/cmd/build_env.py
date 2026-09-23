@@ -8,8 +8,8 @@ import sys
 import pytest
 
 import spack.error
-from spack.llnl.util.filesystem import working_dir
 from spack.main import SpackCommand
+from spack.util.filesystem import working_dir
 
 build_env = SpackCommand("build-env")
 

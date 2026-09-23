@@ -8,8 +8,7 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.variant
 from spack.error import SpackError
-from spack.spec import Spec
-from spack.spec_parser import expand_toolchains
+from spack.spec import Spec, expand_toolchains
 
 
 class SpecList:
@@ -113,6 +112,9 @@ class SpecList:
 
 
 def _expand_matrix_constraints(matrix_config):
+    # Avoid circular import
+    import spack.hash_lookup
+
     # recurse so we can handle nested matrices
     expanded_rows = []
     for row in matrix_config["matrix"]:
@@ -154,7 +156,7 @@ def _expand_matrix_constraints(matrix_config):
             pass
 
         # Resolve abstract hashes for exclusion criteria
-        if any(test_spec.lookup_hash().satisfies(x) for x in excludes):
+        if any(spack.hash_lookup.lookup_hash(test_spec).satisfies(x) for x in excludes):
             continue
 
         if sigil:
@@ -292,7 +294,3 @@ class SpecListError(SpackError):
 
 class UndefinedReferenceError(SpecListError):
     """Error class for undefined references in Spack stacks."""
-
-
-class InvalidSpecConstraintError(SpecListError):
-    """Error class for invalid spec constraints at concretize time."""

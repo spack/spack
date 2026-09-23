@@ -1,10 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.llnl.util.lang
+import spack.util.lang
 
 
-@spack.llnl.util.lang.lazy_lexicographic_ordering
+@spack.util.lang.lazy_lexicographic_ordering
 class OperatingSystem:
     """Base class for all the Operating Systems.
 

@@ -113,7 +113,25 @@ class SphinxCodeBlock(Directive):
         return [literal]
 
 
+class SphinxGlossary(Directive):
+    """Parses the body of a Sphinx ``glossary`` directive. Tags the container so the
+    paragraph reformatter can skip multi-term alias lines (which docutils misparses as a
+    single paragraph) while still reflowing definition bodies nested below."""
+
+    has_content = True
+    optional_arguments = 0
+    required_arguments = 0
+    option_spec = {"sorted": directives.flag}
+
+    def run(self) -> List[nodes.Node]:
+        node = nodes.container()
+        node["glossary"] = True
+        self.state.nested_parse(self.content, self.content_offset, node)
+        return [node]
+
+
 directives.register_directive("code-block", SphinxCodeBlock)
+directives.register_directive("glossary", SphinxGlossary)
 
 
 class ParagraphInfo:
@@ -136,6 +154,14 @@ def _is_node_in_table(node: nodes.Node) -> bool:
         if isinstance(node, nodes.table):
             return True
     return False
+
+
+def _is_glossary_term_paragraph(node: nodes.Node) -> bool:
+    """A paragraph that is a direct child of a ``glossary`` container is a misparsed
+    multi-term alias group (e.g. ``package`` / ``recipe``). Definition bodies live one
+    level deeper (inside a ``block_quote`` or ``definition`` node)."""
+    parent = node.parent
+    return isinstance(parent, nodes.container) and parent.get("glossary") is True
 
 
 def _validate_schema(data: object) -> None:
@@ -210,7 +236,10 @@ def _format_paragraphs(document: nodes.document, path: str, src_lines: List[str]
     paragraphs = [
         ParagraphInfo(line=p.line, src=p.rawsource)
         for p in document.findall(nodes.paragraph)
-        if p.line is not None and p.rawsource and not _is_node_in_table(p)
+        if p.line is not None
+        and p.rawsource
+        and not _is_node_in_table(p)
+        and not _is_glossary_term_paragraph(p)
     ]
 
     # Work from bottom to top to avoid messing up line numbers

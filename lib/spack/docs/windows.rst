@@ -12,8 +12,6 @@
 Spack On Windows
 ================
 
-Windows support for Spack is currently under development.
-While this work is still in an early stage, it is currently possible to set up Spack and perform a few operations on Windows.
 This section will guide you through the steps needed to install Spack and start running it on a fresh Windows machine.
 
 Step 1: Install prerequisites

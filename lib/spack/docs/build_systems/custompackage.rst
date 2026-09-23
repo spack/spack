@@ -9,6 +9,9 @@
 
 .. _custompackage:
 
+.. index::
+   single: build system; custom
+
 Custom Build Systems
 --------------------
 

@@ -5,6 +5,7 @@ import contextlib
 import filecmp
 import glob
 import io
+import json
 import os
 import pathlib
 import shutil
@@ -18,35 +19,39 @@ import spack.cmd.env
 import spack.concretize
 import spack.config
 import spack.environment as ev
-import spack.environment.depfile as depfile
 import spack.error
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.link_tree
-import spack.llnl.util.tty as tty
 import spack.main
-import spack.modules
-import spack.modules.tcl
 import spack.package_base
 import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.solver.asp
+import spack.spec
 import spack.stage
 import spack.store
 import spack.util.environment
+import spack.util.filesystem as fs
+import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
+from spack.active_environment import active_environment
 from spack.cmd.env import _env_create
-from spack.installer import PackageInstaller
-from spack.llnl.util.filesystem import readlink
-from spack.llnl.util.lang import dedupe
+from spack.concretize_ui import SolveKind
+from spack.config import Configuration, substitute_path_variables
+from spack.environment import depfile
 from spack.main import SpackCommand, SpackCommandError
+from spack.old_installer import PackageInstaller
+from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import stage_prefix
+from spack.store import Store
 from spack.test.conftest import RepoBuilder
+from spack.test.utilities import RecordingUI
 from spack.traverse import traverse_nodes
+from spack.util import tty
 from spack.util.executable import Executable
-from spack.util.path import substitute_path_variables
+from spack.util.filesystem import readlink
+from spack.util.lang import dedupe
 from spack.version import Version
 
 # TODO-27021
@@ -252,6 +257,12 @@ def template_combinatorial_env(tmp_path: pathlib.Path):
           projections:
             'all': '{{{{architecture.target}}}}/{{{{name}}}}-{{{{version}}}}'
     """
+
+
+def test_add_requires_active_env():
+    """Test that spack add exits with code 2 when no environment is active."""
+    add("hdf5", fail_on_error=False)
+    assert add.returncode == 2
 
 
 def test_add():
@@ -506,13 +517,13 @@ def test_env_specs_partition(install_mockery, mock_fetch):
     assert roots_to_install[0].name == "mpileaks"
 
 
-def test_env_install_all(install_mockery, mock_fetch):
+def test_env_install_all(temporary_store: Store, install_mockery, mock_fetch):
     e = ev.create("test")
     e.add("cmake-client")
     e.concretize()
     e.install_all(fake=True)
     spec = next(x for x in e.all_specs_generator() if x.name == "cmake-client")
-    assert spec.installed
+    assert temporary_store.db.installed(spec)
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch, installer_variant):
@@ -535,7 +546,12 @@ def test_env_install_single_spec(install_mockery, mock_fetch, installer_variant)
 @pytest.mark.parametrize("unify", [True, False, "when_possible"])
 @pytest.mark.parametrize("reuse", [True, False])
 def test_env_install_include_concrete_env(
-    unify, reuse, install_mockery, mock_fetch, mutable_config
+    unify,
+    reuse,
+    temporary_store: Store,
+    install_mockery,
+    mock_fetch,
+    mutable_config: Configuration,
 ):
     test1, test2, combined = setup_combined_multiple_env()
 
@@ -554,7 +570,7 @@ def test_env_install_include_concrete_env(
     test2_user_spec_hashes = [x.hash for x in test2.concretized_roots]
 
     for spec in combined.all_specs():
-        assert spec.installed
+        assert temporary_store.db.installed(spec)
 
     assert test1_user_spec_hashes == [
         x.hash for x in combined.included_concretized_roots[test1.path]
@@ -573,13 +589,15 @@ def test_env_install_include_concrete_env(
         assert mpileaks["libelf"].dag_hash() in test2_user_spec_hashes
 
 
-def test_env_roots_marked_explicit(install_mockery, mock_fetch, installer_variant):
+def test_env_roots_marked_explicit(
+    temporary_store: Store, install_mockery, mock_fetch, installer_variant
+):
     install = SpackCommand("install")
     install("--fake", "dependent-install")
 
     # Check one explicit, one implicit install
-    dependent = spack.store.STORE.db.query(explicit=True)
-    dependency = spack.store.STORE.db.query(explicit=False)
+    dependent = temporary_store.db.query(explicit=True)
+    dependency = temporary_store.db.query(explicit=False)
     assert len(dependent) == 1
     assert len(dependency) == 1
 
@@ -590,11 +608,13 @@ def test_env_roots_marked_explicit(install_mockery, mock_fetch, installer_varian
         e.concretize()
         e.install_all()
 
-    explicit = spack.store.STORE.db.query(explicit=True)
+    explicit = temporary_store.db.query(explicit=True)
     assert len(explicit) == 2
 
 
-def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkeypatch, capfd):
+def test_env_modifications_error_on_activate(
+    install_mockery, mock_fetch, monkeypatch, capfd, mock_packages: RepoPath
+):
     env("create", "test")
     install = SpackCommand("install")
 
@@ -605,7 +625,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
     def setup_error(pkg, env):
         raise RuntimeError("cmake-client had issues!")
 
-    pkg = spack.repo.PATH.get_pkg_class("cmake-client")
+    pkg = mock_packages.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
     ev.shell.activate(e)
@@ -648,7 +668,7 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.P
 
 
 def test_env_install_two_specs_same_dep(
-    install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
+    temporary_store: Store, install_mockery, mock_fetch, tmp_path: pathlib.Path, monkeypatch
 ):
     """Test installation of two packages that share a dependency with no
     connection and the second specifying the dependency as a 'build'
@@ -677,10 +697,10 @@ spack:
     assert "depb: Successfully installed" in out
     assert "pkg-a: Successfully installed" in out
 
-    depb = spack.store.STORE.db.query_one("depb", installed=True)
+    depb = temporary_store.db.query_one("depb", installed=True)
     assert depb, "Expected depb to be installed"
 
-    a = spack.store.STORE.db.query_one("pkg-a", installed=True)
+    a = temporary_store.db.query_one("pkg-a", installed=True)
     assert a, "Expected pkg-a to be installed"
 
 
@@ -1030,7 +1050,7 @@ spack:
 
 
 @pytest.mark.parametrize("use_name", (True, False))
-def test_init_from_env(use_name, environment_from_manifest):
+def test_init_from_env(use_name, environment_from_manifest, mutable_config: Configuration):
     """Test that an environment can be instantiated from an environment dir"""
     e1 = environment_from_manifest(
         """
@@ -1049,7 +1069,7 @@ spack:
             "libelf": {"spec": "libelf", "path": "./libelf"},
             "mpileaks": {"spec": "mpileaks", "path": "../mpileaks"},
         }
-        spack.config.set("develop", dev_config)
+        mutable_config.set("develop", dev_config)
         fs.touch(os.path.join(e1.path, "libelf"))
 
     e1.concretize()
@@ -1079,7 +1099,7 @@ def test_init_from_env_no_spackfile(tmp_path):
 def test_init_from_yaml_relative_includes(tmp_path: pathlib.Path):
     files = [
         "relative_copied/packages.yaml",
-        "./relative_copied/compilers.yaml",
+        "./relative_copied/mirrors.yaml",
         "repos.yaml",
         "./config.yaml",
     ]
@@ -1135,7 +1155,9 @@ spack:
         _ = _env_create("test2", init_file=str(e1_manifest))
 
 
-def test_env_view_external_prefix(tmp_path: pathlib.Path, mutable_database, mock_packages):
+def test_env_view_external_prefix(
+    tmp_path: pathlib.Path, mutable_database, mock_packages, mutable_config: Configuration
+):
     fake_prefix = tmp_path / "a-prefix"
     fake_bin = fake_prefix / "bin"
     fake_bin.mkdir(parents=True, exist_ok=False)
@@ -1165,7 +1187,7 @@ packages:
     external_config_dict = spack.util.spack_yaml.load_config(external_config)
 
     test_scope = spack.config.InternalConfigScope("env-external-test", data=external_config_dict)
-    with spack.config.override(test_scope):
+    with mutable_config.override(test_scope):
         e = ev.create("test", manifest_file)
         e.concretize()
         # Note: normally installing specs in a test environment requires doing
@@ -1268,7 +1290,7 @@ spack:
     with pytest.raises(ValueError, match="does not exist"):
         ev.activate(ev.Environment(env_root))
 
-    assert ev.active_environment() is None
+    assert active_environment() is None
 
 
 def test_env_with_include_config_files_same_basename(
@@ -1508,7 +1530,7 @@ def test_env_with_included_config_file_url(
     env = ev.Environment(str(tmp_path))
     ev.activate(env)
 
-    cfg = spack.config.get("packages")
+    cfg = mutable_empty_config.get("packages")
     assert cfg["mpileaks"]["version"] == ["2.2"]
 
 
@@ -1847,7 +1869,7 @@ def test_roots_display_with_variants():
     assert "boost+shared" in out
 
 
-def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
+def test_uninstall_keeps_in_env(mock_stage, mock_fetch, temporary_store: Store, install_mockery):
     # 'spack uninstall' without --remove should not change the environment
     # spack.yaml file, just uninstall specs
     env("create", "test")
@@ -1858,7 +1880,7 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
 
     test = ev.read("test")
     # Save this spec to check later if it is still in the env
-    (mpileaks_hash,) = list(x for x, y in test.specs_by_hash.items() if y.name == "mpileaks")
+    (mpileaks_hash,) = [x for x, y in test.specs_by_hash.items() if y.name == "mpileaks"]
     user_specs_before = test.user_specs
     user_spec_hashes_before = {x.hash for x in test.concretized_roots}
 
@@ -1869,7 +1891,7 @@ def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
     assert {x.hash for x in test.concretized_roots} == user_spec_hashes_before
     assert test.user_specs.specs == user_specs_before.specs
     assert mpileaks_hash in test.specs_by_hash
-    assert not test.specs_by_hash[mpileaks_hash].installed
+    assert not temporary_store.db.installed(test.specs_by_hash[mpileaks_hash])
 
 
 def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
@@ -2005,7 +2027,7 @@ def test_env_view_fails_dir_file(
         add("view-file")
         add("view-dir")
         with pytest.raises(
-            spack.llnl.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
+            spack.util.link_tree.MergeConflictSummary, match=os.path.join("bin", "x")
         ):
             install()
 
@@ -2117,12 +2139,12 @@ def test_env_include_concrete_envs_lockfile():
     with open(combined.lock_path, encoding="utf-8") as f:
         lockfile_as_dict = combined._read_lockfile(f)
 
-    assert set(
+    assert {
         entry["hash"] for entry in lockfile_as_dict[ev.lockfile_include_key][test1.path]["roots"]
-    ) == set(test1.specs_by_hash)
-    assert set(
+    } == set(test1.specs_by_hash)
+    assert {
         entry["hash"] for entry in lockfile_as_dict[ev.lockfile_include_key][test2.path]["roots"]
-    ) == set(test2.specs_by_hash)
+    } == set(test2.specs_by_hash)
 
 
 def test_env_include_concrete_add_env():
@@ -2313,6 +2335,13 @@ def test_concretize_include_concrete_env():
     """
     test1, _, combined = setup_combined_multiple_env()
 
+    # Nothing changed, so writing the combined environment leaves its lockfile alone
+    with open(combined.lock_path, "rb") as f:
+        lockfile_before = f.read()
+    combined.write()
+    with open(combined.lock_path, "rb") as f:
+        assert f.read() == lockfile_before
+
     # Update test1 environment
     with test1:
         add("mpileaks")
@@ -2329,6 +2358,8 @@ def test_concretize_include_concrete_env():
     combined.concretize()
     combined.write()
     assert Spec("mpileaks") in {x.root for x in combined.included_concretized_roots[test1.path]}
+    with open(combined.lock_path, "rb") as f:
+        assert f.read() != lockfile_before
 
 
 def test_concretize_nested_include_concrete_envs():
@@ -2339,7 +2370,8 @@ def test_concretize_nested_include_concrete_envs():
     test1.concretize()
     test1.write()
 
-    env("create", "--include-concrete", "test1", "test2")
+    os.environ["TEST1_ROOT"] = test1.path
+    env("create", "--include-concrete", "${TEST1_ROOT}", "test2")
     test2 = ev.read("test2")
     with test2:
         add("libelf")
@@ -2995,7 +3027,7 @@ def test_stack_combinatorial_view(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() and current_dir.is_dir()
 
 
@@ -3008,7 +3040,7 @@ def test_stack_view_select(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is spec.satisfies("target=x86_64")
 
 
@@ -3021,7 +3053,7 @@ def test_stack_view_exclude(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not spec.satisfies("callpath")
 
 
@@ -3038,7 +3070,7 @@ def test_stack_view_select_and_exclude(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3058,7 +3090,7 @@ def test_view_link_roots(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             expected_exists = spec in test.roots() and (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3140,7 +3172,7 @@ def test_view_link_all(installed_environment, template_combinatorial_env, tmp_pa
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() == (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3279,7 +3311,7 @@ def test_stack_view_multiple_views(installed_environment, tmp_path: pathlib.Path
         for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = comb_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = comb_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not spec.satisfies("target=core2")
 
 
@@ -3644,9 +3676,7 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_modules_exist_after_env_install(installed_environment, monkeypatch):
-    # Some caching issue
-    monkeypatch.setattr(spack.modules.tcl, "configuration_registry", {})
+def test_modules_exist_after_env_install(installed_environment):
     with installed_environment(
         """
 spack:
@@ -3734,6 +3764,53 @@ def test_virtual_spec_concretize_together(mutable_config):
         assert any(s.package.provides("mpi") for _, s in e.concretized_specs())
 
 
+@pytest.mark.parametrize(
+    "unify,method_to_fail",
+    [
+        (True, (spack.concretize, "_concretize_together")),
+        ("when_possible", (spack.solver.asp.Solver, "solve_in_rounds")),
+        # An earlier failure so that we test the case where the internal state
+        # has been changed, but the pointer to the internal variables has not change.
+        # This effectively tests that we are properly copying by value not by
+        # reference for the transactional concretization
+        (True, (ev.EnvironmentConcretizer, "concretize")),
+    ],
+)
+def test_concretize_transactional(
+    unify, method_to_fail, monkeypatch, mutable_config: Configuration
+):
+    mutable_config.set("concretizer:unify", unify)
+    e = ev.create("test")
+
+    e.add("mpi")
+    e.add("zlib")
+    e.concretize()
+
+    # remove one spec and add another to ensure we test with changes before
+    # and after the environment is cleared during concretization
+    e.remove("zlib")
+    e.add("libelf")
+
+    def fail(*args, **kwargs):
+        raise Exception("Test failures")
+
+    location, method = method_to_fail
+    monkeypatch.setattr(location, method, fail)
+
+    first_roots = e.concretized_roots[:]
+    first_hash_dict = e.specs_by_hash.copy()
+
+    try:
+        e.concretize()
+    except Exception:
+        pass
+    else:
+        assert False, "concretization failure required for testing"
+
+    assert e.concretized_roots == first_roots
+    assert e.specs_by_hash == first_hash_dict
+
+
 def test_query_develop_specs(tmp_path: pathlib.Path):
     """Test whether a spec is develop'ed or not"""
     srcdir = tmp_path / "here"
@@ -3809,7 +3886,7 @@ def test_create_and_activate_managed(tmp_path: pathlib.Path):
         shell = env("activate", "--without-view", "--create", "--sh", "foo")
         active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
         assert str(tmp_path) in active_env_var
-        active_ev = ev.active_environment()
+        active_ev = active_environment()
         assert active_ev and "foo" == active_ev.name
         env("deactivate")
 
@@ -3857,6 +3934,36 @@ def test_env_view_fail_if_symlink_points_elsewhere(
     assert os.path.isdir(non_view_dir)
 
 
+def test_env_view_backward_compat_old_symlink_format(
+    tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    """An old-style symlink view pointing to ._view/<hash>/ is recognized as up-to-date."""
+    view = str(tmp_path / "view")
+    env("create", "--with-view={0}".format(view), "test")
+    with ev.read("test") as e:
+        add("libelf")
+        install("--fake")
+        view_desc = e.default_view
+        specs = view_desc.specs_for_view(e.concrete_roots())
+        content_hash = view_desc.content_hash(specs)
+
+    # Simulate old format: remove the real view dir and replace with a symlink
+    root_name = os.path.basename(view)
+    root_dir = os.path.dirname(view)
+    old_hash_dir = os.path.join(root_dir, "._%s" % root_name, content_hash)
+    shutil.rmtree(view)
+    os.makedirs(old_hash_dir, exist_ok=True)
+    os.symlink(old_hash_dir, view)
+
+    # Regeneration should detect the old symlink is up-to-date and be a no-op
+    with ev.read("test"):
+        env("view", "regenerate")
+
+    # The symlink was not touched (still points to the old hash dir)
+    assert os.path.islink(view)
+    assert os.path.realpath(view) == old_hash_dir
+
+
 def test_failed_view_cleanup(tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery):
     """Tests whether Spack cleans up after itself when a view fails to create"""
     view_dir = tmp_path / "view"
@@ -3864,10 +3971,7 @@ def test_failed_view_cleanup(tmp_path: pathlib.Path, mock_stage, mock_fetch, ins
         add("libelf")
         install("--fake")
 
-    # Save the current view directory.
-    resolved_view = view_dir.resolve(strict=True)
-    all_views = resolved_view.parent
-    views_before = list(all_views.iterdir())
+    assert view_dir.is_dir() and not view_dir.is_symlink()
 
     # Add a spec that results in view clash when creating a view
     with ev.read("env"):
@@ -3875,51 +3979,44 @@ def test_failed_view_cleanup(tmp_path: pathlib.Path, mock_stage, mock_fetch, ins
         with pytest.raises(ev.SpackEnvironmentViewError):
             install("--fake")
 
-    # Make sure there is no broken view in the views directory, and the current
-    # view is the original view from before the failed regenerate attempt.
-    views_after = list(all_views.iterdir())
-    assert views_before == views_after
-    assert view_dir.samefile(resolved_view), view_dir
+    # The view is still a real directory; no .new or .old leftovers.
+    assert view_dir.is_dir() and not view_dir.is_symlink()
+    assert not list(tmp_path.glob("view.new.*"))
+    assert not list(tmp_path.glob("view.old.*"))
 
 
 def test_environment_view_target_already_exists(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
-    """When creating a new view, Spack should check whether
-    the new view dir already exists. If so, it should not be
-    removed or modified."""
+    """The view is a real directory; an orphaned ._view/<hash>/ from the old
+    symlink format does not prevent regeneration."""
 
-    # Create a new environment
     view = str(tmp_path / "view")
     env("create", "--with-view={0}".format(view), "test")
     with ev.read("test"):
         add("libelf")
         install("--fake")
 
-    # Empty the underlying view
-    real_view = os.path.realpath(view)
-    assert os.listdir(real_view)  # make sure it had *some* contents
-    shutil.rmtree(real_view)
+    # view is a real directory in the new format
+    assert os.path.isdir(view) and not os.path.islink(view)
+    assert os.listdir(view)  # has some contents
 
-    # Replace it with something new.
-    os.mkdir(real_view)
-    fs.touch(os.path.join(real_view, "file"))
+    # Simulate an orphaned old-format hash dir sitting next to the view
+    orphan_dir = os.path.join(str(tmp_path), "._view", "someoldhash")
+    os.makedirs(orphan_dir)
+    fs.touch(os.path.join(orphan_dir, "orphan_file"))
 
-    # Remove the symlink so Spack can't know about the "previous root"
-    os.unlink(view)
-
-    # Regenerate the view, which should realize it can't write into the same dir.
-    msg = "Failed to generate environment view"
+    # Regeneration should succeed; the orphaned dir is not touched
     with ev.read("test"):
-        with pytest.raises(ev.SpackEnvironmentViewError, match=msg):
-            env("view", "regenerate")
+        env("view", "regenerate")
 
-    # Make sure the dir was left untouched.
-    assert not os.path.lexists(view)
-    assert os.listdir(real_view) == ["file"]
+    assert os.path.isdir(view) and not os.path.islink(view)
+    assert os.path.isfile(os.path.join(orphan_dir, "orphan_file"))
 
 
-def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery):
+def test_environment_query_spec_by_hash(
+    mock_stage, mock_fetch, temporary_store: Store, install_mockery
+):
     env("create", "test")
     with ev.read("test"):
         add("libdwarf")
@@ -3928,8 +4025,8 @@ def test_environment_query_spec_by_hash(mock_stage, mock_fetch, install_mockery)
         spec = e.matching_spec("libelf")
         install("--fake", f"/{spec.dag_hash()}")
     with ev.read("test") as e:
-        assert not e.matching_spec("libdwarf").installed
-        assert e.matching_spec("libelf").installed
+        assert not temporary_store.db.installed(e.matching_spec("libdwarf"))
+        assert temporary_store.db.installed(e.matching_spec("libelf"))
 
 
 @pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])
@@ -4043,6 +4140,11 @@ def test_read_legacy_lockfile_and_reconcretize(
     test = ev.read("test")
     assert len(test.specs_by_hash) == 1
 
+    # Legacy lockfiles are keyed by other hashes, so they are rewritten in the current format
+    test.write()
+    with open(test.lock_path, encoding="utf-8") as f:
+        assert json.load(f)["_meta"]["specfile-version"] == spack.spec.SPECFILE_FORMAT_VERSION
+
     single_root = next(iter(test.specs_by_hash.values()))
 
     # v1 only has version 1.0, because v1 was keyed by DAG hash, and v1.0 overwrote
@@ -4063,7 +4165,7 @@ def test_read_legacy_lockfile_and_reconcretize(
     assert len(test.specs_by_hash) == 2
 
     expected_versions = set([Version("0.5"), Version("1.0")])
-    current_versions = set(s["dtbuild1"].version for s in test.specs_by_hash.values())
+    current_versions = {s["dtbuild1"].version for s in test.specs_by_hash.values()}
     assert current_versions == expected_versions
 
 
@@ -4391,12 +4493,12 @@ spack:
 """
         )
 
-    with spack.config.override("config:url_fetch_method", "curl"):
+    with mutable_empty_config.override("config:url_fetch_method", "curl"):
         env = ev.Environment(str(tmp_path))
         ev.activate(env)
 
         # Make sure a setting from test/data/config/packages.yaml is present
-        cfg = spack.config.get("packages")
+        cfg = mutable_empty_config.get("packages")
         assert "mpich" in cfg["all"]["providers"]["mpi"]
 
 
@@ -4571,7 +4673,7 @@ spack:
 
         for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             # no specs will exist in the included view projection
-            base_dir = view_dir / f"{spec.architecture.target}"
+            base_dir = view_dir / f"{spec.target}"
             included_dir = base_dir / f"{spec.name}-{spec.version}-from-view"
             assert not included_dir.exists()
 
@@ -4579,7 +4681,7 @@ spack:
             # are also not cmake (excluded in the environment view) should exist
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not (
                 spec.satisfies("cmake") or spec.satisfies("target=core2")
             )
@@ -4988,3 +5090,81 @@ def test_exists_consistent_with_all_environment_names(
 
     listed = "myenv" in ev.all_environment_names()
     assert ev.exists("myenv") == listed
+
+
+def test_concretization_reports_groups(environment_from_manifest):
+    """Tests that each group of user specs is reported to the frontend."""
+    e = environment_from_manifest("""
+spack:
+  specs:
+  - libelf
+  - group: apps1
+    specs:
+    - pkg-a
+  - group: apps2
+    specs:
+    - pkg-b
+""")
+    ui = RecordingUI()
+    with e:
+        e.concretize(ui=ui)
+
+    # "default" is concretized first, the groups that don't need each other follow in any order
+    assert ui.groups[0] == ("default", SolveKind.SEPARATELY, 1, 1)
+    assert set(ui.groups[1:]) == {
+        ("apps1", SolveKind.SEPARATELY, 1, 1),
+        ("apps2", SolveKind.SEPARATELY, 1, 1),
+    }
+    assert ui.groups_ended == 3
+    assert (ui.started, ui.ended) == (1, 1)
+
+
+def test_concretization_reports_a_group_with_nothing_to_do(environment_from_manifest):
+    """Tests that re-concretizing an environment still reports each group, including the ones
+    that are solved already.
+    """
+    e = environment_from_manifest("""
+spack:
+  specs:
+  - libelf
+  - group: apps1
+    specs:
+    - pkg-a
+""")
+    with e:
+        e.concretize()
+        e.write()
+
+        ui = RecordingUI()
+        e.concretize(ui=ui)
+
+    # Nothing is left to solve, but both groups are still opened and closed
+    assert set(ui.groups) == {
+        ("default", SolveKind.SEPARATELY, 0, 1),
+        ("apps1", SolveKind.SEPARATELY, 0, 1),
+    }
+    assert ui.groups_ended == 2
+    assert not ui.concretized
+    assert (ui.started, ui.ended) == (1, 1)
+
+
+@pytest.mark.parametrize("unify", [True, "when_possible", False])
+def test_reported_total_ignores_specs_that_were_kept(unify, mutable_config, mock_packages):
+    """Tests that adding a spec to an already concretized environment announces a total of one,
+    whatever 'concretizer:unify' prescribes. The specs that were kept go through the solve for
+    'unify: true' and 'when_possible', and a frontend counting them would run past 100%.
+    """
+    mutable_config.set("concretizer:unify", unify)
+    e = ev.create("test")
+    e.add("libelf")
+    e.concretize()
+    e.write()
+
+    e.add("mpileaks")
+    ui = RecordingUI()
+    e.concretize(ui=ui)
+
+    total = ui.groups[0][2]
+    assert total == 1
+    assert [count for _, _, count, _ in ui.concretized] == [1]
+    assert [abstract.name for abstract, _, _, _ in ui.concretized] == ["mpileaks"]
