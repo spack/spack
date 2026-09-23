@@ -203,5 +203,5 @@ def test_create_individual_env_scripts(
     # Environment names shouldn't appear in the other's scripts
     assert env_name_2 not in activate_content_1
     assert env_name_1 not in activate_content_2
-    assert env_name_2 not in deactivate_content_1   
+    assert env_name_2 not in deactivate_content_1
     assert env_name_1 not in deactivate_content_2

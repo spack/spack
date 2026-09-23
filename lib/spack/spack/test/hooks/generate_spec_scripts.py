@@ -134,24 +134,18 @@ def test_install_multiple_specs_shell_scripts(
         separator = f'"{os.pathsep}"'
     elif shell == "pwsh":
         separator = f"'{os.pathsep}'"
-
-    assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', dyninst_prefix, shell)}"
-        f" {separator}" in dyninst_load
+    cmd = _get_shell_cmd_invocation(
+        "_spack_env_prepend", "CMAKE_PREFIX_PATH", dyninst_prefix, shell
     )
-    assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', hypre_prefix, shell)}"
-        f" {separator}" in hypre_load
+    assert f"{cmd} {separator}" in dyninst_load
+    cmd = _get_shell_cmd_invocation("_spack_env_prepend", "CMAKE_PREFIX_PATH", hypre_prefix, shell)
+    assert f"{cmd} {separator}" in hypre_load
+    cmd = _get_shell_cmd_invocation(
+        "_spack_env_prepend", "CMAKE_PREFIX_PATH", dyninst_prefix, shell
     )
-
-    assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', dyninst_prefix, shell)}"
-        f" {separator}" not in hypre_load
-    )
-    assert (
-        f"{_get_shell_cmd_invocation('_spack_env_prepend', 'CMAKE_PREFIX_PATH', hypre_prefix, shell)}"
-        f" {separator}" not in dyninst_load
-    )
+    assert f"{cmd} {separator}" not in hypre_load
+    cmd = _get_shell_cmd_invocation("_spack_env_prepend", "CMAKE_PREFIX_PATH", hypre_prefix, shell)
+    assert f"{cmd} {separator}" not in dyninst_load
 
     assert hypre_spec.name not in dyninst_load
     assert dyninst_spec.name not in hypre_load

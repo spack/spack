@@ -397,7 +397,9 @@ def env_activate(args):
     ev.activate(active_env, use_env_repo=True)
 
     # strip to avoid duplicate newlines
-    cmds = env_script.get_despacktivate_and_prompt_cmds(active_env, args.shell, prompt=args.prompt).strip("\n")
+    cmds = env_script.get_despacktivate_and_prompt_cmds(
+        active_env, args.shell, prompt=args.prompt
+    ).strip("\n")
     sys.stdout.write(f"{cmds}\n")
 
     sys.stdout.write(env_script.source_env_script(env_activate_script, args.shell))
