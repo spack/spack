@@ -46,8 +46,7 @@ Once configured, you can start by generating Tcl module files for all currently 
 
    $ spack module tcl refresh
 
-To generate Lua module files simply use the ``spack module lmod`` command instead of ``spack module tcl``,
-and configure a ``lmod`` root alongside or instead of ``tcl`` in your modules configuration.
+To generate Lua module files simply use the ``spack module lmod`` command instead of ``spack module tcl``, and configure a ``lmod`` root alongside or instead of ``tcl`` in your modules configuration.
 
 Once module files are in place, add the Tcl module directory to your module path:
 
