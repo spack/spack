@@ -48,7 +48,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         metavar="directory",
         action="append",
-        help="search this prefix or bin path instead of PATH (multiple use allowed)",
+        help="search this prefix, bin, or lib path instead of PATH and LD_LIBRARY_PATH (multiple use allowed)",
     )
     find_parser.add_argument(
         "--scope",
@@ -56,11 +56,21 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=lambda: spack.config.CONFIG.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
-    find_parser.add_argument(
-        "--all", action="store_true", help="search for all packages that Spack knows about"
+    all_or_tags = find_parser.add_mutually_exclusive_group()
+    manifest_str = (
+        f", including Cray manifest at {cray_manifest.default_path}"
+        if os.path.isdir(cray_manifest.default_path)
+        else ""
     )
-    arguments.add_common_arguments(find_parser, ["tags", "jobs"])
+    all_or_tags.add_argument(
+        "--all",
+        action="store_true",
+        help=f"search for all packages that Spack knows about{manifest_str}",
+    )
+    arguments.add_common_arguments(find_parser, ["jobs"])
+    arguments.add_common_arguments(all_or_tags, ["tags"])
     # NOTE: this argument is *optional*, unlike common.arguments.packages
+    # but since it's positional it cannot be added to all_or_tags
     find_parser.add_argument(
         "packages",
         nargs=argparse.REMAINDER,
@@ -106,6 +116,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def external_find(args):
+    if (args.all or args.tags) and args.packages:
+        raise ValueError("Conflicting options")
+
     if args.all or not (args.tags or args.packages):
         # If the user calls 'spack external find' with no arguments, and
         # this system has a description of installed packages, then we should
@@ -131,20 +144,12 @@ def external_find(args):
     # Outside the Cray manifest, the search is done by tag for performance reasons,
     # since tags are cached.
 
-    # If the user specified both --all and --tag, then --all has precedence
     if args.all or args.packages:
-        if args.tags:
-            # We may want to elevate this to an error
-            tty.warn("Ignoring --tag argument: 'all' or package list provided")
         # Each detectable package has at least the detectable tag
         args.tags = ["detectable"]
     elif not args.tags:
         # If the user didn't specify anything, search for build tools by default
         args.tags = ["core-packages", "build-tools"]
-
-    if args.all and args.packages:
-        # We may want to elevate this to an error or change the behavior: it's counterintuitive
-        tty.warn("Ignoring --all argument: package list was provided")
 
     candidate_packages = packages_to_search_for(
         names=args.packages, tags=args.tags, exclude=args.exclude
@@ -183,9 +188,9 @@ def external_find(args):
 def packages_to_search_for(
     *, names: Optional[List[str]], tags: List[str], exclude: Optional[List[str]]
 ):
-    result = list(
-        {pkg for tag in tags for pkg in spack.repo.PATH.packages_with_tags(tag, full=True)}
-    )
+    result = list({
+        pkg for tag in tags for pkg in spack.repo.PATH.packages_with_tags(tag, full=True)
+    })
 
     if names:
         # Match both fully qualified and unqualified

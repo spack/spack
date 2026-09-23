@@ -247,7 +247,7 @@ def constraint():
 
 @arg
 def package():
-    return Args("package", metavar="package", help="package name")
+    return Args("package", help="package name")
 
 
 @arg
