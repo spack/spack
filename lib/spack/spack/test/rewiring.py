@@ -18,7 +18,7 @@ from spack.test.relocate import text_in_bin
 if sys.platform == "darwin":
     required_executables = ["/usr/bin/clang++", "install_name_tool"]
 else:
-    required_executables = ["g++", "patchelf"]
+    required_executables = ["g++"]
 
 
 def check_spliced_spec_prefixes(spliced_spec):
