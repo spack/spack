@@ -183,6 +183,35 @@ For resources that were actually migrated, `spack migrate --undo` can use migrat
 - Backups are removed only after restoration and layout updates succeed.
 - Unsafe restoration preserves the backup and reports the conflict for later resolution.
 
+## 3.8 Home directory migration
+
+User configuration and package repositories in `~/.spack` are automatically migrated to the new XDG locations (`~/.config/spack` and `~/.local/state/spack/package_repos`) independently of `$spack` prefix migration.
+
+This migration runs when:
+
+- No isolate scope is active (`$spack/etc/spack/isolate/include.yaml` does not exist).
+- The user scope in loaded configuration points to `~/.config/spack`.
+- `~/.spack` exists and contains configuration files.
+- `~/.config/spack` either does not exist or is empty.
+
+For package repositories:
+
+- The old location is `~/.spack/cache/repos` (now `~/.spack/package_repos` in recent Spack).
+- The new location is `~/.local/state/spack/package_repos`.
+- Migration only occurs if the new location is empty and Spack is using the default state location.
+
+This allows users who:
+
+- Pull a new Spack version into an existing checkout with old resources under `$spack`;
+- Clone a fresh Spack instance with no old `$spack` resources; or
+- Use a shared, read-only Spack prefix
+
+to have their personal `~/.spack` configuration automatically migrated on first use.
+
+The home directory migration runs on every Spack invocation (when conditions are met) and is independent of whether `$spack` prefix resources exist or whether the layout scope has been created. Configuration is reloaded after home directory migration completes to pick up the migrated user configuration.
+
+`~/.spack` is retained after migration because older Spack instances may still reference it.
+
 # 4. Updated `spack isolate` Behavior
 
 Isolation controls where newly generated artifacts are created for one Spack instance. It does not relocate old resources, even when old resources are present and automatic migration would otherwise be considered.

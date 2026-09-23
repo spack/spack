@@ -211,7 +211,7 @@ def test_auto_migration_copies_user_config(mock_spack_instance, monkeypatch):
     (old_config / "config.yaml").write_text("config:\n  build_jobs: 3\n", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate()
+    spack.config._do_migrate_home()
 
     new_config = pathlib.Path(home_dir) / ".config" / "spack" / "config.yaml"
     assert new_config.read_text(encoding="utf-8") == "config:\n  build_jobs: 3\n"
@@ -469,7 +469,7 @@ def test_auto_migration_old_spack_internal_resources(
     monkeypatch.setattr(spack.config, "CONFIG", test_config)
 
     # Run migration which creates layout scope
-    spack.config._do_migrate()
+    spack.config._do_migrate_spack_prefix()
 
     # Reinitialize config to pick up newly created layout scope
     test_config = spack.config.create()
@@ -489,7 +489,7 @@ def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeyp
     (old_repos / "second" / "root.txt").write_text("second root", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate()
+    spack.config._do_migrate_home()
 
     new_repos = pathlib.Path(spack.paths.package_repos_path)
     assert (new_repos / "first" / "root.txt").read_text(encoding="utf-8") == "first root"
@@ -521,7 +521,7 @@ def test_auto_migration_skips_existing_package_repository_destination(
     (new_repo / "source").write_text("new", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate()
+    spack.config._do_migrate_spack_prefix()
 
     assert (new_repo / "source").read_text(encoding="utf-8") == "new"
     assert not (new_repos / "second").exists()
@@ -540,10 +540,10 @@ def test_auto_migration_is_not_repeated_after_layout_scope(mock_spack_instance, 
     (old_licenses / "license.dat").write_text("license", encoding="utf-8")
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    spack.config._do_migrate()
+    spack.config._do_migrate_spack_prefix()
     assert not spack.config.should_auto_migrate()
     backup = pathlib.Path(base_prefix) / ".migration-backup" / "licenses" / "license.dat"
     backup_mtime = backup.stat().st_mtime_ns
 
-    spack.config._do_migrate()
+    spack.config._do_migrate_spack_prefix()
     assert backup.stat().st_mtime_ns == backup_mtime

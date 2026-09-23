@@ -1038,12 +1038,31 @@ def _main(argv=None):
 
     # Check if auto-migration is needed (before executing command)
     if cmd_name != "isolate":
+        prefix_result = {"migrated": [], "retained": []}
+        home_result = {"user_config": False, "package_repos": False}
+        config_changed = False
+
+        # Migrate $spack prefix resources (licenses, environments, GPG, etc.)
         if spack.config.should_auto_migrate():
-            spack.config._do_migrate()
-            # Reload config to pick up new layout scope
+            prefix_result = spack.config._do_migrate_spack_prefix()
+            config_changed = True
+
+        # Migrate ~/.spack home directory (user config and package repos)
+        # This is separate and runs even on fresh clones with no old $spack data
+        home_result = spack.config._do_migrate_home()
+        if home_result["user_config"] or home_result["package_repos"]:
+            config_changed = True
+
+        if config_changed:
+            # Reload config to pick up new layout scope and/or user config changes
             spack.config.CONFIG = spack.config.create()
             # Reinitialize global singletons that depend on CONFIG
             spack.config.reinitialize_global_state()
+
+        # Compose and display migration message if anything was migrated
+        message = spack.config._compose_migration_message(prefix_result, home_result)
+        if message:
+            spack.util.tty.warn(message)
 
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things

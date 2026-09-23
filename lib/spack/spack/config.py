@@ -2268,14 +2268,137 @@ def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
     return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
 
 
-def _do_migrate() -> None:
-    """Perform auto-migration of Spack data from old to new locations.
+def _should_migrate_home() -> bool:
+    """Determine if ~/.spack home directory migration should run.
 
-    Migrates portable resources (licenses, environments, GPG data) to new
-    XDG-style shared locations. Existing installs are retained in place.
-    Configuration is written to the layout scope.
+    This is separate from should_auto_migrate() which checks for old resources
+    in $spack. Home migration runs when:
+    - No isolate scope is active
+    - Config/package repos are pointing at new default locations AND they're empty
+    - Old default locations have content
+
+    This allows fresh clones or other users of a shared prefix to get their
+    ~/.spack config migrated even when there are no old resources in $spack.
     """
-    tty.debug("Auto-migration called")
+    # Don't migrate if isolation is active
+    isolate_include = os.path.join(_isolate_scope_path(), "include.yaml")
+    if os.path.exists(isolate_include):
+        return False
+
+    # Check user config migration
+    old_config = os.path.expanduser("~/.spack")
+    new_config = os.path.expanduser("~/.config/spack")
+
+    # Check if user scope exists and points to new default location
+    user_scope = CONFIG.scopes.get("user")
+    if user_scope and isinstance(user_scope, (DirectoryConfigScope, SingleFileScope)):
+        user_scope_path = os.path.normpath(os.path.expanduser(user_scope.path))
+        expected_path = os.path.normpath(new_config)
+        config_should_migrate = (
+            user_scope_path == expected_path
+            and os.path.isdir(old_config)
+            and (not os.path.exists(new_config) or not os.listdir(new_config))
+        )
+    else:
+        config_should_migrate = False
+
+    # Check package repos migration
+    old_repos = spack.paths.old_package_repos_path
+    new_repos = spack.paths.package_repos_path
+
+    repos_should_migrate = (
+        os.path.isdir(old_repos)
+        and bool(os.listdir(old_repos))
+        and (not os.path.exists(new_repos) or not bool(os.listdir(new_repos)))
+        # Only migrate if pointing at default state location
+        and os.path.normpath(os.path.abspath(spack.paths.user_cache_path))
+        == os.path.normpath(os.path.abspath(spack.paths.default_state_home))
+    )
+
+    return config_should_migrate or repos_should_migrate
+
+
+def _do_migrate_home() -> Dict[str, bool]:
+    """Migrate user config and package repos from ~/.spack to new XDG locations.
+
+    This is independent of $spack prefix migration and runs based on whether:
+    - New default locations exist and are empty
+    - Old locations have content
+
+    This allows users who git pull a new Spack to get their ~/.spack migrated
+    regardless of what's in the $spack prefix.
+
+    Returns:
+        Dict with keys 'user_config' and 'package_repos', values True if migrated
+    """
+    if not _should_migrate_home():
+        return {"user_config": False, "package_repos": False}
+
+    tty.debug("Home directory migration called")
+
+    user_config_migrated = _migrate_user_config()
+    package_repos_migrated = _migrate_package_repositories()
+
+    return {"user_config": user_config_migrated, "package_repos": package_repos_migrated}
+
+
+def _compose_migration_message(
+    prefix_result: Dict[str, List[str]], home_result: Dict[str, bool]
+) -> Optional[str]:
+    """Compose migration message from both migration results.
+
+    Args:
+        prefix_result: Dict with 'migrated' and 'retained' keys (lists of resource names)
+        home_result: Dict with 'user_config' and 'package_repos' keys (bool values)
+
+    Returns:
+        Message string if anything was migrated, None otherwise
+    """
+    parts = []
+
+    if prefix_result["migrated"] or prefix_result["retained"]:
+        parts.append("Spack automatically migrated old resources.")
+        if prefix_result["migrated"]:
+            parts.append("  - Migrated: " + ", ".join(prefix_result["migrated"]) + ".")
+        if prefix_result["retained"]:
+            parts.append("  - Retained: " + ", ".join(prefix_result["retained"]) + ".")
+        parts.append("  - Existing installs and shared artifacts were not removed.")
+
+    if home_result["user_config"] or home_result["package_repos"]:
+        if not parts:
+            parts.append("Spack migrated home directory resources:")
+        else:
+            parts.append("")
+            parts.append("Home directory:")
+        if home_result["user_config"]:
+            parts.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
+        if home_result["package_repos"]:
+            parts.append(
+                "  - Copied package repositories from ~/.spack to the shared state location."
+            )
+        parts.append("  - ~/.spack was retained because older Spack instances may still use it.")
+
+    if parts:
+        parts.extend(["", "To undo this migration, run `spack migrate undo`."])
+        return "\n".join(parts)
+
+    return None
+
+
+def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
+    """Perform auto-migration of Spack prefix data from old to new locations.
+
+    Migrates portable resources (licenses, environments, GPG data) from old
+    locations under $spack to new XDG-style shared locations. Existing installs
+    are retained in place. Configuration is written to the layout scope.
+
+    This does NOT migrate ~/.spack user config or package repos - that is
+    handled by _do_migrate_home() which has different conditions.
+
+    Returns:
+        Dict with keys 'migrated' and 'retained' (lists of resource names)
+    """
+    tty.debug("Spack prefix auto-migration called")
 
     # Detect what old resources exist
     old_resources = _detect_old_resources()
@@ -2289,8 +2412,6 @@ def _do_migrate() -> None:
     scope_config: Dict[str, Any] = {}
     migrated_resources: List[str] = []
     retained_resources: List[str] = []
-    user_config_migrated = False
-    package_repos_migrated = False
 
     # 1. Handle installs.  Existing installs are always retained in their old
     # location, including during isolation.  Module trees are not migrated or
@@ -2415,10 +2536,6 @@ def _do_migrate() -> None:
             _migrate_environments,
         )
 
-    # 5. Copy ~/.spack to ~/.config/spack
-    user_config_migrated = _migrate_user_config()
-    package_repos_migrated = _migrate_package_repositories()
-
     # Write config scope files to the layout scope
     if "config" in scope_config:
         with open(config_path, "w", encoding="utf-8") as f:
@@ -2427,26 +2544,7 @@ def _do_migrate() -> None:
 
     tty.debug(f"Created layout scope for auto-migration: {layout_scope_path}")
 
-    migration_summary = ["Spack automatically migrated old resources."]
-    if user_config_migrated:
-        migration_summary.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
-    if package_repos_migrated:
-        migration_summary.append(
-            "  - Copied package repositories from ~/.spack to the shared state location."
-        )
-    if migrated_resources:
-        migration_summary.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
-    if retained_resources:
-        migration_summary.append("  - Retained: " + ", ".join(retained_resources) + ".")
-    migration_summary.extend(
-        [
-            "  - Existing installs and shared artifacts were not removed.",
-            "  - ~/.spack was retained because older Spack instances may still use it.",
-            "",
-            "To undo this migration, run `spack migrate undo`.",
-        ]
-    )
-    tty.warn("\n".join(migration_summary))
+    return {"migrated": migrated_resources, "retained": retained_resources}
 
 
 def create_incremental() -> Generator[Configuration, None, None]:
@@ -2488,7 +2586,8 @@ def create_incremental() -> Generator[Configuration, None, None]:
         )
 
     # NOTE: Migration is now handled in main.py after command parsing, not during
-    # config initialization. See _do_migrate() and main.py for details.
+    # config initialization. See _do_migrate_spack_prefix() and _do_migrate_home()
+    # in this module, and main.py for details.
     # The old migration check code with $spack-global locking has been removed.
 
 
