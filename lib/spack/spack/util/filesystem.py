@@ -88,7 +88,6 @@ __all__ = [
     "force_symlink",
     "getuid",
     "chgrp",
-    "chmod_x",
     "copy",
     "install",
     "copy_tree",
@@ -653,7 +652,7 @@ def group_ids(uid: Optional[int] = None) -> List[int]:
 
 
 @system_path_filter(arg_slice=slice(1))
-def chgrp(path, group, follow_symlinks=True):
+def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
     if sys.platform == "win32":
         raise OSError("Function 'chgrp' is not supported on Windows")
@@ -664,24 +663,7 @@ def chgrp(path, group, follow_symlinks=True):
         gid = group
     if os.stat(path).st_gid == gid:
         return
-    if follow_symlinks:
-        os.chown(path, -1, gid)
-    else:
-        os.lchown(path, -1, gid)
-
-
-@system_path_filter(arg_slice=slice(1))
-def chmod_x(entry, perms):
-    """Implements chmod, treating all executable bits as set using the chmod
-    utility's ``+X`` option.
-    """
-    mode = os.stat(entry).st_mode
-    if os.path.isfile(entry):
-        if not mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
-            perms &= ~stat.S_IXUSR
-            perms &= ~stat.S_IXGRP
-            perms &= ~stat.S_IXOTH
-    os.chmod(entry, perms)
+    os.chown(path, -1, gid)
 
 
 def win_copy_exe_mode(src, dest):
