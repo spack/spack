@@ -557,7 +557,7 @@ def reinitialize():
     binary index cache location (e.g., after auto-migration creates layout scope).
     """
     global BINARY_INDEX
-    BINARY_INDEX = cast(BinaryIndexCache, spack.util.lang.Singleton(BinaryIndexCache))
+    BINARY_INDEX = cast(BinaryIndexCache, spack.util.lang.Singleton(_binary_index))
 
 
 def compute_hash(data):
