@@ -48,7 +48,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=None,
         metavar="directory",
         action="append",
-        help="search this prefix, bin, or lib path instead of PATH and LD_LIBRARY_PATH (multiple use allowed)",
+        help="search this prefix, bin, or lib path instead of PATH and LD_LIBRARY_PATH "
+        "(multiple use allowed)",
     )
     find_parser.add_argument(
         "--scope",
@@ -60,7 +61,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--cray-manifest",
         default="auto",
         metavar="directory",
-        help="Cray manifest to search for packages, or 'auto', or 'none'"
+        help="Cray manifest to search for packages, or 'auto', or 'none'\n"
         f"(default: {cray_manifest.default_path} if passing 'all' or if packages/tags absent)",
     )
     arguments.add_common_arguments(find_parser, ["jobs"])
@@ -129,13 +130,18 @@ def external_find(args):
             manifest_dir = ""
 
     if args.packages and (args.all or args.tags):
-        # Note that this cannot be encoded into the arg parser since 'packages' is a positional argument.
-        # For backward compatibility, inform the user about the behavior change with respec to '--all'
+        # Note that this cannot be encoded into the arg parser since 'packages'
+        # is a positional argument. For backward compatibility, inform the user
+        # about the behavior change with respect to '--all'
         compat_msg = ""
         if args.cray_manifest == "auto" and manifest_dir:
-            compat_msg = f" Replace '--all' with '--cray-manifest={manifest_dir}' to search for packages using a manifest."
+            compat_msg = (
+                f" Replace '--all' with '--cray-manifest={manifest_dir}' "
+                "to search for packages using a manifest."
+            )
         raise ValueError(
-            f"Conflicting 'find' arguments: cannot specify packages when using '--all' or '--tags'.{compat_msg}"
+            "Conflicting 'find' arguments: cannot specify packages when using '--all' or '--tags'."
+            + compat_msg
         )
 
     if manifest_dir:
