@@ -56,21 +56,21 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=lambda: spack.config.CONFIG.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
-    all_or_tags = find_parser.add_mutually_exclusive_group()
-    manifest_str = (
-        f", including Cray manifest at {cray_manifest.default_path}"
-        if os.path.isdir(cray_manifest.default_path)
-        else ""
-    )
-    all_or_tags.add_argument(
-        "--all",
-        action="store_true",
-        help=f"search for all packages that Spack knows about{manifest_str}",
+    find_parser.add_argument(
+        "--cray-manifest",
+        default="auto",
+        metavar="directory",
+        help="Cray manifest to search for packages, or 'auto', or 'none'"
+        f"(default: {cray_manifest.default_path} if passing 'all' or if packages/tags absent)",
     )
     arguments.add_common_arguments(find_parser, ["jobs"])
+    all_or_tags = find_parser.add_mutually_exclusive_group()
+    all_or_tags.add_argument(
+        "--all", action="store_true", help="search for all packages that Spack knows about"
+    )
     arguments.add_common_arguments(all_or_tags, ["tags"])
     # NOTE: this argument is *optional*, unlike common.arguments.packages
-    # but since it's positional it cannot be added to all_or_tags
+    # but since it's positional it *cannot* be used with all_or_tags
     find_parser.add_argument(
         "packages",
         nargs=argparse.REMAINDER,
@@ -116,19 +116,42 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def external_find(args):
-    if (args.all or args.tags) and args.packages:
-        raise ValueError("Conflicting options")
+    manifest_dir: str = args.cray_manifest if args.cray_manifest != "none" else ""
+    if manifest_dir == "auto":
+        if (not args.all) or args.tags or args.packages:
+            # Backward-compatible behavior: do not search unless 'all' is given
+            # or tags/packages are omitted
+            manifest_dir = ""
+        else:
+            manifest_dir = cray_manifest.default_path
+        if not os.path.isdir(manifest_dir):
+            tty.debug("Default Cray manifest directory {manifest_dir} does not exist.")
+            manifest_dir = ""
 
-    if args.all or not (args.tags or args.packages):
+    if args.packages and (args.all or args.tags):
+        # Note that this cannot be encoded into the arg parser since 'packages' is a positional argument.
+        # For backward compatibility, inform the user about the behavior change with respec to '--all'
+        compat_msg = ""
+        if args.cray_manifest == "auto" and manifest_dir:
+            compat_msg = f" Replace '--all' with '--cray-manifest={manifest_dir}' to search for packages using a manifest."
+        raise ValueError(
+            f"Conflicting 'find' arguments: cannot specify packages when using '--all' or '--tags'.{compat_msg}"
+        )
+
+    if manifest_dir:
         # If the user calls 'spack external find' with no arguments, and
         # this system has a description of installed packages, then we should
         # consume it automatically.
         try:
-            _collect_and_consume_cray_manifest_files()
+            _collect_and_consume_cray_manifest_files(
+                manifest_directory=manifest_dir, ignore_default_dir=True
+            )
         except NoManifestFileError:
             # It's fine to not find any manifest file if we are doing the
             # search implicitly (i.e. as part of 'spack external find')
-            pass
+            # but not OK if the user asks for it explicitly
+            if args.cray_manifest != "auto":
+                raise
         except Exception as e:
             # For most exceptions, just print a warning and continue.
             # Note that KeyboardInterrupt does not subclass Exception
@@ -254,11 +277,7 @@ def _collect_and_consume_cray_manifest_files(
                 manifest_files.append(os.path.join(directory, fpath))
 
     if not manifest_files:
-        raise NoManifestFileError(
-            "--file/--directory not specified, and no manifest found at {0}".format(
-                cray_manifest.default_path
-            )
-        )
+        raise NoManifestFileError("No Cray manifests found in " + ", ".join(manifest_dirs))
 
     for path in manifest_files:
         tty.debug("Reading manifest file: " + path)
