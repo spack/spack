@@ -56,7 +56,7 @@ class ShellCmdString:
         self.shell = shell
         self.separator = ":" if shell not in ("bat", "pwsh") else ";"
 
-    def shell_quote(self, value: str, shell: str = "sh") -> str:
+    def shell_quote(self, value: str, shell: Optional[str] = None) -> str:
         """Quote a string for safe use in a shell script.
 
         Args:
@@ -66,6 +66,8 @@ class ShellCmdString:
         Returns:
             A properly quoted string safe for the target shell
         """
+        if not shell:
+            shell = self.shell
         if not value:
             return '""' if shell == "bat" else "''"
 
@@ -83,7 +85,12 @@ class ShellCmdString:
             # Also escape % as %% to prevent variable expansion (%PATH% -> %%PATH%%).
             return '"' + value.replace('"', '""').replace("%", "%%") + '"'
         elif shell == "pwsh":
-            if "'" in value or any(c in value for c in " \t\n$`;&|<>(){}[]"):
+            # "," builds an array, and "@", "#", "-" are special only at the start of a token
+            if (
+                "'" in value
+                or any(c in value for c in ' \t\n$`";&|<>(){}[],')
+                or value[0] in "@#-"
+            ):
                 return "'" + value.replace("'", "''") + "'"
             return value
         else:
@@ -107,6 +114,7 @@ class ShellCmdString:
         cmd = self.shell_fn("_spack_env_append", self.shell)
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
 
         return f"{cmd} {name} {value} {sep}\n"
 
@@ -115,6 +123,7 @@ class ShellCmdString:
         cmd = self.shell_fn("_spack_env_prepend", self.shell)
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
 
         return f"{cmd} {name} {value} {sep}\n"
 
@@ -122,6 +131,7 @@ class ShellCmdString:
         """Returns the command to prune duplicate values from an environment variable."""
         cmd = self.shell_fn("_spack_env_prune_duplicates", self.shell)
         sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
 
         return f"{cmd} {name} {sep}\n"
 
@@ -131,6 +141,7 @@ class ShellCmdString:
         cmd = self.shell_fn("_spack_env_remove_first", self.shell)
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
 
         return f"{cmd} {name} {value} {sep}\n"
 
@@ -140,6 +151,7 @@ class ShellCmdString:
         cmd = self.shell_fn("_spack_env_remove_last", self.shell)
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
 
         return f"{cmd} {name} {value} {sep}\n"
 
@@ -148,6 +160,7 @@ class ShellCmdString:
         cmd = self.shell_fn("_spack_env_remove_value", self.shell)
         value = self.shell_quote(value, self.shell)
         sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
 
         return f"{cmd} {name} {value} {sep}\n"
 
@@ -155,12 +168,14 @@ class ShellCmdString:
         """Returns the command to set an environment variable to a value."""
         cmd = self.shell_fn("_spack_env_set", self.shell)
         value = self.shell_quote(value, self.shell)
+        name = self.shell_quote(name)
 
         return f"{cmd} {name} {value}\n"
 
     def unset(self, name: str) -> str:
         """Returns the command to unset an environment variable."""
         cmd = self.shell_fn("_spack_env_unset", self.shell)
+        name = self.shell_quote(name)
 
         return f"{cmd} {name}\n"
 
