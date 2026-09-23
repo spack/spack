@@ -1073,7 +1073,7 @@ def _main(argv=None):
         # Compose and display migration message if anything was migrated
         message = spack.config._compose_migration_message(prefix_result, home_result)
         if message:
-            spack.util.tty.warn(message)
+            tty.warn(message)
 
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things
