@@ -5905,7 +5905,6 @@ def assign_hashes(specs: Iterable[Spec], *, repo: "spack.repo.RepoPath") -> None
     specs = list(specs)
     for spec in spack.traverse.traverse_nodes(specs):
         if not spec.concrete and not spec._package_hash:
-            spec._mark_root_concrete()
             spec._package_hash = repo.get_pkg_class(spec.fullname)(spec).content_hash(repo=repo)
     for spec in specs:
         spec._mark_concrete()

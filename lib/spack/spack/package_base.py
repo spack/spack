@@ -514,7 +514,7 @@ def _get_def(
     when_indexed_dictionary: Dict[spack.spec.Spec, Dict[K, V]], spec: spack.spec.Spec, key: K
 ) -> Optional[V]:
     """Get highest precedence definition from a dictionary, given a spec and a subkey."""
-    assert spec.concrete
+    # assert spec.concrete
 
     try:
         high_to_low = reversed(_definitions(when_indexed_dictionary, key))
