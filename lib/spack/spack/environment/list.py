@@ -148,7 +148,7 @@ def _expand_matrix_constraints(matrix_config):
     for row in matrix_config["matrix"]:
         new_row = []
         for r in row:
-            if isinstance(r, dict):
+            if isinstance(r, dict) and "matrix" in r:
                 # Flatten the nested matrix into a single row of constraints
                 new_row.extend(
                     [
@@ -157,7 +157,7 @@ def _expand_matrix_constraints(matrix_config):
                     ]
                 )
             else:
-                new_row.append([r])
+                new_row.append([spec_string(r)])
         expanded_rows.append(new_row)
 
     excludes = matrix_config.get("exclude", [])  # only compute once
@@ -197,12 +197,12 @@ def _expand_matrix_constraints(matrix_config):
 
 
 def _sigilify(item, sigil):
-    if isinstance(item, dict):
+    if isinstance(item, dict) and "matrix" in item:
         if sigil:
             item["sigil"] = sigil
         return item
     else:
-        return sigil + item
+        return sigil + spec_string(item)
 
 
 class Definition(NamedTuple):
