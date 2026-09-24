@@ -642,3 +642,15 @@ def test_external_id_reports_conflicts(config, mock_packages):
         ),
         ("libelf@0.8.12", "/other/path"): ExternalId("libelf-0.8.13-d1a113f", None),
     }
+
+
+def test_missing_id_error_lists_providers_of_virtual_dependencies(config, mock_packages):
+    """Tests that a reference to an unknown id reports the ids of the externals providing a
+    virtual the package depends on.
+    """
+    externals_dicts: List[ExternalDict] = [
+        {"spec": "callpath@0.9", "prefix": "/user/path", "dependencies": [{"id": "wrong"}]},
+        {"spec": "mpich@3.0.4", "prefix": "/user/path", "id": "my-mpich"},
+    ]
+    with pytest.raises(ExternalDependencyError, match="can depend on: my-mpich"):
+        ExternalSpecsParser(externals_dicts, repo=mock_packages)
