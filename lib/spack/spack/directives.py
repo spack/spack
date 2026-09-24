@@ -1280,6 +1280,9 @@ def _assert_when_is_version_only(when_spec: Optional[spack.spec.Spec]) -> None:
 
 class DropDirectiveBase(ABC):
     name = ""
+    #: Whether this drop type supports subtracting a version range out of an existing entry's own
+    #: spec (only meaningful for spec-bearing directives; patches leave this False).
+    supports_version_subtraction = False
 
     def __init__(self, when):
         self.removal_when = _make_when_spec(when)
@@ -1309,6 +1312,12 @@ class DropDirectiveBase(ABC):
         shape of an entry varies per directive type, so subclasses override this."""
         raise NotImplementedError
 
+    def rebuild_entry(self, directive_entry, new_spec):
+        """Return a copy of ``directive_entry`` whose spec has been replaced by ``new_spec``.
+        Used by version subtraction to trim an entry's own version range. Subclasses that set
+        ``supports_version_subtraction`` must implement this."""
+        raise NotImplementedError
+
     def remove(self):
         removal_when = self.removal_when
         if not removal_when:
@@ -1329,17 +1338,77 @@ class DropDirectiveBase(ABC):
         for when, directives in directive_dict.items():
             for directive_entry in self.iterate_directives(directives):
                 if self.entry_matches_removal(directive_entry):
-                    if when == removal_when:
-                        continue
-                    elif when.versions.intersects(removal_when.versions):
-                        self.handle_intersection(
-                            when, directive_entry, complement_versions, filtered
-                        )
-                    else:
-                        self.add_to_filtered(filtered, when, directive_entry)
+                    self.apply_when_filter(
+                        when, directive_entry, complement_versions, removal_when, filtered
+                    )
+                elif self.supports_version_subtraction and self.try_subtract_versions(
+                    when, directive_entry, complement_versions, removal_when, filtered
+                ):
+                    pass
                 else:
                     self.add_to_filtered(filtered, when, directive_entry)
         return filtered
+
+    def apply_when_filter(
+        self, when, directive_entry, complement_versions, removal_when, filtered
+    ):
+        """Add ``directive_entry`` back to ``filtered``, trimming its ``when`` clause against the
+        removal's versions: fully drop it where the whole ``when`` is removed, trim the
+        overlapping part, otherwise keep it as-is. Shared by the whole-match path and by version
+        subtraction so the ``when``-axis behavior is identical for both."""
+        if when == removal_when:
+            return  # the entire when-condition is removed: drop this entry
+        elif when.versions.intersects(removal_when.versions):
+            self.handle_intersection(when, directive_entry, complement_versions, filtered)
+        else:
+            self.add_to_filtered(filtered, when, directive_entry)
+
+    def try_subtract_versions(
+        self, when, directive_entry, complement_versions, removal_when, filtered
+    ):
+        """If the existing entry differs from the removal spec *only* in its top-level version,
+        subtract the removal's version range out of the entry's own spec and re-add the trimmed
+        entry (or drop it if nothing is left). Returns True iff it handled the entry.
+
+        This is the generalization of whole-entry matching: e.g. ``drop_depends_on("mpi@1:")``
+        turns an inherited ``depends_on("mpi")`` into ``depends_on("mpi@:0")`` instead of leaving
+        it untouched. It only fires for specs that differ solely in a top-level version, the one
+        case where a representable version complement exists (a general ``Spec.complement`` is
+        infeasible -- see PR #48947). Versions carried on a child node (e.g. the compiler in
+        ``%gcc@14:``) are out of scope and leave the entry unchanged."""
+        existing_spec = self.directive_of(directive_entry)
+        if not self._differs_only_in_top_level_version(existing_spec, self.removal_directive):
+            return False
+
+        new_versions = existing_spec.versions.intersection(
+            self.removal_directive.versions.complement()
+        )
+        if new_versions == spack.version.VersionList():
+            return True  # the removal fully covers this entry's versions: drop it
+
+        new_spec = existing_spec.copy()
+        new_spec.versions = new_versions
+        new_entry = self.rebuild_entry(directive_entry, new_spec)
+
+        # Unlike the whole-match path (:meth:`apply_when_filter`), we must NOT drop the entry
+        # when ``when == removal_when``: the removal's *version* constraint lived in its spec
+        # (already subtracted above), not in its ``when``, so the trimmed entry stays under its
+        # own ``when``. We still trim the ``when`` clause where it genuinely overlaps a versioned
+        # removal ``when`` (e.g. ``drop_depends_on("mpi@1:", when="@3")``), composing the spec
+        # trim with the when trim.
+        if when != removal_when and when.versions.intersects(removal_when.versions):
+            self.handle_intersection(when, new_entry, complement_versions, filtered)
+        else:
+            self.add_to_filtered(filtered, when, new_entry)
+        return True
+
+    @staticmethod
+    def _differs_only_in_top_level_version(existing_spec, removal_spec):
+        """Whether two specs are identical except for their top-level version constraint."""
+        a, b = existing_spec.copy(), removal_spec.copy()
+        a.versions = spack.spec.Spec().versions
+        b.versions = spack.spec.Spec().versions
+        return a == b
 
     def handle_intersection(self, when, directive_entry, complement_versions, filtered):
         new_when = when.copy()
@@ -1353,6 +1422,7 @@ class DropDirectiveBase(ABC):
 
 class DropConflicts(DropDirectiveBase):
     name = "conflicts"
+    supports_version_subtraction = True
 
     def __init__(self, spec, when):
         DropDirectiveBase.__init__(self, when)
@@ -1368,7 +1438,9 @@ class DropConflicts(DropDirectiveBase):
         ``mpi@1:`` satisfies ``mpi``), while ``drop_depends_on("mpi@1:")`` does *not* wipe a
         general ``depends_on("mpi")`` (``mpi`` does not satisfy ``mpi@1:``). ``satisfies``
         already accounts for package names and anonymous constraints, so no separate name
-        check is needed. See PR #48947."""
+        check is needed. When the two specs differ *only* in version, the non-satisfying case
+        is handled instead by version subtraction (see
+        :meth:`DropDirectiveBase.try_subtract_versions`). See PR #48947."""
         return self.directive_of(directive_entry).satisfies(self.removal_directive)
 
     def add_to_filtered(self, filtered, when, directive_entry):
@@ -1376,6 +1448,10 @@ class DropConflicts(DropDirectiveBase):
 
     def directive_of(self, directive_entry):
         return directive_entry[0]
+
+    def rebuild_entry(self, directive_entry, new_spec):
+        _, msg = directive_entry
+        return (new_spec, msg)
 
 
 class DropDependsOn(DropConflicts):
@@ -1391,9 +1467,19 @@ class DropDependsOn(DropConflicts):
     def directive_of(self, directive_entry):
         return directive_entry[1].spec
 
+    def rebuild_entry(self, directive_entry, new_spec):
+        # Dependency objects are interned and shared across packages, so we must not mutate the
+        # existing one -- build a new (re-interned) Dependency carrying the trimmed spec.
+        name, dependency = directive_entry
+        new_dependency = Dependency(new_spec, depflag=dependency.depflag)
+        new_dependency.patches = dependency.patches
+        return (name, intern_dependency(new_dependency))
+
 
 class DropPatch(DropConflicts):
     name = "patches"
+    # Patches are not specs, so there is no version range to subtract.
+    supports_version_subtraction = False
 
     def __init__(self, url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256):
         DropDirectiveBase.__init__(self, when)
@@ -1430,6 +1516,12 @@ class DropRequire(DropConflicts):
     def directive_of(self, directive_entry):
         return directive_entry[0][0]
 
+    def rebuild_entry(self, directive_entry, new_spec):
+        # A requirement entry is ((spec, ...), policy, msg); subtract from the first spec only,
+        # mirroring how directive_of reads it out.
+        specs, policy, msg = directive_entry
+        return ((new_spec, *specs[1:]), policy, msg)
+
 
 @directive("conflicts")
 def drop_conflict(conflict_spec: SpecType, when: WhenType = None):
@@ -1437,6 +1529,15 @@ def drop_conflict(conflict_spec: SpecType, when: WhenType = None):
 
     This is typically used when inheriting from another package if the author
     desires to keep some of the conflicts in the parent package but delete others.
+
+    Matching is by *satisfaction*: an inherited conflict is removed when its spec satisfies
+    ``conflict_spec`` (i.e. ``conflict_spec`` is equal to or more general than it). In addition,
+    when the two specs differ *only* in their top-level version, the removal's version range is
+    subtracted out of the existing conflict's own range rather than removing it wholesale -- so
+    ``drop_conflict("mpi@1:")`` turns ``conflicts("mpi")`` into ``conflicts("mpi@:0")``. Versions
+    carried on a child node (e.g. the compiler in ``%gcc@14:``) are out of scope for this
+    subtraction and leave the entry unchanged, since only top-level versions have a representable
+    complement (a general ``Spec.complement`` is infeasible -- see PR #48947).
 
     This code will not throw an error if the user inputs a conflict to delete
     that does not exist.
@@ -1450,6 +1551,15 @@ def drop_depends_on(spec: SpecType, when: WhenType = None):
 
     This is typically used when inheriting from another package if the author
     desires to keep some of the dependencies in the parent package but delete others.
+
+    Matching is by *satisfaction*: an inherited dependency is removed when its spec satisfies
+    ``spec`` (i.e. ``spec`` is equal to or more general than it). In addition, when the two specs
+    differ *only* in their top-level version, the removal's version range is subtracted out of the
+    existing dependency's own range rather than removing it wholesale -- so
+    ``drop_depends_on("mpi@1:")`` turns ``depends_on("mpi")`` into ``depends_on("mpi@:0")``.
+    Versions carried on a child node (e.g. the compiler in ``%gcc@14:``) are out of scope for this
+    subtraction and leave the entry unchanged, since only top-level versions have a representable
+    complement (a general ``Spec.complement`` is infeasible -- see PR #48947).
 
     This code will not throw an error if the user inputs a dependency to delete
     that does not exist.
@@ -1470,9 +1580,12 @@ def drop_patch(
     """Remove a patch from a package.
 
     This is typically used when inheriting from another package if the author
-    desires to keep some of the dependencies in the parent package but delete others.
+    desires to keep some of the patches in the parent package but delete others.
 
-    This code will not throw an error if the user inputs a dependency to delete
+    Patches are matched by equality (they are not specs, so there is no satisfaction relation or
+    version subtraction).
+
+    This code will not throw an error if the user inputs a patch to delete
     that does not exist.
     """
     return DropPatch(
@@ -1482,12 +1595,21 @@ def drop_patch(
 
 @directive("requirements")
 def drop_require(spec: SpecType, when: WhenType = None):
-    """Remove a dependency from a package.
+    """Remove a requirement from a package.
 
     This is typically used when inheriting from another package if the author
-    desires to keep some of the dependencies in the parent package but delete others.
+    desires to keep some of the requirements in the parent package but delete others.
 
-    This code will not throw an error if the user inputs a dependency to delete
+    Matching is by *satisfaction*: an inherited requirement is removed when its (first) spec
+    satisfies ``spec`` (i.e. ``spec`` is equal to or more general than it). In addition, when the
+    two specs differ *only* in their top-level version, the removal's version range is subtracted
+    out of the existing requirement's own range rather than removing it wholesale -- so
+    ``drop_require("mpi@1:")`` turns ``requires("mpi")`` into ``requires("mpi@:0")``. Versions
+    carried on a child node (e.g. the compiler in ``%gcc@14:``) are out of scope for this
+    subtraction and leave the entry unchanged, since only top-level versions have a representable
+    complement (a general ``Spec.complement`` is infeasible -- see PR #48947).
+
+    This code will not throw an error if the user inputs a requirement to delete
     that does not exist.
     """
     return DropRequire(spec, when).remove()

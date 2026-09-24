@@ -557,28 +557,153 @@ def test_drop_depends_on_matches_by_satisfaction():
     assert Child.dependencies == {}  # type: ignore
 
 
-def test_drop_depends_on_specific_removal_does_not_match_general_entry():
-    """Matching is whole-entry by satisfaction, and it is *not* symmetric: a specific removal
-    spec does not match a more general existing dependency, because the general spec does not
-    satisfy the specific one (``mpi`` does not satisfy ``mpi@1:``).
-
-    Note this is a whole-entry match, not a partial version subtraction: the drop machinery
-    only trims version ranges carried on a directive's ``when=`` clause (via the complement),
-    never the version range embedded in the dependency spec itself. So dropping ``mpi@1:``
-    does not carve ``@1:`` out of an existing ``depends_on("mpi")`` to leave ``mpi@:1`` -- the
-    entry simply does not match and is left untouched. See PR #48947."""
+def test_drop_depends_on_subtracts_version_from_general_entry():
+    """When a specific removal spec differs from a more general existing dependency *only* in
+    its top-level version, the removal's version range is subtracted out of the existing spec's
+    own version range instead of leaving the entry untouched. So ``drop_depends_on("mpi@1:")``
+    turns an inherited ``depends_on("mpi")`` (i.e. ``mpi@:``) into ``depends_on("mpi@:0")`` --
+    everything below ``@1``. This is a strict generalization of satisfaction matching (the
+    satisfy case is the special case where the removal version is unconstrained). See
+    PR #48947."""
 
     class Parent(metaclass=DirectiveMeta):
-        name = "general-parent"
+        name = "subtract-parent"
         depends_on("mpi")
 
     class Child(Parent):
-        name = "general-child"
+        name = "subtract-child"
         drop_depends_on("mpi@1:")
 
-    # "mpi" does not satisfy "mpi@1:", so the whole dependency is left in place unchanged.
-    assert "mpi" in Child.dependencies[spack.spec.Spec()]  # type: ignore
-    assert str(Child.dependencies[spack.spec.Spec()]["mpi"].spec) == "mpi"  # type: ignore
+    # Parent keeps the full range; child has the @1: range carved out.
+    assert str(Parent.dependencies[spack.spec.Spec()]["mpi"].spec) == "mpi"  # type: ignore
+    assert str(Child.dependencies[spack.spec.Spec()]["mpi"].spec) == "mpi@:0"  # type: ignore
+
+
+def test_drop_depends_on_subtraction_empties_range_removes_entry():
+    """When subtraction (or, equivalently, satisfaction) removes the entire version range, the
+    entry is dropped completely. ``drop_depends_on("mpi@1:")`` against ``depends_on("mpi@1:")``
+    leaves nothing."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "subtract-empty-parent"
+        depends_on("mpi@1:")
+
+    class Child(Parent):
+        name = "subtract-empty-child"
+        drop_depends_on("mpi@1:")
+
+    assert Child.dependencies == {}  # type: ignore
+
+
+def test_drop_depends_on_subtraction_no_overlap_is_noop():
+    """Subtracting a non-overlapping version range leaves the dependency spec unchanged."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "subtract-noop-parent"
+        depends_on("mpi@:0")
+
+    class Child(Parent):
+        name = "subtract-noop-child"
+        drop_depends_on("mpi@5:")
+
+    assert str(Child.dependencies[spack.spec.Spec()]["mpi"].spec) == "mpi@:0"  # type: ignore
+
+
+def test_drop_depends_on_does_not_mutate_interned_dependency():
+    """``Dependency`` objects are interned and shared across packages, so version subtraction
+    must build a *new* dependency rather than mutate the shared one. A child that drops part of
+    an inherited dependency's version range must not corrupt the parent's (shared) entry."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "intern-parent"
+        depends_on("mpi")
+
+    parent_dep = Parent.dependencies[spack.spec.Spec()]["mpi"]  # type: ignore
+
+    class Child(Parent):
+        name = "intern-child"
+        drop_depends_on("mpi@1:")
+
+    # Parent's shared dependency object is untouched (same object, full range); child has a
+    # brand-new, trimmed dependency.
+    assert Parent.dependencies[spack.spec.Spec()]["mpi"] is parent_dep  # type: ignore
+    assert str(parent_dep.spec) == "mpi"
+    assert str(Child.dependencies[spack.spec.Spec()]["mpi"].spec) == "mpi@:0"  # type: ignore
+    assert Child.dependencies[spack.spec.Spec()]["mpi"] is not parent_dep  # type: ignore
+
+
+def test_drop_conflict_subtracts_top_level_version():
+    """Version subtraction also applies to ``drop_conflict``."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "conflict-subtract-parent"
+        conflicts("mpi")
+
+    class Child(Parent):
+        name = "conflict-subtract-child"
+        drop_conflict("mpi@1:")
+
+    surviving = [spec for lst in Child.conflicts.values() for spec, _ in lst]  # type: ignore
+    assert [str(s) for s in surviving] == ["mpi@:0"]
+
+
+def test_drop_conflict_compiler_node_version_not_subtracted():
+    """Version subtraction is scoped to *top-level* versions. A version carried on a child node
+    (e.g. the compiler in ``%gcc@14:``) is out of scope: the entry is left unchanged. This is a
+    deliberate, documented limitation -- only top-level versions have a representable
+    complement in this machinery. See PR #48947."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "conflict-compiler-parent"
+        conflicts("%gcc")
+
+    class Child(Parent):
+        name = "conflict-compiler-child"
+        drop_conflict("%gcc@14:")
+
+    surviving = [spec for lst in Child.conflicts.values() for spec, _ in lst]  # type: ignore
+    assert [str(s) for s in surviving] == ["%gcc"]
+
+
+def test_drop_require_subtracts_top_level_version():
+    """Version subtraction also applies to ``drop_require``; the requirement's policy and
+    message are preserved."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "require-subtract-parent"
+        requires("mpi", policy="one_of", msg="need mpi")
+
+    class Child(Parent):
+        name = "require-subtract-child"
+        drop_require("mpi@1:")
+
+    entries = [entry for lst in Child.requirements.values() for entry in lst]  # type: ignore
+    assert len(entries) == 1
+    specs, policy, msg = entries[0]
+    assert str(specs[0]) == "mpi@:0"
+    assert policy == "one_of"
+    assert msg.endswith("need mpi")
+
+
+def test_drop_depends_on_subtraction_composes_with_when_trim():
+    """Version subtraction on the dependency spec composes with the independent trimming of the
+    directive's ``when=`` clause. Here the ``when`` range ``@2:4`` is trimmed against the
+    removal's ``when`` ``@3`` while the dependency spec is trimmed against the removal's
+    ``@1:``."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "compose-parent"
+        depends_on("mpi", when="@2:4")
+
+    class Child(Parent):
+        name = "compose-child"
+        drop_depends_on("mpi@1:", when="@3")
+
+    rendered = {  # type: ignore
+        str(when): {name: str(dep.spec) for name, dep in inner.items()}
+        for when, inner in Child.dependencies.items()
+    }
+    assert rendered == {"@2,4": {"mpi": "mpi@:0"}}
 
 
 def test_drop_conflict_and_require_match_by_satisfaction():
