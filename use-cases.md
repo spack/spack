@@ -439,8 +439,15 @@ There are two scenarios where we know migration is complete:
 
 ### Locking both destinations and spack prefix
 
-- Regardless of whether we lock inside `$spack`, we must lock the destinations because different spack prefixes could be simultaneously auto-migrating into `$HOME`
-- Why then do we also lock inside of `$spack`? Because if two spack processes for the same prefix try to copy the gpg keys into the new destination, one of those will fail. The destination lock is to coordinate between instances and doesn't tell us whether the gpg keys (for example) were successfully copied for our instance.
+- **Destination locks are required** to coordinate between different spack prefixes simultaneously migrating into `$HOME`. GPG and environments acquire these locks.
+
+- **The global `$spack/.migration-lock` is semi-redundant** given the combination of (a) fault-tolerance mechanisms (hash-based markers that distinguish "our prior migration" from "another instance's migration") and (b) destination locking. Two processes from the same spack prefix could safely race through migration - they'd serialize at each destination lock, and the second would find markers indicating that resource was already migrated.
+
+- **However, the global lock is kept for practical benefits:**
+  - **Reduces contention**: Only one process performs migration work; others wait and see `.migration-done` marker
+  - **More efficient**: No wasted work from multiple processes all attempting the same migrations
+  - **Simpler reasoning**: One process handles the entire migration atomically
+  - **Covers licenses**: License migration currently has no destination lock (relies on hash comparison), so the global lock prevents races there
 
 ### Fault tolerance for interrupted migrations
 
