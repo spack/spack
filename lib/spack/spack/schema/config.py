@@ -231,7 +231,7 @@ properties: Dict[str, Any] = {
             "installer": {
                 "type": "string",
                 "enum": ["old", "new"],
-                "description": "Which installer to use. The new installer is experimental.",
+                "description": "Which installer to use. The old installer is deprecated.",
             },
             "sandbox": {
                 "type": "object",
