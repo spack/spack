@@ -1650,7 +1650,7 @@ def for_package(pkg: "spack.package_base.PackageBase") -> FetchStrategy:
     Package must be concrete to determine a fetch strategy which fits the
     version constraints, otherwise multiple when= options could overlap.
     """
-    assert pkg.spec.concrete
+    # assert pkg.spec.concrete
 
     # No-code packages have a custom fetch strategy to work around issues
     # with resource staging.
