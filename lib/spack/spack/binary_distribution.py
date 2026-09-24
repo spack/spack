@@ -103,6 +103,7 @@ from .url_buildcache import (
     InvalidMetadataFile,
     ListMirrorSpecsError,
     MirrorMetadata,
+    NoSuchBlobException,
     NoVerifyException,
     URLBuildcacheEntry,
     get_entries_from_cache,
@@ -2777,16 +2778,17 @@ class IndexHandler:
         cache_class = get_url_buildcache_class(CURRENT_BUILD_CACHE_LAYOUT_VERSION)
         try:
             result = io.TextIOWrapper(manifest_response, encoding="utf-8").read()
+
+            manifest = BuildcacheManifest.from_dict(
+                # Currently we do not sign buildcache index, but we could
+                cache_class.verify_and_extract_manifest(result, verify=False)
+            )
+            blob_record = manifest.get_blob_records(
+                cache_class.component_to_media_types(BuildcacheComponent.INDEX)
+            )[0]
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {manifest_response.url} is invalid", e) from e
 
-        manifest = BuildcacheManifest.from_dict(
-            # Currently we do not sign buildcache index, but we could
-            cache_class.verify_and_extract_manifest(result, verify=False)
-        )
-        blob_record = manifest.get_blob_records(
-            cache_class.component_to_media_types(BuildcacheComponent.INDEX)
-        )[0]
         return blob_record
 
     def fetch_index_blob(
@@ -3033,6 +3035,11 @@ class DefaultIndexHandler(IndexHandler):
             raise FetchIndexError(
                 f"Could not read index manifest from {url_index_manifest}"
             ) from e
+        except NoSuchBlobException as e:
+            raise FetchIndexError(
+                f"Could not find valid index manifest in {url_index_manifest}"
+            ) from e
+
 
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
@@ -3079,16 +3086,23 @@ class EtagIndexHandler(IndexHandler):
         except OSError as e:  # URLError, socket.timeout, etc.
             raise FetchIndexError(f"Could not fetch index manifest {manifest_url}", e) from e
 
-        # We need to read the index manifest and fetch the associated blob
-        with response:
-            index_blob_record = self.get_index_manifest(response)
-            etag_header_value = response.headers.get("Etag", None) or response.headers.get(
-                "etag", None
-            )
+        # Try to fetch the index blobs if they exist.
+        try:
+            # We need to read the index manifest and fetch the associated blob
+            with response:
+                index_blob_record = self.get_index_manifest(response)
+                etag_header_value = response.headers.get("Etag", None) or response.headers.get(
+                    "etag", None
+                )
 
-        cache_entry = cache_class(self.url, allow_unsigned=True)
-        computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
-        cache_entry.destroy()
+            cache_entry = cache_class(self.url, allow_unsigned=True)
+            computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
+            cache_entry.destroy()
+        except NoSuchBlobException as e:
+            # It is possible that there is no supported database for old build caches.
+            raise FetchIndexError(
+                f"Could not find valid index manifest in {url_index_manifest}"
+            ) from e
 
         return FetchIndexResult(
             etag=web_util.parse_etag(etag_header_value),
