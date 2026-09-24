@@ -16,6 +16,7 @@ import spack.modules.common
 import spack.modules.error
 import spack.modules.tcl
 import spack.spec
+import spack.store
 import spack.util.environment
 from spack.config import Configuration
 
@@ -1076,6 +1077,61 @@ class TestTcl:
             )
             == 1
         )
+
+    def test_no_fold_without_variants(
+        self, install_mockery, module_configuration, modulefile_filenames, factory, monkeypatch
+    ):
+        """Test module files behave as before when variants are disabled: no folding, no
+        database query, and module file is removed on uninstall."""
+        module_configuration("fold_variants_none")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+
+        # second installation maps to same module file, which is not overwritten
+        with pytest.warns(UserWarning, match="exists and will not be overwritten"):
+            install("--fake", "--add", spec_b)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert content_a == content_b
+
+        # other installations are not looked up in the database
+        def fail_query(*args, **kwargs):
+            raise AssertionError("database should not be queried when variants are disabled")
+
+        writer, _ = factory(spec_b)
+        with monkeypatch.context() as m:
+            m.setattr(spack.store.STORE.db, "query", fail_query)
+            assert writer.conf.other_installed_specs == []
+            assert not writer.layout.hold_other_installations
+
+        # uninstall removes the module file as no installation is folded into it
+        uninstall("-y", spec_a)
+        assert not os.path.exists(module_file_a)
+
+    @pytest.mark.parametrize("config_name", ["variants_all", "fold_variants_hash_projection"])
+    def test_no_fold_with_hash_in_module_name(
+        self, install_mockery, module_configuration, factory, monkeypatch, config_name
+    ):
+        """Test no installation lookup is made when the hash is part of the module name, as
+        installations then cannot share a module file."""
+        module_configuration(config_name)
+        install("--fake", "--add", "mpileaks@2.3 ~debug ^zmpi")
+        install("--fake", "--add", "mpileaks@2.3 +debug ^zmpi")
+
+        def fail_query(*args, **kwargs):
+            raise AssertionError("database should not be queried when hash is in module name")
+
+        writer, _ = factory("mpileaks@2.3 +debug ^zmpi")
+        with monkeypatch.context() as m:
+            m.setattr(spack.store.STORE.db, "query", fail_query)
+            assert not writer.conf.folds_installations
+            assert writer.conf.other_installed_specs == []
+            assert not writer.layout.hold_other_installations
 
     def test_fold_variants(self, install_mockery, module_configuration, modulefile_filenames):
         """Test generating and removing installations folded in same module file."""
