@@ -1066,36 +1066,35 @@ def _main(argv=None):
         config_changed = False
 
         # Check if migration was already done when config module loaded
-        # (stored globally in config.py to avoid race conditions)
         migration_done_before_cfg = spack.config._migration_done_at_module_load
 
-        # Migrate $spack prefix resources (licenses, environments, GPG, etc.) under lock
-        # The lock prevents concurrent migrations from conflicting
-        migration_done_after_lock = False
-        if not migration_done_before_cfg:
-            # Check if there are any old resources before trying to acquire the lock
-            # This avoids write attempts on fresh Spack instances with no old data
-            has_old_resources = spack.config._has_old_prefix_resources()
-
-            if has_old_resources:
-                # Old resources exist, so we need to check migration status under lock
-                lock_path = spack.config._migration_lock_path()
-                lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-                try:
-                    with spack.util.lock.WriteTransaction(lock):
-                        migration_done_after_lock = os.path.exists(
-                            spack.config._migration_done_marker_path()
-                        )
-                        if migration_done_after_lock:
-                            config_changed = True
-                        elif spack.config.should_auto_migrate():
-                            prefix_result = spack.config._do_migrate_spack_prefix()
-                            config_changed = True
-                except OSError as e:
-                    tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
-                except spack.util.lock.LockError as e:
-                    tty.die(f"Timed out waiting for migration lock: {e}")
-            # else: no old resources and no marker = fresh instance, no migration needed
+        # Old resources are kept in-place. In that sense "migration" refers to
+        # copying them to new locations and updating config to point to them.
+        # Because of that, if there *are not* any old resources, then we know
+        # that a migration would never have occurred, and moreover that
+        # no other concurrent spack process was migrating between the start
+        # of this spack process and this point in time.
+        has_old_resources = spack.config._has_old_prefix_resources()
+        if has_old_resources and not migration_done_before_cfg:
+            lock_path = spack.config._migration_lock_path()
+            lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+            try:
+                # Note: this lockfile is in the spack prefix. New checkouts
+                # of spack will not generate this lock because they will not
+                # have any old resources.
+                with spack.util.lock.WriteTransaction(lock):
+                    migration_done_after_lock = os.path.exists(
+                        spack.config._migration_done_marker_path()
+                    )
+                    if migration_done_after_lock:
+                        config_changed = True
+                    elif spack.config.should_auto_migrate():
+                        prefix_result = spack.config._do_migrate_spack_prefix()
+                        config_changed = True
+            except OSError as e:
+                tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
+            except spack.util.lock.LockError as e:
+                tty.die(f"Timed out waiting for migration lock: {e}")
 
         # Migrate ~/.spack home directory (user config and package repos)
         # This is separate and runs even on fresh clones with no old $spack data
