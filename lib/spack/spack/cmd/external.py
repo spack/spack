@@ -133,6 +133,16 @@ def external_find(args):
     # Outside the Cray manifest, the search is done by tag for performance reasons,
     # since tags are cached.
 
+    env = active_environment()
+
+    # In an environment, avoid detecting Spack-installed packages exposed through the
+    # environment's views as externals. This applies to any search within an environment,
+    # not just --all, unless the user explicitly restricted the search paths themselves.
+    if env and not args.path:
+        filtered_paths = _search_paths_excluding_views(env)
+        if filtered_paths:
+            args.path = filtered_paths
+
     # When --all is used within an environment, limit the search to the packages
     # that the environment could concretize to. We use the abstract user specs
     # (not the concrete specs) and expand virtuals so that *every* possible
@@ -140,7 +150,6 @@ def external_find(args):
     # `mpi` -- rather than only the provider a previous concretization happened to
     # pick. This is what lets a later `spack concretize` actually see the
     # newly-found externals.
-    env = active_environment()
     if args.all and env and env.user_specs:
         graph = create_graph_analyzer(spack.context.default())
         reachable, _, _ = graph.possible_dependencies(
@@ -149,25 +158,6 @@ def external_find(args):
         if reachable:
             args.packages = sorted(reachable)
             tty.debug(f"Searching for packages from environment: {', '.join(args.packages)}")
-
-            # Exclude environment view paths to avoid detecting Spack-installed
-            # packages as externals
-            if not args.path:
-                from spack.util import environment as env_util
-                from spack.util.filesystem import path_contains_subdirectory
-
-                view_roots = [os.path.realpath(view.root) for view in env.views.values()]
-
-                def under_view(path_dir):
-                    real_path = os.path.realpath(path_dir)
-                    if any(path_contains_subdirectory(real_path, root) for root in view_roots):
-                        tty.debug(f"Excluding view path from search: {path_dir}")
-                        return True
-                    return False
-
-                filtered_paths = [p for p in env_util.get_path("PATH") if not under_view(p)]
-                if filtered_paths:
-                    args.path = filtered_paths
 
     # If the user specified both --all and --tag, then --all has precedence
     if args.all or args.packages:
@@ -209,6 +199,32 @@ def external_find(args):
         spack.cmd.display_specs(new_specs)
     else:
         tty.msg("No new external packages detected")
+
+
+def _search_paths_excluding_views(env) -> Optional[List[str]]:
+    """Return the entries of ``PATH`` that are not inside any of the environment's view
+    roots, so that Spack-installed packages exposed through a view are not detected as
+    externals. Returns ``None`` if the filtering removes nothing (i.e. no view is on PATH).
+    """
+    from spack.util import environment as env_util
+    from spack.util.filesystem import path_contains_subdirectory
+
+    view_roots = [os.path.realpath(view.root) for view in env.views.values()]
+    if not view_roots:
+        return None
+
+    def under_view(path_dir):
+        real_path = os.path.realpath(path_dir)
+        if any(path_contains_subdirectory(real_path, root) for root in view_roots):
+            tty.debug(f"Excluding view path from search: {path_dir}")
+            return True
+        return False
+
+    search_paths = env_util.get_path("PATH")
+    filtered_paths = [p for p in search_paths if not under_view(p)]
+    if filtered_paths == search_paths:
+        return None
+    return filtered_paths
 
 
 def packages_to_search_for(

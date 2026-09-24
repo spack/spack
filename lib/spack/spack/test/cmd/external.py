@@ -489,11 +489,11 @@ def test_find_external_all_in_env_searches_all_virtual_providers(
         assert "mpich" in pkgs_cfg
 
 
-def test_find_external_all_excludes_view_paths(
-    mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path, tmp_path
-):
-    """Test that 'spack external find --all' in a concretized environment excludes
-    environment view paths from the search."""
+def _setup_view_vs_external_env(mock_executable, monkeypatch, mock_packages, tmp_path):
+    """Set up an environment with a cmake both inside a view and outside it on PATH.
+
+    Returns the (env, versions) pair. The caller is responsible for entering the env.
+    """
     import spack.environment as ev
     from spack.environment.environment import ViewDescriptor
 
@@ -509,11 +509,6 @@ def test_find_external_all_excludes_view_paths(
     cmake_cls = mock_packages.get_pkg_class("cmake")
     monkeypatch.setattr(cmake_cls, "determine_version", _determine_version)
 
-    view_dir = tmp_path / "view" / "bin"
-    view_dir.mkdir(parents=True)
-    external_dir = tmp_path / "external" / "bin"
-    external_dir.mkdir(parents=True)
-
     cmake_in_view = mock_executable(
         "cmake", output=f"echo cmake version {versions['view']}", subdir=("view", "bin")
     )
@@ -527,16 +522,45 @@ def test_find_external_all_excludes_view_paths(
     env = ev.create("test")
     env.add("cmake")
     env.concretize()
-
     env.views = {"default": ViewDescriptor(env.path, str(tmp_path / "view"))}
+
+    return env, versions
+
+
+def _assert_only_external_cmake_detected(mutable_config, versions):
+    pkgs_cfg = mutable_config.get("packages")
+    assert "cmake" in pkgs_cfg
+    cmake_externals = pkgs_cfg["cmake"]["externals"]
+    assert len(cmake_externals) == 1
+    assert versions["external"] in cmake_externals[0]["spec"]
+    assert versions["view"] not in str(cmake_externals)
+
+
+def test_find_external_all_excludes_view_paths(
+    mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path, tmp_path
+):
+    """Test that 'spack external find --all' in a concretized environment excludes
+    environment view paths from the search."""
+    env, versions = _setup_view_vs_external_env(
+        mock_executable, monkeypatch, mock_packages, tmp_path
+    )
 
     with env:
         assert active_environment() is env
         external("find", "--all")
+        _assert_only_external_cmake_detected(mutable_config, versions)
 
-        pkgs_cfg = mutable_config.get("packages")
-        assert "cmake" in pkgs_cfg
-        cmake_externals = pkgs_cfg["cmake"]["externals"]
-        assert len(cmake_externals) == 1
-        assert versions["external"] in cmake_externals[0]["spec"]
-        assert versions["view"] not in str(cmake_externals)
+
+def test_find_external_named_package_excludes_view_paths(
+    mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path, tmp_path
+):
+    """View paths must be excluded for any search within an environment, not just --all.
+    A plain 'spack external find cmake' must also ignore the copy exposed through the view."""
+    env, versions = _setup_view_vs_external_env(
+        mock_executable, monkeypatch, mock_packages, tmp_path
+    )
+
+    with env:
+        assert active_environment() is env
+        external("find", "cmake")
+        _assert_only_external_cmake_detected(mutable_config, versions)
