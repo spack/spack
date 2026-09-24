@@ -342,11 +342,15 @@ Migration and isolation decisions use the fully resolved configuration, includin
 
 # 6. Concurrency and Safety Invariants
 
-Auto-migration is designed to be safe when multiple Spack instances run concurrently, whether on the same machine or accessing shared filesystems.
+Auto-migration is designed to be safe when multiple Spack instances run concurrently, whether on the same machine or accessing shared filesystems. Two distinct concurrency scenarios are handled:
+
+1. **Multiple processes with the same `$spack` prefix**: For example, two users running commands against a shared Spack installation, or one user running multiple `spack` commands in parallel. These processes coordinate through a shared migration lock.
+
+2. **Multiple different `$spack` prefixes each performing migration**: For example, a user with multiple Spack checkouts starting commands in each one simultaneously. Each prefix has its own independent migration lock, so they migrate in parallel without interfering.
 
 ## 6.1 Spack prefix migrations
 
-Auto-migration of `$spack` prefix resources uses a top-level migration lock (`$spack/.migration-lock`) to coordinate concurrent Spack instances:
+Auto-migration of `$spack` prefix resources uses a per-prefix migration lock (`$spack/.migration-lock`) to coordinate concurrent Spack instances using that prefix:
 
 - **Migration lock acquisition**: Each Spack process attempts to acquire the lock before migration. If the lock cannot be acquired (no write permissions or timeout), that process skips migration and proceeds with existing configuration.
   
