@@ -74,6 +74,7 @@ from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
 from .list import SpecList, SpecListParser
+from .list import SpecList, SpecListError, SpecListParser, spec_string
 
 SpecPair = Tuple[Spec, Spec]
 
@@ -1544,7 +1545,7 @@ class Environment:
                     raise SpackEnvironmentError(f"no such package: {spec.name}")
 
         list_to_change = self.spec_lists[list_name]
-        existing = str(spec) in list_to_change.yaml_list
+        existing = any(spec_string(x) == str(spec) for x in list_to_change.yaml_list)
         if not existing:
             list_to_change.add(spec)
             if list_name == USER_SPECS_KEY:
@@ -3335,7 +3336,8 @@ def initialize_environment_dir(
 
 
 class ManifestEntry(NamedTuple):
-    """A spec string written in a list of the manifest file"""
+    """A spec string written in a list of the manifest file, either on its own or as the ``spec``
+    attribute of an entry with options"""
 
     #: ``specs`` for the default group, otherwise the name of a definition
     list_name: str
@@ -3481,12 +3483,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         else:
             containers = [item[list_name] for item in self._active_definitions(list_name)]
 
-        return [
-            ManifestEntry(list_name, container, idx, item, expand(item))
-            for container in containers
-            for idx, item in enumerate(container)
-            if isinstance(item, str) and not item.startswith("$")
-        ]
+        result = []
+        for container in containers:
+            for idx, item in enumerate(container):
+                text = spec_string(item)
+                if text is not None and not text.startswith("$"):
+                    result.append(ManifestEntry(list_name, container, idx, text, expand(text)))
+        return result
 
     def _default_group_lists(self) -> List[List[Any]]:
         """Returns the YAML lists holding the specs of the default group"""
@@ -3515,7 +3518,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             replacements: entries, each paired with its new text
         """
         for entry, text in replacements:
-            entry.container[entry.position] = text
+            item = entry.container[entry.position]
+            if isinstance(item, dict):  # spec entry with options, which are kept
+                item["spec"] = text
+            else:
+                entry.container[entry.position] = text
         self._entries_changed([entry for entry, _ in replacements])
 
     def remove_entries(self, entries: List[ManifestEntry]) -> None:

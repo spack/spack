@@ -105,6 +105,17 @@ class SpecList:
         return iter(self.specs)
 
 
+def spec_string(item: Union[str, Dict]) -> Optional[str]:
+    """Returns the spec string of a single spec entry in a YAML spec list, i.e. either a plain
+    string or a ``spec:`` entry with options. Returns None for other entries, like matrices.
+    """
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict) and "spec" in item:
+        return item["spec"]
+    return None
+
+
 def _expand_matrix_constraints(matrix_config):
     # Avoid circular import
     import spack.hash_lookup
