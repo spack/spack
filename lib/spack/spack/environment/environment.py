@@ -2177,7 +2177,7 @@ class Environment:
             specs: specs to install, by default the concrete roots
             install_args: keyword arguments of ``spack.installer_dispatch.create_installer``
         """
-        specs = specs if specs is not None else self.concrete_roots()
+        specs = specs if specs is not None else self.installable_roots()
 
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
@@ -2264,6 +2264,29 @@ class Environment:
         """Same as concretized_specs, except it returns the list of concrete
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
+
+    def installable_roots(self) -> List[Spec]:
+        """Same as concrete_roots(), but excludes roots marked ``install: false``"""
+        not_installable: Set[Tuple[str, Spec]] = set()
+        for group in self.manifest.groups():
+            speclist = self.user_specs_by(group=group)
+            not_installable.update(
+                (group, spec)
+                for spec, install in zip(speclist.specs, speclist.install_flags)
+                if not install
+            )
+
+        result = [
+            self.specs_by_hash[x.hash]
+            for x in self.concretized_roots
+            if (x.group, x.root) not in not_installable
+        ]
+        result.extend(
+            concrete
+            for included_env in self.included_concretized_roots
+            for _, concrete in self.concretized_specs_from_included_environment(included_env)
+        )
+        return result
 
     def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
         """Generates all the (abstract, concrete) spec pairs for a given group"""
@@ -3428,6 +3451,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     )
                 elif "specs" in item:
                     self._user_specs[group].extend(item["specs"])
+                elif "spec" in item:
+                    self._user_specs[group].append(item)
 
     def _clear_user_specs(self) -> None:
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
