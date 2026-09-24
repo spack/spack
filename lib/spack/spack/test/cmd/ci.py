@@ -424,6 +424,28 @@ spack:
     assert "dependency-install" in found
 
 
+def test_ci_generate_skips_install_false(ci_generate_test, tmp_path: pathlib.Path):
+    """Roots marked install: false get no build jobs"""
+    _, outputfile, _ = ci_generate_test(
+        f"""\
+spack:
+  specs:
+    - dependency-install
+    - spec: dependent-install
+      install: false
+  mirrors:
+    buildcache-destination: {tmp_path / "ci-mirror"}
+  ci:
+    pipeline-gen:
+    - build-job:
+        tags: [donotcare]
+"""
+    )
+    jobs = syaml.load(outputfile.read_text())
+    assert any("dependency-install" in job for job in jobs)
+    assert not any("dependent-install" in job for job in jobs)
+
+
 def test_ci_generate_for_pr_pipeline(ci_generate_test, tmp_path: pathlib.Path, monkeypatch):
     """Test generation of a PR pipeline with disabled rebuild-index"""
     monkeypatch.setenv("SPACK_PIPELINE_TYPE", "spack_pull_request")
