@@ -210,17 +210,26 @@ def pull_checkout_branch(
     remote: str = "origin",
     depth: Optional[int] = None,
     git_exe: Optional[exe.Executable] = None,
+    force_discard: bool = False,
 ):
-    """Fetch and checkout branch, then rebase with remote tracking branch."""
+    """Fetch and checkout branch, then rebase with remote tracking branch.
+    If force_discard is set to True, then use git checkout --force.
+    """
     git_exe = git_exe or git(required=True)
+    refspec = f"refs/heads/{branch}:refs/remotes/{remote}/{branch}"
 
-    fetch_args = ["--quiet", "--progress"]
+    fetch_args = ["--quiet"]
     if depth:
         if depth <= 0:
             raise ValueError("depth must be a positive integer")
         fetch_args.append(f"--depth={depth}")
 
-    git_exe("fetch", *fetch_args, remote, f"refs/heads/{branch}:refs/remotes/{remote}/{branch}")
+    if force_discard:
+        git_exe("fetch", *fetch_args, remote, f"+{refspec}")
+        git_exe("checkout", "--quiet", "--force", "-B", branch, f"{remote}/{branch}")
+        return
+
+    git_exe("fetch", *fetch_args, remote, refspec)
     git_exe("checkout", "--quiet", branch)
 
     try:
