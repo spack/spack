@@ -1074,6 +1074,8 @@ def _main(argv=None):
         # that a migration would never have occurred, and moreover that
         # no other concurrent spack process was migrating between the start
         # of this spack process and this point in time.
+        # Note: `spack isolate` also writes the .migration-done file, so
+        # that running spack after `spack isolate` never triggers an auto-migration
         has_old_resources = spack.config._has_old_prefix_resources()
         if has_old_resources and not migration_done_before_cfg:
             lock_path = spack.config._migration_lock_path()

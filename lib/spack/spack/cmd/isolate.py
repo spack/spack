@@ -223,6 +223,28 @@ def _do_isolate(args):
     with open(config_path, "w", encoding="utf-8") as f:
         syaml.dump(scope_config, f)
 
+    # Write migration completion marker to prevent auto-migration after isolation
+    # Only needed if there are old resources that auto-migration would otherwise handle
+    has_old_resources = any(old_resources.values())
+    if has_old_resources:
+        marker_path = spack.config._migration_done_marker_path()
+        if os.path.exists(marker_path):
+            tty.warn(
+                "Prior auto-migration was performed. There may be resources in $HOME, "
+                "but as of now spack will not write anything into $HOME."
+            )
+        else:
+            try:
+                with open(marker_path, "w", encoding="utf-8") as f:
+                    f.write("Migration completed\n")
+                tty.debug(f"Wrote migration completion marker: {marker_path}")
+            except OSError as e:
+                tty.warn(
+                    "Isolation incomplete for older spack instance. Auto-migration may move "
+                    "resources into $HOME for future invocations that are not `spack isolate`. "
+                    f"Could not write {marker_path}: {e}"
+                )
+
 
 def _undo_isolate():
     if not os.path.exists(ISOLATE_SCOPE_PATH):
