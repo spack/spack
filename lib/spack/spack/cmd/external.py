@@ -102,6 +102,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def external_find(args):
+    if args.all and args.packages:
+        args.subparser.error(
+            "cannot specify package names together with '--all'\n"
+            "  '--all' already searches for all relevant packages"
+        )
+
     if args.all or not (args.tags or args.packages):
         # If the user calls 'spack external find' with no arguments, and
         # this system has a description of installed packages, then we should

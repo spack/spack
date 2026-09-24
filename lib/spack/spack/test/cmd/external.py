@@ -443,6 +443,14 @@ def test_find_external_all_in_env_limits_to_reachable_packages(
         assert "cmake" not in pkgs_cfg
 
 
+def test_find_external_all_with_packages_errors():
+    """Test that 'spack external find --all pkg' errors, since '--all' and an explicit list
+    of packages are mutually exclusive ways of choosing what to search for."""
+    output = external("find", "--all", "cmake", fail_on_error=False)
+    assert external.returncode != 0
+    assert "cannot specify package names together with '--all'" in output
+
+
 def test_find_external_all_in_env_searches_all_virtual_providers(
     mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path
 ):
