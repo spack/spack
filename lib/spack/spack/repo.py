@@ -1396,7 +1396,9 @@ class Repo:
             )
             self._repo_index.add_indexer("providers", ProviderIndexer(self))
             self._repo_index.add_indexer("tags", TagIndexer(self))
-            self._repo_index.add_indexer("patches", PatchIndexer(self))
+            # The name is also the cache directory. v2: dependency patches are keyed by bare
+            # package name, so caches written with fullname keys must not be reused.
+            self._repo_index.add_indexer("patches_v2", PatchIndexer(self))
         return self._repo_index
 
     @property
@@ -1412,7 +1414,7 @@ class Repo:
     def get_patch_index(self, allow_stale: bool = False) -> spack.patch.PatchCache:
         """Index of patches and packages they're defined on. Set allow_stale is True to bypass
         cache validation and return a potentially stale index."""
-        return self.index.get_index("patches", allow_stale=allow_stale)
+        return self.index.get_index("patches_v2", allow_stale=allow_stale)
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
         providers = self.provider_index.providers_for(virtual)
