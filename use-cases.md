@@ -424,7 +424,16 @@ There are two scenarios where we know migration is complete:
 
 - Regardless of whether we lock inside `$spack`, we must lock the destinations because different spack prefixes could be simultaneously auto-migrating into `$HOME`
 - Why then do we also lock inside of `$spack`? Because if two spack processes for the same prefix try to copy the gpg keys into the new destination, one of those will fail. The destination lock is to coordinate between instances and doesn't tell us whether the gpg keys (for example) were successfully copied for our instance.
-- This leaves one hole: if a spack process successfully migrates gpg keys but fails before completing all migration (and in particular writing `$spack/.migration-done`), the next process that picks up will know that auto-migration is incomplete, and won't know that gpg migration for the previous process was successful
+
+### Fault tolerance for interrupted migrations
+
+If a migration process succeeds in copying a resource but crashes before writing `$spack/.migration-done`, the next process needs to distinguish "our prior successful copy" from "another spack instance's copy." This is handled per-resource-type:
+
+- **GPG keys**: A marker file `.migration-<hash>` (where hash identifies the spack prefix) is added to the staging directory and moved atomically with the GPG data. If the destination exists with our marker, it's our prior copy (success). If it exists without our marker, it's a collision (failure).
+
+- **Environments**: Each environment directory gets a `.migration-<hash>` marker after copying. If an environment with the same name exists at the destination with our marker, it's our prior copy (skip it). Without our marker, it's a collision (stop migration).
+
+- **Licenses**: File content hashes are compared. If a license file exists at the destination with matching hash, it's either our prior copy or an identical file (both fine, continue). If the hash differs, it's a collision (stop migration).
 
 ### The migration-done marker
 

@@ -2121,6 +2121,19 @@ def _migration_done_marker_path() -> str:
     return os.path.join(spack.paths.prefix, ".migration-done")
 
 
+def _migration_source_hash() -> str:
+    """Compute a hash of the spack prefix to identify this migration source.
+
+    This hash is used in marker files to distinguish migrations from different
+    spack instances, enabling fault tolerance when migrations are interrupted.
+
+    Returns:
+        8-character hex hash of the normalized spack prefix path
+    """
+    prefix_str = os.path.normpath(spack.paths.prefix)
+    return spack.util.hash.b32_hash(prefix_str)[:8]
+
+
 def _has_old_prefix_resources() -> bool:
     """Check if there are any old resources in $spack that might need migration.
 
@@ -2165,11 +2178,25 @@ def _migrate_gpg(
     if not gpg_home_exists and not gpg_keys_exists:
         return True
 
-    # Check for destination conflicts before attempting any migration
-    if gpg_home_exists and os.path.exists(target_gpg_home):
-        tty.debug(f"Cannot migrate GPG home: destination already exists: {target_gpg_home}")
-        return False
-    if gpg_keys_exists and os.path.exists(target_gpg_keys):
+    # Check if our migration already succeeded in a prior interrupted attempt
+    source_hash = _migration_source_hash()
+    marker_name = f".migration-{source_hash}"
+
+    if os.path.exists(target_gpg_home):
+        marker_path = os.path.join(target_gpg_home, marker_name)
+        if os.path.exists(marker_path):
+            tty.debug(
+                f"GPG home already migrated from this spack instance (found marker {marker_name})"
+            )
+            return True
+        else:
+            tty.debug(
+                f"Cannot migrate GPG home: destination exists from different source: "
+                f"{target_gpg_home}"
+            )
+            return False
+
+    if os.path.exists(target_gpg_keys):
         tty.debug(f"Cannot migrate GPG keys: destination already exists: {target_gpg_keys}")
         return False
 
@@ -2191,6 +2218,9 @@ def _migrate_gpg(
                 shutil.rmtree(staging_home, ignore_errors=True)
             shutil.copytree(old_gpg_home, staging_home)
             os.chmod(staging_home, 0o700)
+            # Add migration marker to identify this source
+            with open(os.path.join(staging_home, marker_name), "w") as f:
+                f.write(f"Migrated from {spack.paths.prefix}\n")
             os.replace(staging_home, target_gpg_home)
             staging_home = None
 
@@ -2222,6 +2252,9 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
     if not os.path.exists(src_dir):
         return True
 
+    source_hash = _migration_source_hash()
+    marker_name = f".migration-{source_hash}"
+
     filesystem.mkdirp(dst_dir)
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
     try:
@@ -2234,11 +2267,20 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                 continue
             dst_path = os.path.join(dst_dir, entry)
             if os.path.exists(dst_path):
-                tty.warn(
-                    f"Environment migration stopped: destination exists: {dst_path}. "
-                    f"The old environments directory will remain configured."
-                )
-                return False
+                # Check if this env was already migrated from our spack instance
+                marker_path = os.path.join(dst_path, marker_name)
+                if os.path.exists(marker_path):
+                    tty.debug(
+                        f"Environment {entry} already migrated from this spack instance "
+                        f"(found marker {marker_name})"
+                    )
+                    continue  # Skip this env, it's already migrated
+                else:
+                    tty.warn(
+                        f"Environment migration stopped: destination exists from different "
+                        f"source: {dst_path}. Old environments directory will remain configured."
+                    )
+                    return False
             entries_to_copy.append(entry)
 
         # Define view exclusion callback for environment copies
@@ -2260,6 +2302,9 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
             dst_path = os.path.join(dst_dir, entry)
             try:
                 shutil.copytree(src_path, dst_path, ignore=ignore_views)
+                # Add migration marker to identify this source
+                with open(os.path.join(dst_path, marker_name), "w") as f:
+                    f.write(f"Migrated from {spack.paths.prefix}\n")
             except (OSError, shutil.Error) as e:
                 tty.warn(f"Failed to copy environment {entry}: {e}")
                 # Copy failed despite holding lock and passing upfront checks.
@@ -2287,6 +2332,23 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
         dst_path = os.path.join(dst_dir, entry)
         try:
             if os.path.exists(dst_path):
+                # For files, check if content hash matches (could be our prior copy or identical)
+                if os.path.isfile(src_path) and os.path.isfile(dst_path):
+                    with open(src_path, "rb") as f:
+                        src_hash = spack.util.hash.b32_hash(
+                            f.read().decode("utf-8", errors="replace")
+                        )
+                    with open(dst_path, "rb") as f:
+                        dst_hash = spack.util.hash.b32_hash(
+                            f.read().decode("utf-8", errors="replace")
+                        )
+                    if src_hash == dst_hash:
+                        tty.debug(
+                            f"License file {entry} already exists with matching content, skipping"
+                        )
+                        copied.append(entry)
+                        continue
+                # Hash mismatch or directory collision - stop migration
                 raise FileExistsError(dst_path)
             if os.path.isdir(src_path):
                 shutil.copytree(src_path, dst_path)
