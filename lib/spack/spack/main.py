@@ -1104,11 +1104,8 @@ def _main(argv=None):
 
         # Reload config if migration happened (by us or another process while we waited for lock)
         if config_changed:
-            # Reload config to pick up new layout scope and/or user config changes
             spack.config.CONFIG = spack.config.create()
-            # Re-add environment and option-based scopes that were set before migration
             add_env_and_option_based_scopes()
-            # Reinitialize global singletons that depend on CONFIG
             spack.config.reinitialize_global_state()
 
         # Compose and display migration message if anything was migrated by us
