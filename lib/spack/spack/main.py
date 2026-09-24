@@ -1067,27 +1067,26 @@ def _main(argv=None):
 
         # Check if migration was already done when config module loaded
         # (stored globally in config.py to avoid race conditions)
-        migration_done_before = spack.config._migration_done_at_module_load
+        migration_done_before_cfg = spack.config._migration_done_at_module_load
 
         # Migrate $spack prefix resources (licenses, environments, GPG, etc.) under lock
         # The lock prevents concurrent migrations from conflicting
-        if not migration_done_before:
+        migration_done_after_lock = False
+        if not migration_done_before_cfg:
             lock_path = spack.config._migration_lock_path()
             lock = spack.util.lock.Lock(lock_path, default_timeout=120)
             try:
                 with lock.write_lock():
-                    # Re-check should_auto_migrate() after acquiring lock
-                    # (another process may have migrated while we waited)
-                    if spack.config.should_auto_migrate():
+                    migration_done_after_lock = os.path.exists(spack.config._migration_done_marker_path())
+                    if migration_done_after_lock:
+                        config_changed = True
+                    elif spack.config.should_auto_migrate():
                         prefix_result = spack.config._do_migrate_spack_prefix()
                         config_changed = True
             except OSError as e:
                 tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
             except spack.util.lock.LockError as e:
                 tty.die(f"Timed out waiting for migration lock: {e}")
-
-        # Check if migration completed (either by us or another process while we waited)
-        migration_done_after = os.path.exists(spack.config._migration_done_marker_path())
 
         # Migrate ~/.spack home directory (user config and package repos)
         # This is separate and runs even on fresh clones with no old $spack data
@@ -1096,7 +1095,7 @@ def _main(argv=None):
             config_changed = True
 
         # Reload config if migration happened (by us or another process while we waited for lock)
-        if config_changed or (migration_done_after and not migration_done_before):
+        if config_changed:
             # Reload config to pick up new layout scope and/or user config changes
             spack.config.CONFIG = spack.config.create()
             # Re-add environment and option-based scopes that were set before migration
