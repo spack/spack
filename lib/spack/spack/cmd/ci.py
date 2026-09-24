@@ -762,7 +762,7 @@ def validate_standard_versions(
 
     for when, url_dict in when_grouped.items():
         version_hashes = spack.stage.get_checksums_for_versions(
-            url_dict, pkg.name, fetch_options=pkg.fetch_options,  config=cfg.CONFIG
+            url_dict, pkg.name, fetch_options=pkg.fetch_options, config=cfg.CONFIG
         )
 
         for version, sha in version_hashes.items():

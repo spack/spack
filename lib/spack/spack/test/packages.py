@@ -16,6 +16,7 @@ import spack.fetch_strategy
 import spack.package
 import spack.package_base
 import spack.repo
+import spack.version
 from spack.paths import mock_packages_path
 from spack.repo import RepoPath
 from spack.spec import Spec
@@ -403,7 +404,7 @@ def test_package_can_have_sparse_checkout_properties_with_commit_version(
     version = spack.version.Version("1.0")
     pkg = pkg_cls(spec)
 
-    fetcher= None
+    fetcher = None
     for when, version_def in pkg.version_definitions(version):
         if pkg.spec.satisfies(when):
             fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
@@ -421,8 +422,7 @@ def test_package_can_have_sparse_checkout_properties_with_gitversion(
     pkg_cls = mock_packages.get_pkg_class(spec.name)
     assert hasattr(pkg_cls, "git_sparse_paths")
     spec._mark_concrete()
-    fetcher = spack.fetch_strategy.for_package(pkg_cls(spec)
-)
+    fetcher = spack.fetch_strategy.for_package(pkg_cls(spec))
 
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")

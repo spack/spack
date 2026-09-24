@@ -15,4 +15,4 @@ class WhenVersions(Package):
     version("1.0", url="http://www.example.com/linux", when="platform=linux")
     version("1.0", url="http://www.example.com/darwin", when="platform=darwin")
     # Test backwards compatability
-    version("2.0",  url="http://www.example.com/")
+    version("2.0", url="http://www.example.com/")

@@ -2888,8 +2888,8 @@ def sort_by_pkg_preference(
 
 
 def concretization_version_order(
-        vdef: VersionDefinition
-    ) -> Tuple[bool, bool, bool, bool, ConcreteVersion]:
+    vdef: VersionDefinition,
+) -> Tuple[bool, bool, bool, bool, ConcreteVersion]:
     """Version order key for concretization, where preferred > not preferred,
     finite > any infinite component; only if all are the same, do we use default version
     ordering.

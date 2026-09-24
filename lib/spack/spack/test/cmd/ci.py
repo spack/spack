@@ -25,6 +25,7 @@ import spack.stage
 import spack.util.spack_yaml as syaml
 import spack.util.web
 import spack.version
+import spack.version_def
 from spack import ci
 from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
@@ -34,7 +35,6 @@ from spack.error import SpackError
 from spack.schema.database_index import schema as db_idx_schema
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
 from spack.util.filesystem import mkdirp, working_dir
-import spack.version_def
 
 config_cmd = spack.main.SpackCommand("config")
 ci_cmd = spack.main.SpackCommand("ci")

@@ -46,13 +46,13 @@ import pathlib
 import pickle
 import re
 import warnings
-from typing import Iterable, List, Optional, Set, Tuple
-from typing import Iterable, List, Sequence, Set, Tuple, Type
+from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type
 from urllib.request import urlopen
 
 import spack.builder
 import spack.config
 import spack.enums
+import spack.fetch_strategy
 import spack.package_base
 import spack.patch
 import spack.repo
@@ -61,6 +61,7 @@ import spack.util.crypto
 import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant
+import spack.version
 from spack.util.string import plural
 
 #: Map an audit tag to a list of callables implementing checks

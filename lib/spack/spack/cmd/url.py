@@ -8,10 +8,10 @@ from collections import defaultdict
 from typing import Dict
 
 import spack.fetch_strategy as fs
-import spack.package_base
 import spack.repo
 import spack.spec
 import spack.url
+import spack.version
 from spack.url import (
     UndetectableNameError,
     UndetectableVersionError,
