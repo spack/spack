@@ -731,6 +731,28 @@ spack:
     assert {s.name for s in e.installable_roots()} == {"mpileaks"}
 
 
+def test_env_install_false_warns_when_needed_as_dependency(
+    installed_environment, temporary_store: Store, capfd
+):
+    """A root with install: false that another root depends on is installed, with a warning."""
+    with installed_environment(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - spec: callpath
+    install: false
+"""
+    ) as test:
+        assert temporary_store.db.query("callpath")
+        warning = "callpath is marked install: false, but other specs depend on it"
+        assert warning in capfd.readouterr()[1]
+
+        # No warning once it is installed
+        test.install_all(fake=True)
+        assert warning not in capfd.readouterr()[1]
+
+
 def test_env_install_false_needs_no_concretization(environment_from_manifest):
     """install: false is read from spack.yaml at install time, so it needs no concretization."""
     e = environment_from_manifest(
