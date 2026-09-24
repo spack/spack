@@ -1077,7 +1077,9 @@ def _main(argv=None):
             lock = spack.util.lock.Lock(lock_path, default_timeout=120)
             try:
                 with lock.write_lock():
-                    migration_done_after_lock = os.path.exists(spack.config._migration_done_marker_path())
+                    migration_done_after_lock = os.path.exists(
+                        spack.config._migration_done_marker_path()
+                    )
                     if migration_done_after_lock:
                         config_changed = True
                     elif spack.config.should_auto_migrate():
