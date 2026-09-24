@@ -502,6 +502,7 @@ class BinaryIndexCache:
         mirror_url = mirror_metadata.url
         scheme = urllib.parse.urlparse(mirror_url).scheme
         if not cache_entry:
+            self._init_local_index_cache()
             cache_entry = self._local_index_cache.get(str(mirror_metadata), {})
 
         if scheme == "oci":
@@ -543,6 +544,12 @@ class BinaryIndexCache:
             FetchIndexError
             BuildcacheIndexNotExists
         """
+        # Ensure the on-disk cache has been loaded into memory before this call (or any
+        # earlier call for this mirror, e.g. from get_index_handler) writes a fresh entry
+        # into self._local_index_cache. Otherwise a later, redundant load would silently
+        # discard that fresh entry and replace it with whatever is on disk at that point.
+        self._init_local_index_cache()
+
         mirror_url = mirror_metadata.url
         mirror_view = mirror_metadata.view
         layout_version = mirror_metadata.version
@@ -586,6 +593,7 @@ class BinaryIndexCache:
 
     @contextlib.contextmanager
     def read_index(self, mirror_metadata: MirrorMetadata) -> Iterator[Optional[IO[str]]]:
+        self._init_local_index_cache()
         cache_entry = self._local_index_cache.get(str(mirror_metadata), {})
         try:
             cache_key = cache_entry["index_path"]
