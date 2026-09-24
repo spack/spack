@@ -360,7 +360,13 @@ def test_push_index_keeps_records_of_other_formats(tmp_path: pathlib.Path, view:
     current_type = URLBuildcacheEntry.current_component_to_media_type(BuildcacheComponent.INDEX)
 
     def update_index():
-        spack.binary_distribution._url_update_index(MirrorMetadata(mirror_url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, view), str(tmp_path), config=spack.config.CONFIG)
+        spack.binary_distribution._url_update_index(
+            MirrorMetadata(
+                mirror_url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, view
+            ),
+            str(tmp_path),
+            config=spack.config.CONFIG,
+        )
 
     def records():
         return json.loads(manifest_path.read_text(encoding="utf-8"))["data"]
@@ -1927,6 +1933,7 @@ def test_manifest_reads_older_media_types(component, oldest):
     records = [BlobRecord(1, t, "gzip", "sha256", t) for t in (oldest, current)]
     manifest = BuildcacheManifest(layout_version=3, data=records)
     assert [r.checksum for r in manifest.get_blob_records(media_types)] == [current, oldest]
+
 
 @pytest.mark.parametrize(
     "spec_manifest",

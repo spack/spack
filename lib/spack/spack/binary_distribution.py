@@ -744,7 +744,9 @@ def _url_push_index(
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_prefix = mirror_metadata.url
-    manifest_name = url_util.join(mirror_metadata.view, "index") if mirror_metadata.view else "index"
+    manifest_name = (
+        url_util.join(mirror_metadata.view, "index") if mirror_metadata.view else "index"
+    )
     manifest_url = cache_class.get_index_url(cache_prefix, mirror_metadata.view)
 
     try:
@@ -754,10 +756,7 @@ def _url_push_index(
         old = []
 
     record = cache_class.push_blob_from_file(
-        index_json_path,
-        cache_prefix,
-        BuildcacheComponent.INDEX,
-        compression="none",
+        index_json_path, cache_prefix, BuildcacheComponent.INDEX, compression="none"
     )
     # Keep records of other formats so other Spack versions keep their snapshot
     kept = [r for r in old if r.media_type != record.media_type]
@@ -3040,7 +3039,6 @@ class DefaultIndexHandler(IndexHandler):
                 f"Could not find valid index manifest in {url_index_manifest}"
             ) from e
 
-
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
@@ -3100,9 +3098,7 @@ class EtagIndexHandler(IndexHandler):
             cache_entry.destroy()
         except NoSuchBlobException as e:
             # It is possible that there is no supported database for old build caches.
-            raise FetchIndexError(
-                f"Could not find valid index manifest in {url_index_manifest}"
-            ) from e
+            raise FetchIndexError(f"Could not find valid index manifest in {manifest_url}") from e
 
         return FetchIndexResult(
             etag=web_util.parse_etag(etag_header_value),
