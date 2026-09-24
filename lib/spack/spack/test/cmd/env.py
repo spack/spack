@@ -1988,6 +1988,24 @@ def test_env_loads(install_mockery, mock_fetch, mock_modules_root):
         assert "module load mpileaks" in contents
 
 
+@pytest.mark.parametrize("args", [[], ["-r"]])
+def test_env_loads_skips_install_false(
+    args, environment_from_manifest, install_mockery, mock_fetch, mock_modules_root
+):
+    """Roots marked install: false have no module, and are skipped by spack env loads."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        concretize()
+        install("--fake")
+        module("tcl", "refresh", "-y")
+        env("loads", *args)
+
+    with open(os.path.join(e.path, "loads"), encoding="utf-8") as f:
+        contents = f.read()
+    assert "module load mpileaks" in contents
+    assert "cmake" not in contents
+
+
 @pytest.mark.disable_clean_stage_check
 def test_stage(mock_stage, mock_fetch, install_mockery):
     env("create", "test")
