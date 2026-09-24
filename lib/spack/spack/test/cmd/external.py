@@ -420,11 +420,11 @@ def _setup_external_find_test(mock_executable, monkeypatch, mock_packages):
     monkeypatch.setenv("PATH", path)
 
 
-def test_find_external_all_in_concretized_env(
+def test_find_external_all_in_env_limits_to_reachable_packages(
     mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path
 ):
-    """Test that 'spack external find --all' in a concretized environment only searches for
-    packages in the environment's concretization."""
+    """Test that 'spack external find --all' in an environment only searches for packages
+    reachable from the environment's roots, ignoring unrelated detectable packages."""
     import spack.environment as ev
 
     _setup_external_find_test(mock_executable, monkeypatch, mock_packages)
@@ -439,29 +439,46 @@ def test_find_external_all_in_concretized_env(
 
         pkgs_cfg = mutable_config.get("packages")
         assert "gcc" in pkgs_cfg
+        # cmake is detectable but not reachable from gcc, so it must not be searched for
         assert "cmake" not in pkgs_cfg
 
 
-def test_find_external_all_in_unconcretized_env(
+def test_find_external_all_in_env_searches_all_virtual_providers(
     mock_executable, mutable_config, monkeypatch, mock_packages, mutable_mock_env_path
 ):
-    """Test that 'spack external find --all' in an unconcretized environment searches for
-    all detectable packages (fallback behavior)."""
+    """Test that 'spack external find --all' searches for *every* possible provider of a
+    virtual reachable from the roots, not just the one a concretization happened to pick.
+
+    This is what lets a later `spack concretize` see a newly-found external that provides
+    a different implementation of a virtual than the one currently in the lockfile.
+    """
     import spack.environment as ev
 
-    _setup_external_find_test(mock_executable, monkeypatch, mock_packages)
+    version = "3.0.4"
 
+    @classmethod
+    def _determine_version(cls, exe):
+        return version
+
+    mpich_cls = mock_packages.get_pkg_class("mpich")
+    monkeypatch.setattr(mpich_cls, "determine_version", _determine_version)
+
+    mpich_exe = mock_executable("mpichversion", output=f"echo {version}")
+    monkeypatch.setenv("PATH", str(mpich_exe.parent))
+
+    # mpileaks depends on the `mpi` virtual. The mock repo has several providers
+    # (mpich, mpich2, zmpi); a concretization picks only one, but --all must search
+    # for all of them so mpich can be detected regardless of the chosen provider.
     env = ev.create("test")
-    env.add("gcc")
+    env.add("mpileaks")
+    env.concretize()
 
     with env:
         assert active_environment() is env
-        assert not env.all_specs()
         external("find", "--all")
 
         pkgs_cfg = mutable_config.get("packages")
-        assert "gcc" in pkgs_cfg
-        assert "cmake" in pkgs_cfg
+        assert "mpich" in pkgs_cfg
 
 
 def test_find_external_all_excludes_view_paths(

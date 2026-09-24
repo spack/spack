@@ -11,6 +11,8 @@ from typing import List, Optional, Set
 import spack
 import spack.cmd
 import spack.config
+import spack.context
+import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.package_base
@@ -19,6 +21,7 @@ import spack.spec
 from spack import cray_manifest
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.solver.input_analysis import create_graph_analyzer
 from spack.util import tty
 from spack.util.tty import colify
 
@@ -54,16 +57,16 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     find_parser.add_argument(
         "--all",
         action="store_true",
-        help="search for all packages (if in a concretized environment, search for packages "
-        "in the environment's concretization; otherwise search for all detectable packages)",
+        help="search for all packages (if in an environment, search for packages reachable "
+        "from the environment's roots; otherwise search for all detectable packages)",
     )
     arguments.add_common_arguments(find_parser, ["tags", "jobs"])
     find_parser.add_argument("packages", nargs=argparse.REMAINDER)
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
         '"core-packages" tags. Use the --all option to search for all relevant packages. '
-        "When a concretized environment is active, --all searches for packages in the "
-        "environment's concretization; otherwise it searches for all detectable packages."
+        "When an environment is active, --all searches for packages reachable from the "
+        "environment's roots; otherwise it searches for all detectable packages."
     )
 
     sp.add_parser("list", aliases=["ls"], help="list detectable packages, by repository and name")
@@ -124,13 +127,21 @@ def external_find(args):
     # Outside the Cray manifest, the search is done by tag for performance reasons,
     # since tags are cached.
 
-    # When --all is used with a concretized environment, limit search to packages
-    # in the environment (similar to spack mirror create behavior)
+    # When --all is used within an environment, limit the search to the packages
+    # that the environment could concretize to. We use the abstract user specs
+    # (not the concrete specs) and expand virtuals so that *every* possible
+    # provider of a virtual is searched for -- e.g. both mpich and openmpi for
+    # `mpi` -- rather than only the provider a previous concretization happened to
+    # pick. This is what lets a later `spack concretize` actually see the
+    # newly-found externals.
     env = active_environment()
-    if args.all and env:
-        concrete_specs = env.all_specs()
-        if concrete_specs:
-            args.packages = list({spec.name for spec in concrete_specs})
+    if args.all and env and env.user_specs:
+        graph = create_graph_analyzer(spack.context.default())
+        reachable, _, _ = graph.possible_dependencies(
+            *env.user_specs, allowed_deps=dt.ALL, expand_virtuals=True
+        )
+        if reachable:
+            args.packages = sorted(reachable)
             tty.debug(f"Searching for packages from environment: {', '.join(args.packages)}")
 
             # Exclude environment view paths to avoid detecting Spack-installed
