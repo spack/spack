@@ -746,8 +746,6 @@ def _url_push_index(
     manifest_name = url_util.join(mirror_metadata.view, "index") if mirror_metadata.view else "index"
     manifest_url = cache_class.get_index_url(cache_prefix, mirror_metadata.view)
 
-    manifest_name = url_util.join(name, "index") if name else "index"
-    manifest_url = cache_class.get_index_url(cache_prefix, mirror_metadata.view)
     try:
         old = cache_class(cache_prefix, allow_unsigned=True).read_manifest(manifest_url).data
     except Exception as e:  # missing or unreadable: start from scratch
@@ -759,14 +757,19 @@ def _url_push_index(
         cache_prefix,
         BuildcacheComponent.INDEX,
         compression="none",
-        if_match=if_match,
     )
     # Keep records of other formats so other Spack versions keep their snapshot
     kept = [r for r in old if r.media_type != record.media_type]
     manifest = BuildcacheManifest(CURRENT_BUILD_CACHE_LAYOUT_VERSION, [record, *kept])
-    cache_class.push_manifest(
-        cache_prefix, manifest_name, manifest, temp_dir, component_type=BuildcacheComponent.INDEX
-    )
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
+        cache_class.push_manifest(
+            cache_prefix,
+            manifest_name,
+            manifest,
+            tmpdir,
+            component_type=BuildcacheComponent.INDEX,
+            if_match=if_match,
+        )
     cache_class.maybe_push_layout_json(mirror_metadata.url)
 
 

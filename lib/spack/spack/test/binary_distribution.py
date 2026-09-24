@@ -360,7 +360,7 @@ def test_push_index_keeps_records_of_other_formats(tmp_path: pathlib.Path, view:
     current_type = URLBuildcacheEntry.current_component_to_media_type(BuildcacheComponent.INDEX)
 
     def update_index():
-        spack.binary_distribution._url_generate_package_index(mirror_url, str(tmp_path), name=view)
+        spack.binary_distribution._url_update_index(MirrorMetadata(mirror_url, view), str(tmp_path))
 
     def records():
         return json.loads(manifest_path.read_text(encoding="utf-8"))["data"]

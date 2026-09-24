@@ -618,7 +618,6 @@ class URLBuildcacheEntry:
         mirror_url: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
-        if_match: Optional[str] = None,
     ) -> BlobRecord:
         """Push a local file as a blob of the given component type and return its record.
 
@@ -627,7 +626,6 @@ class URLBuildcacheEntry:
             mirror_url: Base URL of the mirror to push to.
             component_type: Component type of the blob that is being pushed.
             compression: Type of compression to apply to blob on upload ('none' or 'gzip')
-            if_match: ETag to check if matching on upload (HTTP and S3 only).
 
         Return:
             BlobRecord corresponding to uploaded blob.
@@ -661,6 +659,7 @@ class URLBuildcacheEntry:
         manifest_name: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
+        if_match: Optional[str] = None,
     ) -> None:
         """Push a local file as a blob and a manifest with just that blob"""
         record = cls.push_blob_from_file(local_file_path, mirror_url, component_type, compression)
