@@ -2178,7 +2178,14 @@ class Environment:
             specs: specs to install, by default the concrete roots
             install_args: keyword arguments of ``spack.installer_dispatch.create_installer``
         """
-        specs = specs if specs is not None else self.installable_roots()
+        roots = self.installable_roots()
+        specs = specs if specs is not None else roots
+
+        # Roots marked install: false are still installed when other specs depend on them
+        skipped = {x.hash for x in self.concretized_roots} - {s.dag_hash() for s in roots}
+        for s in traverse.traverse_nodes(specs, key=traverse.by_dag_hash):
+            if s.dag_hash() in skipped and not s.installed:
+                tty.warn(f"{s.name} is marked install: false, but other specs depend on it")
 
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
