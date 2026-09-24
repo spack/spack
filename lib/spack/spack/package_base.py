@@ -2878,9 +2878,11 @@ def sort_by_pkg_preference(
     """
     vdefs = []
     for version in dedupe(versions):
-        version_def = pkg.version_definitions(version)
-        if version_def:
-            vdefs.append(version_def[-1][1])
+        defs = pkg.version_definitions(version)
+        if defs:
+            vdefs.append(defs[-1][1])
+        else:
+            vdefs.append(VersionDefinition(version, precedence=-1, kwargs={}))
 
     return [vdef.version for vdef in sorted(vdefs, reverse=True, key=concretization_version_order)]
 
