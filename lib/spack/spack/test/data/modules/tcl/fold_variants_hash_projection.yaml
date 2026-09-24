@@ -1,0 +1,9 @@
+enable:
+  - tcl
+tcl:
+  hash_length: 0
+  variants: all
+  projections:
+    all: "{name}/{version}-{hash:7}"
+  all:
+    autoload: direct

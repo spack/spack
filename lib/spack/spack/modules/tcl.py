@@ -5,8 +5,10 @@
 """This module implements the classes necessary to generate Tcl modules."""
 
 import collections
+import re
 from typing import Any, Dict, List, Tuple
 
+import spack.projections as proj
 import spack.spec
 import spack.store
 from spack.variant import RESERVED_NAMES, VariantType, VariantValue
@@ -34,6 +36,25 @@ class TclConfiguration(BaseConfiguration):
     def variants_mode(self) -> str:
         """Returns module file variants definition mode."""
         return self._config.get("variants", "none")
+
+    @property
+    def folds_installations(self) -> bool:
+        """Whether several installations may share this module file, which then folds them.
+        This is the case when variants are enabled and the module file name does not include
+        the hash, as different installations of the same package version then map to the same
+        file name.
+        """
+        if "folds_installations" not in self._cache:
+            self._cache["folds_installations"] = self._compute_folds_installations()
+        return self._cache["folds_installations"]
+
+    def _compute_folds_installations(self) -> bool:
+        if self.variants_mode == "none" or self.conf.get("hash_length", 7) != 0:
+            return False
+        projection = proj.get_projection(self.projections, self.spec)
+        if not projection:
+            projection = self.default_projections["all"]
+        return re.search(r"{[^}]*hash", projection) is None
 
     def _variant_to_str_dict(self, v: VariantValue) -> Dict[str, str]:
         """Returns a dictionary entry representing variant object passed as argument."""
@@ -106,6 +127,11 @@ class TclConfiguration(BaseConfiguration):
         return self._cache["specs_sharing_modulefile"]
 
     def _compute_specs_sharing_modulefile(self) -> List[spack.spec.Spec]:
+        # A module file that cannot be shared holds this installation only, skip the database
+        # query in this case
+        if not self.folds_installations:
+            return [self.spec] if self.add_op else []
+
         name_version_spec = self.spec.format("{name} {@version}")
         spec_list = set(spack.store.STORE.db.query(name_version_spec, installed=True))
 
