@@ -3136,7 +3136,7 @@ complete -c spack -n '__fish_spack_using_command style' -s f -l fix -d 'format a
 complete -c spack -n '__fish_spack_using_command style' -l root -r -f -a root
 complete -c spack -n '__fish_spack_using_command style' -l root -r -d 'style check a different spack instance'
 complete -c spack -n '__fish_spack_using_command style' -l repo -r -f -a repo
-complete -c spack -n '__fish_spack_using_command style' -l repo -r -d 'check a package repo instead of core spack, by namespace (default: builtin)'
+complete -c spack -n '__fish_spack_using_command style' -l repo -r -d 'check a package repo instead of core spack, by namespace (e.g. builtin)'
 complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -f -a tool
 complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'specify which tools to run (default: import, ruff-format, ruff-check, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a skip
