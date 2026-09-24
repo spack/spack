@@ -153,6 +153,10 @@ CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")
 #: Global flag to ignore user-fallback scope during config processing
 ignore_user_fallback = False
 
+#: Whether the migration-done marker existed when this module was loaded
+#: Used by main.py to determine if config reload is needed after migration
+_migration_done_at_module_load = None
+
 
 def substitute_include_path(path, context):
     """Substitute path variables in include paths, with validation.
@@ -2112,6 +2116,16 @@ def _migration_backup_path() -> str:
     return os.path.join(spack.paths.prefix, ".migration-backup")
 
 
+def _migration_lock_path() -> str:
+    """Path to the migration lock file for $spack prefix resources."""
+    return os.path.join(spack.paths.prefix, ".migration-lock")
+
+
+def _migration_done_marker_path() -> str:
+    """Path to the marker file indicating migration is complete."""
+    return os.path.join(spack.paths.prefix, ".migration-done")
+
+
 def _migrate_gpg(
     old_gpg_home: str, target_gpg_home: str, old_gpg_keys: str, target_gpg_keys: str
 ) -> bool:
@@ -2563,6 +2577,13 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
 
     tty.debug(f"Created layout scope for auto-migration: {layout_scope_path}")
 
+    # Write migration completion marker as the last step
+    # This allows other processes to detect that migration finished
+    marker_path = _migration_done_marker_path()
+    with open(marker_path, "w", encoding="utf-8") as f:
+        f.write("Migration completed\n")
+    tty.debug(f"Wrote migration completion marker: {marker_path}")
+
     return {"migrated": migrated_resources, "retained": retained_resources}
 
 
@@ -2620,6 +2641,17 @@ CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 
 #: Many cached config values depend on the current platform, so drop them when it changes.
 spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
+
+
+def _check_migration_done_at_load():
+    """Check if migration was already done when config module loaded."""
+    global _migration_done_at_module_load
+    marker_path = _migration_done_marker_path()
+    _migration_done_at_module_load = os.path.exists(marker_path)
+
+
+# Check migration state at module load time
+_check_migration_done_at_load()
 
 
 def reinitialize_global_state():

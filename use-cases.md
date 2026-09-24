@@ -346,15 +346,30 @@ Auto-migration is designed to be safe when multiple Spack instances run concurre
 
 ## 6.1 Spack prefix migrations
 
-- Existing source data is preserved throughout all migration operations.
-- Installs and modules are never relocated.
-- GPG migration locks the destination parent and uses private atomic staging with atomic rename.
-- Environment migration locks the environments root (shared with `spack env create`), pre-checks all destinations, then copies.
-- License migration creates the destination directory and copies files individually; it reports partial success and stops on first conflict rather than claiming exclusive locking (since license files may be edited outside Spack).
-- Failed GPG or package repository staging leaves no partially exposed destination.
-- Generated configuration points to old sources whenever migration is incomplete or unsafe.
-- The layout scope prevents repeated automatic migration evaluation.
-- The layout scope directory (`$spack/etc/spack/layout/`) inherits permissions from its parent directory (`$spack/etc/spack/`), ensuring proper access in shared installations where multiple users need to read and write the layout scope.
+Auto-migration of `$spack` prefix resources uses a top-level migration lock (`$spack/.migration-lock`) to coordinate concurrent Spack instances:
+
+- **Migration lock acquisition**: Each Spack process attempts to acquire the lock before migration. If the lock cannot be acquired (no write permissions or timeout), that process skips migration and proceeds with existing configuration.
+  
+- **Double-check after lock**: After acquiring the lock, the process re-checks `should_auto_migrate()` because another process may have completed migration while this one waited for the lock.
+
+- **Migration completion marker**: The process that performs migration writes `$spack/.migration-done` as the final step. This marker is checked at config module load time and stored globally, allowing other processes to detect completed migration without re-evaluation.
+
+- **Config reload decision**: A process reloads config if:
+  - It performed migration itself (moved resources, wrote layout scope), OR
+  - The marker didn't exist when config loaded but exists now (another process migrated while this one waited for the lock)
+  
+  This ensures all processes see the new layout scope configuration, whether they performed the migration or arrived while/after another process did.
+
+- **Individual resource safety**:
+  - Existing source data is preserved throughout all migration operations.
+  - Installs and modules are never relocated.
+  - GPG migration uses private atomic staging with atomic rename.
+  - Environment migration locks the environments root (shared with `spack env create`), pre-checks all destinations, then copies.
+  - License migration creates the destination directory and copies files individually; it reports partial success and stops on first conflict rather than claiming exclusive locking (since license files may be edited outside Spack).
+  - Failed GPG or package repository staging leaves no partially exposed destination.
+  - Generated configuration points to old sources whenever migration is incomplete or unsafe.
+
+- **Layout scope**: The layout scope directory (`$spack/etc/spack/layout/`) inherits permissions from its parent directory (`$spack/etc/spack/`), ensuring proper access in shared installations where multiple users need to read and write the layout scope.
 
 ## 6.2 Home directory migrations
 
