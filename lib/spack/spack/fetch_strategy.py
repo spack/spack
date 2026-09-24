@@ -1675,11 +1675,6 @@ def for_package(pkg: "spack.package_base.PackageBase") -> FetchStrategy:
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
         if isinstance(version, spack.version.GitVersion):
-            # Populate the version with comparisons to other commits
-            from spack.version.git_ref_lookup import GitRefLookup
-
-            version.attach_lookup(GitRefLookup(pkg.name))
-
             if not commit and version.is_commit:
                 commit = version.ref
             version_meta_data = pkg.versions.get(version.std_version)

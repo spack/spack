@@ -827,7 +827,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     @classmethod
     def version_def_for_spec(cls, spec) -> Optional[spack.version_def.VersionDefinition]:
         """Get the highest precedence version definition matching this package's spec."""
-        return _get_def(cls.versions, spec, spec.version)
+        return _get_def(cls.when_versions, spec, spec.version)
 
     def get_variant(self, name: str) -> spack.variant.Variant:
         """Get the highest precedence variant definition matching this package's spec.

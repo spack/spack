@@ -197,7 +197,15 @@ def test_url_for_version_with_only_overrides_with_gaps(mock_packages, config):
 )
 def test_fetcher_url(spec_str, expected_type, expected_url):
     """Ensure that top-level git attribute can be used as a default."""
-    fetcher = spack.fetch_strategy.for_spec(Spec(f"{spec_str}@=1.0"))
+    spec = Spec(f"{spec_str}@=1.0")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
+    version = spec.version
+    fetcher = None
+    for when, version_def in pkg.version_definitions(version):
+        if pkg.spec.satisfies(when):
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            break
     assert isinstance(fetcher, expected_type)
     assert fetcher.url == expected_url
 
@@ -216,7 +224,10 @@ def test_fetcher_url(spec_str, expected_type, expected_url):
 def test_fetcher_errors(spec_str, version_str, exception_type):
     """Verify that we can't extrapolate versions for non-URL packages."""
     with pytest.raises(exception_type):
-        spack.fetch_strategy.for_spec(Spec(f"{spec_str}@={version_str}"))
+        spec = Spec(f"{spec_str}@={version_str}")
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+        spec._mark_concrete()
+        spack.fetch_strategy.for_package(pkg_cls(spec))
 
 
 @pytest.mark.usefixtures("mock_packages", "config")
@@ -234,8 +245,16 @@ def test_git_url_top_level_url_versions(version_str, expected_url, digest):
     # leading 62 zeros of sha256 hash
     leading_zeros = "0" * 62
 
-    fetcher = spack.fetch_strategy.for_spec(
-        Spec(f"git-url-top-level@={version_str}"))
+    spec = Spec(f"git-url-top-level@={version_str}")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
+    version = spec.version
+
+    fetcher = None
+    for when, version_def in pkg.version_definitions(version):
+        if pkg.spec.satisfies(when):
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            break
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.url == expected_url
     assert fetcher.digest == leading_zeros + digest
@@ -256,9 +275,17 @@ def test_git_url_top_level_url_versions(version_str, expected_url, digest):
 )
 def test_git_url_top_level_git_versions(version_str, tag, commit, branch):
     """Test git fetch strategy inference when url is specified with git."""
-    fetcher = spack.fetch_strategy.for_spec(
-        Spec(f"git-url-top-level@={version_str}")
-    )
+    spec = Spec(f"git-url-top-level@={version_str}")
+    pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
+    version = spec.version
+
+    fetcher = None
+    for when, version_def in pkg.version_definitions(version):
+        if pkg.spec.satisfies(when):
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            break
+
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert fetcher.url == "https://example.com/some/git/repo"
     assert fetcher.tag == tag
@@ -272,7 +299,15 @@ def test_git_url_top_level_git_versions(version_str, tag, commit, branch):
 def test_git_url_top_level_conflicts(version_str):
     """Test git fetch strategy inference when url is specified with git."""
     with pytest.raises(spack.fetch_strategy.FetcherConflict):
-        spack.fetch_strategy.for_spec(Spec(f"git-url-top-level@={version_str}"))
+        spec = Spec(f"git-url-top-level@={version_str}")
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
+        spack.fetch_strategy.check_pkg_attributes(pkg_cls)
+        pkg = pkg_cls(spec)
+        version = spec.version
+        for when, version_def in pkg.version_definitions(version):
+            if pkg.spec.satisfies(when):
+                spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+                break
 
 
 def test_rpath_args(mutable_database):
@@ -313,7 +348,17 @@ def test_bundle_patch_directive(mock_directive_bundle, clear_directive_functions
 def test_fetch_options(version_str, digest_end, extra_options):
     """Test fetch options inference."""
     leading_zeros = "000000000000000000000000000000"
-    fetcher = spack.fetch_strategy.for_spec(Spec(f"fetch-options@={version_str}"))
+    version = spack.version.Version(version_str)
+    spec = Spec("fetch-options")
+    spec.versions = spack.version.VersionList([version])
+    pkg_cls = spack.repo.PATH.get_pkg_class("fetch-options")
+    pkg = pkg_cls(spec)
+
+    for when, version_def in pkg.version_definitions(version):
+        if pkg.spec.satisfies(when):
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            break
+
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
     assert fetcher.digest == leading_zeros + digest_end
     assert fetcher.extra_options == extra_options
@@ -334,7 +379,16 @@ def test_package_can_have_sparse_checkout_properties(
     pkg_cls = mock_packages.get_pkg_class(spec.name)
     assert hasattr(pkg_cls, "git_sparse_paths")
 
-    fetcher = spack.fetch_strategy.for_spec(Spec(f"{spec}@=1.0"))
+    version = spack.version.Version("1.0")
+    spec.versions = spack.version.VersionList([version])
+    pkg = pkg_cls(spec)
+
+    fetcher = None
+    for when, version_def in pkg.version_definitions(version):
+        if pkg.spec.satisfies(when):
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            break
+
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
@@ -346,8 +400,15 @@ def test_package_can_have_sparse_checkout_properties_with_commit_version(
     spec = Spec("git-sparsepaths-pkg@=1.0 commit=abcdefg")
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     assert hasattr(pkg_cls, "git_sparse_paths")
+    version = spack.version.Version("1.0")
+    pkg = pkg_cls(spec)
 
-    fetcher = spack.fetch_strategy.for_spec(spec)
+    fetcher= None
+    for when, version_def in pkg.version_definitions(version):
+        if pkg.spec.satisfies(when):
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            break
+
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
@@ -356,12 +417,13 @@ def test_package_can_have_sparse_checkout_properties_with_commit_version(
 def test_package_can_have_sparse_checkout_properties_with_gitversion(
     mock_packages: RepoPath, mock_fetch, mock_stage
 ):
-    spec = Spec("git-sparsepaths-pkg")
+    spec = Spec("git-sparsepaths-pkg@git.foo=1.0")
     pkg_cls = mock_packages.get_pkg_class(spec.name)
     assert hasattr(pkg_cls, "git_sparse_paths")
+    spec._mark_concrete()
+    fetcher = spack.fetch_strategy.for_package(pkg_cls(spec)
+)
 
-    version = "git.foo=1.0"
-    fetcher = spack.fetch_strategy.for_spec(Spec(f"{spec}@={version}"))
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
@@ -370,14 +432,31 @@ def test_package_can_have_sparse_checkout_properties_with_gitversion(
 def test_package_version_can_have_sparse_checkout_properties(
     mock_packages: RepoPath, mock_fetch, mock_stage
 ):
-    spec = Spec("git-sparsepaths-version")
+    spec = Spec("git-sparsepaths-version@=1.0")
     pkg_cls = mock_packages.get_pkg_class(spec.name)
+    version = spec.version
+    pkg = pkg_cls(spec)
 
-    fetcher = spack.fetch_strategy.for_spec(Spec(f"{spec}@=1.0"))
+    fetcher = None
+    for when, version_def in pkg.version_definitions(version):
+        if pkg.spec.satisfies(when):
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            break
+
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert fetcher.git_sparse_paths == ["foo", "bar"]
 
-    fetcher = spack.fetch_strategy.for_spec(Spec(f"{spec}@=0.9"))
+    spec = Spec("git-sparsepaths-version@=0.9")
+    pkg_cls = mock_packages.get_pkg_class(spec.name)
+    version = spec.version
+    pkg = pkg_cls(spec)
+
+    fetcher = None
+    for when, version_def in pkg.version_definitions(version):
+        if pkg.spec.satisfies(when):
+            fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+            break
+
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert fetcher.git_sparse_paths is None
 
