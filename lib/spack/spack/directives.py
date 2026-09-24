@@ -1236,19 +1236,78 @@ def drop_all_versions():
     return remove_all_directive("versions")
 
 
+def _assert_when_is_version_only(when_spec: Optional[spack.spec.Spec]) -> None:
+    """Reject a ``drop_*`` ``when=`` clause that constrains anything other than versions.
+
+    A drop directive works by keeping the part of an existing directive that lies *outside*
+    the ``when`` constraint, i.e. by intersecting each existing ``when`` with the complement
+    of the removal ``when`` (see :meth:`DropDirectiveBase.filter_directives`). We can only
+    compute a representable complement for versions, because versions are totally ordered and
+    the complement of a version range is again a (finite union of) version range(s) -- see
+    :meth:`spack.version.VersionList.complement`.
+
+    No such representation exists for the other components of a spec. The complement of a
+    conjunction like ``+foo @1:2`` is the *disjunction* ``~foo`` OR ``@:1`` OR ``@2:``, which a
+    single ``Spec`` (a conjunction) cannot express; and there is no syntax for "any compiler
+    that is not gcc" or "any cflags not containing -O3". A general ``Spec.complement`` is
+    therefore infeasible (see PR #48947), so we restrict ``drop_*`` ``when=`` to versions and
+    fail loudly otherwise.
+    """
+    if when_spec is None:
+        return
+
+    offending = []
+    if when_spec.variants:
+        offending.append("variants")
+    if when_spec.compiler_flags:
+        offending.append("compiler flags")
+    if when_spec.architecture is not None:
+        offending.append("architecture")
+    if when_spec.namespace is not None:
+        offending.append("namespace")
+    if when_spec.dependencies():
+        # Compilers (``%gcc``) and dependency constraints (``^mpi``) both show up here.
+        offending.append("dependencies")
+
+    if offending:
+        raise DirectiveError(
+            f'the "when=" clause of a drop directive may only constrain versions, but '
+            f'"{when_spec}" also constrains: {", ".join(offending)}. '
+            "Complementing a non-version constraint is not representable as a Spec, so it "
+            "is not supported (see PR #48947)."
+        )
+
+
 class DropDirectiveBase(ABC):
     name = ""
 
     def __init__(self, when):
         self.removal_when = _make_when_spec(when)
+        _assert_when_is_version_only(self.removal_when)
 
     @abstractmethod
     def add_to_filtered(self, filtered, when, directive_entry):
         pass
 
     @abstractmethod
-    def get_directive(self, directive_entry):
-        pass
+    def make_directive(self, pkg):
+        """Build the directive value that identifies what this drop targets (e.g. the conflict
+        Spec, the dependency Spec, the patch, ...). Computed once per package, then compared
+        against each existing entry by :meth:`entry_matches_removal`."""
+
+    def entry_matches_removal(self, directive_entry):
+        """Whether ``directive_entry`` (one entry from the package's directive dict) is the one
+        this drop should remove. The default extracts the comparable directive value from the
+        entry via :meth:`directive_of` and compares it against the target built by
+        :meth:`make_directive` (stored in ``self.removal_directive``). Subclasses may override
+        either :meth:`directive_of` (to say how a value is read out of an entry) or this method
+        (to change the matching rule entirely)."""
+        return self.directive_of(directive_entry) == self.removal_directive
+
+    def directive_of(self, directive_entry):
+        """Extract the comparable directive value from an entry of the directive dict. The
+        shape of an entry varies per directive type, so subclasses override this."""
+        raise NotImplementedError
 
     def remove(self):
         removal_when = self.removal_when
@@ -1257,23 +1316,19 @@ class DropDirectiveBase(ABC):
         complement_versions = removal_when.versions.complement()
 
         def _remove(pkg):
-            removal_directive = self.make_directive(pkg)
+            self.removal_directive = self.make_directive(pkg)
             directive_dict = getattr(pkg, self.name)
-            filtered = self.filter_directives(
-                complement_versions, directive_dict, removal_directive, removal_when
-            )
+            filtered = self.filter_directives(complement_versions, directive_dict, removal_when)
             directive_dict.clear()
             directive_dict.update(filtered)
 
         return _remove
 
-    def filter_directives(
-        self, complement_versions, directive_dict, removal_directive, removal_when
-    ):
+    def filter_directives(self, complement_versions, directive_dict, removal_when):
         filtered = {}
         for when, directives in directive_dict.items():
             for directive_entry in self.iterate_directives(directives):
-                if self.get_directive(directive_entry) == removal_directive:
+                if self.entry_matches_removal(directive_entry):
                     if when == removal_when:
                         continue
                     elif when.versions.intersects(removal_when.versions):
@@ -1301,12 +1356,25 @@ class DropConflicts(DropDirectiveBase):
 
     def __init__(self, spec, when):
         DropDirectiveBase.__init__(self, when)
-        self.make_directive = lambda pkg: spack.spec.Spec(spec)
+        self.spec = spec
+
+    def make_directive(self, pkg):
+        return spack.spec.Spec(self.spec)
+
+    def entry_matches_removal(self, directive_entry):
+        """An existing entry is dropped when its spec *satisfies* the removal spec, i.e. when
+        the removal spec is equal to or more general than the existing one. This makes
+        ``drop_depends_on("mpi")`` remove an inherited ``depends_on("mpi@1:")`` (since
+        ``mpi@1:`` satisfies ``mpi``), while ``drop_depends_on("mpi@1:")`` does *not* wipe a
+        general ``depends_on("mpi")`` (``mpi`` does not satisfy ``mpi@1:``). ``satisfies``
+        already accounts for package names and anonymous constraints, so no separate name
+        check is needed. See PR #48947."""
+        return self.directive_of(directive_entry).satisfies(self.removal_directive)
 
     def add_to_filtered(self, filtered, when, directive_entry):
         filtered.setdefault(when, []).append(directive_entry)
 
-    def get_directive(self, directive_entry):
+    def directive_of(self, directive_entry):
         return directive_entry[0]
 
 
@@ -1320,7 +1388,7 @@ class DropDependsOn(DropConflicts):
     def iterate_directives(self, directives):
         return directives.items()
 
-    def get_directive(self, directive_entry):
+    def directive_of(self, directive_entry):
         return directive_entry[1].spec
 
 
@@ -1329,25 +1397,37 @@ class DropPatch(DropConflicts):
 
     def __init__(self, url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256):
         DropDirectiveBase.__init__(self, when)
-        self.make_directive = lambda pkg: _create_patch(
+        self.url_or_filename = url_or_filename
+        self.level = level
+        self.working_dir = working_dir
+        self.reverse = reverse
+        self.sha256 = sha256
+        self.archive_sha256 = archive_sha256
+
+    def make_directive(self, pkg):
+        return _create_patch(
             pkg,
-            url_or_filename,
-            level,
-            working_dir,
-            reverse,
-            sha256,
-            archive_sha256,
+            self.url_or_filename,
+            self.level,
+            self.working_dir,
+            self.reverse,
+            self.sha256,
+            self.archive_sha256,
             ordering_key=None,
         )
 
-    def get_directive(self, directive_entry):
+    def entry_matches_removal(self, directive_entry):
+        # Patches are not specs, so there is no satisfaction relation: match by equality.
+        return self.directive_of(directive_entry) == self.removal_directive
+
+    def directive_of(self, directive_entry):
         return directive_entry
 
 
 class DropRequire(DropConflicts):
     name = "requirements"
 
-    def get_directive(self, directive_entry):
+    def directive_of(self, directive_entry):
         return directive_entry[0][0]
 
 

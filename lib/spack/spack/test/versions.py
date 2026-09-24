@@ -490,6 +490,8 @@ def test_complement():
 
     # Test VersionLists
     check_complement(":1,4,7:develop", "2:3,5:6")
+    check_complement(":0,2:develop", "=1")
+    check_complement(":2.4,2.6:develop", "=2.5")
 
 
 def test_union_with_containment():

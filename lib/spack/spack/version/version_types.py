@@ -396,6 +396,20 @@ class StandardVersion(ConcreteVersion):
             return self if self == other else VersionList()
         return other.intersection(self)
 
+    def complement(self) -> "VersionList":
+        """Everything except this exact version, i.e. ``[typemin, self)`` and
+        ``(self, typemax]``. Mirrors :meth:`ClosedOpenRange.complement` for the degenerate
+        case of a single version (``@=x``), which appears as a bare ``StandardVersion`` in a
+        ``VersionList``. Needed so that ``drop_*`` directives with a ``when="@=x"`` clause can
+        compute the complement of the removal range (see PR #48947)."""
+        below = ClosedOpenRange(StandardVersion.typemin(), self)
+        above = ClosedOpenRange(_next_version(self), StandardVersion.typemax())
+        if self <= StandardVersion.typemin():
+            return VersionList([above])
+        if self >= StandardVersion.typemax():
+            return VersionList([below])
+        return VersionList([below, above])
+
     def isdevelop(self) -> bool:
         """Triggers on the special case of the ``@develop-like`` version."""
         return any(

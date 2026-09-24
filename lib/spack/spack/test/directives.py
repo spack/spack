@@ -17,9 +17,13 @@ from spack.directives import (
     conflicts,
     depends_on,
     deprecated,
+    drop_conflict,
+    drop_depends_on,
+    drop_require,
     drop_version,
     extends,
     patch,
+    requires,
     version,
 )
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveError, DirectiveMeta
@@ -509,6 +513,97 @@ def test_non_commutative_directives_run_in_source_order():
 
     assert spack.version.Version("1.0") in DropBefore.versions  # type: ignore
     assert spack.version.Version("2.0") in DropBefore.versions  # type: ignore
+
+
+@pytest.mark.parametrize(
+    "when,offender",
+    [
+        ("+foo", "variants"),
+        ("%gcc", "dependencies"),
+        ("^mpi", "dependencies"),
+        ("cflags=-O3", "compiler flags"),
+        ("target=x86_64", "architecture"),
+        ("@1:2 +foo", "variants"),
+    ],
+)
+def test_drop_directive_when_rejects_non_version_constraints(when, offender):
+    """A ``drop_*`` ``when=`` clause may only constrain versions: we can compute a
+    representable complement for a version range but not for variants, compilers, cflags,
+    etc. (a general ``Spec.complement`` is infeasible -- see PR #48947). Anything else must
+    fail loudly at package-definition time."""
+    with pytest.raises(DirectiveError, match="may only constrain versions"):
+        drop_conflict("mpi", when=when)
+
+
+@pytest.mark.parametrize("when", ["@1.0:2.0", "@1.0:2.0,3.0", "@=1.0", None, True])
+def test_drop_directive_when_accepts_version_only_constraints(when):
+    """Version-only ``when=`` clauses (and the unconstrained ``None``/``True`` cases) are
+    accepted by drop directives."""
+    # Should not raise.
+    drop_conflict("mpi", when=when)
+
+
+def test_drop_depends_on_matches_by_satisfaction():
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "satisfies-parent"
+        depends_on("mpi@1:")
+
+    class Child(Parent):
+        name = "satisfies-child"
+        drop_depends_on("mpi")
+
+    assert "mpi" in Parent.dependencies[spack.spec.Spec()]  # type: ignore
+    assert Child.dependencies == {}  # type: ignore
+
+
+def test_drop_depends_on_specific_removal_does_not_match_general_entry():
+    """Matching is whole-entry by satisfaction, and it is *not* symmetric: a specific removal
+    spec does not match a more general existing dependency, because the general spec does not
+    satisfy the specific one (``mpi`` does not satisfy ``mpi@1:``).
+
+    Note this is a whole-entry match, not a partial version subtraction: the drop machinery
+    only trims version ranges carried on a directive's ``when=`` clause (via the complement),
+    never the version range embedded in the dependency spec itself. So dropping ``mpi@1:``
+    does not carve ``@1:`` out of an existing ``depends_on("mpi")`` to leave ``mpi@:1`` -- the
+    entry simply does not match and is left untouched. See PR #48947."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "general-parent"
+        depends_on("mpi")
+
+    class Child(Parent):
+        name = "general-child"
+        drop_depends_on("mpi@1:")
+
+    # "mpi" does not satisfy "mpi@1:", so the whole dependency is left in place unchanged.
+    assert "mpi" in Child.dependencies[spack.spec.Spec()]  # type: ignore
+    assert str(Child.dependencies[spack.spec.Spec()]["mpi"].spec) == "mpi"  # type: ignore
+
+
+def test_drop_conflict_and_require_match_by_satisfaction():
+    """Satisfaction-based matching also applies to ``drop_conflict`` and ``drop_require``:
+    dropping ``%gcc`` removes an inherited ``%gcc@14:`` conflict/requirement."""
+
+    class ConflictParent(metaclass=DirectiveMeta):
+        name = "conflict-sat-parent"
+        conflicts("%gcc@14:", when="@1.0")
+
+    class ConflictChild(ConflictParent):
+        name = "conflict-sat-child"
+        drop_conflict("%gcc", when="@1.0")
+
+    assert ConflictChild.conflicts == {}  # type: ignore
+
+    class RequireParent(metaclass=DirectiveMeta):
+        name = "require-sat-parent"
+        requires("%gcc@14:", when="@1.0")
+
+    class RequireChild(RequireParent):
+        name = "require-sat-child"
+        drop_require("%gcc", when="@1.0")
+
+    assert RequireChild.requirements == {}  # type: ignore
 
 
 def test_patched_dependencies_sets_class_attribute():
