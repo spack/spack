@@ -56,6 +56,17 @@ def test_refresh_fold_variants(install_mockery, module_configuration, modulefile
     assert module_file_a == module_file_b
 
 
+def test_refresh_name_clash_without_variants(install_mockery, module_configuration):
+    """Test refresh still reports a name clash when variants are disabled."""
+    install("--fake", "--add", "mpileaks@2.3 ~debug ^zmpi")
+    install("--fake", "--add", "mpileaks@2.3 +debug ^zmpi")
+
+    module_configuration("fold_variants_none")
+    out = module("tcl", "refresh", "-y", "--delete-tree", fail_on_error=False)
+    assert module.returncode == 1
+    assert "Name clashes detected in module files" in out
+
+
 def test_rm_fold_variants(install_mockery, module_configuration, modulefile_filenames):
     """Test rm command over a module file holding multiple installations."""
     module_configuration("fold_variants_all")
