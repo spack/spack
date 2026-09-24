@@ -31,6 +31,7 @@ def check_spliced_spec_prefixes(spliced_spec):
                 assert modded_spec.prefix in text
 
 
+@pytest.mark.not_on_windows("builds and relocates ELF or Mach-O binaries")
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
 def test_rewire_db(mock_fetch, temporary_store: Store, install_mockery, transitive):
@@ -55,6 +56,7 @@ def test_rewire_db(mock_fetch, temporary_store: Store, install_mockery, transiti
     check_spliced_spec_prefixes(spliced_spec)
 
 
+@pytest.mark.not_on_windows("builds and relocates ELF or Mach-O binaries")
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
 def test_rewire_bin(mock_fetch, temporary_store: Store, install_mockery, transitive):
@@ -84,6 +86,7 @@ def test_rewire_bin(mock_fetch, temporary_store: Store, install_mockery, transit
             assert text_in_bin(dep.prefix, bin_file_path)
 
 
+@pytest.mark.not_on_windows("builds and relocates ELF or Mach-O binaries")
 @pytest.mark.requires_executables(*required_executables)
 def test_rewire_writes_new_metadata(mock_fetch, temporary_store: Store, install_mockery):
     """Tests that new metadata was written during a rewire.
@@ -126,6 +129,7 @@ def test_rewire_writes_new_metadata(mock_fetch, temporary_store: Store, install_
         assert not filecmp.cmp(orig_specfile_path, specfile_path, shallow=False)
 
 
+@pytest.mark.not_on_windows("builds and relocates ELF or Mach-O binaries")
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.parametrize("transitive", [True, False])
 def test_uninstall_rewired_spec(mock_fetch, temporary_store: Store, install_mockery, transitive):
@@ -140,6 +144,7 @@ def test_uninstall_rewired_spec(mock_fetch, temporary_store: Store, install_mock
     assert not os.path.exists(spliced_spec.prefix)
 
 
+@pytest.mark.not_on_windows("builds and relocates ELF or Mach-O binaries")
 @pytest.mark.requires_executables(*required_executables)
 def test_rewire_not_installed_fails(mock_fetch, install_mockery):
     """Tests error when an attempt is made to rewire a package that was not
