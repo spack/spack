@@ -1081,9 +1081,12 @@ def _main(argv=None):
                     if spack.config.should_auto_migrate():
                         prefix_result = spack.config._do_migrate_spack_prefix()
                         config_changed = True
-            except (OSError, spack.util.lock.LockError):
-                # Can't acquire lock (no write permission or timeout) - skip migration
-                tty.debug("Could not acquire migration lock, skipping prefix migration")
+            except OSError as e:
+                # No write permission to $spack - skip migration (expected for read-only installs)
+                tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
+            except spack.util.lock.LockError as e:
+                # Timeout waiting for lock - another process held it too long, something is wrong
+                tty.die(f"Timed out waiting for migration lock: {e}")
 
         # Check if migration completed (either by us or another process while we waited)
         migration_done_after = os.path.exists(spack.config._migration_done_marker_path())
