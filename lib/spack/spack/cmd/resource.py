@@ -44,6 +44,10 @@ def _show_patch(sha256):
     color.cprint("@c{%s}" % sha256)
     for package, rec in data.items():
         owner = rec["owner"]
+        # Dependency patches are indexed by bare package name: the repository that provides the
+        # dependency is only known once all repositories are configured, so resolve it here.
+        if "." not in package and spack.repo.PATH.exists(package):
+            package = f"{spack.repo.PATH.repo_for_pkg(package).namespace}.{package}"
 
         if "relative_path" in rec:
             pkg_dir = spack.repo.PATH.get_pkg_class(owner).package_dir
