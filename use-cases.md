@@ -154,6 +154,23 @@ The existence of the layout scope (or `.migration-done` marker) means that this 
 - If all environments copy successfully, no layout entry is written (new location used by default).
 - If migration fails or is abandoned, the old environments root is recorded in layout scope.
 
+### Path rewriting in environment configs
+
+After copying each environment directory, Spack rewrites paths in the environment's YAML files (`spack.yaml`, included configs) to work in the new location. This uses different rules than user config migration because environments are relocated as complete, self-contained units.
+
+**Environment path rewriting rules:**
+
+1. **Absolute path inside old env** → rewrite to new env location (e.g., view at `$old_env/view` becomes `$new_env/view`)
+2. **Relative path pointing outside env** → make absolute to preserve the original target (e.g., `../../some/dir` becomes `/absolute/path/to/some/dir`)
+3. **Relative path staying inside env** → keep relative (e.g., `./subdir` remains `./subdir`, will work in new location)
+4. **Absolute path outside env** → unchanged (e.g., `/some/external/path` stays `/some/external/path`)
+
+**Why environment rules differ from user config migration:**
+
+User config migration (section 3.8) relocates only config files while other resources (repos, caches) may remain at the old location. Therefore, absolute paths into `~/.spack` only make sense to rewrite when they appear in `include:` sections (referencing other config files being moved).
+
+Environment migration relocates the entire environment directory as a unit. Any path pointing inside the environment should be rewritten to the new location, regardless of context. Relative paths escaping the environment are made absolute to preserve their original targets, since the environment's position in the filesystem hierarchy changes.
+
 ## 3.5 GPG data
 
 Spack migrates both the GPG keyring (`config:gpg_path`) and the GPG keys directory (`config:gpg_keys_path`) together. Both must succeed for migration to be considered successful.

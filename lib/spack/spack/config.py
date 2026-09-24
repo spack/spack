@@ -1896,6 +1896,71 @@ def absolutize_path_in_yaml(
         current[final_key] = new_value
 
 
+def process_env_file_paths(
+    file_path: str, old_env_dir: str, new_env_dir: str
+) -> Optional[Dict[str, Any]]:
+    """Rewrite paths in environment config files for environment relocation.
+
+    Applies environment-specific path rewriting rules:
+    1. Absolute path inside old env → rewrite to new env location
+    2. Relative path pointing outside env → make absolute (preserve target)
+    3. Relative path staying inside env → keep relative (works in new location)
+    4. Absolute path outside env → unchanged
+
+    Args:
+        file_path: Path to the yaml file to process
+        old_env_dir: Old environment directory root
+        new_env_dir: New environment directory root
+
+    Returns:
+        Modified data if any paths were changed, None otherwise
+    """
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = syaml.load(f)
+
+    if not data:
+        return None
+
+    config_dir = os.path.dirname(file_path)
+    found_paths = walk_yaml_for_paths(data, config_dir)
+    modified = False
+
+    old_env_norm = os.path.normpath(os.path.abspath(old_env_dir))
+    new_env_norm = os.path.normpath(os.path.abspath(new_env_dir))
+
+    for key_path, original_value, abs_path, in_include in found_paths:
+        abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
+
+        if os.path.isabs(original_value):
+            # Rule 1: Absolute path inside old env → rewrite to new env
+            try:
+                rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
+                if not rel_to_old_env.startswith(".."):
+                    # Path is inside old env, rewrite it
+                    new_path = os.path.join(new_env_norm, rel_to_old_env)
+                    absolutize_path_in_yaml(data, key_path, new_path)
+                    modified = True
+                # else: Rule 4: Absolute path outside env → unchanged
+            except ValueError:
+                # Different drives on Windows or other error → outside env, unchanged
+                pass
+        else:
+            # Relative path - check if it points inside or outside the env
+            try:
+                rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
+                if rel_to_old_env.startswith(".."):
+                    # Rule 2: Relative path pointing outside env → make absolute
+                    absolutize_path_in_yaml(data, key_path, abs_path)
+                    modified = True
+                # else: Rule 3: Relative path inside env → keep relative (no change)
+            except ValueError:
+                # Different drives on Windows → outside env, make absolute
+                absolutize_path_in_yaml(data, key_path, abs_path)
+                modified = True
+
+    return data if modified else None
+
+
 def process_config_file_paths(
     file_path: str, old_location: str, new_config_location: str
 ) -> Optional[Dict[str, Any]]:
@@ -2302,6 +2367,16 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
             dst_path = os.path.join(dst_dir, entry)
             try:
                 shutil.copytree(src_path, dst_path, ignore=ignore_views)
+
+                # Rewrite paths in environment config files
+                yaml_files = filesystem.find(dst_path, ["*.yaml", "*.yml"], recursive=True)
+                for yaml_file in yaml_files:
+                    processed = process_env_file_paths(yaml_file, src_path, dst_path)
+                    if processed:
+                        with open(yaml_file, "w", encoding="utf-8") as f:
+                            syaml.dump(processed, f)
+                        tty.debug(f"Rewrote paths in {yaml_file}")
+
                 # Add migration marker to identify this source
                 with open(os.path.join(dst_path, marker_name), "w") as f:
                     f.write(f"Migrated from {spack.paths.prefix}\n")
