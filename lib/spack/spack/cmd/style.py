@@ -42,8 +42,6 @@ mypy_ignores = [
     "[annotation-unchecked]"
 ]
 
-DEFAULT_REPO = "builtin"
-
 
 #: decorator for adding tools to the list
 class tool:
@@ -78,15 +76,23 @@ def get_git() -> Executable:
     return spack.util.git.git(required=True)
 
 
+def repo_root(repo: spack.repo.Repo) -> Path:
+    """Physical root of ``repo``.
+
+    ``repos.yaml`` paths are only normalized, not resolved, while git and ruff report physical
+    paths -- so every path we compare against or relativize to the repo root uses this one.
+    """
+    return Path(os.path.realpath(repo.root))
+
+
 def get_repo_git_root(repo: spack.repo.Repo) -> Optional[Path]:
     """Root of the git checkout holding ``repo``, or None if it isn't in one."""
     git = get_git()
     with working_dir(repo.root):
         git_root = git("rev-parse", "--show-toplevel", fail_on_error=False, output=str, error=str)
     if git.returncode != 0:
-        tty.debug(f"{repo.root} is not in a git repository")
         return None
-    return Path(git_root.strip())
+    return Path(os.path.realpath(git_root.strip()))
 
 
 def base_sha(root: str, base: str) -> Optional[str]:
@@ -120,14 +126,18 @@ def changed_files_repo(
         all_files: list all files in the repo
     """
     root = get_repo_git_root(repo)
-    if root and base_sha(str(root), base):
-        # The repo may be a subdirectory of its checkout, so only keep files below it.
-        # git reports a physical path, so resolve the repo's too or a symlinked repo root
-        # yields a "../" prefix that matches nothing and silently hides every file.
-        prefix = Path(os.path.relpath(os.path.realpath(repo.root), os.path.realpath(root)))
+    if root is None:
+        tty.warn(f"{repo.root} is not in a git repository, checking all files")
+    elif base_sha(str(root), base) is None:
+        tty.warn(f"{root} does not have a '{base}' revision, checking all files")
+    else:
+        # The repo may be a subdirectory of its checkout, so only keep files below it. Both
+        # roots are physical paths, or a symlinked repo root would yield a "../" prefix that
+        # matches nothing and silently hides every file.
+        prefix = Path(os.path.relpath(repo_root(repo), root))
         files = changed_files(root=str(root), base=base, untracked=untracked, all_files=all_files)
         return [root / f for f in files if prefix in f.parents]
-    return list(Path(repo.root).rglob("*.py"))
+    return sorted(repo_root(repo).rglob("*.py"))
 
 
 def changed_files(base="develop", untracked=True, all_files=False, root=None) -> List[Path]:
@@ -232,12 +242,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     subparser.add_argument(
         "--repo",
-        nargs="?",
-        const=DEFAULT_REPO,
         default=None,
         metavar="NAMESPACE",
-        help="check a package repo instead of core spack, by namespace"
-        " (default: %s)" % DEFAULT_REPO,
+        help="check a package repo instead of core spack, by namespace (e.g. builtin)",
     )
 
     tool_group = subparser.add_mutually_exclusive_group()
@@ -320,7 +327,7 @@ def setup_baseline_ruff_config(args, repo: Optional[spack.repo.Repo] = None):
         # count -- a pyproject.toml only configures ruff if it has a [tool.ruff] section.
         # A repo inside a spack prefix finds spack's config this way; one outside with no
         # config of its own gets ruff's defaults, same as running ruff there by hand.
-        return ["--quiet"], Path(repo.root), Path(repo.root)
+        return ["--quiet"], repo_root(repo), repo_root(repo)
     config = os.path.join(spack.paths.prefix, "pyproject.toml")
     return ["--config", config, "--quiet"], args.root, args.initial_working_dir
 
@@ -457,7 +464,7 @@ def _run_import_check(
 
         if repo:
             # repo file paths are absolute; report them relative to the repo, like the header
-            pretty_path = Path(os.path.relpath(file, repo.root))
+            pretty_path = Path(os.path.relpath(file, repo_root(repo)))
         elif root_relative:
             pretty_path = file
         else:
@@ -578,7 +585,7 @@ def print_style_header(
     if file_list:
         if repo:
             # repo files are absolute; report them relative to the repo
-            paths = [os.path.relpath(f, repo.root) for f in file_list]
+            paths = [os.path.relpath(f, repo_root(repo)) for f in file_list]
         elif args.root_relative:
             paths = [str(f) for f in file_list]
         else:
@@ -637,8 +644,17 @@ def style(parser, args):
     def prefix_relative(path: Union[Path, str]) -> Path:
         return Path(os.path.relpath(os.path.abspath(os.path.realpath(path)), args.root))
 
+    # argparse.REMAINDER keeps a "--" separating options from files, so drop it
+    files = args.files[1:] if args.files[:1] == ["--"] else args.files
+
     # core files are checked from the spack root; repo files are checked where they live
-    file_list = [Path(os.path.realpath(f)) if repo else prefix_relative(f) for f in args.files]
+    if repo:
+        file_list = [Path(os.path.realpath(f)) for f in files]
+        outside = [str(f) for f in file_list if repo_root(repo) not in f.parents]
+        if outside:
+            tty.die(f"Files are not in spack repository {repo.namespace}:", *outside)
+    else:
+        file_list = [prefix_relative(f) for f in files]
 
     # process --tool and --skip arguments
     selected = set(tool_names)
