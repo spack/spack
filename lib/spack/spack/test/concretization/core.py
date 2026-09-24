@@ -3351,7 +3351,7 @@ def test_concretization_version_order():
     versions = [
         VersionDefinition(Version("develop"), 1, {}),
         VersionDefinition(Version("1.0"), 2, {}),
-        VersionDefinition(Version("2.0"),3, {"deprecated": True}),
+        VersionDefinition(Version("2.0"), 3, {"deprecated": True}),
         VersionDefinition(Version("1.1"), 4, {}),
         VersionDefinition(Version("1.1alpha1"), 5, {}),
         VersionDefinition(Version("0.9"), 6, {"preferred": True}),

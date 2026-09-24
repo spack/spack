@@ -44,7 +44,6 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Type
 import spack.config
 import spack.error
 import spack.oci.opener
-import spack.spec
 import spack.util.archive
 import spack.util.executable
 import spack.util.filesystem as fs
@@ -53,12 +52,12 @@ import spack.util.url
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-from spack.util import crypto, tty
 import spack.version_def
-from spack.util.string import comma_and, quote
+from spack.util import crypto, tty
 from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
 from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
+from spack.util.string import comma_and, quote
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies: List[Type["FetchStrategy"]] = []
@@ -188,6 +187,7 @@ class FetchStrategy:
             args: arguments of the version directive
         """
         return cls.url_attr in args
+
 
 # Not registered with @fetcher because it has no url_attr so it can't be used
 # by all_strategies. for_spec() returns it for packages with no-code packages.
@@ -1717,7 +1717,6 @@ def for_package(pkg: "spack.package_base.PackageBase") -> FetchStrategy:
         return _extrapolate(pkg, version)
 
     return _fetcher_for_version_def(pkg, version, version_def)
-
 
 
 def from_url_scheme(url: str, **kwargs) -> FetchStrategy:
