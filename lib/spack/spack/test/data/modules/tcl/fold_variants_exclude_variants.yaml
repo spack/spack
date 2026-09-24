@@ -1,0 +1,15 @@
+enable:
+  - tcl
+tcl:
+  hash_length: 0
+  variants: all
+  all:
+    autoload: direct
+
+  mpileaks:
+    filter:
+      exclude_variants:
+        - debug
+        - fortran
+
+
