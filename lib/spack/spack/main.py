@@ -1073,22 +1073,17 @@ def _main(argv=None):
         # The lock prevents concurrent migrations from conflicting
         if not migration_done_before:
             lock_path = spack.config._migration_lock_path()
+            lock = spack.util.lock.Lock(lock_path, default_timeout=120)
             try:
-                lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-                lock.acquire_write()
-                # Re-check should_auto_migrate() after acquiring lock
-                # (another process may have migrated while we waited)
-                if spack.config.should_auto_migrate():
-                    prefix_result = spack.config._do_migrate_spack_prefix()
-                    config_changed = True
+                with lock.write_lock():
+                    # Re-check should_auto_migrate() after acquiring lock
+                    # (another process may have migrated while we waited)
+                    if spack.config.should_auto_migrate():
+                        prefix_result = spack.config._do_migrate_spack_prefix()
+                        config_changed = True
             except (OSError, spack.util.lock.LockError):
                 # Can't acquire lock (no write permission or timeout) - skip migration
                 tty.debug("Could not acquire migration lock, skipping prefix migration")
-            finally:
-                try:
-                    lock.release_write()
-                except:
-                    pass
 
         # Check if migration completed (either by us or another process while we waited)
         migration_done_after = os.path.exists(spack.config._migration_done_marker_path())
