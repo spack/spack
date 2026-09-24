@@ -380,7 +380,10 @@ def external_show(args):
     rows = []
     for name in sorted(parser.specs_by_name):
         for entry in parser.specs_by_name[name]:
-            if args.packages and not any(entry.spec.intersects(x) for x in args.packages):
+            if args.packages and not any(
+                spack.externals.matches_package_or_virtual(entry.spec, x, context.repo)
+                for x in args.packages
+            ):
                 continue
             external_id = parser.external_id(entry)
             location = entry.config.get("prefix") or ",".join(entry.config.get("modules", []))

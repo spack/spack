@@ -246,8 +246,12 @@ def dependency_types(
     return result
 
 
-def _may_be_dependency(spec: spack.spec.Spec, name: str, repo: spack.repo.RepoPath) -> bool:
-    """Returns True if ``spec`` can satisfy a dependency on the package or virtual ``name``."""
+def matches_package_or_virtual(
+    spec: spack.spec.Spec, name: str, repo: spack.repo.RepoPath
+) -> bool:
+    """Returns True if ``spec`` matches the package ``name``, or a provider of the virtual
+    ``name``.
+    """
     # An abstract node matches a virtual only through its providers
     candidates = repo.providers_for(name) if repo.is_virtual(name) else (name,)
     return any(spec.intersects(c) for c in candidates)
@@ -263,7 +267,7 @@ def infer_dependency(
     """
     depflag, virtuals = spack.deptypes.NONE, []
     for name, current_flag in types_by_name.items():
-        if not _may_be_dependency(dependency, name, repo):
+        if not matches_package_or_virtual(dependency, name, repo):
             continue
         depflag |= current_flag
         if repo.is_virtual(name):
@@ -558,7 +562,7 @@ class ExternalSpecsParser:
         """Returns the referenceable ids of the externals that match any of the names."""
         result = []
         for entry in self.specs_by_external_id.values():
-            if not any(_may_be_dependency(entry.spec, name, self.repo) for name in names):
+            if not any(matches_package_or_virtual(entry.spec, name, self.repo) for name in names):
                 continue
             eid = self.external_id(entry)
             if eid.conflict is None:

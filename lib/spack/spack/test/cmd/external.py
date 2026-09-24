@@ -519,3 +519,18 @@ def test_find_external_with_dependencies(
         {"id": owner["externals"][0]["id"], "deptypes": ["link"]}
     ]
     assert "sonames-consumer@1.0 -> sonames-owner@1.0" in output
+
+
+def test_external_show_virtual(mutable_config: Configuration, mock_packages):
+    """Tests that 'spack external show <virtual>' prints the externals of its providers."""
+    mutable_config.set(
+        "packages",
+        {
+            "mpich": {"externals": [{"spec": "mpich@3.0.4", "prefix": "/user/path"}]},
+            "libelf": {"externals": [{"spec": "libelf@0.8.13", "prefix": "/user/path"}]},
+        },
+    )
+    lines = SpackCommand("external")("show", "mpi").splitlines()
+
+    assert len(lines) == 1
+    assert lines[0].startswith("mpich-3.0.4-d1a113f ")
