@@ -2346,13 +2346,15 @@ def _should_migrate_home() -> bool:
     old_repos = spack.paths.old_package_repos_path
     new_repos = spack.paths.package_repos_path
 
+    # Only migrate package repos if new_repos is at the default location
+    # (i.e., not customized via SPACK_USER_CACHE_PATH or similar)
+    default_new_repos = os.path.join(spack.paths.default_state_home, "package_repos")
     repos_should_migrate = (
         os.path.isdir(old_repos)
         and bool(os.listdir(old_repos))
         and (not os.path.exists(new_repos) or not bool(os.listdir(new_repos)))
-        # Only migrate if pointing at default state location
-        and os.path.normpath(os.path.abspath(spack.paths.user_cache_path))
-        == os.path.normpath(os.path.abspath(spack.paths.default_state_home))
+        and os.path.normpath(os.path.abspath(new_repos))
+        == os.path.normpath(os.path.abspath(default_new_repos))
     )
 
     return config_should_migrate or repos_should_migrate
