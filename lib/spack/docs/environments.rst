@@ -247,7 +247,7 @@ You can also manually force regeneration of all environment scripts by regenerat
 This will recreate all activation and deactivation scripts for all views in the environment.
 
 Shell Compatibility
-~~~~~~~~~~~~~~~~~~
+-------------------
 
 Spack supports environment activation in multiple shells:
 
@@ -276,7 +276,7 @@ The generated script adds several features to your shell:
 4. Sets up view-related environment variables if a view is enabled
 
 Temporary and Default Environments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 Spack also supports creating and activating temporary environments with the ``--temp`` flag:
 

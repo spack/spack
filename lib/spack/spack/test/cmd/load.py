@@ -94,7 +94,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
                     continue
 
                 info = line.split()
-                var_check = info[1].strip("\"").lstrip("\"")
+                var_check = info[1].strip('"').lstrip('"')
                 if len(info) >= 3 and var_check == variable:
                     # Strip quotes from value if present
                     val = info[2].strip('"').strip("'")
