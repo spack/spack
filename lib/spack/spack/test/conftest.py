@@ -2270,6 +2270,21 @@ def inode_cache():
 
 
 @pytest.fixture(autouse=True)
+def mock_user_cache_path(tmp_path: Path, monkeypatch):
+    """Point $user_cache_path-derived locations (misc cache, BINARY_INDEX's persistent
+    index cache, etc.) at a per-test temporary directory instead of the real ~/.spack.
+
+    Without this, every test process (and, under pytest-xdist, every worker) reads and
+    writes the same real, on-disk cache concurrently, since `$user_cache_path` defaults
+    to `~/.spack` unless SPACK_USER_CACHE_PATH is set. `spack.config.replacements()`
+    resolves `$user_cache_path` lazily via `spack.paths.user_cache_path` on every
+    substitution, so patching that attribute here is picked up correctly regardless of
+    when `spack.paths` was first imported.
+    """
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path / "user_cache"))
+
+
+@pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
     spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(
