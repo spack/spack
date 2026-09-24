@@ -118,13 +118,13 @@ If the old install tree was configured explicitly at a custom location, that con
 
 ## 3.2 Configuration migration and path rewriting
 
-Migration copies resources from old to new locations, leaving old resources in place. The layout scope records old paths only for resources that failed to copy; successfully copied resources use the new default locations automatically (no layout entry needed).
+Migration copies resources from old to new locations, leaving old resources in place. The layout scope records old paths for resources that were not migrated: installs (never migrated), resources with custom configuration (skipped), and resources whose copy operation failed. Successfully copied resources with default configuration use the new default locations automatically (no layout entry needed).
 
 Configuration migration must:
 
 - preserve user-authored configuration and its scope precedence;
 - rewrite paths only in generated or migration-owned configuration;
-- record old paths in layout scope only when copying fails;
+- record old paths in layout scope for resources that were not successfully copied to new defaults;
 - avoid changing explicit custom paths;
 - make the resulting configuration effective on the next Spack invocation.
 
@@ -375,7 +375,7 @@ Auto-migration of `$spack` prefix resources uses a per-prefix migration lock (`$
   - Environment migration locks the environments root (shared with `spack env create`), pre-checks all destinations, then copies.
   - License migration creates the destination directory and copies files individually; it reports partial success and stops on first conflict rather than claiming exclusive locking (since license files may be edited outside Spack).
   - Failed staging leaves no partially exposed destination at the new location.
-  - Generated configuration (layout scope) points to old locations for resources that failed to copy, and omits entries for resources that successfully copied (so new locations are used by default).
+  - Generated configuration (layout scope) points to old locations for resources that were not migrated: installs (never migrated), resources with custom configuration (skipped), and resources whose copy operation failed. Successfully copied resources use new default locations (no layout entry).
 
 - **Layout scope**: The layout scope directory (`$spack/etc/spack/layout/`) inherits permissions from its parent directory (`$spack/etc/spack/`), ensuring proper access in shared installations where multiple users need to read and write the layout scope.
 
@@ -394,3 +394,40 @@ User config and package repositories are migrated from `~/.spack` independently 
   - Another Spack instance will never see a partial repository tree.
 
 Both home directory migrations can run safely alongside any number of other Spack instances, whether they're using the old locations, the new locations, or attempting concurrent migrations.
+
+# 7. Auto-Migration Algorithm Details
+
+**NOTE: This section was human-generated. Take special care to ask before modifying it.**
+
+This section provides implementation-level details of the locking algorithm and auto-migration logic.
+
+## 7.1 Algorithm steps
+
+0. If no old resources are present, then all auto-migration logic is skipped
+1. Else, Spack holds a global `$spack/.migration-lock` before doing auto-migration
+2. Destinations for individual components are locked while migrating those components (e.g. envs)
+3. Spack copies old resources to where new defaults expect. Even if the copy is successful, the old resources are kept in place.
+4. Layout scope is updated to point at old locations for: installs (never migrated), resources with custom configuration (skipped), or resources whose copy operation fails (e.g. gpg keys already exist at destination)
+5. Migration writes a `$spack/.migration-done` file
+6. The config.py module checks for `$spack/.migration-done` when it loads
+7. `spack isolate` writes `$spack/.migration-done` for Spack instances with old resources
+
+## 7.2 Rationale and invariants
+
+### Checking for old resources and leaving them in place
+
+There are two scenarios where we know migration is complete:
+- `$spack/.migration-done` exists
+- There are no old spack resources (in which case there was never a migration, because right now, migration means copying those resources into new destinations and pointing config to them)
+
+### Locking both destinations and spack prefix
+
+- Regardless of whether we lock inside `$spack`, we must lock the destinations because different spack prefixes could be simultaneously auto-migrating into `$HOME`
+- Why then do we also lock inside of `$spack`? Because if two spack processes for the same prefix try to copy the gpg keys into the new destination, one of those will fail. The destination lock is to coordinate between instances and doesn't tell us whether the gpg keys (for example) were successfully copied for our instance.
+- This leaves one hole: if a spack process successfully migrates gpg keys but fails before completing all migration (and in particular writing `$spack/.migration-done`), the next process that picks up will know that auto-migration is incomplete, and won't know that gpg migration for the previous process was successful
+
+### The migration-done marker
+
+- If that file already exists before it loads any config, then config doesn't need to be reloaded
+- Otherwise, spack may have been doing a migration while the config was loading
+- We want to load config before making auto-migration decisions, because (a) if we are running `spack isolate`, then we don't want to auto-migrate (and config aliases determine whether we are doing that) and (b) if config sets `config:environments_root` to something non-default, we also don't want to write it
