@@ -612,6 +612,114 @@ def test_env_roots_marked_explicit(
     assert len(explicit) == 2
 
 
+def test_env_root_marked_install_false(
+    installed_environment, temporary_store: Store, tmp_path: pathlib.Path
+):
+    """A root spec with install: false is a root for unification, but can't be installed."""
+    with installed_environment(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+    ) as test:
+        # still a concrete root of the environment, just not an installable one
+        assert {s.name for s in test.concrete_roots()} == {"mpileaks", "cmake"}
+        assert {s.name for s in test.installable_roots()} == {"mpileaks"}
+
+        assert temporary_store.db.query("mpileaks")
+        assert not temporary_store.db.query("cmake")
+
+
+def test_env_install_false_on_duplicate(environment_from_manifest):
+    """A flag inside a definition skips the spec in every group using it, and a group can't undo
+    it. A group can skip a spec from a definition or a matrix by listing it again with
+    install: false."""
+    e = environment_from_manifest(
+        """\
+spack:
+  definitions:
+  - tools:
+    - libelf
+    - spec: libdwarf
+      install: false
+  specs:
+  - group: apps
+    specs:
+    - matrix:
+      - [mpileaks]
+      - [+debug, ~debug]
+    - spec: mpileaks+debug
+      install: false
+    - $tools
+    - spec: libelf
+      install: false
+  - group: extra
+    specs:
+    - $tools
+    - libdwarf
+"""
+    )
+    with e:
+        e.concretize()
+
+    installable = e.installable_roots()
+    assert sorted(s.name for s in installable) == ["libelf", "mpileaks"]
+    assert not any(s.satisfies("+debug") for s in installable if s.name == "mpileaks")
+
+
+def test_env_install_false_in_group(environment_from_manifest):
+    """install: false works with spec groups."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - group: apps
+    specs:
+    - mpileaks
+    - spec: libelf
+      install: false
+"""
+    )
+    with e:
+        e.concretize()
+
+    assert {s.name for s in e.concrete_roots()} == {"mpileaks", "libelf"}
+    assert {s.name for s in e.installable_roots()} == {"mpileaks"}
+
+
+def test_env_install_false_needs_no_concretization(environment_from_manifest):
+    """install: false is read from spack.yaml at install time, so it needs no concretization."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - cmake
+"""
+    )
+    with e:
+        e.concretize()
+        e.write()
+
+    with open(e.manifest_path, "w", encoding="utf-8") as f:
+        f.write(
+            """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+        )
+
+    e = ev.read("test")
+    assert {s.name for s in e.concrete_roots()} == {"mpileaks", "cmake"}
+    assert {s.name for s in e.installable_roots()} == {"mpileaks"}
+
+
 def test_env_modifications_error_on_activate(
     install_mockery, mock_fetch, monkeypatch, capfd, mock_packages: RepoPath
 ):
@@ -1732,6 +1840,16 @@ spack:
 spack:
   specks:
     - libdwarf
+""",
+        ),
+        (
+            spack.config.ConfigFormatError,
+            "is not valid under any of the given schemas",
+            """\
+spack:
+  specs:
+  - spec: mpileaks
+    bad: true
 """,
         ),
     ],
