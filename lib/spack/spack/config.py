@@ -2284,7 +2284,7 @@ def _migrate_gpg(
             shutil.copytree(old_gpg_home, staging_home)
             os.chmod(staging_home, 0o700)
             # Add migration marker to identify this source
-            with open(os.path.join(staging_home, marker_name), "w") as f:
+            with open(os.path.join(staging_home, marker_name), "w", encoding="utf-8") as f:
                 f.write(f"Migrated from {spack.paths.prefix}\n")
             os.replace(staging_home, target_gpg_home)
             staging_home = None
@@ -2378,7 +2378,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                         tty.debug(f"Rewrote paths in {yaml_file}")
 
                 # Add migration marker to identify this source
-                with open(os.path.join(dst_path, marker_name), "w") as f:
+                with open(os.path.join(dst_path, marker_name), "w", encoding="utf-8") as f:
                     f.write(f"Migrated from {spack.paths.prefix}\n")
             except (OSError, shutil.Error) as e:
                 tty.warn(f"Failed to copy environment {entry}: {e}")
