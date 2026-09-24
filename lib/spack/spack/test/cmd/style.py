@@ -441,12 +441,15 @@ def test_changed_files_repo(git, repo_builder: RepoBuilder):
         assert package_py in changed_files_repo(repo, base="main")
 
 
-def test_changed_files_repo_no_git(repo_builder: RepoBuilder):
-    """A repo that isn't a git checkout falls back to every Python file in it."""
+def test_changed_files_repo_no_git(repo_builder: RepoBuilder, capfd):
+    """A repo that isn't a git checkout falls back to every Python file in it, and says so."""
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
         repo = repo_path.get_repo(repo_builder.namespace)
         package_py = add_package_file(pathlib.Path(repo.root))
         assert package_py in changed_files_repo(repo)
+
+    _, err = capfd.readouterr()
+    assert "is not in a git repository, checking all files" in err
 
 
 def test_changed_files_repo_symlinked_root(git, repo_builder: RepoBuilder, tmp_path: pathlib.Path):
@@ -475,7 +478,7 @@ def test_changed_files_repo_symlinked_root(git, repo_builder: RepoBuilder, tmp_p
 
 
 def test_changed_files_repo_no_base(git, repo_builder: RepoBuilder, capfd):
-    """A repo without the base revision falls back to every Python file, without dying."""
+    """A repo without the base revision falls back to every Python file, and warns."""
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
         repo = repo_path.get_repo(repo_builder.namespace)
         with working_dir(repo.root):
@@ -488,7 +491,8 @@ def test_changed_files_repo_no_base(git, repo_builder: RepoBuilder, capfd):
         assert package_py in changed_files_repo(repo, base="not-a-branch")
 
         _, err = capfd.readouterr()
-        assert "does not have a 'not-a-branch' revision" not in err
+        assert "does not have a 'not-a-branch' revision, checking all files" in err
+        assert "spack style needs this branch" not in err
 
 
 @pytest.mark.skipif(not RUFF, reason="ruff is not installed.")
@@ -577,3 +581,56 @@ def test_repo_skips_mypy(repo_builder: RepoBuilder):
         repo = repo_path.get_repo(repo_builder.namespace)
         output = style("--repo", repo.namespace, "-t", "mypy", fail_on_error=False)
     assert "Nothing to run" in output
+
+
+def test_repo_files_after_double_dash(repo_builder: RepoBuilder):
+    """A ``--`` separating options from files is not itself treated as a file."""
+    with spack.repo.use_repositories(repo_builder.root) as repo_path:
+        repo = repo_path.get_repo(repo_builder.namespace)
+        package_py = add_package_file(pathlib.Path(repo.root))
+        output = style(
+            "--repo", repo.namespace, "-t", "import", "--", str(package_py), fail_on_error=False
+        )
+    assert style.returncode == 0
+    assert f"Checking Files:\n  {os.path.relpath(package_py, repo.root)}" in output
+    assert "--: could not parse" not in output
+
+
+def test_repo_rejects_files_outside_repo(repo_builder: RepoBuilder, tmp_path: pathlib.Path):
+    outside = tmp_path / "outside.py"
+    outside.touch()
+    with spack.repo.use_repositories(repo_builder.root) as repo_path:
+        repo = repo_path.get_repo(repo_builder.namespace)
+        output = style("--repo", repo.namespace, str(outside), fail_on_error=False)
+    assert style.returncode == 1
+    assert f"Files are not in spack repository {repo.namespace}" in output
+    assert str(outside.resolve()) in output
+
+
+def test_repo_paths_through_symlinked_root(repo_builder: RepoBuilder, tmp_path: pathlib.Path):
+    """Paths in a repo configured through a symlink are still reported relative to the repo."""
+    repo_root = pathlib.Path(repo_builder.root)
+    package_py = add_package_file(repo_root)
+    package_py.write_text("import spack.util.url\n")  # redundant import
+
+    link = tmp_path / "symlinked-checkout"
+    link.symlink_to(repo_root.parents[1])
+    linked_root = link / "spack_repo" / repo_builder.namespace
+
+    rel_path = os.path.relpath(package_py, repo_root)
+    with spack.repo.use_repositories(str(linked_root)):
+        # not a git checkout, so every file is checked
+        changed = style("--repo", repo_builder.namespace, "-t", "import", fail_on_error=False)
+        explicit = style(
+            "--repo",
+            repo_builder.namespace,
+            "-t",
+            "import",
+            str(linked_root / rel_path),
+            fail_on_error=False,
+        )
+
+    assert f"{rel_path}: redundant import: spack.util.url" in changed
+    assert f"Checking Files:\n  {rel_path}" in explicit
+    assert f"{rel_path}: redundant import: spack.util.url" in explicit
+    assert "../" not in changed + explicit
