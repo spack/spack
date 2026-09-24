@@ -91,11 +91,12 @@ class SpecList:
 
     def remove(self, spec):
         # Get spec to remove from list
-        remove = [
-            s
-            for s in self.yaml_list
-            if (isinstance(s, str) and not s.startswith("$")) and Spec(s) == Spec(spec)
-        ]
+        remove = []
+        for s in self.yaml_list:
+            spec_str = spec_string(s)
+            if spec_str is not None and not spec_str.startswith("$"):
+                if Spec(spec_str) == Spec(spec):
+                    remove.append(s)
         if not remove:
             msg = f"Cannot remove {spec} from SpecList {self.name}.\n"
             msg += f"Either {spec} is not in {self.name} or {spec} is "
@@ -125,6 +126,17 @@ class SpecList:
 
     def __iter__(self):
         return iter(self.specs)
+
+
+def spec_string(item: Union[str, Dict]) -> Optional[str]:
+    """Returns the spec string of a single spec entry in a YAML spec list, i.e. either a plain
+    string or a ``spec:`` entry with options. Returns None for other entries, like matrices.
+    """
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict) and "spec" in item:
+        return item["spec"]
+    return None
 
 
 def _expand_matrix_constraints(matrix_config):

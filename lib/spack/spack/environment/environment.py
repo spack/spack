@@ -72,7 +72,7 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
-from .list import SpecList, SpecListError, SpecListParser
+from .list import SpecList, SpecListError, SpecListParser, spec_string
 
 SpecPair = Tuple[Spec, Spec]
 
@@ -1543,7 +1543,7 @@ class Environment:
                     raise SpackEnvironmentError(f"no such package: {spec.name}")
 
         list_to_change = self.spec_lists[list_name]
-        existing = str(spec) in list_to_change.yaml_list
+        existing = any(spec_string(x) == str(spec) for x in list_to_change.yaml_list)
         if not existing:
             list_to_change.add(spec)
             if list_name == USER_SPECS_KEY:
@@ -3405,7 +3405,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
         self._explicit = {DEFAULT_USER_SPEC_GROUP: True}
 
-    def _all_matches(self, user_spec: str) -> List[str]:
+    def _all_matches(self, user_spec: str) -> List[Union[str, Dict]]:
         """Maps the input string to the first equivalent user spec in the manifest,
         and returns it.
 
@@ -3416,9 +3416,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ValueError: if no equivalent match is found
         """
         result = []
-        for yaml_spec_str in self.configuration["specs"]:
-            if Spec(yaml_spec_str) == Spec(user_spec):
-                result.append(yaml_spec_str)
+        for item in self.configuration["specs"]:
+            spec_str = spec_string(item)
+            if spec_str is not None and Spec(spec_str) == Spec(user_spec):
+                result.append(item)
 
         if not result:
             raise ValueError(f"cannot find a spec equivalent to {user_spec}")
@@ -3537,7 +3538,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec cannot be overridden
         """
         try:
-            self.configuration["specs"][idx] = user_spec
+            entry = self.configuration["specs"][idx]
+            if isinstance(entry, dict):
+                entry["spec"] = user_spec
+            else:
+                self.configuration["specs"][idx] = user_spec
             self._clear_user_specs()
             self._init_user_specs()
         except ValueError as e:
@@ -3591,7 +3596,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             try:
-                item[list_name].remove(user_spec)
+                del item[list_name][[spec_string(x) for x in item[list_name]].index(user_spec)]
                 break
             except ValueError:
                 pass
@@ -3617,8 +3622,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             try:
-                sub_index = item[list_name].index(user_spec)
-                item[list_name][sub_index] = override
+                sub_index = [spec_string(x) for x in item[list_name]].index(user_spec)
+                if isinstance(item[list_name][sub_index], dict):
+                    item[list_name][sub_index]["spec"] = override
+                else:
+                    item[list_name][sub_index] = override
                 break
             except ValueError:
                 pass

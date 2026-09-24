@@ -300,6 +300,47 @@ def test_change_multiple_matches():
     assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
 
+INSTALL_FALSE_ENV = """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+
+
+def test_add_existing_spec_with_options(environment_from_manifest):
+    """Adding a spec that is already listed as a spec: entry does not duplicate it."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        add("cmake")
+
+    e = ev.read("test")
+    assert [s.name for s in e.user_specs] == ["mpileaks", "cmake"]
+    assert e.user_specs.install_flags == [True, False]
+
+
+def test_remove_spec_with_options(environment_from_manifest):
+    """A spec: entry can be removed like a plain spec."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        remove("cmake")
+
+    e = ev.read("test")
+    assert [s.name for s in e.user_specs] == ["mpileaks"]
+
+
+def test_change_spec_with_options(environment_from_manifest):
+    """Changing a spec: entry keeps its options."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        change("cmake@3.30")
+
+    e = ev.read("test")
+    assert e.user_specs[1] == Spec("cmake@3.30")
+    assert e.user_specs.install_flags == [True, False]
+
+
 def test_env_add_virtual():
     env("create", "test")
     e = ev.read("test")
