@@ -21,20 +21,26 @@ def _write_layout_config(path: Path, **config):
 
 
 def test_migrate_undo_restores_backup_and_configuration(mock_spack_instance, monkeypatch):
-    """Undo restores resources and points scopes back to their legacy paths."""
+    """Undo points scopes back to old locations (resources already there)."""
     home_dir, base_prefix = mock_spack_instance
-    backup = Path(base_prefix) / ".migration-backup"
+
+    # Create migration marker
+    marker = Path(base_prefix) / ".migration-done"
+    marker.write_text("Migration completed\n", encoding="utf-8")
+
+    # Create old resources at their original locations
     old_licenses = Path(base_prefix) / "etc" / "spack" / "licenses"
     old_envs = Path(base_prefix) / "var" / "spack" / "environments"
     old_gpg = Path(base_prefix) / "opt" / "spack" / "gpg"
-    (backup / "licenses").mkdir(parents=True)
-    (backup / "licenses" / "license.dat").write_text("license", encoding="utf-8")
-    (backup / "environments" / "demo").mkdir(parents=True)
-    (backup / "environments" / "demo" / "spack.yaml").write_text(
-        "spack:\n  specs: []\n", encoding="utf-8"
-    )
-    (backup / "gpg" / "private-keys-v1.d").mkdir(parents=True)
-    (backup / "gpg" / "private-keys-v1.d" / "key").write_text("key", encoding="utf-8")
+
+    old_licenses.mkdir(parents=True)
+    (old_licenses / "license.dat").write_text("license", encoding="utf-8")
+
+    (old_envs / "demo").mkdir(parents=True)
+    (old_envs / "demo" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+
+    (old_gpg / "private-keys-v1.d").mkdir(parents=True)
+    (old_gpg / "private-keys-v1.d" / "key").write_text("key", encoding="utf-8")
 
     layout = Path(base_prefix) / "etc" / "spack" / "layout"
     _write_layout_config(layout)
@@ -42,41 +48,36 @@ def test_migrate_undo_restores_backup_and_configuration(mock_spack_instance, mon
 
     sp_migrate("undo")
 
+    # Old resources should still exist at their original locations
     assert (old_licenses / "license.dat").read_text(encoding="utf-8") == "license"
     assert (old_envs / "demo" / "spack.yaml").exists()
     assert (old_gpg / "private-keys-v1.d" / "key").exists()
-    assert not backup.exists()
 
+    # Layout scope should point to old locations
     layout_text = (layout / "config.yaml").read_text(encoding="utf-8")
     assert str(old_licenses) in layout_text
     assert str(old_envs) in layout_text
     assert str(old_gpg) in layout_text
+
     standard_scopes = (
         Path(base_prefix) / "etc" / "spack" / "standard_scopes" / "include.yaml"
     ).read_text(encoding="utf-8")
     assert "~/.spack" in standard_scopes
 
 
-def test_migrate_undo_does_not_overwrite_existing_resource(mock_spack_instance, monkeypatch):
-    """Undo refuses a conflicting legacy destination without consuming the backup."""
+def test_migrate_undo_requires_migration_marker(mock_spack_instance, monkeypatch):
+    """Undo requires migration marker to exist."""
     home_dir, base_prefix = mock_spack_instance
-    backup = Path(base_prefix) / ".migration-backup"
-    (backup / "licenses").mkdir(parents=True)
-    (backup / "licenses" / "license.dat").write_text("migrated", encoding="utf-8")
-    old_licenses = Path(base_prefix) / "etc" / "spack" / "licenses"
-    old_licenses.mkdir(parents=True)
-    (old_licenses / "license.dat").write_text("local", encoding="utf-8")
+
+    # No migration marker
     layout = Path(base_prefix) / "etc" / "spack" / "layout"
     _write_layout_config(layout)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    with pytest.raises(spack.main.SpackCommandError):
-        sp_migrate("undo")
-    assert "Cannot restore licenses" in sp_migrate.output
-    assert "destination may have been modified manually" in sp_migrate.output
+    sp_migrate("undo")
 
-    assert (old_licenses / "license.dat").read_text(encoding="utf-8") == "local"
-    assert (backup / "licenses" / "license.dat").read_text(encoding="utf-8") == "migrated"
+    assert "No migration has been performed" in sp_migrate.output
+    assert "Nothing to undo" in sp_migrate.output
 
 
 def test_migrate_cleanup_old_removes_unreferenced_legacy_directory(

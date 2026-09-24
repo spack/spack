@@ -2111,11 +2111,6 @@ def _migrate_package_repositories() -> bool:
         lock.release_write()
 
 
-def _migration_backup_path() -> str:
-    """Path to migration backup directory."""
-    return os.path.join(spack.paths.prefix, ".migration-backup")
-
-
 def _migration_lock_path() -> str:
     """Path to the migration lock file for $spack prefix resources."""
     return os.path.join(spack.paths.prefix, ".migration-lock")
@@ -2124,6 +2119,35 @@ def _migration_lock_path() -> str:
 def _migration_done_marker_path() -> str:
     """Path to the marker file indicating migration is complete."""
     return os.path.join(spack.paths.prefix, ".migration-done")
+
+
+def _has_old_prefix_resources() -> bool:
+    """Check if there are any old resources in $spack that might need migration.
+
+    This is a lightweight check done before attempting to acquire the migration lock.
+    It allows fresh Spack instances with no old data to skip migration entirely without
+    needing write access to $spack.
+
+    Returns:
+        True if any old resources exist, False otherwise
+    """
+    # Check for old installs
+    if os.path.exists(os.path.join(spack.paths.prefix, "opt", "spack")):
+        return True
+
+    # Check for old environments
+    if os.path.exists(spack.paths.old_envs_path):
+        return True
+
+    # Check for old GPG data
+    if os.path.exists(spack.paths.old_gpg_path) or os.path.exists(spack.paths.old_gpg_keys_path):
+        return True
+
+    # Check for old licenses
+    if os.path.exists(spack.paths.old_licenses_path):
+        return True
+
+    return False
 
 
 def _migrate_gpg(
@@ -2180,17 +2204,7 @@ def _migrate_gpg(
             os.replace(staging_keys, target_gpg_keys)
             staging_keys = None
 
-        # Both succeeded, now back up the sources
-        backup_root = _migration_backup_path()
-        if gpg_home_exists:
-            backup_gpg_home = os.path.join(backup_root, "gpg")
-            filesystem.mkdirp(os.path.dirname(backup_gpg_home))
-            shutil.move(old_gpg_home, backup_gpg_home)
-        if gpg_keys_exists:
-            backup_gpg_keys = os.path.join(backup_root, "gpg-keys")
-            filesystem.mkdirp(os.path.dirname(backup_gpg_keys))
-            shutil.move(old_gpg_keys, backup_gpg_keys)
-
+        # Both succeeded - old resources remain in place
         return True
     except (OSError, shutil.Error) as e:
         tty.warn(f"Failed to migrate GPG directories: {e}")
@@ -2252,9 +2266,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                 # Something is fundamentally wrong (lock not respected, filesystem issue, etc.).
                 # Leave everything as-is for investigation rather than potentially making it worse.
                 return False
-            backup_dir = os.path.join(_migration_backup_path(), "environments")
-            filesystem.mkdirp(backup_dir)
-            shutil.move(src_path, os.path.join(backup_dir, entry))
+        # All environments copied successfully - old environments remain in place
         return True
     finally:
         lock.release_write()
@@ -2269,13 +2281,10 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     if not src_entries:
         return True
     filesystem.mkdirp(dst_dir)
-    backup_dir = os.path.join(_migration_backup_path(), "licenses")
-    filesystem.mkdirp(backup_dir)
     copied = []
     for entry in src_entries:
         src_path = os.path.join(src_dir, entry)
         dst_path = os.path.join(dst_dir, entry)
-        backup_path = os.path.join(backup_dir, entry)
         try:
             if os.path.exists(dst_path):
                 raise FileExistsError(dst_path)
@@ -2283,7 +2292,6 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                 shutil.copytree(src_path, dst_path)
             else:
                 shutil.copy2(src_path, dst_path)
-            shutil.move(src_path, backup_path)
             copied.append(entry)
         except (OSError, shutil.Error) as e:
             tty.warn(

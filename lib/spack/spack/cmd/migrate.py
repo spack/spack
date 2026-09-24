@@ -91,15 +91,11 @@ def _cleanup_old() -> None:
 def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     """Undo auto-migration of licenses and environments.
 
-    The `spack migrate undo` command restores the Spack instance to its
-    pre-auto-migration state by moving licenses, environments, and GPG data
-    from $spack/.migration-backup/ back to their original locations, updating
-    the layout and standard scopes, and removing the backup directory.
-
-    IMPORTANT: This does NOT touch any files in shared $HOME directories
-    (e.g., ~/.local/share/spack). Auto-migration moves the original resources
-    into the backup after copying them, so the shared destinations remain intact
-    for other Spack instances.
+    The `spack migrate undo` command updates the layout scope to point all
+    resources back to their old locations. Old resources remain at their
+    original locations (migration copies them, leaving originals in place).
+    New locations may be left in place for other Spack instances to use,
+    or manually removed if desired.
     """
     if args.action == "cleanup-old":
         _cleanup_old()
@@ -116,11 +112,10 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
             "For more information, see the Spack documentation."
         )
 
-    # Get backup directory path
-    backup_dir = spack.config._migration_backup_path()
-
-    if not os.path.exists(backup_dir):
-        tty.msg(f"No migration backup found at {backup_dir}")
+    # Check if migration marker exists
+    marker_path = spack.config._migration_done_marker_path()
+    if not os.path.exists(marker_path):
+        tty.msg("No migration has been performed.")
         tty.msg("Nothing to undo.")
         return
 
@@ -128,68 +123,36 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     old_licenses_dir = spack.paths.old_licenses_path
     old_envs_dir = spack.paths.old_envs_path
     old_gpg_dir = spack.paths.old_gpg_path
+    old_gpg_keys_dir = spack.paths.old_gpg_keys_path
 
-    # Check what's in the backup
-    backup_licenses = os.path.join(backup_dir, "licenses")
-    backup_envs = os.path.join(backup_dir, "environments")
-    backup_gpg = os.path.join(backup_dir, "gpg")
-
-    has_licenses = bool(os.path.exists(backup_licenses) and os.listdir(backup_licenses))
-    has_envs = bool(os.path.exists(backup_envs) and os.listdir(backup_envs))
-    has_gpg = bool(os.path.exists(backup_gpg) and os.listdir(backup_gpg))
+    # Check what old resources exist
+    has_licenses = os.path.exists(old_licenses_dir)
+    has_envs = os.path.exists(old_envs_dir)
+    has_gpg = os.path.exists(old_gpg_dir)
 
     if not has_licenses and not has_envs and not has_gpg:
-        tty.msg(f"Backup directory exists but is empty: {backup_dir}")
+        tty.msg("No old resources found to point back to.")
+        tty.msg("Nothing to undo.")
+        return
 
     # Show what will be done
     if args.dry_run:
         tty.msg("Would perform the following operations:")
         if has_licenses:
-            tty.msg(f"  - Restore licenses from {backup_licenses} to {old_licenses_dir}")
+            tty.msg(f"  - Point license_dir back to {old_licenses_dir}")
         if has_envs:
-            tty.msg(f"  - Restore environments from {backup_envs} to {old_envs_dir}")
+            tty.msg(f"  - Point environments_root back to {old_envs_dir}")
         if has_gpg:
-            tty.msg(f"  - Restore GPG data from {backup_gpg} to {old_gpg_dir}")
-        tty.msg("  - Update layout scope to point to old locations")
+            tty.msg(f"  - Point gpg_path back to {old_gpg_dir}")
+            tty.msg(f"  - Point gpg_keys_path back to {old_gpg_keys_dir}")
+        tty.msg("  - Update layout scope to use old locations")
         tty.msg("  - Update standard scopes to use ~/.spack for the user scope")
-        tty.msg(f"  - Remove backup directory: {backup_dir}")
         return
 
     # Perform the undo
     tty.msg("Undoing auto-migration...")
 
-    def restore_resource(backup_path: str, old_path: str, resource_name: str) -> None:
-        """Move a complete backed-up resource back to its legacy location."""
-        try:
-            # Create only the parent: the destination itself must not exist.
-            # Rename the complete directory rather than shutil.move: move()
-            # treats an existing directory as a container and nests the backup.
-            fs.mkdirp(os.path.dirname(old_path))
-            os.rename(backup_path, old_path)
-        except (OSError, shutil.Error) as e:
-            tty.die(
-                f"Cannot restore {resource_name} to {old_path}: {e}. "
-                "The destination may have been modified manually."
-            )
-
-    # The backup directories are complete resource units. Move each one into
-    # place directly; an existing destination or any other filesystem change is
-    # reported as an undo failure rather than merged or overwritten.
-    if has_licenses:
-        restore_resource(backup_licenses, old_licenses_dir, "licenses")
-        tty.msg(f"  Restored licenses to {old_licenses_dir}")
-
-    if has_envs:
-        restore_resource(backup_envs, old_envs_dir, "environments")
-        tty.msg(f"  Restored environments to {old_envs_dir}")
-
-    if has_gpg:
-        restore_resource(backup_gpg, old_gpg_dir, "GPG data")
-        tty.msg(f"  Restored GPG data to {old_gpg_dir}")
-
-    # Update layout scope to point to old locations. Even an empty backup can
-    # still require the user scope to be restored below, so keep this in the
-    # common undo path.
+    # Update layout scope to point to old locations
     layout_scope_path = spack.config._layout_scope_path()
     config_yaml_path = os.path.join(layout_scope_path, "config.yaml")
 
@@ -205,10 +168,15 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     # Point to old locations
     if has_licenses:
         layout_config["config"]["license_dir"] = old_licenses_dir
+        tty.msg(f"  Pointing license_dir to {old_licenses_dir}")
     if has_envs:
         layout_config["config"]["environments_root"] = old_envs_dir
+        tty.msg(f"  Pointing environments_root to {old_envs_dir}")
     if has_gpg:
         layout_config["config"]["gpg_path"] = old_gpg_dir
+        layout_config["config"]["gpg_keys_path"] = old_gpg_keys_dir
+        tty.msg(f"  Pointing gpg_path to {old_gpg_dir}")
+        tty.msg(f"  Pointing gpg_keys_path to {old_gpg_keys_dir}")
 
     layout_config["config"].setdefault("locations", {})["state"] = [os.path.expanduser("~/.spack")]
 
@@ -223,12 +191,8 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     # the layout scope itself.
     _restore_user_scope_path()
 
-    # Remove backup directory
-    shutil.rmtree(backup_dir)
-    tty.msg(f"  Removed backup directory: {backup_dir}")
-
     tty.msg("\nUndo complete!")
     tty.msg(
-        "\nNOTE: Auto-migrated resources are moved into the migration backup and restored\n"
-        "to their original locations. Shared destinations were not modified."
+        "\nNOTE: Old resources remain at their original locations. New locations may be\n"
+        "left in place for other Spack instances to use, or manually removed if desired."
     )

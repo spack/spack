@@ -156,7 +156,6 @@ def test_isolate_keeps_existing_resources_in_place(mock_spack_paths, tmp_path):
 
     assert (old_licenses / "license.dat").read_text(encoding="utf-8") == "license"
     assert (old_install / "metadata").read_text(encoding="utf-8") == "installed"
-    assert not (base_prefix / ".migration-backup").exists()
     cfg = spack.config.create()
     spack.config.CONFIG = cfg
     assert cfg.get("config:license_dir") == str(old_licenses)

@@ -337,7 +337,6 @@ class MigrationResources:
         expected_migrations.difference_update(
             resource[1:] for resource in overrides if resource.startswith("-")
         )
-        backup = self.base_prefix / ".migration-backup"
         for resource in (
             "gpg",
             "envs/env-1",
@@ -349,39 +348,30 @@ class MigrationResources:
             if resource == "gpg":
                 destination = self.data_home / "gpg"
                 source = self.old_gpg
-                backup_path = backup / "gpg"
                 marker = destination / "private-keys-v1.d" / "key"
             elif resource.startswith("envs/"):
                 name = resource.split("/", 1)[1]
                 destination = self.data_home / "environments" / name
                 source = self.old_envs / name
-                backup_path = backup / "environments" / name
                 marker = destination / "spack.yaml"
             else:
                 name = resource.split("/", 1)[1]
                 destination = self.data_home / "licenses" / name
                 source = self.old_licenses / name
-                # License backup: individual file in backup directory
-                backup_path = backup / "licenses" / name
                 marker = destination
 
             if migrated:
+                # Migration copies resources - both old and new should exist
                 assert destination.exists()
                 assert marker.read_text(encoding="utf-8") == "old"
-                assert backup_path.exists()
-                # For licenses, backup is a file - read directly
-                # For GPG/envs, backup is a directory - check it contains "old"
-                if resource.startswith("licenses/"):
-                    assert backup_path.read_text(encoding="utf-8") == "old"
-                else:
-                    assert self.contains_text(backup_path, "old")
-                assert not source.exists()
+                assert source.exists()
+                assert self.contains_text(source, "old")
                 if resource == "envs/env-1":
                     assert not (destination / "view").exists()
             else:
+                # Not migrated - only old location exists
                 assert source.exists()
                 assert self.contains_text(source, "old")
-                assert not backup_path.exists()
 
                 # When not migrated due to conflicts (not custom config),
                 # config should explicitly point to old location.
@@ -541,9 +531,10 @@ def test_auto_migration_is_not_repeated_after_layout_scope(mock_spack_instance, 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     spack.config._do_migrate_spack_prefix()
-    assert not spack.config.should_auto_migrate()
-    backup = pathlib.Path(base_prefix) / ".migration-backup" / "licenses" / "license.dat"
-    backup_mtime = backup.stat().st_mtime_ns
 
-    spack.config._do_migrate_spack_prefix()
-    assert backup.stat().st_mtime_ns == backup_mtime
+    # After migration completes, should_auto_migrate() should return False
+    assert not spack.config.should_auto_migrate()
+
+    # Migration completion marker should exist
+    marker = pathlib.Path(base_prefix) / ".migration-done"
+    assert marker.exists()
