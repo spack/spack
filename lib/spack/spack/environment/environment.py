@@ -2127,6 +2127,12 @@ class Environment:
         roots = self.installable_roots()
         specs = specs if specs is not None else roots
 
+        # Roots marked install: false are still installed when other specs depend on them
+        skipped = {x.hash for x in self.concretized_roots} - {s.dag_hash() for s in roots}
+        for s in traverse.traverse_nodes(specs, key=traverse.by_dag_hash):
+            if s.dag_hash() in skipped and not s.installed:
+                tty.warn(f"{s.name} is marked install: false, but other specs depend on it")
+
         # Extract reporter arguments
         reporter = install_args.pop("reporter", None)
         report_file = install_args.pop("report_file", None)
