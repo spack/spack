@@ -1326,7 +1326,9 @@ def read_broken_spec(broken_spec_url):
     object.
     """
     try:
-        broken_spec_contents = web_util.read_text(broken_spec_url)
+        broken_spec_contents = web_util.read_text(
+            broken_spec_url, download_dir=spack.stage.stage_root(cfg.CONFIG)
+        )
     except web_util.SpackWebError:
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
