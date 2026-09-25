@@ -94,16 +94,11 @@ class BuildGraph:
         be installed. Installed packages are pruned from the graph, and build dependencies are only
         included when necessary."""
         database = store.db
-        # When only installing dependencies, the requested specs are not nodes of the graph: they
-        # only contribute their dependencies. A requested spec that is itself a dependency of
-        # another node (e.g. a compiler in one environment group needed by the specs of another)
-        # is added when reached, and installed like any other dependency.
-        self.roots = {s.dag_hash() for s in specs} if install_package else set()
-        self.nodes = {s.dag_hash(): s for s in specs} if install_package else {}
-        #: Requested specs that are installed only if another node depends on them
-        self.dependencies_only: Set[str] = (
-            set() if install_package else {s.dag_hash() for s in specs}
-        )
+        self.roots = {s.dag_hash() for s in specs}
+        self.nodes = {s.dag_hash(): s for s in specs}
+        #: Requested specs not installed because install_package=False. They are added back as
+        #: dependencies if a spec needs them after a build cache miss.
+        self.skipped_roots: Set[str] = set()
         self.parent_to_child: Dict[str, Set[str]] = {}
         self.child_to_parent: Dict[str, Set[str]] = {}
         self.overwrite_set = overwrite_set or set()
@@ -111,9 +106,8 @@ class BuildGraph:
         self.pruned: Set[str] = set()
         self.done: Set[str] = set()
         self.force_source: Set[str] = set()
-        # Items are (spec, install policy, whether spec is a node of the graph)
-        stack: List[Tuple[spack.spec.Spec, InstallPolicy, bool]] = [
-            (s, root_policy, install_package) for s in specs
+        stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [
+            (s, root_policy) for s in self.nodes.values()
         ]
 
         self.tests = tests
@@ -129,7 +123,7 @@ class BuildGraph:
 
             # Build the graph and determine which specs to prune
             while stack:
-                spec, install_policy, is_node = stack.pop()
+                spec, install_policy = stack.pop()
                 key = spec.dag_hash()
                 _, record = database.query_by_spec_hash(key)
                 depflag = self._base_deptypes(spec)
@@ -161,15 +155,14 @@ class BuildGraph:
                         else:
                             self.done.add(bh)
 
-                if is_node:
-                    self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
+                self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
 
                 # Enqueue new dependencies
                 for d in dependencies:
                     if d.dag_hash() in self.nodes:
                         continue
                     self.nodes[d.dag_hash()] = d
-                    stack.append((d, dependencies_policy, True))
+                    stack.append((d, dependencies_policy))
 
         # Construct reverse lookup from child to parent
         for parent, children in self.parent_to_child.items():
@@ -179,9 +172,16 @@ class BuildGraph:
                 else:
                     self.child_to_parent[child] = {parent}
 
+        # If we're not installing the package itself, prune the root specs too. Those that other
+        # nodes depend on (e.g. a compiler in one environment group needed by the specs of
+        # another) are kept, and installed like any other dependency.
+        if not install_package:
+            self.skipped_roots = self.roots - self.child_to_parent.keys()
+            self.roots = set()
+
         # Prune specs from the build graph. Their parents become parents of their children and
         # their children become children of their parents.
-        for key in self.pruned:
+        for key in self.pruned | self.skipped_roots:
             for parent in self.child_to_parent.get(key, ()):
                 self.parent_to_child[parent].remove(key)
                 self.parent_to_child[parent].update(self.parent_to_child.get(key, ()))

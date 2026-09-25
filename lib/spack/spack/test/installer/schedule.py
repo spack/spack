@@ -552,8 +552,8 @@ class TestBuildGraph:
         self, temporary_store: Store
     ):
         """app --link--> lib --link--> compiler --build--> tool, with app and compiler requested
-        and install_package=False. compiler is a dependency of lib, and traversed as such. tool is
-        a build dep of a requested spec with root_policy source_only."""
+        and install_package=False. compiler is a dependency of lib, so it is kept in the graph, and
+        no longer a root. tool is a build dep of a requested spec with root_policy source_only."""
         specs = create_dag(
             nodes=["app", "lib", "compiler", "tool"],
             edges=[
@@ -574,7 +574,8 @@ class TestBuildGraph:
         lib, compiler, tool = (specs[n].dag_hash() for n in ("lib", "compiler", "tool"))
         assert graph.nodes.keys() == {lib, compiler, tool}
         assert graph.parent_to_child[lib] == {compiler}
-        assert graph.parent_to_child[compiler] == set()
+        assert graph.parent_to_child[compiler] == {tool}
+        assert graph.skipped_roots == {specs["app"].dag_hash()}
         assert not graph.roots
 
 

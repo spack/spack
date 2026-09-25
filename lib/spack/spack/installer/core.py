@@ -120,7 +120,7 @@ class ReportData:
                     msg = "Spec is external"
                 elif h in build_graph.nodes:
                     msg = "Dependencies failed to install"
-                elif h in build_graph.pruned or h in build_graph.dependencies_only:
+                elif h in build_graph.pruned or h in build_graph.skipped_roots:
                     msg = "Spec was not scheduled for installation"
                 else:
                     # If not installed or failed (build_records), not statically pruned ahead of
