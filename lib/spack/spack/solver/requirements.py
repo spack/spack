@@ -113,6 +113,9 @@ class RequirementRule(NamedTuple):
     condition: spack.spec.Spec
     kind: RequirementKind
     message: Optional[str]
+    #: "file:line" where this rule was written, or "" if it did not come from YAML. Specs lose
+    #: the mark when parsed, so it is recorded here for error messages to quote.
+    location: str = ""
 
 
 def preference(
@@ -122,6 +125,7 @@ def preference(
     origin: RequirementOrigin = RequirementOrigin.PREFER_YAML,
     kind: RequirementKind = RequirementKind.PACKAGE,
     message: Optional[str] = None,
+    location: str = "",
 ) -> RequirementRule:
     """Returns a preference rule"""
     # A strong preference is defined as:
@@ -136,6 +140,7 @@ def preference(
         condition=condition,
         origin=origin,
         message=message,
+        location=location,
     )
 
 
@@ -146,6 +151,7 @@ def conflict(
     origin: RequirementOrigin = RequirementOrigin.CONFLICT_YAML,
     kind: RequirementKind = RequirementKind.PACKAGE,
     message: Optional[str] = None,
+    location: str = "",
 ) -> RequirementRule:
     """Returns a conflict rule"""
     # A conflict is defined as:
@@ -160,6 +166,7 @@ def conflict(
         condition=condition,
         origin=origin,
         message=message,
+        location=location,
     )
 
 
@@ -254,9 +261,16 @@ class RequirementParser:
             if kind == RequirementKind.DEFAULT:
                 # Warn about %gcc type of preferences under `all`.
                 self._maybe_warn_compiler_in_all(item, "prefer")
-            spec, condition, msg = self._parse_prefer_conflict_item(item)
+            spec, condition, msg, location = self._parse_prefer_conflict_item(item)
             result.append(
-                preference(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
+                preference(
+                    pkg_name,
+                    constraint=spec,
+                    condition=condition,
+                    kind=kind,
+                    message=msg,
+                    location=location,
+                )
             )
         return result
 
@@ -269,9 +283,16 @@ class RequirementParser:
     ) -> List[RequirementRule]:
         result = []
         for item in conflicts:
-            spec, condition, msg = self._parse_prefer_conflict_item(item)
+            spec, condition, msg, location = self._parse_prefer_conflict_item(item)
             result.append(
-                conflict(pkg_name, constraint=spec, condition=condition, kind=kind, message=msg)
+                conflict(
+                    pkg_name,
+                    constraint=spec,
+                    condition=condition,
+                    kind=kind,
+                    message=msg,
+                    location=location,
+                )
             )
         return result
 
@@ -288,7 +309,7 @@ class RequirementParser:
             message = item.get("message")
         raw_key = item if isinstance(item, str) else item.get("spec", item)
         _check_unknown_targets([raw_key], [spec], always_warn=True)
-        return spec, condition, message
+        return spec, condition, message, source_location(raw_key)
 
     def _raw_yaml_data(self, pkg_name: str, *, section: str, virtual: bool = False):
         config = self.config.get_config("packages")
@@ -314,6 +335,8 @@ class RequirementParser:
 
         rules = []
         for requirement in requirements:
+            # Take the mark before wrapping a bare string below in a plain dict that has none
+            location = source_location(requirement)
             # A string is equivalent to a one_of group with a single element
             if isinstance(requirement, str):
                 requirement = {"one_of": [requirement]}
@@ -360,6 +383,7 @@ class RequirementParser:
                         message=requirement.get("message"),
                         condition=when,
                         origin=RequirementOrigin.REQUIRE_YAML,
+                        location=location,
                     )
                 )
         return rules
