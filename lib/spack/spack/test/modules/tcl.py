@@ -929,45 +929,56 @@ class TestTcl:
         # test module file of package without variants
         content = modulefile_content("module-long-help target=core2")
         # Spack automatically defines a build_system variant
-        assert len([x for x in content if "variant " in x]) == 2
-        assert len([x for x in content if "getvariant " in x]) == 1
+        assert len([x for x in content if "set variant_names [list build_system]" in x]) == 1
+        assert len([x for x in content if "set boolean_variants [list ]" in x]) == 1
+        assert len([x for x in content if "    build_system {generic}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic} \\w{7}", x)]) == 1
 
         # test module file of package with boolean variants
         content = modulefile_content("mpileaks +debug -shared")
-        assert len([x for x in content if "variant " in x]) == 7
-        assert len([x for x in content if "getvariant " in x]) == 1
-        assert len([x for x in content if "variant --boolean --default True debug" in x]) == 1
-        assert len([x for x in content if "variant --boolean --default False opt" in x]) == 1
-        assert len([x for x in content if "variant --boolean --default False shared" in x]) == 1
-        assert len([x for x in content if "variant --boolean --default True static" in x]) == 1
-        assert len([x for x in content if "variant --boolean --default False fortran" in x]) == 1
         assert (
-            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
+            len(
+                [
+                    x
+                    for x in content
+                    if "set variant_names [list build_system debug fortran opt shared static]" in x
+                ]
+            )
+            == 1
         )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set boolean_variants [list debug fortran opt shared static]" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if "    build_system {generic}" in x]) == 1
+        assert len([x for x in content if "    debug {1}" in x]) == 1
+        assert len([x for x in content if "    fortran {0}" in x]) == 1
+        assert len([x for x in content if "    opt {0}" in x]) == 1
+        assert len([x for x in content if "    shared {0}" in x]) == 1
+        assert len([x for x in content if "    static {1}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic 1 0 0 0 1} \\w{7}", x)]) == 1
 
-        # test variant set module check code
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if "    {build_system=generic +debug ~fortran ~opt ~shared +static} " in x
-                ]
-            )
-            == 1
-        )
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if "foreach avail_spec [array names ::avail_installation] {" in x
-                ]
-            )
-            == 1
-        )
-        assert len([x for x in content if 'append err_msg "* \\"$avail_spec\\"\\n' in x]) == 1
+        # test installation selection and variant definition code
+        assert len([x for x in content if "getvariant --return-value $name __unset__" in x]) == 1
         assert len([x for x in content if "reportError $err_msg" in x]) == 1
+        assert len([x for x in content if "variant --default __unset__ $name" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default $value $name" in x]) == 1
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "variant --default $value $name {*}$variant_values($name)" in x
+                ]
+            )
+            == 1
+        )
 
         # test dependent module designation (containing variants specifications)
         # depends-on command defined once and used 3 times
@@ -1013,41 +1024,21 @@ class TestTcl:
 
         # test module file of package with valued variants
         content = modulefile_content("multivalue-variant-multi-defaults myvariant=bar")
-        assert len([x for x in content if "variant " in x]) == 4
-        assert len([x for x in content if "getvariant " in x]) == 1
-        assert len([x for x in content if "variant_set_spec myvariant 0" in x]) == 1
-        assert len([x for x in content if "variant --default bar myvariant bar" in x]) == 1
         assert (
-            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
-        )
-        assert len([x for x in content if "variant --boolean " in x]) == 0
-
-        # test variant set module check code
-        assert len([x for x in content if "    {build_system=generic myvariant=bar} " in x]) == 1
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if "foreach avail_spec [array names ::avail_installation] {" in x
-                ]
-            )
+            len([x for x in content if "set variant_names [list build_system myvariant]" in x])
             == 1
         )
-        assert len([x for x in content if 'append err_msg "* \\"$avail_spec\\"\\n' in x]) == 1
-        assert len([x for x in content if "reportError $err_msg" in x]) == 1
+        assert len([x for x in content if "set boolean_variants [list ]" in x]) == 1
+        assert len([x for x in content if "    build_system {generic}" in x]) == 1
+        assert len([x for x in content if "    myvariant {bar}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic bar} \\w{7}", x)]) == 1
 
         # test module file of package with multi-valued variants
         content = modulefile_content("multivalue-variant-multi-defaults")
-        assert len([x for x in content if "variant " in x]) == 4
-        assert len([x for x in content if "getvariant " in x]) == 1
-        assert len([x for x in content if "variant_set_spec myvariant 0" in x]) == 1
-        assert len([x for x in content if "variant --default bar_baz myvariant bar_baz" in x]) == 1
-        assert (
-            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
-        )
+        assert len([x for x in content if "    myvariant {bar_baz}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic bar_baz} \\w{7}", x)]) == 1
         content = modulefile_content("multivalue-variant-multi-defaults myvariant=baz,bar")
-        assert len([x for x in content if "variant --default bar_baz myvariant bar_baz" in x]) == 1
+        assert len([x for x in content if "    myvariant {bar_baz}" in x]) == 1
 
     def test_variants_all_reserved(self, modulefile_content, module_configuration):
         """Tests that variants reserved by Spack are not defined in module file."""
@@ -1056,27 +1047,24 @@ class TestTcl:
 
         # patches variant is set on concretized spec of package with patches
         content = modulefile_content("patch@2.0")
-        assert len([x for x in content if "variant " in x]) == 2
+        assert len([x for x in content if "set variant_names [list build_system]" in x]) == 1
         assert len([x for x in content if "variant" in x and "patches" in x]) == 0
-        assert (
-            len([x for x in content if "variant --default generic build_system generic" in x]) == 1
-        )
-        assert len([x for x in content if "    {build_system=generic} " in x]) == 1
+        assert len([x for x in content if re.match("    {generic} \\w{7}", x)]) == 1
 
         # dev_path variant set on spec
         content = modulefile_content("mpileaks dev_path=/some/path")
-        assert len([x for x in content if "variant " in x]) == 7
-        assert len([x for x in content if "variant" in x and "dev_path" in x]) == 0
         assert (
             len(
                 [
                     x
                     for x in content
-                    if "    {build_system=generic ~debug ~fortran ~opt +shared +static} " in x
+                    if "set variant_names [list build_system debug fortran opt shared static]" in x
                 ]
             )
             == 1
         )
+        assert len([x for x in content if "variant" in x and "dev_path" in x]) == 0
+        assert len([x for x in content if re.match("    {generic 0 0 0 1 1} \\w{7}", x)]) == 1
 
     def test_no_fold_without_variants(
         self, install_mockery, module_configuration, modulefile_filenames, factory, monkeypatch
@@ -1150,7 +1138,7 @@ class TestTcl:
                 [
                     x
                     for x in content_o
-                    if "depends-on callpath/1.0-gcc-10.2.1 build_system=generic" in x
+                    if x == "depends-on callpath/1.0-gcc-10.2.1 build_system=generic"
                 ]
             )
             == 1
@@ -1181,7 +1169,7 @@ class TestTcl:
                     x
                     for x in content_a
                     if re.match(
-                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}", x
+                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}$", x
                     )
                 ]
             )
@@ -1193,7 +1181,7 @@ class TestTcl:
                     x
                     for x in content_b
                     if re.match(
-                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}", x
+                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}$", x
                     )
                 ]
             )
@@ -1210,7 +1198,7 @@ class TestTcl:
                 [
                     x
                     for x in content_o
-                    if "depends-on callpath/1.0-gcc-10.2.1 build_system=generic" in x
+                    if x == "depends-on callpath/1.0-gcc-10.2.1 build_system=generic"
                 ]
             )
             == 1
@@ -1227,7 +1215,7 @@ class TestTcl:
         uninstall("-y", spec_a)
         assert not os.path.exists(module_file_a) and os.path.exists(module_file_o)
 
-        # test default value is set only for variants with a single value
+        # test variant values are aggregated across installations, sorted by their values
         spec_a = "manyvariants@1.0.1"
         spec_b = "manyvariants@1.0.1 ~a c=v2"
         install("--fake", "--add", spec_a)
@@ -1235,12 +1223,17 @@ class TestTcl:
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
         with open(module_file_a, encoding="utf-8") as f:
             content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert len([x for x in content_a if "{+a ~b build_system=generic c=v1 d=v1} " in x]) == 1
-        assert len([x for x in content_a if "{~a ~b build_system=generic c=v2 d=v1} " in x]) == 1
-        assert len([x for x in content_a if "variant --boolean a" in x]) == 1
-        assert len([x for x in content_a if "variant --boolean --default False b" in x]) == 1
-        assert len([x for x in content_a if "variant c v2 v1" in x or "variant c v1 v2" in x]) == 1
-        assert len([x for x in content_a if "variant --default v1 d v1" in x]) == 1
+        variant_names = "set variant_names [list a b build_system c d]"
+        assert len([x for x in content_a if variant_names in x]) == 1
+        assert len([x for x in content_a if "set boolean_variants [list a b]" in x]) == 1
+        assert len([x for x in content_a if x == "a {0 1}\\"]) == 1
+        assert len([x for x in content_a if x == "b {0}\\"]) == 1
+        assert len([x for x in content_a if x == "c {v1 v2}\\"]) == 1
+        assert len([x for x in content_a if x == "d {v1}\\"]) == 1
+        install_a = [x for x in content_a if x.startswith("{1 0 generic v1 v1}")]
+        install_b = [x for x in content_a if x.startswith("{0 0 generic v2 v1}")]
+        assert len(install_a) == 1 and len(install_b) == 1
+        assert content_a.index(install_b[0]) < content_a.index(install_a[0])
 
         # test valued conditional variant
         spec_a = "forward-multi-value@1.0"
@@ -1248,30 +1241,24 @@ class TestTcl:
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
         with open(module_file_a, encoding="utf-8") as f:
             content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert len([x for x in content_a if "variant --boolean --default False cuda" in x]) == 1
+        assert len([x for x in content_a if x == "cuda {0}\\"]) == 1
         assert len([x for x in content_a if "cuda_arch" in x]) == 0
         spec_b = "forward-multi-value@1.0 +cuda"
         install("--fake", "--add", spec_b)
         with open(module_file_a, encoding="utf-8") as f:
             content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert len([x for x in content_b if "variant --boolean cuda" in x]) == 1
-        assert len([x for x in content_b if "variant --default none cuda_arch none" in x]) == 1
+        assert len([x for x in content_b if x == "cuda {0 1}\\"]) == 1
+        # neutral value stands for the conditional variant on installations not defining it
+        assert len([x for x in content_b if x == "cuda_arch {none}\\"]) == 1
+        assert len([x for x in content_b if x.startswith("{generic 0 none}")]) == 1
+        assert len([x for x in content_b if x.startswith("{generic 1 none}")]) == 1
         spec_c = "forward-multi-value@1.0 +cuda cuda_arch=11"
         install("--fake", "--add", spec_c)
         with open(module_file_a, encoding="utf-8") as f:
             content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert len([x for x in content_c if "variant --boolean cuda" in x]) == 1
-        assert (
-            len(
-                [
-                    x
-                    for x in content_c
-                    if "variant --default none cuda_arch none 11" in x
-                    or "variant --default none cuda_arch 11 none" in x
-                ]
-            )
-            == 1
-        )
+        assert len([x for x in content_c if x == "cuda {0 1}\\"]) == 1
+        assert len([x for x in content_c if x == "cuda_arch {11 none}\\"]) == 1
+        assert len([x for x in content_c if x.startswith("{generic 1 11}")]) == 1
 
         # test boolean conditional variant
         spec_a = "conditional-variant-pkg@2.0"
@@ -1279,37 +1266,23 @@ class TestTcl:
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
         with open(module_file_a, encoding="utf-8") as f:
             content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert (
-            len([x for x in content_a if "variant --boolean --default True version_based" in x])
-            == 1
-        )
-        assert (
-            len([x for x in content_a if "variant --boolean --default False variant_based" in x])
-            == 1
-        )
+        assert len([x for x in content_a if x == "version_based {1}\\"]) == 1
+        assert len([x for x in content_a if x == "variant_based {0}\\"]) == 1
         assert len([x for x in content_a if "two_whens" in x]) == 0
         spec_b = "conditional-variant-pkg@2.0 ~version_based"
         install("--fake", "--add", spec_b)
         with open(module_file_a, encoding="utf-8") as f:
             content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert len([x for x in content_b if "variant --boolean version_based" in x]) == 1
-        assert (
-            len([x for x in content_b if "variant --boolean --default False variant_based" in x])
-            == 1
-        )
+        assert len([x for x in content_b if x == "version_based {0 1}\\"]) == 1
+        assert len([x for x in content_b if x == "variant_based {0}\\"]) == 1
         assert len([x for x in content_b if "two_whens" in x]) == 0
         spec_c = "conditional-variant-pkg@2.0 +version_based +variant_based"
         install("--fake", "--add", spec_c)
         with open(module_file_a, encoding="utf-8") as f:
             content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert len([x for x in content_c if "variant --boolean version_based" in x]) == 1
-        assert (
-            len([x for x in content_c if "variant --boolean --default False variant_based" in x])
-            == 1
-        )
-        assert (
-            len([x for x in content_c if "variant --boolean --default False two_whens" in x]) == 1
-        )
+        assert len([x for x in content_c if x == "version_based {0 1}\\"]) == 1
+        assert len([x for x in content_c if x == "variant_based {0 1}\\"]) == 1
+        assert len([x for x in content_c if x == "two_whens {0}\\"]) == 1
 
         # test conditional variant on dependency
         spec_a = "conditional-variant-pkg-dependent@1.0 a=v1"
@@ -1326,11 +1299,11 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if (
+                    if re.match(
                         "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic ~version_based"
+                        "build_system=generic ~version_based$",
+                        x,
                     )
-                    in x
                 ]
             )
             == 1
@@ -1340,11 +1313,11 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if (
+                    if re.match(
                         "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic +variant_based +version_based"
+                        "build_system=generic ~two_whens \\+variant_based \\+version_based$",
+                        x,
                     )
-                    in x
                 ]
             )
             == 1
@@ -1354,11 +1327,11 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if (
+                    if re.match(
                         "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic +two_whens +variant_based +version_based"
+                        "build_system=generic \\+two_whens \\+variant_based \\+version_based$",
+                        x,
                     )
-                    in x
                 ]
             )
             == 1
@@ -1399,7 +1372,8 @@ class TestTcl:
         hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
         assert len([x for x in content if hide_implicit_rule == x]) == 1
 
-        # check hash variant is added for 2 similar folded installations among 3
+        # check hash variant is defined last for the 2 folded installations having the same
+        # other variants among 3, and installations are listed sorted by their values
         spec_a = "mpileaks@2.3 +debug +opt ^mpich"
         spec_b = "mpileaks@2.3 +opt +debug ^zmpi"
         spec_c = "mpileaks@2.3 ~opt +debug ^zmpi"
@@ -1414,21 +1388,8 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if re.match(
-                        "\\{build_system=generic \\+debug ~fortran hash=\\w{7} "
-                        "\\+opt \\+shared \\+static\\}",
-                        x,
-                    )
-                ]
-            )
-            == 2
-        )
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if "{build_system=generic +debug ~fortran ~opt +shared +static}" in x
+                    if "set variant_names [list build_system debug fortran opt shared static hash]"
+                    in x
                 ]
             )
             == 1
@@ -1438,10 +1399,16 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if re.match(
-                        "variant --default none hash (\\w{7}|none) (\\w{7}|none) (\\w{7}|none)", x
-                    )
+                    if re.match("hash {(\\w{7}|none) (\\w{7}|none) (\\w{7}|none)}", x)
                 ]
             )
             == 1
         )
+        hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
+        hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
+        hash_c = spack.store.STORE.db.query_one(spec_c).dag_hash(7)
+        install_a = f"{{generic 1 0 1 1 1 {hash_a}}} {hash_a}\\"
+        install_b = f"{{generic 1 0 1 1 1 {hash_b}}} {hash_b}\\"
+        install_c = f"{{generic 1 0 0 1 1 none}} {hash_c}\\"
+        first, second = sorted([install_a, install_b])
+        assert content.index(install_c) < content.index(first) < content.index(second)
