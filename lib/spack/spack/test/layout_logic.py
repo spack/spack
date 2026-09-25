@@ -589,6 +589,35 @@ def test_perform_auto_migration_not_repeated(mock_spack_instance, monkeypatch):
     assert config_changed2 is True  # config_changed is still True because we entered the lock
 
 
+def test_config_migration_skips_unparseable_yaml(mock_spack_instance, monkeypatch):
+    """Test that config migration skips YAML files that can't be parsed."""
+    home_dir, base_prefix = mock_spack_instance
+    old_config = pathlib.Path(home_dir) / ".spack"
+    old_config.mkdir(parents=True, exist_ok=True)
+
+    # Create a valid config file
+    (old_config / "packages.yaml").write_text("packages:\n  all:\n    target: [x86_64]\n", encoding="utf-8")
+
+    # Create an unparseable YAML file (like in a backup directory)
+    backup_dir = old_config / "backup"
+    backup_dir.mkdir()
+    (backup_dir / "broken.yaml").write_text("packages: [unclosed\n", encoding="utf-8")
+
+    # Migration should succeed, skipping the broken file
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    result = spack.config._do_migrate_home()
+
+    # Should have migrated successfully (skipping the broken file)
+    assert result["user_config"] is True
+
+    # Valid config should be migrated
+    new_config = pathlib.Path(home_dir) / ".config" / "spack"
+    assert (new_config / "packages.yaml").exists()
+
+    # Broken file should not be migrated
+    assert not (new_config / "backup" / "broken.yaml").exists()
+
+
 def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     """Test that migrated environments are accessible via spack env list."""
     import spack.environment.environment as ev

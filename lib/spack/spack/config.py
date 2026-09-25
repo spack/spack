@@ -2091,19 +2091,26 @@ def _do_migrate_user_config(
             old_path = os.path.join(old_location, config_file)
             staging_file_path = os.path.join(staging_path, config_file)
 
-            # Process paths using migrate command logic (handles the 4 path rewriting rules)
-            # Pass new_config_location (not staging_path) so paths are rewritten for final
-            # destination
-            modified_data = process_config_file_paths(old_path, old_location, new_config_location)
+            try:
+                # Process paths using migrate command logic (handles the 4 path rewriting rules)
+                # Pass new_config_location (not staging_path) so paths are rewritten for final
+                # destination
+                modified_data = process_config_file_paths(
+                    old_path, old_location, new_config_location
+                )
 
-            # Ensure parent directory exists in staging
-            os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
+                # Ensure parent directory exists in staging
+                os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
 
-            if modified_data is not None:
-                with open(staging_file_path, "w", encoding="utf-8") as f:
-                    syaml.dump(modified_data, f)
-            else:
-                shutil.copy2(old_path, staging_file_path)
+                if modified_data is not None:
+                    with open(staging_file_path, "w", encoding="utf-8") as f:
+                        syaml.dump(modified_data, f)
+                else:
+                    shutil.copy2(old_path, staging_file_path)
+            except (syaml.SpackYAMLError, OSError) as e:
+                # Skip files that can't be parsed or read (e.g., backup directories with broken YAML)
+                tty.debug(f"Skipping {config_file} during migration: {e}")
+                continue
 
         # Atomically rename staging to final destination
         os.rename(staging_path, new_config_location)

@@ -234,6 +234,8 @@ to have their personal `~/.spack` configuration automatically migrated on first 
 
 The home directory migration runs on every Spack invocation (when conditions are met) and is independent of whether `$spack` prefix resources exist or whether the layout scope has been created. Configuration is reloaded after home directory migration completes to pick up the migrated user configuration.
 
+**Unparseable files**: If a YAML file in `~/.spack` cannot be parsed (e.g., backup directories with broken syntax), it is skipped during migration with a debug message. Only valid, parseable YAML files are migrated to `~/.config/spack`. This prevents migration from failing completely due to files that Spack would have ignored anyway.
+
 `~/.spack` is retained after migration because older Spack instances may still reference it.
 
 # 4. Updated `spack isolate` Behavior
