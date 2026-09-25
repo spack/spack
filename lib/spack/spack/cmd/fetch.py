@@ -27,6 +27,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-D", "--dependencies", action="store_true", help="also fetch all dependencies"
     )
+    subparser.add_argument(
+        "-M", "--no-mirrors", action="store_true", help="do not use mirrors to fetch"
+    )
     arguments.add_concretizer_args(subparser)
     subparser.epilog = (
         "With an active environment, the specs "
@@ -38,6 +41,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def fetch(parser, args):
     if args.no_checksum:
         spack.config.CONFIG.set("config:checksum", False, scope="command_line")
+
+    if args.no_mirrors:
+        mirrors = {"url": "", "binary": False, "source": False}
+        spack.config.set("mirrors::''", mirrors, scope="command_line")
 
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
