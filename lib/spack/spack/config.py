@@ -2391,6 +2391,30 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         lock.release_write()
 
 
+def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
+    """Check if two directory trees have identical structure and content."""
+    import filecmp
+
+    cmp = filecmp.dircmp(src_dir, dst_dir)
+
+    # Check for differences in files only in one directory
+    if cmp.left_only or cmp.right_only:
+        return False
+
+    # Check for different files
+    if cmp.diff_files:
+        return False
+
+    # Recursively check subdirectories
+    for subdir in cmp.common_dirs:
+        if not _dirs_identical(
+            os.path.join(src_dir, subdir), os.path.join(dst_dir, subdir)
+        ):
+            return False
+
+    return True
+
+
 def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     """Copy licenses individually without claiming to lock out manual edits."""
     if not os.path.exists(src_dir):
@@ -2406,7 +2430,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
         dst_path = os.path.join(dst_dir, entry)
         try:
             if os.path.exists(dst_path):
-                # For files, check if content hash matches (could be our prior copy or identical)
+                # Check if content matches (could be our prior copy or identical from another checkout)
                 if os.path.isfile(src_path) and os.path.isfile(dst_path):
                     with open(src_path, "rb") as f:
                         src_hash = spack.util.hash.b32_hash(
@@ -2422,7 +2446,15 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                         )
                         copied.append(entry)
                         continue
-                # Hash mismatch or directory collision - stop migration
+                elif os.path.isdir(src_path) and os.path.isdir(dst_path):
+                    # For directories, check if trees are identical
+                    if _dirs_identical(src_path, dst_path):
+                        tty.debug(
+                            f"License directory {entry} already exists with matching content, skipping"
+                        )
+                        copied.append(entry)
+                        continue
+                # Hash mismatch or type mismatch - stop migration
                 raise FileExistsError(dst_path)
             if os.path.isdir(src_path):
                 shutil.copytree(src_path, dst_path)
