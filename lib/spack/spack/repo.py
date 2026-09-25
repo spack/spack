@@ -1396,8 +1396,8 @@ class Repo:
             )
             self._repo_index.add_indexer("providers", ProviderIndexer(self))
             self._repo_index.add_indexer("tags", TagIndexer(self))
-            # The name is also the cache directory. v2: dependency patches are keyed by bare
-            # package name, so caches written with fullname keys must not be reused.
+            # The name is also the cache directory. v2: dependency patches are keyed by the
+            # dependency as written, so caches with resolved fullname keys must not be reused.
             self._repo_index.add_indexer("patches_v2", PatchIndexer(self))
         return self._repo_index
 

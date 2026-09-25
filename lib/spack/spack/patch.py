@@ -398,7 +398,7 @@ class PatchCache:
                     <patch json>
                 namespace2.package2:
                     <patch json>
-                dependency-name:        # patches from depends_on(..., patches=...)
+                [namespace.]dependency: # patches from depends_on(..., patches=...), as written
                     <patch json>
                 ... etc. ...
     """
@@ -465,8 +465,8 @@ class PatchCache:
                 f"Couldn't find patch for package {pkg.fullname} with sha256: {sha256}"
             )
 
-        # Find patches for this class or any class it inherits from, then dependency
-        # patches, which are keyed by bare package name (see _index_patches)
+        # Find patches for this class or any class it inherits from, then patches on a
+        # dependency written without a namespace (see _index_patches)
         for fullname in (*pkg.fullnames, pkg.name):
             patch_dict = sha_index.get(fullname)
             if patch_dict:
@@ -575,8 +575,9 @@ class PatchCache:
                     for patch in patch_list:
                         patch_dict = patch.to_dict()
                         patch_dict.pop("sha256")  # save some space
-                        # Key by bare name: the dependency may come from any repo, and this
-                        # per-repo index cannot know which one the concretizer will pick.
-                        index[patch.sha256] = {dependency.spec.name: patch_dict}
+                        # Key by the dependency as written: an explicit namespace is kept,
+                        # otherwise the bare name, since this per-repo index cannot know
+                        # which repository will provide the dependency.
+                        index[patch.sha256] = {dependency.spec.fullname: patch_dict}
 
         return index
