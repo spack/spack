@@ -37,6 +37,14 @@ class TclConfiguration(BaseConfiguration):
         """Returns module file variants definition mode."""
         return self._config.get("variants", "none")
 
+    def _variant_to_str_dict(self, v: VariantValue) -> Dict[str, str]:
+        """Returns a dictionary entry representing variant object passed as argument.
+        A boolean value is written 1 or 0, as the module file expects it."""
+        if v.type == VariantType.BOOL:
+            return {"value": "1" if v.value else "0", "type": v.type.string, "spec": str(v)}
+        value = "_".join(map(str, v.value)) if isinstance(v.value, tuple) else str(v.value)
+        return {"value": value, "type": v.type.string, "spec": f"{v.name}={value}"}
+
     @property
     def folds_installations(self) -> bool:
         """Whether several installations may share this module file, which then folds them.
@@ -56,19 +64,13 @@ class TclConfiguration(BaseConfiguration):
             projection = self.default_projections["all"]
         return re.search(r"{[^}]*hash", projection) is None
 
-    def _variant_to_str_dict(self, v: VariantValue) -> Dict[str, str]:
-        """Returns a dictionary entry representing variant object passed as argument."""
-        value = "_".join(map(str, v.value)) if isinstance(v.value, tuple) else str(v.value)
-        spec = str(v) if v.type == VariantType.BOOL else f"{v.name}={value}"
-        return {"value": value, "type": v.type.string, "spec": spec}
-
     def _variant_dict_for_spec(
         self, spec: spack.spec.Spec, add_hash_variant: bool = False
     ) -> Dict[str, Dict[str, Any]]:
         """Returns a dictionary of defined variants for given spec keyed by variant name.
         Any multi-valued variant is transformed into a single-valued one, joining values
-        If asked, "hash" variant is defined into the dictionary.
-        The dictionary is sorted by its keys.
+        If asked, "hash" variant is defined last into the dictionary.
+        The dictionary is sorted by its keys, with the "hash" variant last if defined.
         """
         # Variants reserved by Spack (like patches or dev_path) describe how the
         # package was built rather than what it provides, they are not defined
@@ -85,7 +87,7 @@ class TclConfiguration(BaseConfiguration):
                 "spec": f"hash={spec.dag_hash(7)}",
             }
 
-        return dict(sorted(variant_dict.items()))
+        return variant_dict
 
     @property
     def variants(self) -> Dict[str, Dict[str, Any]]:
@@ -110,15 +112,27 @@ class TclConfiguration(BaseConfiguration):
     @property
     def variants_spec(self) -> str:
         """Returns aggregated spec string of variants."""
+        return " ".join(v["spec"] for v in self.variants.values())
+
+    @property
+    def variant_values(self) -> str:
+        """Returns the values of the variants of this installation, in the order of the
+        aggregated variants. A variant this installation does not define takes the neutral
+        value that the aggregated variants give to it."""
         variants = self.variants
-        # filter default value from specification string to cope with conditional variant
-        # that may not be expressed on all existing installations
         return " ".join(
-            variants[name]["spec"]
+            variants[name]["value"] if name in variants else self._neutral_value(v)
             for name, v in self.aggregated_variants.items()
-            if name in variants
-            and (not v["conditional"] or v["default"] != variants[name]["value"])
         )
+
+    @staticmethod
+    def _neutral_value(aggregated_variant: Dict[str, Any]) -> str:
+        """Value standing for a variant on installations that do not define it."""
+        return "0" if aggregated_variant["type"] == "bool" else "none"
+
+    @property
+    def installed_specs(self) -> List[spack.spec.Spec]:
+        return self._specs_sharing_modulefile()
 
     def _specs_sharing_modulefile(self) -> List[spack.spec.Spec]:
         """All installed specs of same name@version that map to the same module filename."""
@@ -143,7 +157,8 @@ class TclConfiguration(BaseConfiguration):
         if self.extra_spec_sharing:
             spec_list.add(self.extra_spec_sharing)
 
-        # Returns only specs that share the same module filename.
+        # Returns only specs that share the same module filename, sorted by their variant
+        # values as the module file selects the first installation matching a load request
         my_filename = self.make_layout(
             self.spec,
             self.name,
@@ -152,7 +167,7 @@ class TclConfiguration(BaseConfiguration):
             extra_spec_sharing=self.extra_spec_sharing,
             cache=self._configuration_cache,
         ).filename
-        return [
+        sharing_specs = [
             spec
             for spec in spec_list
             if self.make_layout(
@@ -165,6 +180,12 @@ class TclConfiguration(BaseConfiguration):
             ).filename
             == my_filename
         ]
+        return sorted(sharing_specs, key=self._variant_values_key)
+
+    def _variant_values_key(self, spec: spack.spec.Spec) -> Tuple[Tuple[str, ...], str]:
+        """Sort key listing installations by their variant values, then by their hash."""
+        values = tuple(v["value"] for v in self._variant_dict_for_spec(spec).values())
+        return (values, spec.dag_hash())
 
     @property
     def other_installed_specs(self) -> List[spack.spec.Spec]:
@@ -192,8 +213,11 @@ class TclConfiguration(BaseConfiguration):
 
     @property
     def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
-        """Returns a consolidated dictionary of defined variants across installations.
-        This dictionary is sorted by its keys, which are variant names.
+        """Returns a consolidated dictionary of defined variants across installations, with
+        their type and sorted values. A variant that only some installations define also
+        takes the neutral value standing for it on the others.
+        This dictionary is sorted by its keys, which are variant names, with the "hash"
+        variant last if defined.
         Returns an empty dictionary if variant mode is disabled.
         """
         if "aggregated_variants" not in self._cache:
@@ -210,39 +234,25 @@ class TclConfiguration(BaseConfiguration):
         total_installs = len(install_specs)
 
         specs_need_hash = set(self._specs_need_hash_variant())
-        install_variant_dicts = [
-            self._variant_dict_for_spec(spec, spec in specs_need_hash) for spec in install_specs
-        ]
-
-        for variant_dict in install_variant_dicts:
+        for spec in install_specs:
+            variant_dict = self._variant_dict_for_spec(spec, spec in specs_need_hash)
             for name, v in variant_dict.items():
                 if name not in aggregated:
-                    aggregated[name] = {"conditional": False, "type": v["type"], "values": set()}
+                    aggregated[name] = {"type": v["type"], "values": set()}
                     seen_in[name] = 0
-
                 aggregated[name]["values"].add(v["value"])
                 seen_in[name] += 1
 
-        for name in aggregated.keys():
-            # Add neutral value for installations where the variant is not defined
-            # (conditional variant)
+        for name, v in aggregated.items():
+            # Conditional variant: some installations do not define it
             if seen_in[name] < total_installs:
-                value = str(False) if aggregated[name]["type"] == "bool" else "none"
-                aggregated[name]["values"].add(value)
-                # Make this fallback value a default to avoid breaking access to the existing
-                # installations where this conditional variant is not defined
-                aggregated[name]["default"] = value
-                aggregated[name]["conditional"] = True
-            # Set a default if single value
-            elif len(aggregated[name]["values"]) == 1:
-                aggregated[name]["default"] = list(aggregated[name]["values"])[0]
-
-        # Sort variant values for deterministic module file content across regenerations,
-        # since dict/set iteration order of strings is not guaranteed to be stable
-        for v in aggregated.values():
+                v["values"].add(self._neutral_value(v))
+            # Sort variant values for deterministic module file content across regenerations,
+            # since dict/set iteration order of strings is not guaranteed to be stable
             v["values"] = sorted(v["values"])
 
-        return dict(sorted(aggregated.items()))
+        # Keep the "hash" variant last, as it ends the depends-on lines of dependent modules
+        return dict(sorted(aggregated.items(), key=lambda item: (item[0] == "hash", item[0])))
 
 
 class TclModulefileWriter(BaseModuleFileWriter):

@@ -33,59 +33,73 @@ proc ModulesHelp { } {
 
 {% block variants %}
 {% if aggregated_variants|length > 0 %}
-proc variant_set_spec {name is_bool is_cond} {
-    set value [getvariant --return-value $name __undef__]
-    if {$value eq {__undef__} || [module-info mode scan]} {
-       return
-    }
-    # skip spec of conditional variants set to their default value
-    if {$is_cond && (($is_bool && !$value) || (!$is_bool && $value eq {none}))} {
-        return
-    }
-    if {!$is_bool} {
-        lappend ::variant_spec_list $name=$value
-    } elseif {$value} {
-        lappend ::variant_spec_list +$name
-    } else {
-        lappend ::variant_spec_list ~$name
-    }
-}
-
-{# Define variants and their values instanciated in actual installations #}
-{# Build along the definition the variant set specified when loading module #}
-set variant_spec_list [list]
+# Variants defined across the installations held by this module file, with their possible
+# values, then the values of each installation in the order of variant_names, and its hash
+set variant_names [list {{ ' '.join(aggregated_variants.keys()) }}]
+set boolean_variants [list {% for name, v in aggregated_variants.items() if v['type'] == 'bool' %}{{ name }}{{ ' ' if not loop.last }}{% endfor %}]
+array set variant_values [list\
 {% for name, v in aggregated_variants.items() %}
-{% set default = "--default " ~ v['default'] ~ " " if 'default' in v else "" %}
-{% set cond = "1" if v['conditional'] else "0" %}
-{% if v['type'] == 'bool' %}
-variant --boolean {{ default }}{{ name }}
-variant_set_spec {{ name }} 1 {{ cond }}
-{% else %}
-variant {{ default }}{{ name }} {{ ' '.join(v['values']) }}
-variant_set_spec {{ name }} 0 {{ cond }}
-{% endif %}
+    {{ name }} {{ '{' }}{{ ' '.join(v['values']) }}{{ '}' }}\
 {% endfor %}
-
-array set avail_installation [list\
+]
+set installations [list\
 {% for install in installations %}
-    {{ '{' }}{{ install.variants_spec }}{{ '}' }} {{ install.hash }}\
+    {{ '{' }}{{ install.variant_values }}{{ '}' }} {{ install.hash }}\
 {% endfor %}
 ]
 
-proc select_installation {spec} {
-    if {[info exists ::avail_installation($spec)]} {
-        return $::avail_installation($spec)
+proc variants_spec {values} {
+    set spec [list]
+    foreach name $::variant_names value $values {
+        if {$name in $::boolean_variants} {
+            lappend spec [expr {$value ? "+$name" : "~$name"}]
+        } else {
+            lappend spec $name=$value
+        }
     }
-    # raise error if selected set does not correspond to an installed package
+    return [join $spec]
+}
+
+# Variants stated on the command line form a mask, the first installation matching it is
+# selected and variants left unset take its values
+proc select_installation {} {
+    set mask [list]
+    foreach name $::variant_names {
+        lappend mask [getvariant --return-value $name __unset__]
+    }
+    foreach {values hash} $::installations {
+        set match 1
+        foreach value $values requested $mask {
+            if {$requested ni [list __unset__ {}] && $requested ne $value} {
+                set match 0
+                break
+            }
+        }
+        if {$match} {
+            return [list $values $hash]
+        }
+    }
+    # raise error if stated variants do not correspond to an installed package
     set err_msg "Specified package is not installed, available packages for this version are:\n"
-    foreach avail_spec [array names ::avail_installation] {
-        append err_msg "* \"$avail_spec\"\n"
+    foreach {values hash} $::installations {
+        append err_msg "* \"[variants_spec $values]\"\n"
     }
     reportError $err_msg
     break
 }
 
-set selected_installation [select_installation [join $variant_spec_list]]
+# Declare variants without checking their value to get those stated on the command line
+foreach name $variant_names {
+    variant --default __unset__ $name
+}
+lassign [select_installation] selected_values selected_installation
+foreach name $variant_names value $selected_values {
+    if {$name in $boolean_variants} {
+        variant --boolean --default $value $name
+    } else {
+        variant --default $value $name {*}$variant_values($name)
+    }
+}
 {% else %}
 set selected_installation {{ hash }}
 {% endif %}
