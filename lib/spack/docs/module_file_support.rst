@@ -347,6 +347,31 @@ Using the ``conflict`` key under a spec pattern, you can prevent two incompatibl
 This prevents loading any other version of the same package (via ``{name}``) or ``intel/14.0.1``.
 For Lmod, and for Environment Modules versions prior to 4.2, the conflict must be expressed on both module files conflicting with each other.
 
+Module aliases
+""""""""""""""
+
+Using the ``alias`` key under a spec pattern, you can define one or more module aliases pointing at the module of each matching installed spec:
+
+.. code-block:: yaml
+
+   modules:
+     default:
+       tcl:
+         mpich:
+           alias:
+           - "mpi/{name}/{version}"
+         openmpi:
+           alias:
+           - "mpi/{name}/{version}"
+
+Alias names may use the same format tokens as projections (e.g. ``{name}``, ``{version}``), which are resolved against the matching spec.
+With the above configuration, users can for instance load ``mpi/mpich/3.0.4`` whatever the projection of the corresponding ``mpich`` module is.
+Aliases are defined in a ``.modulerc`` (Tcl) or ``.modulerc.lua`` (Lua) file stored under the modulepath directory, which requires Environment Modules >= 4.3 or Lmod >= 8.4.13.
+
+If several installed specs match a spec pattern with an alias defined on it, each generated module file redefines the alias onto itself, so the alias ends up pointing at the last module file generated, and a warning is emitted for each redefinition.
+Constrain the spec pattern so that a single installation matches to avoid the ambiguity.
+A warning is also emitted when an alias shadows an existing module file or directory of the same name, or when a generated module file is shadowed by an existing alias: in both cases the module system resolves the name to the alias target.
+
 .. _customize-env-modifications:
 
 Global environment modifications
