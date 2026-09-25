@@ -579,3 +579,40 @@ def test_perform_auto_migration_not_repeated(mock_spack_instance, monkeypatch):
     # Should still be 1 - not called again
     assert mock_config._do_migrate_spack_prefix.call_count == 1
     assert config_changed2 is True  # config_changed is still True because we entered the lock
+
+
+def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
+    """Test that migrated environments are accessible via spack env list."""
+    import spack.environment.environment as ev
+
+    home_dir, base_prefix = mock_spack_instance
+    old_envs = pathlib.Path(spack.paths.old_envs_path)
+    old_envs.mkdir(parents=True)
+
+    # Create old environments with spack.yaml files
+    for name in ("test-env-1", "test-env-2"):
+        env_dir = old_envs / name
+        env_dir.mkdir()
+        (env_dir / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+
+    # Create fresh config and run migration
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.config._do_migrate_spack_prefix()
+
+    # Reload config to pick up layout scope (which may point to old environments_root if conflict)
+    # or the default new location
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    # spack env list should find the environments in the new location
+    env_names = ev.all_environment_names()
+    assert "test-env-1" in env_names
+    assert "test-env-2" in env_names
+
+    # Verify they're in the new location (copied, old location still exists)
+    new_envs = pathlib.Path(spack.config.canonicalize_path("$data_home")) / "environments"
+    assert (new_envs / "test-env-1" / "spack.yaml").exists()
+    assert (new_envs / "test-env-2" / "spack.yaml").exists()
+
+    # Old location still exists (migration copies, doesn't move)
+    assert old_envs.exists()
+    assert (old_envs / "test-env-1" / "spack.yaml").exists()
