@@ -548,6 +548,30 @@ class TestBuildGraph:
         assert dep2_hash not in graph.parent_to_child
         assert dep2_hash not in graph.child_to_parent
 
+    def test_install_package_false_keeps_requested_build_dep_of_source_build(
+        self, temporary_store: Store
+    ):
+        """app --link--> lib --build--> compiler, with app and compiler requested and
+        install_package=False. lib is built from source, so its build edge to compiler is
+        traversed, and compiler is kept as a dependency of lib."""
+        specs = create_dag(
+            nodes=["app", "lib", "compiler"],
+            edges=[("app", "lib", "link"), ("lib", "compiler", "build")],
+        )
+        graph = BuildGraph(
+            specs=[specs["app"], specs["compiler"]],
+            root_policy="auto",
+            dependencies_policy="source_only",
+            include_build_deps=False,
+            install_package=False,
+            install_deps=True,
+            store=temporary_store,
+        )
+        lib, compiler = specs["lib"].dag_hash(), specs["compiler"].dag_hash()
+        assert graph.nodes.keys() == {lib, compiler}
+        assert graph.parent_to_child[lib] == {compiler}
+        assert graph.skipped_roots == {specs["app"].dag_hash()}
+
     def test_install_package_false_installs_requested_spec_as_dependency(
         self, temporary_store: Store
     ):

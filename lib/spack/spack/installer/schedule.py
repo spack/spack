@@ -174,7 +174,8 @@ class BuildGraph:
 
         # If we're not installing the package itself, prune the root specs too. Those that other
         # nodes depend on (e.g. a compiler in one environment group needed by the specs of
-        # another) are kept, and installed like any other dependency.
+        # another) are kept, and installed like any other dependency. This is decided after the
+        # traversal, because which build edges are traversed depends on the install policies.
         if not install_package:
             self.skipped_roots = self.roots - self.child_to_parent.keys()
             self.roots = set()
