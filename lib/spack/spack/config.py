@@ -2360,15 +2360,21 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                     tty.debug(f"Excluding view directory: {path}")
             return ignored
 
-        # All checks passed, now copy
+        # All checks passed, now copy each env via staging
         for entry in entries_to_copy:
             src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
+            staging_path = os.path.join(dst_dir, f".spack-env-{entry}-staging")
             try:
-                shutil.copytree(src_path, dst_path, ignore=ignore_views)
+                # Clean up any stale staging directory from a previous failed attempt
+                if os.path.exists(staging_path):
+                    shutil.rmtree(staging_path, ignore_errors=True)
+
+                # Copy to staging
+                shutil.copytree(src_path, staging_path, ignore=ignore_views)
 
                 # Rewrite paths in environment config files
-                yaml_files = filesystem.find(dst_path, ["*.yaml", "*.yml"], recursive=True)
+                yaml_files = filesystem.find(staging_path, ["*.yaml", "*.yml"], recursive=True)
                 for yaml_file in yaml_files:
                     processed = process_env_file_paths(yaml_file, src_path, dst_path)
                     if processed:
@@ -2377,10 +2383,16 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                         tty.debug(f"Rewrote paths in {yaml_file}")
 
                 # Add migration marker to identify this source
-                with open(os.path.join(dst_path, marker_name), "w", encoding="utf-8") as f:
+                with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
                     f.write(f"Migrated from {spack.paths.prefix}\n")
+
+                # Atomic rename to final destination
+                os.replace(staging_path, dst_path)
             except (OSError, shutil.Error) as e:
                 tty.warn(f"Failed to copy environment {entry}: {e}")
+                # Clean up staging on failure
+                if os.path.exists(staging_path):
+                    shutil.rmtree(staging_path, ignore_errors=True)
                 # Copy failed despite holding lock and passing upfront checks.
                 # Something is fundamentally wrong (lock not respected, filesystem issue, etc.).
                 # Leave everything as-is for investigation rather than potentially making it worse.
