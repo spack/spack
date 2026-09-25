@@ -366,7 +366,8 @@ class URLFetchStrategy(FetchStrategy):
     @property
     def curl(self) -> Executable:
         if not self._curl:
-            self._curl = web_util.require_curl()
+            client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+            self._curl = web_util.require_curl(client=client)
         return self._curl
 
     def source_id(self):
@@ -436,10 +437,11 @@ class URLFetchStrategy(FetchStrategy):
             url, headers={"User-Agent": web_util.SPACK_USER_AGENT, "Accept": "*/*"}
         )
 
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
         response_headers_str = None
         for attempt in range(retries):
             try:
-                with web_util.urlopen(request) as response:
+                with client.urlopen(request) as response:
                     tty.verbose(f"Fetching {url}")
                     progress = FetchProgress.from_headers(
                         response.headers, enabled=sys.stdout.isatty()
@@ -504,7 +506,8 @@ class URLFetchStrategy(FetchStrategy):
 
             timeout = self.extra_options.get("timeout")
 
-        base_args = web_util.base_curl_fetch_args(url, timeout)
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+        base_args = web_util.base_curl_fetch_args(url, timeout, client=client)
         curl_args = config_args + save_args + base_args + cookie_args
 
         # Run curl but grab the mime type from the http headers
@@ -582,7 +585,10 @@ class URLFetchStrategy(FetchStrategy):
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
         web_util.push_to_url(
-            self.archive_file, url_util.path_to_file_url(destination), keep_original=True
+            self.archive_file,
+            url_util.path_to_file_url(destination),
+            keep_original=True,
+            client=web_util.NetworkClient.from_config(spack.config.CONFIG),
         )
 
     @_needs_stage
@@ -658,7 +664,7 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
     def __init__(self, *, url: str, checksum: Optional[str] = None, **kwargs):
         super().__init__(url=url, checksum=checksum, **kwargs)
 
-        self._urlopen = kwargs.get("_urlopen", spack.oci.opener.urlopen)
+        self._urlopen: Optional[spack.oci.opener.OpenType] = kwargs.get("_urlopen")
 
     @_needs_stage
     def fetch(self):
@@ -668,7 +674,10 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
             os.remove(file)
 
         try:
-            response = self._urlopen(self.url)
+            urlopen = self._urlopen or spack.oci.opener.opener_for(
+                web_util.NetworkClient.from_config(spack.config.CONFIG)
+            )
+            response = urlopen(self.url)
             tty.verbose(f"Fetching {self.url}")
             with open(file, "wb") as f:
                 shutil.copyfileobj(response, f)

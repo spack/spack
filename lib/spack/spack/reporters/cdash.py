@@ -89,9 +89,10 @@ class CDash(Reporter):
     CDash instance hosted at ``https://example.com/cdash``.
     """
 
-    def __init__(self, configuration: CDashConfiguration):
+    def __init__(self, configuration: CDashConfiguration, *, urlopen: web_util.OpenType):
         #: Set to False if any error occurs when building the CDash report
         self.success = True
+        self._urlopen = urlopen
 
         # Jinja2 expects `/` path separators
         self.template_dir = "reports/cdash"
@@ -460,7 +461,7 @@ class CDash(Reporter):
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
             try:
-                with web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                with self._urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
                     if self.current_package_name not in self.buildIds:
                         resp_value = io.TextIOWrapper(response, encoding="utf-8").read()
                         match = self.buildid_regexp.search(resp_value)

@@ -63,8 +63,6 @@ spack_compiler = spack.main.SpackCommand("compiler")
 
 PushResult = namedtuple("PushResult", "success url")
 
-urlopen = web_util.urlopen  # alias for mocking in tests
-
 
 def get_git_root(path: str) -> Optional[str]:
     git = spack.util.git.git(required=True)
@@ -357,7 +355,8 @@ def check_for_broken_specs(pipeline_specs: List[spack.spec.Spec], broken_specs_u
         tty.msg("Cannot use an http(s) url for broken specs, ignoring")
         return False
 
-    broken_spec_urls = web_util.list_url(broken_specs_url)
+    client = web_util.NetworkClient.from_config(cfg.CONFIG)
+    broken_spec_urls = web_util.list_url(broken_specs_url, client=client)
 
     if broken_spec_urls is None:
         return False
@@ -379,7 +378,7 @@ def check_for_broken_specs(pipeline_specs: List[spack.spec.Spec], broken_specs_u
 def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     """Gather pipeline options from cli args, spack environment, and
     os environment variables"""
-    pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+    pipeline_mirrors = spack.mirrors.mirror.MirrorCollection.from_config(cfg.CONFIG, binary=True)
     if "buildcache-destination" not in pipeline_mirrors:
         raise SpackCIError("spack ci generate requires a mirror named 'buildcache-destination'")
 
@@ -399,7 +398,8 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
 
     cdash_config = cfg.CONFIG.get("cdash")
     if "build-group" in cdash_config:
-        options.cdash_handler = CDashHandler(cdash_config)
+        client = web_util.NetworkClient.from_config(cfg.CONFIG)
+        options.cdash_handler = CDashHandler(cdash_config, urlopen=client.urlopen)
 
     dependent_depth = os.environ.get("SPACK_PRUNE_UNTOUCHED_DEPENDENT_DEPTH", None)
     if dependent_depth is not None:
@@ -563,7 +563,8 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         if broken and not rebuild_everything:
             raise SpackCIError("spack ci generate failed broken specs check")
 
-    spack_ci_config = SpackCIConfig(ci_config)
+    client = web_util.NetworkClient.from_config(cfg.CONFIG)
+    spack_ci_config = SpackCIConfig(ci_config, urlopen=client.urlopen)
     spack_ci_config.init_pipeline_jobs(pipeline)
 
     # Format the pipeline using the formatter specified in the configs
@@ -716,13 +717,14 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     )
 
 
-def download_and_extract_artifacts(url: str, work_dir: str) -> str:
+def download_and_extract_artifacts(url: str, work_dir: str, *, urlopen: web_util.OpenType) -> str:
     """Look for gitlab artifacts.zip at the given url, and attempt to download
     and extract the contents into the given work_dir
 
     Arguments:
         url: Complete url to artifacts.zip file
         work_dir: Path to destination where artifacts should be extracted
+        urlopen: function to open the url with
 
     Returns:
         Artifacts root path relative to the archive root
@@ -897,11 +899,14 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
         raise SpackError(f"Cannot run reproducer in non-empty working dir:\n  {work_dir}")
 
     platform_script_ext = "ps1" if IS_WINDOWS else "sh"
-    artifact_root = download_and_extract_artifacts(url, work_dir)
+    client = web_util.NetworkClient.from_config(cfg.CONFIG)
+    artifact_root = download_and_extract_artifacts(url, work_dir, urlopen=client.urlopen)
 
     gpg_path = None
     if gpg_url:
-        gpg_path = web_util.fetch_url_text(gpg_url, dest_dir=os.path.join(work_dir, "_pgp"))
+        gpg_path = web_util.fetch_url_text(
+            gpg_url, dest_dir=os.path.join(work_dir, "_pgp"), client=client
+        )
         rel_gpg_path = gpg_path.replace(work_dir, "").lstrip(os.path.sep)
 
     lock_file = fs.find(work_dir, "spack.lock")[0]
@@ -1312,7 +1317,13 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         try:
             with open(file_path, "w", encoding="utf-8") as fd:
                 syaml.dump(broken_spec_details, fd)
-            web_util.push_to_url(file_path, url, keep_original=False, content_type="text/plain")
+            web_util.push_to_url(
+                file_path,
+                url,
+                keep_original=False,
+                content_type="text/plain",
+                client=web_util.NetworkClient.from_config(cfg.CONFIG),
+            )
         except Exception as err:
             # If there is an S3 error (e.g., access denied or connection
             # error), the first non boto-specific class in the exception
@@ -1326,7 +1337,8 @@ def read_broken_spec(broken_spec_url):
     object.
     """
     try:
-        broken_spec_contents = web_util.read_text(broken_spec_url)
+        client = web_util.NetworkClient.from_config(cfg.CONFIG)
+        broken_spec_contents = web_util.read_text(broken_spec_url, client=client)
     except web_util.SpackWebError:
         tty.warn(f"Unable to read broken spec from {broken_spec_url}")
         return None
