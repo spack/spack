@@ -596,7 +596,9 @@ def test_config_migration_skips_unparseable_yaml(mock_spack_instance, monkeypatc
     old_config.mkdir(parents=True, exist_ok=True)
 
     # Create a valid config file
-    (old_config / "packages.yaml").write_text("packages:\n  all:\n    target: [x86_64]\n", encoding="utf-8")
+    (old_config / "packages.yaml").write_text(
+        "packages:\n  all:\n    target: [x86_64]\n", encoding="utf-8"
+    )
 
     # Create an unparseable YAML file (like in a backup directory)
     backup_dir = old_config / "backup"

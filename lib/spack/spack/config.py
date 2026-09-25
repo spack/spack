@@ -2150,7 +2150,7 @@ def _do_migrate_user_config(
                 else:
                     shutil.copy2(old_path, staging_file_path)
             except (syaml.SpackYAMLError, OSError) as e:
-                # Skip files that can't be parsed or read (e.g., backup directories with broken YAML)
+                # Skip files that can't be parsed or read (e.g., backup dirs with broken YAML)
                 tty.debug(f"Skipping {config_file} during migration: {e}")
                 continue
 
@@ -2461,9 +2461,7 @@ def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
 
     # Recursively check subdirectories
     for subdir in cmp.common_dirs:
-        if not _dirs_identical(
-            os.path.join(src_dir, subdir), os.path.join(dst_dir, subdir)
-        ):
+        if not _dirs_identical(os.path.join(src_dir, subdir), os.path.join(dst_dir, subdir)):
             return False
 
     return True
@@ -2484,7 +2482,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
         dst_path = os.path.join(dst_dir, entry)
         try:
             if os.path.exists(dst_path):
-                # Check if content matches (could be our prior copy or identical from another checkout)
+                # Check if content matches (prior copy or identical from another checkout)
                 if os.path.isfile(src_path) and os.path.isfile(dst_path):
                     with open(src_path, "rb") as f:
                         src_hash = spack.util.hash.b32_hash(
@@ -2504,7 +2502,8 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                     # For directories, check if trees are identical
                     if _dirs_identical(src_path, dst_path):
                         tty.debug(
-                            f"License directory {entry} already exists with matching content, skipping"
+                            f"License directory {entry} already exists with matching content, "
+                            f"skipping"
                         )
                         copied.append(entry)
                         continue
