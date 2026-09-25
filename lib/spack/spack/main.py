@@ -1060,51 +1060,7 @@ def _main(argv=None):
     cmd_name, args.command = resolve_alias(cmd_name, args.command)
 
     if cmd_name != "isolate":
-        # TODO: everything in this block should be extracted into its own method
-        # the method should actually take "x=spack.config" as a private parameter
-        # for tests, and the test should confirm that once an auto-migration is
-        # performed, that a second call to this method does not result in another
-        # call to "x._do_migrate_spack_prefix", this can be a test in layout_logic.py
-        prefix_result = {"migrated": [], "retained": []}
-        home_result = {"user_config": False, "package_repos": False}
-        config_changed = False
-
-        # Check if migration was already done when config module loaded
-        migration_done_before_cfg = spack.config._migration_done_at_module_load
-
-        # Old resources are kept in-place. In that sense "migration" refers to
-        # copying them to new locations and updating config to point to them.
-        # Because of that, if there *are not* any old resources, then we know
-        # that a migration would never have occurred, and moreover that
-        # no other concurrent spack process was migrating between the start
-        # of this spack process and this point in time.
-        # Note: `spack isolate` also writes the .migration-done file, so
-        # that running spack after `spack isolate` never triggers an auto-migration
-        has_old_resources = spack.config._has_old_prefix_resources()
-        if has_old_resources and not migration_done_before_cfg:
-            lock_path = spack.config._migration_lock_path()
-            lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-            try:
-                # Note: this lockfile is in the spack prefix. New checkouts
-                # of spack will not generate this lock because they will not
-                # have any old resources.
-                with spack.util.lock.WriteTransaction(lock):
-                    migration_already_done = os.path.exists(
-                        spack.config._migration_done_marker_path()
-                    )
-                    if not migration_already_done:
-                        prefix_result = spack.config._do_migrate_spack_prefix()
-                    config_changed = True
-            except OSError as e:
-                tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
-            except spack.util.lock.LockError as e:
-                tty.die(f"Timed out waiting for migration lock: {e}")
-
-        # Migrate ~/.spack home directory (user config and package repos)
-        # This is separate and runs even on fresh clones with no old $spack data
-        home_result = spack.config._do_migrate_home()
-        if home_result["user_config"] or home_result["package_repos"]:
-            config_changed = True
+        prefix_result, home_result, config_changed = _perform_auto_migration(spack.config)
 
         # Reload config if migration happened (by us or another process while we waited for lock)
         if config_changed:
@@ -1190,6 +1146,62 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
         return 0
     else:
         return _invoke_command(command, parser, args, unknown)
+
+
+def _perform_auto_migration(_config_module=None):
+    """Perform auto-migration of spack prefix and home directory resources.
+
+    Args:
+        _config_module: Config module to use (for testing). Defaults to spack.config.
+
+    Returns:
+        Tuple of (prefix_result, home_result, config_changed)
+    """
+    if _config_module is None:
+        _config_module = spack.config
+
+    prefix_result = {"migrated": [], "retained": []}
+    home_result = {"user_config": False, "package_repos": False}
+    config_changed = False
+
+    # Check if migration was already done when config module loaded
+    migration_done_before_cfg = _config_module._migration_done_at_module_load
+
+    # Old resources are kept in-place. In that sense "migration" refers to
+    # copying them to new locations and updating config to point to them.
+    # Because of that, if there *are not* any old resources, then we know
+    # that a migration would never have occurred, and moreover that
+    # no other concurrent spack process was migrating between the start
+    # of this spack process and this point in time.
+    # Note: `spack isolate` also writes the .migration-done file, so
+    # that running spack after `spack isolate` never triggers an auto-migration
+    has_old_resources = _config_module._has_old_prefix_resources()
+    if has_old_resources and not migration_done_before_cfg:
+        lock_path = _config_module._migration_lock_path()
+        lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+        try:
+            # Note: this lockfile is in the spack prefix. New checkouts
+            # of spack will not generate this lock because they will not
+            # have any old resources.
+            with spack.util.lock.WriteTransaction(lock):
+                migration_already_done = os.path.exists(
+                    _config_module._migration_done_marker_path()
+                )
+                if not migration_already_done:
+                    prefix_result = _config_module._do_migrate_spack_prefix()
+                config_changed = True
+        except OSError as e:
+            tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
+        except spack.util.lock.LockError as e:
+            tty.die(f"Timed out waiting for migration lock: {e}")
+
+    # Migrate ~/.spack home directory (user config and package repos)
+    # This is separate and runs even on fresh clones with no old $spack data
+    home_result = _config_module._do_migrate_home()
+    if home_result["user_config"] or home_result["package_repos"]:
+        config_changed = True
+
+    return prefix_result, home_result, config_changed
 
 
 def main(argv=None):

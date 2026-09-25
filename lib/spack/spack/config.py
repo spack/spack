@@ -1786,41 +1786,6 @@ def _detect_old_resources() -> Dict[str, bool]:
     }
 
 
-# TODO: If this is only called by main.py, it may now be redundant: main.py already
-# checks for .migration-done and old resources. And the `spack isolate` command
-# writes .migration-done for example so we don't need special-case logic.
-# In other words, in the context it is being executed in, it should always
-# return True (in particular if migration_done_after_lock is False)
-# Actually, the other place that calls it is in unit tests for now I think the
-# right thing to do is to remove that comment and the associated assertion
-# and this function
-def should_auto_migrate() -> bool:
-    """Check if auto-migration should be performed.
-
-    Returns False if:
-    - New-style isolate scope exists (etc/spack/isolate/include.yaml)
-    - Layout scope already exists (migration already done)
-    - No old resources to migrate
-    - Spack instance is not writable
-    """
-    # If new-style isolate exists, don't auto-migrate
-    isolate_include = os.path.join(_isolate_scope_path(), "include.yaml")
-    if os.path.exists(isolate_include):
-        return False
-
-    # If layout scope already exists, already migrated
-    if _has_layout_scope():
-        return False
-
-    # Check if Spack instance is writable
-    if not _is_spack_writable():
-        return False
-
-    # If old resources exist, we should migrate
-    old_resources = _detect_old_resources()
-    return any(old_resources.values())
-
-
 class Index:
     """Represents a list index in a YAML path."""
 
