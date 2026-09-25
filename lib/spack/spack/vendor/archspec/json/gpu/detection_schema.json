@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Schema for GPU detection data: PCI vendor IDs and GPU PCI class codes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vendors",
+    "pci_classes"
+  ],
+  "properties": {
+    "vendors": {
+      "description": "Mapping from PCI vendor IDs to vendor names",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^0x[0-9a-f]{4}$": {
+          "type": "string"
+        }
+      }
+    },
+    "pci_classes": {
+      "description": "PCI class codes that identify GPU devices",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^0x[0-9a-f]{6}$"
+      }
+    }
+  }
+}
