@@ -1132,13 +1132,15 @@ class TestTcl:
         module_file_o = modulefile_filenames("tcl", spec_o)[0]
         with open(module_file_o, encoding="utf-8") as f:
             content_o = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        # single installation for dependency, no hash variant defined
+        # dependency is pinned by its hash variant even if it has a single installation
         assert (
             len(
                 [
                     x
                     for x in content_o
-                    if x == "depends-on callpath/1.0-gcc-10.2.1 build_system=generic"
+                    if re.match(
+                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}$", x
+                    )
                 ]
             )
             == 1
@@ -1162,7 +1164,7 @@ class TestTcl:
         assert len([x for x in content_a if "setenv FOOBAR " in x]) == 1
         assert len([x for x in content_b if "if {$selected_installation eq {" in x]) == 2
         assert len([x for x in content_b if "depends-on " in x]) == 7
-        # check alternative installation for dependency express its hash variant to disambiguate
+        # check each installation pins its own dependency installation by its hash variant
         assert (
             len(
                 [
@@ -1190,19 +1192,12 @@ class TestTcl:
         assert len([x for x in content_b if "prepend-path -d {:} PATH " in x]) == 2
         assert len([x for x in content_b if "setenv FOOBAR " in x]) == 2
 
-        # check update of other installed package: still no hash variant defined for dependency
+        # check other installed package is not affected by the new dependency installations
         with open(module_file_o, encoding="utf-8") as f:
-            content_o = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert (
-            len(
-                [
-                    x
-                    for x in content_o
-                    if x == "depends-on callpath/1.0-gcc-10.2.1 build_system=generic"
-                ]
-            )
-            == 1
-        )
+            content_o_after = [
+                line.strip() for line in f.readlines() if not line.startswith("## ")
+            ]
+        assert content_o == content_o_after
 
         # uninstall one package, module file should persist with remaining installation
         uninstall("-y", spec_b)
@@ -1223,15 +1218,15 @@ class TestTcl:
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
         with open(module_file_a, encoding="utf-8") as f:
             content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        variant_names = "set variant_names [list a b build_system c d]"
+        variant_names = "set variant_names [list a b build_system c d hash]"
         assert len([x for x in content_a if variant_names in x]) == 1
         assert len([x for x in content_a if "set boolean_variants [list a b]" in x]) == 1
         assert len([x for x in content_a if x == "a {0 1}\\"]) == 1
         assert len([x for x in content_a if x == "b {0}\\"]) == 1
         assert len([x for x in content_a if x == "c {v1 v2}\\"]) == 1
         assert len([x for x in content_a if x == "d {v1}\\"]) == 1
-        install_a = [x for x in content_a if x.startswith("{1 0 generic v1 v1}")]
-        install_b = [x for x in content_a if x.startswith("{0 0 generic v2 v1}")]
+        install_a = [x for x in content_a if x.startswith("{1 0 generic v1 v1 ")]
+        install_b = [x for x in content_a if x.startswith("{0 0 generic v2 v1 ")]
         assert len(install_a) == 1 and len(install_b) == 1
         assert content_a.index(install_b[0]) < content_a.index(install_a[0])
 
@@ -1250,15 +1245,15 @@ class TestTcl:
         assert len([x for x in content_b if x == "cuda {0 1}\\"]) == 1
         # neutral value stands for the conditional variant on installations not defining it
         assert len([x for x in content_b if x == "cuda_arch {none}\\"]) == 1
-        assert len([x for x in content_b if x.startswith("{generic 0 none}")]) == 1
-        assert len([x for x in content_b if x.startswith("{generic 1 none}")]) == 1
+        assert len([x for x in content_b if x.startswith("{generic 0 none ")]) == 1
+        assert len([x for x in content_b if x.startswith("{generic 1 none ")]) == 1
         spec_c = "forward-multi-value@1.0 +cuda cuda_arch=11"
         install("--fake", "--add", spec_c)
         with open(module_file_a, encoding="utf-8") as f:
             content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
         assert len([x for x in content_c if x == "cuda {0 1}\\"]) == 1
         assert len([x for x in content_c if x == "cuda_arch {11 none}\\"]) == 1
-        assert len([x for x in content_c if x.startswith("{generic 1 11}")]) == 1
+        assert len([x for x in content_c if x.startswith("{generic 1 11 ")]) == 1
 
         # test boolean conditional variant
         spec_a = "conditional-variant-pkg@2.0"
@@ -1301,7 +1296,7 @@ class TestTcl:
                     for x in content
                     if re.match(
                         "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic ~version_based$",
+                        "build_system=generic ~version_based hash=\\w{7}$",
                         x,
                     )
                 ]
@@ -1315,7 +1310,8 @@ class TestTcl:
                     for x in content
                     if re.match(
                         "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic ~two_whens \\+variant_based \\+version_based$",
+                        "build_system=generic ~two_whens \\+variant_based \\+version_based "
+                        "hash=\\w{7}$",
                         x,
                     )
                 ]
@@ -1329,7 +1325,8 @@ class TestTcl:
                     for x in content
                     if re.match(
                         "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic \\+two_whens \\+variant_based \\+version_based$",
+                        "build_system=generic \\+two_whens \\+variant_based \\+version_based "
+                        "hash=\\w{7}$",
                         x,
                     )
                 ]
@@ -1372,8 +1369,8 @@ class TestTcl:
         hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
         assert len([x for x in content if hide_implicit_rule == x]) == 1
 
-        # check hash variant is defined last for the 2 folded installations having the same
-        # other variants among 3, and installations are listed sorted by their values
+        # check hash variant is defined last for the 3 folded installations, 2 of them
+        # having the same other variants, and installations are listed sorted by their values
         spec_a = "mpileaks@2.3 +debug +opt ^mpich"
         spec_b = "mpileaks@2.3 +opt +debug ^zmpi"
         spec_c = "mpileaks@2.3 ~opt +debug ^zmpi"
@@ -1394,21 +1391,64 @@ class TestTcl:
             )
             == 1
         )
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if re.match("hash {(\\w{7}|none) (\\w{7}|none) (\\w{7}|none)}", x)
-                ]
-            )
-            == 1
-        )
+        assert len([x for x in content if re.match("hash {\\w{7} \\w{7} \\w{7}}", x)]) == 1
         hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
         hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
         hash_c = spack.store.STORE.db.query_one(spec_c).dag_hash(7)
         install_a = f"{{generic 1 0 1 1 1 {hash_a}}} {hash_a}\\"
         install_b = f"{{generic 1 0 1 1 1 {hash_b}}} {hash_b}\\"
-        install_c = f"{{generic 1 0 0 1 1 none}} {hash_c}\\"
+        install_c = f"{{generic 1 0 0 1 1 {hash_c}}} {hash_c}\\"
         first, second = sorted([install_a, install_b])
         assert content.index(install_c) < content.index(first) < content.index(second)
+
+    def test_fold_variants_pinned_dependency(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Test module file of a dependent does not change when a second installation of its
+        dependency is folded in the same module file, and this dependency module file lists
+        both installations sorted by their hash variant."""
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^mpich"
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+
+        # single installation of dependency: hash variant is defined with a single value
+        dep_a = spack.store.STORE.db.query_one("callpath ^mpich")
+        module_file_dep = modulefile_filenames("tcl", "callpath ^mpich")[0]
+        with open(module_file_dep, encoding="utf-8") as f:
+            content_dep = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        hash_a = dep_a.dag_hash(7)
+        assert f"hash {{{hash_a}}}\\" in content_dep
+        depends_on_a = f"depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash={hash_a}"
+        assert depends_on_a in content_a
+
+        # install a second dependency build differing only by its own dependencies
+        install("--fake", "--add", "callpath@1.0 ^zmpi")
+        dep_b = spack.store.STORE.db.query_one("callpath ^zmpi")
+        hash_b = dep_b.dag_hash(7)
+        with open(module_file_dep, encoding="utf-8") as f:
+            content_dep = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        assert f"hash {{{' '.join(sorted([hash_a, hash_b]))}}}\\" in content_dep
+        install_a = f"{{generic {hash_a}}} {hash_a}\\"
+        install_b = f"{{generic {hash_b}}} {hash_b}\\"
+        first, second = sorted([install_a, install_b])
+        assert content_dep.index(first) < content_dep.index(second)
+
+        # dependent module file is unchanged when regenerated
+        writer = writer_cls.from_spec(spack.store.STORE.db.query_one(spec_a), "default", True)
+        writer.write(overwrite=True)
+        with open(module_file_a, encoding="utf-8") as f:
+            content_a_after = [
+                line.strip() for line in f.readlines() if not line.startswith("## ")
+            ]
+        assert content_a == content_a_after
+
+    def test_no_hash_variant_with_hash_in_projection(self, factory, module_configuration):
+        """Test hash variant is not defined when the module file name includes the hash."""
+        module_configuration("fold_variants_hash_projection")
+        writer, spec = factory("mpileaks")
+        assert spec.dag_hash(7) in writer.layout.use_name
+        assert "hash" not in writer.conf.variants
+        assert writer.conf.variant_values == "generic 0 0 0 1 1"
