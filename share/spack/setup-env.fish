@@ -180,33 +180,57 @@ end
 
 function get_sp_flags -d "return leading flags"
     #
-    # Accumulate initial flags for main spack command. NOTE: Sets the external
-    # array: `__sp_remaining_args` containing all unprocessed arguments.
+    # Accumulate initial flags for main spack command, stopping at the first
+    # argument that is not a flag (the subcommand). Flags that take a
+    # required value (e.g. -C DIR, --config-scope DIR) consume the value
+    # too, so it isn't mistaken for the subcommand.
     #
+    # NOTE: Sets the external variables: `__sp_remaining_args` (all
+    # unprocessed arguments) and `__sp_early_return` (set when a flag that
+    # short-circuits further parsing, e.g. -h or --version, was seen).
+    #
+
+    set -eg __sp_early_return
 
     # initialize argument counter
     set -l i 1
+    set -l n (count $argv)
 
-    # iterate over elements (`elt`) in `argv` array
-    for elt in $argv
+    while test $i -le $n
+        set -l elt $argv[$i]
 
         # match element `elt` of `argv` array to check if it has a leading dash
-        if echo $elt | string match -r -q "^-"
-            # by echoing the current `elt`, the calling stream accumulates list
-            # of valid flags. NOTE that this can also be done by adding to an
-            # array, but fish functions can only return integers, so this is the
-            # most elegant solution.
-            echo $elt
-        else
+        if not echo $elt | string match -r -q "^-"
             # bash compatibility: stop when the match first fails. Upon failure,
             # we pack the remainder of `argv` into a global `__sp_remaining_args`
-            # array (`i` tracks the index of the next element).
+            # array (`i` tracks the index of the current element).
             set __sp_remaining_args (stream_args $argv[$i..-1])
             return
         end
 
+        switch $elt
+            case --color --config --config-scope --env --env-dir --print-shell-vars --profile-file --sorted-profile --lines -c -C -e -D
+                # flags that take a required value: echo both the flag and
+                # its value, and skip over the value below
+                echo $elt
+                if test $i -lt $n
+                    set i (math $i+1)
+                    echo $argv[$i]
+                end
+            case -h -H -V --help --all-help --version
+                # flags that short-circuit further parsing
+                set -g __sp_early_return 1
+                echo $elt
+            case '*'
+                # by echoing the current `elt`, the calling stream accumulates
+                # list of valid flags. NOTE that this can also be done by
+                # adding to an array, but fish functions can only return
+                # integers, so this is the most elegant solution.
+                echo $elt
+        end
+
         # increment argument counter: used in place of bash's `shift` command
-        set -l i (math $i+1)
+        set i (math $i+1)
 
     end
 
@@ -224,24 +248,13 @@ end
 
 function check_sp_flags -d "check spack flags for h/V flags"
     #
-    # Check if inputs contain h or V flags.
+    # Return true if `get_sp_flags` saw a flag that short-circuits further
+    # parsing (-h, -H, -V, --help, --all-help, --version). Unlike the
+    # previous substring-based check, this can't be fooled by an `h` or `V`
+    # appearing inside a flag's value (e.g. `--env-dir /home/user`).
     #
 
-    # combine argument array into single string (space separated), to be passed
-    # to regular expression matching (`string match -r`)
-    set -l _a "$argv"
-
-    # skip if called with blank input. Notes: [1] (cf. EOF)
-    if test -n "$_a"
-        if echo $_a | string match -r -q ".*h.*"
-            return 0
-        end
-        if echo $_a | string match -r -q ".*V.*"
-            return 0
-        end
-    end
-
-    return 1
+    set -q __sp_early_return
 end
 
 
