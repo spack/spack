@@ -47,3 +47,17 @@ def host_variants() -> Dict[str, List[str]]:
         if gpu.name not in values:
             values.append(gpu.name)
     return result
+
+
+def summary() -> str:
+    """Returns a short, human readable description of the detected GPU defaults."""
+    parts = []
+    for gpu in host():
+        variant_name = VARIANT_BY_VENDOR.get(gpu.vendor)
+        if variant_name is None or not gpu.name:
+            continue
+        label = f"{variant_name}={gpu.name}"
+        if gpu.brand_string:
+            label += f" ({gpu.brand_string})"
+        parts.append(label)
+    return ", ".join(parts)

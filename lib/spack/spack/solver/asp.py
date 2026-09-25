@@ -1966,6 +1966,10 @@ class SpackSolverSetup:
                 if not all(d.multi for d in variant_defs):
                     break
 
+        # DEMO: tell the user which GPUs were used, only for packages they asked for
+        if emitted and pkg_name in getattr(self, "_root_names", set()):
+            tty.msg(f"{pkg_name}: using host GPU defaults: {spack.gpus.summary()}")
+
     def target_preferences(self):
         key_fn = spack.package_prefs.PackagePrefs(
             "all", "target", configuration=self.context.config
@@ -2541,6 +2545,8 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
+        # DEMO: names of the root specs, used to restrict the host GPU notice to roots
+        self._root_names = {s.name for s in specs if s.name}
 
         self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
