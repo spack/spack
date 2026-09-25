@@ -1191,7 +1191,7 @@ def interactive_version_filter(
             version_with_url = [
                 colorize(
                     f"{VERSION_COLOR}{str(v):{max_len}}@.  {url_dict[v]}"
-                    f"{'  @K{# NOTE: change of URL}' if v in url_changes else ''}"
+                    f"{'  @#{# NOTE: change of URL}' if v in url_changes else ''}"
                 )
                 for v in sorted_and_filtered
             ]
