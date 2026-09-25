@@ -79,6 +79,9 @@ class ColorParseError(Exception):
         super().__init__(message)
 
 
+_RUNNING_IN_CI = os.environ.get("CI", "").lower() in ("true", "1")
+
+
 # Text styles for ansi codes
 styles = {"*": "1", "#": "2", "_": "4", None: "0"}  # bold  # faint/dimmed  # underline  # plain
 
@@ -130,7 +133,8 @@ class ColorsActive:
     WHITE_BRIGHT = "\033[0;97m"
 
     BOLD = "\033[1m"
-    FAINT = "\033[2m"
+    # Faint does not work in some CI log viewers, fall back to bright black there
+    FAINT = "\033[2m" if not _RUNNING_IN_CI else "\033[90m"
     UNDERLINE = "\033[4m"
 
     RESET = "\033[0m"
@@ -334,8 +338,15 @@ def colorize(
             )
 
         color_number = colors.get(color_code, "")
+        style_number = styles[style]
+        if _RUNNING_IN_CI and style == "#":
+            # Faint does not work in some CI log viewers, fall back to bright black there
+            style_number = str(colors["K"])
+            # An explicit default foreground color would cancel it
+            if color_code == "d":
+                color_number = ""
         semi = ";" if color_number else ""
-        ansi_code = _escape(f"{styles[style]}{semi}{color_number}", color, enclose, zsh)
+        ansi_code = _escape(f"{style_number}{semi}{color_number}", color, enclose, zsh)
         if text:
             # must be here, not in the final return: top-level @@ is already handled by
             # the regex, and its @-results could form new @@ pairs.
