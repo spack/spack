@@ -451,7 +451,7 @@ def _fake_request(probes: List[Any], result: Optional[str] = None):
     )
 
 
-def test_the_store_is_probed_once_for_all_the_sources(fake_bootstrap_type):
+def test_the_store_is_probed_once_for_all_the_sources(fake_bootstrap_type, temporary_store):
     """The store does not depend on the source, so it is queried once, before the loop."""
     probes: List[Any] = []
     tried: List[str] = []
@@ -466,7 +466,7 @@ def test_the_store_is_probed_once_for_all_the_sources(fake_bootstrap_type):
     assert tried == ["src0", "src1", "src2"]
 
 
-def test_software_in_the_store_skips_every_source(fake_bootstrap_type):
+def test_software_in_the_store_skips_every_source(fake_bootstrap_type, temporary_store):
     """When the probe finds the software, no source is tried."""
     probes: List[Any] = []
     tried: List[str] = []
@@ -480,7 +480,7 @@ def test_software_in_the_store_skips_every_source(fake_bootstrap_type):
     assert tried == []
 
 
-def test_the_first_successful_source_wins(fake_bootstrap_type):
+def test_the_first_successful_source_wins(fake_bootstrap_type, temporary_store):
     probes: List[Any] = []
     tried: List[str] = []
     sources = _fake_sources(tried, RuntimeError("no"), "from src1", "from src2")
@@ -493,7 +493,7 @@ def test_the_first_successful_source_wins(fake_bootstrap_type):
     assert tried == ["src0", "src1"]
 
 
-def test_every_source_failure_is_reported(fake_bootstrap_type):
+def test_every_source_failure_is_reported(fake_bootstrap_type, temporary_store):
     """Tests that the message includes the name and the failure of every source."""
     probes: List[Any] = []
     tried: List[str] = []
@@ -509,7 +509,7 @@ def test_every_source_failure_is_reported(fake_bootstrap_type):
         assert expected in message
 
 
-def test_sources_that_provide_nothing_are_reported_as_such(fake_bootstrap_type):
+def test_sources_that_provide_nothing_are_reported_as_such(fake_bootstrap_type, temporary_store):
     """Tests the message when every source returns None, without raising."""
     probes: List[Any] = []
     tried: List[str] = []
@@ -523,7 +523,7 @@ def test_sources_that_provide_nothing_are_reported_as_such(fake_bootstrap_type):
     assert tried == ["src0", "src1"]
 
 
-def test_no_sources_to_try_is_reported_as_such(fake_bootstrap_type):
+def test_no_sources_to_try_is_reported_as_such(fake_bootstrap_type, temporary_store):
     """Tests the message when the list of sources is empty."""
     probes: List[Any] = []
 
@@ -681,7 +681,9 @@ def backtrace_flags(monkeypatch):
     return _set
 
 
-def test_source_failures_point_at_the_backtrace_flag(fake_bootstrap_type, backtrace_flags):
+def test_source_failures_point_at_the_backtrace_flag(
+    fake_bootstrap_type, temporary_store, backtrace_flags
+):
     """Tests that by default the failures are reported without their tracebacks."""
     tried: List[str] = []
     sources = _fake_sources(tried, RuntimeError("boom"))
@@ -699,7 +701,7 @@ def test_source_failures_point_at_the_backtrace_flag(fake_bootstrap_type, backtr
 
 @pytest.mark.parametrize("flag", ["debug", "SHOW_BACKTRACE"])
 def test_source_failures_include_their_traceback_when_the_flag_is_set(
-    fake_bootstrap_type, backtrace_flags, flag
+    fake_bootstrap_type, temporary_store, backtrace_flags, flag
 ):
     """Tests that either flag turns the tracebacks on, and the hint to enable them off."""
     backtrace_flags(**{flag: True})
