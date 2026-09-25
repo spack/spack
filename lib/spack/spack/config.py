@@ -2018,8 +2018,12 @@ class ConfigPath:
 
         return path_elements
 
+    # Many methods repeatedly parse the same config values: cache results from few of them
+    @functools.lru_cache(16)
     @staticmethod
-    def process(path):
+    def _process(path: str) -> tuple[str]:
+        """Memoized low-level method to parse and validate a config path.
+        """
         result = []
         quote = "['\"]"
         seen_override_in_path = False
@@ -2061,8 +2065,8 @@ class ConfigPath:
 
             result.append(element)
 
-        return result
-
+        # Since result is memoized, result must be immutable
+        return tuple(result)
 
 def process_config_path(path: str) -> List[str]:
     """Process a path argument to config.set() that may contain overrides (``::`` or
@@ -2093,7 +2097,7 @@ def process_config_path(path: str) -> List[str]:
     to ``syaml_str`` (if treating the final element as a value, the caller
     should not parse it in this case).
     """
-    return ConfigPath.process(path)
+    return list(ConfigPath._process(path))
 
 
 def _update_in_memory(data: YamlConfigDict, section: str) -> bool:
