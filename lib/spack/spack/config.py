@@ -1802,9 +1802,40 @@ def walk_yaml_for_paths(
     key_path: Optional[List[Union[str, Index]]] = None,
     in_include: bool = False,
 ) -> List[Tuple[List[Union[str, Index]], str, str, bool]]:
-    """Walk YAML data and find string values that exist as filesystem paths."""
+    """Walk YAML data and find string values that exist as filesystem paths.
+
+    Only checks strings under known path-containing keys to avoid false positives
+    (e.g., spec strings that happen to match directory names).
+    """
     if key_path is None:
         key_path = []
+
+    # Keys whose string values should be treated as paths
+    PATH_KEYS = {
+        "include",
+        "build_stage",
+        "test_stage",
+        "source_cache",
+        "misc_cache",
+        "license_dir",
+        "template_dirs",
+        "environments_root",
+        "gpg_path",
+        "gpg_keys_path",
+        "root",
+        "prefix",
+        "path",
+        "dev_path",
+        "install_tree",
+        "prepend_path",
+        "append_path",
+        "remove_path",
+        "repos",
+        "additional_external_search_paths",
+        "ccache",
+        "concretization_cache",
+        "cache",
+    }
 
     results = []
 
@@ -1819,11 +1850,20 @@ def walk_yaml_for_paths(
                 )
                 results.extend(nested)
             elif isinstance(value, str):
-                abs_path = resolve_and_check_path(value, config_file_dir)
-                if abs_path:
-                    results.append((key_path + [key], value, abs_path, child_in_include))
+                # Only treat as path if parent key is in PATH_KEYS
+                if key in PATH_KEYS:
+                    abs_path = resolve_and_check_path(value, config_file_dir)
+                    if abs_path:
+                        results.append((key_path + [key], value, abs_path, child_in_include))
 
     elif isinstance(data, list):
+        # For list items, check if the parent key (last non-Index in key_path) is in PATH_KEYS
+        parent_key = None
+        for elem in reversed(key_path):
+            if not isinstance(elem, Index):
+                parent_key = elem
+                break
+
         for idx, item in enumerate(data):
             if isinstance(item, (dict, list)):
                 nested = walk_yaml_for_paths(
@@ -1831,9 +1871,11 @@ def walk_yaml_for_paths(
                 )
                 results.extend(nested)
             elif isinstance(item, str):
-                abs_path = resolve_and_check_path(item, config_file_dir)
-                if abs_path:
-                    results.append((key_path + [Index(idx)], item, abs_path, in_include))
+                # Only treat list item as path if parent key is in PATH_KEYS
+                if parent_key in PATH_KEYS:
+                    abs_path = resolve_and_check_path(item, config_file_dir)
+                    if abs_path:
+                        results.append((key_path + [Index(idx)], item, abs_path, in_include))
 
     return results
 
