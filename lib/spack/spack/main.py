@@ -1190,9 +1190,10 @@ def _perform_auto_migration(_config_module=None):
                 if not migration_already_done:
                     prefix_result = _config_module._do_migrate_spack_prefix()
                 config_changed = True
-        except OSError as e:
+        except spack.util.lock.LockPermissionError as e:
+            # Read-only prefix: skip migration
             tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
-        except spack.util.lock.LockError as e:
+        except spack.util.lock.LockTimeoutError as e:
             tty.die(f"Timed out waiting for migration lock: {e}")
 
     # Migrate ~/.spack home directory (user config and package repos)
