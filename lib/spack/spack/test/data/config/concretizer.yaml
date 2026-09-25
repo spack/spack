@@ -3,6 +3,8 @@ concretizer:
   targets:
     granularity: microarchitectures
     host_compatible: false
+  gpus:
+    detect: false
 
   duplicates:
     strategy: minimal

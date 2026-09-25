@@ -30,6 +30,12 @@ concretizer:
     # instance concretize with target "icelake" while running on "haswell").
     # If "true" only allow targets that are compatible with the host.
     host_compatible: true
+  # Options that control GPU detection on the host. If "detect" is true, GPUs found on the
+  # host provide default values for GPU architecture variants (e.g. cuda_arch, amdgpu_target)
+  # when those variants are not set explicitly. Values on the command line or in
+  # packages.yaml take precedence over detected ones.
+  gpus:
+    detect: true
   # When "true" concretize root specs of environments together, so that each unique
   # package in an environment corresponds to one concrete spec. This ensures
   # environments can always be activated. When "false" perform concretization separately
