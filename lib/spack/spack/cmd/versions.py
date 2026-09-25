@@ -4,7 +4,6 @@
 
 import argparse
 import sys
-from typing import Dict
 
 import spack.repo
 import spack.spec
@@ -35,12 +34,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["package", "jobs"])
 
 
-def versions(parser: argparse.ArgumentParser, args: Dict):
+def versions(parser, args):
     spec = spack.spec.Spec(args.package)
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
-    safe_versions = pkg.versions
+    safe_versions = pkg.all_versions()
 
     if not (args.remote or args.new):
         if sys.stdout.isatty():

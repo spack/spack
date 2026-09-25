@@ -5,7 +5,6 @@
 import argparse
 import urllib.parse
 from collections import defaultdict
-from typing import Dict
 
 import spack.fetch_strategy as fs
 import spack.repo
@@ -174,7 +173,7 @@ def url_list(args):
     return len(urls)
 
 
-def url_summary(args: Dict):
+def url_summary(args):
     # Collect statistics on how many URLs were correctly parsed
     total_urls = 0
     correct_names = 0

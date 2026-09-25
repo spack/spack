@@ -575,7 +575,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     versions: Dict[StandardVersion, Dict[str, Any]]
     #: Class level dictionary populated by :func:`~spack.directives.version` directives.
     #: Added in package API v2.6 to support conditional versions.
-    when_versions: Dict[spack.spec.Spec, Dict[StandardVersion, VersionDefinition]]
+    when_versions: Dict[spack.spec.Spec, Dict[ConcreteVersion, VersionDefinition]]
     #: Class level dictionary populated by :func:`~spack.directives.resource` directives
     resources: Dict[spack.spec.Spec, List[Resource]]
     #: Class level dictionary populated by :func:`~spack.directives.depends_on` and
@@ -1129,7 +1129,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         self._resolve_git_provenance(self.spec)
 
-    def all_urls_for_version(self, version: ConcreteVersion) -> List[str]:
+    def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
 
@@ -1143,8 +1143,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _implement_all_urls_for_version(
         self,
-        version: Union[str, ConcreteVersion],
-        custom_url_for_version: Optional[Callable[[ConcreteVersion], Optional[str]]] = None,
+        version: Union[str, StandardVersion],
+        custom_url_for_version: Optional[Callable[[StandardVersion], Optional[str]]] = None,
     ) -> List[str]:
         version = StandardVersion.from_string(version) if isinstance(version, str) else version
 
@@ -2800,7 +2800,7 @@ def _for_package_version(pkg, version=None):
     raise fs.InvalidArgsError(pkg, version, **args)
 
 
-def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -> bool:
+def deprecated_version(pkg: PackageBase, version: Union[str, ConcreteVersion]) -> bool:
     """Return True iff the version is deprecated.
 
     Arguments:
@@ -2818,9 +2818,7 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
     return any(version_spec.satisfies(constraint) for constraint in pkg.deprecations)
 
 
-def preferred_version(
-    pkg: Union[PackageBase, Type[PackageBase]],
-) -> Union[StandardVersion, GitVersion]:
+def preferred_version(pkg: Union[PackageBase, Type[PackageBase]]) -> ConcreteVersion:
     """Returns the preferred versions of the package according to package.py.
 
     Accounts for version deprecation in the package recipe. Doesn't account for

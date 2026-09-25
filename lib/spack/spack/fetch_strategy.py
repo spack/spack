@@ -1522,12 +1522,12 @@ def check_pkg_attributes(pkg: Type["spack.package_base.PackageBase"]):
     if len(conflicts) > 1:
         raise FetcherConflict(
             "Package %s cannot specify %s together. Pick at most one."
-            % (pkg.name, comma_and(quote(conflicts)))
+            % (pkg.name, comma_and(quote(sorted(conflicts))))
         )
 
 
 def _check_version_attributes(
-    fetcher: FetchStrategy,
+    fetcher: Type[FetchStrategy],
     spec: "spack.spec.Spec",
     version_def: spack.version_def.VersionDefinition,
 ):
@@ -1547,7 +1547,7 @@ def _check_version_attributes(
         legal_attrs = [fetcher.url_attr] + list(fetcher.optional_attrs)
         raise FetcherConflict(
             "%s version '%s' has extra arguments: %s"
-            % (spec.name, spec.version, comma_and(quote(extra))),
+            % (spec.name, spec.version, comma_and(quote(sorted(extra)))),
             "Valid arguments for a %s fetcher are: \n    %s"
             % (fetcher.url_attr, comma_and(quote(legal_attrs))),
         )
@@ -1579,6 +1579,7 @@ def _from_merged_attrs(
     attrs: Dict[str, Any]
 
     if fetcher.url_attr == "url":
+        assert isinstance(version_def.version, spack.version.StandardVersion)
         mirrors = pkg.all_urls_for_version(version_def.version)
         url = mirrors[0]
         mirrors = mirrors[1:]
@@ -1677,7 +1678,8 @@ def for_package(pkg: "spack.package_base.PackageBase") -> FetchStrategy:
         if isinstance(version, spack.version.GitVersion):
             if not commit and version.is_commit:
                 commit = version.ref
-            version_meta_data = pkg.versions.get(version.std_version)
+            std_version = version.std_version
+            version_meta_data = pkg.versions.get(std_version) if std_version is not None else None
         else:
             version_meta_data = pkg.versions.get(version)
 

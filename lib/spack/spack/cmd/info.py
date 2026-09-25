@@ -577,7 +577,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         preferred = spack.package_base.preferred_version(pkg)
 
-        def get_url(version: spack.version.VersionType) -> str:
+        def get_url(version: spack.version.ConcreteVersion) -> str:
             try:
                 for when, version_def in pkg.version_definitions(version):
                     if pkg.spec.satisfies(when):
