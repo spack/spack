@@ -577,9 +577,12 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         preferred = spack.package_base.preferred_version(pkg)
 
-        def get_url(version: spack.version.VersionType) -> str:
+        def get_url(version: spack.version.ConcreteVersion) -> str:
             try:
-                return str(spack.package_base.for_package_version(pkg, version))
+                for when, version_def in pkg.version_definitions(version):
+                    if pkg.spec.satisfies(when):
+                        return str(fs._fetcher_for_version_def(pkg, version, version_def))
+                return "No URL"
             except fs.InvalidArgsError:
                 return "No URL"
 
@@ -591,13 +594,17 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         safe = []
         deprecated = []
+        url = ""
         for v in reversed(sorted(versions)):
-            if pkg.has_code:
-                url = get_url(v)
-            if spack.package_base.deprecated_version(pkg, v):
-                deprecated.append((v, url))
-            else:
-                safe.append((v, url))
+            for when, version_def in pkg.version_definitions(v):
+                if pkg.spec.satisfies(when):
+                    if pkg.has_code:
+                        url = get_url(v)
+                    if spack.package_base.deprecated_version(pkg, v):
+                        deprecated.append((v, url))
+                    else:
+                        safe.append((v, url))
+                    break
 
         for title, vers in [("Safe", safe), ("Deprecated", deprecated)]:
             color.cprint("")

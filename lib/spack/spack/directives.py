@@ -72,6 +72,7 @@ from spack.enums import (
 from spack.resource import Resource
 from spack.spec import EMPTY_SPEC
 from spack.version import StandardVersion, VersionChecksumError, VersionError
+from spack.version_def import VersionDefinition
 
 __all__ = [
     "DirectiveError",
@@ -173,7 +174,7 @@ _WHEN_STACK_CACHE: Dict[Tuple[str, ...], spack.spec.Spec] = {}
 SubmoduleCallback = Callable[[spack.package_base.PackageBase], Union[str, List[str], bool]]
 
 
-@directive(("versions", "deprecations"), supports_when=False)
+@directive(("versions", "when_versions", "deprecations"), supports_when=False)
 def version(
     ver: Union[str, int],
     # this positional argument is deprecated, use sha256=... instead
@@ -212,6 +213,8 @@ def version(
     cvs: Optional[str] = None,
     revision: Optional[str] = None,
     date: Optional[str] = None,
+    # condition defining when this version exists
+    when: WhenType = None,
 ):
     """Declare a version for a package with optional metadata for fetching its code.
 
@@ -257,15 +260,21 @@ def version(
         )
         if value is not None
     }
-    return _Version(ver, kwargs)
+    return _Version(ver, when, kwargs)
 
 
 class _Version(NamedTuple):
     ver: Union[str, int]
+    when: WhenType
     kwargs: dict
 
     def __call__(self, pkg: PackageType) -> None:
-        ver, kwargs = self
+        ver, when, kwargs = self
+
+        when_spec = _make_when_spec(when)
+        if not when_spec:
+            return
+
         if (
             (any(s in kwargs for s in spack.util.crypto.hashes) or "checksum" in kwargs)
             and hasattr(pkg, "has_code")
@@ -289,6 +298,12 @@ class _Version(NamedTuple):
             _Deprecated(
                 f"@={version}", "unspecified", "critical", labels=(LEGACY_DEPRECATION_LABEL,)
             )(pkg)
+
+        # Store a version definition for this directive invocation
+        when_versions = pkg.when_versions.setdefault(when_spec, {})
+        when_versions[version] = VersionDefinition(
+            version, precedence=pkg.num_version_definitions(), kwargs=kwargs
+        )
 
 
 @directive("conflicts")

@@ -46,12 +46,13 @@ import pathlib
 import pickle
 import re
 import warnings
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Sequence, Set, Tuple, Type
 from urllib.request import urlopen
 
 import spack.builder
 import spack.config
 import spack.enums
+import spack.fetch_strategy
 import spack.package_base
 import spack.patch
 import spack.repo
@@ -60,6 +61,7 @@ import spack.util.crypto
 import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant
+import spack.version
 from spack.util.string import plural
 
 #: Map an audit tag to a list of callables implementing checks
@@ -567,16 +569,23 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
 
 
 @package_properties
-def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
+def _ensure_all_versions_can_produce_a_fetcher(
+    pkgs: Sequence[str], error_cls: Type[Error]
+) -> List[Error]:
     """Ensure all versions in a package can produce a fetcher"""
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+
+        versions = pkg_cls.all_versions()
         try:
-            spack.package_base.check_pkg_attributes(pkg)
-            for version in pkg.versions:
-                assert spack.package_base.for_package_version(pkg, version)
+            spack.package_base.check_pkg_attributes(pkg_cls)
+            for version in versions:
+                spec = spack.spec.Spec(pkg_name)
+                spec.versions = spack.version.VersionList([version])
+                pkg = pkg_cls(spec)
+                for _, version_def in pkg.version_definitions(version):
+                    assert spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
         except Exception as e:
             error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
             details = ["{}".format(str(e))]
@@ -671,11 +680,13 @@ def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
 
         error_msg = f"Package '{pkg_name}' does not use sha256 checksum"
         details = []
-        for v, args in pkg.versions.items():
-            fetcher = spack.package_base.for_package_version(pkg, v)
-            digest, is_bad = invalid_sha256_digest(fetcher)
-            if is_bad:
-                details.append(f"{pkg_name}@{v} uses {digest}")
+        for version in pkg_cls.all_versions():
+            for _, version_def in pkg_cls.version_definitions(version):
+                pkg = pkg_cls(spack.spec.Spec(pkg_name))
+                fetcher = spack.fetch_strategy._fetcher_for_version_def(pkg, version, version_def)
+                digest, is_bad = invalid_sha256_digest(fetcher)
+                if is_bad:
+                    details.append(f"{pkg_name}@{version} uses {digest}")
 
         for _, resources in pkg.resources.items():
             for resource in resources:
