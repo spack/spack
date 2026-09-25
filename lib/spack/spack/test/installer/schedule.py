@@ -510,8 +510,8 @@ class TestBuildGraph:
             store=temporary_store,
         )
 
-        # Root is pruned because install_package=False
-        # Dependencies are pruned because they're installed
+        # The root is not installed because install_package=False, and its dependencies are
+        # pruned because they're installed
         # Result: empty graph
         assert len(graph.nodes) == 0
         assert len(graph.parent_to_child) == 0
@@ -548,36 +548,59 @@ class TestBuildGraph:
         assert dep2_hash not in graph.parent_to_child
         assert dep2_hash not in graph.child_to_parent
 
-    def test_pruning_root_node_with_install_package_false(
-        self, mock_specs: Dict[str, Spec], temporary_store: Store
+    def test_install_package_false_keeps_requested_build_dep_of_source_build(
+        self, temporary_store: Store
     ):
-        """Test that pruning a root node (no parents in the context) works correctly.
-
-        When install_package=False, root nodes are marked for pruning. This ensures
-        the pruning logic handles the boundary condition where a node has no parents.
-        """
+        """app --link--> lib --build--> compiler, with app and compiler requested and
+        install_package=False. lib is built from source, so its build edge to compiler is
+        traversed, and compiler is kept as a dependency of lib."""
+        specs = create_dag(
+            nodes=["app", "lib", "compiler"],
+            edges=[("app", "lib", "link"), ("lib", "compiler", "build")],
+        )
         graph = BuildGraph(
-            specs=[mock_specs["dep1"]],
+            specs=[specs["app"], specs["compiler"]],
             root_policy="auto",
-            dependencies_policy="auto",
+            dependencies_policy="source_only",
             include_build_deps=False,
-            install_package=False,  # Prune the root
+            install_package=False,
             install_deps=True,
             store=temporary_store,
         )
+        lib, compiler = specs["lib"].dag_hash(), specs["compiler"].dag_hash()
+        assert graph.nodes.keys() == {lib, compiler}
+        assert graph.parent_to_child[lib] == {compiler}
+        assert graph.skipped_roots == {specs["app"].dag_hash()}
 
-        dep1_hash = mock_specs["dep1"].dag_hash()
-        dep2_hash = mock_specs["dep2"].dag_hash()
-
-        # dep1 should be pruned (it's the root and install_package=False)
-        assert dep1_hash not in graph.nodes
-        # dep2 (child of dep1) should still be in the graph
-        assert dep2_hash in graph.nodes
-        # dep2 should have no parents now (its only parent was pruned)
-        assert not graph.child_to_parent.get(dep2_hash)
-        # dep1 should not appear in any mappings
-        assert dep1_hash not in graph.parent_to_child
-        assert dep1_hash not in graph.child_to_parent
+    def test_install_package_false_installs_requested_spec_as_dependency(
+        self, temporary_store: Store
+    ):
+        """app --link--> lib --link--> compiler --build--> tool, with app and compiler requested
+        and install_package=False. compiler is a dependency of lib, so it is kept in the graph, and
+        no longer a root. tool is a build dep of a requested spec with root_policy source_only."""
+        specs = create_dag(
+            nodes=["app", "lib", "compiler", "tool"],
+            edges=[
+                ("app", "lib", "link"),
+                ("lib", "compiler", "link"),
+                ("compiler", "tool", "build"),
+            ],
+        )
+        graph = BuildGraph(
+            specs=[specs["app"], specs["compiler"]],
+            root_policy="source_only",
+            dependencies_policy="auto",
+            include_build_deps=False,
+            install_package=False,
+            install_deps=True,
+            store=temporary_store,
+        )
+        lib, compiler, tool = (specs[n].dag_hash() for n in ("lib", "compiler", "tool"))
+        assert graph.nodes.keys() == {lib, compiler, tool}
+        assert graph.parent_to_child[lib] == {compiler}
+        assert graph.parent_to_child[compiler] == {tool}
+        assert graph.skipped_roots == {specs["app"].dag_hash()}
+        assert not graph.roots
 
 
 @pytest.fixture
@@ -726,6 +749,64 @@ class TestExpandBuildDeps:
         assert specs["d"].dag_hash() in pending
         # C waits on D, so it should NOT be enqueued
         assert specs["c"].dag_hash() not in pending
+
+    def test_expand_build_deps_adds_requested_spec_with_install_package_false(
+        self, temporary_store: Store
+    ):
+        """app --link--> lib --build--> compiler, where app and compiler are requested with
+        install_package=False. compiler is added after lib misses the build cache."""
+        specs = create_dag(
+            nodes=["app", "lib", "compiler"],
+            edges=[("app", "lib", "link"), ("lib", "compiler", "build")],
+        )
+        graph = BuildGraph(
+            specs=[specs["app"], specs["compiler"]],
+            root_policy="auto",
+            dependencies_policy="auto",
+            include_build_deps=False,
+            install_package=False,
+            install_deps=True,
+            store=temporary_store,
+        )
+        lib, compiler = specs["lib"].dag_hash(), specs["compiler"].dag_hash()
+        assert graph.nodes.keys() == {lib}
+
+        pending: List[str] = []
+        assert self._expand(graph, lib, pending, temporary_store.db) == [compiler]
+        assert graph.parent_to_child[lib] == {compiler}
+        assert pending == [compiler]
+
+    @pytest.mark.parametrize("to_do", ["overwrite", "mark_explicit"])
+    def test_expand_build_deps_adds_installed_dep_with_work_left(
+        self, to_do: str, temporary_store: Store
+    ):
+        """A --build--> B --build--> C, where B is installed but must be overwritten or marked
+        explicit. As when building the graph, B is added as a node instead of being considered
+        done, and only an overwrite needs B's build deps."""
+        specs = create_dag(nodes=["a", "b", "c"], edges=[("a", "b", "build"), ("b", "c", "build")])
+        a, b, c = (specs[x].dag_hash() for x in "abc")
+        install_spec_in_db(specs["b"], temporary_store)
+        graph = BuildGraph(
+            specs=[specs["a"]],
+            root_policy="auto",
+            dependencies_policy="source_only",
+            include_build_deps=False,
+            install_package=True,
+            install_deps=True,
+            store=temporary_store,
+            overwrite_set={b} if to_do == "overwrite" else None,
+            explicit_set={b} if to_do == "mark_explicit" else None,
+        )
+        assert graph.nodes.keys() == {a}
+
+        pending: List[str] = []
+        with temporary_store.db.read_transaction():
+            added = graph.expand_build_deps([a], pending, temporary_store.db, "source_only")
+        assert graph.parent_to_child[a] == {b}
+        if to_do == "overwrite":
+            assert added == [b, c] and pending == [c]
+        else:
+            assert added == [b] and pending == [b]
 
     def test_expand_build_deps_shared_dep_already_in_graph(self, temporary_store: Store):
         """A --link--> B, A --build--> C --link--> B.

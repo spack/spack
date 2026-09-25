@@ -709,7 +709,7 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r
 complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -f -a update_index
 complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -d 'regenerate buildcache index after building package(s)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -f -a 'package dependencies'
-complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies (requested specs needed by other requested specs are still pushed)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l with-build-dependencies -f -a with_build_dependencies
 complete -c spack -n '__fish_spack_using_command buildcache push' -l with-build-dependencies -d 'include build dependencies in the buildcache'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l without-build-dependencies -f -a without_build_dependencies
@@ -745,7 +745,7 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k 
 complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -f -a update_index
 complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -d 'regenerate buildcache index after building package(s)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -f -a 'package dependencies'
-complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies (requested specs needed by other requested specs are still pushed)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l with-build-dependencies -f -a with_build_dependencies
 complete -c spack -n '__fish_spack_using_command buildcache create' -l with-build-dependencies -d 'include build dependencies in the buildcache'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l without-build-dependencies -f -a without_build_dependencies
