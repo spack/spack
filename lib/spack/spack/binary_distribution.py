@@ -38,6 +38,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    TypeVar,
     Union,
     cast,
 )
@@ -108,6 +109,8 @@ from .url_buildcache import (
     get_valid_spec_file,
 )
 from .vendor.typing_extensions import TypedDict
+
+T = TypeVar("T")
 
 
 class BuildCacheDatabase(spack.database.Database):
@@ -2014,38 +2017,117 @@ def relocate_package(spec: spack.spec.Spec) -> None:
             os.unlink(install_manifest)
 
 
-def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
-    """Yield all members of tarfile that start with given prefix, and strip that prefix (including
-    symlinks)"""
-    # Including trailing /, otherwise we end up with absolute paths.
-    regex = re.compile(re.escape(prefix) + "/*")
+#: Bytes copied per write when extracting a file from a build cache tarball.
+_TARBALL_COPY_SIZE = 1024 * 1024
 
-    # Only yield members in the package prefix.
-    # Note: when a tarfile is created, relative in-prefix symlinks are
-    # expanded to matching member names of tarfile entries. So, we have
-    # to ensure that those are updated too.
-    # Absolute symlinks are copied verbatim -- relocation should take care of
-    # them.
-    for m in tar.getmembers():
-        result = regex.match(m.name)
-        if not result:
-            continue
-        m.name = m.name[result.end() :]
-        if m.linkname:
-            result = regex.match(m.linkname)
-            if result:
-                m.linkname = m.linkname[result.end() :]
-        yield m
+
+def _sanitize_member(member: tarfile.TarInfo) -> None:
+    """Reject members that could escape the extraction directory, and normalize modes.
+    Symlink targets are not restricted: absolute targets are legitimate, relocation fixes
+    them up, and nothing is ever written through a symlink (see ``_verify_parent_dir``)."""
+    if not (member.isreg() or member.isdir() or member.issym() or member.islnk()):
+        raise ValueError(f"Tarball contains unsupported member {member.name}")
+
+    # Tar names are posix paths; backslashes are separators on Windows.
+    paths = [member.name] + ([member.linkname] if member.islnk() else [])
+    for path in paths:
+        if "\\" in path or path.startswith("/") or path[1:2] == ":" or ".." in path.split("/"):
+            raise ValueError(f"Tarball contains unsafe path {path}")
+
+    # Spack tarballs only carry 0o755/0o644; other modes (setuid, private files) are dropped.
+    if member.isdir():
+        member.mode = 0o755
+    else:
+        member.mode = 0o755 if member.mode & 0o100 else 0o644
+
+
+def _verify_parent_dir(root: str, parent: str, verified: Set[str]) -> None:
+    """Refuse to write below ``root/parent`` if a component of it is a symlink created by an
+    earlier member. Verified directories are real directories that no member can replace."""
+    if not parent or parent in verified:
+        return
+    _verify_parent_dir(root, parent.rpartition("/")[0], verified)
+    if os.path.islink(os.path.join(root, parent)):
+        raise ValueError(f"Tarball writes through symlink {parent}")
+    verified.add(parent)
+
+
+def _create_with_parent(create: Callable[[], T], path: str) -> T:
+    """Call ``create``, creating the parent directory of ``path`` first if it is missing
+    (Spack <= 0.21 tarballs do not list the directories leading up to the prefix)."""
+    try:
+        return create()
+    except FileNotFoundError:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        return create()
 
 
 def extract_buildcache_tarball(tarfile_path: str, destination: str) -> None:
-    with closing(tarfile.open(tarfile_path, "r")) as tar:
-        # For consistent behavior across all supported Python versions
-        tar.extraction_filter = lambda member, path: member
-        # Remove common prefix from tarball entries and directly extract them to the install dir.
-        tar.extractall(
-            path=destination, members=_tar_strip_component(tar, prefix=_ensure_common_prefix(tar))
-        )
+    """Extract the package prefix contained in a buildcache tarball into ``destination``.
+
+    The tarball is read in a single pass into a temporary directory inside ``destination``,
+    validated, and moved into place. A tarball prepared in bad faith cannot write outside
+    ``destination`` or plant privileged files: escaping paths and special members are
+    rejected, nothing is written through or on top of an existing path, modes are
+    normalized, and ownership and timestamps are not restored.
+
+    Files are created with ``os.open`` instead of ``TarFile.extract`` so that a regular
+    file costs an open, writes and a close, like GNU tar: on network filesystems every
+    extra stat, chmod or utime per file is a round trip."""
+    fsys.mkdirp(destination)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    for optional in ("O_NOFOLLOW", "O_CLOEXEC", "O_BINARY"):
+        flags |= getattr(os, optional, 0)
+
+    with tempfile.TemporaryDirectory(dir=destination, prefix=".spack-extract-") as tmpdir:
+        # Mode bits the filesystem strips (umask, default ACLs) require a chmod afterwards.
+        os.mkdir(os.path.join(tmpdir, "probe"), 0o777)
+        stripped = 0o777 & ~os.stat(os.path.join(tmpdir, "probe")).st_mode
+        os.rmdir(os.path.join(tmpdir, "probe"))
+
+        verified: Set[str] = set()
+
+        # Seekable mode is buffered efficiently; nothing seeks back, so gzip runs once.
+        with closing(tarfile.open(tarfile_path, "r:*")) as tar:
+            for member in tar:
+                _sanitize_member(member)
+                _verify_parent_dir(tmpdir, member.name.rpartition("/")[0], verified)
+                path = os.path.join(tmpdir, member.name)
+
+                if member.isdir():
+                    _create_with_parent(lambda: os.mkdir(path, member.mode), path)
+                elif member.isreg():
+                    fd = _create_with_parent(lambda: os.open(path, flags, member.mode), path)
+                    try:
+                        source = cast(IO[bytes], tar.extractfile(member))
+                        while True:
+                            chunk = memoryview(source.read(_TARBALL_COPY_SIZE))
+                            if not chunk:
+                                break
+                            while chunk:
+                                chunk = chunk[os.write(fd, chunk) :]
+                    finally:
+                        os.close(fd)
+                elif member.issym():
+                    _create_with_parent(lambda: os.symlink(member.linkname, path), path)
+                else:
+                    _verify_parent_dir(tmpdir, member.linkname.rpartition("/")[0], verified)
+                    link_source = os.path.join(tmpdir, member.linkname)
+                    if os.path.islink(link_source):
+                        raise ValueError(f"Tarball hardlinks a symlink {member.linkname}")
+                    _create_with_parent(lambda: os.link(link_source, path), path)
+                    continue  # shares the inode of the source, which has its mode already
+
+                if member.mode & stripped and not member.issym():
+                    os.chmod(path, member.mode)
+
+            pkg_prefix = _ensure_common_prefix(tar)
+
+        pkg_dir = os.path.join(tmpdir, pkg_prefix)
+        if os.path.islink(pkg_dir) or not os.path.isdir(pkg_dir):
+            raise ValueError(f"Tarball package prefix {pkg_prefix} is not a directory")
+        for entry in os.listdir(pkg_dir):
+            fsys.rename(os.path.join(pkg_dir, entry), os.path.join(destination, entry))
 
 
 def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=timer.NULL_TIMER):
@@ -2121,7 +2203,10 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
     for member in tar.getmembers():
         stripped = member.name.rstrip("/")
         if not (
-            stripped.startswith(pkg_prefix) or member.isdir() and pkg_prefix.startswith(stripped)
+            stripped == pkg_prefix
+            or stripped.startswith(pkg_prefix + "/")
+            or member.isdir()
+            and pkg_prefix.startswith(stripped + "/")
         ):
             raise ValueError(f"Tarball contains file {stripped} outside of prefix {pkg_prefix}")
         if member.isdir() and stripped == pkg_prefix:
