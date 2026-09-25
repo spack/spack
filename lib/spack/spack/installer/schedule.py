@@ -94,17 +94,26 @@ class BuildGraph:
         be installed. Installed packages are pruned from the graph, and build dependencies are only
         included when necessary."""
         database = store.db
-        self.roots = {s.dag_hash() for s in specs}
-        self.nodes = {s.dag_hash(): s for s in specs}
+        # When only installing dependencies, the requested specs are not nodes of the graph: they
+        # only contribute their dependencies. A requested spec that is itself a dependency of
+        # another node (e.g. a compiler in one environment group needed by the specs of another)
+        # is added when reached, and installed like any other dependency.
+        self.roots = {s.dag_hash() for s in specs} if install_package else set()
+        self.nodes = {s.dag_hash(): s for s in specs} if install_package else {}
+        #: Requested specs that are installed only if another node depends on them
+        self.dependencies_only: Set[str] = (
+            set() if install_package else {s.dag_hash() for s in specs}
+        )
         self.parent_to_child: Dict[str, Set[str]] = {}
         self.child_to_parent: Dict[str, Set[str]] = {}
-        overwrite_set = overwrite_set or set()
-        explicit_set = explicit_set or set()
+        self.overwrite_set = overwrite_set or set()
+        self.explicit_set = explicit_set or set()
         self.pruned: Set[str] = set()
         self.done: Set[str] = set()
         self.force_source: Set[str] = set()
-        stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [
-            (s, root_policy) for s in self.nodes.values()
+        # Items are (spec, install policy, whether spec is a node of the graph)
+        stack: List[Tuple[spack.spec.Spec, InstallPolicy, bool]] = [
+            (s, root_policy, install_package) for s in specs
         ]
 
         self.tests = tests
@@ -120,16 +129,16 @@ class BuildGraph:
 
             # Build the graph and determine which specs to prune
             while stack:
-                spec, install_policy = stack.pop()
+                spec, install_policy, is_node = stack.pop()
                 key = spec.dag_hash()
                 _, record = database.query_by_spec_hash(key)
                 depflag = self._base_deptypes(spec)
 
                 # Conditionally include build dependencies. Don't prune installed specs
                 # that need to be marked explicit so they flow through the DB write path.
-                if record and record.installed and key not in overwrite_set:
+                if record and record.installed and key not in self.overwrite_set:
                     # If it needs to be marked explicit, keep it in the graph (don't prune).
-                    if key not in explicit_set or record.explicit:
+                    if self._is_satisfied(key, record):
                         self.pruned.add(key)
                 elif (
                     install_policy == "source_only"
@@ -152,14 +161,15 @@ class BuildGraph:
                         else:
                             self.done.add(bh)
 
-                self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
+                if is_node:
+                    self.parent_to_child[key] = {d.dag_hash() for d in dependencies}
 
                 # Enqueue new dependencies
                 for d in dependencies:
                     if d.dag_hash() in self.nodes:
                         continue
                     self.nodes[d.dag_hash()] = d
-                    stack.append((d, dependencies_policy))
+                    stack.append((d, dependencies_policy, True))
 
         # Construct reverse lookup from child to parent
         for parent, children in self.parent_to_child.items():
@@ -168,10 +178,6 @@ class BuildGraph:
                     self.child_to_parent[child].add(parent)
                 else:
                     self.child_to_parent[child] = {parent}
-
-        # If we're not installing the package itself, mark root specs for pruning too
-        if not install_package:
-            self.pruned.update(s.dag_hash() for s in specs)
 
         # Prune specs from the build graph. Their parents become parents of their children and
         # their children become children of their parents.
@@ -206,6 +212,16 @@ class BuildGraph:
                     f"Failed to install in package only mode: dependency {non_root_spec} is not "
                     "installed"
                 )
+
+    def _is_satisfied(self, dag_hash: str, record: Optional[spack.database.InstallRecord]) -> bool:
+        """Whether a spec is installed and there is nothing left to do for it: it does not have to
+        be overwritten, nor marked explicit."""
+        return bool(
+            record
+            and record.installed
+            and dag_hash not in self.overwrite_set
+            and (dag_hash not in self.explicit_set or record.explicit)
+        )
 
     def _base_deptypes(self, spec: spack.spec.Spec) -> dt.DepFlag:
         """Returns the dependency types that are always eagerly traversed. These are LINK, RUN, and
@@ -294,7 +310,7 @@ class BuildGraph:
                 continue
 
             _, record = database.query_by_spec_hash(dep_hash)
-            if record and record.installed:
+            if self._is_satisfied(dep_hash, record):
                 self.done.add(dep_hash)
                 continue
 

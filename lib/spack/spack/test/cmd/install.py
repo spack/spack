@@ -1203,3 +1203,44 @@ def test_concurrent_packages_set_in_config(mutable_config: Configuration, mock_p
     spec = spack.concretize.concretize_one("pkg-a")
     installer = spack.old_installer.PackageInstaller([spec.package])
     assert installer.concurrent_packages == 3
+
+
+def test_install_only_dependencies_installs_roots_needed_by_other_roots(
+    tmp_path: pathlib.Path,
+    mutable_config: Configuration,
+    mutable_mock_env_path,
+    mock_packages,
+    mock_fetch,
+    install_mockery,
+):
+    """dtlink1 -> dtlink3 -(build)-> dtbuild2, where dtbuild2 is the root of another environment
+    group. dtbuild2 is installed as a dependency, so the package install policy does not apply."""
+    mutable_config.set("config:installer", "new")
+    (tmp_path / "spack.yaml").write_text(
+        """\
+spack:
+  view: false
+  specs:
+  - group: tools
+    explicit: false
+    specs:
+    - dtbuild2
+  - group: apps
+    needs: [tools]
+    specs:
+    - dtlink1
+"""
+    )
+    with ev.Environment(str(tmp_path)) as e:
+        e.concretize()
+        e.write()
+        dtlink1, dtbuild2 = (
+            next(s for _, s in e.concretized_specs() if s.name == name)
+            for name in ("dtlink1", "dtbuild2")
+        )
+        assert dtlink1["dtlink3"]["dtbuild2"].dag_hash() == dtbuild2.dag_hash()
+        install("--only", "dependencies", "--use-buildcache", "package:only,dependencies:never")
+
+    assert not dtlink1.installed
+    assert dtlink1["dtlink3"].installed
+    assert dtbuild2.installed
