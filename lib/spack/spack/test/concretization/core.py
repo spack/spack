@@ -5707,6 +5707,19 @@ def test_compiler_dependencies_can_be_excluded_from_reuse(
     assert s["zlib"].satisfies("@1.2.11"), s.tree()
 
 
+@pytest.mark.regression("50809")
+def test_compiler_can_be_reused_as_root(temporary_store, mock_packages, mutable_config):
+    """Tests that an installed compiler can be reused as a root node"""
+    installed = spack.concretize.concretize_one("llvm@18")
+    PackageInstaller([installed.package], fake=True, explicit=True).install()
+
+    mutable_config.set("concretizer:unify", True)
+    llvm, _ = spack.concretize.concretize_spec_pairs(
+        [(Spec(f"llvm/{installed.dag_hash()}"), None), (Spec("pkg-a"), None)]
+    )
+    assert llvm == installed
+
+
 def test_parallel_edges_in_a_literal_reach_the_solver(mock_packages, config):
     """A duplicate ^dep clause parses as parallel edges rather than one merged node. The solver
     still builds one node per name from a literal: compatible constraints are merged onto that
