@@ -23,6 +23,8 @@ def host_gpus(monkeypatch, mutable_config):
     monkeypatch.setattr(
         spack.gpus, "host_variants", lambda: {"cuda_arch": ["70"], "amdgpu_target": ["gfx900"]}
     )
+    # DEMO: keep the notice from shelling out to real detection tools during tests
+    monkeypatch.setattr(spack.gpus, "summary", lambda: "cuda_arch=70, amdgpu_target=gfx900")
 
 
 @pytest.mark.parametrize(
