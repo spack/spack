@@ -1059,8 +1059,12 @@ def _main(argv=None):
     cmd_name = args.command[0]
     cmd_name, args.command = resolve_alias(cmd_name, args.command)
 
-    # Check if auto-migration is needed (before executing command)
     if cmd_name != "isolate":
+        # TODO: everything in this block should be extracted into its own method
+        # the method should actually take "x=spack.config" as a private parameter
+        # for tests, and the test should confirm that once an auto-migration is
+        # performed, that a second call to this method does not result in another
+        # call to "x._do_migrate_spack_prefix", this can be a test in layout_logic.py
         prefix_result = {"migrated": [], "retained": []}
         home_result = {"user_config": False, "package_repos": False}
         config_changed = False
@@ -1085,14 +1089,12 @@ def _main(argv=None):
                 # of spack will not generate this lock because they will not
                 # have any old resources.
                 with spack.util.lock.WriteTransaction(lock):
-                    migration_done_after_lock = os.path.exists(
+                    migration_already_done = os.path.exists(
                         spack.config._migration_done_marker_path()
                     )
-                    if migration_done_after_lock:
-                        config_changed = True
-                    elif spack.config.should_auto_migrate():
+                    if not migration_already_done:
                         prefix_result = spack.config._do_migrate_spack_prefix()
-                        config_changed = True
+                    config_changed = True
             except OSError as e:
                 tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
             except spack.util.lock.LockError as e:

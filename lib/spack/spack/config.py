@@ -1786,6 +1786,14 @@ def _detect_old_resources() -> Dict[str, bool]:
     }
 
 
+# TODO: If this is only called by main.py, it may now be redundant: main.py already
+# checks for .migration-done and old resources. And the `spack isolate` command
+# writes .migration-done for example so we don't need special-case logic.
+# In other words, in the context it is being executed in, it should always
+# return True (in particular if migration_done_after_lock is False)
+# Actually, the other place that calls it is in unit tests for now I think the
+# right thing to do is to remove that comment and the associated assertion
+# and this function
 def should_auto_migrate() -> bool:
     """Check if auto-migration should be performed.
 
