@@ -36,13 +36,20 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=False,
         help="packages with detected externals won't be built with Spack",
     )
-    find_parser.add_argument("--exclude", action="append", help="packages to exclude from search")
+    find_parser.add_argument(
+        "--exclude",
+        action="append",
+        metavar="package",
+        help="do not search for this package (multiple use allowed)",
+    )
     find_parser.add_argument(
         "-p",
         "--path",
         default=None,
+        metavar="directory",
         action="append",
-        help="one or more alternative search paths for finding externals",
+        help="search this prefix, bin, or lib path instead of PATH and LD_LIBRARY_PATH "
+        "(multiple use allowed)",
     )
     find_parser.add_argument(
         "--scope",
@@ -51,10 +58,26 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="configuration scope to modify",
     )
     find_parser.add_argument(
+        "--cray-manifest",
+        default="auto",
+        metavar="directory",
+        help="Cray manifest to search for packages, or 'auto', or 'none'\n"
+        f"(default: {cray_manifest.default_path} if passing 'all' or if packages/tags absent)",
+    )
+    arguments.add_common_arguments(find_parser, ["jobs"])
+    all_or_tags = find_parser.add_mutually_exclusive_group()
+    all_or_tags.add_argument(
         "--all", action="store_true", help="search for all packages that Spack knows about"
     )
-    arguments.add_common_arguments(find_parser, ["tags", "jobs"])
-    find_parser.add_argument("packages", nargs=argparse.REMAINDER)
+    arguments.add_common_arguments(all_or_tags, ["tags"])
+    # NOTE: this argument is *optional*, unlike common.arguments.packages
+    # but since it's positional it *cannot* be used with all_or_tags
+    find_parser.add_argument(
+        "packages",
+        nargs=argparse.REMAINDER,
+        metavar="package(s)",
+        help="search for only these packages",
+    )
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
         '"core-packages" tags. Use the --all option to search for every possible '
@@ -94,16 +117,47 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def external_find(args):
-    if args.all or not (args.tags or args.packages):
+    manifest_dir: str = args.cray_manifest if args.cray_manifest != "none" else ""
+    if manifest_dir == "auto":
+        if (not args.all) or args.tags or args.packages:
+            # Backward-compatible behavior: do not search unless 'all' is given
+            # or tags/packages are omitted
+            manifest_dir = ""
+        else:
+            manifest_dir = cray_manifest.default_path
+        if not os.path.isdir(manifest_dir):
+            tty.debug("Default Cray manifest directory {manifest_dir} does not exist.")
+            manifest_dir = ""
+
+    if args.packages and (args.all or args.tags):
+        # Note that this cannot be encoded into the arg parser since 'packages'
+        # is a positional argument. For backward compatibility, inform the user
+        # about the behavior change with respect to '--all'
+        compat_msg = ""
+        if args.cray_manifest == "auto" and manifest_dir:
+            compat_msg = (
+                f" Replace '--all' with '--cray-manifest={manifest_dir}' "
+                "to search for packages using a manifest."
+            )
+        raise ValueError(
+            "Conflicting 'find' arguments: cannot specify packages when using '--all' or '--tags'."
+            + compat_msg
+        )
+
+    if manifest_dir:
         # If the user calls 'spack external find' with no arguments, and
         # this system has a description of installed packages, then we should
         # consume it automatically.
         try:
-            _collect_and_consume_cray_manifest_files()
+            _collect_and_consume_cray_manifest_files(
+                manifest_directory=manifest_dir, ignore_default_dir=True
+            )
         except NoManifestFileError:
             # It's fine to not find any manifest file if we are doing the
             # search implicitly (i.e. as part of 'spack external find')
-            pass
+            # but not OK if the user asks for it explicitly
+            if args.cray_manifest != "auto":
+                raise
         except Exception as e:
             # For most exceptions, just print a warning and continue.
             # Note that KeyboardInterrupt does not subclass Exception
@@ -119,7 +173,6 @@ def external_find(args):
     # Outside the Cray manifest, the search is done by tag for performance reasons,
     # since tags are cached.
 
-    # If the user specified both --all and --tag, then --all has precedence
     if args.all or args.packages:
         # Each detectable package has at least the detectable tag
         args.tags = ["detectable"]
@@ -230,11 +283,7 @@ def _collect_and_consume_cray_manifest_files(
                 manifest_files.append(os.path.join(directory, fpath))
 
     if not manifest_files:
-        raise NoManifestFileError(
-            "--file/--directory not specified, and no manifest found at {0}".format(
-                cray_manifest.default_path
-            )
-        )
+        raise NoManifestFileError("No Cray manifests found in " + ", ".join(manifest_dirs))
 
     for path in manifest_files:
         tty.debug("Reading manifest file: " + path)
