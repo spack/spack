@@ -2203,7 +2203,9 @@ def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorMetadata]:
         for layout_version in mirror.supported_layout_versions:
             # layout_version could eventually come from the mirror config
             cache_class = get_url_buildcache_class(layout_version=layout_version)
-            cache_entry = cache_class(mirror.fetch_url, spec)
+            cache_entry = cache_class(
+                mirror.fetch_url, spec, allow_unsigned=not mirror.signed
+            )
 
             try:
                 spec_dict = cache_entry.fetch_metadata()
@@ -2606,7 +2608,7 @@ class IndexHandler:
         try:
             result = io.TextIOWrapper(manifest_response, encoding="utf-8").read()
         except (ValueError, OSError) as e:
-            raise FetchIndexError(f"Remote index {manifest_response.url} is invalid", e) from e
+            raise FetchIndexError(f"Remote index {self.url} is invalid", e) from e
 
         manifest = BuildcacheManifest.from_dict(
             # Currently we do not sign buildcache index, but we could
@@ -2916,12 +2918,49 @@ class EtagIndexHandler(IndexHandler):
         )
 
 
+class SCPIndexHandler(IndexHandler):
+    """Fetcher for buildcache index, cache invalidation via manifest contents"""
+
+    def __init__(self, mirror_metadata: MirrorMetadata, local_hash):
+        self.url = mirror_metadata.url
+        self.layout_version = mirror_metadata.version
+        self.view = mirror_metadata.view
+        self.local_hash = local_hash
+
+    def conditional_fetch(self) -> FetchIndexResult:
+        cache_class = get_url_buildcache_class(layout_version=self.layout_version)
+        url_index_manifest = cache_class.get_index_url(self.url, self.view)
+
+        try:
+            _, _, response = web_util.read_from_url(url_index_manifest)
+        except Exception as e:
+            raise FetchIndexError(
+                f"Could not read index manifest from {url_index_manifest}"
+            ) from e
+
+        with response:
+            index_blob_record = self.get_index_manifest(response)
+
+        # Early exit if our cache is up to date.
+        if self.local_hash and self.local_hash == index_blob_record.checksum:
+            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+
+        # Otherwise, download the index blob
+        cache_entry = cache_class(self.url, allow_unsigned=True)
+        computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
+        cache_entry.destroy()
+
+        return FetchIndexResult(etag=None, hash=computed_hash, data=result, fresh=False)
+
+
 def get_index_fetcher(
     scheme: str, mirror_metadata: MirrorMetadata, cache_entry: Dict[str, str]
 ) -> IndexHandler:
     if scheme == "oci":
         # TODO: Actually etag and OCI are not mutually exclusive...
         return OCIIndexHandler(mirror_metadata, cache_entry.get("index_hash", None))
+    elif scheme in ("ssh", "scp"):
+        return SCPIndexHandler(mirror_metadata, local_hash=cache_entry.get("index_hash", None))
     elif cache_entry.get("etag"):
         if mirror_metadata.version < 3:
             return EtagIndexHandlerV2(mirror_metadata, cache_entry["etag"])

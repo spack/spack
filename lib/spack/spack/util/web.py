@@ -32,6 +32,7 @@ from spack.vendor.typing_extensions import ParamSpec
 import spack
 import spack.config
 import spack.error
+import spack.stage
 import spack.util.executable
 import spack.util.url
 import spack.util.url as url_util
@@ -39,8 +40,9 @@ from spack.util import lang, tty
 from spack.util import s3 as s3_util
 from spack.util.filesystem import mkdirp, working_dir
 
-from .executable import CommandNotFoundError, Executable
+from .executable import CommandNotFoundError, Executable, ProcessError
 from .gcs import GCSBlob, GCSBucket, GCSHandler
+from .ssh import SSHConnection
 
 
 class Retry:
@@ -346,6 +348,11 @@ def read_from_url(url, accept_content_type=None):
     if isinstance(url, str):
         url = urllib.parse.urlparse(url)
 
+    if url.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(url)
+        ssh.download_location = spack.stage.stage_root(spack.config.CONFIG)
+        return url.geturl(), {}, ssh.read(url.path)
+
     # Timeout in seconds for web requests
     request = Request(url.geturl(), headers={"User-Agent": SPACK_USER_AGENT})
 
@@ -373,12 +380,20 @@ def read_from_url(url, accept_content_type=None):
 
 
 def _read_text(url: str) -> str:
+    if urllib.parse.urlparse(url).scheme in ("ssh", "scp"):
+        _, _, response = read_from_url(url)
+        with response:
+            return io.TextIOWrapper(response, encoding="utf-8").read()
     request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
     with urlopen(request) as response:
         return io.TextIOWrapper(response, encoding="utf-8").read()
 
 
 def _read_json(url: str):
+    if urllib.parse.urlparse(url).scheme in ("ssh", "scp"):
+        _, _, response = read_from_url(url)
+        with response:
+            return json.load(response)
     request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
     with urlopen(request) as response:
         return json.load(response)
@@ -392,7 +407,7 @@ def read_text(url: str) -> str:
     """Fetch url and return the response body decoded as UTF-8 text."""
     try:
         return _read_text_with_retry(url)
-    except OSError as e:
+    except (OSError, ProcessError) as e:
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
@@ -400,7 +415,7 @@ def read_json(url: str):
     """Fetch url and return the response body parsed as JSON."""
     try:
         return _read_json_with_retry(url)
-    except OSError as e:
+    except (OSError, ProcessError) as e:
         raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
 
 
@@ -455,6 +470,10 @@ def push_to_url(
         gcs.upload_to_blob(local_file_path)
         if not keep_original:
             os.remove(local_file_path)
+
+    elif remote_url.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(remote_url)
+        ssh.push(local_file_path, remote_url.path, keep_original=keep_original)
 
     else:
         raise NotImplementedError(f"Unrecognized URL scheme: {remote_url.scheme}")
@@ -630,6 +649,10 @@ def url_exists(url, curl=None):
     tty.debug("Checking existence of {0}".format(url))
     url_result = urllib.parse.urlparse(url)
 
+    if url_result.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(url_result)
+        return ssh.exists(url_result.path)
+
     # Use curl if configured to do so
     fetch_method = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
     use_curl = fetch_method.startswith("curl") and url_result.scheme not in ("gs", "s3")
@@ -707,6 +730,10 @@ def list_url(url, recursive=False):
         gcs = GCSBucket(url)
         return gcs.get_all_blobs(recursive=recursive)
 
+    elif url.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(url)
+        return ssh.list_path(url.path, recursive=recursive)
+
 
 def stat_url(url: str) -> Optional[Tuple[int, float]]:
     """Get stat result for a URL.
@@ -726,9 +753,11 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
         except FileNotFoundError:
             return None
         return url_stat.st_size, url_stat.st_mtime
-
     elif parsed_url.scheme == "s3":
         return s3_util.stat_object(url)
+    elif parsed_url.scheme in ("ssh", "scp"):
+        ssh = SSHConnection.from_url(parsed_url)
+        return ssh.stat_path(parsed_url.path)
     else:
         raise NotImplementedError(f"Unrecognized URL scheme: {parsed_url.scheme}")
 
