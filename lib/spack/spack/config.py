@@ -1967,7 +1967,24 @@ def process_config_file_paths(
                 except ValueError:
                     pass
         else:
-            if not in_include:
+            # Relative path
+            if in_include:
+                # For relative include paths, check if they point outside the old config dir
+                abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
+                try:
+                    rel_to_old = os.path.relpath(abs_path_norm, old_location_norm)
+                    points_outside = os.path.normpath(rel_to_old).startswith("..")
+                except ValueError:
+                    # Different drives on Windows
+                    points_outside = True
+
+                if points_outside:
+                    # Points outside old config dir - make absolute to preserve target
+                    absolutize_path_in_yaml(data, key_path, abs_path)
+                    modified = True
+                # else: points inside old config dir - keep relative (will work in new location)
+            else:
+                # Relative path outside include - always make absolute
                 absolutize_path_in_yaml(data, key_path, abs_path)
                 modified = True
 

@@ -222,7 +222,8 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
 
     Absolute paths outside ``include:`` remain unchanged, absolute paths inside
     ``include:`` are rewritten, relative paths outside ``include:`` become
-    absolute, and relative paths inside ``include:`` remain relative.
+    absolute, and relative paths inside ``include:`` remain relative if they
+    point inside the config directory, or become absolute if they point outside.
     """
     old_config_dir = tmp_path / ".spack"
     new_config_dir = tmp_path / ".config" / "spack"
@@ -237,6 +238,10 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
     relative_local = old_config_dir / "local.yaml"
     relative_local.write_text("config: {}\n", encoding="utf-8")
 
+    # Relative include that points outside the config dir
+    shared_cfg = tmp_path / "shared-cfg"
+    shared_cfg.mkdir()
+
     config_path = old_config_dir / "config.yaml"
     config_path.write_text(
         syaml.dump(
@@ -250,8 +255,10 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
                 "include": [
                     # Absolute paths under the old config root are rewritten.
                     {"path": str(absolute_included)},
-                    # Relative include paths remain relative.
+                    # Relative include paths pointing inside stay relative.
                     {"path": "included-relative.yaml"},
+                    # Relative include paths pointing outside become absolute.
+                    {"path": "../shared-cfg"},
                 ],
             }
         ),
@@ -267,6 +274,7 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
     assert migrated["config"]["repos"] == str(relative_local)
     assert migrated["include"][0]["path"] == str(new_config_dir / "included-absolute")
     assert migrated["include"][1]["path"] == "included-relative.yaml"
+    assert migrated["include"][2]["path"] == str(shared_cfg)
 
 
 class MigrationResources:
