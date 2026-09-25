@@ -8,7 +8,7 @@ import json
 import os
 import sys
 import tempfile
-from typing import List, Mapping, Optional, Tuple
+from typing import List, Mapping, Optional, Set, Tuple
 
 import spack.binary_distribution
 import spack.cmd
@@ -474,16 +474,23 @@ def _specs_to_be_packaged(
         deptype = dt.ALL
     else:
         deptype = dt.RUN | dt.LINK | dt.TEST
+    # Without the package itself, skip the requested specs, except those that other traversed
+    # specs depend on (e.g. a compiler in one environment group needed by the specs of another)
+    skip: Set[str] = set()
+    if "package" not in things_to_install:
+        dependencies = {
+            edge.spec.dag_hash()
+            for edge in traverse.traverse_edges(
+                requested, root=False, deptype=deptype, cover="edges", key=traverse.by_dag_hash
+            )
+        }
+        skip = {s.dag_hash() for s in requested} - dependencies
     specs = [
         s
         for s in traverse.traverse_nodes(
-            requested,
-            root="package" in things_to_install,
-            deptype=deptype,
-            order="breadth",
-            key=traverse.by_dag_hash,
+            requested, deptype=deptype, order="breadth", key=traverse.by_dag_hash
         )
-        if not s.external
+        if not s.external and s.dag_hash() not in skip
     ]
     specs.reverse()
     return specs
