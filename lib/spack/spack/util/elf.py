@@ -575,10 +575,18 @@ class UpdateCStringAction:
         f.write(b"\x00" * (len(self.old_value) - len(self.new_value)))
 
 
+#: Transformation of a list of RPATH entries
+RpathTransform = Callable[[List[bytes]], List[bytes]]
+
+
 def _get_rpath_substitution(
-    elf: ElfFile, regex: Pattern, substitutions: Dict[bytes, bytes]
+    elf: ElfFile,
+    regex: Pattern,
+    substitutions: Dict[bytes, bytes],
+    rpath_transform: Optional[RpathTransform] = None,
 ) -> Optional[UpdateCStringAction]:
-    """Make rpath substitutions in-place."""
+    """Make rpath substitutions in-place. If given, ``rpath_transform`` is applied to the RPATH
+    entries before the substitutions."""
     # If there's no RPATH, then there's no need to replace anything.
     if not elf.has_rpath:
         return None
@@ -588,12 +596,16 @@ def _get_rpath_substitution(
     # more likely that the string doesn't grow.
     rpaths = list(filter(len, elf.dt_rpath_str.split(b":")))
 
-    num_rpaths = len(rpaths)
-
-    if num_rpaths == 0:
+    if not rpaths:
         return None
 
     changed = False
+    if rpath_transform is not None:
+        transformed = rpath_transform(rpaths)
+        changed = transformed != rpaths
+        rpaths = transformed
+
+    num_rpaths = len(rpaths)
     for i in range(num_rpaths):
         old_rpath = rpaths[i]
         match = regex.match(old_rpath)
@@ -632,12 +644,13 @@ def _get_pt_interp_substitution(
 
 
 def substitute_rpath_and_pt_interp_in_place_or_raise(
-    path: str, substitutions: Dict[bytes, bytes]
+    path: str, substitutions: Dict[bytes, bytes], rpath_transform: Optional[RpathTransform] = None
 ) -> bool:
     """Returns true if the rpath and interpreter were modified, false if there was nothing to do.
     Raises ElfCStringUpdatesFailed if the ELF file cannot be updated in-place. This exception
     contains a list of actions to perform with other tools. The file is left untouched in this
-    case."""
+    case. If given, ``rpath_transform`` is applied to the RPATH entries before the substitutions.
+    """
     regex = re.compile(b"|".join(re.escape(p) for p in substitutions.keys()))
 
     try:
@@ -645,7 +658,7 @@ def substitute_rpath_and_pt_interp_in_place_or_raise(
             elf = parse_elf(f, interpreter=True, dynamic_section=True)
 
             # Get the actions to perform.
-            rpath = _get_rpath_substitution(elf, regex, substitutions)
+            rpath = _get_rpath_substitution(elf, regex, substitutions, rpath_transform)
             pt_interp = _get_pt_interp_substitution(elf, regex, substitutions)
 
             # Nothing to do.
