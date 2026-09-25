@@ -1427,6 +1427,40 @@ spack:
     assert uploader.pushed == ["libdwarf"]
 
 
+@pytest.mark.parametrize("args", [[], ["--group", "default"]])
+def test_buildcache_push_skips_install_false(
+    args, tmp_path: pathlib.Path, monkeypatch, install_mockery, mock_fetch, mutable_mock_env_path
+):
+    """Roots marked install: false are not pushed, so pushing after an install succeeds."""
+    env_dir = tmp_path / "myenv"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        """\
+spack:
+  specs:
+  - libelf
+  - spec: libdwarf
+    install: false
+  view: false
+"""
+    )
+
+    mirror_dir = tmp_path / "mirror"
+    mirror_dir.mkdir()
+
+    uploader = _mock_uploader(mirror_dir)
+    monkeypatch.setattr(
+        spack.binary_distribution, "make_uploader", lambda *args, **kwargs: uploader
+    )
+
+    with ev.Environment(env_dir) as e:
+        e.concretize()
+        e.install_all(fake=True)
+        buildcache("push", "--unsigned", "--only", "package", *args, str(mirror_dir))
+
+    assert uploader.pushed == ["libelf"]
+
+
 def test_buildcache_push_with_multiple_groups(
     tmp_path: pathlib.Path, monkeypatch, install_mockery, mock_fetch, mutable_mock_env_path
 ):
