@@ -566,6 +566,8 @@ class YamlFilesystemView(FilesystemView):
                     spec = get_spec_from_file(filename)
                     if spec:
                         specs.append(spec)
+        # Specs read from view metadata carry no prefix. Stamp it so callers can read .prefix.
+        spack.store.STORE.set_prefixes(specs)
         return specs
 
     def get_conflicts(self, *specs):
@@ -588,7 +590,10 @@ class YamlFilesystemView(FilesystemView):
         dotspack = self.get_path_meta_folder(spec)
         filename = os.path.join(dotspack, spack.store.STORE.layout.spec_file_name)
 
-        return get_spec_from_file(filename)
+        result = get_spec_from_file(filename)
+        if result is not None:
+            spack.store.STORE.set_prefixes([result])
+        return result
 
     def link_meta_folder(self, spec):
         src = spack.store.STORE.layout.metadata_path(spec)
