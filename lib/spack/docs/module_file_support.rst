@@ -374,18 +374,19 @@ Users select an installation by stating its variants on the ``module load`` comm
    $ module load -v zlib +shared
    Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:+optimize:+pic:+shared}
 
-A variant whose value differs between the folded installations, like ``shared`` here, has no default, so a plain ``module load`` fails:
+The stated variants form a mask, and the first installation matching it is selected.
+The variants left unset take the values of the selected installation.
+Installations are listed sorted by their variant values, so a plain ``module load zlib`` loads the first of them, ``zlib ~shared`` here:
 
 .. code-block:: console
 
-   $ module load zlib
-   Loading zlib/1.3.2-gcc-13.3.0
-     ERROR: No value specified for variant 'shared'
-       Allowed values are: 1 0 yes no true false on off
+   $ module load -v zlib
+   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:+optimize:+pic:-shared}
 
-The exception is a conditional variant that only some of the installations define.
-On the other installations it takes the value ``False``, or ``none`` for a non-boolean variant, which is also its default, so it can be left out when loading them.
-For example, with ``python +tkinter +tix`` and ``python ~tkinter`` in the same module file, ``module load python ~tkinter`` does not need to state ``tix``.
+Installing a new build may change what such a partial specification selects, so state the variants that identify the installation you need.
+
+A conditional variant that only some of the installations define is disabled on the others, so they match ``~name``, or ``name=none`` for a non-boolean variant.
+For example, with ``python +tkinter +tix`` and ``python ~tkinter`` in the same module file, ``module load python ~tix`` selects the latter.
 
 If the stated variants do not match any installation, the error lists the installed configurations:
 
@@ -394,8 +395,8 @@ If the stated variants do not match any installation, the error lists the instal
    $ module load zlib ~pic +shared
    Loading zlib/1.3.2-gcc-13.3.0{-pic:+shared}
      ERROR: Specified package is not installed, available packages for this version are:
-       * "build_system=makefile +optimize +pic +shared"
        * "build_system=makefile +optimize +pic ~shared"
+       * "build_system=makefile +optimize +pic +shared"
      ERROR: Module evaluation aborted
 
 Spack maintains folded module files automatically:
@@ -420,8 +421,10 @@ The two installations have the same variants, so the specifications that select 
 
 .. code-block:: text
 
-   ... hash=6dj7iyw ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools
-   ... hash=hyob6r5 ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools
+   ... ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools hash=6dj7iyw
+   ... ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools hash=hyob6r5
+
+Like any other variant, ``hash`` left unset takes the value of the selected installation.
 
 .. warning::
 

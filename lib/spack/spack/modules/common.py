@@ -784,6 +784,12 @@ class BaseConfiguration:
         return ""
 
     @property
+    def installed_specs(self) -> List[spack.spec.Spec]:
+        """Returns the installed specs held by the module file, in the order it lists them.
+        This spec is the only one, unless it is being removed from the module file."""
+        return [self.spec] if self.add_op else []
+
+    @property
     def other_installed_specs(self) -> List[spack.spec.Spec]:
         """Returns a list of all the other installed spec for this package version"""
         return []
@@ -795,6 +801,12 @@ class BaseConfiguration:
         Returns an empty dictionary if variant mode is disabled.
         """
         return {}
+
+    @property
+    def variant_values(self) -> str:
+        """Returns the values of the variants of this installation, in the order of the
+        aggregated variants. Returns an empty string if variant mode is not supported."""
+        return ""
 
 
 class FileLayout:
@@ -1309,16 +1321,16 @@ class ModuleContext(tengine.Context):
 
     @tengine.context_property
     def installations(self) -> List["ModuleContext"]:
-        """Returns context for all installations of this package version."""
+        """Returns context for all installations of this package version, in the order the
+        module file selects them."""
         context_list = []
-        extra_spec_sharing = None
+        # let other installs know of this newly installed spec
+        extra_spec_sharing = self.conf.spec if self.conf.add_op else None
 
-        if self.conf.add_op:
-            context_list.append(self)
-            # let other installs know of this newly installed spec
-            extra_spec_sharing = self.conf.spec
-
-        for spec in self.conf.other_installed_specs:
+        for spec in self.conf.installed_specs:
+            if spec == self.conf.spec:
+                context_list.append(self)
+                continue
             other_conf = self.conf.make_configuration(
                 spec,
                 self.conf.name,
@@ -1343,6 +1355,11 @@ class ModuleContext(tengine.Context):
     def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
         """Expose aggregated variant metadata to templates."""
         return self.conf.aggregated_variants
+
+    @tengine.context_property
+    def variant_values(self) -> str:
+        """Returns the values of the variants of this installation."""
+        return self.conf.variant_values
 
 
 class BaseModuleFileWriter:
