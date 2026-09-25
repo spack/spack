@@ -1240,3 +1240,60 @@ def test_expand_build_deps_source_only_includes_nested_build_deps(temporary_stor
     # nested_build_tool must also be added (BUILD dep of build_tool). This is the bug: without the
     # fix, expand_build_deps only traverses LINK|RUN, so nested_build_tool is missing.
     assert specs["nested_build_tool"].dag_hash() in added_hashes
+
+
+def test_install_package_false_keeps_root_that_is_dependency_of_other_root(temporary_store: Store):
+    """With install_package=False (``--only dependencies``), a requested spec that is also a
+    dependency of another requested spec (e.g. a compiler in an environment spec group) must stay
+    in the graph."""
+    specs = create_dag(
+        nodes=["app", "compiler", "gmp", "lib"],
+        edges=[
+            ("app", "compiler", "build"),
+            ("app", "lib", ("build", "link")),
+            ("lib", "compiler", "build"),
+            ("compiler", "gmp", ("build", "link")),
+        ],
+    )
+    graph = BuildGraph(
+        specs=[specs["compiler"], specs["app"]],
+        root_policy="auto",
+        dependencies_policy="auto",
+        include_build_deps=True,
+        install_package=False,
+        install_deps=True,
+        store=temporary_store,
+    )
+    assert specs["app"].dag_hash() not in graph.nodes
+    assert specs["compiler"].dag_hash() in graph.nodes
+    assert specs["compiler"].dag_hash() in graph.parent_to_child[specs["lib"].dag_hash()]
+
+
+def test_install_package_false_expands_requested_build_dep(temporary_store: Store):
+    """With install_package=False and lazy build deps, a requested spec that turns out to be a
+    build dependency after a cache miss must be scheduled, not treated as installed."""
+    specs = create_dag(
+        nodes=["app", "compiler", "lib"],
+        edges=[
+            ("app", "lib", ("build", "link")),
+            ("app", "compiler", "build"),
+            ("lib", "compiler", "build"),
+        ],
+    )
+    graph = BuildGraph(
+        specs=[specs["compiler"], specs["app"]],
+        root_policy="auto",
+        dependencies_policy="auto",
+        include_build_deps=False,
+        install_package=False,
+        install_deps=True,
+        store=temporary_store,
+    )
+    assert specs["compiler"].dag_hash() not in graph.nodes
+    pending: List[str] = []
+    db = temporary_store.db
+    with db.read_transaction():
+        newly_added = graph.expand_build_deps([specs["lib"].dag_hash()], pending, db)
+    assert specs["compiler"].dag_hash() in newly_added
+    assert specs["compiler"].dag_hash() in pending
+    assert specs["lib"].dag_hash() not in pending

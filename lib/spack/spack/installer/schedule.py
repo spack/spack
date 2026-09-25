@@ -101,6 +101,9 @@ class BuildGraph:
         overwrite_set = overwrite_set or set()
         explicit_set = explicit_set or set()
         self.pruned: Set[str] = set()
+        #: Uninstalled roots pruned only because ``install_package=False``. They are still
+        #: installed if they turn out to be dependencies of other nodes in the graph.
+        self.skipped_roots: Set[str] = set()
         self.done: Set[str] = set()
         self.force_source: Set[str] = set()
         stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [
@@ -169,9 +172,14 @@ class BuildGraph:
                 else:
                     self.child_to_parent[child] = {parent}
 
-        # If we're not installing the package itself, mark root specs for pruning too
+        # If we're not installing the package itself, mark root specs for pruning too, unless they
+        # are dependencies of other nodes (e.g. an environment root that is a build dependency of
+        # another root, like a compiler in a separate spec group).
         if not install_package:
-            self.pruned.update(s.dag_hash() for s in specs)
+            self.skipped_roots = {
+                h for h in self.roots if h not in self.pruned and h not in self.child_to_parent
+            }
+            self.pruned.update(self.skipped_roots)
 
         # Prune specs from the build graph. Their parents become parents of their children and
         # their children become children of their parents.
@@ -282,7 +290,9 @@ class BuildGraph:
             dep_hash = dep.dag_hash()
 
             # Skip installed deps
-            if dep_hash in self.pruned or dep_hash in self.done:
+            if dep_hash in self.done or (
+                dep_hash in self.pruned and dep_hash not in self.skipped_roots
+            ):
                 continue
 
             # If already in the graph (e.g. overwrite build in progress), add edge but don't
@@ -304,6 +314,8 @@ class BuildGraph:
 
             # New node: add to graph and recurse into its link/run/test deps
             self.nodes[dep_hash] = dep
+            self.pruned.discard(dep_hash)
+            self.skipped_roots.discard(dep_hash)
             self.parent_to_child.setdefault(dep_hash, set())
             newly_added.append(dep_hash)
 
