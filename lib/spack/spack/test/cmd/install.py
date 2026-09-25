@@ -1212,10 +1212,10 @@ def test_install_only_dependencies_installs_roots_needed_by_other_roots(
     mock_packages,
     mock_fetch,
     install_mockery,
+    installer_variant,
 ):
     """dtlink1 -> dtlink3 -(build)-> dtbuild2, where dtbuild2 is the root of another environment
     group. dtbuild2 is installed as a dependency, so the package install policy does not apply."""
-    mutable_config.set("config:installer", "new")
     (tmp_path / "spack.yaml").write_text(
         """\
 spack:

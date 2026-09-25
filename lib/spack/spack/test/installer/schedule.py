@@ -755,15 +755,16 @@ class TestExpandBuildDeps:
     def test_expand_build_deps_adds_installed_dep_with_work_left(
         self, to_do: str, temporary_store: Store
     ):
-        """A --build--> B, where B is installed but must be overwritten or marked explicit. As when
-        building the graph, B is added as a node instead of being considered done."""
-        specs = create_dag(nodes=["a", "b"], edges=[("a", "b", "build")])
-        a, b = specs["a"].dag_hash(), specs["b"].dag_hash()
+        """A --build--> B --build--> C, where B is installed but must be overwritten or marked
+        explicit. As when building the graph, B is added as a node instead of being considered
+        done, and only an overwrite needs B's build deps."""
+        specs = create_dag(nodes=["a", "b", "c"], edges=[("a", "b", "build"), ("b", "c", "build")])
+        a, b, c = (specs[x].dag_hash() for x in "abc")
         install_spec_in_db(specs["b"], temporary_store)
         graph = BuildGraph(
             specs=[specs["a"]],
             root_policy="auto",
-            dependencies_policy="auto",
+            dependencies_policy="source_only",
             include_build_deps=False,
             install_package=True,
             install_deps=True,
@@ -774,9 +775,13 @@ class TestExpandBuildDeps:
         assert graph.nodes.keys() == {a}
 
         pending: List[str] = []
-        assert self._expand(graph, a, pending, temporary_store.db) == [b]
+        with temporary_store.db.read_transaction():
+            added = graph.expand_build_deps([a], pending, temporary_store.db, "source_only")
         assert graph.parent_to_child[a] == {b}
-        assert pending == [b]
+        if to_do == "overwrite":
+            assert added == [b, c] and pending == [c]
+        else:
+            assert added == [b] and pending == [b]
 
     def test_expand_build_deps_shared_dep_already_in_graph(self, temporary_store: Store):
         """A --link--> B, A --build--> C --link--> B.

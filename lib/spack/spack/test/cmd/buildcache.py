@@ -29,7 +29,7 @@ import spack.util.web as web_util
 from spack.active_environment import active_environment
 from spack.old_installer import PackageInstaller
 from spack.paths import test_path
-from spack.test.traverse import create_dag
+from spack.test.installer.conftest import create_dag
 from spack.url_buildcache import (
     BuildcacheComponent,
     URLBuildcacheEntry,
@@ -461,10 +461,9 @@ def test_specs_to_be_packaged_only_dependencies_keeps_requested_dependencies(bui
     """a --build--> b, a --link--> c, where a and b are requested. b is a dependency of a, so it is
     packaged with --only dependencies, as long as build dependencies are."""
     specs = create_dag(nodes=["a", "b", "c"], edges=[("a", "b", "build"), ("a", "c", "link")])
-    for s in specs.values():
-        s._mark_concrete()
+    # b before a, so that b is visited as a requested spec before it is reached from a
     packaged = spack.cmd.buildcache._specs_to_be_packaged(
-        [specs["a"], specs["b"]], "dependencies", build_deps
+        [specs["b"], specs["a"]], "dependencies", build_deps
     )
     assert {s.name for s in packaged} == expected
 

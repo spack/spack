@@ -320,6 +320,26 @@ def test_reports_collect_success_failure_and_skips(temporary_store, mock_package
     assert [r.result for r in installer.reports[other.dag_hash()].packages] == ["success"]
 
 
+def test_reports_only_dependencies(temporary_store, mock_packages):
+    """Without the package itself, a requested spec needed by another is installed, and the
+    other is reported as not scheduled."""
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    installer = PackageInstaller(
+        [root.package, dep.package],
+        explicit=True,
+        ui=RecordingUI(),
+        launcher=ScriptedLauncher({dep.name: Script()}),
+        create_reports=True,
+        install_package=False,
+    )
+    installer.install()
+
+    records = {r.name: r for r in installer.reports[root.dag_hash()].packages}
+    assert records[dep.name].result == "success"
+    assert records[root.name].message == "Spec was not scheduled for installation"
+
+
 @pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
 def test_keyboard_interrupt_terminates_builds_and_flushes_db(temporary_store, mock_packages):
     """A KeyboardInterrupt from the UI propagates, terminates the running build, and still

@@ -324,7 +324,9 @@ class BuildGraph:
             newly_added.append(dep_hash)
 
             deptype = self._base_deptypes(dep)
-            if dependencies_policy == "source_only":
+            # Installed specs that are only marked explicit don't need their build deps
+            installed = record and record.installed and dep_hash not in self.overwrite_set
+            if dependencies_policy == "source_only" and not installed:
                 deptype |= dt.BUILD
             for child in dep.dependencies(deptype=deptype):
                 stack.append((dep_hash, child))

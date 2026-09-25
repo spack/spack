@@ -79,7 +79,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         choices=["package", "dependencies"],
         help="select the mode of installation\n\n"
         "default is to install the package along with all its dependencies. "
-        "alternatively, one can decide to install only the package or only the dependencies",
+        "alternatively, one can decide to install only the package or only the dependencies "
+        "(requested specs needed by other requested specs are still installed)",
     )
     subparser.add_argument(
         "-u",

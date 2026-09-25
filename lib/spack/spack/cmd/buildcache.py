@@ -103,7 +103,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="select the buildcache mode. "
         "The default is to build a cache for the package along with all its dependencies. "
         "Alternatively, one can decide to build a cache for only the package or only the "
-        "dependencies",
+        "dependencies (requested specs needed by other requested specs are still pushed)",
     )
     with_or_without_build_deps = push.add_mutually_exclusive_group()
     with_or_without_build_deps.add_argument(
