@@ -1,0 +1,7 @@
+enable:
+  - tcl
+tcl:
+  hash_length: 0
+  variants: varying
+  all:
+    autoload: direct
