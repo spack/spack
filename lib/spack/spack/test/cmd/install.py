@@ -25,6 +25,7 @@ import spack.hooks.sbom_generate
 import spack.old_installer
 import spack.package_base
 import spack.reporters.cdash
+import spack.store
 import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.error import SpackError, SpecSyntaxError
@@ -826,6 +827,58 @@ def test_install_only_dependencies_of_all_in_env(
             assert not os.path.exists(root.prefix)
             for dep in root.traverse(root=False):
                 assert os.path.exists(dep.prefix)
+
+
+@pytest.mark.not_on_windows("Environment views not supported on windows. Revisit after #34701")
+def test_install_only_dependencies_root_is_dependency_of_other_root(
+    mutable_mock_env_path, mock_fetch, install_mockery, installer_variant
+):
+    """An environment root that is also a dependency of another root must be installed by
+    ``spack install --only dependencies``."""
+    env("create", "--without-view", "test")
+
+    with ev.read("test"):
+        add("dependent-install")
+        add("dependency-install")
+        install("--only", "dependencies")
+
+        dep = spack.concretize.concretize_one("dependency-install")
+        root = spack.concretize.concretize_one("dependent-install")
+        assert os.path.exists(dep.prefix)
+        assert not os.path.exists(root.prefix)
+
+
+def test_install_only_dependencies_with_implicit_compiler_group(
+    mutable_mock_env_path, install_mockery, installer_variant, tmp_path: pathlib.Path
+):
+    """A compiler in a non-explicit spec group, needed by another group, must be installed by
+    ``spack install --only dependencies --include-build-deps`` (like a two-pass container build).
+    """
+    (tmp_path / "spack.yaml").write_text(
+        """\
+spack:
+  view: false
+  specs:
+  - group: compilers
+    explicit: false
+    specs:
+    - gcc@14.0.1
+  - group: apps
+    needs: [compilers]
+    specs:
+    - dyninst %c=gcc@14.0.1
+"""
+    )
+    e = ev.Environment(str(tmp_path))
+    with e:
+        e.concretize()
+        e.write()
+        install("--fake", "--include-build-deps", "--only", "dependencies")
+
+    db = spack.store.STORE.db
+    assert db.query_local("gcc@14.0.1"), "compiler group root was not installed"
+    assert db.query_local("libelf")
+    assert not db.query_local("dyninst")
 
 
 # Unit tests should not be affected by the user's managed environments
