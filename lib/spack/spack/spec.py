@@ -155,9 +155,9 @@ COMPILER_COLOR = "@g"  #: color for highlighting compilers
 VERSION_COLOR = "@c"  #: color for highlighting versions
 ARCHITECTURE_COLOR = "@m"  #: color for highlighting architectures
 VARIANT_COLOR = "@B"  #: color for highlighting variants
-HASH_COLOR = "@K"  #: color for highlighting package hashes
+HASH_COLOR = "@#d"  #: color for highlighting package hashes
 HIGHLIGHT_COLOR = "@_R"  #: color for highlighting spec parts on demand
-DIM_COLOR = "@K"  #: color for dimmed (grey-out) spec parts
+DIM_COLOR = "@#d"  #: color for dimmed (grey-out) spec parts
 #: Maps PartStyle to a color override; NORMAL is absent so .get(style, default) preserves default
 _STYLE_COLOR_MAP = {
     spack.enums.PartStyle.HIGHLIGHT: HIGHLIGHT_COLOR,
@@ -198,7 +198,7 @@ class InstallStatus(enum.Enum):
     installed = "@g{[+]}  "
     upstream = "@g{[^]}  "
     external = "@M{[e]}  "
-    absent = "@K{ - }  "
+    absent = "@#{ - }  "
     missing = "@r{[-]}  "
     buildcache = "@g{[b]}  "
 
@@ -1632,7 +1632,7 @@ def tree(
                 out += clr.colorize("@r{[-]}  ", color=color)
 
         if hashes:
-            out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hashlen)
+            out += clr.colorize("@#{%s}  ", color=color) % node.dag_hash(hashlen)
 
         if show_types:
             if cover == "nodes":
