@@ -20,6 +20,7 @@ import spack.concretize
 import spack.error
 import spack.main
 import spack.solver.asp
+import spack.solver.error
 import spack.spec
 from spack.config import Configuration
 
@@ -111,6 +112,20 @@ def test_virtual_constrained_beyond_versions_error(spec, mock_packages, mutable_
     assert "cannot concretize" in str(e.value)
 
 
+def test_provider_excluded_by_requirement_names_both(mock_packages, mutable_config: Configuration):
+    """Asking for a provider that a virtual requirement rules out must name the provider that is
+    required, not just say the one asked for is impossible."""
+    mutable_config.set("concretizer:static_analysis", True)
+    mutable_config.set("packages:mpi", {"require": ["mpich"]})
+    with pytest.raises(spack.solver.error.InvalidDependencyError) as exc_info:
+        spack.concretize.concretize_one("mpileaks ^zmpi")
+    assert_actionable_error(
+        exc_info,
+        "'zmpi' is not a possible dependency of 'mpileaks'",
+        "the 'mpi' virtual it provides is required to be 'mpich', which 'zmpi' is not",
+    )
+
+
 def test_internal_error_handling_formatting(tmp_path: pathlib.Path):
     log = StringIO()
     input_to_output = [
@@ -187,7 +202,7 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
         # via link/run from multivalue-variant.
         pytest.param(
             "multivalue-variant ^gmake",
-            ["gmake is not a direct 'build' or"],
+            ["'gmake' is not a direct 'build' or 'test' dependency of 'multivalue-variant'"],
             id="literal_not_in_dag",
         ),
         # mvapich2 file_systems uses auto_or_any_combination_of, but "auto" and "lustre"
