@@ -297,7 +297,7 @@ For example, with a single ``git`` installation and the following configuration:
 .. code-block:: console
 
    $ spack module tcl find git
-   git/2.53.0-gcc-15.2.1 build_system=autotools +man +nls +perl +subtree ~tcltk
+   git/2.53.0-gcc-15.2.1 build_system=autotools +man +nls +perl +subtree ~tcltk hash=q5s4xwn
 
 Users can state on the ``module load`` command line the variant configuration they expect.
 The module loads if it matches what is installed:
@@ -314,10 +314,13 @@ and fails with an error listing the installed configurations otherwise:
    $ module load git ~perl
    Loading git/2.53.0-gcc-15.2.1{-perl}
      ERROR: Specified package is not installed, available packages for this version are:
-       * "build_system=autotools +man +nls +perl +subtree ~tcltk"
+       * "build_system=autotools +man +nls +perl +subtree ~tcltk hash=q5s4xwn"
      ERROR: Module evaluation aborted
 
 A plain ``module load git`` still works, since the default value of each module variant is the value of the variant in the installed spec.
+
+The ``hash`` variant is not a Spack variant: it holds the hash of the installation, and Spack defines it when the module name does not include the hash, which is the case with ``hash_length: 0`` and projections that do not include the hash.
+It keeps the ``depends-on`` lines of dependent module files bound to the exact installation they were built against, see :ref:`module-variants-folding`.
 
 The ``variants`` key under the ``tcl`` module configuration accepts the values:
 
@@ -372,7 +375,7 @@ Users select an installation by stating its variants on the ``module load`` comm
 .. code-block:: console
 
    $ module load -v zlib +shared
-   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:+optimize:+pic:+shared}
+   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:+optimize:+pic:+shared:hash=vzg6net}
 
 The stated variants form a mask, and the first installation matching it is selected.
 The variants left unset take the values of the selected installation.
@@ -381,7 +384,7 @@ Installations are listed sorted by their variant values, so a plain ``module loa
 .. code-block:: console
 
    $ module load -v zlib
-   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:+optimize:+pic:-shared}
+   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:+optimize:+pic:-shared:hash=ickxcoy}
 
 Installing a new build may change what such a partial specification selects, so state the variants that identify the installation you need.
 
@@ -395,8 +398,8 @@ If the stated variants do not match any installation, the error lists the instal
    $ module load zlib ~pic +shared
    Loading zlib/1.3.2-gcc-13.3.0{-pic:+shared}
      ERROR: Specified package is not installed, available packages for this version are:
-       * "build_system=makefile +optimize +pic ~shared"
-       * "build_system=makefile +optimize +pic +shared"
+       * "build_system=makefile +optimize +pic ~shared hash=ickxcoy"
+       * "build_system=makefile +optimize +pic +shared hash=vzg6net"
      ERROR: Module evaluation aborted
 
 Spack maintains folded module files automatically:
@@ -410,25 +413,23 @@ Spack maintains folded module files automatically:
    Unlike uninstall, ``spack module tcl rm`` deletes a folded module file as a whole, so the other installations folded into it lose their module too.
    Run ``spack module tcl refresh`` to write the file again.
 
-If two installations folded in the same module file cannot be distinguished by their variant set, Spack adds a ``hash`` variant to the specification to ensure that each installation can still be selected unambiguously.
+Two installations folded in the same module file may have the same variants, when they differ only by their dependencies:
 
 .. code-block:: console
 
    $ spack install hdf5@1.14 ^openmpi
    $ spack install hdf5@1.14 ^mpich
 
-The two installations have the same variants, so the specifications that select them in the ``hdf5/1.14.6-gcc-15.2.1`` module file differ only by their ``hash`` variant:
+The ``hash`` variant tells them apart in the ``hdf5/1.14.6-gcc-15.2.1`` module file:
 
 .. code-block:: text
 
    ... ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools hash=6dj7iyw
    ... ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools hash=hyob6r5
 
+The ``depends-on`` lines of dependent module files always state the ``hash`` variant, so a dependent keeps loading the installation it was built against whatever installations are later folded into, or removed from, the module file of its dependency.
+
 Like any other variant, ``hash`` left unset takes the value of the selected installation.
-
-.. warning::
-
-   If installing a package causes a folded module file to require the ``hash`` variant, it is recommended to :ref:`regenerate all module files<cmd-spack-module-refresh>` for packages depending on it so their ``depends-on`` lines include the new ``hash`` variant.
 
 Default module versions
 """""""""""""""""""""""
