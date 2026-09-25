@@ -3357,6 +3357,9 @@ def _resolve_location_var(location_key):
             # a cycle among the three
             tty.warn(f"Skipping recursive definition in locations config: {item}.")
             continue
+        # Skip empty or whitespace-only paths (e.g., from empty env vars)
+        if not candidate or not candidate.strip():
+            continue
         # Look for unresolved env var or config vars in candidate
         var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
         unresolved_vars = re.search(var_pattern, candidate)
