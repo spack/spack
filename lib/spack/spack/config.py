@@ -2111,8 +2111,10 @@ def _migrate_package_repositories() -> bool:
     if not os.path.isdir(old_path) or os.path.exists(new_path):
         return False
 
-    if os.path.normpath(os.path.abspath(spack.paths.user_cache_path)) != os.path.normpath(
-        os.path.abspath(spack.paths.default_state_home)
+    # Only migrate if new_path is at the default location (not customized)
+    default_new_repos = os.path.join(spack.paths.default_state_home, "package_repos")
+    if os.path.normpath(os.path.abspath(new_path)) != os.path.normpath(
+        os.path.abspath(default_new_repos)
     ):
         return False
 
@@ -2418,64 +2420,13 @@ def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
     return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
 
 
-def _should_migrate_home() -> bool:
-    """Determine if ~/.spack home directory migration should run.
-
-    This is separate from should_auto_migrate() which checks for old resources
-    in $spack. Home migration runs when:
-    - No isolate scope is active
-    - Config/package repos are pointing at new default locations AND they're empty
-    - Old default locations have content
-
-    This allows fresh clones or other users of a shared prefix to get their
-    ~/.spack config migrated even when there are no old resources in $spack.
-    """
-    # Don't migrate if isolation is active
-    isolate_include = os.path.join(_isolate_scope_path(), "include.yaml")
-    if os.path.exists(isolate_include):
-        return False
-
-    # Check user config migration
-    old_config = os.path.expanduser("~/.spack")
-    new_config = os.path.expanduser("~/.config/spack")
-
-    # Check if user scope exists and points to new default location
-    user_scope = CONFIG.scopes.get("user")
-    if user_scope and isinstance(user_scope, (DirectoryConfigScope, SingleFileScope)):
-        user_scope_path = os.path.normpath(os.path.expanduser(user_scope.path))
-        expected_path = os.path.normpath(new_config)
-        config_should_migrate = (
-            user_scope_path == expected_path
-            and os.path.isdir(old_config)
-            and (not os.path.exists(new_config) or not os.listdir(new_config))
-        )
-    else:
-        config_should_migrate = False
-
-    # Check package repos migration
-    old_repos = spack.paths.old_package_repos_path
-    new_repos = spack.paths.package_repos_path
-
-    # Only migrate package repos if new_repos is at the default location
-    # (i.e., not customized via SPACK_USER_CACHE_PATH or similar)
-    default_new_repos = os.path.join(spack.paths.default_state_home, "package_repos")
-    repos_should_migrate = (
-        os.path.isdir(old_repos)
-        and bool(os.listdir(old_repos))
-        and (not os.path.exists(new_repos) or not bool(os.listdir(new_repos)))
-        and os.path.normpath(os.path.abspath(new_repos))
-        == os.path.normpath(os.path.abspath(default_new_repos))
-    )
-
-    return config_should_migrate or repos_should_migrate
-
-
 def _do_migrate_home() -> Dict[str, bool]:
     """Migrate user config and package repos from ~/.spack to new XDG locations.
 
     This is independent of $spack prefix migration and runs based on whether:
-    - New default locations exist and are empty
+    - No isolate scope is active
     - Old locations have content
+    - New locations don't exist (checked by individual migration functions)
 
     This allows users who git pull a new Spack to get their ~/.spack migrated
     regardless of what's in the $spack prefix.
@@ -2483,7 +2434,9 @@ def _do_migrate_home() -> Dict[str, bool]:
     Returns:
         Dict with keys 'user_config' and 'package_repos', values True if migrated
     """
-    if not _should_migrate_home():
+    # Don't migrate if isolation is active
+    isolate_include = os.path.join(_isolate_scope_path(), "include.yaml")
+    if os.path.exists(isolate_include):
         return {"user_config": False, "package_repos": False}
 
     tty.debug("Home directory migration called")
