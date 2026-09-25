@@ -23,6 +23,7 @@ class VtkM(CMakePackage):
         default="none",
         values=("70", "none"),
         multi=False,
+        sticky=True,
         when="+cuda",
     )
 
@@ -33,6 +34,7 @@ class VtkM(CMakePackage):
         description="AMD GPU architecture",
         values=("gfx900", "none"),
         multi=False,
+        sticky=True,
         when="+rocm",
     )
     depends_on("cmake@3.18:")

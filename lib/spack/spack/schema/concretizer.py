@@ -119,6 +119,19 @@ properties: Dict[str, Any] = {
                     },
                 },
             },
+            "gpus": {
+                "type": "object",
+                "description": "Controls whether GPUs detected on the host provide default "
+                "values for GPU architecture variants (e.g. cuda_arch, amdgpu_target)",
+                "properties": {
+                    "detect": {
+                        "type": "boolean",
+                        "description": "If true, detect host GPUs and use them as variant "
+                        "defaults when the variant is not set on the command line or in "
+                        "packages.yaml",
+                    }
+                },
+            },
             "unify": {
                 "description": "Controls whether environment specs are concretized together "
                 "or separately",
