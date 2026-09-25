@@ -11,9 +11,11 @@ import spack.concretize
 import spack.config
 import spack.main
 import spack.modules
+import spack.modules.cache
 import spack.modules.lmod
 import spack.repo
 import spack.store
+import spack.util.module_cmd
 from spack.config import Configuration
 from spack.old_installer import PackageInstaller
 
@@ -222,3 +224,135 @@ def test_setdefault_command(mutable_database, mutable_config: Configuration):
         assert os.path.exists(writers[k].layout.filename)
     assert os.path.exists(link_name) and os.path.islink(link_name)
     assert os.path.realpath(link_name) == os.path.realpath(writers[preferred].layout.filename)
+
+
+@pytest.fixture()
+def module_cmd_calls(monkeypatch):
+    """Intercepts module command runs, and returns the list of their arguments."""
+    monkeypatch.setattr(spack.modules.cache, "_pending_dirs", set())
+    calls = []
+
+    def fake_module(*args, environb=None, **kwargs):
+        calls.append((args, environb))
+        return ""
+
+    monkeypatch.setattr(spack.util.module_cmd, "module", fake_module)
+    return calls
+
+
+def _enable_update_cache(mutable_config):
+    mutable_config.set("modules", {"default": {"enable": ["tcl"], "tcl": {"update_cache": True}}})
+
+
+@pytest.mark.db
+def test_tcl_refresh_updates_module_cache(mutable_database, mutable_config, module_cmd_calls):
+    """Tests that a refresh ends with a single cachebuild of the changed directories,
+    when 'update_cache' is set."""
+    _enable_update_cache(mutable_config)
+
+    module("tcl", "refresh", "-y", "mpileaks")
+
+    assert len(module_cmd_calls) == 2
+    assert module_cmd_calls[0][0] == ("cacheclear",)
+    args, _ = module_cmd_calls[1]
+    assert args[0] == "cachebuild"
+    assert len(args) > 1 and all(os.path.isdir(d) for d in args[1:])
+
+    # Module file removal also triggers a cache update
+    module_cmd_calls.clear()
+    module("tcl", "rm", "-y", "mpileaks")
+
+    assert len(module_cmd_calls) == 2
+    assert module_cmd_calls[0][0] == ("cacheclear",)
+    assert module_cmd_calls[1][0][0] == "cachebuild"
+
+
+@pytest.mark.db
+def test_tcl_refresh_no_update_cache_by_default(mutable_database, module_cmd_calls):
+    """Tests that no cache update happens when 'update_cache' is not set."""
+    module("tcl", "refresh", "-y", "mpileaks")
+    assert not module_cmd_calls
+
+
+@pytest.mark.db
+def test_tcl_setdefault_updates_module_cache(
+    mutable_database, mutable_config: Configuration, module_cmd_calls
+):
+    """Tests that setting the default module file triggers a cache update, when
+    'update_cache' is set."""
+    _enable_update_cache(mutable_config)
+    other_spec, preferred = "pkg-a@1.0", "pkg-a@2.0"
+    specs = [
+        spack.concretize.concretize_one(other_spec),
+        spack.concretize.concretize_one(preferred),
+    ]
+    PackageInstaller([s.package for s in specs], explicit=True, fake=True).install()
+    module("tcl", "refresh", "-y", preferred, other_spec)
+
+    module_cmd_calls.clear()
+    module("tcl", "setdefault", other_spec)
+
+    assert len(module_cmd_calls) == 2
+    assert module_cmd_calls[0][0] == ("cacheclear",)
+    assert module_cmd_calls[1][0][0] == "cachebuild"
+
+
+@pytest.mark.db
+def test_tcl_cachebuild_command(mutable_database, mutable_config: Configuration, module_cmd_calls):
+    """Tests that 'spack module tcl cachebuild' builds the cache of every modulepath
+    directory managed by spack, even when 'update_cache' is not set."""
+    # Exclude one package from module file generation to also verify that excluded
+    # specs do not contribute modulepath directories
+    mutable_config.set(
+        "modules", {"default": {"enable": ["tcl"], "tcl": {"exclude": ["libdwarf"]}}}
+    )
+    module("tcl", "refresh", "-y")
+    module_cmd_calls.clear()
+
+    module("tcl", "cachebuild")
+
+    assert len(module_cmd_calls) == 1
+    args, _ = module_cmd_calls[0]
+    assert args[0] == "cachebuild"
+    assert len(args) > 1 and all(os.path.isdir(d) for d in args[1:])
+
+
+@pytest.mark.db
+def test_tcl_cacheclear_command(database, module_cmd_calls, monkeypatch):
+    """Tests that 'spack module tcl cacheclear' runs with MODULEPATH set to the
+    modulepath directories managed by spack, ignoring the inherited value."""
+    monkeypatch.setenv("MODULEPATH", "/some/user/modulepath")
+    module("tcl", "refresh", "-y")
+    module_cmd_calls.clear()
+
+    module("tcl", "cacheclear")
+
+    assert len(module_cmd_calls) == 1
+    args, environb = module_cmd_calls[0]
+    assert args == ("cacheclear",)
+    modulepath = os.fsdecode(environb[b"MODULEPATH"])
+    assert modulepath and all(os.path.isdir(d) for d in modulepath.split(os.pathsep))
+    assert "/some/user/modulepath" not in modulepath
+
+
+@pytest.mark.db
+def test_cache_subcommands_without_modulepath_directory(database, module_cmd_calls, monkeypatch):
+    """Tests that cache sub-commands run no module command when no modulepath
+    directory holds module files of known installed packages."""
+    monkeypatch.setattr(spack.repo.PATH, "exists", lambda name: False)
+
+    out = module("tcl", "cachebuild")
+    assert "No modulepath directory found" in out
+
+    out = module("tcl", "cacheclear")
+    assert "No modulepath directory found" in out
+
+    assert not module_cmd_calls
+
+
+@pytest.mark.db
+def test_cache_subcommands_are_tcl_only(database):
+    """Tests that cache sub-commands are not available for lmod."""
+    for subcommand in ("cachebuild", "cacheclear"):
+        with pytest.raises(spack.main.SpackCommandError):
+            module("lmod", subcommand)

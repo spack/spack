@@ -10,6 +10,7 @@ import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.config
+import spack.modules.cache
 import spack.modules.common
 import spack.modules.error
 import spack.modules.tcl
@@ -842,3 +843,69 @@ class TestTcl:
         writer, _ = factory("mpich@3.0.4")
         assert "namematch" in writer.layout.use_name
         assert "depmatch" not in writer.layout.use_name
+
+    def test_update_cache_registration(self, factory, module_configuration, monkeypatch):
+        """Tests that writing or removing a module file registers its modulepath
+        directory for a module cache update."""
+        module_configuration("update_cache")
+        monkeypatch.setattr(spack.modules.cache, "_pending_dirs", set())
+        writer, _ = factory(mpileaks_spec_string)
+
+        # The module file path is the modulepath directory plus the module use name
+        assert writer.layout.filename == os.path.join(
+            writer.layout.modulepath, writer.layout.use_name
+        )
+
+        writer.write()
+        assert spack.modules.cache._pending_dirs == {writer.layout.modulepath}
+
+        # An already existing module file is not overwritten, hence not registered
+        spack.modules.cache._pending_dirs.clear()
+        with pytest.warns(UserWarning):
+            writer.write()
+        assert spack.modules.cache._pending_dirs == set()
+
+        writer.write(overwrite=True)
+        assert spack.modules.cache._pending_dirs == {writer.layout.modulepath}
+
+        spack.modules.cache._pending_dirs.clear()
+        writer.remove()
+        assert spack.modules.cache._pending_dirs == {writer.layout.modulepath}
+
+        # Removing an already absent module file does not register
+        spack.modules.cache._pending_dirs.clear()
+        writer.remove()
+        assert spack.modules.cache._pending_dirs == set()
+
+    def test_update_cache_excluded_spec(self, factory, module_configuration, monkeypatch):
+        """Tests that a spec excluded from module file generation does not register its
+        modulepath directory for a module cache update."""
+        module_configuration("update_cache")
+        monkeypatch.setattr(spack.modules.cache, "_pending_dirs", set())
+        writer, _ = factory("callpath")
+
+        writer.write()
+        assert not os.path.exists(writer.layout.filename)
+        assert spack.modules.cache._pending_dirs == set()
+
+    def test_update_cache_disabled(self, factory, module_configuration, monkeypatch):
+        """Tests that no cache update is registered when 'update_cache' is off."""
+        module_configuration("autoload_direct")
+        monkeypatch.setattr(spack.modules.cache, "_pending_dirs", set())
+        writer, _ = factory(mpileaks_spec_string)
+
+        assert not writer.conf.update_cache
+
+        writer.write()
+        writer.register_cache_update()
+        writer.remove()
+        assert spack.modules.cache._pending_dirs == set()
+
+    def test_modulepath_hierarchical(self, factory, module_configuration):
+        """Tests the modulepath directory computation for a hierarchical layout."""
+        module_configuration("complex_hierarchy")
+        writer, _ = factory("mpich@3.0.4 %gcc@=10.2.1")
+
+        assert writer.layout.filename == os.path.join(
+            writer.layout.modulepath, writer.layout.use_name
+        )
