@@ -2,16 +2,28 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import functools
+import os
 import pathlib
 import sys
+import warnings
 
 import pytest
 
+import spack.audit
+import spack.deptypes
 import spack.detection
 import spack.detection.common
+import spack.detection.dependencies
+import spack.detection.elf_closure
+import spack.detection.ownership
 import spack.detection.path
+import spack.detection.test
+import spack.externals
 import spack.repo
 import spack.spec
+import spack.util.elf
+import spack.util.filesystem
 from spack.config import Configuration
 from spack.test.utilities import UnusableGlobal
 
@@ -179,3 +191,1020 @@ def test_detect_specs_validates_variants_with_injected_repo(tmp_path, monkeypatc
     assert len(detected) == 1
     assert detected[0].external_path == str(prefixes["valid"] / "bin")
     assert detected[0].satisfies("languages=c,c++")
+
+
+def _write_elf(path: pathlib.Path, **kwargs) -> str:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(spack.util.elf.minimal_elf(**kwargs))
+    return str(path)
+
+
+def _resolved(loaded, path: str):
+    """Returns the real paths the DT_NEEDED entries of ``path`` resolve to."""
+    return loaded[os.path.realpath(path)].needed
+
+
+INTERPRETER = "/lib64/ld-linux-x86-64.so.2"
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "search_path,ld_library_path,expected",
+    [
+        # RPATH comes before LD_LIBRARY_PATH
+        ({"rpath": "{tmp}/rpath"}, True, "rpath"),
+        # LD_LIBRARY_PATH comes before RUNPATH
+        ({"runpath": "{tmp}/runpath"}, True, "env"),
+        ({"runpath": "{tmp}/runpath"}, False, "runpath"),
+        # Default directories come last
+        ({}, True, "env"),
+        ({}, False, "default"),
+    ],
+)
+def test_dynamic_loader_search_order(tmp_path, search_path, ld_library_path, expected):
+    for directory in ("rpath", "env", "runpath", "default"):
+        _write_elf(tmp_path / directory / "libz.so.1", soname="libz.so.1")
+    kwargs = {k: v.format(tmp=tmp_path) for k, v in search_path.items()}
+    exe = _write_elf(
+        tmp_path / "bin" / "exe", needed=["libz.so.1"], interpreter=INTERPRETER, **kwargs
+    )
+
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=[str(tmp_path / "env")] if ld_library_path else [],
+        default_dirs=[str(tmp_path / "default")],
+    )
+    loaded = loader.load(exe)
+
+    assert _resolved(loaded, exe) == [os.path.realpath(tmp_path / expected / "libz.so.1")]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "exe_search_path,lib_search_path,finds_libb",
+    [
+        # The RPATH of the loading file is searched for the libraries of what it loads
+        ({"rpath": "{tmp}/lib"}, {}, True),
+        # RUNPATH is used only for the DT_NEEDED entries of the file that has it
+        ({"runpath": "{tmp}/lib"}, {}, False),
+        # A file with a RUNPATH does not search the RPATH of the file that loaded it
+        ({"rpath": "{tmp}/lib"}, {"runpath": "{tmp}/other"}, False),
+    ],
+)
+def test_dynamic_loader_rpath_of_loading_files(
+    tmp_path, exe_search_path, lib_search_path, finds_libb
+):
+    lib = tmp_path / "lib"
+    _write_elf(
+        lib / "liba.so",
+        soname="liba.so",
+        needed=["libb.so"],
+        **{k: v.format(tmp=tmp_path) for k, v in lib_search_path.items()},
+    )
+    _write_elf(lib / "libb.so", soname="libb.so")
+    exe = _write_elf(
+        tmp_path / "bin" / "exe",
+        needed=["liba.so"],
+        interpreter=INTERPRETER,
+        **{k: v.format(tmp=tmp_path) for k, v in exe_search_path.items()},
+    )
+
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[])
+    loaded = loader.load(exe)
+
+    liba = loaded[os.path.realpath(lib / "liba.so")]
+    if finds_libb:
+        assert liba.needed == [os.path.realpath(lib / "libb.so")] and liba.missing == []
+    else:
+        assert liba.needed == [] and liba.missing == ["libb.so"]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_expands_origin(tmp_path):
+    """Tests that $ORIGIN of an executable is its directory after resolving symlinks, and that
+    $ORIGIN of a library is the directory it was found in, without resolving symlinks.
+    """
+    prefix = tmp_path / "prefix"
+    store = tmp_path / "store"
+    _write_elf(store / "liba.so", soname="liba.so", needed=["libb.so"], runpath="$ORIGIN/b")
+    (prefix / "lib").mkdir(parents=True)
+    (prefix / "lib" / "liba.so").symlink_to(store / "liba.so")
+    _write_elf(prefix / "lib" / "b" / "libb.so", soname="libb.so")
+    exe = _write_elf(
+        prefix / "bin" / "exe",
+        needed=["liba.so"],
+        interpreter=INTERPRETER,
+        runpath="${ORIGIN}/../lib",
+    )
+    link = tmp_path / "view" / "bin" / "exe"
+    link.parent.mkdir(parents=True)
+    link.symlink_to(exe)
+
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[])
+    loaded = loader.load(str(link))
+
+    assert set(loaded) == {
+        os.path.realpath(exe),
+        os.path.realpath(store / "liba.so"),
+        os.path.realpath(prefix / "lib" / "b" / "libb.so"),
+    }
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_does_not_search_loaded_sonames(tmp_path):
+    """Tests that a DT_NEEDED entry matching the soname of a loaded library resolves to that
+    library, even when the requesting file would find another one.
+    """
+    _write_elf(tmp_path / "default" / "libz.so", soname="libz.so.1")
+    _write_elf(tmp_path / "private" / "libz.so.1", soname="libz.so.1")
+    _write_elf(
+        tmp_path / "default" / "liba.so",
+        soname="liba.so",
+        needed=["libz.so.1"],
+        runpath=str(tmp_path / "private"),
+    )
+    exe = _write_elf(
+        tmp_path / "bin" / "exe", needed=["libz.so", "liba.so"], interpreter=INTERPRETER
+    )
+
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=[], default_dirs=[str(tmp_path / "default")]
+    )
+    loaded = loader.load(exe)
+
+    default_libz = os.path.realpath(tmp_path / "default" / "libz.so")
+    assert _resolved(loaded, str(tmp_path / "default" / "liba.so")) == [default_libz]
+    assert os.path.realpath(tmp_path / "private" / "libz.so.1") not in loaded
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_skips_incompatible_libraries(tmp_path):
+    _write_elf(tmp_path / "lib32" / "libz.so.1", soname="libz.so.1", is_64_bit=False)
+    (tmp_path / "script").mkdir()
+    (tmp_path / "script" / "libz.so.1").write_text("INPUT(libz.so.1)")
+    _write_elf(tmp_path / "lib64" / "libz.so.1", soname="libz.so.1")
+    exe = _write_elf(tmp_path / "bin" / "exe", needed=["libz.so.1"], interpreter=INTERPRETER)
+
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=[],
+        default_dirs=[str(tmp_path / "lib32"), str(tmp_path / "script"), str(tmp_path / "lib64")],
+    )
+    loaded = loader.load(exe)
+
+    assert _resolved(loaded, exe) == [os.path.realpath(tmp_path / "lib64" / "libz.so.1")]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_closure_with_cycle_and_missing_library(tmp_path):
+    lib = tmp_path / "lib"
+    _write_elf(lib / "liba.so", soname="liba.so", needed=["libb.so", "libmissing.so"])
+    _write_elf(lib / "libb.so", soname="libb.so", needed=["liba.so"])
+
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[str(lib)])
+    loaded = loader.load(str(lib / "liba.so"))
+
+    liba, libb = os.path.realpath(lib / "liba.so"), os.path.realpath(lib / "libb.so")
+    assert set(loaded) == {liba, libb}
+    assert loaded[liba].needed == [libb] and loaded[liba].missing == ["libmissing.so"]
+    assert loaded[libb].needed == [liba] and loaded[libb].missing == []
+
+
+def test_dynamic_loader_root_not_elf(tmp_path):
+    script = tmp_path / "script"
+    script.write_text("#!/bin/sh\n")
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[])
+    assert loader.load(str(script)) == {}
+    assert loader.load(str(tmp_path / "does-not-exist")) == {}
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_used_for_several_roots(tmp_path):
+    """Tests that libraries resolved for one root do not affect the resolution for another."""
+    for directory in ("first", "second"):
+        _write_elf(tmp_path / directory / "libz.so.1", soname="libz.so.1")
+    first = _write_elf(
+        tmp_path / "bin" / "first",
+        needed=["libz.so.1"],
+        interpreter=INTERPRETER,
+        rpath=str(tmp_path / "first"),
+    )
+    second = _write_elf(
+        tmp_path / "bin" / "second",
+        needed=["libz.so.1"],
+        interpreter=INTERPRETER,
+        rpath=str(tmp_path / "second"),
+    )
+
+    loader = spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[])
+
+    assert _resolved(loader.load(first), first) == [
+        os.path.realpath(tmp_path / "first" / "libz.so.1")
+    ]
+    assert _resolved(loader.load(second), second) == [
+        os.path.realpath(tmp_path / "second" / "libz.so.1")
+    ]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_dynamic_loader_ignores_relative_ld_library_path_entries(tmp_path):
+    """Tests that empty and relative entries in LD_LIBRARY_PATH, as in the split of an unset
+    variable, do not resolve against the current working directory.
+    """
+    _write_elf(tmp_path / "cwd" / "libz.so.1", soname="libz.so.1")
+    _write_elf(tmp_path / "cwd" / "lib" / "libz.so.1", soname="libz.so.1")
+    _write_elf(tmp_path / "default" / "libz.so.1", soname="libz.so.1")
+    exe = _write_elf(tmp_path / "bin" / "exe", needed=["libz.so.1"], interpreter=INTERPRETER)
+    loader = spack.detection.elf_closure.DynamicLoader(
+        ld_library_path=["", "lib"], default_dirs=[str(tmp_path / "default")]
+    )
+
+    with spack.util.filesystem.working_dir(tmp_path / "cwd"):
+        loaded = loader.load(exe)
+
+    assert _resolved(loaded, exe) == [os.path.realpath(tmp_path / "default" / "libz.so.1")]
+
+
+@pytest.mark.not_on_windows("Uses shell scripts as mock executables")
+def test_by_path_detailed_assigns_files_by_version(mock_executable, mock_packages):
+    """Tests that when one directory yields several specs, each spec is detected from the files
+    whose version matches its own.
+    """
+    gcc_12 = mock_executable("gcc-12", output="echo 12.3.0")
+    gcc_13 = mock_executable("gcc-13", output="echo 13.2.0")
+    # A file without a version belongs to no spec
+    mock_executable("gcc", output="echo")
+
+    detected = spack.detection.path.by_path_detailed(
+        ["gcc"], repo=mock_packages, path_hints=[str(gcc_12.parent)]
+    )
+
+    files_by_version = {str(x.spec.versions): x.files for x in detected["gcc"]}
+    assert files_by_version == {"12.3.0": [str(gcc_12)], "13.2.0": [str(gcc_13)]}
+
+
+@pytest.mark.not_on_windows("Uses shell scripts as mock executables")
+def test_detect_leaves_out_files_rejected_by_the_package(mock_executable, mock_packages):
+    clang = mock_executable("clang", output="echo 'clang version 14.0.0'")
+    clangxx = mock_executable("clang++", output="echo 'clang version 14.0.0'")
+    clang_format = mock_executable("clang-format", output="echo 'clang version 14.0.0'")
+
+    detected = spack.detection.path.ExecutablesFinder().detect(
+        pkg=mock_packages.get_pkg_class("llvm"),
+        paths=[str(clang), str(clangxx), str(clang_format)],
+        repo_path=mock_packages,
+    )
+
+    assert [x.files for x in detected] == [[str(clang), str(clangxx)]]
+
+
+def test_ownership_index_of_detectable_packages(mock_packages):
+    """Tests that libraries are attributed through ``sonames``, falling back to ``libraries``,
+    and executables through ``executables``, only for packages that can be detected.
+    """
+    index = spack.detection.ownership.ownership_index(mock_packages)
+
+    # sonames-not-detectable sets the same sonames, but cannot be detected
+    assert index.library_owners("libsonames-owner.so.1") == ["sonames-owner"]
+    assert index.library_owners("liblibraries-owner.so.2") == ["libraries-owner"]
+    assert index.library_owners("libunknown.so.1") == []
+
+    assert index.executable_owners("sonames-owner") == ["sonames-owner"]
+    assert index.executable_owners("mpichversion") == ["mpich"]
+    assert index.executable_owners("libsonames-owner.so.1") == []
+
+
+def _consumer_layout(tmp_path: pathlib.Path, needed_by_consumer_lib):
+    """Creates an executable of sonames-consumer that loads ``libintermediate.so.1`` from its
+    prefix, or ``libsonames-owner.so.1`` when ``needed_by_consumer_lib`` is None, and a library
+    of sonames-owner in another prefix. Returns the executable.
+    """
+    owner_lib = tmp_path / "owner" / "lib"
+    _write_elf(owner_lib / "libsonames-owner.so.1", soname="libsonames-owner.so.1")
+    runpath = f"$ORIGIN/../lib:{owner_lib}"
+    first = "libsonames-owner.so.1"
+    if needed_by_consumer_lib is not None:
+        first = needed_by_consumer_lib
+        _write_elf(
+            tmp_path / "consumer" / "lib" / first,
+            soname=first,
+            needed=["libsonames-owner.so.1"],
+            runpath=str(owner_lib),
+        )
+    return _write_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=[first],
+        interpreter=INTERPRETER,
+        runpath=runpath,
+    )
+
+
+def _detect_dependencies(detected, externals, mock_packages):
+    return spack.detection.dependencies.detect_dependencies(
+        detected,
+        externals=externals,
+        index=spack.detection.ownership.ownership_index(mock_packages),
+        loader=spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[]),
+        repo=mock_packages,
+    )
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "intermediate,has_edge",
+    [
+        # The executable loads the library directly
+        (None, True),
+        # The search passes through libraries of no package, and of the package itself
+        ("libhelper.so.1", True),
+        ("libsonames-consumer.so.1", True),
+        # The search stops at system libraries
+        ("libstdc++.so.6", False),
+    ],
+)
+def test_detect_dependencies_from_loaded_libraries(
+    tmp_path, intermediate, has_edge, mock_packages, config
+):
+    exe = _consumer_layout(tmp_path, intermediate)
+    consumer = spack.spec.Spec.from_detection(
+        "sonames-consumer@1.0", external_path=str(tmp_path / "consumer")
+    )
+    owner = spack.spec.Spec.from_detection(
+        "sonames-owner@1.0", external_path=str(tmp_path / "owner")
+    )
+    detected = [spack.detection.path.DetectedExternal(spec=consumer, files=[exe])]
+
+    result = _detect_dependencies(detected, [consumer, owner], mock_packages)
+
+    assert result.missing == []
+    if not has_edge:
+        assert result.edges == []
+        return
+
+    library = os.path.realpath(tmp_path / "owner" / "lib" / "libsonames-owner.so.1")
+    assert result.edges == [
+        spack.detection.dependencies.ExternalEdge(
+            parent=consumer, child=owner, depflag=spack.deptypes.LINK, virtuals=(), library=library
+        )
+    ]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_detect_dependencies_without_external_in_prefix(tmp_path, mock_packages, config):
+    """Tests that a library whose owner has no external in the prefix of the library is
+    returned as missing.
+    """
+    exe = _consumer_layout(tmp_path, None)
+    consumer = spack.spec.Spec.from_detection(
+        "sonames-consumer@1.0", external_path=str(tmp_path / "consumer")
+    )
+    elsewhere = spack.spec.Spec.from_detection(
+        "sonames-owner@1.0", external_path=str(tmp_path / "elsewhere")
+    )
+    detected = [spack.detection.path.DetectedExternal(spec=consumer, files=[exe])]
+
+    result = _detect_dependencies(detected, [consumer, elsewhere], mock_packages)
+
+    assert result.edges == []
+    assert result.missing == [
+        spack.detection.dependencies.MissingExternal(
+            parent=consumer,
+            library=os.path.realpath(tmp_path / "owner" / "lib" / "libsonames-owner.so.1"),
+            owners=["sonames-owner"],
+            prefix=os.path.realpath(tmp_path / "owner"),
+        )
+    ]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_detect_dependencies_with_ambiguous_external(tmp_path, mock_packages, config):
+    exe = _consumer_layout(tmp_path, None)
+    consumer = spack.spec.Spec.from_detection(
+        "sonames-consumer@1.0", external_path=str(tmp_path / "consumer")
+    )
+    owners = [
+        spack.spec.Spec.from_detection(f"sonames-owner@{v}", external_path=str(tmp_path / "owner"))
+        for v in ("1.0", "2.0")
+    ]
+    detected = [spack.detection.path.DetectedExternal(spec=consumer, files=[exe])]
+
+    with pytest.warns(UserWarning, match="may belong to any of"):
+        result = _detect_dependencies(detected, [consumer, *owners], mock_packages)
+
+    assert result.edges == [] and result.missing == []
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "library,expected_version",
+    [
+        # The library is a symlink to a file whose name has the version
+        ("liblibraries-owner.so.1", "1.0"),
+        # The pattern of the recipe matches, but its version detection rejects the file
+        ("liblibraries-owner-extra.so.1", None),
+    ],
+)
+def test_detect_dependencies_on_package_detected_by_libraries(
+    tmp_path, library, expected_version, mock_packages, config, recwarn
+):
+    """Tests that a package detected by its libraries owns only the libraries its recipe detects
+    a version for, and that its externals are told apart by that version.
+    """
+    lib_dir = tmp_path / "usr" / "lib"
+    real = _write_elf(lib_dir / f"{library}.0", soname=library)
+    (lib_dir / library).symlink_to(real)
+    exe = _write_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=[library],
+        interpreter=INTERPRETER,
+        runpath=str(lib_dir),
+    )
+    consumer = spack.spec.Spec.from_detection(
+        "sonames-consumer@1.0", external_path=str(tmp_path / "consumer")
+    )
+    owners = {
+        v: spack.spec.Spec.from_detection(
+            f"libraries-owner@{v}", external_path=str(tmp_path / "usr")
+        )
+        for v in ("1.0", "2.0")
+    }
+    detected = [spack.detection.path.DetectedExternal(spec=consumer, files=[exe])]
+
+    result = _detect_dependencies(detected, [consumer, *owners.values()], mock_packages)
+
+    assert result.missing == [] and not recwarn.list
+    if expected_version is None:
+        assert result.edges == []
+    else:
+        assert [(x.child, x.library) for x in result.edges] == [
+            (owners[expected_version], os.path.realpath(real))
+        ]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_detect_dependencies_requires_link_dependency_in_recipe(tmp_path, mock_packages, config):
+    """Tests that no edge is recorded when the recipe of the parent has only a build dependency
+    on the owner of a library it loads.
+    """
+    exe = _consumer_layout(tmp_path, None)
+    consumer = spack.spec.Spec.from_detection(
+        "sonames-consumer@1.0~owner", external_path=str(tmp_path / "consumer")
+    )
+    owner = spack.spec.Spec.from_detection(
+        "sonames-owner@1.0", external_path=str(tmp_path / "owner")
+    )
+    detected = [spack.detection.path.DetectedExternal(spec=consumer, files=[exe])]
+
+    with pytest.warns(UserWarning, match="has no link dependency on sonames-owner"):
+        result = _detect_dependencies(detected, [consumer, owner], mock_packages)
+
+    assert result.edges == [] and result.missing == []
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize("layout", ["merged-usr", "view"])
+def test_detect_dependencies_through_symlinks(tmp_path, layout, mock_packages, config):
+    """Tests that a library is attributed to an external when either the path the library was
+    found at, or its real path, is in the prefix of the external.
+    """
+    if layout == "merged-usr":
+        # The library is found at <root>/lib, a symlink to <root>/usr/lib, and the prefix of
+        # the external is <root>/usr
+        real = _write_elf(
+            tmp_path / "root" / "usr" / "lib" / "libsonames-owner.so.1",
+            soname="libsonames-owner.so.1",
+        )
+        (tmp_path / "root" / "lib").symlink_to(tmp_path / "root" / "usr" / "lib")
+        search_dir, prefix = tmp_path / "root" / "lib", tmp_path / "root" / "usr"
+    else:
+        # The library is found in a view, where it is a symlink to a file in another prefix,
+        # and the prefix of the external is the view
+        real = _write_elf(
+            tmp_path / "store" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+        )
+        (tmp_path / "view" / "lib").mkdir(parents=True)
+        (tmp_path / "view" / "lib" / "libsonames-owner.so.1").symlink_to(real)
+        search_dir, prefix = tmp_path / "view" / "lib", tmp_path / "view"
+
+    exe = _write_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=["libsonames-owner.so.1"],
+        interpreter=INTERPRETER,
+        runpath=str(search_dir),
+    )
+    consumer = spack.spec.Spec.from_detection(
+        "sonames-consumer@1.0", external_path=str(tmp_path / "consumer")
+    )
+    owner = spack.spec.Spec.from_detection("sonames-owner@1.0", external_path=str(prefix))
+    detected = [spack.detection.path.DetectedExternal(spec=consumer, files=[exe])]
+
+    result = _detect_dependencies(detected, [consumer, owner], mock_packages)
+
+    assert [(x.child, x.library) for x in result.edges] == [(owner, os.path.realpath(real))]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize("in_default_dirs,warns", [(True, True), (False, False)])
+def test_detect_dependencies_through_ld_library_path(
+    tmp_path, in_default_dirs, warns, mock_packages, config, recwarn
+):
+    """Tests that dependencies are detected from the libraries found through LD_LIBRARY_PATH,
+    with a warning when the default directories would give another library of the same package.
+    """
+    env_lib = _write_elf(
+        tmp_path / "module" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+    )
+    if in_default_dirs:
+        _write_elf(
+            tmp_path / "usr" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+        )
+    exe = _write_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=["libsonames-owner.so.1"],
+        interpreter=INTERPRETER,
+    )
+    consumer = spack.spec.Spec.from_detection(
+        "sonames-consumer@1.0", external_path=str(tmp_path / "consumer")
+    )
+    owners = [
+        spack.spec.Spec.from_detection(
+            "sonames-owner@1.0", external_path=str(tmp_path / "module")
+        ),
+        spack.spec.Spec.from_detection("sonames-owner@2.0", external_path=str(tmp_path / "usr")),
+    ]
+    detected = [spack.detection.path.DetectedExternal(spec=consumer, files=[exe])]
+
+    result = spack.detection.dependencies.detect_dependencies(
+        detected,
+        externals=[consumer, *owners],
+        index=spack.detection.ownership.ownership_index(mock_packages),
+        loader=spack.detection.elf_closure.DynamicLoader(
+            ld_library_path=[str(tmp_path / "module" / "lib")],
+            default_dirs=[str(tmp_path / "usr" / "lib")],
+        ),
+        repo=mock_packages,
+    )
+
+    assert [(x.child, x.library) for x in result.edges] == [(owners[0], os.path.realpath(env_lib))]
+    messages = [str(x.message) for x in recwarn.list]
+    if warns:
+        assert len(messages) == 1 and "through LD_LIBRARY_PATH" in messages[0]
+    else:
+        assert messages == []
+
+
+def _write_host_elf(path: pathlib.Path, **kwargs) -> str:
+    """Writes an ELF file that detection accepts on the host, and makes it executable."""
+    is_64_bit, is_little_endian, e_machine = spack.util.elf.get_elf_compat(sys.executable)
+    result = _write_elf(
+        path, is_64_bit=is_64_bit, is_little_endian=is_little_endian, e_machine=e_machine, **kwargs
+    )
+    path.chmod(0o755)
+    return result
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize("case", ["closure", "excluded", "not-found"])
+def test_detect_with_dependencies(tmp_path, case, mock_packages, config):
+    """Tests that the owners of loaded libraries are detected in the prefix of the libraries,
+    and searched for dependencies in turn, unless excluded.
+    """
+    # sonames-consumer -> sonames-owner -> libraries-owner, each in its own prefix. The library
+    # of libraries-owner is in a multiarch directory, as on Debian.
+    libs = tmp_path / "libs" / "lib" / "x86_64-linux-gnu"
+    real = _write_host_elf(libs / "liblibraries-owner.so.1.0", soname="liblibraries-owner.so.1")
+    (libs / "liblibraries-owner.so.1").symlink_to(real)
+    _write_host_elf(
+        tmp_path / "owner" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+    )
+    if case != "not-found":
+        _write_host_elf(
+            tmp_path / "owner" / "bin" / "sonames-owner",
+            needed=["liblibraries-owner.so.1"],
+            interpreter=INTERPRETER,
+            runpath=str(libs),
+        )
+    _write_host_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=["libsonames-owner.so.1"],
+        interpreter=INTERPRETER,
+        runpath=str(tmp_path / "owner" / "lib"),
+    )
+    detect = functools.partial(spack.detection.path.by_path_detailed, repo=mock_packages)
+
+    result = spack.detection.dependencies.detect_with_dependencies(
+        detect(["sonames-consumer"], path_hints=[str(tmp_path / "consumer")]),
+        detect=detect,
+        configured=[],
+        index=spack.detection.ownership.ownership_index(mock_packages),
+        loader=spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[]),
+        repo=mock_packages,
+        exclude=["sonames-owner"] if case == "excluded" else [],
+    )
+
+    prefixes = {
+        name: [x.spec.external_path for x in entries] for name, entries in result.detected.items()
+    }
+    edges = [(x.parent.name, x.child.name) for x in result.edges]
+    if case == "closure":
+        assert prefixes == {
+            "sonames-consumer": [str(tmp_path / "consumer")],
+            "sonames-owner": [str(tmp_path / "owner")],
+            "libraries-owner": [str(tmp_path / "libs")],
+        }
+        assert edges == [
+            ("sonames-consumer", "sonames-owner"),
+            ("sonames-owner", "libraries-owner"),
+        ]
+        assert result.missing == []
+    else:
+        assert prefixes == {"sonames-consumer": [str(tmp_path / "consumer")]}
+        assert edges == []
+        assert [(x.parent.name, x.owners) for x in result.missing] == [
+            ("sonames-consumer", ["sonames-owner"])
+        ]
+
+
+@pytest.mark.parametrize(
+    "configured,detected,expected_ids",
+    [
+        # Each new entry gets the id the parser derives for it
+        (
+            [],
+            ["cmake@3.27.5 /usr", "cmake@3.28.1 /usr"],
+            ["cmake-3.27.5-894d731", "cmake-3.28.1-894d731"],
+        ),
+        # An entry of another version or prefix leaves the id free
+        (
+            [{"spec": "cmake@3.27.5", "prefix": "/opt/cmake"}],
+            ["cmake@3.28.1 /opt/cmake", "cmake@3.26.0 /usr"],
+            ["cmake-3.28.1-df72813", "cmake-3.26.0-894d731"],
+        ),
+        # The id is derived by an entry without an id
+        ([{"spec": "cmake@=3.27.5", "prefix": "/usr/"}], ["cmake@3.27.5 /usr"], [None]),
+        # The id is the explicit id of an entry
+        (
+            [{"spec": "cmake@3.28.1", "prefix": "/opt/cmake", "id": "cmake-3.27.5-894d731"}],
+            ["cmake@3.27.5 /usr"],
+            [None],
+        ),
+        # Two new entries derive the same id
+        ([], ["cmake@3.27.5 /usr", "cmake@3.27.5+ownlibs /usr"], [None, None]),
+    ],
+)
+def test_update_configuration_writes_derived_ids(
+    configured, detected, expected_ids, mutable_config: Configuration
+):
+    """Tests that new entries get the id the parser derives for them, unless it is already in use
+    or derived by another new entry.
+    """
+    mutable_config.set("packages", {"cmake": {"externals": configured}})
+    detected_specs = []
+    for item in detected:
+        spec_str, prefix = item.rsplit(" ", 1)
+        detected_specs.append(spack.spec.Spec(spec_str, external_path=prefix))
+
+    spack.detection.common.update_configuration({"cmake": detected_specs}, config=mutable_config)
+
+    ids = {
+        f"{x['spec']} {x['prefix']}": x.get("id")
+        for x in mutable_config.get("packages")["cmake"]["externals"]
+    }
+    assert [ids[x] for x in detected] == expected_ids
+
+
+def _external_edge(parent: str, child: str, *, virtuals=()):
+    """Returns an edge between two detected externals, written as ``<spec> <prefix>``."""
+    parent_str, parent_prefix = parent.rsplit(" ", 1)
+    child_str, child_prefix = child.rsplit(" ", 1)
+    return spack.detection.dependencies.ExternalEdge(
+        parent=spack.spec.Spec(parent_str, external_path=parent_prefix),
+        child=spack.spec.Spec(child_str, external_path=child_prefix),
+        depflag=spack.deptypes.LINK,
+        virtuals=virtuals,
+        library=os.path.join(child_prefix, "lib", "libchild.so"),
+    )
+
+
+def _derived_id(spec: str, prefix: str) -> str:
+    node = spack.externals.node_from_dict({"spec": spec, "prefix": prefix})
+    return spack.externals.derived_external_id(node)
+
+
+def _parsed_externals(config: Configuration, repo) -> spack.externals.ExternalSpecsParser:
+    packages_yaml = config.deepcopy_as_builtin("packages")
+    return spack.externals.ExternalSpecsParser(
+        spack.externals.extract_dicts_from_configuration(packages_yaml), repo=repo
+    )
+
+
+@pytest.mark.parametrize(
+    "edge,expected_virtuals",
+    [
+        # The recipe declares a build and link dependency, the edge is only a link dependency
+        (_external_edge("sonames-consumer@1.0 /opt/consumer", "sonames-owner@1.0 /opt/owner"), ()),
+        (
+            _external_edge(
+                "mpileaks@2.3 /opt/mpileaks", "mpich@3.0.4 /opt/mpich", virtuals=("mpi",)
+            ),
+            ("mpi",),
+        ),
+    ],
+)
+def test_add_dependencies_of_new_entries(
+    edge, expected_virtuals, mutable_empty_config: Configuration, mock_packages
+):
+    """Tests that edges between detected externals are written to packages.yaml with their
+    dependency types and virtuals, and that parsing configuration restores them.
+    """
+    spack.detection.common.update_configuration(
+        {edge.parent.name: [edge.parent], edge.child.name: [edge.child]},
+        config=mutable_empty_config,
+        scope="user",
+    )
+
+    added = spack.detection.common.add_dependencies(
+        [edge], config=mutable_empty_config, repo=mock_packages, scope="user"
+    )
+
+    assert added == [edge]
+    parent_entry = mutable_empty_config.get("packages")[edge.parent.name]["externals"][0]
+    expected = {"id": _derived_id(str(edge.child), edge.child.external_path), "deptypes": ["link"]}
+    if expected_virtuals:
+        expected["virtuals"] = ",".join(expected_virtuals)
+    assert parent_entry["dependencies"] == [expected]
+
+    parser = _parsed_externals(mutable_empty_config, mock_packages)
+    parent = parser.get_specs_for_package(edge.parent.name)[0]
+    edges = parent.edges_to_dependencies()
+    assert [(x.spec.name, x.depflag, x.virtuals) for x in edges] == [
+        (edge.child.name, spack.deptypes.LINK, expected_virtuals)
+    ]
+
+
+_CONSUMER = {"spec": "sonames-consumer@1.0", "prefix": "/opt/consumer"}
+_OWNER = {"spec": "sonames-owner@1.0", "prefix": "/opt/owner"}
+_OWNER_ID = _derived_id("sonames-owner@1.0", "/opt/owner")
+
+
+@pytest.mark.parametrize(
+    "packages_by_scope,warning",
+    [
+        # The entry of the parent already lists other dependencies
+        (
+            {
+                "user": {
+                    "sonames-consumer": {
+                        "externals": [{**_CONSUMER, "dependencies": [{"id": "other"}]}]
+                    },
+                    "sonames-owner": {"externals": [_OWNER]},
+                }
+            },
+            "its entry lists other dependencies",
+        ),
+        # The entry of the parent is in another scope
+        (
+            {
+                "site": {"sonames-consumer": {"externals": [_CONSUMER]}},
+                "user": {"sonames-owner": {"externals": [_OWNER]}},
+            },
+            "its entry is not in the 'user' scope",
+        ),
+        # The child matches two entries
+        (
+            {
+                "user": {
+                    "sonames-consumer": {"externals": [_CONSUMER]},
+                    "sonames-owner": {
+                        "externals": [_OWNER, {**_OWNER, "spec": "sonames-owner@=1.0"}]
+                    },
+                }
+            },
+            "2 entries match",
+        ),
+        # The child matches no entry
+        ({"user": {"sonames-consumer": {"externals": [_CONSUMER]}}}, "0 entries match"),
+        # The id of the child is the explicit id of another entry
+        (
+            {
+                "user": {
+                    "sonames-consumer": {"externals": [_CONSUMER]},
+                    "sonames-owner": {
+                        "externals": [
+                            _OWNER,
+                            {"spec": "sonames-owner@1.0", "prefix": "/usr", "id": _OWNER_ID},
+                        ]
+                    },
+                }
+            },
+            f"the id {_OWNER_ID} of .* cannot be referenced",
+        ),
+    ],
+)
+def test_add_dependencies_leaves_entries_unchanged(
+    packages_by_scope, warning, mutable_empty_config: Configuration, mock_packages
+):
+    """Tests that dependencies are not written when the entry of the parent cannot be modified,
+    or the entry of the child cannot be referenced, and that a warning says why.
+    """
+    for scope, packages in packages_by_scope.items():
+        mutable_empty_config.set("packages", packages, scope=scope)
+    expected = mutable_empty_config.deepcopy_as_builtin("packages")
+    edge = _external_edge("sonames-consumer@1.0 /opt/consumer", "sonames-owner@1.0 /opt/owner")
+
+    with pytest.warns(UserWarning, match=warning):
+        added = spack.detection.common.add_dependencies(
+            [edge], config=mutable_empty_config, repo=mock_packages, scope="user"
+        )
+
+    assert added == []
+    assert mutable_empty_config.deepcopy_as_builtin("packages") == expected
+
+
+def test_add_dependencies_twice(mutable_empty_config: Configuration, mock_packages):
+    """Tests that adding the same dependencies again changes nothing, and emits no warning."""
+    edge = _external_edge("sonames-consumer@1.0 /opt/consumer", "sonames-owner@1.0 /opt/owner")
+    mutable_empty_config.set(
+        "packages",
+        {"sonames-consumer": {"externals": [_CONSUMER]}, "sonames-owner": {"externals": [_OWNER]}},
+        scope="user",
+    )
+    spack.detection.common.add_dependencies(
+        [edge], config=mutable_empty_config, repo=mock_packages, scope="user"
+    )
+    expected = mutable_empty_config.deepcopy_as_builtin("packages")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        added = spack.detection.common.add_dependencies(
+            [edge], config=mutable_empty_config, repo=mock_packages, scope="user"
+        )
+
+    assert added == []
+    assert mutable_empty_config.deepcopy_as_builtin("packages") == expected
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_detection_tests_with_dependencies(mock_packages):
+    """Tests that detection tests create mock libraries, and detect the dependencies of the
+    package under test only from the mock layout.
+    """
+    outcomes = [
+        x.run() for x in spack.detection.detection_tests("sonames-consumer", mock_packages)
+    ]
+
+    assert [[str(x) for x in outcome.specs] for outcome in outcomes] == [
+        ["sonames-consumer@1.0"],
+        ["sonames-consumer@1.0"],
+    ]
+    assert [[(str(p), str(c)) for p, c in outcome.dependencies] for outcome in outcomes] == [
+        [("sonames-consumer@1.0", "sonames-owner@1.0")],
+        [],
+    ]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "dependencies,expected_details",
+    [
+        (["sonames-owner@1.0"], []),
+        (None, []),
+        ([], ['"sonames-owner@1.0" was detected as a dependency, but was not expected']),
+        (
+            ["sonames-owner@2.0"],
+            [
+                'a dependency satisfying "sonames-owner@2.0" was not detected',
+                '"sonames-owner@1.0" was detected as a dependency, but was not expected',
+            ],
+        ),
+    ],
+)
+def test_audit_detection_tests_with_dependencies(
+    dependencies, expected_details, mock_packages, monkeypatch
+):
+    """Tests that the externals audit reports dependencies that differ from those expected."""
+    test = spack.detection.test.DetectionTest(
+        pkg_name="sonames-consumer",
+        layout=[
+            spack.detection.test.MockExecutables(
+                executables=["bin/sonames-consumer"],
+                script="echo 1.0",
+                needed=["libsonames-owner.so.1"],
+            ),
+            spack.detection.test.MockExecutables(executables=["bin/sonames-owner"], script=""),
+        ],
+        results=[
+            spack.detection.test.ExpectedTestResult(
+                spec="sonames-consumer@1.0", extra_attributes={}, dependencies=dependencies
+            )
+        ],
+        libraries=[spack.detection.test.MockLibrary(path="lib/libsonames-owner.so.1")],
+    )
+    monkeypatch.setattr(
+        spack.detection,
+        "detection_tests",
+        lambda pkg_name, repo: [spack.detection.test.Runner(test=test, repository=repo)],
+    )
+
+    # Detection tests are selected by the name of the package directory
+    errors = spack.audit.run_check(
+        "PKG-EXTERNALS", pkgs=["sonames_consumer"], debug_log=lambda x: None
+    )
+
+    details = [x.split(" [test_id")[0] for error in errors for x in error.details]
+    assert details == expected_details
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize(
+    "listed,expected_edges,warning",
+    [
+        # An executable of another package, run by the external
+        (["tool/bin/dependency-files-tool"], [("dependency-files-tool", "run")], None),
+        # An executable matching the patterns of a package whose recipe does not confirm it
+        (["fake/bin/dependency-files-tool"], [], None),
+        # A library of another package, loaded by the external
+        (["owner/lib/libsonames-owner.so.1"], [("sonames-owner", "link")], None),
+        (
+            ["tool/bin/dependency-files-tool", "owner/lib/libsonames-owner.so.1"],
+            [("dependency-files-tool", "run"), ("sonames-owner", "link")],
+            None,
+        ),
+        # The method raises
+        (None, [], "Cannot get the dependency files of dependency-files-user@1.0"),
+        # The method returns a relative path
+        (["bin/dependency-files-tool"], [], "must be absolute paths"),
+    ],
+)
+def test_detect_with_dependencies_from_dependency_files(
+    listed, expected_edges, warning, tmp_path, mock_executable, mock_packages, config
+):
+    """Tests that the files returned by determine_dependency_files are evidence of run
+    dependencies when another package owns them as executables, and of link dependencies when it
+    owns them as libraries.
+    """
+    mock_executable("dependency-files-user", output="echo", subdir=("user", "bin"))
+    mock_executable(
+        "dependency-files-tool", output="echo dependency-files-tool 2.0", subdir=("tool", "bin")
+    )
+    mock_executable("dependency-files-tool", output="echo other-tool 2.0", subdir=("fake", "bin"))
+    mock_executable("sonames-owner", output="echo", subdir=("owner", "bin"))
+    _write_host_elf(
+        tmp_path / "owner" / "lib" / "libsonames-owner.so.1", soname="libsonames-owner.so.1"
+    )
+    if listed is not None:
+        share = tmp_path / "user" / "share"
+        share.mkdir()
+        entries = [x if x.startswith("bin/") else str(tmp_path / x) for x in listed]
+        (share / "dependency-files").write_text("\n".join(entries))
+    detect = functools.partial(spack.detection.path.by_path_detailed, repo=mock_packages)
+
+    with warnings.catch_warnings(record=True) as recorded:
+        warnings.simplefilter("always")
+        result = spack.detection.dependencies.detect_with_dependencies(
+            detect(["dependency-files-user"], path_hints=[str(tmp_path / "user")]),
+            detect=detect,
+            configured=[],
+            index=spack.detection.ownership.ownership_index(mock_packages),
+            loader=spack.detection.elf_closure.DynamicLoader(ld_library_path=[], default_dirs=[]),
+            repo=mock_packages,
+        )
+
+    edges = sorted(
+        (x.child.name, spack.deptypes.flag_to_string(x.depflag))
+        for x in result.edges
+        if x.parent.name == "dependency-files-user"
+    )
+    assert edges == expected_edges
+    assert result.missing == []
+    messages = [str(x.message) for x in recorded]
+    if warning is None:
+        assert messages == []
+    else:
+        assert len(messages) == 1 and warning in messages[0]
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+def test_detect_dependencies_requires_run_dependency_in_recipe(
+    tmp_path, mock_executable, mock_packages, config
+):
+    """Tests that an executable run by an external gives no dependency when the recipe has only
+    a build dependency on its package.
+    """
+    tool_exe = mock_executable(
+        "dependency-files-tool", output="echo dependency-files-tool 2.0", subdir=("tool", "bin")
+    )
+    user = spack.spec.Spec.from_detection(
+        "dependency-files-user@1.0~tool", external_path=str(tmp_path / "user")
+    )
+    tool = spack.spec.Spec.from_detection(
+        "dependency-files-tool@2.0", external_path=str(tmp_path / "tool")
+    )
+    detected = [
+        spack.detection.path.DetectedExternal(
+            spec=user, files=[], dependency_files=[str(tool_exe)]
+        )
+    ]
+
+    with pytest.warns(UserWarning, match="has no run dependency on dependency-files-tool"):
+        result = _detect_dependencies(detected, [user, tool], mock_packages)
+
+    assert result.edges == []

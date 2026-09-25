@@ -98,6 +98,9 @@ After running this command your ``packages.yaml`` may include new entries:
        externals:
        - spec: cmake@3.17.2
          prefix: /usr
+         id: cmake-3.17.2-894d731
+
+Each new entry gets the id that Spack would derive for it (see :ref:`below <external-dependencies-yaml>`), unless another external already uses that id.
 
 Generally this is useful for detecting a small set of commonly-used packages; for now this is generally limited to finding build-only dependencies.
 Specific limitations include:
@@ -106,6 +109,49 @@ Specific limitations include:
   See :ref:`here <make-package-findable>` for more details.
 * The logic does not search through module files, it can only detect packages with executables defined in ``PATH``; you can help Spack locate externals which use module files by loading any associated modules for packages that you want Spack to know about before running ``spack external find``.
 * Spack does not overwrite existing entries in the package configuration: If there is an external defined for a spec at any configuration scope, then Spack will not add a new external entry (``spack config blame packages`` can help locate all external entries).
+
+.. _cmd-spack-external-find-dependencies:
+
+Detect dependencies between externals
+"""""""""""""""""""""""""""""""""""""
+
+By default, each external found by ``spack external find`` is recorded without dependencies.
+Spack may then pair it with dependencies that differ from the libraries it loads at runtime, for instance with an ``hwloc`` built from sources for an external ``openmpi`` that loads the system ``libhwloc``.
+With the ``--dependencies`` option, Spack also detects the link dependencies of the externals it finds:
+
+.. code-block:: console
+
+   $ spack external find --dependencies curl
+
+On Linux, Spack reads the shared libraries loaded by the files each external was detected from, and searches them as the dynamic loader does, including in ``LD_LIBRARY_PATH``.
+Recipes can also point to files that the external uses in other ways, such as the linker a compiler runs (see :ref:`dependency-files`).
+Each file is attributed to the packages that own it (see :ref:`library-ownership`), and a dependency is recorded when exactly one external of an owner has the file in its prefix, and the recipe of the dependent has a dependency on that owner of the type shown by the file: ``link`` for a library, ``run`` for an executable.
+Libraries of libc and of compiler runtimes never produce a dependency.
+When an owner has no external, Spack searches for it in the prefix of the library, and adds the externals it finds to ``packages.yaml`` too.
+These externals are buildable even with ``--not-buildable``, which applies only to the packages that were searched for, and packages given to ``--exclude`` are never searched for.
+
+Dependencies are written with their ids, and with the dependency types shown by the files:
+
+.. code-block:: yaml
+
+   packages:
+     curl:
+       externals:
+       - spec: curl@8.5.0+gssapi+ldap+nghttp2
+         prefix: /usr
+         id: curl-8.5.0-894d731
+         dependencies:
+         - id: openssl-3.0.13-894d731
+           deptypes:
+           - link
+     openssl:
+       externals:
+       - spec: openssl@3.0.13
+         prefix: /usr
+         id: openssl-3.0.13-894d731
+
+Spack adds ``dependencies`` only to entries in the configuration scope it modifies, and only to entries that have none.
+A warning is emitted for each dependency that is detected but not recorded, and for each external that loads the libraries of another package from different files with and without ``LD_LIBRARY_PATH``.
 
 Prevent packages from being built from sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -302,12 +348,27 @@ The example in the previous section, written using the YAML configuration, becom
        - spec: "mpich@3.0.4"
          prefix: /user/path
 
+.. _external-dependencies-yaml:
+
 Each dependency can be specified either by:
 
 - A ``spec:`` that matches an available external package, like in the previous case, or by
 - An ``id`` that explicitly references another external package.
 
 Using the ``id`` provides an unambiguous reference to a specific external package, which is essential for differentiating between externals that have similar specs but differ, for example, only by their installation prefix.
+
+An external without an explicit ``id`` has one derived from its name, version, and prefix (or modules, if it has no prefix).
+The derived id has the form ``<name>-<version>-<digest>``, where the 7 characters of the digest are a hash of the prefix only: externals with the same prefix, such as ``gcc-13.3.0-894d731`` and ``glibc-2.39-894d731`` in ``/usr``, share the same digest.
+This allows referencing an external in a configuration scope you cannot modify, for instance one defined by a system administrator.
+Variants are not part of the derived id, so two externals that differ only by their variants derive the same id, and neither can be referenced by it: give one of them an explicit ``id`` instead.
+To see the id of each external, and whether it can be referenced, use ``spack external show``:
+
+.. code-block:: console
+
+   $ spack external show mpileaks callpath mpich
+   callpath_id           callpath@1.0            /user/path  [/home/user/.spack/packages.yaml:23]
+   mpich-3.0.4-d1a113f   mpich@3.0.4             /user/path  [/home/user/.spack/packages.yaml:34]
+   mpileaks-2.3-d1a113f  mpileaks@2.3~debug+opt  /user/path  [/home/user/.spack/packages.yaml:11]
 
 The dependency types can be specified in the optional ``deptypes`` field, while virtuals can be specified in the optional ``virtuals`` field.
 As before, when the dependency types are not specified, Spack will infer them from the package recipe.

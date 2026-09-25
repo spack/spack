@@ -6,7 +6,7 @@ import bisect
 import re
 import struct
 from struct import calcsize, unpack, unpack_from
-from typing import BinaryIO, Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple
+from typing import BinaryIO, Callable, Dict, List, NamedTuple, Optional, Pattern, Sequence, Tuple
 
 
 class ElfHeader(NamedTuple):
@@ -68,16 +68,21 @@ class ELF_CONSTANTS:
     DATA2MSB = 2
     ET_EXEC = 2
     ET_DYN = 3
+    EM_X86_64 = 62
     PT_LOAD = 1
     PT_DYNAMIC = 2
     PT_INTERP = 3
+    PF_R = 4
     DT_NULL = 0
     DT_NEEDED = 1
     DT_STRTAB = 5
+    DT_STRSZ = 10
     DT_SONAME = 14
     DT_RPATH = 15
     DT_RUNPATH = 29
     SHT_STRTAB = 3
+    SHT_DYNAMIC = 6
+    SHF_ALLOC = 2
 
 
 class ElfFile:
@@ -693,6 +698,175 @@ def get_elf_compat(path: str) -> Tuple[bool, bool, int]:
     with open(path, "rb") as f:
         elf = parse_elf(f, only_header=True)
         return (elf.is_64_bit, elf.is_little_endian, elf.elf_hdr.e_machine)
+
+
+def minimal_elf(
+    *,
+    needed: Sequence[str] = (),
+    soname: Optional[str] = None,
+    rpath: Optional[str] = None,
+    runpath: Optional[str] = None,
+    interpreter: Optional[str] = None,
+    e_type: int = ELF_CONSTANTS.ET_DYN,
+    e_machine: int = ELF_CONSTANTS.EM_X86_64,
+    is_64_bit: bool = True,
+    is_little_endian: bool = True,
+) -> bytes:
+    """Returns the bytes of an ELF file with a dynamic section and no code.
+
+    The file has one ``PT_LOAD`` segment mapping the whole file at address 0, a ``PT_DYNAMIC``
+    segment, an optional ``PT_INTERP`` segment, and the sections ``.dynstr``, ``.dynamic`` and
+    ``.shstrtab``. Tools like ``readelf`` can read it, but the dynamic linker cannot load it.
+
+    Arguments:
+        needed: ``DT_NEEDED`` entries, in order
+        soname: ``DT_SONAME`` entry
+        rpath: ``DT_RPATH`` entry, a colon separated list of directories
+        runpath: ``DT_RUNPATH`` entry, a colon separated list of directories
+        interpreter: path of the dynamic linker in ``PT_INTERP``
+        e_type: type of the file, ``ET_DYN`` or ``ET_EXEC``
+        e_machine: architecture of the file
+        is_64_bit: whether the file is ``ELFCLASS64`` or ``ELFCLASS32``
+        is_little_endian: whether the file is ``ELFDATA2LSB`` or ``ELFDATA2MSB``
+    """
+    if rpath is not None and runpath is not None:
+        raise ValueError("an ELF file cannot have both DT_RPATH and DT_RUNPATH")
+
+    byte_order = "<" if is_little_endian else ">"
+    ehdr_fmt = byte_order + ("HHLQQQLHHHHHH" if is_64_bit else "HHLLLLLHHHHHH")
+    phdr_fmt = byte_order + ("LLQQQQQQ" if is_64_bit else "LLLLLLLL")
+    shdr_fmt = byte_order + ("LLQQQQLLQQ" if is_64_bit else "LLLLLLLLLL")
+    dyn_fmt = byte_order + ("qQ" if is_64_bit else "lL")
+    word_size = 8 if is_64_bit else 4
+    ehdr_size = 16 + calcsize(ehdr_fmt)
+
+    # String table of the dynamic section, starting with the empty string
+    strtab = bytearray(b"\0")
+    dynamic: List[Tuple[int, int]] = []
+
+    def add_string(tag: int, value: str) -> None:
+        dynamic.append((tag, len(strtab)))
+        strtab.extend(value.encode("utf-8") + b"\0")
+
+    for name in needed:
+        add_string(ELF_CONSTANTS.DT_NEEDED, name)
+    if soname is not None:
+        add_string(ELF_CONSTANTS.DT_SONAME, soname)
+    if rpath is not None:
+        add_string(ELF_CONSTANTS.DT_RPATH, rpath)
+    if runpath is not None:
+        add_string(ELF_CONSTANTS.DT_RUNPATH, runpath)
+
+    def align(offset: int) -> int:
+        return -(-offset // word_size) * word_size
+
+    # Layout: ELF header, program headers, interpreter, dynamic string table, dynamic array,
+    # section name table, section headers. File offsets and virtual addresses coincide, since
+    # PT_LOAD maps the whole file at address 0.
+    num_phdrs = 3 if interpreter is not None else 2
+    interp_offset = ehdr_size + num_phdrs * calcsize(phdr_fmt)
+    interp = b"" if interpreter is None else interpreter.encode("utf-8") + b"\0"
+    strtab_offset = interp_offset + len(interp)
+    dynamic_offset = align(strtab_offset + len(strtab))
+    dynamic += [
+        (ELF_CONSTANTS.DT_STRTAB, strtab_offset),
+        (ELF_CONSTANTS.DT_STRSZ, len(strtab)),
+        (ELF_CONSTANTS.DT_NULL, 0),
+    ]
+    dynamic_size = len(dynamic) * calcsize(dyn_fmt)
+    shstrtab = b"\0.dynstr\0.dynamic\0.shstrtab\0"
+    shstrtab_offset = dynamic_offset + dynamic_size
+    shdr_offset = align(shstrtab_offset + len(shstrtab))
+    num_shdrs = 4
+    file_size = shdr_offset + num_shdrs * calcsize(shdr_fmt)
+
+    def phdr(p_type: int, offset: int, size: int, p_align: int) -> bytes:
+        p_flags = ELF_CONSTANTS.PF_R
+        if is_64_bit:
+            return struct.pack(
+                phdr_fmt, p_type, p_flags, offset, offset, offset, size, size, p_align
+            )
+        return struct.pack(phdr_fmt, p_type, offset, offset, offset, size, size, p_flags, p_align)
+
+    def shdr(
+        name: bytes,
+        sh_type: int,
+        sh_flags: int,
+        offset: int,
+        size: int,
+        *,
+        sh_link: int = 0,
+        sh_addralign: int = 1,
+        sh_entsize: int = 0,
+    ) -> bytes:
+        sh_name = shstrtab.index(b"\0" + name + b"\0") + 1
+        sh_addr = offset if sh_flags & ELF_CONSTANTS.SHF_ALLOC else 0
+        sh_info = 0
+        return struct.pack(
+            shdr_fmt,
+            sh_name,
+            sh_type,
+            sh_flags,
+            sh_addr,
+            offset,
+            size,
+            sh_link,
+            sh_info,
+            sh_addralign,
+            sh_entsize,
+        )
+
+    e_ident = ELF_CONSTANTS.MAGIC + bytes(
+        [
+            ELF_CONSTANTS.CLASS64 if is_64_bit else ELF_CONSTANTS.CLASS32,
+            ELF_CONSTANTS.DATA2LSB if is_little_endian else ELF_CONSTANTS.DATA2MSB,
+            1,  # EI_VERSION
+        ]
+    )
+    result = bytearray(e_ident.ljust(16, b"\0"))
+    result += struct.pack(
+        ehdr_fmt,
+        e_type,
+        e_machine,
+        1,  # e_version
+        0,  # e_entry
+        ehdr_size,  # e_phoff
+        shdr_offset,
+        0,  # e_flags
+        ehdr_size,
+        calcsize(phdr_fmt),
+        num_phdrs,
+        calcsize(shdr_fmt),
+        num_shdrs,
+        3,  # e_shstrndx
+    )
+    # PT_INTERP must precede any loadable segment
+    if interpreter is not None:
+        result += phdr(ELF_CONSTANTS.PT_INTERP, interp_offset, len(interp), 1)
+    result += phdr(ELF_CONSTANTS.PT_LOAD, 0, file_size, 0x1000)
+    result += phdr(ELF_CONSTANTS.PT_DYNAMIC, dynamic_offset, dynamic_size, word_size)
+    result += interp + strtab
+    result = result.ljust(dynamic_offset, b"\0")
+    for tag, value in dynamic:
+        result += struct.pack(dyn_fmt, tag, value)
+    result += shstrtab
+    result = result.ljust(shdr_offset, b"\0")
+    result += bytes(calcsize(shdr_fmt))
+    result += shdr(
+        b".dynstr", ELF_CONSTANTS.SHT_STRTAB, ELF_CONSTANTS.SHF_ALLOC, strtab_offset, len(strtab)
+    )
+    result += shdr(
+        b".dynamic",
+        ELF_CONSTANTS.SHT_DYNAMIC,
+        ELF_CONSTANTS.SHF_ALLOC,
+        dynamic_offset,
+        dynamic_size,
+        sh_link=1,
+        sh_addralign=word_size,
+        sh_entsize=calcsize(dyn_fmt),
+    )
+    result += shdr(b".shstrtab", ELF_CONSTANTS.SHT_STRTAB, 0, shstrtab_offset, len(shstrtab))
+    return bytes(result)
 
 
 class ElfCStringUpdatesFailed(Exception):

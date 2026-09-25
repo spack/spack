@@ -14,11 +14,14 @@ from spack.compilers.config import all_compilers_from
 from spack.config import Configuration
 from spack.externals import (
     DuplicateExternalError,
+    ExternalDependencyError,
     ExternalDict,
+    ExternalId,
     ExternalSpecError,
     ExternalSpecsParser,
     complete_architecture,
     complete_variants_and_architecture,
+    derived_external_id,
 )
 
 pytestmark = pytest.mark.usefixtures("mock_packages")
@@ -502,3 +505,152 @@ def test_external_with_value_conditional_on_another_version(mutable_config: Conf
 
     assert s.external
     assert s.satisfies("flavor=new")
+
+
+@pytest.mark.parametrize(
+    "external_dict,expected",
+    [
+        # The digest is based on a normalized version of the prefix
+        ({"spec": "cmake@3.23.1", "prefix": "/user/path"}, "cmake-3.23.1-d1a113f"),
+        ({"spec": "cmake@=3.23.1", "prefix": "/user/path/"}, "cmake-3.23.1-d1a113f"),
+        ({"spec": "cmake@3.23.1", "prefix": "/user//path"}, "cmake-3.23.1-d1a113f"),
+        # Different prefix means different digest
+        ({"spec": "cmake@3.23.1", "prefix": "/other/path"}, "cmake-3.23.1-0ebf718"),
+        # Same prefix means same digest. In this case it's the name and version that change
+        ({"spec": "cmake@3.4.3", "prefix": "/user/path"}, "cmake-3.4.3-d1a113f"),
+        # Variants are not part of the id - the id maps to an installed external, and shouldn't be
+        # affected by the change of a variant in the configuration file
+        ({"spec": "gcc@12.1.0", "prefix": "/user/path"}, "gcc-12.1.0-d1a113f"),
+        ({"spec": "gcc@12.1.0 +binutils", "prefix": "/user/path"}, "gcc-12.1.0-d1a113f"),
+        ({"spec": "gcc@12.1.0 ~binutils", "prefix": "/user/path"}, "gcc-12.1.0-d1a113f"),
+    ],
+)
+def test_derived_external_id(config, mock_packages, external_dict: ExternalDict, expected):
+    """Tests the exact derived ids, which are written into packages.yaml, for different spellings
+    of the same external.
+    """
+    parser = ExternalSpecsParser([external_dict], repo=mock_packages)
+    assert derived_external_id(parser.all_specs()[0]) == expected
+
+
+def test_reference_to_derived_id(config, mock_packages):
+    """Tests that an external can reference by derived id an external that has no explicit id"""
+    externals_dicts: List[ExternalDict] = [
+        {
+            "spec": "cmake-client@1.0",
+            "prefix": "/user/path",
+            "dependencies": [{"id": "cmake-3.23.1-d1a113f"}],
+        },
+        {"spec": "cmake@3.23.1", "prefix": "/user/path"},
+    ]
+    parser = ExternalSpecsParser(externals_dicts, repo=mock_packages)
+    (client,) = parser.query("cmake-client")
+    assert client.satisfies("%[deptypes=build] cmake@3.23.1")
+
+
+def test_duplicate_externals_without_id(config, mock_packages):
+    """Tests that externals without an explicit id that derive the same id, here because they
+    differ only by a variant, are all parsed, and that a reference to their shared derived id is
+    an error listing both.
+    """
+    duplicates: List[ExternalDict] = [
+        {"spec": "mpich@3.0.4 +debug", "prefix": "/user/path"},
+        {"spec": "mpich@3.0.4 ~debug", "prefix": "/user/path"},
+    ]
+    parser = ExternalSpecsParser([dict(x) for x in duplicates], repo=mock_packages)
+    assert len(parser.query("mpich@3.0.4+debug")) == 1
+    assert len(parser.query("mpich@3.0.4~debug")) == 1
+
+    client: ExternalDict = {
+        "spec": "callpath@0.9",
+        "prefix": "/user/path",
+        "dependencies": [{"id": "mpich-3.0.4-d1a113f"}],
+    }
+    with pytest.raises(ExternalDependencyError, match="matches multiple externals") as e:
+        ExternalSpecsParser([client] + [dict(x) for x in duplicates], repo=mock_packages)
+    assert "mpich@=3.0.4+debug" in str(e.value)
+    assert "mpich@=3.0.4~debug" in str(e.value)
+
+
+def test_explicit_id_takes_precedence_over_derived_id(config, mock_packages):
+    """Tests that a reference resolves to the external with a matching explicit id, when another
+    external without an id derives the same id.
+    """
+    externals_dicts: List[ExternalDict] = [
+        {
+            "spec": "cmake-client@1.0",
+            "prefix": "/user/path",
+            "dependencies": [{"id": "cmake-3.23.1-d1a113f"}],
+        },
+        {"spec": "cmake@3.23.1", "prefix": "/user/path"},
+        {"spec": "cmake@3.4.3", "prefix": "/other/path", "id": "cmake-3.23.1-d1a113f"},
+    ]
+    parser = ExternalSpecsParser(externals_dicts, repo=mock_packages)
+    assert len(parser.query("cmake")) == 2
+    (client,) = parser.query("cmake-client")
+    assert client.satisfies("%[deptypes=build] cmake@3.4.3")
+
+
+def test_missing_id_error_lists_ids_of_possible_dependencies(config, mock_packages):
+    """Tests that a reference to an unknown id reports the ids of the externals the package can
+    depend on, and only those.
+    """
+    externals_dicts: List[ExternalDict] = [
+        {
+            "spec": "cmake-client@1.0",
+            "prefix": "/user/path",
+            "dependencies": [{"id": "cmake-3.23.1-wrong"}],
+        },
+        {"spec": "cmake@3.23.1", "prefix": "/user/path"},
+        {"spec": "cmake@3.4.3", "prefix": "/other/path", "id": "old-cmake"},
+        {"spec": "libelf@0.8.13", "prefix": "/user/path"},
+    ]
+    with pytest.raises(ExternalDependencyError) as e:
+        ExternalSpecsParser(externals_dicts, repo=mock_packages)
+
+    assert "cmake-3.23.1-d1a113f, old-cmake" in str(e.value)
+    assert "libelf" not in str(e.value)
+
+
+def test_external_id_reports_conflicts(config, mock_packages):
+    """Tests the ids reported for externals, including those that cannot be referenced, and that
+    parsing only nodes does not raise on a broken reference.
+    """
+    externals_dicts: List[ExternalDict] = [
+        {"spec": "cmake-client@1.0", "prefix": "/user/path", "dependencies": [{"id": "wrong"}]},
+        {"spec": "cmake@3.23.1", "prefix": "/user/path"},
+        {"spec": "cmake@=3.23.1", "prefix": "/user/path/"},
+        {"spec": "libelf@0.8.13", "prefix": "/user/path"},
+        {"spec": "libelf@0.8.12", "prefix": "/other/path", "id": "libelf-0.8.13-d1a113f"},
+    ]
+    parser = ExternalSpecsParser(externals_dicts, repo=mock_packages, nodes_only=True)
+    ids = {
+        (x.config["spec"], x.config["prefix"]): parser.external_id(x)
+        for entries in parser.specs_by_name.values()
+        for x in entries
+    }
+    assert ids == {
+        ("cmake-client@1.0", "/user/path"): ExternalId("cmake-client-1.0-d1a113f", None),
+        ("cmake@3.23.1", "/user/path"): ExternalId(
+            "cmake-3.23.1-d1a113f", "derived by multiple externals"
+        ),
+        ("cmake@=3.23.1", "/user/path/"): ExternalId(
+            "cmake-3.23.1-d1a113f", "derived by multiple externals"
+        ),
+        ("libelf@0.8.13", "/user/path"): ExternalId(
+            "libelf-0.8.13-d1a113f", "explicit id of another external"
+        ),
+        ("libelf@0.8.12", "/other/path"): ExternalId("libelf-0.8.13-d1a113f", None),
+    }
+
+
+def test_missing_id_error_lists_providers_of_virtual_dependencies(config, mock_packages):
+    """Tests that a reference to an unknown id reports the ids of the externals providing a
+    virtual the package depends on.
+    """
+    externals_dicts: List[ExternalDict] = [
+        {"spec": "callpath@0.9", "prefix": "/user/path", "dependencies": [{"id": "wrong"}]},
+        {"spec": "mpich@3.0.4", "prefix": "/user/path", "id": "my-mpich"},
+    ]
+    with pytest.raises(ExternalDependencyError, match="can depend on: my-mpich"):
+        ExternalSpecsParser(externals_dicts, repo=mock_packages)

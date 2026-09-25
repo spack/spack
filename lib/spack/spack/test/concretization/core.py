@@ -56,7 +56,11 @@ import spack.version.git_ref_lookup
 from spack.concretize_ui import SolveKind
 from spack.config import Configuration
 from spack.database import Database
-from spack.externals import ExternalDependencyError
+from spack.externals import (
+    ExternalDependencyError,
+    ExternalSpecsParser,
+    extract_dicts_from_configuration,
+)
 from spack.old_installer import PackageInstaller
 from spack.repo import RepoPath
 from spack.solver.asp import Result
@@ -3257,6 +3261,12 @@ class TestConcretizeEdges:
         assert not s.satisfies("^[virtuals=blas,lapack] openblas")
 
 
+def _external_parser(packages_yaml) -> ExternalSpecsParser:
+    return ExternalSpecsParser(
+        extract_dicts_from_configuration(packages_yaml), repo=spack.repo.PATH
+    )
+
+
 def test_reusable_externals_match(mock_packages, tmp_path: pathlib.Path):
     spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
     spec.external_path = str(tmp_path)
@@ -3264,15 +3274,16 @@ def test_reusable_externals_match(mock_packages, tmp_path: pathlib.Path):
     spec._mark_concrete()
     assert spack.solver.reuse._is_reusable(
         spec,
-        {
-            "mpich": {
-                "externals": [
-                    {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
-                ]
+        _external_parser(
+            {
+                "mpich": {
+                    "externals": [
+                        {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
+                    ]
+                }
             }
-        },
+        ),
         local=False,
-        repo=spack.repo.PATH,
     )
 
 
@@ -3283,15 +3294,16 @@ def test_reusable_externals_match_virtual(mock_packages, tmp_path: pathlib.Path)
     spec._mark_concrete()
     assert spack.solver.reuse._is_reusable(
         spec,
-        {
-            "mpi": {
-                "externals": [
-                    {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
-                ]
+        _external_parser(
+            {
+                "mpi": {
+                    "externals": [
+                        {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
+                    ]
+                }
             }
-        },
+        ),
         local=False,
-        repo=spack.repo.PATH,
     )
 
 
@@ -3302,15 +3314,16 @@ def test_reusable_externals_different_prefix(mock_packages, tmp_path: pathlib.Pa
     spec._mark_concrete()
     assert not spack.solver.reuse._is_reusable(
         spec,
-        {
-            "mpich": {
-                "externals": [
-                    {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
-                ]
+        _external_parser(
+            {
+                "mpich": {
+                    "externals": [
+                        {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
+                    ]
+                }
             }
-        },
+        ),
         local=False,
-        repo=spack.repo.PATH,
     )
 
 
@@ -3322,15 +3335,16 @@ def test_reusable_externals_different_modules(mock_packages, tmp_path: pathlib.P
     spec._mark_concrete()
     assert not spack.solver.reuse._is_reusable(
         spec,
-        {
-            "mpich": {
-                "externals": [
-                    {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
-                ]
+        _external_parser(
+            {
+                "mpich": {
+                    "externals": [
+                        {"spec": "mpich@4.1", "prefix": str(tmp_path), "modules": ["mpich/4.1"]}
+                    ]
+                }
             }
-        },
+        ),
         local=False,
-        repo=spack.repo.PATH,
     )
 
 
@@ -3340,9 +3354,10 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
     spec._mark_concrete()
     assert not spack.solver.reuse._is_reusable(
         spec,
-        {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": str(tmp_path)}]}},
+        _external_parser(
+            {"mpich": {"externals": [{"spec": "mpich@4.1 +debug", "prefix": str(tmp_path)}]}}
+        ),
         local=False,
-        repo=spack.repo.PATH,
     )
 
 
@@ -6172,3 +6187,43 @@ def test_no_available_compiler_error(remove_all_compilers):
     remove_all_compilers()
     with pytest.raises(spack.compilers.config.NoAvailableCompilerError, match="in PATH"):
         spack.concretize.concretize_one("pkg-b")
+
+
+@pytest.mark.parametrize(
+    "installed_dependencies,configured_dependencies,expected",
+    [
+        # Dependencies added to packages.yaml after the external was installed
+        ([], [{"spec": "mpich@3.0.4"}], False),
+        # Same dependencies
+        ([{"spec": "mpich@3.0.4"}], [{"spec": "mpich@3.0.4"}], True),
+        # The dependency now resolves to another external
+        ([{"spec": "mpich@3.0.4"}], [{"spec": "mpich@3.0.3"}], False),
+        # An installed external may have more dependencies than its entry
+        ([{"spec": "mpich@3.0.4"}], [], True),
+    ],
+)
+def test_reusable_externals_dependencies(
+    installed_dependencies, configured_dependencies, expected, mock_packages
+):
+    """Tests that an external from the store is reusable only if it has a matching dependency for
+    each dependency of its entry in packages.yaml.
+    """
+
+    def packages_yaml(dependencies):
+        return {
+            "callpath": {
+                "externals": [
+                    {"spec": "callpath@0.9", "prefix": "/callpath", "dependencies": dependencies}
+                ]
+            },
+            "mpich": {
+                "externals": [
+                    {"spec": "mpich@3.0.4", "prefix": "/mpich-3.0.4"},
+                    {"spec": "mpich@3.0.3", "prefix": "/mpich-3.0.3"},
+                ]
+            },
+        }
+
+    installed = _external_parser(packages_yaml(installed_dependencies)).query("callpath")[0]
+    configured = _external_parser(packages_yaml(configured_dependencies))
+    assert spack.solver.reuse._is_reusable(installed, configured, local=True) is expected

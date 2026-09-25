@@ -29,6 +29,7 @@ import spack.solver.reuse
 import spack.spec
 import spack.store
 from spack.cray_manifest import compiler_from_entry, entries_to_specs
+from spack.externals import ExternalSpecsParser
 from spack.externals_config import external_config_with_implicit_externals
 from spack.solver.reuse import ReusableSpecsSelector
 from spack.store import Store
@@ -484,9 +485,8 @@ def test_cray_manifest_externals_from_a_build_cache_are_not_reusable(
 
     assert not spack.solver.reuse._is_reusable(
         spec,
-        packages_with_externals={},
+        external_parser=ExternalSpecsParser([], repo=spack.repo.PATH),
         local=False,
-        repo=spack.repo.PATH,
         external_db_hashes=spack.solver.reuse._external_db_hashes(temporary_store),
     )
 

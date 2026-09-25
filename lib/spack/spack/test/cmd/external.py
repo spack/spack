@@ -11,6 +11,7 @@ import spack.cmd.external
 import spack.cray_manifest
 import spack.detection
 import spack.detection.path
+import spack.util.elf
 from spack.config import Configuration
 from spack.main import SpackCommand
 from spack.spec import Spec
@@ -52,8 +53,16 @@ def test_find_external_update_config(mutable_config: Configuration):
     cmake_cfg = pkgs_cfg["cmake"]
     cmake_externals = cmake_cfg["externals"]
 
-    assert {"spec": "cmake@1.foo", "prefix": "/x/y1"} in cmake_externals
-    assert {"spec": "cmake@3.17.2", "prefix": "/x/y2"} in cmake_externals
+    assert {
+        "spec": "cmake@1.foo",
+        "prefix": "/x/y1",
+        "id": "cmake-1.foo-91f2afe",
+    } in cmake_externals
+    assert {
+        "spec": "cmake@3.17.2",
+        "prefix": "/x/y2",
+        "id": "cmake-3.17.2-f3ebccf",
+    } in cmake_externals
 
 
 def test_get_executables(working_env, mock_executable):
@@ -103,11 +112,16 @@ def test_find_external_cmd_not_buildable(
             [],
             [
                 "builtin_mock.cmake",
+                "builtin_mock.dependency-files-tool",
+                "builtin_mock.dependency-files-user",
                 "builtin_mock.find-externals1",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
+                "builtin_mock.libraries-owner",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.sonames-consumer",
+                "builtin_mock.sonames-owner",
             ],
         ),
         # find --all --exclude find-externals1
@@ -117,10 +131,15 @@ def test_find_external_cmd_not_buildable(
             ["builtin_mock.find-externals1"],
             [
                 "builtin_mock.cmake",
+                "builtin_mock.dependency-files-tool",
+                "builtin_mock.dependency-files-user",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
+                "builtin_mock.libraries-owner",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.sonames-consumer",
+                "builtin_mock.sonames-owner",
             ],
         ),
         (
@@ -129,10 +148,15 @@ def test_find_external_cmd_not_buildable(
             ["find-externals1"],
             [
                 "builtin_mock.cmake",
+                "builtin_mock.dependency-files-tool",
+                "builtin_mock.dependency-files-user",
                 "builtin_mock.gcc",
                 "builtin_mock.intel-oneapi-compilers",
+                "builtin_mock.libraries-owner",
                 "builtin_mock.llvm",
                 "builtin_mock.mpich",
+                "builtin_mock.sonames-consumer",
+                "builtin_mock.sonames-owner",
             ],
         ),
         # find hwloc (and mock hwloc is not detectable)
@@ -242,7 +266,11 @@ def test_find_external_merge(mutable_config: Configuration):
     pkg_externals = pkg_cfg["externals"]
 
     assert {"spec": "find-externals1@1.1", "prefix": "/preexisting-prefix"} in pkg_externals
-    assert {"spec": "find-externals1@1.2", "prefix": "/x/y2"} in pkg_externals
+    assert {
+        "spec": "find-externals1@1.2",
+        "prefix": "/x/y2",
+        "id": "find-externals1-1.2-f3ebccf",
+    } in pkg_externals
 
 
 def test_list_detectable_packages(mutable_config):
@@ -393,3 +421,116 @@ def test_detect_virtuals(mock_executable, mutable_config, monkeypatch, mock_pack
 
     # Check that the mpi:buildable entry was not overwritten
     assert mutable_config.get("packages:mpi:buildable") is True
+
+
+def test_external_show(mutable_config: Configuration):
+    """Tests that 'spack external show' prints the id of each external, flags the ids that cannot
+    be referenced, and works when a reference in configuration is broken.
+    """
+    mutable_config.set(
+        "packages",
+        {
+            "cmake-client": {
+                "externals": [
+                    {
+                        "spec": "cmake-client@1.0",
+                        "prefix": "/user/path",
+                        "dependencies": [{"id": "wrong"}],
+                    }
+                ]
+            },
+            "cmake": {
+                "externals": [
+                    {"spec": "cmake@3.23.1", "prefix": "/user/path"},
+                    {"spec": "cmake@3.4.3", "prefix": "/other/path", "id": "old-cmake"},
+                ]
+            },
+            "libelf": {
+                "externals": [
+                    {"spec": "libelf@0.8.13", "prefix": "/user/path"},
+                    {"spec": "libelf@=0.8.13", "prefix": "/user/path/"},
+                ]
+            },
+        },
+    )
+    lines = SpackCommand("external")("show").splitlines()
+
+    assert any(line.startswith("cmake-client-1.0-d1a113f ") for line in lines)
+    assert any(line.startswith("cmake-3.23.1-d1a113f ") for line in lines)
+    assert any(line.startswith("old-cmake ") and "/other/path" in line for line in lines)
+    libelf_lines = [x for x in lines if x.startswith("libelf-0.8.13-d1a113f ")]
+    assert len(libelf_lines) == 2
+    assert all("cannot be referenced" in x for x in libelf_lines)
+
+    lines = SpackCommand("external")("show", "cmake").splitlines()
+    assert len(lines) == 2
+    assert all("cmake@" in x and "cmake-client" not in x for x in lines)
+
+
+def _write_host_elf(path: pathlib.Path, **kwargs) -> None:
+    """Writes an executable ELF file for the host, without code."""
+    is_64_bit, is_little_endian, e_machine = spack.util.elf.get_elf_compat(sys.executable)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(
+        spack.util.elf.minimal_elf(
+            is_64_bit=is_64_bit, is_little_endian=is_little_endian, e_machine=e_machine, **kwargs
+        )
+    )
+    path.chmod(0o755)
+
+
+@pytest.mark.not_on_windows("ELF files are not loaded on Windows")
+@pytest.mark.parametrize("exclude", [False, True])
+def test_find_external_with_dependencies(
+    exclude, tmp_path: pathlib.Path, mutable_config: Configuration, monkeypatch
+):
+    """Tests that --dependencies detects the owner of a library that a searched package loads,
+    records the dependency, and makes only the searched package non-buildable.
+    """
+    monkeypatch.delenv("LD_LIBRARY_PATH", raising=False)
+    owner_lib = tmp_path / "owner" / "lib"
+    _write_host_elf(owner_lib / "libsonames-owner.so.1", soname="libsonames-owner.so.1")
+    _write_host_elf(tmp_path / "owner" / "bin" / "sonames-owner")
+    _write_host_elf(
+        tmp_path / "consumer" / "bin" / "sonames-consumer",
+        needed=["libsonames-owner.so.1"],
+        runpath=str(owner_lib),
+    )
+    args = ["find", "--dependencies", "--not-buildable", "--path", str(tmp_path / "consumer")]
+    if exclude:
+        args.extend(["--exclude", "sonames-owner"])
+
+    output = SpackCommand("external")(*args, "sonames-consumer")
+
+    packages = mutable_config.get("packages")
+    consumer = packages["sonames-consumer"]
+    assert consumer["buildable"] is False
+    assert [x["prefix"] for x in consumer["externals"]] == [str(tmp_path / "consumer")]
+    if exclude:
+        assert "sonames-owner" not in packages
+        assert "dependencies" not in consumer["externals"][0]
+        assert str(owner_lib / "libsonames-owner.so.1") in output
+        return
+
+    owner = packages["sonames-owner"]
+    assert "buildable" not in owner
+    assert [x["prefix"] for x in owner["externals"]] == [str(tmp_path / "owner")]
+    assert consumer["externals"][0]["dependencies"] == [
+        {"id": owner["externals"][0]["id"], "deptypes": ["link"]}
+    ]
+    assert "sonames-consumer@1.0 -> sonames-owner@1.0" in output
+
+
+def test_external_show_virtual(mutable_config: Configuration, mock_packages):
+    """Tests that 'spack external show <virtual>' prints the externals of its providers."""
+    mutable_config.set(
+        "packages",
+        {
+            "mpich": {"externals": [{"spec": "mpich@3.0.4", "prefix": "/user/path"}]},
+            "libelf": {"externals": [{"spec": "libelf@0.8.13", "prefix": "/user/path"}]},
+        },
+    )
+    lines = SpackCommand("external")("show", "mpi").splitlines()
+
+    assert len(lines) == 1
+    assert lines[0].startswith("mpich-3.0.4-d1a113f ")

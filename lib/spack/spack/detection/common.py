@@ -13,16 +13,21 @@ The module also contains other functions that might be useful across different
 detection mechanisms.
 """
 
+import collections
+import copy
 import glob
 import itertools
 import os
 import pathlib
 import re
 import sys
-from typing import Dict, List, Optional, Set, Tuple, Union
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import spack.config
+import spack.deptypes as dt
 import spack.error
+import spack.externals
 import spack.operating_systems.windows_os as winOs
 import spack.schema
 import spack.spec
@@ -30,6 +35,10 @@ import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
 from spack.util import tty
+
+if TYPE_CHECKING:
+    import spack.detection.dependencies
+    import spack.repo
 
 
 def _externals_in_packages_yaml(config: spack.config.Configuration) -> Set[spack.spec.Spec]:
@@ -45,8 +54,29 @@ def _externals_in_packages_yaml(config: spack.config.Configuration) -> Set[spack
 ExternalEntryType = Union[str, List[str], Dict[str, str]]
 
 
+def _derived_id(entry: Any) -> Optional[str]:
+    """Returns the id the externals parser derives for an entry, or None if it cannot parse it."""
+    try:
+        return spack.externals.derived_external_id(spack.externals.node_from_dict(entry))
+    except spack.error.SpackError:
+        return None
+
+
+def _external_ids_in_packages_yaml(packages_yaml) -> Set[str]:
+    """Returns the explicit ids of the externals in packages.yaml, and the derived ids of those
+    without one.
+    """
+    result = set()
+    for package_configuration in packages_yaml.values():
+        for item in package_configuration.get("externals", []):
+            eid = item["id"] if "id" in item else _derived_id(item)
+            if eid is not None:
+                result.add(eid)
+    return result
+
+
 def _pkg_config_dict(
-    external_pkg_entries: List["spack.spec.Spec"],
+    external_pkg_entries: List["spack.spec.Spec"], *, used_ids: Set[str]
 ) -> Dict[str, Union[bool, List[Dict[str, ExternalEntryType]]]]:
     """Generate a package specific config dict according to the packages.yaml schema.
 
@@ -56,15 +86,20 @@ def _pkg_config_dict(
         {
             'externals': [{
                 'spec': 'cmake@3.17.1',
-                'prefix': '/opt/cmake-3.17.1/'
+                'prefix': '/opt/cmake-3.17.1',
+                'id': 'cmake-3.17.1-43abed8'
             }, {
                 'spec': 'cmake@3.16.5',
-                'prefix': '/opt/cmake-3.16.5/'
+                'prefix': '/opt/cmake-3.16.5',
+                'id': 'cmake-3.16.5-bfce1a9'
             }]
        }
+
+    Each entry gets the id the externals parser would derive for it, unless the id is in
+    ``used_ids`` or is derived by another entry. Those entries get no id, since an explicit id
+    would duplicate an explicit id, or take precedence over a derived id, already in use.
     """
-    pkg_dict = spack.util.spack_yaml.syaml_dict()
-    pkg_dict["externals"] = []
+    entries = []
     for e in external_pkg_entries:
         if not _spec_is_valid(e):
             continue
@@ -75,13 +110,20 @@ def _pkg_config_dict(
         ]
         if e.external_modules:
             external_items.append(("modules", e.external_modules))
+        derived_id = _derived_id(spack.util.spack_yaml.syaml_dict(external_items))
+        entries.append((e, external_items, derived_id))
+
+    counts = collections.Counter(derived_id for _, _, derived_id in entries)
+    pkg_dict = spack.util.spack_yaml.syaml_dict()
+    pkg_dict["externals"] = []
+    for e, external_items, derived_id in entries:
+        if derived_id is not None and counts[derived_id] == 1 and derived_id not in used_ids:
+            external_items.append(("id", derived_id))
 
         if e.extra_attributes:
             external_items.append(
                 ("extra_attributes", spack.util.spack_yaml.syaml_dict(e.extra_attributes.items()))
             )
-
-        # external_items.extend(e.spec.extra_attributes.items())
         pkg_dict["externals"].append(spack.util.spack_yaml.syaml_dict(external_items))
 
     return pkg_dict
@@ -205,11 +247,12 @@ def update_configuration(
         buildable: whether the detected packages are buildable or not
     """
     predefined_external_specs = _externals_in_packages_yaml(config)
+    used_ids = _external_ids_in_packages_yaml(config.get("packages"))
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
         new_entries = [s for s in entries if s not in predefined_external_specs]
 
-        pkg_config = _pkg_config_dict(new_entries)
+        pkg_config = _pkg_config_dict(new_entries, used_ids=used_ids)
         external_entries = pkg_config.get("externals", [])
         assert not isinstance(external_entries, bool), "unexpected value for external entry"
 
@@ -228,6 +271,123 @@ def update_configuration(
     config.set("packages", pkgs_cfg, scope=scope)
 
     return all_new_specs
+
+
+def _location_key(spec: spack.spec.Spec) -> Optional[str]:
+    """Returns the id the externals parser derives for an entry of ``spec``."""
+    entry: Dict[str, Any] = {"spec": str(spec), "prefix": spec.external_path}
+    if spec.external_modules:
+        entry["modules"] = spec.external_modules
+    return _derived_id(entry)
+
+
+def add_dependencies(
+    edges: Iterable["spack.detection.dependencies.ExternalEdge"],
+    *,
+    config: spack.config.Configuration,
+    repo: "spack.repo.RepoPath",
+    scope: Optional[str] = None,
+) -> List["spack.detection.dependencies.ExternalEdge"]:
+    """Adds edges between externals to the ``dependencies`` of the entries of their parents in
+    packages.yaml, and returns the edges that were added.
+
+    An entry matches a spec when both have the same name, version and prefix. Each edge references
+    the entry of its child by id, with its dependency types and virtuals. An edge is not added if
+    the child does not match exactly one entry, or if the id of that entry cannot be referenced.
+
+    Only an entry in ``scope`` that has no ``dependencies`` key is modified. A warning is emitted
+    for each parent whose edges are not added, unless its entry already references their ids.
+
+    Args:
+        edges: edges to add
+        config: configuration to be updated
+        repo: repository of the recipes of the externals
+        scope: configuration scope of the entries to update
+    """
+    scope = scope or config.default_modify_scope()
+    with warnings.catch_warnings():
+        # Warnings about the entries are emitted when configuration is used
+        warnings.simplefilter("ignore")
+        parser = spack.externals.ExternalSpecsParser(
+            spack.externals.extract_dicts_from_configuration(
+                config.deepcopy_as_builtin("packages")
+            ),
+            repo=repo,
+            complete_node=spack.externals.complete_architecture,
+            nodes_only=True,
+        )
+    entries_by_key: Dict[str, List[spack.externals.ExternalSpecAndConfig]] = (
+        collections.defaultdict(list)
+    )
+    for entries in parser.specs_by_name.values():
+        for entry in entries:
+            entries_by_key[spack.externals.derived_external_id(entry.spec)].append(entry)
+
+    edges_by_parent: Dict[
+        Optional[str], List[Tuple["spack.detection.dependencies.ExternalEdge", Dict[str, Any]]]
+    ] = collections.defaultdict(list)
+    for edge in edges:
+        candidates = entries_by_key.get(_location_key(edge.child) or "", [])
+        if len(candidates) != 1:
+            warnings.warn(
+                f"The dependency of {edge.parent} on {edge.child} is not recorded in "
+                f"packages.yaml, since {len(candidates)} entries match {edge.child}"
+            )
+            continue
+        external_id = parser.external_id(candidates[0])
+        if external_id.conflict:
+            warnings.warn(
+                f"The dependency of {edge.parent} on {edge.child} is not recorded in "
+                f"packages.yaml, since the id {external_id.id} of {edge.child} cannot be "
+                f"referenced [{external_id.conflict}]"
+            )
+            continue
+        dependency: Dict[str, Any] = {
+            "id": external_id.id,
+            "deptypes": list(dt.flag_to_tuple(edge.depflag)),
+        }
+        if edge.virtuals:
+            dependency["virtuals"] = ",".join(edge.virtuals)
+        edges_by_parent[_location_key(edge.parent)].append((edge, dependency))
+
+    packages = copy.deepcopy(config.get("packages", scope=scope))
+    added: List["spack.detection.dependencies.ExternalEdge"] = []
+    for parent_key, items in edges_by_parent.items():
+        parent = items[0][0].parent
+        dependencies = sorted((x for _, x in items), key=lambda x: x["id"])
+        in_scope = [
+            x
+            for x in packages.get(parent.name, {}).get("externals", [])
+            if parent_key is not None and _derived_id(x) == parent_key
+        ]
+        elsewhere = [x.config for x in entries_by_key.get(parent_key or "", [])]
+        if len(in_scope) == 1 and "dependencies" not in in_scope[0]:
+            in_scope[0]["dependencies"] = dependencies
+            added.extend(edge for edge, _ in items)
+            continue
+
+        existing: List[Any] = []
+        if len(in_scope) == 1:
+            existing, reason = in_scope[0]["dependencies"], "its entry lists other dependencies"
+        elif in_scope or len(elsewhere) > 1:
+            reason = "several entries match it"
+        elif elsewhere:
+            existing = elsewhere[0].get("dependencies", [])
+            reason = f"its entry is not in the '{scope}' scope"
+        else:
+            reason = "no entry matches it"
+
+        existing_ids = {x.get("id") for x in existing}
+        missing = [x["id"] for x in dependencies if x["id"] not in existing_ids]
+        if missing:
+            warnings.warn(
+                f"The dependencies of {parent} on {', '.join(missing)} are not recorded in "
+                f"packages.yaml, since {reason}"
+            )
+
+    if added:
+        config.set("packages", packages, scope=scope)
+    return added
 
 
 def set_virtuals_nonbuildable(virtuals: Set[str], scope: Optional[str] = None) -> List[str]:
