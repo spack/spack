@@ -319,7 +319,7 @@ def test_setup_spack_repro_version(
     spack_dir.mkdir(parents=True)
 
     prefix_save = spack.paths.prefix
-    monkeypatch.setattr(spack.paths, "prefix", "/garbage")
+    monkeypatch.setattr(spack.paths.locations, "prefix", "/garbage")
 
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)
     _, err = capfd.readouterr()
@@ -327,7 +327,7 @@ def test_setup_spack_repro_version(
     assert not ret
     assert "Unable to find the path" in err
 
-    monkeypatch.setattr(spack.paths, "prefix", prefix_save)
+    monkeypatch.setattr(spack.paths.locations, "prefix", prefix_save)
     monkeypatch.setattr(spack.util.git, "git", lambda: None)
 
     ret = ci.setup_spack_repro_version(str(repro_dir), c2, c1)
@@ -618,14 +618,15 @@ def test_ci_skipped_report(tmp_path: pathlib.Path, config, monkeypatch):
         assert all(count == 1 for count in have)
 
 
-def test_ci_get_stack_changed_no_env(mock_git_repo, monkeypatch):
+def test_ci_get_stack_changed_no_env(mock_git_repo, monkeypatch, modifies_spackpaths):
     """Test that we can detect the change to .gitlab-ci.yml in a
     mock spack git repo."""
     monkeypatch.setenv("CI_CONFIG_PATH", os.path.join(mock_git_repo, ".gitlab-ci.yml"))
-    monkeypatch.setattr(spack.paths, "prefix", mock_git_repo)
-    fake_env_path = os.path.join(
-        spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
-    )
+
+    new_paths = spack.paths.SpackPaths(mock_git_repo)
+    monkeypatch.setattr(spack.paths, "locations", new_paths)
+
+    fake_env_path = os.path.join(new_paths.prefix, os.path.sep.join(("no", "such", "env", "path")))
     assert ci.stack_changed(fake_env_path) is True
 
 

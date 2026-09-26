@@ -19,7 +19,7 @@ def misc_cache_location(*, config: spack.config.Configuration) -> str:
     Currently the ``MISC_CACHE`` stores indexes for virtual dependency
     providers and for which packages provide which tags.
     """
-    path = config.get("config:misc_cache", spack.paths.default_misc_cache_path)
+    path = config.get("config:misc_cache", default="$state_home/$spack_instance_id/cache")
     return spack.config.canonicalize_path(path, config=config)
 
 
@@ -69,3 +69,16 @@ class MirrorCache(spack.fetch_strategy.FsCacheBase):
         Note: archives package sources even if not normally cached (e.g. tip of hg/git branch).
         """
         super().store(fetcher, relative_dest)
+
+
+def reinitialize():
+    """Reinitialize global cache singletons.
+
+    Call this after reloading CONFIG to ensure cache locations reflect
+    the current configuration (e.g., after auto-migration creates layout scope).
+    """
+    global MISC_CACHE
+
+    MISC_CACHE = cast(
+        spack.util.file_cache.FileCache, spack.util.lang.Singleton(_create_global_misc_cache)
+    )

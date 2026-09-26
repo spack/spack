@@ -791,14 +791,17 @@ def print_setup_info(*info):
 
     Args:
         info (list): list of things to print: comma-separated list
-            of ``"csh"``, ``"sh"``, or ``"modules"``
+            of ``"csh"``, ``"sh"``, or ``"modules"``. Can also include
+            ``"skip_missing_modules"`` to silently skip missing module roots
+            instead of raising an error.
 
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
     """
-    from spack.modules.common import root_path
+    from spack.modules.common import ModulesError, root_path
 
     shell = "csh" if "csh" in info else "sh"
+    skip_missing_modules = "skip_missing_modules" in info
 
     def shell_set(var, value):
         if shell == "sh":
@@ -814,8 +817,16 @@ def print_setup_info(*info):
     # print roots for all module systems
     module_to_roots = {"tcl": list(), "lmod": list()}
     for name in module_to_roots.keys():
-        path = root_path(name, "default")
-        module_to_roots[name].append(path)
+        try:
+            path = root_path(name, "default")
+            module_to_roots[name].append(path)
+        except ModulesError:
+            if skip_missing_modules:
+                # Silently skip when called from setup scripts
+                pass
+            else:
+                # Re-raise when called explicitly by user
+                raise
 
     other_spack_instances = spack.config.CONFIG.get("upstreams") or {}
     for install_properties in other_spack_instances.values():
@@ -1001,17 +1012,29 @@ def _main(argv=None):
         env.manifest.prepare_config_scope()
         spack.environment.environment.set_active_environment(env)
 
-    # add the environment
-    if env:
-        add_environment_scope()
+    def add_env_and_option_based_scopes():
+        """Add environment, -C scopes, command_line scope, and command-line options to CONFIG.
 
-    # Push scopes from the command line last
-    if args.config_scopes:
-        add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
-    spack.config.CONFIG.push_scope(
-        spack.config.InternalConfigScope("command_line"), priority=ConfigScopePriority.COMMAND_LINE
-    )
-    setup_main_options(args)
+        This adds configuration scopes that come from:
+        - Environment activation (via -e flag or SPACK_ENV)
+        - Command-line config directories (via -C flag)
+        - Command-line options that set config values (--debug, --mock, etc.)
+        """
+        # add the environment
+        if env:
+            add_environment_scope()
+
+        # Push scopes from the command line last
+        if args.config_scopes:
+            add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
+        spack.config.CONFIG.push_scope(
+            spack.config.InternalConfigScope("command_line"),
+            priority=ConfigScopePriority.COMMAND_LINE,
+        )
+        setup_main_options(args)
+
+    # Initial setup of environment and option-based config scopes
+    add_env_and_option_based_scopes()
 
     # ------------------------------------------------------------------------
     # Things that require configuration should go below here
@@ -1035,6 +1058,30 @@ def _main(argv=None):
     # Try to load the particular command the caller asked for.
     cmd_name = args.command[0]
     cmd_name, args.command = resolve_alias(cmd_name, args.command)
+
+    if cmd_name != "isolate":
+        prefix_result, home_result, config_changed = _perform_auto_migration(spack.config)
+
+        # Reload config if migration happened (by us or another process while we waited for lock)
+        if config_changed:
+            spack.config.CONFIG = spack.config.create()
+
+            # Re-find environment from new location if one was active
+            # (migration may have moved it from old to new environments_root)
+            if env and not args.no_env:
+                try:
+                    env = spack.cmd.find_environment(args)
+                except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError) as e:
+                    e.print_context()
+                    env_format_error = e
+
+            add_env_and_option_based_scopes()
+            spack.config.reinitialize_global_state()
+
+        # Compose and display migration message if anything was migrated by us
+        message = spack.config._compose_migration_message(prefix_result, home_result)
+        if message:
+            tty.warn(message)
 
     # set up a bootstrap context, if asked.
     # bootstrap context needs to include parsing the command, b/c things
@@ -1109,6 +1156,63 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
         return 0
     else:
         return _invoke_command(command, parser, args, unknown)
+
+
+def _perform_auto_migration(_config_module=None):
+    """Perform auto-migration of spack prefix and home directory resources.
+
+    Args:
+        _config_module: Config module to use (for testing). Defaults to spack.config.
+
+    Returns:
+        Tuple of (prefix_result, home_result, config_changed)
+    """
+    if _config_module is None:
+        _config_module = spack.config
+
+    prefix_result = {"migrated": [], "retained": []}
+    home_result = {"user_config": False, "package_repos": False}
+    config_changed = False
+
+    # Check if migration was already done when config module loaded
+    migration_done_before_cfg = _config_module._migration_done_at_module_load
+
+    # Old resources are kept in-place. In that sense "migration" refers to
+    # copying them to new locations and updating config to point to them.
+    # Because of that, if there *are not* any old resources, then we know
+    # that a migration would never have occurred, and moreover that
+    # no other concurrent spack process was migrating between the start
+    # of this spack process and this point in time.
+    # Note: `spack isolate` also writes the .migration-done file, so
+    # that running spack after `spack isolate` never triggers an auto-migration
+    has_old_resources = _config_module._has_old_prefix_resources()
+    if has_old_resources and not migration_done_before_cfg:
+        lock_path = _config_module._migration_lock_path()
+        lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+        try:
+            # Note: this lockfile is in the spack prefix. New checkouts
+            # of spack will not generate this lock because they will not
+            # have any old resources.
+            with spack.util.lock.WriteTransaction(lock):
+                migration_already_done = os.path.exists(
+                    _config_module._migration_done_marker_path()
+                )
+                if not migration_already_done:
+                    prefix_result = _config_module._do_migrate_spack_prefix()
+                config_changed = True
+        except spack.util.lock.LockPermissionError as e:
+            # Read-only prefix: skip migration
+            tty.debug(f"Cannot write to Spack prefix, skipping migration: {e}")
+        except spack.util.lock.LockTimeoutError as e:
+            tty.die(f"Timed out waiting for migration lock: {e}")
+
+    # Migrate ~/.spack home directory (user config and package repos)
+    # This is separate and runs even on fresh clones with no old $spack data
+    home_result = _config_module._do_migrate_home()
+    if home_result["user_config"] or home_result["package_repos"]:
+        config_changed = True
+
+    return prefix_result, home_result, config_changed
 
 
 def main(argv=None):

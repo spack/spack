@@ -10,139 +10,161 @@ dependencies.
 """
 
 import os
+import sys
+import types
 from pathlib import PurePath
+from typing import TYPE_CHECKING
 
 import spack.util.filesystem
 from spack.util import hash
 
-#: This file lives in $prefix/lib/spack/spack/__file__
-prefix = str(PurePath(spack.util.filesystem.ancestor(__file__, 4)))
 
-#: synonym for prefix
-spack_root = prefix
+class SpackPaths:
+    """Object containing paths for a Spack instance with layout detection."""
 
-#: bin directory in the spack prefix
-bin_path = os.path.join(prefix, "bin")
+    def __init__(self, _prefix=None):
+        #: This file lives in $prefix/lib/spack/spack/__file__
+        self.prefix = _prefix or str(PurePath(spack.util.filesystem.ancestor(__file__, 4)))
 
-#: The spack script itself
-spack_script = os.path.join(bin_path, "spack")
+        #: synonym for prefix
+        self.spack_root = self.prefix
 
-#: The sbang script in the spack installation
-sbang_script = os.path.join(bin_path, "sbang")
+        #: bin directory in the spack prefix
+        self.bin_path = os.path.join(self.prefix, "bin")
 
-# spack directory hierarchy
-lib_path = os.path.join(prefix, "lib", "spack")
-module_path = os.path.join(lib_path, "spack")
-vendor_path = os.path.join(module_path, "vendor")
-command_path = os.path.join(module_path, "cmd")
-analyzers_path = os.path.join(module_path, "analyzers")
-platform_path = os.path.join(module_path, "platforms")
-compilers_path = os.path.join(module_path, "compilers")
-operating_system_path = os.path.join(module_path, "operating_systems")
-test_path = os.path.join(module_path, "test")
-hooks_path = os.path.join(module_path, "hooks")
-opt_path = os.path.join(prefix, "opt")
-share_path = os.path.join(prefix, "share", "spack")
-etc_path = os.path.join(prefix, "etc", "spack")
+        #: The spack script itself
+        self.spack_script = os.path.join(self.bin_path, "spack")
 
-#
-# Things in $spack/etc/spack
-#
-default_license_dir = os.path.join(etc_path, "licenses")
+        #: The sbang script in the spack installation
+        self.sbang_script = os.path.join(self.bin_path, "sbang")
 
-#
-# Things in $spack/var/spack
-#
-var_path = os.path.join(prefix, "var", "spack")
+        # spack directory hierarchy
+        self.lib_path = os.path.join(self.prefix, "lib", "spack")
+        self.module_path = os.path.join(self.lib_path, "spack")
+        self.vendor_path = os.path.join(self.module_path, "vendor")
+        self.command_path = os.path.join(self.module_path, "cmd")
+        self.analyzers_path = os.path.join(self.module_path, "analyzers")
+        self.platform_path = os.path.join(self.module_path, "platforms")
+        self.compilers_path = os.path.join(self.module_path, "compilers")
+        self.operating_system_path = os.path.join(self.module_path, "operating_systems")
+        self.test_path = os.path.join(self.module_path, "test")
+        self.hooks_path = os.path.join(self.module_path, "hooks")
+        self.opt_path = os.path.join(self.prefix, "opt")
+        self.share_path = os.path.join(self.prefix, "share", "spack")
+        self.etc_path = os.path.join(self.prefix, "etc", "spack")
 
-# read-only things in $spack/var/spack
-repos_path = os.path.join(var_path, "repos")
-test_repos_path = os.path.join(var_path, "test_repos")
-mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
+        #: Things in $spack/var/spack
+        self.var_path = os.path.join(self.prefix, "var", "spack")
 
-#
-# Writable things in $spack/var/spack
-# TODO: Deprecate these, as we want a read-only spack prefix by default.
-# TODO: These should probably move to user cache, or some other location.
-#
-# fetch cache for downloaded files
-default_fetch_cache_path = os.path.join(var_path, "cache")
+        # read-only things in $spack/var/spack
+        self.repos_path = os.path.join(self.var_path, "repos")
+        self.test_repos_path = os.path.join(self.var_path, "test_repos")
+        self.mock_packages_path = os.path.join(self.test_repos_path, "spack_repo", "builtin_mock")
 
-# GPG paths.
-gpg_keys_path = os.path.join(var_path, "gpg")
-mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
-mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
-gpg_path = os.path.join(opt_path, "spack", "gpg")
+        # GPG paths for mock data
+        self.mock_gpg_data_path = os.path.join(self.var_path, "gpg.mock", "data")
+        self.mock_gpg_keys_path = os.path.join(self.var_path, "gpg.mock", "keys")
+
+        # Old layout paths for detection
+        self.old_install_path = os.path.join(self.prefix, "opt", "spack")
+        self.old_envs_path = os.path.join(self.var_path, "environments")
+        self.old_fetch_cache_path = os.path.join(self.var_path, "cache")
+        self.old_gpg_path = os.path.join(self.prefix, "opt", "spack", "gpg")
+        self.old_gpg_keys_path = os.path.join(self.var_path, "gpg")
+        self.old_licenses_path = os.path.join(self.etc_path, "licenses")
+
+        expanded_home = os.path.expanduser("~")
+
+        # If this exists, this was the location for configs and for the package repository
+        self.old_default_dot_spack = os.path.join(expanded_home, ".spack")
+
+        #: User configuration location
+        self.user_config_path = os.path.expanduser(
+            os.getenv("SPACK_USER_CONFIG_PATH") or os.path.join(expanded_home, ".config", "spack")
+        )
+
+        #: System configuration location
+        self.system_config_path = os.path.expanduser(
+            os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
+        )
+
+        #: Not a location itself, but used for when Spack instances
+        #: share the same cache base directory for caches that should
+        #: not be shared between those instances.
+        self.spack_instance_id = hash.b32_hash(self.spack_root)[:7]
+
+        self.default_state_home = os.path.join(expanded_home, ".local", "state", "spack")
+
+    @property
+    def user_cache_path(self):
+        import spack.config
+
+        return spack.config._resolve_location_var("state") or self.default_state_home
+
+    @property
+    def reports_path(self):
+        return os.path.join(self.user_cache_path, "reports")
+
+    @property
+    def default_test_path(self):
+        return os.path.join(self.user_cache_path, "test")
+
+    @property
+    def default_monitor_path(self):
+        return os.path.join(self.reports_path, "monitor")
+
+    @property
+    def user_repos_cache_path(self):
+        return os.path.join(self.user_cache_path, "git_repos")
+
+    @property
+    def package_repos_path(self):
+        return os.path.join(self.user_cache_path, "package_repos")
+
+    @property
+    def old_package_repos_path(self):
+        """Legacy default location for cached package repositories."""
+        return os.path.join(self.old_default_dot_spack, "package_repos")
+
+    @property
+    def gpg_path(self):
+        """GPG home directory - reads from config."""
+        import spack.config
+
+        cfg = spack.config.CONFIG.get("config:gpg_path", None)
+        if cfg:
+            return spack.config.canonicalize_path(cfg)
+        # Fallback if config not set (shouldn't happen with defaults)
+        data_home = spack.config.substitute_path_variables("$data_home")
+        return os.path.join(data_home, "gpg")
+
+    @property
+    def gpg_keys_path(self):
+        """GPG keys directory - reads from config."""
+        import spack.config
+
+        cfg = spack.config.CONFIG.get("config:gpg_keys_path", None)
+        if cfg:
+            return spack.config.canonicalize_path(cfg)
+        # Fallback if config not set (shouldn't happen with defaults)
+        data_home = spack.config.substitute_path_variables("$data_home")
+        return os.path.join(data_home, "gpg-keys")
+
+    @property
+    def default_fetch_cache_path(self):
+        """Source cache directory - reads from config."""
+        import spack.config
+
+        cfg = spack.config.CONFIG.get("config:source_cache", None)
+        if cfg:
+            return spack.config.canonicalize_path(cfg)
+        # Fallback if config not set (shouldn't happen with defaults)
+        data_home = spack.config.substitute_path_variables("$data_home")
+        return os.path.join(data_home, "cache")
 
 
-#: Not a location itself, but used for when Spack instances
-#: share the same cache base directory for caches that should
-#: not be shared between those instances.
-spack_instance_id = hash.b32_hash(spack_root)[:7]
-
-
-# Below paths are where Spack can write information for the user.
-# Some are caches, some are not exactly caches.
-#
-# The options that start with `default_` below are overridable in
-# `config.yaml`, but they default to use `user_cache_path/<location>`.
-#
-# You can override the top-level directory (the user cache path) by
-# setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
-#
-def _get_user_cache_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
-
-
-user_cache_path = str(PurePath(_get_user_cache_path()))
-
-#: junit, cdash, etc. reports about builds
-reports_path = os.path.join(user_cache_path, "reports")
-
-#: installation test (spack test) output
-default_test_path = os.path.join(user_cache_path, "test")
-
-#: spack monitor analysis directories
-default_monitor_path = os.path.join(reports_path, "monitor")
-
-#: git repositories fetched to compare commits to versions
-user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
-
-#: default location where remote package repositories are cloned
-package_repos_path = os.path.join(user_cache_path, "package_repos")
-
-#: bootstrap store for bootstrapping clingo and other tools
-default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
-
-#: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-default_misc_cache_path = os.path.join(user_cache_path, spack_instance_id, "cache")
-
-# Below paths pull configuration from the host environment.
-#
-# There are three environment variables you can use to isolate spack from
-# the host environment:
-# - `SPACK_USER_CONFIG_PATH`: override `~/.spack` location (for config and caches)
-# - `SPACK_SYSTEM_CONFIG_PATH`: override `/etc/spack` configuration scope.
-# - `SPACK_DISABLE_LOCAL_CONFIG`: disable both of these locations.
-
-
-# User configuration and caches in $HOME/.spack
-def _get_user_config_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or "~%s.spack" % os.sep)
-
-
-# Configuration in /etc/spack on the system
-def _get_system_config_path():
-    return os.path.expanduser(
-        os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
-    )
-
-
-#: User configuration location
-user_config_path = _get_user_config_path()
-
-#: System configuration location
-system_config_path = _get_system_config_path()
+# Module-level singleton instance
+locations = SpackPaths()
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
@@ -154,5 +176,96 @@ def set_working_dir():
     try:
         spack_working_dir = os.getcwd()
     except OSError:
-        os.chdir(prefix)
-        spack_working_dir = prefix
+        os.chdir(locations.prefix)
+        spack_working_dir = locations.prefix
+
+
+# Type hints for mypy - these module-level attributes are dynamically resolved at runtime
+# via the module shim below. Declared here so mypy can see them when checking imports.
+if TYPE_CHECKING:
+    # From SpackPaths
+    prefix: str
+    spack_root: str
+    bin_path: str
+    spack_script: str
+    sbang_script: str
+    lib_path: str
+    module_path: str
+    vendor_path: str
+    command_path: str
+    analyzers_path: str
+    platform_path: str
+    compilers_path: str
+    operating_system_path: str
+    test_path: str
+    hooks_path: str
+    opt_path: str
+    share_path: str
+    etc_path: str
+    var_path: str
+    repos_path: str
+    test_repos_path: str
+    mock_packages_path: str
+    mock_gpg_data_path: str
+    mock_gpg_keys_path: str
+    old_install_path: str
+    old_envs_path: str
+    old_fetch_cache_path: str
+    old_gpg_path: str
+    old_gpg_keys_path: str
+    old_licenses_path: str
+    old_default_dot_spack: str
+    default_state_home: str
+    user_config_path: str
+    system_config_path: str
+    spack_instance_id: str
+    user_cache_path: str
+    default_fetch_cache_path: str
+    gpg_keys_path: str
+    gpg_path: str
+    reports_path: str
+    default_test_path: str
+    default_monitor_path: str
+    user_repos_cache_path: str
+    package_repos_path: str
+    old_package_repos_path: str
+
+
+# Module shim: lets callers keep using `spack.paths.X` for any attribute on
+# `locations` (e.g. `spack.paths.gpg_path`, `spack.paths.prefix`).
+# Uses a sys.modules swap because we want all attribute access to delegate
+# to the locations object.
+class _PathsModule(types.ModuleType):
+    def __getattribute__(self, name: str):
+        # For special attributes, use normal resolution
+        if name in ("__dict__", "__class__", "__name__"):
+            return object.__getattribute__(self, name)
+
+        # Look up 'locations' from module __dict__
+        module_dict = object.__getattribute__(self, "__dict__")
+
+        # If it's a known module-level attribute (not from locations), return it
+        if name in ("locations", "SpackPaths", "set_working_dir"):
+            if name in module_dict:
+                return module_dict[name]
+            raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
+
+        # spack_working_dir is mutable - look it up in the original module
+        if name in ["spack_working_dir"]:
+            original_module = module_dict.get("_original_module")
+            if original_module is not None:
+                return original_module.__dict__.get(name)
+            return module_dict.get(name)
+
+        # Otherwise delegate to locations object
+        locs = module_dict.get("locations")
+        if locs is None:
+            raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
+        return getattr(locs, name)  # type: ignore[return-value]
+
+
+_original_module = sys.modules[__name__]
+_shim = _PathsModule(__name__)
+_shim.__dict__.update(_original_module.__dict__)
+_shim.__dict__["_original_module"] = _original_module
+sys.modules[__name__] = _shim

@@ -75,6 +75,39 @@ properties: Dict[str, Any] = {
                     **spack.schema.projections.ref_properties,
                 },
             },
+            "locations": {
+                "type": "object",
+                "description": "Roots for Spack's user-level data. Used by "
+                "$data_home/$state_home/$cache_home substitutions. "
+                "Defaults come from the active layout scheme yaml "
+                "(etc/spack/defaults/old/config.yaml).",
+                "properties": {
+                    "data": {
+                        "oneOf": [
+                            {"type": "string"},
+                            {"type": "array", "items": {"type": "string"}},
+                        ]
+                    },
+                    "cache": {
+                        "oneOf": [
+                            {"type": "string"},
+                            {"type": "array", "items": {"type": "string"}},
+                        ]
+                    },
+                    "state": {
+                        "oneOf": [
+                            {"type": "string"},
+                            {"type": "array", "items": {"type": "string"}},
+                        ]
+                    },
+                },
+                "additionalProperties": False,
+            },
+            "gpg_path": {"type": "string", "description": "Directory holding Spack's gpg keyring"},
+            "gpg_keys_path": {
+                "type": "string",
+                "description": "Directory of pre-imported public keys",
+            },
             "install_hash_length": {
                 "type": "integer",
                 "minimum": 1,
@@ -121,8 +154,9 @@ properties: Dict[str, Any] = {
                 "indices of packages",
             },
             "environments_root": {
-                "type": "string",
-                "description": "Directory where Spack managed environments are created and stored",
+                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}],
+                "description": "Directory where Spack managed environments are created and "
+                "stored. Can be a string or list of fallback paths (first existing is used).",
             },
             "connect_timeout": {
                 "type": "integer",

@@ -4,15 +4,11 @@
 import os
 import shutil
 import sys
-import textwrap
 from argparse import ArgumentParser
-from typing import cast
-
-from spack.vendor.ruamel.yaml.compat import ordereddict
+from typing import Tuple
 
 import spack.config
 import spack.paths
-import spack.schema.include
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 
@@ -20,47 +16,7 @@ description = "isolate the current spack instance from the home directory"
 section = "config"
 level = "long"
 
-INCLUDE_PATH = os.path.join(spack.paths.etc_path, "include.yaml")
-PRESERVED_INCLUDE_PATH = os.path.join(spack.paths.etc_path, ".isolate.include.yaml")
 ISOLATE_SCOPE_PATH = os.path.join(spack.paths.etc_path, "isolate")
-
-
-def _get_scope_indices(included_scopes):
-    user_index = None
-    site_index = None
-    system_index = None
-    iso_index = None
-    for i, entry in enumerate(included_scopes):
-        if entry["name"] == "user":
-            user_index = i
-        elif entry["name"] == "site":
-            site_index = i
-        elif entry["name"] == "system":
-            system_index = i
-        elif entry["name"] == "isolate":
-            iso_index = i
-    return user_index, site_index, system_index, iso_index
-
-
-def _isolate_bootstrap_config(new_user_path):
-    bootstrap_yaml = {"bootstrap": {"root": os.path.join(new_user_path, "bootstrap")}}
-    with open(os.path.join(ISOLATE_SCOPE_PATH, "bootstrap.yaml"), "w", encoding="utf-8") as f:
-        syaml.dump(bootstrap_yaml, f)
-
-
-def _isolate_config_config(new_user_path):
-    build_stage_dirs = ["$tempdir/$user/spack-stage", os.path.join(new_user_path, "stage")]
-    test_stage_dir = os.path.join(new_user_path, "test-stage")
-    misc_cache_dir = os.path.join(new_user_path, "cache")
-    config_yaml = {
-        "config": {
-            "build_stage:": build_stage_dirs,
-            "test_stage:": test_stage_dir,
-            "misc_cache:": misc_cache_dir,
-        }
-    }
-    with open(os.path.join(ISOLATE_SCOPE_PATH, "config.yaml"), "w", encoding="utf-8") as f:
-        syaml.dump(config_yaml, f)
 
 
 def _isolate_repos_config(new_user_path):
@@ -78,35 +34,89 @@ def _isolate_repos_config(new_user_path):
         syaml.dump({"repos": new_repos_config}, f)
 
 
-def _setup_isolate_scope(new_user_path, overwrite: bool):
-    # Bypass overwriting/pre-existing when using --self
-    if os.path.exists(ISOLATE_SCOPE_PATH):
-        if os.path.samefile(new_user_path, ISOLATE_SCOPE_PATH):
-            pass
-        elif overwrite:
-            shutil.rmtree(ISOLATE_SCOPE_PATH)
-            os.mkdir(ISOLATE_SCOPE_PATH)
-        else:
-            raise Exception("An isolation already exists for this Spack instance")
-    else:
-        os.mkdir(ISOLATE_SCOPE_PATH)
-    isolate_dict = {}
-    isolate_dict["name"] = "isolate"
-    isolate_dict["path"] = ISOLATE_SCOPE_PATH
-    _isolate_bootstrap_config(new_user_path)
-    _isolate_config_config(new_user_path)
-    _isolate_repos_config(new_user_path)
-    return isolate_dict
-
-
-def _get_new_user_scope(new_user_path):
-    return {
+def _isolate_include_config(new_user_path):
+    """Write include.yaml with include:: override to redirect user scope."""
+    user_scope_dict = {
         "name": "user",
         "path": new_user_path,
         "optional": True,
         "prefer_modify": True,
-        "when": '"SPACK_DISABLE_LOCAL_CONFIG" not in env',
     }
+
+    # The override replaces the standard_scopes include list. Keep the layout
+    # scope visible because it contains old-resource redirects and may be
+    # updated later by commands such as `spack migrate undo`.
+    include_list = [
+        user_scope_dict,
+        {"name": "layout", "path": "$spack/etc/spack/layout", "optional": True},
+    ]
+
+    # Create a syaml_str with override marker for the key
+    include_key = syaml.syaml_str("include")
+    include_key.override = True  # type: ignore[attr-defined]
+
+    # Create the dict with the marked key
+    include_data = syaml.syaml_dict([(include_key, include_list)])
+
+    # Write to isolate scope's include.yaml
+    include_yaml_path = os.path.join(ISOLATE_SCOPE_PATH, "include.yaml")
+    with open(include_yaml_path, "w", encoding="utf-8") as f:
+        syaml.dump_config(include_data, f)
+
+
+def _setup_isolate_scope(
+    new_user_path, overwrite: bool, target_config_existed: bool, reuse_old: bool
+) -> Tuple[str, str]:
+    """Set up the isolate scope directories and include.yaml.
+
+    Returns:
+        (config_path, final_user_path) - where to write config, and the user redirect path
+    """
+    # Check if this is --self (isolate scope IS the user path)
+    is_self = os.path.exists(ISOLATE_SCOPE_PATH) and os.path.samefile(
+        new_user_path, ISOLATE_SCOPE_PATH
+    )
+
+    # Bypass overwriting/pre-existing when using --self
+    if os.path.exists(ISOLATE_SCOPE_PATH):
+        if is_self:
+            pass
+        elif overwrite:
+            shutil.rmtree(ISOLATE_SCOPE_PATH)
+            os.makedirs(ISOLATE_SCOPE_PATH)
+        elif not reuse_old:
+            raise Exception("An isolation already exists for this Spack instance")
+    else:
+        os.makedirs(ISOLATE_SCOPE_PATH, exist_ok=True)
+
+    # For --self, create a user-redirect subdirectory for user config additions
+    # The isolate scope's config files point to isolate/bootstrap, isolate/cache, etc.
+    # But user additions go to isolate/user-redirect
+    if is_self:
+        user_redirect_path = os.path.join(ISOLATE_SCOPE_PATH, "user-redirect")
+        os.makedirs(user_redirect_path, exist_ok=True)
+        final_user_path = user_redirect_path
+    else:
+        final_user_path = new_user_path
+
+    # Determine where to write generated config (isolation locations + old resources)
+    # If reusing an existing target config, write to layout scope to avoid overwriting it
+    # Otherwise, write to the isolate target's config.yaml
+    config_path = (
+        os.path.join(spack.config._layout_scope_path(), "config.yaml")
+        if target_config_existed and reuse_old
+        else os.path.join(new_user_path, "config.yaml")
+    )
+
+    # Write include.yaml with include:: override to redirect user scope
+    # For --self, this points to user-redirect/
+    # For --path, this points to the external path
+    _isolate_include_config(final_user_path)
+
+    return config_path, final_user_path
+
+
+# _get_new_user_scope no longer needed - moved into _isolate_include_config
 
 
 def _ensure_destination_setup(destination: str, overwrite: bool):
@@ -119,13 +129,7 @@ def _ensure_destination_setup(destination: str, overwrite: bool):
     return os.path.abspath(destination)
 
 
-def _preserve_and_extract_include():
-    if not os.path.exists(PRESERVED_INCLUDE_PATH):
-        shutil.copy(INCLUDE_PATH, PRESERVED_INCLUDE_PATH)
-    include_config = cast(
-        ordereddict, spack.config.read_config_file(INCLUDE_PATH, spack.schema.include.schema)
-    )
-    return include_config["include"]
+# _preserve_and_extract_include no longer needed - we don't modify etc/spack/include.yaml
 
 
 def setup_parser(subparser: ArgumentParser):
@@ -145,44 +149,109 @@ def setup_parser(subparser: ArgumentParser):
     subparser.add_argument(
         "--overwrite", action="store_true", help="overwrite existing isolation if necessary"
     )
+    subparser.add_argument(
+        "--reuse-old",
+        action="store_true",
+        help="reuse an existing isolation target without overwriting its configuration",
+    )
 
 
 def _do_isolate(args):
-    destination = _ensure_destination_setup(args.path, args.overwrite)
-    include_config: list = _preserve_and_extract_include()
-    isolate_scope = _setup_isolate_scope(destination, args.overwrite)
-    user_index, site_index, system_index, old_isolate_index = _get_scope_indices(include_config)
-    # No need for a separate isolation scope when using --self
-    if not os.path.samefile(destination, ISOLATE_SCOPE_PATH):
-        # insert the isolate scope above the below user and site but above system
-        if old_isolate_index is not None:  # first try the old isolate index (--overwrite)
-            include_config[old_isolate_index] = isolate_scope
-        elif site_index is not None:  # otherwise put it below the site scope
-            include_config.insert(site_index + 1, isolate_scope)
-        elif system_index is not None:  # if there is no site scope, put it above the system scope
-            include_config.insert(system_index, isolate_scope)
-        elif user_index is not None:  # if there is no system scope, put it below the user scope
-            include_config.insert(user_index + 1, isolate_scope)
-        else:  # Strange changes have been made if there is no site, system, or user scope
-            include_config.append(isolate_scope)
+    if args.overwrite and args.reuse_old:
+        tty.die("Cannot combine --overwrite and --reuse-old")
 
-    new_user_scope = _get_new_user_scope(destination)
-    if user_index is not None:
-        include_config[user_index] = new_user_scope
+    target_config_existed = os.path.isfile(os.path.join(args.path, "config.yaml"))
+    if os.path.exists(args.path):
+        if args.overwrite:
+            destination = _ensure_destination_setup(args.path, overwrite=True)
+        elif args.reuse_old:
+            destination = os.path.abspath(args.path)
+        else:
+            raise Exception(f"Isolation destination: {args.path} already exists")
     else:
-        include_config.insert(0, new_user_scope)
+        destination = _ensure_destination_setup(args.path, overwrite=False)
 
-    with open(INCLUDE_PATH, "w", encoding="utf-8") as f:
-        syaml.dump({"include": include_config}, f)
+    config_path, final_user_path = _setup_isolate_scope(
+        destination, args.overwrite, target_config_existed, args.reuse_old
+    )
+
+    # If writing to layout scope (because we're reusing existing target config),
+    # ensure layout scope doesn't already exist to avoid conflicts
+    layout_config = os.path.join(spack.config._layout_scope_path(), "config.yaml")
+    if config_path == layout_config and os.path.exists(config_path):
+        raise Exception(
+            f"Layout scope config already exists at {config_path}. "
+            "Cannot write isolation config without overwriting it."
+        )
+
+    # Build config with isolation locations
+    scope_config = {
+        "config": {
+            "build_stage:": ["$tempdir/$user/spack-stage", os.path.join(destination, "stage")],
+            "test_stage:": os.path.join(destination, "test-stage"),
+            "misc_cache:": os.path.join(destination, "cache"),
+            "locations": spack.config._isolate_locations_config(destination),
+        }
+    }
+
+    # Add old resource pointers if they exist
+    old_resources = spack.config._detect_old_resources()
+
+    if old_resources["installs"]:
+        scope_config["config"]["install_tree"] = {
+            "root": os.path.join(spack.paths.prefix, "opt", "spack")
+        }
+        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
+
+    if old_resources["gpg_keys"]:
+        old_gpg_home = spack.paths.old_gpg_path
+        old_gpg_keys = spack.paths.old_gpg_keys_path
+        scope_config["config"]["gpg_path"] = old_gpg_home
+        scope_config["config"]["gpg_keys_path"] = old_gpg_keys
+        tty.debug(f"Keeping GPG data in {old_gpg_home} and {old_gpg_keys}")
+
+    if old_resources["licenses"]:
+        scope_config["config"]["license_dir"] = spack.paths.old_licenses_path
+        tty.debug(f"Keeping licenses in {spack.paths.old_licenses_path}")
+
+    if old_resources["environments"]:
+        scope_config["config"]["environments_root"] = spack.paths.old_envs_path
+        tty.debug(f"Keeping environments in {spack.paths.old_envs_path}")
+
+    # Write the config file
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    with open(config_path, "w", encoding="utf-8") as f:
+        syaml.dump(scope_config, f)
+
+    # Write migration completion marker to prevent auto-migration after isolation
+    # Only needed if there are old resources that auto-migration would otherwise handle
+    has_old_resources = any(old_resources.values())
+    if has_old_resources:
+        marker_path = spack.config._migration_done_marker_path()
+        if os.path.exists(marker_path):
+            tty.warn(
+                "Prior auto-migration was performed. There may be resources in $HOME, "
+                "but as of now spack will not write anything into $HOME."
+            )
+        else:
+            try:
+                with open(marker_path, "w", encoding="utf-8") as f:
+                    f.write("Migration completed\n")
+                tty.debug(f"Wrote migration completion marker: {marker_path}")
+            except OSError as e:
+                tty.warn(
+                    "Isolation incomplete for older spack instance. Auto-migration may move "
+                    "resources into $HOME for future invocations that are not `spack isolate`. "
+                    f"Could not write {marker_path}: {e}"
+                )
 
 
 def _undo_isolate():
     if not os.path.exists(ISOLATE_SCOPE_PATH):
         raise RuntimeError("Cannot find isolation to undo")
-    if not os.path.exists(PRESERVED_INCLUDE_PATH):
-        raise RuntimeError("Cannot find pre-isolate include.yaml")
+    # Simply remove the isolate scope directory
+    # No need to restore include.yaml since we never modified it
     shutil.rmtree(ISOLATE_SCOPE_PATH)
-    shutil.copy(PRESERVED_INCLUDE_PATH, INCLUDE_PATH)
 
 
 def isolate(parser, args):
@@ -197,24 +266,3 @@ def isolate(parser, args):
     elif args.path is None:
         tty.die("Must provide one of --path, --self, or --undo")
     _do_isolate(args)
-    tty.warn(
-        "\n".join(
-            textwrap.wrap(
-                "Due to current limitations in Spack's configuration, adding repos without an"
-                " explicit destination will default to $SPACK_USER_CACHE_PATH or ~/.spack."
-                " This behavior will be fixed with shared spack in v1.3."
-            )
-        )
-    )
-    if "SPACK_DISABLE_LOCAL_CONFIG" in os.environ:
-        tty.warn(
-            "\n".join(
-                textwrap.wrap(
-                    "SPACK_DISABLE_LOCAL_CONFIG is present in the current shell environment,"
-                    " which disables the user scope. spack isolate uses this scope for"
-                    " isolation. In order for future configuration changes to be added"
-                    " to the isolated scope, you will need to unset SPACK_DISABLE_LOCAL_CONFIG."
-                )
-            )
-        )
-        pass

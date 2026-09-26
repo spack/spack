@@ -1,0 +1,27 @@
+include:
+  # user configuration scope
+  - name: "user"
+    path_override_env_var: SPACK_USER_CONFIG_PATH
+    path: "~/.config/spack"
+    fallback: "~/.spack"
+    optional: true
+    prefer_modify: true
+    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
+  # site configuration scope
+  - name: "site"
+    path: "$spack/etc/spack/site"
+    optional: true
+
+  # system configuration scope
+  - name: "system"
+    path_override_env_var: SPACK_SYSTEM_CONFIG_PATH
+    path: "/etc/spack"
+    optional: true
+    when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
+  # layout scope - auto-generated path overrides for shared Spack
+  # Loaded last so user/site/system can override it
+  - name: "layout"
+    path: "$spack/etc/spack/layout"
+    optional: true
