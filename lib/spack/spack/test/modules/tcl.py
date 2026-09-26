@@ -2,8 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import ast
 import os
 import re
+import subprocess
+from typing import Dict, Tuple
 
 import pytest
 
@@ -18,6 +21,8 @@ import spack.modules.tcl
 import spack.spec
 import spack.store
 import spack.util.environment
+import spack.util.executable
+import spack.version
 from spack.config import Configuration
 
 mpich_spec_string = "mpich@3.0.4"
@@ -56,6 +61,62 @@ def compiler(request):
 )
 def provider(request):
     return request.param
+
+
+class ModuleCommand:
+    """Runs the Environment Modules command against an environment it holds, and applies to
+    this environment the changes each command outputs."""
+
+    def __init__(self, modulecmd: str, env: Dict[str, str]):
+        self.modulecmd = modulecmd
+        self.env = env
+
+    def __call__(self, *args: str) -> Tuple[bool, str]:
+        """Runs a module command, returning whether it succeeded and its error output."""
+        proc = subprocess.run(
+            [self.modulecmd, "python", *args],
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
+        status = False
+        for line in proc.stdout.splitlines():
+            set_match = re.match(r"os\.environ\['(\w+)'\] = (.*)", line)
+            del_match = re.match(r"del os\.environ\['(\w+)'\]", line)
+            if set_match:
+                self.env[set_match.group(1)] = ast.literal_eval(set_match.group(2))
+            elif del_match:
+                self.env.pop(del_match.group(1), None)
+            elif line == "_mlstatus = True":
+                status = True
+        return status, proc.stderr
+
+
+@pytest.fixture()
+def module_command(tmp_path) -> ModuleCommand:
+    """Returns a runner of the Environment Modules command, with module variants enabled and
+    an environment where the test sets MODULEPATH to the module files it generates. Skips the
+    test when Environment Modules 5.1 or newer, which module variants require, is not
+    available."""
+    modulecmd = (
+        os.environ.get("MODULES_CMD") or spack.util.executable.which_string("modulecmd.tcl") or ""
+    )
+    if not os.path.isfile(modulecmd):
+        pytest.skip("requires Environment Modules")
+    version = subprocess.run(
+        [modulecmd, "python", "--version"], stderr=subprocess.PIPE, universal_newlines=True
+    ).stderr
+    match = re.search(r"Modules Release (\d+(\.\d+)+)", version)
+    if not match or spack.version.Version(match.group(1)) < spack.version.Version("5.1"):
+        pytest.skip("requires Environment Modules 5.1 or newer")
+
+    env = {
+        "PATH": os.environ.get("PATH", ""),
+        "HOME": str(tmp_path),
+        "MODULES_ADVANCED_VERSION_SPEC": "1",
+    }
+    return ModuleCommand(modulecmd, env)
 
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages")
@@ -1452,3 +1513,53 @@ class TestTcl:
         assert spec.dag_hash(7) in writer.layout.use_name
         assert "hash" not in writer.conf.variants
         assert writer.conf.variant_values == "generic 0 0 0 1 1"
+
+    def test_fold_variants_load_unload(
+        self, install_mockery, module_configuration, module_command
+    ):
+        """Test the module tool loads the installation selected by the stated variants, with
+        the dependency installations pinned by their hash variant, and reverts all of it on
+        unload."""
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        module_command.env["MODULEPATH"] = writer_cls.from_spec(
+            concrete_a, "default"
+        ).layout.arch_dirname
+        initial_env = dict(module_command.env)
+
+        # stated variants select the matching installation, loaded with its dependencies
+        status, _ = module_command("load", "mpileaks", "+debug")
+        assert status
+        loaded = module_command.env["LOADEDMODULES"].split(":")
+        assert "mpileaks/2.3-gcc-10.2.1" in loaded and "callpath/1.0-gcc-10.2.1" in loaded
+        assert f"hash|{concrete_b.dag_hash(7)}|" in module_command.env["__MODULES_LMVARIANT"]
+        assert f"hash|{concrete_a.dag_hash(7)}|" not in module_command.env["__MODULES_LMVARIANT"]
+        assert module_command.env["FOOBAR"] == "mpileaks"
+        assert concrete_b.prefix.bin in module_command.env["PATH"].split(":")
+        assert concrete_a.prefix.bin not in module_command.env["PATH"].split(":")
+
+        # the variants recorded at load time select the same installation on unload, so its
+        # environment changes are reverted along with the dependencies loaded with it
+        status, _ = module_command("unload", "mpileaks")
+        assert status
+        assert module_command.env == initial_env
+
+        # a plain load selects the first installation listed, which has ~debug
+        status, _ = module_command("load", "mpileaks")
+        assert status
+        assert f"hash|{concrete_a.dag_hash(7)}|" in module_command.env["__MODULES_LMVARIANT"]
+        assert concrete_a.prefix.bin in module_command.env["PATH"].split(":")
+        status, _ = module_command("unload", "mpileaks")
+        assert status
+        assert module_command.env == initial_env
+
+        # variants matching no installation abort the load and leave the environment as is
+        status, stderr = module_command("load", "mpileaks", "~shared")
+        assert not status
+        assert "Specified package is not installed" in stderr
+        assert module_command.env == initial_env
