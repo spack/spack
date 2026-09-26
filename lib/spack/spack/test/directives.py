@@ -461,7 +461,11 @@ def test_directive_descriptor_init():
 
     # idem for `pkg.provided_together`
     provided_together = DirectiveDictDescriptor("provided_together")
-    assert provided_together.directives_to_run == ["drop_all_provides", "drop_provides", "provides"]
+    assert provided_together.directives_to_run == [
+        "drop_all_provides",
+        "drop_provides",
+        "provides",
+    ]
     assert provided_together.dicts_to_init == ["provided", "provided_together"]
 
     # when specifying patches on dependencies with `depends_on` and `extends`, the `pkg.patches`
