@@ -154,8 +154,9 @@ properties: Dict[str, Any] = {
                 "indices of packages",
             },
             "environments_root": {
-                "type": "string",
-                "description": "Directory where Spack managed environments are created and stored",
+                "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}],
+                "description": "Directory where Spack managed environments are created and "
+                "stored. Can be a string or list of fallback paths (first existing is used).",
             },
             "connect_timeout": {
                 "type": "integer",

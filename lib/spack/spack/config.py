@@ -1450,6 +1450,7 @@ class OptionalInclude:
 
 class IncludePath(OptionalInclude):
     path: str
+    fallback: Optional[str]
     sha256: str
     destination: Optional[str]
 
@@ -1466,6 +1467,14 @@ class IncludePath(OptionalInclude):
         context_prefix = f"({self.name}) " if self.name else ""
         context = f"{context_prefix}{path}"
         self.path = substitute_include_path(path, context)
+
+        # Fallback path to use if primary path doesn't exist
+        fallback_path = entry.get("fallback", "")
+        if fallback_path:
+            fallback_context = f"{context_prefix}{fallback_path}"
+            self.fallback = substitute_include_path(fallback_path, fallback_context)
+        else:
+            self.fallback = None
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1499,23 +1508,55 @@ class IncludePath(OptionalInclude):
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
+        # Determine which path to use: primary or fallback
+        path_to_use = self.path
+
         # An absolute path does not need a local base directory.
-        if os.path.isabs(self.path):
+        if os.path.isabs(path_to_use):
             tty.debug(f"The included path ({self}) is absolute so needs no base directory")
             base = None
         else:
-            base = self.base_directory(self.path, parent_scope)
+            base = self.base_directory(path_to_use, parent_scope)
 
         # Make sure to use a proper working directory when obtaining the local
         # path for a local (or remote) file.
-        tty.debug(f"Local base directory for {self.path} is {base}")
+        tty.debug(f"Local base directory for {path_to_use} is {base}")
 
-        canonical_path = canonicalize_path(self.path, base)
+        canonical_path = canonicalize_path(path_to_use, base)
         config_path = rfc_util.local_path(canonical_path, self.sha256, base)
         assert config_path
+
+        # Check if we should use fallback: primary doesn't exist but fallback does
+        if self.fallback and not os.path.exists(config_path):
+            tty.debug(
+                f"Primary path {path_to_use} does not exist, checking fallback {self.fallback}"
+            )
+
+            # Compute fallback path
+            if os.path.isabs(self.fallback):
+                fallback_base = None
+            else:
+                fallback_base = self.base_directory(self.fallback, parent_scope)
+
+            fallback_canonical = canonicalize_path(self.fallback, fallback_base)
+            fallback_config_path = rfc_util.local_path(
+                fallback_canonical, self.sha256, fallback_base
+            )
+            assert fallback_config_path
+
+            # Only use fallback if it exists
+            if os.path.exists(fallback_config_path):
+                tty.debug(f"Using existing fallback path: {fallback_config_path}")
+                path_to_use = self.fallback
+                base = fallback_base
+                canonical_path = fallback_canonical
+                config_path = fallback_config_path
+            else:
+                tty.debug(f"Fallback {self.fallback} also does not exist, using primary path")
+
         self.destination = config_path
 
-        scope = self._scope(self.path, self.destination, parent_scope)
+        scope = self._scope(path_to_use, self.destination, parent_scope)
         if scope is not None:
             self._scopes = [scope]
 
@@ -2038,7 +2079,8 @@ def _migrate_user_config() -> bool:
 
     Only performs migration if:
     - A "user" scope exists in the loaded configuration
-    - That scope path is ~/.config/spack
+    - That scope would point to ~/.config/spack (if it existed) or is currently using
+      the fallback ~/.spack
     - ~/.config/spack does not exist
     - ~/.spack exists
 
@@ -2048,22 +2090,36 @@ def _migrate_user_config() -> bool:
     old_location = os.path.expanduser("~/.spack")
     new_default_cfg_location = os.path.expanduser("~/.config/spack")
 
-    # Check if there's a "user" scope in loaded config pointing to ~/.config/spack
-    user_scope = CONFIG.scopes.get("user")
-    if not user_scope:
-        tty.debug("No 'user' scope in loaded config, skipping user config migration")
+    # Check the include configuration to see if user scope is configured with new default
+    # We look at the config, not the loaded scope, to distinguish between:
+    # - path: ~/.config/spack (new default) + fallback → migrate
+    # - path: ~/.spack (explicit user choice) → don't migrate
+    include_config = CONFIG.get_config("include")
+    if not include_config:
+        tty.debug("No include configuration found, skipping user config migration")
         return False
 
-    # Check if the user scope path is ~/.config/spack
-    if not isinstance(user_scope, (DirectoryConfigScope, SingleFileScope)):
-        tty.debug("The 'user' scope is not filesystem-backed, skipping user config migration")
+    # get_config strips the top-level key, so include_config is the list directly
+    # Find the user scope entry in the include list
+    user_include_entry = None
+    for entry in include_config:
+        if isinstance(entry, dict) and entry.get("name") == "user":
+            user_include_entry = entry
+            break
+
+    if not user_include_entry:
+        tty.debug("No 'user' entry in include configuration, skipping user config migration")
         return False
-    user_scope_path = os.path.normpath(os.path.expanduser(user_scope.path))
-    expected_path = os.path.normpath(new_default_cfg_location)
-    if user_scope_path != expected_path:
+
+    # Check if the configured path is the new default (~/.config/spack)
+    configured_path = user_include_entry.get("path", "")
+    configured_path_expanded = os.path.normpath(os.path.expanduser(configured_path))
+    expected_new_path = os.path.normpath(new_default_cfg_location)
+
+    if configured_path_expanded != expected_new_path:
         tty.debug(
-            f"User scope path is {user_scope_path}, not {expected_path}, "
-            f"skipping user config migration"
+            f"User scope configured with path {configured_path}, not the new default "
+            f"{new_default_cfg_location}, skipping user config migration"
         )
         return False
 
@@ -2689,6 +2745,7 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     def _handle_portable_resource(
         resource_name: str,
         config_key: str,
+        configured_value: Optional[str],
         old_path: str,
         target_subdir: str,
         migrate_fn: Callable[[str, str], bool],
@@ -2698,6 +2755,7 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
         Args:
             resource_name: Display name (e.g., "licenses", "environments")
             config_key: Config key (e.g., "license_dir", "environments_root")
+            configured_value: The configured value from config (already extracted from lists)
             old_path: Old location path
             target_subdir: Subdirectory under $data_home for target
             migrate_fn: Function to perform the migration (returns True on success)
@@ -2705,12 +2763,12 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
         # Check if user has custom configuration
         data_home = substitute_path_variables("$data_home")
         target_path = os.path.join(data_home, target_subdir)
-        configured = CONFIG.get(f"config:{config_key}")
         target_norm = os.path.normpath(os.path.expanduser(target_path))
 
-        if configured is None:
+        if configured_value is None:
             configured = target_path
-        configured = canonicalize_path(configured)
+        else:
+            configured = canonicalize_path(configured_value)
 
         if configured != target_norm:
             # Custom location - don't migrate, keep in old location
@@ -2737,15 +2795,26 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
 
     # 3. Handle licenses
     if old_resources["licenses"]:
+        license_dir_config = CONFIG.get("config:license_dir")
         _handle_portable_resource(
-            "licenses", "license_dir", spack.paths.old_licenses_path, "licenses", _migrate_licenses
+            "licenses",
+            "license_dir",
+            license_dir_config,
+            spack.paths.old_licenses_path,
+            "licenses",
+            _migrate_licenses,
         )
 
     # 4. Handle environments
     if old_resources["environments"]:
+        envs_root_config = CONFIG.get("config:environments_root")
+        # For list configs, use first entry (where new resources would be created)
+        if isinstance(envs_root_config, list):
+            envs_root_config = envs_root_config[0] if envs_root_config else None
         _handle_portable_resource(
             "environments",
             "environments_root",
+            envs_root_config,
             spack.paths.old_envs_path,
             "environments",
             _migrate_environments,
@@ -2811,6 +2880,10 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # config initialization. See _do_migrate_spack_prefix() and _do_migrate_home()
     # in this module, and main.py for details.
     # The old migration check code with $spack-global locking has been removed.
+    #
+    # Old resources (e.g., environments in var/spack/environments) are accessible
+    # immediately via fallback paths in the default config (e.g., environments_root
+    # list with fallback to old location).
 
 
 def create() -> Configuration:
