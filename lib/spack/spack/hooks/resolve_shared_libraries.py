@@ -19,9 +19,16 @@ def post_install(spec, explicit):
     if policy == "ignore" or spec.external or spec.platform not in ("linux", "freebsd"):
         return
 
-    visitor = spack.verify_libraries.ResolveSharedElfLibDepsVisitor(
-        [*spack.verify_libraries.ALLOW_UNRESOLVED, *spec.package.unresolved_libraries]
-    )
+    allowed_libs = list(spack.verify_libraries.ALLOW_UNRESOLVED)
+    allowed_libs.extend(spec.package.unresolved_libraries)
+
+    for dep in spec.traverse(deptype="link"):
+        if dep.external and dep.extra_attributes:
+            dep_allowed = dep.extra_attributes.get("unresolved_libraries", [])
+            if isinstance(dep_allowed, list):
+                allowed_libs.extend(dep_allowed)
+
+    visitor = spack.verify_libraries.ResolveSharedElfLibDepsVisitor(allowed_libs)
     visit_directory_tree(spec.prefix, visitor)
 
     if not visitor.problems:
