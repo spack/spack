@@ -1065,6 +1065,16 @@ def _main(argv=None):
         # Reload config if migration happened (by us or another process while we waited for lock)
         if config_changed:
             spack.config.CONFIG = spack.config.create()
+
+            # Re-find environment from new location if one was active
+            # (migration may have moved it from old to new environments_root)
+            if env and not args.no_env:
+                try:
+                    env = spack.cmd.find_environment(args)
+                except (spack.config.ConfigFormatError, ev.SpackEnvironmentConfigError) as e:
+                    e.print_context()
+                    env_format_error = e
+
             add_env_and_option_based_scopes()
             spack.config.reinitialize_global_state()
 
