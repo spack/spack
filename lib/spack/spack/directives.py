@@ -1189,9 +1189,10 @@ class _Requires(NamedTuple):
         requirement_list.append((requirements, policy, msg_with_name))
 
 
-def remove_all_directive(directive_name):
+def remove_all_directive(*directive_names):
     def _remove_all_directive(pkg):
-        getattr(pkg, directive_name).clear()
+        for directive_name in directive_names:
+            getattr(pkg, directive_name).clear()
 
     return _remove_all_directive
 
@@ -1234,6 +1235,36 @@ def drop_all_versions():
     desires different versions than those available in the parent package.
     """
     return remove_all_directive("versions")
+
+
+@directive(("provided", "provided_together"))
+def drop_all_provides():
+    """Removes all provides from a package (including any ``provides(...)`` groups).
+
+    This is typically used when inheriting from another package if the author
+    desires different provides than those available in the parent package.
+    """
+    return remove_all_directive("provided", "provided_together")
+
+
+@directive("variants")
+def drop_all_variants():
+    """Removes all variants from a package.
+
+    This is typically used when inheriting from another package if the author
+    desires different variants than those available in the parent package.
+    """
+    return remove_all_directive("variants")
+
+
+@directive("resources")
+def drop_all_resources():
+    """Removes all resources from a package.
+
+    This is typically used when inheriting from another package if the author
+    desires different resources than those available in the parent package.
+    """
+    return remove_all_directive("resources")
 
 
 def _assert_when_is_version_only(when_spec: Optional[spack.spec.Spec]) -> None:
@@ -1523,6 +1554,158 @@ class DropRequire(DropConflicts):
         return ((new_spec, *specs[1:]), policy, msg)
 
 
+class DropProvides(DropConflicts):
+    """Drop a provided virtual. ``provided`` is ``{when: set(Spec)}``, so an entry is a bare
+    ``Spec``. Otherwise this behaves exactly like :class:`DropConflicts`: satisfaction matching
+    plus version subtraction. The companion ``provided_together`` dict is pruned separately in
+    :meth:`remove`."""
+
+    name = "provided"
+
+    def iterate_directives(self, directives):
+        # ``directives`` is a set(Spec); copy it since we rebuild the dict as we go.
+        return list(directives)
+
+    def directive_of(self, directive_entry):
+        return directive_entry
+
+    def add_to_filtered(self, filtered, when, directive_entry):
+        filtered.setdefault(when, set()).add(directive_entry)
+
+    def rebuild_entry(self, directive_entry, new_spec):
+        return new_spec
+
+    def remove(self):
+        base_remove = DropConflicts.remove(self)
+        if base_remove is None:
+            return None
+
+        def _remove(pkg):
+            base_remove(pkg)
+            self._prune_provided_together(pkg)
+
+        return _remove
+
+    def _prune_provided_together(self, pkg):
+        """Remove the dropped virtual's name from every ``provided_together`` group, dropping any
+        group that falls below two members and any ``when`` key left with no groups. A name is
+        pruned from a group only when it no longer appears anywhere in ``pkg.provided`` under an
+        intersecting ``when`` (i.e. it was actually removed, not merely version-trimmed)."""
+        removed_name = self.removal_directive.name
+        surviving_names = {
+            when: {spec.name for spec in specs} for when, specs in pkg.provided.items()
+        }
+
+        def still_provided(group_when):
+            return any(
+                removed_name in names
+                for when, names in surviving_names.items()
+                if when == group_when or when.intersects(group_when)
+            )
+
+        pruned = {}
+        for when, groups in pkg.provided_together.items():
+            new_groups = []
+            for group in groups:
+                if removed_name in group and not still_provided(when):
+                    group = group - {removed_name}
+                if len(group) >= 2:
+                    new_groups.append(group)
+            if new_groups:
+                pruned[when] = new_groups
+        pkg.provided_together.clear()
+        pkg.provided_together.update(pruned)
+
+
+class DropVariant(DropDirectiveBase):
+    """Drop a variant by name. ``variants`` is ``{when: {name: Variant}}``. Variants are not
+    specs, so there is no satisfaction relation or version subtraction: match by name and apply
+    only the standard ``when``-axis trimming."""
+
+    name = "variants"
+
+    def __init__(self, variant_name, when):
+        DropDirectiveBase.__init__(self, when)
+        self.variant_name = variant_name
+
+    def make_directive(self, pkg):
+        return self.variant_name
+
+    def entry_matches_removal(self, directive_entry):
+        return directive_entry[0] == self.removal_directive
+
+    def iterate_directives(self, directives):
+        return list(directives.items())
+
+    def add_to_filtered(self, filtered, when, directive_entry):
+        name, variant_def = directive_entry
+        filtered.setdefault(when, {})[name] = variant_def
+
+
+class DropResource(DropDirectiveBase):
+    """Drop a resource by name. ``resources`` is ``{when: [Resource]}``. Resources are not specs,
+    so match by name and apply only the standard ``when``-axis trimming."""
+
+    name = "resources"
+
+    def __init__(self, resource_name, when):
+        DropDirectiveBase.__init__(self, when)
+        self.resource_name = resource_name
+
+    def make_directive(self, pkg):
+        return self.resource_name
+
+    def entry_matches_removal(self, directive_entry):
+        return directive_entry.name == self.removal_directive
+
+    def add_to_filtered(self, filtered, when, directive_entry):
+        filtered.setdefault(when, []).append(directive_entry)
+
+
+class DropExtends(DropDirectiveBase):
+    """Drop an extends. ``extendees`` is ``{name: (spec, when_spec)}`` -- keyed by name, not by
+    ``when`` -- and ``extends()`` also registers a ``depends_on`` (plus a ``python-venv``
+    dependency when extending python). So this does not use the ``{when: entries}``
+    :meth:`filter_directives` framework: it removes the extendee entry by name and then reuses
+    :class:`DropDependsOn` to remove the dependency edges. The extendee is removed wholesale by
+    name; there is no per-version granularity because ``extendees`` has no ``when`` axis."""
+
+    name = "extendees"
+
+    def __init__(self, spec, when):
+        DropDirectiveBase.__init__(self, when)
+        self.spec = spec
+        self._when_arg = when
+
+    def make_directive(self, pkg):
+        return spack.spec.Spec(self.spec)
+
+    def add_to_filtered(self, filtered, when, directive_entry):
+        # Not used: DropExtends overrides remove() and does not go through filter_directives.
+        raise NotImplementedError
+
+    def remove(self):
+        if not self.removal_when:
+            return None
+
+        def _remove(pkg):
+            name = spack.spec.Spec(self.spec).name
+            pkg.extendees.pop(name, None)
+
+            # Remove the depends_on that extends() created, matching drop_depends_on semantics.
+            drop_dep = DropDependsOn(self.spec, self._when_arg).remove()
+            if drop_dep is not None:
+                drop_dep(pkg)
+
+            # extends("python") also adds a python-venv dependency (see _Extends.__call__).
+            if name == "python" and pkg.name != "python-venv":
+                drop_venv = DropDependsOn("python-venv", self._when_arg).remove()
+                if drop_venv is not None:
+                    drop_venv(pkg)
+
+        return _remove
+
+
 @directive("conflicts")
 def drop_conflict(conflict_spec: SpecType, when: WhenType = None):
     """Remove a conflict from a package.
@@ -1613,6 +1796,81 @@ def drop_require(spec: SpecType, when: WhenType = None):
     that does not exist.
     """
     return DropRequire(spec, when).remove()
+
+
+@directive(("extendees", "dependencies"))
+def drop_extends(spec: SpecType, when: WhenType = None):
+    """Remove an extends from a package.
+
+    This is typically used when inheriting from another package if the author
+    desires to keep some of the extends in the parent package but delete others.
+
+    Because ``extends()`` also registers a ``depends_on`` (and, when extending ``python``, a
+    ``python-venv`` dependency), this removes *both* the extendee entry and those dependency
+    edges. Extendees are keyed by name, not by ``when``, so the extendee is removed wholesale by
+    name (there is no version subtraction on the extendee itself).
+
+    This code will not throw an error if the user inputs an extends to delete
+    that does not exist.
+    """
+    return DropExtends(spec, when).remove()
+
+
+@directive(("provided", "provided_together"))
+def drop_provides(spec: SpecType, when: WhenType = None):
+    """Remove a provided virtual from a package.
+
+    This is typically used when inheriting from another package if the author
+    desires to keep some of the provides in the parent package but delete others.
+
+    Matching is by *satisfaction*: an inherited ``provides`` is removed when its virtual spec
+    satisfies ``spec`` (i.e. ``spec`` is equal to or more general than it). In addition, when the
+    two specs differ *only* in their top-level version, the removal's version range is subtracted
+    out of the existing provided spec's own range rather than removing it wholesale -- so
+    ``drop_provides("mpi@1:")`` turns ``provides("mpi")`` into ``provides("mpi@:0")``. Versions
+    carried on a child node are out of scope for this subtraction (only top-level versions have a
+    representable complement; a general ``Spec.complement`` is infeasible -- see PR #48947). The
+    dropped virtual is also pruned from any ``provides(...)`` group it shared (the companion
+    ``provided_together`` dict), and a group that falls below two members is removed.
+
+    This code will not throw an error if the user inputs a provides to delete
+    that does not exist.
+    """
+    return DropProvides(spec, when).remove()
+
+
+@directive("variants")
+def drop_variant(name: str, when: WhenType = None):
+    """Remove a variant from a package.
+
+    This is typically used when inheriting from another package if the author
+    desires to keep some of the variants in the parent package but delete others.
+
+    Variants are matched by name (they are not specs, so there is no satisfaction relation or
+    version subtraction). A version-only ``when=`` still trims the conditions under which the
+    variant applies.
+
+    This code will not throw an error if the user inputs a variant to delete
+    that does not exist.
+    """
+    return DropVariant(name, when).remove()
+
+
+@directive("resources")
+def drop_resource(name: str, when: WhenType = None):
+    """Remove a resource from a package.
+
+    This is typically used when inheriting from another package if the author
+    desires to keep some of the resources in the parent package but delete others.
+
+    Resources are matched by name (they are not specs, so there is no satisfaction relation or
+    version subtraction). A version-only ``when=`` still trims the conditions under which the
+    resource applies.
+
+    This code will not throw an error if the user inputs a resource to delete
+    that does not exist.
+    """
+    return DropResource(name, when).remove()
 
 
 @directive("versions", supports_when=False)

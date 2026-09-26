@@ -17,13 +17,23 @@ from spack.directives import (
     conflicts,
     depends_on,
     deprecated,
+    drop_all_provides,
+    drop_all_resources,
+    drop_all_variants,
     drop_conflict,
     drop_depends_on,
+    drop_extends,
+    drop_provides,
     drop_require,
+    drop_resource,
+    drop_variant,
     drop_version,
     extends,
     patch,
+    provides,
     requires,
+    resource,
+    variant,
     version,
 )
 from spack.directives_meta import DirectiveDictDescriptor, DirectiveError, DirectiveMeta
@@ -428,7 +438,7 @@ def test_directives_meta_combine_when():
 def test_directive_descriptor_init():
     # when `pkg.variants` is initialized, only the `variant` directive should run
     variants = DirectiveDictDescriptor("variants")
-    assert variants.directives_to_run == ["variant"]
+    assert variants.directives_to_run == ["drop_all_variants", "drop_variant", "variant"]
     assert variants.dicts_to_init == ["variants"]
 
     # when `pkg.dependencies` is initialized, `depends_on` and `extends` should run, and also
@@ -438,6 +448,7 @@ def test_directive_descriptor_init():
         "depends_on",
         "drop_all_depends_on",
         "drop_depends_on",
+        "drop_extends",
         "extends",
     ]
     assert dependencies.dicts_to_init == ["dependencies", "extendees"]
@@ -445,12 +456,12 @@ def test_directive_descriptor_init():
     # when `pkg.provided` is initialized, so should `pkg.provided_together`, and only the
     # provides directive should run
     provided = DirectiveDictDescriptor("provided")
-    assert provided.directives_to_run == ["provides"]
+    assert provided.directives_to_run == ["drop_all_provides", "drop_provides", "provides"]
     assert provided.dicts_to_init == ["provided", "provided_together"]
 
     # idem for `pkg.provided_together`
     provided_together = DirectiveDictDescriptor("provided_together")
-    assert provided_together.directives_to_run == ["provides"]
+    assert provided_together.directives_to_run == ["drop_all_provides", "drop_provides", "provides"]
     assert provided_together.dicts_to_init == ["provided", "provided_together"]
 
     # when specifying patches on dependencies with `depends_on` and `extends`, the `pkg.patches`
@@ -729,6 +740,241 @@ def test_drop_conflict_and_require_match_by_satisfaction():
         drop_require("%gcc", when="@1.0")
 
     assert RequireChild.requirements == {}  # type: ignore
+
+
+def test_drop_provides_matches_by_satisfaction():
+    """``drop_provides`` uses satisfaction matching like ``drop_depends_on``: dropping ``mpi``
+    removes an inherited ``provides("mpi@2:")``."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "provides-sat-parent"
+        provides("mpi@2:")
+
+    class Child(Parent):
+        name = "provides-sat-child"
+        drop_provides("mpi")
+
+    assert Child.provided == {}  # type: ignore
+
+
+def test_drop_provides_subtracts_top_level_version():
+    """Version subtraction applies to ``drop_provides``: dropping ``mpi@1:`` turns an inherited
+    ``provides("mpi")`` into ``provides("mpi@:0")``."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "provides-subtract-parent"
+        provides("mpi")
+
+    class Child(Parent):
+        name = "provides-subtract-child"
+        drop_provides("mpi@1:")
+
+    surviving = sorted(str(s) for specs in Child.provided.values() for s in specs)  # type: ignore
+    assert surviving == ["mpi@:0"]
+
+
+def test_drop_provides_prunes_provided_together():
+    """Dropping a virtual that was part of a ``provides(...)`` group removes it from the
+    ``provided`` set and from the companion ``provided_together`` group; the group, now below two
+    members, is removed entirely."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "provides-group-parent"
+        provides("lapack", "blas")
+
+    class Child(Parent):
+        name = "provides-group-child"
+        drop_provides("blas")
+
+    provided = sorted(str(s) for specs in Child.provided.values() for s in specs)  # type: ignore
+    assert provided == ["lapack"]
+    assert Child.provided_together == {}  # type: ignore
+
+
+def test_drop_provides_keeps_larger_group():
+    """A ``provides(...)`` group with three members loses only the dropped virtual and survives
+    (still >= 2 members)."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "provides-biggroup-parent"
+        provides("lapack", "blas", "scalapack")
+
+    class Child(Parent):
+        name = "provides-biggroup-child"
+        drop_provides("blas")
+
+    groups = [sorted(g) for lst in Child.provided_together.values() for g in lst]  # type: ignore
+    assert groups == [["lapack", "scalapack"]]
+
+
+class _VariantPackage(metaclass=DirectiveMeta):
+    """Minimal base that supplies ``num_variant_definitions`` (normally provided by
+    ``PackageBase``) so ``variant(...)`` can be used on inline test classes."""
+
+    _variant_count = 0
+
+    @classmethod
+    def num_variant_definitions(cls):
+        _VariantPackage._variant_count += 1
+        return _VariantPackage._variant_count
+
+
+def test_drop_variant_removes_by_name():
+    """Variants are matched by name (not spec)."""
+
+    class Parent(_VariantPackage):
+        name = "variant-parent"
+        variant("foo", default=False)
+        variant("bar", default=False)
+
+    class Child(Parent):
+        name = "variant-child"
+        drop_variant("foo")
+
+    surviving = sorted(name for inner in Child.variants.values() for name in inner)  # type: ignore
+    assert surviving == ["bar"]
+
+
+def test_drop_variant_when_trim():
+    """A version-only ``when=`` trims the conditions under which a dropped variant applies."""
+
+    class Parent(_VariantPackage):
+        name = "variant-when-parent"
+        variant("foo", default=False, when="@2:4")
+
+    class Child(Parent):
+        name = "variant-when-child"
+        drop_variant("foo", when="@3")
+
+    rendered = {  # type: ignore
+        str(when): sorted(inner.keys()) for when, inner in Child.variants.items()
+    }
+    assert rendered == {"@2,4": ["foo"]}
+
+
+def test_drop_variant_no_match_keeps_others():
+    """Dropping a non-existent variant leaves the others untouched."""
+
+    class Parent(_VariantPackage):
+        name = "variant-noop-parent"
+        variant("bar", default=False)
+
+    class Child(Parent):
+        name = "variant-noop-child"
+        drop_variant("foo")
+
+    surviving = sorted(name for inner in Child.variants.values() for name in inner)  # type: ignore
+    assert surviving == ["bar"]
+
+
+def test_drop_resource_removes_by_name():
+    """Resources are matched by name."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "resource-parent"
+        resource(name="r", url="https://example.com/r.tar.gz", sha256="a" * 64)
+        resource(name="s", url="https://example.com/s.tar.gz", sha256="b" * 64)
+
+    class Child(Parent):
+        name = "resource-child"
+        drop_resource("r")
+
+    surviving = sorted(res.name for lst in Child.resources.values() for res in lst)  # type: ignore
+    assert surviving == ["s"]
+
+
+def test_drop_resource_no_match_keeps_others():
+    """Dropping a non-existent resource leaves the others untouched."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "resource-noop-parent"
+        resource(name="s", url="https://example.com/s.tar.gz", sha256="b" * 64)
+
+    class Child(Parent):
+        name = "resource-noop-child"
+        drop_resource("r")
+
+    surviving = sorted(res.name for lst in Child.resources.values() for res in lst)  # type: ignore
+    assert surviving == ["s"]
+
+
+def test_drop_extends_removes_extendee_and_dependency():
+    """``drop_extends`` removes both the extendee entry and the dependency that ``extends()``
+    created. Extending ``python`` also adds a ``python-venv`` dependency, which is removed too."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "extends-parent"
+        extends("python")
+
+    # Sanity: parent has the extendee and both dependencies.
+    assert "python" in Parent.extendees  # type: ignore
+    parent_deps = sorted(  # type: ignore
+        name for inner in Parent.dependencies.values() for name in inner
+    )
+    assert parent_deps == ["python", "python-venv"]
+
+    class Child(Parent):
+        name = "extends-child"
+        drop_extends("python")
+
+    assert Child.extendees == {}  # type: ignore
+    assert Child.dependencies == {}  # type: ignore
+
+
+def test_drop_extends_no_match_is_noop():
+    """Dropping an extends that does not exist leaves the extendee and its dependency intact."""
+
+    class Parent(metaclass=DirectiveMeta):
+        name = "extends-noop-parent"
+        extends("perl")
+
+    class Child(Parent):
+        name = "extends-noop-child"
+        drop_extends("ruby")
+
+    assert "perl" in Child.extendees  # type: ignore
+    surviving = sorted(name for inner in Child.dependencies.values() for name in inner)  # type: ignore
+    assert surviving == ["perl"]
+
+
+def test_drop_all_provides():
+    class Parent(metaclass=DirectiveMeta):
+        name = "drop-all-provides-parent"
+        provides("mpi")
+        provides("lapack", "blas")
+
+    class Child(Parent):
+        name = "drop-all-provides-child"
+        drop_all_provides()
+
+    assert Child.provided == {}  # type: ignore
+    assert Child.provided_together == {}  # type: ignore
+
+
+def test_drop_all_variants():
+    class Parent(_VariantPackage):
+        name = "drop-all-variants-parent"
+        variant("foo", default=False)
+        variant("bar", default=False)
+
+    class Child(Parent):
+        name = "drop-all-variants-child"
+        drop_all_variants()
+
+    assert Child.variants == {}  # type: ignore
+
+
+def test_drop_all_resources():
+    class Parent(metaclass=DirectiveMeta):
+        name = "drop-all-resources-parent"
+        resource(name="r", url="https://example.com/r.tar.gz", sha256="a" * 64)
+        resource(name="s", url="https://example.com/s.tar.gz", sha256="b" * 64)
+
+    class Child(Parent):
+        name = "drop-all-resources-child"
+        drop_all_resources()
+
+    assert Child.resources == {}  # type: ignore
 
 
 def test_patched_dependencies_sets_class_attribute():
