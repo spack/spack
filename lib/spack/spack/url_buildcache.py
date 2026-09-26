@@ -143,18 +143,12 @@ class BuildcacheManifest:
             data=[BlobRecord.from_dict(blob_json) for blob_json in manifest_json["data"]],
         )
 
-    def get_blob_records(self, media_type: str) -> List[BlobRecord]:
-        """Return any blob records from the manifest matching the given media type"""
-        matches: List[BlobRecord] = []
-
-        for record in self.data:
-            if record.media_type == media_type:
-                matches.append(record)
-
-        if matches:
-            return matches
-
-        raise NoSuchBlobException(f"Manifest has no blobs of type {media_type}")
+    def get_blob_records(self, media_types: List[str]) -> List[BlobRecord]:
+        """Return the blob records from the manifest of the given media types, in their order"""
+        matches = [r for t in media_types for r in self.data if r.media_type == t]
+        if not matches:
+            raise NoSuchBlobException(f"Manifest has no blobs of type {', '.join(media_types)}")
+        return matches
 
 
 class URLBuildcacheEntry:
@@ -189,11 +183,23 @@ class URLBuildcacheEntry:
 
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/manifests/.+")
     LAYOUT_VERSION = 3
-    BUILDCACHE_INDEX_MEDIATYPE = f"application/vnd.spack.db.v{spack.database._DB_VERSION}+json"
-    SPEC_MEDIATYPE = f"application/vnd.spack.spec.v{spack.spec.SPECFILE_FORMAT_VERSION}+json"
-    TARBALL_MEDIATYPE = f"application/vnd.spack.install.v{BINARY_MEDIA_TYPE_VERSION}.tar+gzip"
-    PUBLIC_KEY_MEDIATYPE = "application/pgp-keys"
-    PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
+    #: Media types of each component that are read, newest first. The first is the one written.
+    MEDIA_TYPES = {
+        BuildcacheComponent.INDEX: [
+            f"application/vnd.spack.db.v{i}+json"
+            for i in reversed(range(8, spack.database._DB_VERSION[0] + 1))
+        ],
+        BuildcacheComponent.SPEC: [
+            f"application/vnd.spack.spec.v{i}+json"
+            for i in reversed(range(5, spack.spec.SPECFILE_FORMAT_VERSION + 1))
+        ],
+        BuildcacheComponent.KEY: ["application/pgp-keys"],
+        BuildcacheComponent.KEY_INDEX: ["application/vnd.spack.keyindex.v1+json"],
+        BuildcacheComponent.TARBALL: [
+            f"application/vnd.spack.install.v{i}.tar+gzip"
+            for i in reversed(range(2, BINARY_MEDIA_TYPE_VERSION + 1))
+        ],
+    }
     BUILDCACHE_INDEX_FILE = "index.manifest.json"
     COMPONENT_PATHS = {
         BuildcacheComponent.MANIFEST: [f"v{LAYOUT_VERSION}", "manifests"],
@@ -323,20 +329,22 @@ class URLBuildcacheEntry:
         raise BuildcacheEntryError(f"Not a manifest component: {buildcache_component}")
 
     @classmethod
-    def component_to_media_type(cls, component: BuildcacheComponent) -> str:
-        """Mapping from buildcache component to media type"""
-        if component == BuildcacheComponent.SPEC:
-            return cls.SPEC_MEDIATYPE
-        elif component == BuildcacheComponent.TARBALL:
-            return cls.TARBALL_MEDIATYPE
-        elif component == BuildcacheComponent.INDEX:
-            return cls.BUILDCACHE_INDEX_MEDIATYPE
-        elif component == BuildcacheComponent.KEY:
-            return cls.PUBLIC_KEY_MEDIATYPE
-        elif component == BuildcacheComponent.KEY_INDEX:
-            return cls.PUBLIC_KEY_INDEX_MEDIATYPE
+    def component_to_media_types(cls, component: BuildcacheComponent) -> List[str]:
+        """Media types of a buildcache component that are read, newest first"""
+        if component in cls.MEDIA_TYPES:
+            return cls.MEDIA_TYPES[component]
 
         raise BuildcacheEntryError(f"Not a blob component: {component}")
+
+    @classmethod
+    def current_component_to_media_type(cls, component: BuildcacheComponent) -> str:
+        """Media type of a buildcache component that is written"""
+        return cls.component_to_media_types(component)[0]
+
+    @classmethod
+    def oldest_component_to_media_type(cls, component: BuildcacheComponent) -> str:
+        """Oldest media type of a buildcache component that is read"""
+        return cls.component_to_media_types(component)[-1]
 
     def get_local_spec_path(self) -> str:
         """Convenience method to return the local path of a fetched spec file"""
@@ -352,7 +360,7 @@ class URLBuildcacheEntry:
         if not self.manifest:
             raise BuildcacheEntryError("Read manifest before accessing blob records")
 
-        records = self.manifest.get_blob_records(self.component_to_media_type(blob_type))
+        records = self.manifest.get_blob_records(self.component_to_media_types(blob_type))
 
         if len(records) == 0:
             raise BuildcacheEntryError(f"Manifest has no blob record of type {blob_type}")
@@ -427,7 +435,7 @@ class URLBuildcacheEntry:
 
         for component in components:
             component_blobs = self.manifest.get_blob_records(
-                self.component_to_media_type(component)
+                self.component_to_media_types(component)
             )
 
             if len(component_blobs) == 0:
@@ -601,21 +609,15 @@ class URLBuildcacheEntry:
         web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
 
     @classmethod
-    def push_local_file_as_blob(
+    def push_blob_from_file(
         cls,
         local_file_path: str,
         mirror_url: str,
-        manifest_name: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
-    ) -> None:
-        """Convenience method to push a local file to a mirror as a blob.  Both manifest
-        and blob are pushed as a component of the given component_type.  If ``compression``
-        is ``"gzip"`` the blob will be compressed before pushing, otherwise it will be pushed
-        uncompressed."""
-        cache_class = get_url_buildcache_class()
+    ) -> BlobRecord:
+        """Push a local file as a blob of the given component type and return its record"""
         checksum_algo = "sha256"
-        blob_to_push = local_file_path
 
         with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
@@ -628,15 +630,30 @@ class URLBuildcacheEntry:
 
             record = BlobRecord(
                 checker.length,
-                cache_class.component_to_media_type(component_type),
+                cls.current_component_to_media_type(component_type),
                 compression,
                 checksum_algo,
                 checker.hexdigest(),
             )
-            manifest = BuildcacheManifest(
-                layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
-            )
             cls.push_blob(mirror_url, blob_to_push, record)
+
+        return record
+
+    @classmethod
+    def push_local_file_as_blob(
+        cls,
+        local_file_path: str,
+        mirror_url: str,
+        manifest_name: str,
+        component_type: BuildcacheComponent,
+        compression: str = "none",
+    ) -> None:
+        """Push a local file as a blob and a manifest with just that blob"""
+        record = cls.push_blob_from_file(local_file_path, mirror_url, component_type, compression)
+        manifest = BuildcacheManifest(
+            layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
+        )
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             cls.push_manifest(
                 mirror_url, manifest_name, manifest, tmpdir, component_type=component_type
             )
@@ -686,7 +703,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 tarball_content_length,
-                self.TARBALL_MEDIATYPE,
+                self.current_component_to_media_type(BuildcacheComponent.TARBALL),
                 compression,
                 checksum_algorithm,
                 tarball_checksum,
@@ -714,7 +731,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 metadata_size,
-                self.SPEC_MEDIATYPE,
+                self.current_component_to_media_type(BuildcacheComponent.SPEC),
                 compression,
                 checksum_algorithm,
                 metadata_checksum,

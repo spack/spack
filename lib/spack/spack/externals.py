@@ -265,7 +265,8 @@ class ExternalSpecsParser:
         # Attach dependencies to externals
         self._create_edges()
         # Mark the specs as concrete
-        spack.spec.finalize_concretization(self.nodes, repo=self.repo)
+        spack.repo.freeze_provided_virtuals(self.nodes, repo=self.repo)
+        spack.spec.assign_hashes(self.nodes, repo=self.repo)
 
     def _create_edges(self):
         for eid, entry in self.specs_by_external_id.items():
@@ -311,10 +312,13 @@ class ExternalSpecsParser:
                     # Infer the deptype if only '%' was used in the spec
                     inferred_virtuals = []
                     for name, current_flag in deptypes_by_package.items():
-                        if not dependency_node.intersects(name):
+                        # An abstract node matches a virtual only through its providers
+                        is_virtual = self.repo.is_virtual(name)
+                        candidates = self.repo.providers_for(name) if is_virtual else (name,)
+                        if not any(dependency_node.intersects(c) for c in candidates):
                             continue
                         depflag |= current_flag
-                        if self.repo.is_virtual(name):
+                        if is_virtual:
                             inferred_virtuals.append(name)
                     virtuals = tuple(inferred_virtuals)
                 elif depflag == spack.deptypes.NONE:

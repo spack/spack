@@ -4,6 +4,7 @@
 import pytest
 
 import spack.audit
+import spack.paths
 from spack.main import SpackCommand
 from spack.test.conftest import MockHTTPResponse
 
@@ -54,3 +55,22 @@ def test_audit_packages_https(mutable_config, mock_packages, monkeypatch):
     # providing one or more package names with https should work
     audit("packages-https", "cmake", "conflict", fail_on_error=True)
     assert audit.returncode == 0
+
+
+@pytest.mark.parametrize("subcommand", [["packages"], ["packages-https", "--all"], ["externals"]])
+def test_audit_fails_on_repository_that_cannot_be_constructed(
+    subcommand, tmp_path, mutable_config, monkeypatch
+):
+    """Tests that package audits exit with an error when a configured repository cannot be
+    constructed."""
+    monkeypatch.setattr(spack.audit, "urlopen", lambda url: MockHTTPResponse(200, "OK"))
+    repo_dir = tmp_path / "unsupported"
+    (repo_dir / "packages").mkdir(parents=True)
+    (repo_dir / "repo.yaml").write_text("repo:\n  namespace: unsupported\n  api: v99.0\n")
+    mutable_config.set(
+        "repos", {"builtin_mock": spack.paths.mock_packages_path, "unsupported": str(repo_dir)}
+    )
+
+    output = audit(*subcommand, fail_on_error=False)
+    assert audit.returncode == 1
+    assert "Package API v99.0 is not supported" in output

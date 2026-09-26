@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import warnings
 from typing import TYPE_CHECKING, List, Optional, Set, Union
 
 from spack.vendor.typing_extensions import Literal
@@ -44,6 +45,13 @@ def create_installer(
 ) -> Union["spack.old_installer.PackageInstaller", "spack.installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
     use_old_installer = spack.config.CONFIG.get("config:installer", "new") == "old"
+
+    if use_old_installer:
+        # Python's default filter shows this once per process
+        warnings.warn(
+            "config:installer:old is deprecated and will be removed in Spack v1.4. "
+            "Remove the setting or use config:installer:new instead."
+        )
 
     if spack.config.CONFIG.get("config:sandbox:enable", False):
         if use_old_installer:

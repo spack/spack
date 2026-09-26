@@ -8,4 +8,4 @@ pylint==4.0.8
 docutils==0.23
 ruamel.yaml==0.19.1
 slotscheck==0.21.0
-ruff==0.16.7
+ruff==0.16.8

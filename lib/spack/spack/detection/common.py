@@ -218,6 +218,10 @@ def update_configuration(
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
 
+    # Don't rewrite configuration if there's nothing to add
+    if not pkg_to_cfg:
+        return all_new_specs
+
     scope = scope or config.default_modify_scope()
     pkgs_cfg = config.get("packages", scope=scope)
     pkgs_cfg = spack.schema.merge_yaml(pkgs_cfg, pkg_to_cfg)
