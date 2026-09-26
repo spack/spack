@@ -305,7 +305,7 @@ The module loads if it matches what is installed:
 .. code-block:: console
 
    $ module load -v git +perl ~tcltk
-   Loading git/2.53.0-gcc-15.2.1{+perl:-tcltk}
+   Loading git/2.53.0-gcc-15.2.1{build_system=autotools:hash=q5s4xwn:+man:+nls:+perl:+subtree:-tcltk}
 
 and fails with an error listing the installed configurations otherwise:
 
@@ -375,7 +375,7 @@ Users select an installation by stating its variants on the ``module load`` comm
 .. code-block:: console
 
    $ module load -v zlib +shared
-   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:+optimize:+pic:+shared:hash=vzg6net}
+   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:hash=vzg6net:+optimize:+pic:+shared}
 
 The stated variants form a mask, and the first installation matching it is selected.
 The variants left unset take the values of the selected installation.
@@ -384,7 +384,7 @@ Installations are listed sorted by their variant values, so a plain ``module loa
 .. code-block:: console
 
    $ module load -v zlib
-   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:+optimize:+pic:-shared:hash=ickxcoy}
+   Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:hash=ickxcoy:+optimize:+pic:-shared}
 
 Installing a new build may change what such a partial specification selects, so state the variants that identify the installation you need.
 
