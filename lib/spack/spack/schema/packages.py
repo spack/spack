@@ -58,6 +58,15 @@ implicit_rpaths: Dict[str, Any] = {
     "description": "List of non-default link directories to register at runtime as rpaths",
 }
 
+unresolved_libraries: Dict[str, Any] = {
+    "type": "array",
+    "items": {"type": "string"},
+    "description": (
+        "List of library SONAME patterns permitted to be absent from the explicitly "
+        "embedded RPATHs of dependent packages."
+    ),
+}
+
 permissions = {
     "type": "object",
     "description": "File permissions settings for package installations",
@@ -396,6 +405,7 @@ properties: Dict[str, Any] = {
                                     "environment": spack.schema.environment.ref_env_modifications,
                                     "extra_rpaths": extra_rpaths,
                                     "implicit_rpaths": implicit_rpaths,
+                                    "unresolved_libraries": unresolved_libraries,
                                     "flags": flags,
                                 },
                             },
