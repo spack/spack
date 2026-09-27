@@ -1041,47 +1041,18 @@ class TestTcl:
             == 1
         )
 
-        # test dependent module designation (containing variants specifications)
+        # test dependent module designation: the module name includes the hash, which pins the
+        # dependency installation on its own, so no variant is stated
         # depends-on command defined once and used 3 times
         assert len([x for x in content if "depends-on " in x]) == 4
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if re.match(
-                        "    depends-on callpath/1.0-gcc-10.2.1-\\w{7} build_system=generic", x
-                    )
-                ]
-            )
-            == 1
-        )
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if re.match(
-                        "    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic ~debug",
-                        x,
-                    )
-                ]
-            )
-            == 1
-        )
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if re.match(
-                        "    depends-on gcc-runtime/10.2.1-none-none-\\w{7} build_system=generic",
-                        x,
-                    )
-                ]
-            )
-            == 1
-        )
+        depends_on_lines = [x for x in content if x.startswith("    depends-on ")]
+        assert len(depends_on_lines) == 3
+        for pattern in (
+            "    depends-on callpath/1.0-gcc-10.2.1-\\w{7}$",
+            "    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7}$",
+            "    depends-on gcc-runtime/10.2.1-none-none-\\w{7}$",
+        ):
+            assert len([x for x in depends_on_lines if re.match(pattern, x)]) == 1
 
         # test module file of package with valued variants
         content = modulefile_content("multivalue-variant-multi-defaults myvariant=bar")
@@ -1199,9 +1170,7 @@ class TestTcl:
                 [
                     x
                     for x in content_o
-                    if re.match(
-                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}$", x
-                    )
+                    if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)
                 ]
             )
             == 1
@@ -1231,9 +1200,7 @@ class TestTcl:
                 [
                     x
                     for x in content_a
-                    if re.match(
-                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}$", x
-                    )
+                    if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)
                 ]
             )
             == 1
@@ -1243,9 +1210,7 @@ class TestTcl:
                 [
                     x
                     for x in content_b
-                    if re.match(
-                        "depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash=\\w{7}$", x
-                    )
+                    if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)
                 ]
             )
             == 2
@@ -1350,50 +1315,18 @@ class TestTcl:
         module_file = modulefile_filenames("tcl", spec_a)[0]
         with open(module_file, encoding="utf-8") as f:
             content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if re.match(
-                        "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic ~version_based hash=\\w{7}$",
-                        x,
-                    )
-                ]
-            )
-            == 1
-        )
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if re.match(
-                        "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic ~two_whens \\+variant_based \\+version_based "
-                        "hash=\\w{7}$",
-                        x,
-                    )
-                ]
-            )
-            == 1
-        )
-        assert (
-            len(
-                [
-                    x
-                    for x in content
-                    if re.match(
-                        "depends-on conditional-variant-pkg/2.0-none-none "
-                        "build_system=generic \\+two_whens \\+variant_based \\+version_based "
-                        "hash=\\w{7}$",
-                        x,
-                    )
-                ]
-            )
-            == 1
-        )
+        # each installation pins its own dependency installation by its hash variant only,
+        # whatever conditional variants the dependency installations define
+        pin_pattern = "depends-on conditional-variant-pkg/2.0-none-none hash=(\\w{7})$"
+        pinned_hashes = [
+            m.group(1) for x in content for m in [re.match(pin_pattern, x)] if m is not None
+        ]
+        dep_hashes = [
+            s["conditional-variant-pkg"].dag_hash(7)
+            for s in spack.store.STORE.db.query("conditional-variant-pkg-dependent@1.0")
+        ]
+        assert len(dep_hashes) == 3 and len(set(dep_hashes)) == 3
+        assert sorted(pinned_hashes) == sorted(dep_hashes)
 
         # check module is considered explicit as soon as one install is explicit
         module_configuration("fold_variants_hide_implicits")
@@ -1482,7 +1415,7 @@ class TestTcl:
             content_dep = [line.strip() for line in f.readlines() if not line.startswith("## ")]
         hash_a = dep_a.dag_hash(7)
         assert f"hash {{{hash_a}}}\\" in content_dep
-        depends_on_a = f"depends-on callpath/1.0-gcc-10.2.1 build_system=generic hash={hash_a}"
+        depends_on_a = f"depends-on callpath/1.0-gcc-10.2.1 hash={hash_a}"
         assert depends_on_a in content_a
 
         # install a second dependency build differing only by its own dependencies
