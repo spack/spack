@@ -149,8 +149,8 @@ if {$selected_installation eq {{ '{' }}{{ install.hash }}{{ '}' }}} {
 
 # Set variables to notify the provider of the new services
 {% for name in install.provides %}
-    setenv MODULES_{{ name|upper() }}_NAME {{ '{' }}{{ name_part }}{{ '}' }}
-    setenv MODULES_{{ name|upper() }}_VERSION {{ '{' }}{{ version_part }}{{ '}' }}
+    setenv MODULES_{{ name|upper() }}_NAME {{ '{' }}{{ install.name_part }}{{ '}' }}
+    setenv MODULES_{{ name|upper() }}_VERSION {{ '{' }}{{ install.version_part }}{{ '}' }}
 {% endfor %}
 
 {% endif %}
