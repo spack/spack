@@ -86,3 +86,18 @@ def test_rm_fold_variants(install_mockery, module_configuration, modulefile_file
     modulefile_filenames("tcl", spec_b)[0]
     module("tcl", "rm", "-y", spec_b)
     assert not os.path.exists(module_file_a)
+
+
+def test_refresh_name_clash_across_versions(install_mockery, module_configuration):
+    """Test refresh reports a name clash when installations of different versions project to
+    the same module file name, as only installations of one version are folded."""
+    install("--fake", "--add", "mpileaks@2.2 ~debug ^zmpi")
+    install("--fake", "--add", "mpileaks@2.3 ~debug ^zmpi")
+    install("--fake", "--add", "mpileaks@2.3 +debug ^zmpi")
+
+    module_configuration("fold_variants_name_projection")
+    out = module("tcl", "refresh", "-y", "--delete-tree", fail_on_error=False)
+    assert module.returncode == 1
+    assert "Name clashes detected in module files" in out
+    assert "mpileaks@=2.2" in out
+    assert "mpileaks@=2.3" in out
