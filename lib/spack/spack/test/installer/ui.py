@@ -870,6 +870,22 @@ class TestLogFollowing:
         assert "starting" in output
         assert output.index("-- Configuring done") < output.rindex("Progress:")
 
+    def test_verbose_tty_continues_partial_log_line(self):
+        """A later log chunk completes a buffered fragment before display above the overview."""
+        tui, _, fake_stdout = create_tui(total=1, verbose=True)
+        on_build_added(tui, "pkg0")
+        tui.render()
+        fake_stdout.clear()
+
+        tui.on_log_output("pkg0", b"checking for boost...")
+        assert fake_stdout.getvalue() == ""
+
+        tui.on_log_output("pkg0", b"yes\n")
+
+        output = fake_stdout.getvalue()
+        assert "checking for boost...yes\n" in output
+        assert "Progress:" in output
+
     def test_verbose_tty_toggle_off_clears_streamed_log(self):
         """Turning streaming off clears the screen and restores the overview position."""
         tui, _, fake_stdout = create_tui(total=1, verbose=True)
@@ -1239,13 +1255,11 @@ class TestToggle:
         assert tui.log_streaming is True
         assert tui.tracked_build_id == "next"
 
-    def test_partial_line_newline_on_toggle_and_next(self):
-        """Ensure newline is inserted before mode transitions when log doesn't end with newline."""
+    def test_partial_line_handling_on_toggle_and_next(self):
+        """Mode transitions preserve complete lines and discard unselected fragments."""
         tui, _, fake_stdout = create_tui(total=2)
         build_a, build_b = add_mock_builds(tui, 2)
 
-        # Toggle log streaming on and off while receiving logs that may or may not end with
-        # newlines.
         tui.toggle()
         tui.on_log_output(build_a, b"checking for foo...")
         tui.toggle()
@@ -1260,10 +1274,10 @@ class TestToggle:
         # There shouldn't be any double newlines:
         assert "\n\n" not in written
 
-        # All partial and newline-terminated logs should be present with appropriate newlines:
+        # Switching builds must not join an incomplete fragment from another build.
         assert "checking for foo...\n" in written
         assert "checking for bar... yes\n" in written
-        assert "checking for baz...\n" in written
+        assert "checking for baz..." not in written
 
     @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
     @pytest.mark.parametrize("filter_padding", [True, False])
