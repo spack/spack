@@ -4,6 +4,7 @@
 
 """This module implements the classes necessary to generate Tcl modules."""
 
+import os
 import re
 from typing import Any, Dict, List, Tuple
 
@@ -248,10 +249,23 @@ class TclModulefileWriter(BaseModuleFileWriter):
     def remove_installation(self):
         """Removes this installation from module file. Module file is deleted if it
         does not reference any other package installation."""
-        if self.layout.hold_other_installations:
+        if self.layout.hold_other_installations and os.path.exists(self.layout.filename):
             self.write()
+            # The removed installation may have been the one making this module the default
+            if not self._holds_default():
+                self.remove_module_defaults()
         else:
             self.remove()
+
+    def _holds_default(self) -> bool:
+        """Whether an installation held by the module file matches a configured default."""
+        return any(self.matches_default(install.spec) for install in self.context.installations)
+
+    def update_module_defaults(self) -> None:
+        """Points the ``default`` symlink to this module file if it holds an installation
+        matching a configured default, whichever installation is being written."""
+        if self._holds_default():
+            self.link_default()
 
     def update_module_hiddenness(self, remove=False):
         """Update modulerc file corresponding to module to add or remove
