@@ -216,6 +216,7 @@ class TerminalUI(InstallerUI):
         self.search_term = ""
         self.search_mode = False
         self.log_ends_with_newline = True
+        self.log_stream_buffer = b""
         self.actual_jobs: int = 0
         self.target_jobs: int = 0
         self.blocked: bool = False
@@ -263,6 +264,8 @@ class TerminalUI(InstallerUI):
         self.log_history[info.id] = deque(maxlen=LOG_HISTORY_SIZE)
         self.dirty = True
         if self.log_streaming and not self.tracked_build_id:
+            self.log_stream_buffer = b""
+            self.log_ends_with_newline = True
             self.tracked_build_id = info.id
             self.commands.append(SetEcho(info.id, True))
         # TTY builds forward logs so the overview can parse progress after mode changes.
@@ -274,6 +277,8 @@ class TerminalUI(InstallerUI):
         self.builds.pop(build_id, None)
         self.log_history.pop(build_id, None)
         if self.tracked_build_id == build_id:
+            self.log_stream_buffer = b""
+            self.log_ends_with_newline = True
             self.tracked_build_id = ""
             self.overview_mode = True
         self.dirty = True
@@ -305,7 +310,10 @@ class TerminalUI(InstallerUI):
             else:
                 self._redraw_overview_with_log_history(self.tracked_build_id)
         else:
-            if not self.log_ends_with_newline:
+            if self.log_stream_buffer:
+                self.log_stream_buffer = b""
+                self.log_ends_with_newline = True
+            elif not self.log_ends_with_newline:
                 self.stdout.buffer.write(b"\n")
                 self.log_ends_with_newline = True
             self.search_term = ""
@@ -407,6 +415,9 @@ class TerminalUI(InstallerUI):
         if not new_build_id or self.tracked_build_id == new_build_id:
             return
 
+        self.log_stream_buffer = b""
+        self.log_ends_with_newline = True
+
         new_build = self.builds[new_build_id]
 
         # Non-TTY output must stop forwarding the previous build before switching.
@@ -490,6 +501,8 @@ class TerminalUI(InstallerUI):
 
             # Continue streaming after success so output does not stop between builds.
             if build_id == self.tracked_build_id:
+                self.log_stream_buffer = b""
+                self.log_ends_with_newline = True
                 self.tracked_build_id = ""
                 if state == "finished" and self.log_streaming:
                     self.next()
@@ -682,7 +695,7 @@ class TerminalUI(InstallerUI):
             buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
 
     def on_log_output(self, build_id: str, data: bytes) -> None:
-        """Cache forwarded log chunks and stream selected output above the TTY overview."""
+        """Cache forwarded chunks, buffer partial lines, and stream selected TTY output."""
         if self.headless:
             return
         if self.filter_padding:
@@ -696,15 +709,21 @@ class TerminalUI(InstallerUI):
         if build_id != self.tracked_build_id:
             return
         if self.overview_mode and self.is_tty:
+            data = self.log_stream_buffer + data
+            last_newline = data.rfind(b"\n")
+            if last_newline < 0:
+                self.log_stream_buffer = data
+                self.log_ends_with_newline = False
+                return
+            self.log_stream_buffer = data[last_newline + 1 :]
+            data = data[: last_newline + 1]
+            self.log_ends_with_newline = not self.log_stream_buffer
             now = self.get_time()
             if self.active_area_rows > 0:
                 self.stdout.write(f"\033[{self.active_area_rows}A\r\033[0J")
             self.stdout.flush()
         self.stdout.buffer.write(data)
         if self.overview_mode and self.is_tty:
-            if not data.endswith(b"\n"):
-                self.stdout.buffer.write(b"\n")
-                self.log_ends_with_newline = True
             self.dirty = True
             self.active_area_rows = 0
             has_unfinished = any(pkg.finished_time is None for pkg in self.builds.values())
@@ -719,6 +738,7 @@ class TerminalUI(InstallerUI):
         """Clear the TTY, replay cached output with a final newline, and redraw the overview."""
         if self.headless or not self.is_tty:
             return
+        self.log_stream_buffer = b""
         history = (output,) if output is not None else self.log_history.get(build_id, ())
         history_rows = sum(chunk.count(b"\n") for chunk in history)
         history_needs_newline = bool(history and not history[-1].endswith(b"\n"))
@@ -734,7 +754,7 @@ class TerminalUI(InstallerUI):
             self.stdout.buffer.write(chunk)
         if history_needs_newline:
             self.stdout.buffer.write(b"\n")
-            self.log_ends_with_newline = True
+        self.log_ends_with_newline = True
         self.stdout.write("\0338")
         now = self.get_time()
         self.dirty = True
