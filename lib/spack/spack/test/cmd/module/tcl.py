@@ -84,7 +84,8 @@ def test_rm_fold_variants(install_mockery, module_configuration, modulefile_file
     # remove module file holding multiple installations
     module("tcl", "refresh", "-y", "--delete-tree")
     install("--fake", "--add", spec_b)
-    modulefile_filenames("tcl", spec_b)[0]
+    # write the module file again, now holding both installations
+    modulefile_filenames("tcl", spec_b)
     module("tcl", "rm", "-y", spec_b)
     assert not os.path.exists(module_file_a)
 
