@@ -995,8 +995,8 @@ class TestLogFollowing:
         # Nothing should be printed
         assert fake_stdout.getvalue() == ""
 
-    def test_unselected_streamed_logs_are_cached_without_output(self):
-        """Logs from an unselected build are cached without being written immediately."""
+    def test_print_logs_discarded_when_not_tracked(self):
+        """Test that logs from non-tracked builds are discarded"""
         tui, _, fake_stdout = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
 
@@ -1010,6 +1010,142 @@ class TestLogFollowing:
 
         # Nothing should be printed since we're tracking pkg0, not pkg1
         assert fake_stdout.getvalue() == ""
+
+    @pytest.mark.parametrize("data", [b"[12] ignored\n", b"[1/0] ignored\n"])
+    def test_invalid_builder_progress_preserves_progress(self, data):
+        tui, _, _ = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_progress(build_id, 50, 100)
+        tui.dirty = False
+
+        tui.on_log_output(build_id, data)
+
+        assert tui.builds[build_id].progress == inst.BuildProgress("50%", "fetching")
+        assert tui.builds[build_id].progress_buffer == b""
+        assert not tui.dirty
+
+    def test_builder_progress_for_unknown_build(self):
+        tui, _, stdout = create_tui(total=1)
+        add_mock_builds(tui, 1)
+        tui.dirty = False
+        data = b"[50%] Building C object dir/file.c.o\n"
+
+        tui.on_log_output("unknown", data)
+
+        assert "unknown" not in tui.builds
+        assert list(tui.log_history["unknown"]) == [data]
+        assert stdout.getvalue() == ""
+        assert not tui.dirty
+
+    def test_parse_fractional_progress_line(self):
+        """A fractional builder progress line updates the structured overview row."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(build_id, b"...\n[2/10] ...\n")
+        assert fake_stdout.getvalue() == ""
+        assert tui.builds[build_id].progress == inst.BuildProgress("20%")
+
+    def test_progress_bazel_comma_fractional_progress_line(self):
+        """Bazel comma-separated action counts produce a percentage and file message."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(
+            build_id,
+            b"[15,557 / 23,143] TdGenerate dir/file.inc; 7s local ... (6 actions, 5 running)\n",
+        )
+
+        assert fake_stdout.getvalue() == ""
+        assert tui.builds[build_id].progress == inst.BuildProgress("67%", "dir/file.inc")
+
+    def test_progress_bazel_compiling_message(self):
+        """Bazel compiling progress produces a percentage and file message."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(
+            build_id, b"[51 / 100] Compiling dir/file.cc; 42s local ... (16 actions, 15 running)\n"
+        )
+
+        assert fake_stdout.getvalue() == ""
+        assert tui.builds[build_id].progress == inst.BuildProgress("51%", "dir/file.cc")
+
+    def test_overview_cmake_cxx_building_line(self):
+        """A CMake CXX building line updates the structured overview row."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(
+            build_id,
+            b"...\n[ 96%] Building CXX object src/CMakeFiles/foo.cpp.o\nRunning tests...\n",
+        )
+
+        assert fake_stdout.getvalue() == ""
+        assert tui.builds[build_id].progress == inst.BuildProgress("96%", "foo.cpp")
+
+    def test_render_building_filename_as_progress_message(self):
+        """Test that a Building line's filename appears in the overview row."""
+        tui, _, _ = create_tui(color=False)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_state_changed(build_id, "build")
+        tui.on_log_output(build_id, b"[ 96%] Building CXX object src/CMakeFiles/foo.cpp.o\n")
+
+        rendered = "".join(tui._generate_line_components(tui.builds[build_id]))
+
+        assert " (96%) foo.cpp" in rendered
+
+    @pytest.mark.parametrize(
+        "message, expected",
+        [
+            ("Building CXX object src/CMakeFiles/foo.cpp.o", "foo.cpp"),
+            (r"Building CXX object src\CMakeFiles\foo.cpp.o", "foo.cpp"),
+            ("Compiling src/dir/file.cc; 42s local", "dir/file.cc"),
+            (r"Compiling src\dir\file.cc; 42s local", "dir/file.cc"),
+            ("Built target foo", "Built target foo"),
+        ],
+    )
+    @pytest.mark.parametrize("host_separator", ["/", "\\"])
+    def test_build_progress_message_removes_only_object_suffix(
+        self, message, expected, host_separator, monkeypatch
+    ):
+        """Only an exact object-file suffix is removed from a builder message."""
+        tui, _, _ = create_tui()
+        monkeypatch.setattr(inst.os, "sep", host_separator)
+
+        assert tui._build_progress_message(message) == expected
+
+    def test_parse_building_line_split_across_log_chunks(self):
+        """A CMake Building filename is parsed after its line arrives in two chunks."""
+        tui, _, _ = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(build_id, b"[ 96%] Building CXX object CMakeFiles/foo")
+        assert tui.builds[build_id].progress is None
+
+        tui.on_log_output(build_id, b".cpp.o\n")
+
+        assert tui.builds[build_id].progress == inst.BuildProgress("96%", "foo.cpp")
+
+    def test_parse_non_building_cmake_progress_lines(self):
+        """CMake status and non-Building progress lines become structured messages."""
+        tui, _, _ = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(build_id, b"CMake message\n")
+        assert tui.builds[build_id].progress == inst.BuildProgress(None, "CMake message")
+
+        tui.on_log_output(build_id, b"-- Checking\n")
+        assert tui.builds[build_id].progress == inst.BuildProgress(None, "Checking")
+
+        tui.on_log_output(build_id, b"[ 99%] Linking C executable timeit-target\n")
+        assert tui.builds[build_id].progress == inst.BuildProgress(
+            "99%", "Linking C executable timeit-target"
+        )
+        tui.on_log_output(build_id, b"[100%] Built target gmock_main\n")
+        assert tui.builds[build_id].progress == inst.BuildProgress(
+            "100%", "Built target gmock_main"
+        )
 
     def test_can_navigate_to_failed_build(self, tmp_path):
         """Test that navigating to a failed build shows log summary and path"""
@@ -1367,9 +1503,11 @@ class TestToggle:
 
         tui.toggle()
         tui.toggle()
+        tui.on_log_output(build_id, b"[ 96%] Building CXX object src/CMakeFiles/foo.cpp.o\n")
 
         assert tui.overview_mode is True
-        assert inst.SetEcho(build_id, False) not in tui.commands
+        assert tui.log_streaming is False
+        assert tui.builds[build_id].progress == inst.BuildProgress("96%", "foo.cpp")
 
     def test_on_state_changed_finished_continues_streaming_next_build(self):
         """Finishing a streamed build follows the next unfinished build."""
@@ -1402,10 +1540,11 @@ class TestToggle:
 
     def test_streaming_resumes_when_next_build_is_added(self):
         """A later build is tracked when streaming outlives the previous build wave."""
-        tui, _, _ = create_tui(total=2)
+        tui, _, fake_stdout = create_tui(total=2)
         [build_id] = add_mock_builds(tui, 1)
 
         tui.toggle()
+        tui.on_log_output(build_id, b"old partial")
         tui.on_state_changed(build_id, "finished")
 
         assert tui.log_streaming is True
@@ -1415,6 +1554,11 @@ class TestToggle:
 
         assert tui.log_streaming is True
         assert tui.tracked_build_id == "next"
+
+        fake_stdout.clear()
+        tui.on_log_output("next", b"new output\n")
+        assert "new output\n" in fake_stdout.getvalue()
+        assert "old partial" not in fake_stdout.getvalue()
 
     def test_partial_line_handling_on_toggle_and_next(self):
         """Mode transitions preserve complete lines and discard unselected fragments."""
@@ -2020,6 +2164,7 @@ class TestLineRendering:
         tui.on_state_changed("pkg", "finished")
         fake_time.append(inst.CLEANUP_TIMEOUT + 0.1)
 
+        # The install prefix exceeds the terminal width and is omitted from the mutable row.
         tui.render()
 
         lines = [line for line in fake_stdout.getvalue().splitlines() if "pkg@1.0" in line]
