@@ -1534,3 +1534,24 @@ class TestTcl:
             content = f.read()
         assert concrete_b.dag_hash(7) in content
         assert concrete_a.dag_hash(7) not in content
+
+    def test_fold_variants_defaults(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Test the default symlink follows the installations held by a folded module file."""
+        module_configuration("fold_variants_defaults")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+
+        # writing the installation that is not the default still links the module file, as
+        # it holds the default installation
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        default_link = os.path.join(os.path.dirname(module_file), "default")
+        assert os.readlink(default_link) == module_file
+
+        # the module file is no longer the default once the matching installation is removed
+        uninstall("-y", spec_b)
+        assert os.path.exists(module_file)
+        assert not os.path.lexists(default_link)
