@@ -48,6 +48,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--force", action="store_true", help="re-split even if already split"
     )
 
+    regen_gdbinit_parser = sp.add_parser(
+        "regen-gdbinit",
+        help="regenerate gdbinit for an installed package from its existing debug-source "
+        "cache and split symbols, without rebuilding (picks up debug_source.py fixes "
+        "to substitute-path generation)",
+    )
+    regen_gdbinit_parser.add_argument("spec", help="installed spec to regenerate gdbinit for")
+    
     fetch_parser = sp.add_parser(
         "fetch",
         help="fetch previously-pushed debug source/symbols for an installed spec "
@@ -164,6 +172,18 @@ def split_symbols(args):
     pkg = spec.package
     spack.debug_source.split_symbols(pkg, force=args.force)
 
+    
+def regen_gdbinit(args):
+    specs = spack.cmd.parse_specs(args.spec, concretize=False)
+    if len(specs) != 1:
+        tty.die("'spack debug regen-gdbinit' requires exactly one spec")
+
+    env = ev.active_environment()
+    spec = spack.cmd.disambiguate_spec(specs[0], env)
+    pkg = spec.package
+    spack.debug_source.regenerate_gdbinit(pkg)
+
+
 def fetch(args):
     if not args.spec and not args.build_id:
         tty.die("'spack debug fetch' requires a spec or --build-id")
@@ -226,6 +246,8 @@ def debug(parser, args):
         stage_source(args)
     elif args.debug_command == "split-symbols":
         split_symbols(args)
+    elif args.debug_command == "regen-gdbinit":
+        regen_gdbinit(args)
     elif args.debug_command == "fetch":
         fetch(args)
     elif args.debug_command == "serve":

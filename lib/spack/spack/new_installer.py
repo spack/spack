@@ -801,9 +801,10 @@ def _install(
         _is_debug_target = explicit and spack.debug_source._spec_requested_debug_build(spec)
         
         if (debug_source or debug_symbols) and _is_debug_target:
-            if spack.debug_source._has_any_debug_binary(str(spec.prefix)):                
+            if spack.debug_source._has_any_debug_binary(str(spec.prefix)):
+                comp_dirs = None
                 if debug_source:
-                    spack.debug_source.install_debug_artifacts(pkg)
+                    comp_dirs = spack.debug_source.install_debug_artifacts(pkg)
                 split_debug_files = None
                 bytes_saved = None
                 if debug_symbols:
@@ -813,6 +814,7 @@ def _install(
                     spack.debug_source.debug_source_dir(spec),
                     split_debug_files,
                     bytes_saved,
+                    comp_dirs
                 )
             else:
                 spack.llnl.util.tty.msg(f"{spec.name}: no debug sections found, skipping debug capture")
