@@ -522,6 +522,15 @@ class BaseConfiguration:
         """Return spec dag hash of specified length (7 characters by default)."""
         return self.spec.dag_hash(length)
 
+    def make_folded_configuration(self, spec: spack.spec.Spec) -> "BaseConfiguration":
+        """Returns the configuration of another installation held by the same module file.
+        Its explicitness is read from the database, as it may differ from this one's. This
+        installation is shared with it when being added, as it may not be recorded yet."""
+        extra_spec_sharing = self.extra_spec_sharing or (self.spec if self.add_op else None)
+        return self.make_configuration(
+            spec, self.name, extra_spec_sharing=extra_spec_sharing, cache=self._configuration_cache
+        )
+
     @property
     def hash(self) -> Optional[str]:
         """Hash tag for the module or None"""
@@ -1330,22 +1339,12 @@ class ModuleContext(tengine.Context):
         """Returns context for all installations of this package version, in the order the
         module file selects them."""
         context_list = []
-        # let other installs know of this newly installed spec
-        extra_spec_sharing = self.conf.spec if self.conf.add_op else None
-
         for spec in self.conf.installed_specs:
             if spec == self.conf.spec:
                 context_list.append(self)
                 continue
-            other_conf = self.conf.make_configuration(
-                spec,
-                self.conf.name,
-                self.conf.explicit,
-                extra_spec_sharing=extra_spec_sharing,
-                cache=self.conf._configuration_cache,
-            )
-            other_layout = FileLayout(other_conf)
-            context_list.append(ModuleContext(other_conf, other_layout))
+            other_conf = self.conf.make_folded_configuration(spec)
+            context_list.append(ModuleContext(other_conf, FileLayout(other_conf)))
 
         return context_list
 
