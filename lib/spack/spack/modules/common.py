@@ -1513,15 +1513,23 @@ class BaseModuleFileWriter:
         # record module hiddenness if implicit
         self.update_module_hiddenness()
 
+    def matches_default(self, spec: Optional[spack.spec.Spec] = None) -> bool:
+        """Whether ``spec`` (this module's spec by default) matches a configured default."""
+        spec = self.spec if spec is None else spec
+        return any(spec.satisfies(default) for default in self.conf.defaults)
+
+    def link_default(self) -> None:
+        """Points the ``default`` symlink to this module file."""
+        # Symlink to a tmp location first and move, so that existing
+        # symlinks do not cause an error.
+        default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
+        default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
+        os.symlink(self.layout.filename, default_tmp)
+        os.rename(default_tmp, default_path)
+
     def update_module_defaults(self) -> None:
-        if any(self.spec.satisfies(default) for default in self.conf.defaults):
-            # This spec matches a default, it needs to be symlinked to default
-            # Symlink to a tmp location first and move, so that existing
-            # symlinks do not cause an error.
-            default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
-            default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
-            os.symlink(self.layout.filename, default_tmp)
-            os.rename(default_tmp, default_path)
+        if self.matches_default():
+            self.link_default()
 
     def update_module_hiddenness(self, remove: bool = False) -> None:
         """Update modulerc file corresponding to module to add or remove
@@ -1593,7 +1601,7 @@ class BaseModuleFileWriter:
         self.remove()
 
     def remove_module_defaults(self) -> None:
-        if not any(self.spec.satisfies(default) for default in self.conf.defaults):
+        if not self.matches_default():
             return
 
         # This spec matches a default, symlink needs to be removed as we remove the module

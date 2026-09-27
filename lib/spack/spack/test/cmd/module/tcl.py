@@ -10,6 +10,7 @@ import spack.main
 import spack.modules.tcl
 
 install = spack.main.SpackCommand("install")
+uninstall = spack.main.SpackCommand("uninstall")
 module = spack.main.SpackCommand("module")
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
@@ -101,3 +102,21 @@ def test_refresh_name_clash_across_versions(install_mockery, module_configuratio
     assert "Name clashes detected in module files" in out
     assert "mpileaks@=2.2" in out
     assert "mpileaks@=2.3" in out
+
+
+def test_uninstall_does_not_recreate_module(
+    install_mockery, module_configuration, modulefile_filenames
+):
+    """Test uninstalling a folded installation does not write back a module file that was
+    removed beforehand."""
+    module_configuration("fold_variants_all")
+    spec_a = "mpileaks@2.3 ~debug ^zmpi"
+    spec_b = "mpileaks@2.3 +debug ^zmpi"
+    install("--fake", "--add", spec_a)
+    install("--fake", "--add", spec_b)
+    module_file = modulefile_filenames("tcl", spec_a)[0]
+    module("tcl", "rm", "-y", spec_a)
+    assert not os.path.exists(module_file)
+
+    uninstall("-y", spec_b)
+    assert not os.path.exists(module_file)
