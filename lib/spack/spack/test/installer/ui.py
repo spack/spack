@@ -1560,11 +1560,13 @@ class TestToggle:
         assert "new output\n" in fake_stdout.getvalue()
         assert "old partial" not in fake_stdout.getvalue()
 
-    def test_partial_line_handling_on_toggle_and_next(self):
-        """Mode transitions preserve complete lines and discard unselected fragments."""
+    def test_partial_line_newline_on_toggle_and_next(self):
+        """Ensure newline is inserted before mode transitions when log doesn't end with newline."""
         tui, _, fake_stdout = create_tui(total=2)
         build_a, build_b = add_mock_builds(tui, 2)
 
+        # Follow a build, toggle back and forth between logs and overview mode, and receive logs
+        # that may or may not end with newlines.
         tui.toggle()
         tui.on_log_output(build_a, b"checking for foo...")
         tui.toggle()
@@ -1579,9 +1581,10 @@ class TestToggle:
         # There shouldn't be any double newlines:
         assert "\n\n" not in written
 
-        # Switching builds must not join an incomplete fragment from another build.
+        # All partial and newline-terminated logs should be present with appropriate newlines:
         assert "checking for foo...\n" in written
         assert "checking for bar... yes\n" in written
+        # Switching builds discards an incomplete fragment to avoid mixing build output.
         assert "checking for baz..." not in written
 
     @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
@@ -2128,6 +2131,81 @@ class TestLineRendering:
         on_build_added(tui, "pkg", log_path="/tmp/pkg.log")
         tui.on_state_changed("pkg", "failed")
         assert "failed: /tmp/pkg.log" in fake_stdout.getvalue()
+
+    def test_live_overview_failed_lines_show_log_paths(self):
+        """Failed rows persist once, at full width, in build order above active rows."""
+        tui, fake_time, fake_stdout = create_tui(total=4, terminal_cols=40, color=False)
+        on_build_added(tui, "rwn56m6", name="py-boost-histogram", version="1.7.1")
+        on_build_added(
+            tui,
+            "yl2vfsh",
+            name="yasm",
+            version="1.3.0",
+            log_path="/tmp/spack-stage-yasm-yl2vfsh/spack-build-out.txt",
+        )
+        on_build_added(
+            tui,
+            "xvgpoe4",
+            name="davix",
+            version="0.8.10",
+            log_path="/tmp/spack-stage-davix-xvgpoe4/spack-build-out.txt",
+        )
+        on_build_added(tui, "rlfantf", name="rust", version="1.97.1")
+        tui.on_state_changed("rwn56m6", "finished")
+        fake_time[0] = inst.CLEANUP_TIMEOUT + 0.1
+        tui.on_state_changed("yl2vfsh", "failed")
+        tui.on_state_changed("xvgpoe4", "failed")
+        tui.on_state_changed("rlfantf", "building")
+
+        tui.render()
+
+        output = fake_stdout.getvalue()
+        assert output.count("yasm@1.3.0") == 1
+        assert output.count("davix@0.8.10") == 1
+        yasm_line = next(line for line in output.splitlines() if "yasm@1.3.0" in line)
+        davix_line = next(line for line in output.splitlines() if "davix@0.8.10" in line)
+        assert "failed: /tmp/spack-stage-yasm-yl2vfsh/spack-build-out.txt" in yasm_line
+        assert "failed: /tmp/spack-stage-davix-xvgpoe4/spack-build-out.txt" in davix_line
+
+        assert output.index("py-boost-histogram@1.7.1") < output.index("yasm@1.3.0")
+        assert output.index("yasm@1.3.0") < output.index("davix@0.8.10")
+        assert output.index("davix@0.8.10") < output.index("rust@1.97.1")
+
+        fake_stdout.clear()
+        fake_time[0] += inst.SPINNER_INTERVAL
+        tui.render()
+        assert "yasm@1.3.0" not in fake_stdout.getvalue()
+        assert "davix@0.8.10" not in fake_stdout.getvalue()
+
+    def test_failed_row_reappears_after_full_screen_redraw(self):
+        """A full-screen redraw re-emits each persisted failed row exactly once."""
+        tui, _, fake_stdout = create_tui(total=1, verbose=True, color=False)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_state_changed(build_id, "failed")
+        tui.render()
+        fake_stdout.clear()
+
+        tui.on_input("v")
+        output = fake_stdout.getvalue()
+
+        assert output.count(f"[x] {build_id[:7]} pkg0@0.0") == 1
+
+    def test_removed_failure_can_be_printed_again(self):
+        """A retried build may persist a new failed row under the same build ID."""
+        tui, fake_time, fake_stdout = create_tui(total=1, color=False)
+        on_build_added(tui, "pkg", log_path="/tmp/first.log")
+        tui.on_state_changed("pkg", "failed")
+        tui.render()
+        assert fake_stdout.getvalue().count("pkg@1.0 failed: /tmp/first.log") == 1
+        fake_stdout.clear()
+
+        tui.on_build_removed("pkg")
+        on_build_added(tui, "pkg", log_path="/tmp/retry.log")
+        tui.on_state_changed("pkg", "failed")
+        fake_time.append(inst.SPINNER_INTERVAL)
+        tui.render()
+
+        assert fake_stdout.getvalue().count("pkg@1.0 failed: /tmp/retry.log") == 1
 
     def test_external_indicator(self):
         """External packages are rendered with the [e] indicator."""

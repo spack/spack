@@ -14,7 +14,7 @@ import re
 import sys
 import time
 from collections import deque
-from typing import Callable, Deque, Dict, Generator, List, NamedTuple, Optional, TextIO, Union
+from typing import Callable, Deque, Dict, Generator, List, NamedTuple, Optional, Set, TextIO, Union
 
 import spack.config
 import spack.util.tty.color as coloring
@@ -216,6 +216,8 @@ class TerminalUI(InstallerUI):
         self.completed = 0
         self.builds: Dict[str, BuildInfo] = {}
         self.finished_builds: List[BuildInfo] = []
+        #: Failed build IDs already persisted in terminal history.
+        self.printed_failures: Set[str] = set()
         self.spinner_index = 0
         self.dirty = True  # Start dirty to draw initial state
         self.active_area_rows = 0
@@ -287,9 +289,10 @@ class TerminalUI(InstallerUI):
             self.commands.append(SetEcho(info.id, True))
 
     def on_build_removed(self, build_id: str) -> None:
-        """Remove a build, its retained log history, and any tracking state."""
+        """Remove retained logs, the failure marker, and tracking state for a build."""
         self.builds.pop(build_id, None)
         self.log_history.pop(build_id, None)
+        self.printed_failures.discard(build_id)
         if self.tracked_build_id == build_id:
             self.log_stream_buffer = b""
             self.log_ends_with_newline = True
@@ -605,7 +608,7 @@ class TerminalUI(InstallerUI):
     def _render_overview(
         self, *, now: float, has_unfinished: bool, finalize: bool = False
     ) -> None:
-        """Render persisted completed rows and the mutable active-build overview."""
+        """Render persisted completed and failed rows plus the mutable active-build overview."""
         # Build the overview output in a buffer and print all at once to avoid flickering.
         buffer = io.StringIO()
 
@@ -631,6 +634,19 @@ class TerminalUI(InstallerUI):
             self.finished_builds.clear()
             # Finished builds can span multiple lines, overlapping our "active area", invalidating
             # active_area_rows. Set to 0 to force newlines instead of cursor movement.
+            self.active_area_rows = 0
+
+        # Persist failures and retain their build records for log-summary navigation.
+        failures = [
+            build
+            for build in self.builds.values()
+            if build.state == "failed" and build.id not in self.printed_failures
+        ]
+        if failures:
+            for build in failures:
+                self._render_build(build, buffer, now=now)
+                self._println(buffer, force_newline=True)
+                self.printed_failures.add(build.id)
             self.active_area_rows = 0
 
         # Then a header followed by the active builds. This is the "mutable" part of the display.
@@ -669,9 +685,9 @@ class TerminalUI(InstallerUI):
             self._println(buffer, "Waiting for other Spack install process...")
 
         displayed_builds = (
-            [b for b in self.builds.values() if self._is_displayed(b)]
+            [b for b in self.builds.values() if b.state != "failed" and self._is_displayed(b)]
             if self.search_term
-            else self.builds.values()
+            else [b for b in self.builds.values() if b.state != "failed"]
         )
         len_builds = len(displayed_builds)
 
@@ -828,9 +844,11 @@ class TerminalUI(InstallerUI):
     def _redraw_overview_with_log_history(
         self, build_id: str, output: Optional[bytes] = None
     ) -> None:
-        """Clear the TTY, replay cached output with a final newline, and redraw the overview."""
+        """Replay cached output, then redraw the overview and any persisted failed rows."""
         if self.headless or not self.is_tty:
             return
+        # The full-screen redraw removes persisted rows, so emit them again below the log.
+        self.printed_failures.clear()
         self.log_stream_buffer = b""
         history = (output,) if output is not None else self.log_history.get(build_id, ())
         history_rows = sum(chunk.count(b"\n") for chunk in history)
