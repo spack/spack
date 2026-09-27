@@ -859,6 +859,17 @@ class FileLayout:
         return self.name
 
     @property
+    def pin_name(self) -> str:
+        """Returns the name that selects this installation from a dependent module file.
+        The "hash" variant is the only one stated when the module file folds installations,
+        so the name stays valid whatever variants the module file defines later on. The bare
+        module name is enough when it includes the hash."""
+        hash_variant = self.conf.variants.get("hash")
+        if hash_variant:
+            return f"{self.name} {hash_variant['spec']}"
+        return self.name
+
+    @property
     def arch_dirname(self) -> str:
         """Returns the root folder for this architecture."""
         if self.conf.arch_folder:
@@ -1245,7 +1256,7 @@ class ModuleContext(tengine.Context):
         name = self.conf.name
         cache = self.conf._configuration_cache
         return [
-            self.conf.make_layout(x, name, cache=cache).use_name for x in getattr(self.conf, what)
+            self.conf.make_layout(x, name, cache=cache).pin_name for x in getattr(self.conf, what)
         ]
 
     @tengine.context_property

@@ -327,8 +327,8 @@ The ``variants`` key under the ``tcl`` module configuration accepts the values:
 * ``none`` (default): do not define variants in module files
 * ``all``: define all variants from the installed spec in the module file, except those reserved by Spack such as ``patches`` or ``dev_path``
 
-Spack also appends the variants to the module names it writes in ``depends-on`` lines, so dependencies are loaded with their exact variant configuration.
-The ``spack module tcl loads`` command prints the module names with their variants too.
+Like ``spack module tcl find``, the ``spack module tcl loads`` command prints the module names with their variants.
+The ``depends-on`` lines of module files do not state them: the module name pins the dependency installation when it includes the hash, and the ``hash`` variant pins it otherwise, see :ref:`module-variants-folding`.
 
 .. warning::
 
@@ -427,7 +427,7 @@ The ``hash`` variant tells them apart in the ``hdf5/1.14.6-gcc-15.2.1`` module f
    ... ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools hash=6dj7iyw
    ... ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools hash=hyob6r5
 
-The ``depends-on`` lines of dependent module files always state the ``hash`` variant, so a dependent keeps loading the installation it was built against whatever installations are later folded into, or removed from, the module file of its dependency.
+The ``depends-on`` lines of dependent module files state the ``hash`` variant only, so a dependent keeps loading the installation it was built against whatever installations are later folded into, or removed from, the module file of its dependency, and whatever variants that module file then defines.
 
 Like any other variant, ``hash`` left unset takes the value of the selected installation.
 
