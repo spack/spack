@@ -1496,3 +1496,41 @@ class TestTcl:
         assert not status
         assert "Specified package is not installed" in stderr
         assert module_command.env == initial_env
+
+    def test_fold_variants_explicit_from_database(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Test the explicitness of the other folded installations is read from the database,
+        so an implicit installation written alongside an explicit one does not hide the
+        module file."""
+        module_configuration("fold_variants_hide_implicits")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        mark("--implicit", spec_a)
+        install("--fake", "--add", spec_b)
+
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_a), "default")
+        assert not writer.conf.explicit
+        writer.write(overwrite=True)
+        assert not os.path.exists(writer.layout.modulerc)
+
+    def test_fold_variants_excluded(self, install_mockery, module_configuration):
+        """Test an installation excluded from module file generation is not folded into the
+        module file of the other installations."""
+        module_configuration("fold_variants_exclude")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+
+        writer = writer_cls.from_spec(concrete_b, "default")
+        assert writer.conf.installed_specs == [concrete_b]
+        assert not writer.layout.hold_other_installations
+        writer.write()
+        with open(writer.layout.filename, encoding="utf-8") as f:
+            content = f.read()
+        assert concrete_b.dag_hash(7) in content
+        assert concrete_a.dag_hash(7) not in content

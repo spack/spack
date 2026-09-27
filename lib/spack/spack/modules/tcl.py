@@ -12,7 +12,7 @@ import spack.spec
 import spack.store
 from spack.variant import RESERVED_NAMES, VariantType, VariantValue
 
-from .common import BaseConfiguration, BaseModuleFileWriter
+from .common import BaseConfiguration, BaseModuleFileWriter, FileLayout
 
 
 class TclConfiguration(BaseConfiguration):
@@ -137,8 +137,11 @@ class TclConfiguration(BaseConfiguration):
         if not self.folds_installations:
             return [self.spec] if self.add_op else []
 
+        # Upstream installations are left out: their module files belong to the upstream
         name_version_spec = self.spec.format("{name} {@version}")
-        spec_list = set(spack.store.STORE.db.query(name_version_spec, installed=True))
+        spec_list = set(
+            spack.store.STORE.db.query(name_version_spec, installed=True, install_tree="local")
+        )
 
         if self.add_op:
             spec_list.add(self.spec)
@@ -148,30 +151,29 @@ class TclConfiguration(BaseConfiguration):
         if self.extra_spec_sharing:
             spec_list.add(self.extra_spec_sharing)
 
-        # Returns only specs that share the same module filename, sorted by their variant
-        # values as the module file selects the first installation matching a load request
-        my_filename = self.make_layout(
-            self.spec,
-            self.name,
-            self.explicit,
-            add_op=self.add_op,
-            extra_spec_sharing=self.extra_spec_sharing,
-            cache=self._configuration_cache,
-        ).filename
-        sharing_specs = [
-            spec
-            for spec in spec_list
-            if self.make_layout(
-                spec,
-                self.name,
-                self.explicit,
-                add_op=self.add_op,
-                extra_spec_sharing=self.extra_spec_sharing,
-                cache=self._configuration_cache,
-            ).filename
-            == my_filename
-        ]
-        return sorted(sharing_specs, key=self._variant_values_key)
+        # Keep only specs that share the same module filename and are not excluded from module
+        # file generation, sorted by their variant values as the module file selects the first
+        # installation matching a load request
+        my_filename = FileLayout(self).filename
+        sharing_specs = []
+        for spec in spec_list:
+            if spec == self.spec:
+                sharing_specs.append(spec)
+                continue
+            other_conf = self.make_folded_configuration(spec)
+            if not other_conf.excluded and FileLayout(other_conf).filename == my_filename:
+                sharing_specs.append(spec)
+        sharing_specs.sort(key=self._variant_values_key)
+
+        # The other installations compute the same list, hand it over to spare them the
+        # database query. An excluded installation is not part of their list though.
+        if not self.excluded:
+            for spec in sharing_specs:
+                if spec != self.spec:
+                    other_conf = self.make_folded_configuration(spec)
+                    other_conf._cache.setdefault("specs_sharing_modulefile", sharing_specs)
+
+        return sharing_specs
 
     def _variant_values_key(self, spec: spack.spec.Spec) -> Tuple[Tuple[str, ...], str]:
         """Sort key listing installations by their variant values, then by their hash."""
