@@ -113,6 +113,9 @@ def test_namespace_policy_data_is_loaded_from_yaml():
 
     assert "commands" not in policy
     assert policy["hidden_roots"]
+    assert policy["empty_directory_paths"] == [
+        {"path": "/usr/share/aclocal", "unless_external_specs": ["autoconf"]}
+    ]
     assert policy["replacement_roots"] == ["/tmp", "/var/tmp"]
     assert "/dev/urandom" in policy["device_nodes"]
     assert policy["tmpfs_paths"] == ["/dev/shm"]
@@ -143,6 +146,16 @@ def test_namespace_policy_data_is_loaded_from_yaml():
     [
         (lambda policy: policy.update(version=2), "version"),
         (lambda policy: policy.update(hidden_roots="/usr/bin"), "hidden_roots"),
+        (
+            lambda policy: policy.update(empty_directory_paths=[{"path": "relative"}]),
+            "empty_directory_paths[0].path",
+        ),
+        (
+            lambda policy: policy.update(
+                empty_directory_paths=[{"path": "/tmp", "unless_external_specs": ["@"]}]
+            ),
+            "empty_directory_paths[0].unless_external_specs",
+        ),
         (lambda policy: policy.update(tmpfs_paths=["relative"]), "tmpfs_paths"),
         (lambda policy: policy.update(device_symlinks=[]), "device_symlinks"),
         (lambda policy: policy.update(device_symlinks={"/dev/fd": "relative"}), "device_symlinks"),
@@ -776,22 +789,29 @@ def test_enable_sandbox_prepares_namespace_mount_tree(
     assert mock_sandbox.apply_calls == [False]
 
 
-def test_default_hide_as_empty_dirs_skips_external_autoconf():
-    """An external autoconf keeps access to its own host macro directory."""
+def test_configured_empty_directory_paths_match_external_spec_constraints():
+    """External dependencies can disable configured empty-directory features."""
     import types
 
-    from spack.installer.build import default_hide_as_empty_dirs
+    from spack.installer.build import configured_empty_directory_paths
 
     def fake_spec(dependencies):
         spec = types.SimpleNamespace()
         spec.traverse = lambda root=True: iter(dependencies)
         return cast(Any, spec)
 
-    external = types.SimpleNamespace(name="autoconf", external=True)
-    assert default_hide_as_empty_dirs(fake_spec([external])) == []
+    policy = {
+        "empty_directory_paths": [
+            {"path": "/usr/share/aclocal", "unless_external_specs": ["autoconf@2.70:+foo"]}
+        ]
+    }
+    external = spack.spec.Spec("autoconf@2.72+foo", external_path="/opt/external-autoconf")
+    assert configured_empty_directory_paths(fake_spec([external]), policy) == []
 
-    not_external = types.SimpleNamespace(name="autoconf", external=False)
-    assert default_hide_as_empty_dirs(fake_spec([not_external])) == ["/usr/share/aclocal"]
+    nonmatching = spack.spec.Spec("autoconf@2.69+foo", external_path="/opt/external-autoconf")
+    assert configured_empty_directory_paths(fake_spec([nonmatching]), policy) == [
+        "/usr/share/aclocal"
+    ]
 
 
 def test_namespace_filesystem_policy_from_installer_inputs(monkeypatch, tmp_path: pathlib.Path):
@@ -823,7 +843,7 @@ def test_namespace_filesystem_policy_from_installer_inputs(monkeypatch, tmp_path
 
     dependencies = [
         SimpleNamespace(name="dependency", external=False, prefix=dependency_prefix),
-        SimpleNamespace(name="external", external=True, prefix=external_prefix),
+        spack.spec.Spec("external", external_path=str(external_prefix)),
     ]
     spec = cast(
         Any, SimpleNamespace(prefix=install_prefix, traverse=lambda root=True: iter(dependencies))

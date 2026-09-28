@@ -175,6 +175,45 @@ def _validate_absolute_path_list(policy_name: str, path: str, policy: dict, key:
         raise _policy_error(policy_name, path, key, "expected absolute paths")
 
 
+def _validate_empty_directory_paths(policy_name: str, path: str, policy: dict) -> None:
+    value = policy.get("empty_directory_paths")
+    if not isinstance(value, list):
+        raise _policy_error(policy_name, path, "empty_directory_paths", "expected a list")
+    for index, entry in enumerate(value):
+        if not isinstance(entry, dict):
+            raise _policy_error(
+                policy_name, path, f"empty_directory_paths[{index}]", "expected a mapping"
+            )
+        directory = entry.get("path")
+        if not isinstance(directory, str) or not os.path.isabs(directory):
+            raise _policy_error(
+                policy_name,
+                path,
+                f"empty_directory_paths[{index}].path",
+                "expected an absolute path",
+            )
+        constraints = entry.get("unless_external_specs", [])
+        if not isinstance(constraints, list) or not all(
+            isinstance(constraint, str) for constraint in constraints
+        ):
+            raise _policy_error(
+                policy_name,
+                path,
+                f"empty_directory_paths[{index}].unless_external_specs",
+                "expected a list of strings",
+            )
+        for constraint in constraints:
+            try:
+                spack.spec.Spec(constraint)
+            except (spack.error.SpecError, spack.error.SpecSyntaxError) as error:
+                raise _policy_error(
+                    policy_name,
+                    path,
+                    f"empty_directory_paths[{index}].unless_external_specs",
+                    f"invalid spec {constraint!r}: {error}",
+                ) from error
+
+
 def _load_sandbox_policy(path: str = SANDBOX_POLICY_PATH) -> dict:
     """Load and validate the shipped namespace sandbox compatibility policy."""
     policy_name = "sandbox policy"
@@ -203,6 +242,7 @@ def _load_sandbox_policy(path: str = SANDBOX_POLICY_PATH) -> dict:
         _validate_string_list(policy_name, path, policy, key)
     for key in ("hidden_roots", "replacement_roots", "tmpfs_paths", "mount_plan_scratch_paths"):
         _validate_absolute_path_list(policy_name, path, policy, key)
+    _validate_empty_directory_paths(policy_name, path, policy)
 
     device_symlinks = policy.get("device_symlinks")
     if not isinstance(device_symlinks, dict) or not all(
@@ -1432,17 +1472,25 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
         spack.util.tty.debug(e)
 
 
-def default_hide_as_empty_dirs(spec: spack.spec.Spec) -> List[str]:
-    """Return host directories hidden as empty by default for this build.
-
-    The host ``/usr/share/aclocal`` directory is hidden unless the spec has an
-    external ``autoconf`` dependency, because a host autoconf legitimately relies
-    on its own system macro directory.
-    """
-    hidden_dirs = []
-    if not any(dep.name == "autoconf" and dep.external for dep in spec.traverse(root=False)):
-        hidden_dirs.append("/usr/share/aclocal")
-    return hidden_dirs
+def configured_empty_directory_paths(
+    spec: spack.spec.Spec, policy: Optional[dict] = None
+) -> List[str]:
+    """Return policy-configured host directories hidden as empty for this build."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    external_dependencies = [
+        dep for dep in spec.traverse(root=False) if getattr(dep, "external", False)
+    ]
+    return [
+        entry["path"]
+        for entry in policy["empty_directory_paths"]
+        if not any(
+            any(
+                dependency.satisfies(constraint, deps=False)
+                for dependency in external_dependencies
+            )
+            for constraint in entry.get("unless_external_specs", [])
+        )
+    ]
 
 
 def namespace_filesystem_policy_from_inputs(
@@ -1477,7 +1525,7 @@ def namespace_filesystem_policy_from_inputs(
         return ((path, path) for path in minimal_paths)
 
     return spack.sandbox_namespaces.build_namespace_filesystem_policy(
-        (path for path in default_hide_as_empty_dirs(spec) if os.path.isdir(path)),
+        (path for path in configured_empty_directory_paths(spec) if os.path.isdir(path)),
         existing_identity_mounts(read_only_paths),
         existing_identity_mounts(read_write_paths),
     )
@@ -1939,7 +1987,9 @@ def _prepare_namespace_sandbox_before_threads(
             if not prepared:
                 raise spack.error.InstallError("Cannot apply selected namespace filesystem policy")
         else:
-            prepared = sandbox.prepare_mount_tree(default_hide_as_empty_dirs(spec), stage_path)
+            prepared = sandbox.prepare_mount_tree(
+                configured_empty_directory_paths(spec), stage_path
+            )
             if not prepared:
                 spack.util.tty.warn(
                     "Build sandbox could not mask host directories; kernel namespaces unavailable"
@@ -2043,7 +2093,7 @@ def _enable_sandbox(
         and isinstance(sandbox, namespace_module.NamespaceSandbox)
         and not namespace_prepared
     ):
-        hidden_dirs = default_hide_as_empty_dirs(spec)
+        hidden_dirs = configured_empty_directory_paths(spec)
         if not sandbox.prepare_mount_tree(hidden_dirs, stage_path):
             spack.util.tty.warn(
                 "Build sandbox could not mask host directories; kernel namespaces unavailable"
