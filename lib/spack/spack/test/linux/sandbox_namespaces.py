@@ -346,6 +346,88 @@ def test_filesystem_policy_compiles_generated_paths(tmp_path):
     assert (stage / "spack-empty-host-dirs/0/generated-file").is_file()
 
 
+def test_filesystem_policy_compiles_private_shared_memory(tmp_path):
+    hidden = tmp_path / "dev"
+    hidden.mkdir()
+    shared_memory = str(hidden / "shm")
+    descriptor_link = ns.NamespaceGeneratedSymlink(str(hidden / "fd"), "/proc/self/fd")
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        generated_symlinks=[descriptor_link],
+        tmpfs_paths=[shared_memory],
+        read_only_view=True,
+    )
+    plan = ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "scratch"))
+    assert plan.tmpfs_paths == (shared_memory,)
+    assert plan.generated_symlinks == (descriptor_link,)
+    libc = FakeLibc()
+    assert ns._apply_namespace_mount_plan(plan, libc)
+    assert os.readlink(tmp_path / "scratch/spack-empty-host-dirs/0/fd") == "/proc/self/fd"
+    assert (tmp_path / "scratch/spack-empty-host-dirs/0/shm").is_dir()
+    assert libc.mount_calls[-1] == (
+        b"tmpfs",
+        os.fsencode(shared_memory),
+        ns.MS_NOSUID | ns.MS_NODEV,
+    )
+    assert libc.mount_setattr_calls[0] == (ns.AT_FDCWD, b"/", ns.AT_RECURSIVE)
+
+
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        "relative",
+        "dotdot",
+        "outside",
+        "root",
+        "duplicate",
+        "nested",
+        "restored",
+        "generated",
+        "symlink",
+        "replacement",
+    ],
+)
+def test_private_tmpfs_policy_rejects_conflicts(tmp_path, invalid):
+    hidden = tmp_path / "dev"
+    hidden.mkdir()
+    shared_memory = str(hidden / "shm")
+    options = {}
+    paths = [shared_memory]
+    if invalid == "relative":
+        paths = ["dev/shm"]
+    elif invalid == "dotdot":
+        paths = [str(hidden / ".." / "shm")]
+    elif invalid == "outside":
+        paths = [str(tmp_path / "outside")]
+    elif invalid == "root":
+        paths = [str(hidden)]
+    elif invalid == "duplicate":
+        paths *= 2
+    elif invalid == "nested":
+        paths.append(shared_memory + "/child")
+    elif invalid == "restored":
+        options["read_write_mounts"] = [(str(tmp_path), shared_memory)]
+    elif invalid == "generated":
+        options["generated_paths"] = [ns.NamespaceGeneratedPath(shared_memory, True)]
+    elif invalid == "symlink":
+        options["generated_symlinks"] = [
+            ns.NamespaceGeneratedSymlink(shared_memory, "/proc/self/fd")
+        ]
+    elif invalid == "replacement":
+        options["replacement_mounts"] = [(str(tmp_path), str(hidden))]
+    with pytest.raises(ns.NamespaceSetupError):
+        ns.build_namespace_filesystem_policy([str(hidden)], tmpfs_paths=paths, **options)
+
+
+def test_private_tmpfs_handbuilt_policy_revalidated_before_entry(tmp_path, monkeypatch):
+    hidden = tmp_path / "dev"
+    hidden.mkdir()
+    policy = ns.NamespaceFilesystemPolicy((str(hidden),), tmpfs_paths=("relative",))
+    monkeypatch.setattr(ns, "_enter_user_mount_namespace", lambda *args: pytest.fail("entered"))
+    with pytest.raises(ns.NamespaceSetupError, match="invalid tmpfs path"):
+        ns.NamespaceSandbox().prepare_filesystem_policy(policy, str(tmp_path / "scratch"))
+
+
 def test_filesystem_policy_compiles_replacement_and_generated_alias(tmp_path):
     hidden = tmp_path / "hidden"
     hidden.mkdir()
@@ -364,9 +446,15 @@ def test_filesystem_policy_compiles_replacement_and_generated_alias(tmp_path):
 
     plan = ns.build_namespace_mount_plan_from_policy(policy, str(stage))
 
+    preserved_source = str(stage / "spack-preserved-host-paths" / "replacement-0")
+    assert plan.preserved_mounts == (
+        ns.NamespacePreservedMount(
+            str(replacement), preserved_source, True, ns.NamespaceMountAccess.READ_WRITE
+        ),
+    )
     assert plan.replacement_mounts == (
         ns.NamespacePreservedMount(
-            str(replacement), str(hidden), True, ns.NamespaceMountAccess.READ_WRITE
+            preserved_source, str(hidden), True, ns.NamespaceMountAccess.READ_WRITE
         ),
     )
     assert plan.generated_symlinks == (
