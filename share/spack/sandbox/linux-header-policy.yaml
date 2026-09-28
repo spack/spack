@@ -1,0 +1,157 @@
+# System header paths permitted to sandboxed builds using host compilers.
+# Paths are relative to /usr/include. Missing paths are ignored.
+version: 1
+system_include_root: /usr/include
+glibc:
+  files:
+  - aio.h
+  - aliases.h
+  - alloca.h
+  - ar.h
+  - argp.h
+  - argz.h
+  - assert.h
+  - byteswap.h
+  - complex.h
+  - cpio.h
+  # crypt.h is from the passwd libxcrypt library, has a dependency loop with perl, so allow it:
+  - crypt.h
+  - ctype.h
+  - dirent.h
+  - dlfcn.h
+  - elf.h
+  - endian.h
+  - envz.h
+  - err.h
+  - errno.h
+  - error.h
+  - execinfo.h
+  - fcntl.h
+  - features-time64.h
+  - features.h
+  - fenv.h
+  - fmtmsg.h
+  - fnmatch.h
+  - fstab.h
+  - fts.h
+  - ftw.h
+  - gconv.h
+  - getopt.h
+  - glob.h
+  - gnu-versions.h
+  - grp.h
+  - gshadow.h
+  - iconv.h
+  - ifaddrs.h
+  - inttypes.h
+  - langinfo.h
+  - lastlog.h
+  - libgen.h
+  - libintl.h
+  - limits.h
+  - link.h
+  - locale.h
+  - malloc.h
+  - math.h
+  - mcheck.h
+  - memory.h
+  - mntent.h
+  - monetary.h
+  - mqueue.h
+  - netdb.h
+  - nl_types.h
+  - nss.h
+  - obstack.h
+  - paths.h
+  - poll.h
+  - printf.h
+  - proc_service.h
+  - pthread.h
+  - pty.h
+  - pwd.h
+  - re_comp.h
+  - regex.h
+  - regexp.h
+  - resolv.h
+  - sched.h
+  - search.h
+  - semaphore.h
+  - setjmp.h
+  - sgtty.h
+  - shadow.h
+  - signal.h
+  - spawn.h
+  - stab.h
+  - stdbit.h
+  - stdc-predef.h
+  - stdint.h
+  - stdio.h
+  - stdio_ext.h
+  - stdlib.h
+  - string.h
+  - strings.h
+  - syscall.h
+  - sysexits.h
+  - syslog.h
+  - tar.h
+  - termio.h
+  - termios.h
+  - tgmath.h
+  - thread_db.h
+  - threads.h
+  - time.h
+  - ttyent.h
+  - uchar.h
+  - ucontext.h
+  - ulimit.h
+  - unistd.h
+  - utime.h
+  - utmp.h
+  - utmpx.h
+  - values.h
+  - wait.h
+  - wchar.h
+  - wctype.h
+  - wordexp.h
+  directories:
+  - arpa
+  - finclude
+  - net
+  - netash
+  - netatalk
+  - netax25
+  - neteconet
+  - netinet
+  - netipx
+  - netiucv
+  - netpacket
+  - netrom
+  - netrose
+  - nfs
+  - protocols
+  - rpc
+  target_directories:
+  - bits
+  - gnu
+  - sys
+  target_files:
+  - a.out.h
+  - fpu_control.h
+  - ieee754.h
+linux:
+  directories:
+  - asm-generic
+  - drm
+  - linux
+  - misc
+  - mtd
+  - rdma
+  - regulator
+  - scsi
+  - sound
+  - video
+  - xen
+  target_directories:
+  - asm
+libstdcxx:
+  maximum_major_for_non_gcc: 15

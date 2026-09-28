@@ -1,0 +1,165 @@
+# Build sandbox compatibility policy.
+# Package-specific provenance for entries is recorded here so policy changes can be
+# reviewed independently from installer control flow.
+version: 1
+hidden_roots:
+- /bin
+- /dev
+- /home
+- /root
+- /run/user
+- /sbin
+- /tmp
+- /usr/bin
+- /usr/include
+- /usr/lib
+- /usr/lib64
+- /usr/libexec
+- /usr/sbin
+- /usr/share
+- /var/tmp
+replacement_roots:
+- /tmp
+- /var/tmp
+device_nodes:
+- /dev/full
+- /dev/null
+- /dev/random
+- /dev/tty
+- /dev/urandom
+- /dev/zero
+stage_programs:
+- 7z
+- bunzip2
+- git
+- gunzip
+- gzip
+- patch
+- sh
+- tar
+- unzip
+- xz
+host_runtime_read_paths:
+- /lib
+- /lib64
+- /usr/lib
+- /usr/lib64
+- /usr/lib/locale  # perl
+- /etc/ld.so.cache
+- /etc/ld.so.conf
+- /etc/ld.so.conf.d
+- /proc/cpuinfo
+- /etc/debian_version
+- /etc/fonts  # font-util
+- /etc/hosts  # perl
+- /etc/passwd  # ncurses
+- /etc/mime.types
+- /usr/share/mime/mime.cache  # intel-oneapi-mkl bootstrapper
+- /usr/share/mime/types  # intel-oneapi-mkl bootstrapper
+- /etc/ssl/certs
+- /dev/urandom  # vc
+file_runtime_read_paths:
+- /etc/magic  # pkgconf, berkeley-db
+- /usr/share/file/magic.mgc  # pkgconf, berkeley-db
+compiler_languages:
+- c
+- cxx
+- fortran
+compiler_driver_aliases:
+  c:
+  - cc
+  - gcc
+  cxx:
+  - c++
+  - g++
+  fortran:
+  - f77
+  - gfortran
+compiler_programs:
+- cc1
+- cc1plus
+- f951
+- collect2
+- lto1
+- lto-wrapper
+- cpp
+binutils_programs:
+- as
+- ld
+- ld.bfd
+- ld.gold
+- ar
+- nm
+- objcopy  # glib
+- ranlib
+- strip
+coreutils_install_programs:
+- chmod
+- cp
+- install
+- ln
+- mkdir
+- mv
+- rm
+- rmdir  # pkgconf, berkeley-db
+coreutils_file_programs:
+- cat
+- cmp  # diffutils
+- comm  # perl
+- cut
+- date  # diffutils, libevent
+- echo  # diffutils, pkgconf
+- head  # ncurses
+- ls
+- od  # ninja
+- paste  # ncurses
+- realpath  # perl
+- sleep  # ncurses
+- split  # perl
+- tail  # perl
+- tee  # petsc
+- touch
+- "true"  # pkgconf, berkeley-db
+- wc
+coreutils_util_programs:
+- basename
+- arch  # perl
+- dirname
+- env
+- expr
+- id  # font-util
+- mktemp  # seen in openblas build log (build completes without it)
+- pwd
+- sort  # pkgconf, berkeley-db
+- tr
+- uname
+- uniq  # pkgconf, berkeley-db, diffutils
+build_utilities_programs:
+- diff  # pkgconf, berkeley-db
+- egrep  # perl
+- fc-cache  # font-util
+- fgrep  # bazel
+- file  # pkgconf, berkeley-db
+- find
+- git
+- gzip  # font-util, git
+- grep
+- hexdump
+- md5sum  # bazel
+- sha384sum  # intel-oneapi-mkl
+- ldd
+- make
+- sh
+- tar  # self-extracting installers such as CUDA
+- tbl  # ncurses
+- unzip  # bazel
+- which
+- xargs  # diffutils
+script_interpreter_programs:
+- awk
+- bash
+- mawk  # ncurses
+- perl
+- sed
+compiler_files:
+- liblto_plugin.so

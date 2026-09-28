@@ -106,6 +106,22 @@ class NamespaceMountRequest(NamedTuple):
     access: NamespaceMountAccess
 
 
+class NamespaceGeneratedPath(NamedTuple):
+    """One file or directory created only in the namespace view."""
+
+    path: str
+    is_directory: bool
+
+
+class NamespaceFilesystemPolicy(NamedTuple):
+    """Immutable filesystem intent validated before namespace mutation."""
+
+    hidden_roots: Tuple[str, ...]
+    read_only_mounts: Tuple[NamespaceMountRequest, ...] = ()
+    read_write_mounts: Tuple[NamespaceMountRequest, ...] = ()
+    generated_paths: Tuple[NamespaceGeneratedPath, ...] = ()
+
+
 class NamespacePreservedMount(NamedTuple):
     """A preserved bind mount with the source type needed at application time."""
 
@@ -122,6 +138,7 @@ class NamespaceMountPlan(NamedTuple):
     mounts: Tuple[NamespaceMount, ...]
     preserved_mounts: Tuple[NamespacePreservedMount, ...] = ()
     restoration_mounts: Tuple[NamespacePreservedMount, ...] = ()
+    generated_paths: Tuple[NamespaceGeneratedPath, ...] = ()
 
 
 class _CapabilityHeader(ctypes.Structure):
@@ -192,6 +209,191 @@ def _set_mount_read_only(libc: ctypes.CDLL, target: str, recursive: bool) -> Non
     )
 
 
+def _path_contains(parent: str, child: str) -> bool:
+    return parent != child and os.path.commonpath((parent, child)) == parent
+
+
+def _validate_non_overlapping_paths(paths: Iterable[Tuple[str, str]], operation: str) -> None:
+    sorted_paths = sorted(paths, key=lambda item: item[0])
+    for index, (path, category) in enumerate(sorted_paths):
+        for previous_path, previous_category in sorted_paths[:index]:
+            if path == previous_path:
+                _mount_plan_error(
+                    operation,
+                    f"duplicate or access-conflicting {category} and "
+                    f"{previous_category} path: {path}",
+                )
+            if _path_contains(previous_path, path):
+                _mount_plan_error(
+                    operation,
+                    f"overlapping {previous_category} and {category} paths: "
+                    f"{previous_path} and {path}",
+                )
+
+
+def build_namespace_filesystem_policy(
+    hidden_roots: Iterable[str],
+    read_only_mounts: Iterable[Tuple[str, str]] = (),
+    read_write_mounts: Iterable[Tuple[str, str]] = (),
+    generated_paths: Iterable[NamespaceGeneratedPath] = (),
+) -> NamespaceFilesystemPolicy:
+    """Canonicalize and validate namespace filesystem intent.
+
+    Entries in different access categories may not duplicate or overlap. This
+    function performs no filesystem mutation. Policy-to-plan compilation
+    separately checks whether the current mount implementation can express all
+    classified paths below the selected hidden roots.
+    """
+    resolved_hidden_roots = []
+    for root in hidden_roots:
+        if not os.path.exists(root):
+            _mount_plan_error(
+                "validate namespace policy hidden root",
+                f"hidden root does not exist: {root}",
+                errno.ENOENT,
+            )
+        if not os.path.isdir(root):
+            _mount_plan_error(
+                "validate namespace policy hidden root",
+                f"hidden root is not a directory: {root}",
+                errno.ENOTDIR,
+            )
+        resolved_hidden_roots.append(os.path.realpath(os.path.abspath(root)))
+    _validate_non_overlapping_paths(
+        ((path, "hidden root") for path in resolved_hidden_roots),
+        "validate namespace policy hidden roots",
+    )
+    sorted_hidden_roots = tuple(sorted(resolved_hidden_roots))
+
+    def canonicalize_mounts(
+        requests: Iterable[Tuple[str, str]], access: NamespaceMountAccess
+    ) -> Tuple[NamespaceMountRequest, ...]:
+        mounts = []
+        for source, target in requests:
+            resolved_source = os.path.realpath(os.path.abspath(source))
+            if not os.path.exists(resolved_source):
+                _mount_plan_error(
+                    "validate namespace policy mount source",
+                    f"mount source does not exist: {source}",
+                    errno.ENOENT,
+                )
+            resolved_target = os.path.realpath(os.path.abspath(target))
+            mounts.append(NamespaceMountRequest(resolved_source, resolved_target, access))
+        return tuple(sorted(mounts, key=lambda item: (item.target, item.source)))
+
+    canonical_read_only = canonicalize_mounts(read_only_mounts, NamespaceMountAccess.READ_ONLY)
+    canonical_read_write = canonicalize_mounts(read_write_mounts, NamespaceMountAccess.READ_WRITE)
+    canonical_generated_list = []
+    for path in generated_paths:
+        if not isinstance(path, NamespaceGeneratedPath) or not isinstance(path.is_directory, bool):
+            _mount_plan_error(
+                "validate namespace policy generated path", f"invalid generated path: {path!r}"
+            )
+        canonical_generated_list.append(
+            NamespaceGeneratedPath(os.path.realpath(os.path.abspath(path.path)), path.is_directory)
+        )
+    canonical_generated = tuple(sorted(canonical_generated_list, key=lambda item: item.path))
+
+    classified_paths = [
+        (mount.target, mount.access.value) for mount in canonical_read_only + canonical_read_write
+    ]
+    classified_paths.extend((path.path, "generated") for path in canonical_generated)
+    _validate_non_overlapping_paths(classified_paths, "validate namespace policy classified paths")
+    for path, category in classified_paths:
+        for root in sorted_hidden_roots:
+            if path == root:
+                _mount_plan_error(
+                    "validate namespace policy categories",
+                    f"duplicate hidden root and {category} path: {path}",
+                )
+            if _path_contains(path, root):
+                _mount_plan_error(
+                    "validate namespace policy categories",
+                    f"overlapping {category} path and hidden root: {path} and {root}",
+                )
+        if category == "generated" and not any(
+            _path_contains(root, path) for root in sorted_hidden_roots
+        ):
+            _mount_plan_error(
+                "validate namespace policy generated path",
+                f"generated path is not below a hidden root: {path}",
+            )
+
+    return NamespaceFilesystemPolicy(
+        sorted_hidden_roots, canonical_read_only, canonical_read_write, canonical_generated
+    )
+
+
+def _validated_namespace_filesystem_policy(
+    policy: NamespaceFilesystemPolicy,
+) -> NamespaceFilesystemPolicy:
+    if not isinstance(policy, NamespaceFilesystemPolicy):
+        _mount_plan_error("validate namespace policy", f"invalid policy: {policy!r}")
+    read_only_mounts = []
+    read_write_mounts = []
+    for mount in policy.read_only_mounts:
+        if not isinstance(mount, NamespaceMountRequest) or (
+            mount.access is not NamespaceMountAccess.READ_ONLY
+        ):
+            _mount_plan_error(
+                "validate namespace policy access", f"invalid read-only mount: {mount!r}"
+            )
+        read_only_mounts.append((mount.source, mount.target))
+    for mount in policy.read_write_mounts:
+        if not isinstance(mount, NamespaceMountRequest) or (
+            mount.access is not NamespaceMountAccess.READ_WRITE
+        ):
+            _mount_plan_error(
+                "validate namespace policy access", f"invalid read-write mount: {mount!r}"
+            )
+        read_write_mounts.append((mount.source, mount.target))
+    validated = build_namespace_filesystem_policy(
+        policy.hidden_roots, read_only_mounts, read_write_mounts, policy.generated_paths
+    )
+    if policy != validated:
+        _mount_plan_error("validate namespace policy", "policy is not canonical")
+    return validated
+
+
+def build_namespace_mount_plan_from_policy(
+    policy: NamespaceFilesystemPolicy, stage_path: str
+) -> NamespaceMountPlan:
+    """Compile validated filesystem policy into deterministic mount operations."""
+    policy = _validated_namespace_filesystem_policy(policy)
+    resolved_stage = os.path.realpath(os.path.abspath(stage_path))
+    reserved_stage_paths = (
+        os.path.join(resolved_stage, "spack-empty-host-dirs"),
+        os.path.join(resolved_stage, "spack-preserved-host-paths"),
+    )
+    for root in policy.hidden_roots:
+        if resolved_stage == root or _path_contains(root, resolved_stage):
+            _mount_plan_error(
+                "compile namespace policy",
+                f"mount-plan stage must be outside hidden roots: {resolved_stage}",
+            )
+        if any(root == path or _path_contains(path, root) for path in reserved_stage_paths):
+            _mount_plan_error(
+                "compile namespace policy", f"hidden root overlaps mount-plan scratch: {root}"
+            )
+    classified_paths = [mount.target for mount in policy.read_only_mounts]
+    classified_paths.extend(mount.target for mount in policy.read_write_mounts)
+    classified_paths.extend(path.path for path in policy.generated_paths)
+    for path in classified_paths:
+        if not any(_path_contains(root, path) for root in policy.hidden_roots):
+            _mount_plan_error(
+                "compile namespace policy", f"classified path is not below a hidden root: {path}"
+            )
+    mounts = policy.read_only_mounts + policy.read_write_mounts
+    plan = _build_namespace_mount_plan(policy.hidden_roots, stage_path, mounts)
+    return NamespaceMountPlan(
+        plan.stage_path,
+        plan.mounts,
+        plan.preserved_mounts,
+        plan.restoration_mounts,
+        policy.generated_paths,
+    )
+
+
 def build_namespace_mount_plan(
     paths: Iterable[str], stage_path: str, preserved_sources: Iterable[NamespaceMountRequest] = ()
 ) -> NamespaceMountPlan:
@@ -205,6 +407,59 @@ def build_namespace_mount_plan(
     conflicting relationships are rejected before entering a namespace or
     creating a source directory.
     """
+    resolved_paths = []
+    for path in paths:
+        if not os.path.exists(path):
+            continue
+        if not os.path.isdir(path):
+            _mount_plan_error(
+                "validate mount plan target",
+                f"mount target is not a directory: {path}",
+                errno.ENOTDIR,
+            )
+        resolved_paths.append(os.path.realpath(os.path.abspath(path)))
+    sorted_paths = sorted(resolved_paths)
+    for index, path in enumerate(sorted_paths):
+        for previous_path in sorted_paths[:index]:
+            if path == previous_path:
+                _mount_plan_error("validate mount plan targets", f"duplicate mount target: {path}")
+            if _path_contains(previous_path, path):
+                _mount_plan_error(
+                    "validate mount plan targets",
+                    f"conflicting mount targets: {previous_path} and {path}",
+                )
+
+    read_only_mounts = []
+    read_write_mounts = []
+    for request in preserved_sources:
+        if request.access is NamespaceMountAccess.READ_ONLY:
+            read_only_mounts.append((request.source, request.target))
+        elif request.access is NamespaceMountAccess.READ_WRITE:
+            read_write_mounts.append((request.source, request.target))
+        else:
+            _mount_plan_error(
+                "validate preserved access", f"invalid preserved mount access: {request.access!r}"
+            )
+        if not os.path.exists(request.source):
+            _mount_plan_error(
+                "validate preserved source",
+                f"preserved source does not exist: {request.source}",
+                errno.ENOENT,
+            )
+        resolved_target = os.path.realpath(os.path.abspath(request.target))
+        if not any(_path_contains(root, resolved_target) for root in sorted_paths):
+            _mount_plan_error(
+                "validate preserved relationship",
+                f"preserved target is not below a hidden directory: {request.target}",
+            )
+    policy = build_namespace_filesystem_policy(sorted_paths, read_only_mounts, read_write_mounts)
+    return build_namespace_mount_plan_from_policy(policy, stage_path)
+
+
+def _build_namespace_mount_plan(
+    paths: Iterable[str], stage_path: str, preserved_sources: Iterable[NamespaceMountRequest]
+) -> NamespaceMountPlan:
+    """Build concrete operations from canonical validated policy entries."""
     resolved_stage = os.path.realpath(os.path.abspath(stage_path))
     if os.path.exists(resolved_stage) and not os.path.isdir(resolved_stage):
         _mount_plan_error(
@@ -215,46 +470,26 @@ def build_namespace_mount_plan(
 
     targets = []
     for path in paths:
-        if not os.path.exists(path):
-            continue
-        if not os.path.isdir(path):
-            _mount_plan_error(
-                "validate mount plan target",
-                f"mount target is not a directory: {path}",
-                errno.ENOTDIR,
-            )
-        targets.append(os.path.realpath(os.path.abspath(path)))
+        targets.append(path)
 
     sorted_targets = sorted(targets)
     for index, target in enumerate(sorted_targets):
-        if index and target == sorted_targets[index - 1]:
-            _mount_plan_error("validate mount plan targets", f"duplicate mount target: {target}")
-        if (
-            index
-            and os.path.commonpath((sorted_targets[index - 1], target))
-            == sorted_targets[index - 1]
-        ):
-            _mount_plan_error(
-                "validate mount plan targets",
-                f"conflicting mount targets: {sorted_targets[index - 1]} and {target}",
-            )
+        for previous_target in sorted_targets[:index]:
+            if target == previous_target:
+                _mount_plan_error(
+                    "validate mount plan targets", f"duplicate mount target: {target}"
+                )
+            if _path_contains(previous_target, target):
+                _mount_plan_error(
+                    "validate mount plan targets",
+                    f"conflicting mount targets: {previous_target} and {target}",
+                )
 
-    hidden_targets = tuple(sorted_targets)
     preserved_requests = []
     for source, target, access in preserved_sources:
-        if not isinstance(access, NamespaceMountAccess):
-            _mount_plan_error(
-                "validate preserved access", f"invalid preserved mount access: {access!r}"
-            )
-        resolved_source = os.path.realpath(os.path.abspath(source))
-        if not os.path.exists(resolved_source):
-            _mount_plan_error(
-                "validate preserved source",
-                f"preserved source does not exist: {source}",
-                errno.ENOENT,
-            )
+        resolved_source = source
         source_is_directory = os.path.isdir(resolved_source)
-        resolved_target = os.path.realpath(os.path.abspath(target))
+        resolved_target = target
         if os.path.exists(resolved_target):
             if os.path.isdir(resolved_target) != source_is_directory:
                 _mount_plan_error(
@@ -267,17 +502,6 @@ def build_namespace_mount_plan(
                 "validate preserved target",
                 f"preserved target parent does not exist: {target}",
                 errno.ENOENT,
-            )
-        containing_targets = [
-            hidden_target
-            for hidden_target in hidden_targets
-            if os.path.commonpath((hidden_target, resolved_target)) == hidden_target
-            and hidden_target != resolved_target
-        ]
-        if not containing_targets:
-            _mount_plan_error(
-                "validate preserved relationship",
-                f"preserved target is not below a hidden directory: {target}",
             )
         preserved_requests.append((resolved_source, resolved_target, source_is_directory, access))
 
@@ -330,11 +554,13 @@ def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> 
         access: NamespaceMountAccess = NamespaceMountAccess.READ_WRITE,
     ) -> None:
         if not os.path.exists(source):
-            if source_is_directory:
-                os.makedirs(source)
-            else:
-                os.makedirs(os.path.dirname(source), exist_ok=True)
-                Path(source).touch()
+            _mount_plan_error(
+                "apply mount plan source", f"mount source disappeared: {source}", errno.ENOENT
+            )
+        if os.path.isdir(source) != source_is_directory:
+            _mount_plan_error(
+                "apply mount plan source", f"mount source type changed: {source}", errno.ENOTDIR
+            )
         if not os.path.exists(target):
             if source_is_directory:
                 os.makedirs(target)
@@ -390,6 +616,16 @@ def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> 
             )
             endpoint = os.path.join(mask.source, os.path.relpath(restoration.target, mask.target))
             if restoration.source_is_directory:
+                os.makedirs(endpoint, exist_ok=True)
+            else:
+                os.makedirs(os.path.dirname(endpoint), exist_ok=True)
+                Path(endpoint).touch()
+        for generated in plan.generated_paths:
+            mask = next(
+                mount for mount in plan.mounts if _path_contains(mount.target, generated.path)
+            )
+            endpoint = os.path.join(mask.source, os.path.relpath(generated.path, mask.target))
+            if generated.is_directory:
                 os.makedirs(endpoint, exist_ok=True)
             else:
                 os.makedirs(os.path.dirname(endpoint), exist_ok=True)
@@ -797,6 +1033,21 @@ class NamespaceSandbox(Sandbox):
         self._stage_path = stage_path
         plan = build_namespace_mount_plan(hidden_list, stage_path, preserved_sources)
         if not prepare_empty_directory_masking(hidden_list, self.libc):
+            return False
+        libc = self.libc or ctypes.CDLL(None, use_errno=True)
+        self._namespace_ready = _apply_namespace_mount_plan(plan, libc)
+        return self._namespace_ready
+
+    def prepare_filesystem_policy(
+        self, policy: NamespaceFilesystemPolicy, stage_path: str
+    ) -> bool:
+        """Validate and apply a complete policy before entering the namespace."""
+        if self._namespace_ready:
+            return True
+        plan = build_namespace_mount_plan_from_policy(policy, stage_path)
+        self._hidden_dirs = list(policy.hidden_roots)
+        self._stage_path = stage_path
+        if not prepare_empty_directory_masking(policy.hidden_roots, self.libc):
             return False
         libc = self.libc or ctypes.CDLL(None, use_errno=True)
         self._namespace_ready = _apply_namespace_mount_plan(plan, libc)
