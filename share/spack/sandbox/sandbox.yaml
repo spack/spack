@@ -12,8 +12,8 @@ hidden_roots:
 - /tmp
 - /usr/bin
 - /usr/include
-- /usr/lib
-- /usr/lib64
+- /usr/lib   # FIXME: Check if Debian compiler-specific and Python-specific
+- /usr/lib64 # FIXME: Check if Debian compiler-specific and Python-specific
 - /usr/libexec
 - /usr/sbin
 - /usr/share
