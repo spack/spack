@@ -8,6 +8,7 @@ import errno
 import os
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
 import pytest
@@ -416,6 +417,226 @@ def test_filesystem_policy_rejects_replacement_outside_hidden_root(tmp_path):
         )
 
 
+@pytest.mark.parametrize("worker_pid", [0, -1, "invalid"])
+def test_mount_scratch_rejects_invalid_worker(tmp_path, worker_pid):
+    lease = ns.NamespaceMountPlanScratch(str(tmp_path))
+    with pytest.raises(ns.NamespaceSetupError, match="invalid worker PID"):
+        lease.attach_worker(worker_pid)
+    assert lease.worker_pid is None
+
+
+def test_mount_scratch_rejects_replacing_attached_worker(tmp_path):
+    lease = ns.NamespaceMountPlanScratch(str(tmp_path))
+    worker_pid = os.getpid() + 1
+    lease.attach_worker(worker_pid)
+    with pytest.raises(ns.NamespaceSetupError, match="worker already attached"):
+        lease.attach_worker(worker_pid + 1)
+    assert lease.worker_pid == worker_pid
+
+
+def test_mount_plan_scratch_is_private_and_concurrent(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+    replacement = tmp_path / "replacement"
+    replacement.mkdir()
+    stage = tmp_path / "stage"
+    prefix = tmp_path / "prefix"
+    writable = tmp_path / "writable"
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        [(str(source), str(hidden / "selected"))],
+        replacement_mounts=[(str(replacement), str(hidden))],
+    )
+
+    def allocate():
+        return ns.allocate_namespace_mount_plan_scratch(
+            policy, str(stage), [str(prefix), str(writable)], str(tmp_path)
+        )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        scratches = list(executor.map(lambda _: allocate(), range(2)))
+
+    assert scratches[0].path != scratches[1].path
+    for scratch in scratches:
+        assert scratch.path.startswith(str(tmp_path) + os.sep)
+        assert os.stat(scratch.path).st_mode & 0o777 == 0o700
+        for excluded in (hidden, source, replacement, stage, prefix, writable):
+            assert os.path.commonpath((scratch.path, str(excluded))) not in (
+                scratch.path,
+                str(excluded),
+            )
+        scratch.cleanup()
+
+
+def test_mount_plan_scratch_rejects_symlinked_base_and_collisions(tmp_path, monkeypatch):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    real_base = tmp_path / "real-base"
+    real_base.mkdir()
+    symlinked_base = tmp_path / "symlinked-base"
+    symlinked_base.symlink_to(real_base, target_is_directory=True)
+    policy = ns.build_namespace_filesystem_policy([str(hidden)])
+
+    with pytest.raises(ns.NamespaceSetupError, match="scratch base is symlinked"):
+        ns.allocate_namespace_mount_plan_scratch(
+            policy, str(tmp_path / "stage"), base_path=str(symlinked_base)
+        )
+
+    scratch = ns.allocate_namespace_mount_plan_scratch(
+        policy, str(tmp_path / "stage"), base_path=str(real_base)
+    )
+    monkeypatch.setattr(ns.tempfile, "mkdtemp", lambda **kwargs: scratch.path)
+    with pytest.raises(ns.NamespaceSetupError, match="scratch allocation collision"):
+        ns.allocate_namespace_mount_plan_scratch(
+            policy, str(tmp_path / "stage"), base_path=str(real_base)
+        )
+    scratch.cleanup()
+
+
+def test_mount_plan_scratch_cleanup_rejects_live_worker_and_replacement(tmp_path):
+    (tmp_path / "hidden").mkdir()
+    policy = ns.build_namespace_filesystem_policy([str(tmp_path / "hidden")])
+    scratch = ns.allocate_namespace_mount_plan_scratch(
+        policy, str(tmp_path / "stage"), base_path=str(tmp_path)
+    )
+    worker = subprocess.Popen(
+        [sys.executable, "-c", "import os; os.read(0, 1)"], stdin=subprocess.PIPE
+    )
+    try:
+        scratch.attach_worker(worker.pid)
+        with pytest.raises(ns.NamespaceSetupError, match="worker is still alive"):
+            scratch.cleanup()
+    finally:
+        worker.terminate()
+        worker.wait()
+
+    moved = tmp_path / "moved-scratch"
+    os.rename(scratch.path, moved)
+    os.symlink(moved, scratch.path)
+    with pytest.raises(ns.NamespaceSetupError, match="scratch path changed type"):
+        scratch.cleanup()
+    os.unlink(scratch.path)
+    os.rmdir(moved)
+    scratch.cleanup()
+
+
+def test_mount_plan_scratch_rejects_bad_bases_and_allocations(tmp_path, monkeypatch):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    policy = ns.build_namespace_filesystem_policy([str(hidden)])
+    stage = str(tmp_path / "stage")
+
+    base_file = tmp_path / "base-file"
+    base_file.write_text("")
+    with pytest.raises(ns.NamespaceSetupError, match="scratch base is not a directory"):
+        ns.allocate_namespace_mount_plan_scratch(policy, stage, base_path=str(base_file))
+
+    with pytest.raises(ns.NamespaceSetupError, match="scratch base overlaps a policy root"):
+        ns.allocate_namespace_mount_plan_scratch(policy, stage, base_path=str(hidden))
+
+    base = tmp_path / "base"
+    base.mkdir()
+    link = base / "link"
+    link.symlink_to(hidden, target_is_directory=True)
+    monkeypatch.setattr(ns.tempfile, "mkdtemp", lambda **kwargs: str(link))
+    with pytest.raises(ns.NamespaceSetupError, match="allocated scratch is symlinked"):
+        ns.allocate_namespace_mount_plan_scratch(policy, stage, base_path=str(base))
+
+    monkeypatch.setattr(ns.tempfile, "mkdtemp", lambda **kwargs: str(hidden))
+    with pytest.raises(
+        ns.NamespaceSetupError, match="allocated scratch collides with a policy root"
+    ):
+        ns.allocate_namespace_mount_plan_scratch(policy, stage, base_path=str(base))
+
+    missing = str(base / "missing")
+    monkeypatch.setattr(ns.tempfile, "mkdtemp", lambda **kwargs: missing)
+    with pytest.raises(ns.NamespaceSetupError, match="allocated scratch is not a real directory"):
+        ns.allocate_namespace_mount_plan_scratch(policy, stage, base_path=str(base))
+
+
+def test_mount_plan_scratch_owner_and_replacement_checks(tmp_path):
+    (tmp_path / "hidden").mkdir()
+    policy = ns.build_namespace_filesystem_policy([str(tmp_path / "hidden")])
+    scratch = ns.allocate_namespace_mount_plan_scratch(
+        policy, str(tmp_path / "stage"), base_path=str(tmp_path)
+    )
+    # A forked child inherits the scratch object but is not its owner.
+    scratch._owner_pid = -1
+    with pytest.raises(ns.NamespaceSetupError, match="only the scratch owner may attach a worker"):
+        scratch.attach_worker(os.getpid())
+    with pytest.raises(ns.NamespaceSetupError, match="only the scratch owner may clean up"):
+        scratch.cleanup()
+    scratch._owner_pid = os.getpid()
+
+    moved = tmp_path / "moved-scratch"
+    os.rename(scratch.path, moved)
+    os.mkdir(scratch.path)
+    with pytest.raises(ns.NamespaceSetupError, match="scratch path was replaced"):
+        scratch.cleanup()
+    os.rmdir(scratch.path)
+    os.rename(moved, scratch.path)
+    scratch.cleanup()
+
+
+def test_namespace_process_is_alive_handles_errno(monkeypatch):
+    def fake_kill(error_number):
+        def kill(process_id, signal_number):
+            raise OSError(error_number, "fake")
+
+        return kill
+
+    monkeypatch.setattr(ns.os, "kill", fake_kill(errno.EPERM))
+    assert ns._namespace_process_is_alive(1234) is True
+    monkeypatch.setattr(ns.os, "kill", fake_kill(errno.ESRCH))
+    assert ns._namespace_process_is_alive(1234) is False
+    monkeypatch.setattr(ns.os, "kill", fake_kill(errno.EINVAL))
+    with pytest.raises(OSError):
+        ns._namespace_process_is_alive(1234)
+
+
+def test_mount_plan_scratch_avoids_all_mount_endpoints(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    read_only_source = tmp_path / "ro-source"
+    read_only_source.mkdir()
+    read_write_source = tmp_path / "rw-source"
+    read_write_source.mkdir()
+    replacement = tmp_path / "replacement"
+    replacement.mkdir()
+    base = tmp_path / "base"
+    base.mkdir()
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        [(str(read_only_source), str(hidden / "ro"))],
+        read_write_mounts=[(str(read_write_source), str(hidden / "rw"))],
+        replacement_mounts=[(str(replacement), str(hidden))],
+    )
+
+    scratch = ns.allocate_namespace_mount_plan_scratch(
+        policy, str(tmp_path / "stage"), base_path=str(base)
+    )
+    assert scratch.path.startswith(str(base) + os.sep)
+    scratch.cleanup()
+
+    with pytest.raises(ns.NamespaceSetupError, match="scratch base overlaps a policy root"):
+        ns.allocate_namespace_mount_plan_scratch(
+            policy, str(tmp_path / "stage"), base_path=str(read_write_source)
+        )
+
+
+def test_mount_plan_scratch_rejects_invalid_policy_flags(tmp_path):
+    (tmp_path / "hidden").mkdir()
+    policy = ns.build_namespace_filesystem_policy([str(tmp_path / "hidden")])._replace(
+        read_only_view=1
+    )
+    with pytest.raises(ns.NamespaceSetupError, match="invalid read-only view"):
+        ns.allocate_namespace_mount_plan_scratch(
+            policy, str(tmp_path / "stage"), base_path=str(tmp_path)
+        )
+
+
 def test_mount_plan_does_not_recreate_disappeared_preserved_source(tmp_path):
     hidden = tmp_path / "hidden"
     hidden.mkdir()
@@ -435,6 +656,27 @@ def test_mount_plan_does_not_recreate_disappeared_preserved_source(tmp_path):
     with pytest.raises(ns.NamespaceSetupError, match="mount source disappeared"):
         ns._apply_namespace_mount_plan(plan, FakeLibc())
     assert not source.exists()
+
+
+def test_mount_plan_detects_source_type_change(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+    plan = ns.build_namespace_mount_plan(
+        [str(hidden)],
+        str(tmp_path / "stage"),
+        [
+            ns.NamespaceMountRequest(
+                str(source), str(hidden / "target"), ns.NamespaceMountAccess.READ_ONLY
+            )
+        ],
+    )
+    source.rmdir()
+    source.write_text("replaced by a file")
+
+    with pytest.raises(ns.NamespaceSetupError, match="mount source type changed"):
+        ns._apply_namespace_mount_plan(plan, FakeLibc())
 
 
 def test_filesystem_policy_validation_precedes_namespace_entry(namespace_setup, tmp_path):
@@ -659,6 +901,29 @@ def test_writable_preserved_mounts_remain_writable(tmp_path):
     libc = FakeLibc()
     assert ns._apply_namespace_mount_plan(plan, libc)
     assert libc.mount_setattr_calls == []
+
+
+def test_read_only_view_restores_explicit_writable_mounts(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    read_only_source = tmp_path / "read-only-source"
+    read_only_source.mkdir()
+    read_write_source = tmp_path / "read-write-source"
+    read_write_source.mkdir()
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        [(str(read_only_source), str(hidden / "read-only"))],
+        [(str(read_write_source), str(hidden / "read-write"))],
+        read_only_view=True,
+    )
+
+    plan = ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "stage"))
+    libc = FakeLibc()
+    assert ns._apply_namespace_mount_plan(plan, libc)
+    assert plan.read_only_view
+    assert libc.mount_setattr_calls[0] == (ns.AT_FDCWD, b"/", ns.AT_RECURSIVE)
+    assert libc.mount_setattr_attributes[0] == (ns.MOUNT_ATTR_RDONLY, 0)
+    assert (0, ns.MOUNT_ATTR_RDONLY) in libc.mount_setattr_attributes
 
 
 def test_mount_plan_validation_precedes_namespace_entry(namespace_setup, tmp_path):
@@ -936,6 +1201,67 @@ os._exit(0)
     assert result.returncode == 0, result.stderr
     assert (source / "preserved-write").read_text() == "preserved"
     assert (source / "restored-write").read_text() == "restored"
+    assert not list(hidden.iterdir())
+
+
+def test_live_read_only_view_rejects_passthrough_writes(tmp_path):
+    if not ns.namespace_sandbox_available():
+        pytest.skip("unprivileged namespaces unavailable")
+    passthrough = tmp_path / "passthrough"
+    passthrough.mkdir()
+    writable_source = tmp_path / "writable-source"
+    writable_source.mkdir()
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    stage = tmp_path / "stage"
+    stage.mkdir()
+    code = """
+import errno
+import os
+import sys
+from pathlib import Path
+from spack.sandbox_namespaces import NamespaceSandbox, build_namespace_filesystem_policy
+
+passthrough = Path(sys.argv[1])
+writable_source = Path(sys.argv[2])
+hidden = Path(sys.argv[3])
+stage = Path(sys.argv[4])
+policy = build_namespace_filesystem_policy(
+    [str(hidden)],
+    read_write_mounts=[(str(writable_source), str(hidden / "writable"))],
+    read_only_view=True,
+)
+sandbox = NamespaceSandbox()
+assert sandbox.prepare_filesystem_policy(policy, str(stage))
+assert sandbox.drop_mount_authority()
+try:
+    (passthrough / "must-fail").write_text("must fail")
+except OSError as error:
+    assert error.errno == errno.EROFS, error
+else:
+    raise AssertionError("inherited passthrough tree remained writable")
+(hidden / "writable" / "must-work").write_text("writable")
+os._exit(0)
+"""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            code,
+            str(passthrough),
+            str(writable_source),
+            str(hidden),
+            str(stage),
+        ],
+        env=dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+    assert not (passthrough / "must-fail").exists()
+    assert (writable_source / "must-work").read_text() == "writable"
     assert not list(hidden.iterdir())
 
 
