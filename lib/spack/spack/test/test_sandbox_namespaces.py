@@ -29,6 +29,7 @@ class FakeLibc:
     def __init__(self):
         self.unshare_calls = []
         self.mount_calls = []
+        self.mount_setattr_calls = []
 
     def unshare(self, flags):
         self.unshare_calls.append(flags.value)
@@ -36,6 +37,10 @@ class FakeLibc:
 
     def mount(self, source, target, filesystemtype, flags, data):
         self.mount_calls.append((source, target, flags.value))
+        return 0
+
+    def mount_setattr(self, directory_fd, path, flags, attributes, size):
+        self.mount_setattr_calls.append((directory_fd.value, path, flags.value))
         return 0
 
     def capset(self, header, capabilities):
@@ -128,6 +133,237 @@ def test_empty_mount_tree_enters_namespace(namespace_setup, tmp_path):
     assert len(libc.unshare_calls) == 1
 
 
+def test_mount_plan_is_immutable_and_deterministic(tmp_path):
+    first = tmp_path / "z-target"
+    second = tmp_path / "a-target"
+    first.mkdir()
+    second.mkdir()
+
+    plan = ns.build_namespace_mount_plan([str(first), str(second)], str(tmp_path / "stage"))
+
+    assert plan.stage_path == str((tmp_path / "stage").resolve())
+    assert plan.mounts == (
+        ns.NamespaceMount(str(tmp_path / "stage/spack-empty-host-dirs/0"), str(second)),
+        ns.NamespaceMount(str(tmp_path / "stage/spack-empty-host-dirs/1"), str(first)),
+    )
+    with pytest.raises(AttributeError):
+        setattr(plan, "mounts", ())
+
+
+@pytest.mark.parametrize("conflict", ["duplicate", "nested"])
+def test_mount_plan_rejects_conflicting_targets(tmp_path, conflict):
+    parent = tmp_path / "parent"
+    child = parent / "child"
+    parent.mkdir()
+    child.mkdir()
+    paths = [str(parent), str(parent)] if conflict == "duplicate" else [str(parent), str(child)]
+
+    with pytest.raises(ns.NamespaceSetupError, match="mount plan targets"):
+        ns.build_namespace_mount_plan(paths, str(tmp_path / "stage"))
+
+
+def test_mount_plan_rejects_invalid_types(tmp_path):
+    target_file = tmp_path / "target-file"
+    stage_file = tmp_path / "stage-file"
+    target_file.touch()
+    stage_file.touch()
+
+    with pytest.raises(ns.NamespaceSetupError, match="target is not a directory"):
+        ns.build_namespace_mount_plan([str(target_file)], str(tmp_path / "stage"))
+    with pytest.raises(ns.NamespaceSetupError, match="stage path is not a directory"):
+        ns.build_namespace_mount_plan([], str(stage_file))
+
+
+def test_mount_plan_preserves_sources_before_hiding_and_restores_aliases(tmp_path):
+    hidden = tmp_path / "usr" / "bin"
+    hidden.mkdir(parents=True)
+    merged_alias = tmp_path / "bin"
+    merged_alias.symlink_to(tmp_path / "usr" / "bin", target_is_directory=True)
+    source = tmp_path / "selected-tool"
+    source.touch()
+    stage = tmp_path / "stage"
+
+    plan = ns.build_namespace_mount_plan(
+        [str(hidden)],
+        str(stage),
+        [
+            ns.NamespaceMountRequest(
+                str(source), str(merged_alias / "tool"), ns.NamespaceMountAccess.READ_ONLY
+            )
+        ],
+    )
+
+    assert plan.preserved_mounts == (
+        ns.NamespacePreservedMount(
+            str(source.resolve()),
+            str(stage / "spack-preserved-host-paths/0"),
+            False,
+            ns.NamespaceMountAccess.READ_ONLY,
+        ),
+    )
+    assert plan.restoration_mounts == (
+        ns.NamespacePreservedMount(
+            str(stage / "spack-preserved-host-paths/0"),
+            str(hidden / "tool"),
+            False,
+            ns.NamespaceMountAccess.READ_ONLY,
+        ),
+    )
+
+    libc = FakeLibc()
+    assert ns._apply_namespace_mount_plan(plan, libc)
+    assert libc.mount_calls == [
+        (os.fsencode(source), os.fsencode(stage / "spack-preserved-host-paths/0"), ns.MS_BIND),
+        (b"tmpfs", os.fsencode(stage / "spack-empty-host-dirs"), ns._EMPTY_SOURCE_FLAGS),
+        (
+            None,
+            os.fsencode(stage / "spack-empty-host-dirs"),
+            ns.MS_REMOUNT | ns.MS_RDONLY | ns._EMPTY_SOURCE_FLAGS,
+        ),
+        (os.fsencode(stage / "spack-empty-host-dirs/0"), os.fsencode(hidden), ns.MS_BIND),
+        (
+            os.fsencode(stage / "spack-preserved-host-paths/0"),
+            os.fsencode(hidden / "tool"),
+            ns.MS_BIND,
+        ),
+    ]
+    assert libc.mount_setattr_calls == [
+        (ns.AT_FDCWD, os.fsencode(stage / "spack-preserved-host-paths/0"), 0),
+        (ns.AT_FDCWD, os.fsencode(hidden / "tool"), 0),
+    ]
+
+
+def test_mount_plan_preserves_directory_trees_recursively(tmp_path):
+    hidden = tmp_path / "usr" / "include"
+    hidden.mkdir(parents=True)
+    source = tmp_path / "headers"
+    source.mkdir()
+    plan = ns.build_namespace_mount_plan(
+        [str(hidden)],
+        str(tmp_path / "stage"),
+        [
+            ns.NamespaceMountRequest(
+                str(source), str(hidden / "selected"), ns.NamespaceMountAccess.READ_ONLY
+            )
+        ],
+    )
+
+    libc = FakeLibc()
+    assert ns._apply_namespace_mount_plan(plan, libc)
+    assert libc.mount_calls[0][2] == ns.MS_BIND | ns.MS_REC
+    assert libc.mount_calls[1][2] == ns._EMPTY_SOURCE_FLAGS
+    assert libc.mount_calls[2][2] == ns.MS_REMOUNT | ns.MS_RDONLY | ns._EMPTY_SOURCE_FLAGS
+    assert libc.mount_calls[3][2] == ns.MS_BIND
+    assert libc.mount_calls[4][2] == ns.MS_BIND | ns.MS_REC
+    assert libc.mount_setattr_calls == [
+        (
+            ns.AT_FDCWD,
+            os.fsencode(tmp_path / "stage/spack-preserved-host-paths/0"),
+            ns.AT_RECURSIVE,
+        ),
+        (ns.AT_FDCWD, os.fsencode(hidden / "selected"), ns.AT_RECURSIVE),
+    ]
+
+
+def test_mount_plan_rejects_preserved_source_relationships(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+
+    with pytest.raises(ns.NamespaceSetupError, match="preserved source does not exist"):
+        ns.build_namespace_mount_plan(
+            [str(hidden)],
+            str(tmp_path / "stage"),
+            [
+                ns.NamespaceMountRequest(
+                    str(tmp_path / "missing"), str(hidden / "x"), ns.NamespaceMountAccess.READ_ONLY
+                )
+            ],
+        )
+    with pytest.raises(ns.NamespaceSetupError, match="not below a hidden directory"):
+        ns.build_namespace_mount_plan(
+            [str(hidden)],
+            str(tmp_path / "stage"),
+            [
+                ns.NamespaceMountRequest(
+                    str(source), str(tmp_path / "other"), ns.NamespaceMountAccess.READ_ONLY
+                )
+            ],
+        )
+
+
+def test_mount_plan_rejects_invalid_preserved_access_before_namespace_entry(
+    namespace_setup, tmp_path
+):
+    libc, _ = namespace_setup
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+    sandbox = ns.NamespaceSandbox(libc)
+
+    with pytest.raises(ns.NamespaceSetupError, match="invalid preserved mount access"):
+        sandbox.prepare_mount_tree(
+            [str(hidden)],
+            str(tmp_path / "stage"),
+            [ns.NamespaceMountRequest(str(source), str(hidden / "selected"), "read-only")],
+        )
+    assert libc.unshare_calls == []
+
+
+def test_writable_preserved_mounts_remain_writable(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+    plan = ns.build_namespace_mount_plan(
+        [str(hidden)],
+        str(tmp_path / "stage"),
+        [
+            ns.NamespaceMountRequest(
+                str(source), str(hidden / "selected"), ns.NamespaceMountAccess.READ_WRITE
+            )
+        ],
+    )
+
+    libc = FakeLibc()
+    assert ns._apply_namespace_mount_plan(plan, libc)
+    assert libc.mount_setattr_calls == []
+
+
+def test_mount_plan_validation_precedes_namespace_entry(namespace_setup, tmp_path):
+    libc, _ = namespace_setup
+    parent = tmp_path / "parent"
+    child = parent / "child"
+    parent.mkdir()
+    child.mkdir()
+    sandbox = ns.NamespaceSandbox(libc)
+
+    with pytest.raises(ns.NamespaceSetupError, match="conflicting mount targets"):
+        sandbox.prepare_mount_tree([str(parent), str(child)], str(tmp_path / "stage"))
+    assert libc.unshare_calls == []
+
+
+def test_preserved_source_validation_precedes_namespace_entry(namespace_setup, tmp_path):
+    libc, _ = namespace_setup
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    sandbox = ns.NamespaceSandbox(libc)
+
+    with pytest.raises(ns.NamespaceSetupError, match="preserved source does not exist"):
+        sandbox.prepare_mount_tree(
+            [str(hidden)],
+            str(tmp_path / "stage"),
+            [
+                ns.NamespaceMountRequest(
+                    str(tmp_path / "missing"), str(hidden / "x"), ns.NamespaceMountAccess.READ_ONLY
+                )
+            ],
+        )
+    assert libc.unshare_calls == []
+
+
 def test_prepare_reuses_active_namespace(namespace_setup, monkeypatch):
     libc, _ = namespace_setup
     ns._enter_user_mount_namespace(libc)
@@ -157,8 +393,225 @@ def test_mask_existing_directories(tmp_path):
         [str(target), str(tmp_path / "missing")], str(tmp_path), True, libc
     )
     assert libc.mount_calls == [
-        (os.fsencode(tmp_path / "spack-empty-host-dirs/0"), os.fsencode(target), ns.MS_BIND)
+        (b"tmpfs", os.fsencode(tmp_path / "spack-empty-host-dirs"), ns._EMPTY_SOURCE_FLAGS),
+        (
+            None,
+            os.fsencode(tmp_path / "spack-empty-host-dirs"),
+            ns.MS_REMOUNT | ns.MS_RDONLY | ns._EMPTY_SOURCE_FLAGS,
+        ),
+        (os.fsencode(tmp_path / "spack-empty-host-dirs/0"), os.fsencode(target), ns.MS_BIND),
     ]
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux namespaces")
+def test_live_mask_sources_remain_empty_after_stage_write_grant(tmp_path):
+    if not ns.namespace_sandbox_available():
+        pytest.skip("unprivileged namespaces unavailable")
+    target = tmp_path / "host"
+    target.mkdir()
+    stage = tmp_path / "stage"
+    stage.mkdir()
+    code = """
+import errno
+import os
+import sys
+from pathlib import Path
+from spack.sandbox import LandlockSandbox
+from spack.sandbox_namespaces import NamespaceSandbox
+
+target = Path(sys.argv[1])
+stage = Path(sys.argv[2])
+sandbox = NamespaceSandbox(landlock_factory=LandlockSandbox)
+assert sandbox.prepare_mount_tree([str(target)], str(stage))
+source = stage / "spack-empty-host-dirs" / "0"
+assert not list(source.iterdir())
+assert not list(target.iterdir())
+assert sandbox.drop_mount_authority()
+sandbox.allow_write(stage)
+sandbox.apply()
+for path in (source / "source-write", target / "target-write"):
+    try:
+        path.write_text("must fail")
+    except OSError as error:
+        assert error.errno == errno.EROFS, error
+    else:
+        raise AssertionError("empty mask source is writable: {}".format(path))
+assert not list(source.iterdir())
+os._exit(0)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(target), str(stage)],
+        env=dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+    assert not list(target.iterdir())
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux namespaces")
+def test_live_preserved_directory_tree_is_read_only_without_landlock(tmp_path):
+    if not ns.namespace_sandbox_available():
+        pytest.skip("unprivileged namespaces unavailable")
+    source = tmp_path / "source"
+    source.mkdir()
+    marker = source / "marker"
+    marker.write_text("selected data")
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    stage = tmp_path / "stage"
+    stage.mkdir()
+    code = """
+import errno
+import os
+import sys
+from pathlib import Path
+from spack.sandbox_namespaces import (
+    NamespaceMountAccess,
+    NamespaceMountRequest,
+    NamespaceSandbox,
+)
+
+source = Path(sys.argv[1])
+hidden = Path(sys.argv[2])
+stage = Path(sys.argv[3])
+sandbox = NamespaceSandbox()
+request = NamespaceMountRequest(
+    str(source), str(hidden / "selected"), NamespaceMountAccess.READ_ONLY
+)
+assert sandbox.prepare_mount_tree([str(hidden)], str(stage), [request])
+assert sandbox.drop_mount_authority()
+preserved = stage / "spack-preserved-host-paths" / "0"
+restored = hidden / "selected"
+assert (preserved / "marker").read_text() == "selected data"
+assert (restored / "marker").read_text() == "selected data"
+for path in (preserved / "write", restored / "write"):
+    try:
+        path.write_text("must fail")
+    except OSError as error:
+        assert error.errno == errno.EROFS, error
+    else:
+        raise AssertionError("read-only preserved mount is writable: {}".format(path))
+os._exit(0)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(source), str(hidden), str(stage)],
+        env=dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+    assert list(source.iterdir()) == [marker]
+    assert not list(hidden.iterdir())
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux namespaces")
+def test_live_preserved_file_is_read_only_without_landlock(tmp_path):
+    if not ns.namespace_sandbox_available():
+        pytest.skip("unprivileged namespaces unavailable")
+    source = tmp_path / "source"
+    source.write_text("selected data")
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    stage = tmp_path / "stage"
+    stage.mkdir()
+    code = """
+import errno
+import os
+import sys
+from pathlib import Path
+from spack.sandbox_namespaces import (
+    NamespaceMountAccess,
+    NamespaceMountRequest,
+    NamespaceSandbox,
+)
+
+source = Path(sys.argv[1])
+hidden = Path(sys.argv[2])
+stage = Path(sys.argv[3])
+sandbox = NamespaceSandbox()
+request = NamespaceMountRequest(
+    str(source), str(hidden / "selected"), NamespaceMountAccess.READ_ONLY
+)
+assert sandbox.prepare_mount_tree([str(hidden)], str(stage), [request])
+assert sandbox.drop_mount_authority()
+preserved = stage / "spack-preserved-host-paths" / "0"
+restored = hidden / "selected"
+assert preserved.read_text() == "selected data"
+assert restored.read_text() == "selected data"
+for path in (preserved, restored):
+    try:
+        path.write_text("must fail")
+    except OSError as error:
+        assert error.errno == errno.EROFS, error
+    else:
+        raise AssertionError("read-only preserved file is writable: {}".format(path))
+os._exit(0)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(source), str(hidden), str(stage)],
+        env=dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+    assert source.read_text() == "selected data"
+    assert not list(hidden.iterdir())
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux namespaces")
+def test_live_writable_mount_remains_writable_without_landlock(tmp_path):
+    if not ns.namespace_sandbox_available():
+        pytest.skip("unprivileged namespaces unavailable")
+    source = tmp_path / "source"
+    source.mkdir()
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    stage = tmp_path / "stage"
+    stage.mkdir()
+    code = """
+import os
+import sys
+from pathlib import Path
+from spack.sandbox_namespaces import (
+    NamespaceMountAccess,
+    NamespaceMountRequest,
+    NamespaceSandbox,
+)
+
+source = Path(sys.argv[1])
+hidden = Path(sys.argv[2])
+stage = Path(sys.argv[3])
+sandbox = NamespaceSandbox()
+request = NamespaceMountRequest(
+    str(source), str(hidden / "selected"), NamespaceMountAccess.READ_WRITE
+)
+assert sandbox.prepare_mount_tree([str(hidden)], str(stage), [request])
+assert sandbox.drop_mount_authority()
+preserved = stage / "spack-preserved-host-paths" / "0"
+restored = hidden / "selected"
+(preserved / "preserved-write").write_text("preserved")
+(restored / "restored-write").write_text("restored")
+os._exit(0)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(source), str(hidden), str(stage)],
+        env=dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        timeout=20,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (source / "preserved-write").read_text() == "preserved"
+    assert (source / "restored-write").read_text() == "restored"
+    assert not list(hidden.iterdir())
 
 
 def test_mount_failure_is_fatal(namespace_setup, monkeypatch, tmp_path):

@@ -157,16 +157,48 @@ def test_probe_transports_syscall_failure(monkeypatch):
 
 
 @pytest.mark.skipif(not hasattr(os, "fork"), reason="requires fork")
-def test_probe_transports_bind_mount_failure(monkeypatch):
+@pytest.mark.parametrize(
+    "failing_call, operation",
+    [
+        (1, "mount(tmpfs probe)"),
+        (2, "mount(MS_REMOUNT, MS_RDONLY probe)"),
+        (3, "mount(MS_BIND probe)"),
+    ],
+)
+def test_probe_transports_mount_failure(monkeypatch, failing_call, operation):
+    class FailingLibc:
+        def __init__(self):
+            self.mount_calls = 0
+
+        def mount(self, source, target, filesystemtype, flags, data):
+            self.mount_calls += 1
+            if self.mount_calls == failing_call:
+                ctypes.set_errno(errno.EPERM)
+                return -1
+            return 0
+
+        def mount_setattr(self, directory_fd, path, flags, attributes, size):
+            return 0
+
+    monkeypatch.setattr(ns, "_enter_user_mount_namespace", lambda *args, **kwargs: None)
+    capability = ns._probe_namespace_capability(FailingLibc())
+    assert capability == ns.NamespaceCapability(False, operation, "Operation not permitted")
+
+
+@pytest.mark.skipif(not hasattr(os, "fork"), reason="requires fork")
+def test_probe_transports_read_only_mount_failure(monkeypatch):
     class FailingLibc:
         def mount(self, source, target, filesystemtype, flags, data):
-            ctypes.set_errno(errno.EPERM)
+            return 0
+
+        def mount_setattr(self, directory_fd, path, flags, attributes, size):
+            ctypes.set_errno(errno.EOPNOTSUPP)
             return -1
 
     monkeypatch.setattr(ns, "_enter_user_mount_namespace", lambda *args, **kwargs: None)
     capability = ns._probe_namespace_capability(FailingLibc())
     assert capability == ns.NamespaceCapability(
-        False, "mount(MS_BIND probe)", "Operation not permitted"
+        False, "mount_setattr(MOUNT_ATTR_RDONLY)", os.strerror(errno.EOPNOTSUPP)
     )
 
 
@@ -174,6 +206,9 @@ def test_probe_transports_bind_mount_failure(monkeypatch):
 def test_probe_transports_capability_drop_failure(monkeypatch):
     class FailingLibc:
         def mount(self, source, target, filesystemtype, flags, data):
+            return 0
+
+        def mount_setattr(self, directory_fd, path, flags, attributes, size):
             return 0
 
         def capset(self, header, capabilities):
@@ -193,6 +228,9 @@ def test_probe_removes_bind_mount_directories(monkeypatch, tmp_path):
 
     class SuccessfulLibc:
         def mount(self, source, target, filesystemtype, flags, data):
+            return 0
+
+        def mount_setattr(self, directory_fd, path, flags, attributes, size):
             return 0
 
         def capset(self, header, capabilities):
