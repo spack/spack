@@ -17,18 +17,21 @@ import selectors
 import shlex
 import shutil
 import signal
+import subprocess
 import sys
 import tempfile
 import traceback
 from gzip import GzipFile
 from multiprocessing import Process
-from typing import TYPE_CHECKING, List, NamedTuple, Optional, Tuple
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 from spack.vendor.typing_extensions import Protocol
 
 import spack.binary_distribution
 import spack.build_environment
 import spack.builder
+import spack.compilers.config
 import spack.config
 import spack.error
 import spack.hooks
@@ -56,7 +59,7 @@ from spack.installer.base import (
     ProcessExitNotifier,
 )
 from spack.subprocess_context import GlobalStateMarshaler
-from spack.util.executable import ProcessError
+from spack.util.executable import ProcessError, which_string
 
 if sys.platform == "win32":
     from spack.installer.windows import WindowsSentinelBridge as ExitNotifier
@@ -105,6 +108,13 @@ class NamespacePolicyInputPaths(NamedTuple):
     header_paths: Tuple[str, ...]
     runtime_paths: Tuple[str, ...]
     temporary_paths: Tuple[str, ...]
+
+
+class ResolvedSandboxPath(NamedTuple):
+    """Preserve the requested spelling separately from its canonical source path."""
+
+    spelling: str
+    source: str
 
 
 SANDBOX_POLICY_PATH = os.path.join(spack.paths.share_path, "sandbox", "sandbox.yaml")
@@ -221,6 +231,7 @@ def _load_linux_header_policy(path: str = LINUX_HEADER_POLICY_PATH) -> dict:
         raise _policy_error(
             "Linux header policy", path, "system_include_root", "expected an absolute path"
         )
+    _validate_absolute_path_list("Linux header policy", path, policy, "compiler_roots")
 
     for section in ("glibc", "linux"):
         value = policy.get(section)
@@ -245,6 +256,374 @@ def _load_linux_header_policy(path: str = LINUX_HEADER_POLICY_PATH) -> dict:
             "expected an integer",
         )
     return policy
+
+
+def _selected_compilers(
+    spec: spack.spec.Spec, policy: Optional[dict] = None
+) -> List[Tuple[str, str, spack.spec.Spec]]:
+    """Return selected language, driver path, and compiler spec tuples without duplicates."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    languages = tuple(policy["compiler_languages"])
+    compiler_names = set(spack.compilers.config.supported_compilers(repo=spack.repo.PATH))
+    result = []
+    seen = set()
+
+    for node in spec.traverse():
+        for edge in node.edges_to_dependencies():
+            selected_languages = set(edge.virtuals) & set(languages)
+            configured = (edge.spec.extra_attributes or {}).get("compilers", {})
+            for language in languages:
+                path = configured.get(language)
+                if language in selected_languages and path and (language, path) not in seen:
+                    seen.add((language, path))
+                    result.append((language, path, edge.spec))
+        if node.name not in compiler_names:
+            continue
+        configured = (node.extra_attributes or {}).get("compilers", {})
+        for language in languages:
+            path = configured.get(language)
+            if path and (language, path) not in seen:
+                seen.add((language, path))
+                result.append((language, path, node))
+    return result
+
+
+def _compiler_query(compiler_path: str, option: str) -> Optional[str]:
+    try:
+        completed = subprocess.run(
+            [compiler_path, option],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            universal_newlines=True,
+        )
+    except OSError:
+        return None
+    if completed.returncode != 0:
+        return None
+    reported = completed.stdout.strip()
+    return reported if os.path.isabs(reported) else None
+
+
+def _resolved_sandbox_path(spelling: str, source: str) -> ResolvedSandboxPath:
+    return ResolvedSandboxPath(spelling, os.path.realpath(source))
+
+
+def _is_spack_binutils_wrapper(path: str) -> bool:
+    parts = Path(path).parts
+    return any(parts[index : index + 2] == ("libexec", "spack") for index in range(len(parts) - 1))
+
+
+def compiler_support_paths(
+    compiler_path: str, policy: Optional[dict] = None
+) -> List[ResolvedSandboxPath]:
+    """Return compiler-reported support programs and files without PATH fallback."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    result = []
+    for program in policy["compiler_programs"] + policy["binutils_programs"]:
+        reported = _compiler_query(compiler_path, f"-print-prog-name={program}")
+        if reported is None or (
+            program in policy["binutils_programs"] and _is_spack_binutils_wrapper(reported)
+        ):
+            continue
+        result.append(_resolved_sandbox_path(program, reported))
+
+    for filename in policy["compiler_files"]:
+        reported = _compiler_query(compiler_path, f"-print-file-name={filename}")
+        if reported is not None:
+            result.append(_resolved_sandbox_path(filename, reported))
+    return result
+
+
+def compiler_driver_paths(
+    spec: spack.spec.Spec, policy: Optional[dict] = None
+) -> List[ResolvedSandboxPath]:
+    """Return selected compiler drivers and the first target for each alias spelling."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    result = []
+    seen = set()
+    for language, compiler_path, _compiler_spec in _selected_compilers(spec, policy):
+        source = os.path.realpath(compiler_path)
+        spellings = [compiler_path]
+        spellings.extend(
+            os.path.join(os.path.dirname(compiler_path), alias)
+            for alias in policy["compiler_driver_aliases"][language]
+        )
+        for spelling in spellings:
+            entry = _resolved_sandbox_path(spelling, source)
+            if entry.spelling not in seen:
+                seen.add(entry.spelling)
+                result.append(entry)
+    return result
+
+
+def compiler_alias_symlink_paths(
+    spec: spack.spec.Spec, policy: Optional[dict] = None
+) -> List[spack.sandbox_namespaces.NamespaceGeneratedSymlink]:
+    """Convert selected compiler alias spellings into generated namespace symlinks."""
+    return [
+        spack.sandbox_namespaces.NamespaceGeneratedSymlink(entry.spelling, entry.source)
+        for entry in compiler_driver_paths(spec, policy)
+        if entry.spelling != entry.source
+    ]
+
+
+def executable_support_paths(
+    executable: str, policy: Optional[dict] = None
+) -> List[ResolvedSandboxPath]:
+    """Return exact data files required by a selected executable."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    if os.path.basename(executable) == "file":
+        return [
+            _resolved_sandbox_path(path, path)
+            for path in policy["file_runtime_read_paths"]
+            if os.path.exists(path)
+        ]
+    if os.path.basename(executable) != "cpp":
+        return []
+    reported = _compiler_query(executable, "-print-prog-name=cc1")
+    return [_resolved_sandbox_path("cc1", reported)] if reported is not None else []
+
+
+def git_support_paths(git_path: str) -> List[ResolvedSandboxPath]:
+    """Return Git's configured helper directory, without searching for Git again."""
+    try:
+        completed = subprocess.run(
+            [git_path, "--exec-path"],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            universal_newlines=True,
+        )
+    except OSError:
+        return []
+    exec_path = completed.stdout.strip()
+    if completed.returncode != 0 or not os.path.isabs(exec_path):
+        return []
+    return [_resolved_sandbox_path(f"{git_path} --exec-path", exec_path)]
+
+
+def stage_tool_paths(policy: Optional[dict] = None) -> List[ResolvedSandboxPath]:
+    """Select stage tools, their script-helper closure, and Git's helper directory."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    helper_closure = {"gunzip": ("gzip", "sh"), "bunzip2": ("bzip2", "sh")}
+    names = list(policy["stage_programs"])
+    for name in tuple(names):
+        for helper in helper_closure.get(name, ()):
+            if helper not in names:
+                names.append(helper)
+
+    result = []
+    seen = set()
+    for name in names:
+        source = which_string(name)
+        if source is None:
+            continue
+        entry = _resolved_sandbox_path(name, source)
+        if (entry.spelling, entry.source) not in seen:
+            seen.add((entry.spelling, entry.source))
+            result.append(entry)
+        if name == "git":
+            for support in git_support_paths(source):
+                if (support.spelling, support.source) not in seen:
+                    seen.add((support.spelling, support.source))
+                    result.append(support)
+    return result
+
+
+def tool_runtime_paths(spec: spack.spec.Spec, tool_paths) -> List[str]:
+    """Return Spack tool prefixes and link/run dependency prefixes owning selected tools."""
+    sources = [
+        path.source if isinstance(path, ResolvedSandboxPath) else os.path.realpath(path)
+        for path in tool_paths
+    ]
+    result = []
+    seen = set()
+    for node in spec.traverse():
+        prefix = os.path.realpath(str(node.prefix))
+        try:
+            owns_tool = any(os.path.commonpath((source, prefix)) == prefix for source in sources)
+        except ValueError:
+            owns_tool = False
+        if not owns_tool:
+            continue
+        for path in [str(node.prefix)] + [
+            str(dependency.prefix)
+            for dependency in node.traverse(root=False, deptype=("link", "run"))
+        ]:
+            resolved = os.path.realpath(path)
+            if resolved not in seen:
+                seen.add(resolved)
+                result.append(resolved)
+    return result
+
+
+def _gcc_installation(compiler_path: str, policy: Optional[dict] = None) -> Optional[Path]:
+    """Return the system GCC installation directory reported by a compiler driver."""
+    policy = policy if policy is not None else _load_linux_header_policy()
+    try:
+        completed = subprocess.run(
+            [compiler_path, "-print-libgcc-file-name"],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            universal_newlines=True,
+        )
+    except OSError:
+        return None
+    if completed.returncode != 0 or not os.path.isabs(completed.stdout.strip()):
+        return None
+    installation = Path(completed.stdout.strip()).resolve().parent
+    roots = tuple(Path(root).resolve() for root in policy["compiler_roots"])
+    return installation if installation.parent.parent in roots else None
+
+
+def _versioned_directories_by_major(root: Path) -> Dict[int, List[Path]]:
+    """Return immediate child directories grouped by numeric major version."""
+    result: Dict[int, List[Path]] = {}
+    try:
+        entries = sorted(root.iterdir())
+    except OSError:
+        return result
+    for entry in entries:
+        if not entry.is_dir():
+            continue
+        try:
+            major = int(entry.name.split(".", 1)[0])
+        except ValueError:
+            continue
+        result.setdefault(major, []).append(entry)
+    return result
+
+
+def _major_version(value) -> Optional[int]:
+    try:
+        return int(str(value).split(".", 1)[0])
+    except (TypeError, ValueError):
+        return None
+
+
+def _permitted_gcc_installation(
+    compiler_path: str, compiler_spec: spack.spec.Spec, policy: dict
+) -> Optional[Path]:
+    """Select the GCC installation whose libstdc++ headers may be read."""
+    reported = _gcc_installation(compiler_path, policy)
+    if reported is None:
+        return None
+    installations = _versioned_directories_by_major(reported.parent)
+    if compiler_spec.name == "gcc":
+        candidates = [reported]
+    else:
+        maximum_major = policy["libstdcxx"]["maximum_major_for_non_gcc"]
+        safe_majors = [major for major in installations if major <= maximum_major]
+        permitted_major = max(safe_majors) if safe_majors else _major_version(reported.name)
+        candidates = installations.get(permitted_major, []) if permitted_major is not None else []
+    if not candidates:
+        return None
+    header_root = Path(policy["system_include_root"]) / "c++"
+    return next(
+        (path for path in reversed(candidates) if (header_root / path.name).is_dir()), None
+    )
+
+
+def _policy_paths(root: Path, values) -> List[str]:
+    """Resolve safe relative policy entries below a trusted root."""
+    result = []
+    for value in values:
+        if not isinstance(value, str) or os.path.isabs(value) or ".." in Path(value).parts:
+            raise spack.error.InstallError(f"Invalid relative Linux header policy path: {value!r}")
+        result.append(str(root / value))
+    return result
+
+
+def system_compiler_header_paths(
+    spec: spack.spec.Spec, policy: Optional[dict] = None
+) -> List[str]:
+    """Return explicit libc, Linux UAPI, and selected libstdc++ header paths."""
+    policy = policy if policy is not None else _load_linux_header_policy()
+    selected = _selected_compilers(spec)
+    system_selected = [
+        entry
+        for entry in selected
+        if os.path.commonpath((str(Path(entry[1]).resolve()), "/usr")) == "/usr"
+    ]
+    if not system_selected:
+        return []
+
+    include_root = Path(policy["system_include_root"])
+    paths = _policy_paths(
+        include_root,
+        policy["glibc"]["files"]
+        + policy["glibc"]["directories"]
+        + policy["glibc"]["target_files"]
+        + policy["glibc"]["target_directories"]
+        + policy["linux"]["directories"]
+        + policy["linux"]["target_directories"],
+    )
+    targets = set()
+    for _language, compiler_path, _compiler_spec in system_selected:
+        installation = _gcc_installation(compiler_path, policy)
+        if installation is not None:
+            targets.add(installation.parent.name)
+    for target in targets:
+        target_root = include_root / target
+        paths.extend(
+            _policy_paths(
+                target_root,
+                policy["glibc"]["target_files"]
+                + policy["glibc"]["target_directories"]
+                + policy["linux"]["target_directories"],
+            )
+        )
+
+    for language, compiler_path, compiler_spec in system_selected:
+        installation = _gcc_installation(compiler_path, policy)
+        if installation is None:
+            continue
+        if language == "cxx":
+            installation = _permitted_gcc_installation(compiler_path, compiler_spec, policy)
+            if installation is None:
+                continue
+            version = installation.name
+            paths.extend(
+                [
+                    str(include_root / "c++" / version),
+                    str(include_root / installation.parent.name / "c++" / version),
+                    str(include_root / "c++" / version / installation.parent.name),
+                ]
+            )
+        paths.extend([str(installation / "include"), str(installation / "include-fixed")])
+    return list(dict.fromkeys(paths))
+
+
+def gcc_installation_dirs_to_mask(
+    spec: spack.spec.Spec, policy: Optional[dict] = None
+) -> List[str]:
+    """Hide system GCC installations other than the permitted selected C++ installation."""
+    policy = policy if policy is not None else _load_linux_header_policy()
+    selected = _selected_compilers(spec, _load_sandbox_policy())
+    required_installations = {
+        installation
+        for _language, compiler_path, compiler_spec in selected
+        for installation in [_gcc_installation(compiler_path, policy)]
+        if compiler_spec.name == "gcc" and installation is not None
+    }
+    for language, compiler_path, compiler_spec in selected:
+        if (
+            language != "cxx"
+            or os.path.commonpath((str(Path(compiler_path).resolve()), "/usr")) != "/usr"
+        ):
+            continue
+        permitted = _permitted_gcc_installation(compiler_path, compiler_spec, policy)
+        if permitted is None:
+            return []
+        return [
+            str(path)
+            for paths in _versioned_directories_by_major(permitted.parent).values()
+            for path in paths
+            if path != permitted and path not in required_installations
+        ]
+    return []
 
 
 class ChildInfo:
@@ -844,6 +1223,8 @@ def namespace_filesystem_policy_and_plan_from_inputs(
     stage_path: str,
     mount_plan_stage: str,
     selected_paths: NamespacePolicyInputPaths,
+    replacement_mounts: Iterable[Tuple[str, str]] = (),
+    generated_symlinks: Iterable[spack.sandbox_namespaces.NamespaceGeneratedSymlink] = (),
 ) -> Tuple[
     spack.sandbox_namespaces.NamespaceFilesystemPolicy, spack.sandbox_namespaces.NamespaceMountPlan
 ]:
@@ -940,24 +1321,15 @@ def namespace_filesystem_policy_and_plan_from_inputs(
 
     effective_read_only = minimal_paths(requested_read_only)
     effective_read_write = minimal_paths(requested_read_write)
-    mount_targets = effective_read_only + effective_read_write
 
-    candidate_hidden_roots = list(requested_hidden_roots)
-    for target in mount_targets:
-        parent = os.path.dirname(target)
-        if parent == os.path.sep:
-            raise spack.sandbox_namespaces.NamespaceSetupError(
-                errno.EINVAL,
-                "select namespace policy hidden roots",
-                f"cannot isolate a top-level path without hiding the filesystem root: {target}",
-            )
-        candidate_hidden_roots.append(parent)
-    hidden_roots = minimal_paths(tuple(sorted(set(candidate_hidden_roots))))
+    hidden_roots = minimal_paths(requested_hidden_roots)
 
     policy = spack.sandbox_namespaces.build_namespace_filesystem_policy(
         hidden_roots,
         ((path, path) for path in effective_read_only),
         ((path, path) for path in effective_read_write),
+        replacement_mounts=replacement_mounts,
+        generated_symlinks=generated_symlinks,
     )
 
     def assert_covered(paths, mounts, access):

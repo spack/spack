@@ -362,6 +362,101 @@ def test_filesystem_policy_compiles_generated_paths(tmp_path):
     assert (stage / "spack-empty-host-dirs/0/generated-file").is_file()
 
 
+def test_filesystem_policy_compiles_replacement_and_generated_alias(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    replacement = tmp_path / "replacement"
+    replacement.mkdir()
+    compiler = tmp_path / "compiler"
+    compiler.touch()
+    alias = hidden / "cc"
+    alias.symlink_to(compiler)
+    stage = tmp_path / "stage"
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        replacement_mounts=[(str(replacement), str(hidden))],
+        generated_symlinks=[ns.NamespaceGeneratedSymlink(str(alias), str(compiler))],
+    )
+
+    plan = ns.build_namespace_mount_plan_from_policy(policy, str(stage))
+
+    assert plan.replacement_mounts == (
+        ns.NamespacePreservedMount(
+            str(replacement), str(hidden), True, ns.NamespaceMountAccess.READ_WRITE
+        ),
+    )
+    assert plan.generated_symlinks == (
+        ns.NamespaceGeneratedSymlink(str(alias), str(compiler.resolve())),
+    )
+    assert ns._apply_namespace_mount_plan(plan, FakeLibc())
+    generated_alias = stage / "spack-empty-host-dirs/0/cc"
+    assert generated_alias.is_symlink()
+    assert os.readlink(str(generated_alias)) == str(compiler.resolve())
+
+
+@pytest.mark.parametrize(
+    "invalid, message, error_number",
+    [
+        ("missing-replacement", "replacement source does not exist", errno.ENOENT),
+        ("file-replacement", "replacement source is not a directory", errno.ENOTDIR),
+        ("relative-alias", "invalid generated symlink", errno.EINVAL),
+        ("outside-alias", "generated symlink is not below a hidden root", errno.EINVAL),
+    ],
+)
+def test_filesystem_policy_rejects_invalid_replacements_and_aliases(
+    tmp_path, invalid, message, error_number
+):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    replacements = []
+    aliases = []
+    if invalid.endswith("replacement"):
+        if invalid == "file-replacement":
+            source.touch()
+        replacements = [(str(source), str(hidden))]
+    elif invalid == "relative-alias":
+        aliases = [ns.NamespaceGeneratedSymlink(str(hidden / "cc"), "relative-compiler")]
+    else:
+        source.touch()
+        aliases = [ns.NamespaceGeneratedSymlink(str(tmp_path / "outside"), str(source))]
+
+    with pytest.raises(ns.NamespaceSetupError, match=message) as caught:
+        ns.build_namespace_filesystem_policy(
+            [str(hidden)], replacement_mounts=replacements, generated_symlinks=aliases
+        )
+    assert caught.value.errno == error_number
+
+
+def test_filesystem_policy_rejects_forged_replacement_access(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+    policy = ns.NamespaceFilesystemPolicy(
+        (str(hidden),),
+        replacement_mounts=(
+            ns.NamespaceMountRequest(str(source), str(hidden), ns.NamespaceMountAccess.READ_ONLY),
+        ),
+    )
+
+    with pytest.raises(ns.NamespaceSetupError, match="invalid replacement mount") as caught:
+        ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "stage"))
+    assert caught.value.operation == "validate namespace policy access"
+
+
+def test_filesystem_policy_rejects_replacement_outside_hidden_root(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    replacement = tmp_path / "replacement"
+    replacement.mkdir()
+
+    with pytest.raises(ns.NamespaceSetupError, match="replacement target is not a hidden root"):
+        ns.build_namespace_filesystem_policy(
+            [str(hidden)], replacement_mounts=[(str(replacement), str(tmp_path))]
+        )
+
+
 def test_mount_plan_does_not_recreate_disappeared_preserved_source(tmp_path):
     hidden = tmp_path / "hidden"
     hidden.mkdir()
