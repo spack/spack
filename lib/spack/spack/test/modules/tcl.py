@@ -14,6 +14,7 @@ import spack.vendor.archspec.cpu
 
 import spack.concretize
 import spack.config
+import spack.error
 import spack.main
 import spack.modules.common
 import spack.modules.error
@@ -989,11 +990,13 @@ class TestTcl:
 
         # test module file of package without variants
         content = modulefile_content("module-long-help target=core2")
-        # Spack automatically defines a build_system variant
-        assert len([x for x in content if "set variant_names [list build_system]" in x]) == 1
+        # Spack automatically defines a build_system variant, and the hash variant stands for
+        # the hash left out of the module name
+        assert len([x for x in content if "set variant_names [list build_system hash]" in x]) == 1
         assert len([x for x in content if "set boolean_variants [list ]" in x]) == 1
         assert len([x for x in content if "    build_system {generic}" in x]) == 1
-        assert len([x for x in content if re.match("    {generic} \\w{7}", x)]) == 1
+        assert len([x for x in content if re.match("    hash {\\w{7}}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic \\w{7}} \\w{7}", x)]) == 1
 
         # test module file of package with boolean variants
         content = modulefile_content("mpileaks +debug -shared")
@@ -1002,7 +1005,8 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if "set variant_names [list build_system debug fortran opt shared static]" in x
+                    if "set variant_names [list build_system debug fortran opt shared static hash]"
+                    in x
                 ]
             )
             == 1
@@ -1023,7 +1027,9 @@ class TestTcl:
         assert len([x for x in content if "    opt {0}" in x]) == 1
         assert len([x for x in content if "    shared {0}" in x]) == 1
         assert len([x for x in content if "    static {1}" in x]) == 1
-        assert len([x for x in content if re.match("    {generic 1 0 0 0 1} \\w{7}", x)]) == 1
+        assert (
+            len([x for x in content if re.match("    {generic 1 0 0 0 1 \\w{7}} \\w{7}", x)]) == 1
+        )
 
         # test installation selection and variant definition code
         assert len([x for x in content if "getvariant --return-value $name __unset__" in x]) == 1
@@ -1041,34 +1047,35 @@ class TestTcl:
             == 1
         )
 
-        # test dependent module designation: the module name includes the hash, which pins the
-        # dependency installation on its own, so no variant is stated
+        # test dependent module designation: the hash variant pins the dependency installation
         # depends-on command defined once and used 3 times
         assert len([x for x in content if "depends-on " in x]) == 4
         depends_on_lines = [x for x in content if x.startswith("    depends-on ")]
         assert len(depends_on_lines) == 3
         for pattern in (
-            "    depends-on callpath/1.0-gcc-10.2.1-\\w{7}$",
-            "    depends-on mpich/3.0.4-gcc-10.2.1-\\w{7}$",
-            "    depends-on gcc-runtime/10.2.1-none-none-\\w{7}$",
+            "    depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$",
+            "    depends-on mpich/3.0.4-gcc-10.2.1 hash=\\w{7}$",
+            "    depends-on gcc-runtime/10.2.1-none-none hash=\\w{7}$",
         ):
             assert len([x for x in depends_on_lines if re.match(pattern, x)]) == 1
 
         # test module file of package with valued variants
         content = modulefile_content("multivalue-variant-multi-defaults myvariant=bar")
         assert (
-            len([x for x in content if "set variant_names [list build_system myvariant]" in x])
+            len(
+                [x for x in content if "set variant_names [list build_system myvariant hash]" in x]
+            )
             == 1
         )
         assert len([x for x in content if "set boolean_variants [list ]" in x]) == 1
         assert len([x for x in content if "    build_system {generic}" in x]) == 1
         assert len([x for x in content if "    myvariant {bar}" in x]) == 1
-        assert len([x for x in content if re.match("    {generic bar} \\w{7}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic bar \\w{7}} \\w{7}", x)]) == 1
 
         # test module file of package with multi-valued variants
         content = modulefile_content("multivalue-variant-multi-defaults")
         assert len([x for x in content if "    myvariant {bar_baz}" in x]) == 1
-        assert len([x for x in content if re.match("    {generic bar_baz} \\w{7}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic bar_baz \\w{7}} \\w{7}", x)]) == 1
         content = modulefile_content("multivalue-variant-multi-defaults myvariant=baz,bar")
         assert len([x for x in content if "    myvariant {bar_baz}" in x]) == 1
 
@@ -1079,9 +1086,9 @@ class TestTcl:
 
         # patches variant is set on concretized spec of package with patches
         content = modulefile_content("patch@2.0")
-        assert len([x for x in content if "set variant_names [list build_system]" in x]) == 1
+        assert len([x for x in content if "set variant_names [list build_system hash]" in x]) == 1
         assert len([x for x in content if "variant" in x and "patches" in x]) == 0
-        assert len([x for x in content if re.match("    {generic} \\w{7}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic \\w{7}} \\w{7}", x)]) == 1
 
         # dev_path variant set on spec
         content = modulefile_content("mpileaks dev_path=/some/path")
@@ -1090,13 +1097,24 @@ class TestTcl:
                 [
                     x
                     for x in content
-                    if "set variant_names [list build_system debug fortran opt shared static]" in x
+                    if "set variant_names [list build_system debug fortran opt shared static hash]"
+                    in x
                 ]
             )
             == 1
         )
         assert len([x for x in content if "variant" in x and "dev_path" in x]) == 0
-        assert len([x for x in content if re.match("    {generic 0 0 0 1 1} \\w{7}", x)]) == 1
+        assert (
+            len([x for x in content if re.match("    {generic 0 0 0 1 1 \\w{7}} \\w{7}", x)]) == 1
+        )
+
+    def test_variants_all_require_hash_length_zero(self, modulefile_content, module_configuration):
+        """Tests variants cannot be defined in module files whose name includes the hash."""
+
+        module_configuration("variants_all_hashed_names")
+
+        with pytest.raises(spack.error.ConfigError, match="requires 'hash_length: 0'"):
+            modulefile_content("mpileaks")
 
     def test_variants_all_translated_values(self, modulefile_content, module_configuration):
         """Tests variant values are written in the form the module command reads back once
@@ -1111,7 +1129,9 @@ class TestTcl:
         assert len([x for x in content if "    fum {charmxx}" in x]) == 1
         content = modulefile_content("singlevalue-variant fum=ch3:sock")
         assert len([x for x in content if "    fum {ch3_sock}" in x]) == 1
-        assert len([x for x in content if re.match("    {generic ch3_sock} \\w{7}", x)]) == 1
+        assert (
+            len([x for x in content if re.match("    {generic ch3_sock \\w{7}} \\w{7}", x)]) == 1
+        )
 
         # a value the module command reads as a boolean gets a trailing "_"
         content = modulefile_content("singlevalue-variant fum=on")
@@ -1152,13 +1172,12 @@ class TestTcl:
         uninstall("-y", spec_a)
         assert not os.path.exists(module_file_a)
 
-    @pytest.mark.parametrize("config_name", ["variants_all", "fold_variants_hash_projection"])
     def test_no_fold_with_hash_in_module_name(
-        self, install_mockery, module_configuration, factory, monkeypatch, config_name
+        self, install_mockery, module_configuration, factory, monkeypatch
     ):
         """Test no installation lookup is made when the hash is part of the module name, as
         installations then cannot share a module file."""
-        module_configuration(config_name)
+        module_configuration("fold_variants_hash_projection")
         install("--fake", "--add", "mpileaks@2.3 ~debug ^zmpi")
         install("--fake", "--add", "mpileaks@2.3 +debug ^zmpi")
 

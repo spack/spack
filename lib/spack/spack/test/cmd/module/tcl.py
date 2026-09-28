@@ -45,7 +45,7 @@ def test_refresh_fold_variants(install_mockery, module_configuration, modulefile
     install("--fake", "--add", spec_a)
     install("--fake", "--add", spec_b)
 
-    module_configuration("variants_all")
+    module_configuration("variants_none")
     module_file_a = modulefile_filenames("tcl", spec_a)[0]
     module_file_b = modulefile_filenames("tcl", spec_b)[0]
     assert module_file_a != module_file_b
