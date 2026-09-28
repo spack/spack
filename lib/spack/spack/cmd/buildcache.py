@@ -1024,7 +1024,14 @@ def update_view(
                 return e.get_one_by_hash(spec_hash)
         return None
 
-    if hashes:
+    # If in append mode and there is nothing to
+    # append, skip updating the index, otherwise create
+    # an index reguardless of hashes.
+    if hashes or update_mode != ViewUpdateMode.APPEND:
+        if not hashes:
+            # This has to be a tty.warn or else the output is lost for tests
+            tty.warn("No specs found for view, creating an empty index")
+
         with tempfile.TemporaryDirectory(
             dir=spack.stage.stage_root(spack.config.CONFIG)
         ) as tmpdir:
@@ -1036,13 +1043,6 @@ def update_view(
                 spec_by_hash=_spec_by_hash,
                 config=spack.config.CONFIG,
             )
-
-    else:
-        # If this is append mode and there is nothing to
-        # append, skip updating the index
-        if update_mode != ViewUpdateMode.APPEND:
-            # This has to be a tty.warn or else the output is lost for tests
-            tty.warn("No specs found for view, creating an empty index")
 
     if update_keys:
         mirror_update_keys(mirror)
