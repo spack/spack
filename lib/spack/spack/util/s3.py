@@ -171,6 +171,7 @@ def _s3_open(url, method: S3OpenMethod = "GET", extra_args={}):
     if key.startswith("/"):
         key = key[1:]
 
+    method = method.upper()
     if method not in ("GET", "HEAD"):
         raise urllib.error.URLError(
             "Only GET and HEAD verbs are currently supported for the s3:// scheme"
@@ -195,7 +196,7 @@ def _s3_open(url, method: S3OpenMethod = "GET", extra_args={}):
             error.get("Message", "Unknown S3 Error"),
             metadata.get("HTTPHeaders", {}),
             stream,
-        )
+        ) from e
 
     headers = obj["ResponseMetadata"]["HTTPHeaders"]
 
@@ -226,7 +227,7 @@ class UrllibS3Handler(urllib.request.BaseHandler):
         if_none_match = req.get_header("If-none-match")
         extra_args = {}
         if if_none_match:
-            extra_args["IfNoneMatch"] = if_none_match
+            extra_args["IfNoneMatch"] = if_none_match.strip('"')
 
         url, headers, stream = _s3_open(orig_url, method=req.get_method(), extra_args=extra_args)
         return urllib.response.addinfourl(stream, headers, url)

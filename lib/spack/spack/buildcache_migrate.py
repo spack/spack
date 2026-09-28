@@ -338,8 +338,6 @@ def migrate(
             v3_cache_class.maybe_push_layout_json(mirror_url)
 
             # Push the migrated mirror index
-            index_tmpdir = os.path.join(tmpdir, "rebuild_index")
-            os.mkdir(index_tmpdir)
             spack.binary_distribution._url_push_index(MirrorMetadata(mirror_url), db)
 
             # Push the public part of the signing key
