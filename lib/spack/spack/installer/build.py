@@ -17,6 +17,7 @@ import selectors
 import shlex
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -31,6 +32,7 @@ from spack.vendor.typing_extensions import Protocol
 import spack.binary_distribution
 import spack.build_environment
 import spack.builder
+import spack.caches
 import spack.compilers.config
 import spack.config
 import spack.error
@@ -45,6 +47,7 @@ import spack.store
 import spack.url_buildcache
 import spack.util.environment
 import spack.util.filesystem as fs
+import spack.util.ld_so_conf
 import spack.util.lock
 import spack.util.spack_yaml as syaml
 import spack.util.timer
@@ -108,6 +111,17 @@ class NamespacePolicyInputPaths(NamedTuple):
     header_paths: Tuple[str, ...]
     runtime_paths: Tuple[str, ...]
     temporary_paths: Tuple[str, ...]
+
+
+class NamespaceHostDeviceWorkerPaths(NamedTuple):
+    """Trusted host, device, and worker-state paths selected before policy compilation."""
+
+    hidden_roots: Tuple[str, ...]
+    replacement_roots: Tuple[str, ...]
+    host_runtime_paths: Tuple[str, ...]
+    device_paths: Tuple[str, ...]
+    read_only_paths: Tuple[str, ...]
+    writable_paths: Tuple[str, ...]
 
 
 class ResolvedSandboxPath(NamedTuple):
@@ -431,6 +445,117 @@ def stage_tool_paths(policy: Optional[dict] = None) -> List[ResolvedSandboxPath]
     return result
 
 
+def _canonical_existing_paths(
+    paths: Iterable[str], *, character_devices: bool = False
+) -> Tuple[str, ...]:
+    result = []
+    seen = set()
+    for path in paths:
+        resolved = os.path.realpath(os.path.abspath(path))
+        if not os.path.exists(resolved):
+            continue
+        if character_devices and not stat.S_ISCHR(os.stat(resolved).st_mode):
+            continue
+        if resolved not in seen:
+            seen.add(resolved)
+            result.append(resolved)
+    return tuple(sorted(result))
+
+
+def _canonical_required_paths(paths: Iterable[str], category: str) -> Tuple[str, ...]:
+    result = []
+    seen = set()
+    for path in paths:
+        absolute = os.path.abspath(path)
+        resolved = os.path.realpath(absolute)
+        if not os.path.lexists(absolute):
+            raise spack.sandbox_namespaces.NamespaceSetupError(
+                errno.ENOENT,
+                "select namespace policy inputs",
+                f"{category} path does not exist: {path}",
+            )
+        if absolute != resolved:
+            raise spack.sandbox_namespaces.NamespaceSetupError(
+                errno.EINVAL,
+                "select namespace policy inputs",
+                f"{category} path is not canonical: {path} resolves to {resolved}",
+            )
+        if resolved not in seen:
+            seen.add(resolved)
+            result.append(resolved)
+    return tuple(sorted(result))
+
+
+def select_namespace_host_device_worker_paths(
+    config: dict,
+    spec: spack.spec.Spec,
+    stage_path: str,
+    *,
+    log_path: Optional[str],
+    jobserver_paths: Iterable[str],
+    worker_root: str,
+    fetch_cache_path: str,
+    policy: Optional[dict] = None,
+) -> NamespaceHostDeviceWorkerPaths:
+    """Select host, device, and worker-state inputs without changing the worker filesystem.
+
+    Host runtime paths are candidates and are omitted when unavailable. Lifecycle and worker
+    paths are explicit trusted inputs and fail closed when missing or non-canonical.
+    """
+    policy = policy if policy is not None else _load_sandbox_policy()
+    hidden_roots = _canonical_existing_paths(policy["hidden_roots"])
+    replacement_roots = tuple(
+        root
+        for root in _canonical_existing_paths(policy["replacement_roots"])
+        if root in hidden_roots
+    )
+    host_runtime_paths = _canonical_existing_paths(
+        policy["host_runtime_read_paths"]
+        + policy["file_runtime_read_paths"]
+        + spack.util.ld_so_conf.host_dynamic_linker_search_paths()
+    )
+    device_paths = _canonical_existing_paths(policy["device_nodes"], character_devices=True)
+
+    repositories = tuple(spack.repo.PATH.repos)
+    read_only_candidates = [
+        spack.paths.bin_path,
+        spack.paths.lib_path,
+        spack.paths.share_path,
+        spack.paths.etc_path,
+        spack.paths.user_config_path,
+        spack.paths.system_config_path,
+        *host_runtime_paths,
+        *[str(dep.prefix) for dep in spec.traverse(root=False) if not dep.external],
+        *[repo.root for repo in repositories],
+        *[repo.python_path for repo in repositories if getattr(repo, "python_path", None)],
+        os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"),
+        *[
+            os.path.join(upstream_db.root, "bin", "sbang")
+            for upstream_db in spack.store.STORE.upstreams or ()
+        ],
+        spack.paths.user_cache_path,
+        spack.caches.misc_cache_location(config=spack.config.CONFIG),
+        *config.get("allow_read", []),
+    ]
+    read_only_paths = _canonical_existing_paths(read_only_candidates)
+
+    required_worker_paths = [stage_path, str(spec.prefix), worker_root, fetch_cache_path]
+    if log_path is not None:
+        required_worker_paths.append(log_path)
+    required_worker_paths.extend(jobserver_paths)
+    writable_paths = list(_canonical_required_paths(required_worker_paths, "worker"))
+    writable_paths.extend(_canonical_existing_paths(config.get("allow_write", [])))
+
+    return NamespaceHostDeviceWorkerPaths(
+        hidden_roots,
+        replacement_roots,
+        host_runtime_paths,
+        device_paths,
+        read_only_paths,
+        tuple(sorted(set(writable_paths))),
+    )
+
+
 def tool_runtime_paths(spec: spack.spec.Spec, tool_paths) -> List[str]:
     """Return Spack tool prefixes and link/run dependency prefixes owning selected tools."""
     sources = [
@@ -640,6 +765,7 @@ class ChildInfo:
         "notifier",
         "log_path",
         "prefix_lock",
+        "lifecycle",
         "state_buffer",
     )
 
@@ -652,6 +778,7 @@ class ChildInfo:
         control_w_conn: IpcChannel,
         notifier: ProcessExitNotifier,
         log_path: str,
+        lifecycle: Optional["BuildLifecycle"] = None,
     ) -> None:
         self.proc = proc
         self.spec = spec
@@ -661,6 +788,7 @@ class ChildInfo:
         self.notifier = notifier
         self.log_path = log_path
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
+        self.lifecycle = lifecycle
         # Buffer for partially received state data from this child. Kept as raw bytes and split on
         # b"\n": the newline byte cannot occur inside a multi-byte UTF-8 sequence, so framing is
         # safe without decoding partial reads.
@@ -673,6 +801,10 @@ class ChildInfo:
             except Exception:
                 pass
         self.prefix_lock = None
+
+    def finalize_lifecycle(self, exitcode: int) -> None:
+        if self.lifecycle is not None:
+            self.lifecycle.finalize(exitcode)
 
     def register_with_selector(self, selector: selectors.BaseSelector, build_id: str) -> None:
         """Register output, state, and sentinel channels with the selector."""
@@ -896,19 +1028,27 @@ class PrefixPivoter:
 
     def __enter__(self) -> "PrefixPivoter":
         """Enter the context: move existing prefix to temporary location if needed."""
-        if not self._lexists(self.prefix):
-            return self
-        # Move the existing prefix to a temporary location so the build starts fresh
-        self.tmp_prefix = self._mkdtemp(
-            dir=self.parent, prefix=".", suffix=OVERWRITE_BACKUP_SUFFIX
-        )
-        self._rename(self.prefix, self.tmp_prefix)
+        self.prepare()
         return self
+
+    def prepare(self, create_target: bool = False) -> None:
+        """Move an existing prefix aside and optionally create the new target."""
+        if self._lexists(self.prefix):
+            self.tmp_prefix = self._mkdtemp(
+                dir=self.parent, prefix=".", suffix=OVERWRITE_BACKUP_SUFFIX
+            )
+            self._rename(self.prefix, self.tmp_prefix)
+        if create_target:
+            fs.mkdirp(self.prefix)
 
     def __exit__(
         self, exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[object]
     ) -> None:
         """Exit the context: cleanup on success, restore on failure."""
+        self.finalize(exc_type)
+
+    def finalize(self, exc_type: Optional[type]) -> None:
+        """Finalize the pivot after the worker has stopped using the prefix."""
         if exc_type is None:
             # Success: remove the backup
             if self.tmp_prefix is not None:
@@ -951,6 +1091,59 @@ class PrefixPivoter:
         shutil.rmtree(path, ignore_errors=True)
 
 
+class BuildLifecycle:
+    """Own host-backed stage and prefix transitions for one build."""
+
+    def __init__(self, spec: spack.spec.Spec, keep_stage: bool, keep_prefix: bool = False) -> None:
+        self.spec = spec
+        self.keep_stage = keep_stage
+        self.stage = spec.package.stage
+        self.stage_parent: Optional[str] = None
+        self.stage_path: Optional[str] = None
+        self.prefix_pivoter = PrefixPivoter(str(spec.prefix), keep_prefix=keep_prefix)
+        self._prepared = False
+        self._finalized = False
+
+    def prepare(self, create_prefix_target: bool = False) -> None:
+        """Allocate a private stage parent and prepare the empty install target."""
+        stage_root = self.stage[0].stage_root
+        fs.mkdirp(stage_root)
+        self.stage_parent = tempfile.mkdtemp(dir=stage_root, prefix=".spack-stage-")
+        previous_stage = None
+        previous_stage_path = os.path.join(stage_root, self.stage[0].name)
+        if os.path.lexists(previous_stage_path):
+            previous_stage = tempfile.mkdtemp(dir=stage_root, prefix=".spack-stage-previous-")
+            os.rmdir(previous_stage)
+            fs.rename(previous_stage_path, previous_stage)
+        for stage in self.stage:
+            stage.path = os.path.join(self.stage_parent, stage.name)
+        if previous_stage is not None:
+            fs.rename(previous_stage, self.stage.path)
+        self.stage_path = self.stage.path
+        try:
+            self.prefix_pivoter.prepare(create_target=create_prefix_target)
+        except BaseException:
+            shutil.rmtree(self.stage_parent, ignore_errors=True)
+            raise
+        self._prepared = True
+
+    def finalize(self, exitcode: int) -> None:
+        """Finalize host paths after the child namespace and process are gone."""
+        if not self._prepared or self._finalized:
+            return
+        if exitcode == ExitCode.SUCCESS:
+            self.prefix_pivoter.finalize(None)
+        elif exitcode == ExitCode.BUILD_CACHE_MISS:
+            self.prefix_pivoter.finalize(BinaryCacheMiss)
+        else:
+            self.prefix_pivoter.finalize(RuntimeError)
+        if exitcode in (ExitCode.SUCCESS, ExitCode.BUILD_CACHE_MISS) and not self.keep_stage:
+            assert self.stage_parent is not None
+            self.stage[0].path = os.path.join(self.stage[0].stage_root, self.stage[0].name)
+            shutil.rmtree(self.stage_parent, ignore_errors=True)
+        self._finalized = True
+
+
 class BuildRequest(NamedTuple):
     """Plain data describing a single build to be launched: the input of a build launcher."""
 
@@ -970,6 +1163,8 @@ class BuildRequest(NamedTuple):
     log_path: str
     stop_before: Optional[str]
     stop_at: Optional[str]
+    stage_parent: Optional[str] = None
+    stage_path: Optional[str] = None
 
 
 def worker_function(
@@ -1049,7 +1244,7 @@ def worker_function(
         parent,
         log_path,
         spec=spec,
-        stage_path=spec.package.stage.path,
+        stage_path=request.stage_parent or request.stage_path or spec.package.stage.path,
     )
 
     # Use closefd=False because of the connection objects. Use line buffering.
@@ -1066,8 +1261,7 @@ def worker_function(
     exit_code = ExitCode.SUCCESS
 
     try:
-        with PrefixPivoter(spec.prefix, request.keep_prefix):
-            _install(request, state_stream, spack.store.STORE, sandbox=sandbox)
+        _install(request, state_stream, spack.store.STORE, sandbox=sandbox)
     except spack.error.StopPhase:
         exit_code = ExitCode.STOPPED_AT_PHASE
     except ProcessError as e:
@@ -1354,8 +1548,45 @@ def namespace_filesystem_policy_and_plan_from_inputs(
     return policy, plan
 
 
+def validate_namespace_policy_before_threads(
+    config: dict,
+    spec: spack.spec.Spec,
+    stage_path: str,
+    mount_plan_stage: str,
+    selected_paths: NamespacePolicyInputPaths,
+    replacement_mounts: Iterable[Tuple[str, str]] = (),
+    generated_symlinks: Iterable[spack.sandbox_namespaces.NamespaceGeneratedSymlink] = (),
+) -> Optional[
+    Tuple[
+        spack.sandbox_namespaces.NamespaceFilesystemPolicy,
+        spack.sandbox_namespaces.NamespaceMountPlan,
+    ]
+]:
+    """Validate the selected namespace policy before any worker mutation.
+
+    Validation is unconditional whenever this helper is called. Callers can retain the returned
+    immutable policy and mount plan for a later activation step.
+    """
+    return namespace_filesystem_policy_and_plan_from_inputs(
+        config,
+        spec,
+        stage_path,
+        mount_plan_stage,
+        selected_paths,
+        replacement_mounts,
+        generated_symlinks,
+    )
+
+
 def _prepare_namespace_sandbox_before_threads(
-    config: dict, spec: spack.spec.Spec, stage_path: str
+    config: dict,
+    spec: spack.spec.Spec,
+    stage_path: str,
+    *,
+    mount_plan_stage: Optional[str] = None,
+    selected_paths: Optional[NamespacePolicyInputPaths] = None,
+    replacement_mounts: Iterable[Tuple[str, str]] = (),
+    generated_symlinks: Iterable[spack.sandbox_namespaces.NamespaceGeneratedSymlink] = (),
 ) -> Optional[spack.sandbox.Sandbox]:
     """Prepare the namespace view and drop mount authority before ``Tee``.
 
@@ -1365,6 +1596,21 @@ def _prepare_namespace_sandbox_before_threads(
     """
     if not config.get("enable", False):
         return None
+
+    if mount_plan_stage is not None or selected_paths is not None:
+        if mount_plan_stage is None or selected_paths is None:
+            raise spack.error.InstallError(
+                "Namespace policy validation requires selected paths and mount-plan scratch"
+            )
+        validate_namespace_policy_before_threads(
+            config,
+            spec,
+            stage_path,
+            mount_plan_stage,
+            selected_paths,
+            replacement_mounts,
+            generated_symlinks,
+        )
 
     spack.sandbox_namespaces.freeze_namespace_sandbox_capability()
     try:
@@ -1517,6 +1763,9 @@ def _install(
 
     # Create the stage and log file before starting the tee thread.
     pkg = spec.package
+    if request.stage_parent is not None:
+        for stage in pkg.stage:
+            stage.path = os.path.join(request.stage_parent, stage.name)
     pkg.run_tests = request.run_tests
 
     # timer for install phases, dumped to install_times.json on success
@@ -1553,7 +1802,9 @@ def _install(
     store.layout.create_install_directory(spec)
 
     stage = pkg.stage
-    stage.keep = request.keep_stage
+    # The supervisor removes successful stages after the child namespace is gone. Keeping the
+    # stage here also leaves failed stages untouched for inspection.
+    stage.keep = True
 
     # Then try a source build.
     with stage:
@@ -1609,7 +1860,10 @@ def _install(
             raise spack.error.InstallError(f"'{stop_at}' is not a valid phase for {pkg.name}")
 
         _enable_sandbox(
-            spack.config.CONFIG.get("config:sandbox", {}), spec, stage.path, sandbox=sandbox
+            spack.config.CONFIG.get("config:sandbox", {}),
+            spec,
+            request.stage_parent or stage.path,
+            sandbox=sandbox,
         )
 
         for phase in builder:

@@ -41,7 +41,7 @@ from spack.installer.base import (
     InstallPolicy,
     JobServerBase,
 )
-from spack.installer.build import BuildRequest, ChildInfo, start_build
+from spack.installer.build import BuildLifecycle, BuildRequest, ChildInfo, start_build
 from spack.installer.schedule import (
     AddSpecAction,
     BuildGraph,
@@ -490,6 +490,11 @@ class PackageInstaller:
                     if child.proc.is_alive():
                         child.proc.kill()
                         child.proc.join()
+                    child.finalize_lifecycle(
+                        child.proc.exitcode
+                        if child.proc.exitcode is not None
+                        else ExitCode.BUILD_ERROR
+                    )
                 except Exception:
                     pass
 
@@ -571,6 +576,7 @@ class PackageInstaller:
         self._drain_child_output(build, selector)
         self._drain_child_state(build, selector)
         exitcode = build.close(selector)
+        build.finalize_lifecycle(exitcode)
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
         if exitcode == ExitCode.SUCCESS:
@@ -751,6 +757,13 @@ class PackageInstaller:
         tests = self.tests
         run_tests = tests is True or bool(tests and spec.name in tests)
         is_root = dag_hash in self.build_graph.roots
+        lifecycle = None
+        if not spec.external:
+            lifecycle = BuildLifecycle(
+                spec, self.keep_stage or is_develop, keep_prefix=self.keep_prefix
+            )
+            sandbox_config = spack.config.CONFIG.get("config:sandbox", {})
+            lifecycle.prepare(create_prefix_target=sandbox_config.get("enable", False))
         # Both possible sub-processes (cache install, source build) append to the same log file.
         if dag_hash not in self.log_paths:
             if spec.external:
@@ -783,8 +796,16 @@ class PackageInstaller:
             log_path=self.log_paths[dag_hash],
             stop_before=self.stop_before if is_root else None,
             stop_at=self.stop_at if is_root else None,
+            stage_parent=lifecycle.stage_parent if lifecycle else None,
+            stage_path=lifecycle.stage_path if lifecycle else None,
         )
-        child_info = self.launcher(request, jobserver)
+        try:
+            child_info = self.launcher(request, jobserver)
+        except BaseException:
+            if lifecycle is not None:
+                lifecycle.finalize(ExitCode.BUILD_ERROR)
+            raise
+        child_info.lifecycle = lifecycle
         child_info.prefix_lock = prefix_lock
         self.running_builds[dag_hash] = child_info
         child_info.register_with_selector(selector, dag_hash)

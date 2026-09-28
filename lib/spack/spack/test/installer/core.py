@@ -191,6 +191,7 @@ def test_capacity_serializes_launches(temporary_store, mock_packages):
     assert requests_at_finish == [1, 2]
 
 
+@pytest.mark.disable_clean_stage_check  # stopped builds retain their host-visible stage
 def test_stopped_at_phase_is_not_a_failure(temporary_store, mock_packages):
     """A build exiting with STOPPED_AT_PHASE raises nothing, reports no failure, and leaves no
     database record."""

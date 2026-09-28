@@ -23,6 +23,7 @@ import spack.sandbox
 import spack.sandbox_namespaces
 import spack.spec
 import spack.store
+import spack.util.ld_so_conf
 import spack.util.spack_yaml as syaml
 from spack.installer.build import _enable_sandbox
 
@@ -854,6 +855,108 @@ def test_complete_namespace_policy_from_installer_inputs(monkeypatch, tmp_path: 
     assert {mount.target for mount in plan.restoration_mounts} == {
         str(path) for path in read_only_targets | read_write_targets
     }
+
+
+def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: pathlib.Path):
+    from spack.installer.build import select_namespace_host_device_worker_paths
+
+    host = tmp_path / "host"
+    for relative in ("bin", "lib", "share", "etc", "config", "repo", "store/bin"):
+        (host / relative).mkdir(parents=True)
+    runtime = host / "lib" / "libc.so"
+    runtime.touch()
+    dependency = host / "store" / "dependency"
+    dependency.mkdir()
+    install_prefix = host / "store" / "install"
+    install_prefix.mkdir()
+    stage = host / "stage"
+    stage.mkdir()
+    worker_root = host / "worker"
+    worker_root.mkdir()
+    fetch_cache = host / "fetch-cache"
+    fetch_cache.mkdir()
+    log_path = host / "worker.log"
+    log_path.touch()
+    jobserver = host / "jobserver_fifo"
+    jobserver.touch()
+    repository = host / "repo"
+    device = pathlib.Path(os.devnull)
+
+    monkeypatch.setattr(spack.paths, "bin_path", str(host / "bin"))
+    monkeypatch.setattr(spack.paths, "lib_path", str(host / "lib"))
+    monkeypatch.setattr(spack.paths, "share_path", str(host / "share"))
+    monkeypatch.setattr(spack.paths, "etc_path", str(host / "etc"))
+    monkeypatch.setattr(spack.paths, "user_config_path", str(host / "config"))
+    monkeypatch.setattr(spack.paths, "system_config_path", str(host / "config"))
+    monkeypatch.setattr(
+        spack.repo, "PATH", SimpleNamespace(repos=[SimpleNamespace(root=str(repository))])
+    )
+    monkeypatch.setattr(spack.store.STORE, "unpadded_root", str(host / "store"))
+    monkeypatch.setattr(spack.store.STORE, "upstreams", None)
+    monkeypatch.setattr(
+        spack.util.ld_so_conf, "host_dynamic_linker_search_paths", lambda: [str(runtime)]
+    )
+
+    spec = cast(
+        Any,
+        SimpleNamespace(
+            prefix=install_prefix,
+            traverse=lambda root=False: iter([SimpleNamespace(prefix=dependency, external=False)]),
+        ),
+    )
+    policy = {
+        "hidden_roots": [str(host / "store"), str(host / "stage")],
+        "replacement_roots": [str(host / "stage")],
+        "host_runtime_read_paths": [str(runtime), str(host / "missing-runtime")],
+        "file_runtime_read_paths": [],
+        "device_nodes": [str(device), str(host / "not-a-device")],
+    }
+
+    selected = select_namespace_host_device_worker_paths(
+        {"allow_read": [str(repository)], "allow_write": [str(worker_root)]},
+        spec,
+        str(stage),
+        log_path=str(log_path),
+        jobserver_paths=(str(jobserver),),
+        worker_root=str(worker_root),
+        fetch_cache_path=str(fetch_cache),
+        policy=policy,
+    )
+
+    assert selected.hidden_roots == tuple(
+        sorted((str((host / "stage").resolve()), str((host / "store").resolve())))
+    )
+    assert selected.replacement_roots == (str((host / "stage").resolve()),)
+    assert selected.host_runtime_paths == (str(runtime.resolve()),)
+    assert selected.device_paths == (str(device.resolve()),)
+    assert set(selected.read_only_paths) >= {
+        str((host / "bin").resolve()),
+        str((host / "lib").resolve()),
+        str((host / "share").resolve()),
+        str((host / "etc").resolve()),
+        str(dependency.resolve()),
+        str(repository.resolve()),
+    }
+    assert set(selected.writable_paths) >= {
+        str(stage.resolve()),
+        str(install_prefix.resolve()),
+        str(worker_root.resolve()),
+        str(fetch_cache.resolve()),
+        str(log_path.resolve()),
+        str(jobserver.resolve()),
+    }
+
+    with pytest.raises(spack.sandbox_namespaces.NamespaceSetupError, match="does not exist"):
+        select_namespace_host_device_worker_paths(
+            {},
+            spec,
+            str(stage),
+            log_path=None,
+            jobserver_paths=(),
+            worker_root=str(worker_root),
+            fetch_cache_path=str(host / "missing-fetch-cache"),
+            policy=policy,
+        )
 
 
 def test_complete_namespace_policy_rejects_missing_selected_path(
