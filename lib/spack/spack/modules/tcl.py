@@ -15,6 +15,28 @@ from spack.variant import RESERVED_NAMES, VariantType, VariantValue
 
 from .common import BaseConfiguration, BaseModuleFileWriter, FileLayout
 
+#: Words the module command reads as booleans, any prefix of them included
+_MODULE_BOOLEAN_WORDS = ("true", "false", "yes", "no", "on", "off")
+
+
+def module_variant_value(value: str) -> str:
+    """Returns a variant value in the form the module command reads back once loaded:
+    ``++`` is spelled ``xx`` as in ``cxx``, any other character than letters, digits,
+    ``_``, ``-``, ``.`` and ``/`` becomes ``_``, and a value the module command reads as a
+    boolean gets a trailing ``_``."""
+    value = value.replace("++", "xx")
+    # The module command records loaded modules as name{+a:b=c}, where "+", "~", "@", ":",
+    # "," and "=" are syntax, and it cannot unload a module whose values hold them. Other
+    # non-alphanumeric characters break the Tcl lists of the module file or need quoting on
+    # the module command line.
+    value = re.sub(r"[^A-Za-z0-9_.\-/]", "_", value)
+    # The variant command refuses a boolean-looking value on a non-boolean variant, and the
+    # module command accepts any prefix of a boolean word but the ambiguous "o"
+    lower = value.lower()
+    if lower not in ("", "o") and any(word.startswith(lower) for word in _MODULE_BOOLEAN_WORDS):
+        value += "_"
+    return value
+
 
 class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
@@ -39,10 +61,13 @@ class TclConfiguration(BaseConfiguration):
 
     def _variant_to_str_dict(self, v: VariantValue) -> Dict[str, str]:
         """Returns a dictionary entry representing variant object passed as argument.
-        A boolean value is written 1 or 0, as the module file expects it."""
+        A boolean value is written 1 or 0, as the module file expects it. Any other value
+        is written in the form the module command reads back, see :func:`module_variant_value`,
+        with the values of a multi-valued variant joined by underscores."""
         if v.type == VariantType.BOOL:
             return {"value": "1" if v.value else "0", "type": v.type.string, "spec": str(v)}
         value = "_".join(map(str, v.value)) if isinstance(v.value, tuple) else str(v.value)
+        value = module_variant_value(value)
         return {"value": value, "type": v.type.string, "spec": f"{v.name}={value}"}
 
     @property

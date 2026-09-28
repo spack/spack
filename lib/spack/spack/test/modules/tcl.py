@@ -1098,6 +1098,25 @@ class TestTcl:
         assert len([x for x in content if "variant" in x and "dev_path" in x]) == 0
         assert len([x for x in content if re.match("    {generic 0 0 0 1 1} \\w{7}", x)]) == 1
 
+    def test_variants_all_translated_values(self, modulefile_content, module_configuration):
+        """Tests variant values are written in the form the module command reads back once
+        loaded."""
+
+        module_configuration("variants_all")
+
+        # "++" is spelled "xx", and characters the module command reserves become "_"
+        content = modulefile_content("gcc languages=c,c++,fortran")
+        assert len([x for x in content if "    languages {c_cxx_fortran}" in x]) == 1
+        content = modulefile_content("singlevalue-variant fum=charm++")
+        assert len([x for x in content if "    fum {charmxx}" in x]) == 1
+        content = modulefile_content("singlevalue-variant fum=ch3:sock")
+        assert len([x for x in content if "    fum {ch3_sock}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic ch3_sock} \\w{7}", x)]) == 1
+
+        # a value the module command reads as a boolean gets a trailing "_"
+        content = modulefile_content("singlevalue-variant fum=on")
+        assert len([x for x in content if "    fum {on_}" in x]) == 1
+
     def test_no_fold_without_variants(
         self, install_mockery, module_configuration, modulefile_filenames, factory, monkeypatch
     ):
@@ -1496,6 +1515,32 @@ class TestTcl:
         assert not status
         assert "Specified package is not installed" in stderr
         assert module_command.env == initial_env
+
+    def test_fold_variants_translated_values_load_unload(
+        self, install_mockery, module_configuration, module_command
+    ):
+        """Test the module tool selects an installation by a translated variant value, and
+        reads this value back on unload."""
+        module_configuration("fold_variants_all")
+        spec_a = "singlevalue-variant fum=ch3:sock"
+        spec_b = "singlevalue-variant fum=on"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        module_command.env["MODULEPATH"] = writer_cls.from_spec(
+            concrete_a, "default"
+        ).layout.arch_dirname
+        initial_env = dict(module_command.env)
+
+        for value, concrete in (("ch3_sock", concrete_a), ("on_", concrete_b)):
+            status, stderr = module_command("load", "singlevalue-variant", f"fum={value}")
+            assert status, stderr
+            assert f"fum|{value}|" in module_command.env["__MODULES_LMVARIANT"]
+            assert f"hash|{concrete.dag_hash(7)}|" in module_command.env["__MODULES_LMVARIANT"]
+            status, stderr = module_command("unload", "singlevalue-variant")
+            assert status, stderr
+            assert module_command.env == initial_env
 
     def test_fold_variants_explicit_from_database(
         self, install_mockery, module_configuration, modulefile_filenames

@@ -337,6 +337,9 @@ The ``depends-on`` lines of module files do not state them: the module name pins
    Compiler (``%compiler``) and dependency (``^dep``) constraints are not understood: the module tool takes them for additional module names to load and fails to find them.
    ``@`` refers to the version part of the module name, such as ``git@2.53.0-gcc-15.2.1``, not to the Spack version.
    Multi-valued variants are written with their values joined by underscores: ``libs=shared,static`` in a Spack spec is ``libs=shared_static`` on the ``module`` command line.
+   Values are also translated when the ``module`` command could not read them back once loaded: ``++`` is spelled ``xx`` as in ``cxx``, any other character than letters, digits, ``_``, ``-``, ``.`` and ``/`` becomes ``_``, and a value the ``module`` command reads as a boolean, such as ``on``, ``off``, ``yes``, ``no``, ``true`` or ``false``, gets a trailing ``_``.
+   So ``languages=c,c++,fortran`` is ``languages=c_cxx_fortran``, ``device=ch3:sock`` is ``device=ch3_sock`` and ``use_vtkm=on`` is ``use_vtkm=on_`` on the ``module`` command line.
+   ``spack module tcl find`` prints the values as the ``module`` command expects them.
 
 .. _module-variants-folding:
 
