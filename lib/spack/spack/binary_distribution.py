@@ -1892,15 +1892,11 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-#: Value of ``id()`` for a Spec, to key nodes by object identity
-SpecObjectId = int
-
-
-def _virtuals_by_node(root: spack.spec.Spec) -> Dict[SpecObjectId, Set[str]]:
+def _virtuals_by_node(root: spack.spec.Spec) -> Dict[int, Set[str]]:
     """Return the virtuals each node in the DAG of ``root`` provides, in the context of ``root``,
     keyed by the ``id`` of the node. Same semantics as ``Spec._virtuals_provided``.
     """
-    result: Dict[SpecObjectId, Set[str]] = defaultdict(set)
+    result: Dict[int, Set[str]] = defaultdict(set)
     result[id(root)] = {v.name for v in root.provided_virtuals}
     for edge in root.traverse_edges(root=False, cover="edges"):
         result[id(edge.spec)].update(edge.virtuals)
@@ -1938,7 +1934,8 @@ class _SpliceAnalogs:
         if not analogs:
             return None
         c = self.candidates
-        return c[max(analogs, key=lambda i: (c[i].name == s.name, c[i].version, -i))]
+        key = lambda i: (c[i].name == s.name, c[i].version, -i)
+        return c[max(analogs, key=key)]
 
 
 def relocate_package(spec: spack.spec.Spec) -> None:
