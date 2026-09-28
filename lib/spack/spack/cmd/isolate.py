@@ -9,6 +9,7 @@ from typing import Tuple
 
 import spack.config
 import spack.paths
+import spack.util.lock
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 
@@ -249,9 +250,35 @@ def _do_isolate(args):
 def _undo_isolate():
     if not os.path.exists(ISOLATE_SCOPE_PATH):
         raise RuntimeError("Cannot find isolation to undo")
-    # Simply remove the isolate scope directory
-    # No need to restore include.yaml since we never modified it
+
+    # Remove the isolate scope directory
     shutil.rmtree(ISOLATE_SCOPE_PATH)
+    tty.msg(f"Removed isolate scope: {ISOLATE_SCOPE_PATH}")
+
+    # Remove layout scope if it exists (from --reuse-old writing isolation config there)
+    layout_scope_path = spack.config._layout_scope_path()
+    if os.path.exists(layout_scope_path):
+        shutil.rmtree(layout_scope_path)
+        tty.msg(f"Removed layout scope: {layout_scope_path}")
+
+    # Remove migration marker and run auto-migration to set up layout scope with old resource pointers
+    marker_path = spack.config._migration_done_marker_path()
+    if os.path.exists(marker_path):
+        os.remove(marker_path)
+        tty.debug("Removed migration marker")
+
+    tty.msg("Running auto-migration...")
+    lock_path = spack.config._migration_lock_path()
+    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+    with spack.util.lock.WriteTransaction(lock):
+        prefix_result = spack.config._do_migrate_spack_prefix()
+        home_result = spack.config._do_migrate_home()
+
+
+    # Show migration summary
+    msg = spack.config._migration_message(prefix_result, home_result)
+    if msg:
+        tty.msg(msg)
 
 
 def isolate(parser, args):
