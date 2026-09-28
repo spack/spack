@@ -42,11 +42,19 @@ device_symlinks:
 stage_programs:
 - 7z
 - bunzip2
+- cat
+- chmod
+- expr
 - git
 - gunzip
 - gzip
+- ls
+- make
 - patch
+- rm
+- sed
 - sh
+- sort
 - tar
 - unzip
 - xz

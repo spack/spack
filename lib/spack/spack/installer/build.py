@@ -465,10 +465,10 @@ def stage_tool_paths(policy: Optional[dict] = None) -> List[ResolvedSandboxPath]
     return result
 
 
-def stage_tool_alias_symlink_paths(
+def tool_alias_symlink_paths(
     tool_entries: Iterable[ResolvedSandboxPath], hidden_roots: Iterable[str]
 ) -> List[spack.sandbox_namespaces.NamespaceGeneratedSymlink]:
-    """Restore selected stage-tool spellings when their executables are symlinks."""
+    """Restore selected tool spellings when their executables are symlinks."""
     result = []
     for entry in tool_entries:
         spelling = which_string(entry.spelling)
@@ -1668,10 +1668,13 @@ def prepare_namespace_activation(
     )
 
     compiler_paths = []
+    compiler_support_entries = []
     for entry in compiler_driver_paths(spec):
         compiler_paths.append(entry.source)
     for _language, compiler_path, _compiler_spec in _selected_compilers(spec):
-        compiler_paths.extend(entry.source for entry in compiler_support_paths(compiler_path))
+        support_entries = compiler_support_paths(compiler_path)
+        compiler_support_entries.extend(support_entries)
+        compiler_paths.extend(entry.source for entry in support_entries)
 
     tool_entries = stage_tool_paths()
     tool_paths = [entry.source for entry in tool_entries]
@@ -1704,7 +1707,9 @@ def prepare_namespace_activation(
         dict.fromkeys(
             (
                 *compiler_alias_symlink_paths(spec),
-                *stage_tool_alias_symlink_paths(tool_entries, host_paths.hidden_roots),
+                *tool_alias_symlink_paths(
+                    (*tool_entries, *compiler_support_entries), host_paths.hidden_roots
+                ),
                 *(
                     (
                         spack.sandbox_namespaces.NamespaceGeneratedSymlink(
