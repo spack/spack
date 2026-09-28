@@ -1330,6 +1330,7 @@ def namespace_filesystem_policy_and_plan_from_inputs(
         ((path, path) for path in effective_read_write),
         replacement_mounts=replacement_mounts,
         generated_symlinks=generated_symlinks,
+        read_only_view=True,
     )
 
     def assert_covered(paths, mounts, access):
