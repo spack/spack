@@ -6,6 +6,7 @@
 
 import os
 import pathlib
+import shutil
 import sys
 from pathlib import Path
 
@@ -283,6 +284,86 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
     assert migrated["include"][0]["path"] == str(new_config_dir / "included-absolute")
     assert migrated["include"][1]["path"] == "included-relative.yaml"
     assert migrated["include"][2]["path"] == str(shared_cfg)
+
+
+def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
+    """Environment migration applies the four path-handling scenarios.
+
+    1. Absolute path inside old env → rewrite to new env location
+    2. Relative path pointing outside env → make absolute (preserve target)
+    3. Relative path staying inside env → keep relative (works in new location)
+    4. Absolute path outside env → unchanged
+    """
+    old_envs = tmp_path / "old_envs"
+    new_envs = tmp_path / "new_envs"
+    old_envs.mkdir()
+    new_envs.mkdir()
+
+    old_env = old_envs / "myenv"
+    old_env.mkdir()
+
+    # Create test paths
+    local_file = old_env / "local.yaml"
+    local_file.write_text("packages: {}\n", encoding="utf-8")
+
+    subdir = old_env / "subdir"
+    subdir.mkdir()
+    subdir_file = subdir / "nested.yaml"
+    subdir_file.write_text("config: {}\n", encoding="utf-8")
+
+    # Shared config outside the environment
+    shared_cfg = old_envs / "shared.yaml"
+    shared_cfg.write_text("packages: {}\n", encoding="utf-8")
+
+    external_dir = tmp_path / "external"
+    external_dir.mkdir()
+
+    # Create spack.yaml with all path scenarios
+    spack_yaml = old_env / "spack.yaml"
+    spack_yaml.write_text(
+        syaml.dump(
+            {
+                "spack": {
+                    "specs": ["zlib"],
+                    "config": {
+                        # Rule 1: Absolute path inside env → rewrite to new location
+                        "source_cache": str(local_file),
+                        # Rule 4: Absolute path outside env → unchanged
+                        "misc_cache": str(external_dir),
+                    },
+                    "include": [
+                        # Rule 2: Relative path pointing outside env → make absolute
+                        "../shared.yaml",
+                        # Rule 3: Relative path inside env → keep relative
+                        "local.yaml",
+                    ],
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    # Copy to staging (simulating what _migrate_environments does)
+    staging = new_envs / ".spack-env-myenv-staging"
+    shutil.copytree(old_env, staging)
+
+    # Process the file (this is what happens during migration)
+    staging_yaml = staging / "spack.yaml"
+    migrated = spack.config.process_env_file_paths(str(staging_yaml), str(old_env), str(staging))
+
+    assert migrated is not None
+
+    # Rule 1: Absolute path inside old env gets rewritten to new location
+    assert migrated["spack"]["config"]["source_cache"] == str(staging / "local.yaml")
+
+    # Rule 4: Absolute path outside env stays unchanged
+    assert migrated["spack"]["config"]["misc_cache"] == str(external_dir)
+
+    # Rule 2: Relative path outside env becomes absolute (preserves original target)
+    assert migrated["spack"]["include"][0] == str(shared_cfg)
+
+    # Rule 3: Relative path inside env stays relative
+    assert migrated["spack"]["include"][1] == "local.yaml"
 
 
 class MigrationResources:

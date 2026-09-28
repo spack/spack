@@ -1977,12 +1977,18 @@ def process_env_file_paths(
     if not data:
         return None
 
-    config_dir = os.path.dirname(file_path)
-    found_paths = walk_yaml_for_paths(data, config_dir)
-    modified = False
-
+    # file_path is in the new location (staging), but we need to resolve relative paths
+    # as they would have been in the old location
+    new_config_dir = os.path.dirname(file_path)
     old_env_norm = os.path.normpath(os.path.abspath(old_env_dir))
     new_env_norm = os.path.normpath(os.path.abspath(new_env_dir))
+
+    # Calculate what the config dir would have been in the old location
+    rel_to_new_env = os.path.relpath(new_config_dir, new_env_norm)
+    old_config_dir = os.path.join(old_env_norm, rel_to_new_env)
+
+    found_paths = walk_yaml_for_paths(data, old_config_dir)
+    modified = False
 
     for key_path, original_value, abs_path, in_include in found_paths:
         abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
