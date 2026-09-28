@@ -718,10 +718,22 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     old_envs.mkdir(parents=True)
 
     # Create old environments with spack.yaml files
-    for name in ("test-env-1", "test-env-2"):
-        env_dir = old_envs / name
-        env_dir.mkdir()
-        (env_dir / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    # test-env-1 has a shared config file
+    env1_dir = old_envs / "test-env-1"
+    env1_dir.mkdir()
+    (env1_dir / "common.yaml").write_text(
+        "packages:\n  all:\n    compiler: [gcc]\n", encoding="utf-8"
+    )
+    (env1_dir / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+
+    # test-env-2 includes from test-env-1 with both relative and absolute paths
+    env2_dir = old_envs / "test-env-2"
+    env2_dir.mkdir()
+    abs_include = str(env1_dir / "common.yaml")
+    (env2_dir / "spack.yaml").write_text(
+        f"spack:\n  specs: []\n  include:\n  - ../test-env-1/common.yaml\n  - {abs_include}\n",
+        encoding="utf-8",
+    )
 
     # Create fresh config and run migration
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
@@ -744,3 +756,13 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     # Old location still exists (migration copies, doesn't move)
     assert old_envs.exists()
     assert (old_envs / "test-env-1" / "spack.yaml").exists()
+
+    # Verify sibling environment references were rewritten to new location
+    env2_yaml = new_envs / "test-env-2" / "spack.yaml"
+    with open(env2_yaml, "r", encoding="utf-8") as f:
+        env2_data = syaml.load(f)
+
+    # Both relative and absolute includes should point to new location of test-env-1
+    expected_include = str(new_envs / "test-env-1" / "common.yaml")
+    assert env2_data["spack"]["include"][0] == expected_include  # was relative
+    assert env2_data["spack"]["include"][1] == expected_include  # was absolute
