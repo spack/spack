@@ -119,14 +119,20 @@ def test_namespace_policy_data_is_loaded_from_yaml():
     assert policy["mount_plan_scratch_paths"] == ["/run/lock", "/var", "/opt"]
     assert policy["device_symlinks"]["/dev/fd"] == "/proc/self/fd"
     assert "tar" in policy["stage_programs"]
-    assert "cat" in policy["stage_programs"]
-    assert "chmod" in policy["stage_programs"]
-    assert "expr" in policy["stage_programs"]
-    assert "ls" in policy["stage_programs"]
-    assert "make" in policy["stage_programs"]
-    assert "rm" in policy["stage_programs"]
-    assert "sed" in policy["stage_programs"]
-    assert "sort" in policy["stage_programs"]
+    assert "ar" in policy["binutils_programs"]
+    assert "objdump" in policy["binutils_programs"]
+    assert "cat" in policy["coreutils_file_programs"]
+    assert "chmod" in policy["coreutils_install_programs"]
+    assert "expr" in policy["coreutils_util_programs"]
+    assert "ls" in policy["coreutils_file_programs"]
+    assert "readlink" in policy["coreutils_file_programs"]
+    assert "gencat" in policy["build_utilities_programs"]
+    assert "make" in policy["build_utilities_programs"]
+    assert "rm" in policy["coreutils_install_programs"]
+    assert "sed" in policy["script_interpreter_programs"]
+    assert "sort" in policy["coreutils_util_programs"]
+    assert "cat" not in policy["stage_programs"]
+    assert "chmod" not in policy["stage_programs"]
     assert header_policy["version"] == 1
     assert header_policy["system_include_root"] == "/usr/include"
     assert header_policy["compiler_roots"] == ["/usr/lib/gcc", "/usr/lib64/gcc"]
@@ -415,6 +421,35 @@ def test_stage_tool_paths_include_helper_chain_and_git_exec_path(monkeypatch):
         build.ResolvedSandboxPath("gzip", "/tools/gzip"),
         build.ResolvedSandboxPath("sh", "/tools/sh"),
     ]
+
+
+def test_install_tool_paths_union_policy_program_groups(monkeypatch, tmp_path):
+    from spack.installer import build
+
+    groups = {
+        "binutils_programs": ["ar", "ld"],
+        "coreutils_install_programs": ["chmod", "rm"],
+        "coreutils_file_programs": ["cat", "ls"],
+        "coreutils_util_programs": ["expr", "sort"],
+        "build_utilities_programs": ["make", "git"],
+        "script_interpreter_programs": ["awk", "sed"],
+    }
+    tool_dir = tmp_path / "bin"
+    tool_dir.mkdir()
+    tools = {}
+    for program in (program for group in groups.values() for program in group):
+        tools[program] = tool_dir / program
+        tools[program].touch()
+    monkeypatch.setattr(
+        build, "which_string", lambda name: str(tools[name]) if name in tools else None
+    )
+    monkeypatch.setattr(build, "git_support_paths", lambda path: [])
+
+    selected = build.install_tool_paths(groups)
+
+    assert {entry.spelling for entry in selected} == {
+        program for group in groups.values() for program in group
+    }
 
 
 def test_tool_alias_symlink_paths_restore_selected_spelling(monkeypatch, tmp_path):
@@ -1172,6 +1207,7 @@ def test_prepare_namespace_activation_compiles_selected_production_policy(
     monkeypatch.setattr(
         build, "stage_tool_paths", lambda: [build.ResolvedSandboxPath(str(tool), str(tool))]
     )
+    monkeypatch.setattr(build, "install_tool_paths", lambda: [])
     monkeypatch.setattr(build, "tool_runtime_paths", lambda spec, tools: [])
     monkeypatch.setattr(build, "sys", SimpleNamespace(executable=str(python_alias), path=()))
     missing_header = headers / "a.out.h"
