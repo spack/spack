@@ -50,6 +50,58 @@ def _write_yaml(path: pathlib.Path, data: dict) -> None:
     path.write_text(stream.getvalue(), encoding="utf-8")
 
 
+@pytest.mark.parametrize("failure", ["allocation", "compilation"])
+def test_prepare_namespace_activation_releases_scratch_on_failure(monkeypatch, tmp_path, failure):
+    from spack.installer import build
+
+    spec = SimpleNamespace(prefix=tmp_path, traverse=lambda root=False: iter(()))
+    host_paths = SimpleNamespace(
+        hidden_roots=(),
+        replacement_roots=(),
+        host_runtime_paths=(),
+        device_paths=(),
+        read_only_paths=(),
+        writable_paths=(),
+    )
+    policy = spack.sandbox_namespaces.NamespaceFilesystemPolicy(())
+    cleaned = []
+    scratch = SimpleNamespace(path=str(tmp_path), cleanup=lambda: cleaned.append(True))
+    failure_error = OSError("scratch " + failure + " failed")
+
+    def allocate(*args, **kwargs):
+        if failure == "allocation":
+            raise failure_error
+        return scratch
+
+    def compile_plan(*args, **kwargs):
+        raise failure_error
+
+    monkeypatch.setattr(
+        build, "select_namespace_host_device_worker_paths", lambda *args, **kwargs: host_paths
+    )
+    monkeypatch.setattr(build, "compiler_driver_paths", lambda spec: [])
+    monkeypatch.setattr(build, "_selected_compilers", lambda spec: [])
+    monkeypatch.setattr(build, "stage_tool_paths", lambda: [])
+    monkeypatch.setattr(build, "install_tool_paths", lambda: [], raising=False)
+    monkeypatch.setattr(build, "tool_runtime_paths", lambda *args: [])
+    monkeypatch.setattr(build, "system_compiler_header_paths", lambda spec: ())
+    monkeypatch.setattr(build, "compiler_alias_symlink_paths", lambda spec: [])
+    monkeypatch.setattr(
+        build, "namespace_selected_filesystem_policy_from_inputs", lambda *args: policy
+    )
+    monkeypatch.setattr(
+        spack.sandbox_namespaces, "allocate_namespace_mount_plan_scratch", allocate
+    )
+    monkeypatch.setattr(build, "namespace_filesystem_policy_and_plan_from_inputs", compile_plan)
+
+    with pytest.raises(OSError) as error:
+        build.prepare_namespace_activation(
+            {}, spec, str(tmp_path), "", (), str(tmp_path), str(tmp_path / "cache")
+        )
+    assert error.value is failure_error
+    assert cleaned == ([] if failure == "allocation" else [True])
+
+
 def test_namespace_policy_data_is_loaded_from_yaml():
     if sys.platform != "linux":
         pytest.skip("Linux namespace filesystem policy")
@@ -959,6 +1011,148 @@ def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: 
         )
 
 
+def test_prepare_namespace_activation_compiles_selected_production_policy(
+    monkeypatch, tmp_path: pathlib.Path
+):
+    from spack.installer import build
+
+    host = tmp_path / "host"
+
+    def directory(path):
+        path.mkdir(parents=True)
+        return path
+
+    def file(path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+        return path
+
+    hidden_bin = directory(host / "usr" / "bin")
+    hidden_include = directory(host / "usr" / "include")
+    selected_hidden_runtime = directory(host / "usr" / "lib")
+    compiler = file(hidden_bin / "cc")
+    tool = file(hidden_bin / "tar")
+    headers = directory(hidden_include / "compiler")
+    runtime = file(host / "etc" / "passwd")
+    repository = directory(host / "repository")
+    repository_python = directory(host / "repository-python")
+    hidden_home = directory(host / "home")
+    dependency = directory(host / "store" / "dependency")
+    prefix = directory(host / "store" / "install")
+    stage = directory(host / "stage")
+    worker_root = directory(host / "worker")
+    user_cache = directory(hidden_home / ".spack")
+    fetch_cache = directory(user_cache / "source-cache")
+    misc_cache = directory(user_cache / "misc-cache")
+    log_path = file(host / "build.log")
+    jobserver = file(host / "jobserver")
+
+    spack_source_paths = tuple(
+        directory(path)
+        for path in (
+            host / "spack" / "bin",
+            host / "spack" / "lib",
+            host / "spack" / "share" / "spack",
+            host / "spack" / "etc" / "spack",
+        )
+    )
+    sbang = file(host / "store" / "bin" / "sbang")
+    spec = cast(
+        Any,
+        SimpleNamespace(
+            prefix=prefix,
+            traverse=lambda root=False: iter([SimpleNamespace(prefix=dependency, external=False)]),
+        ),
+    )
+    selected_host_paths = build.NamespaceHostDeviceWorkerPaths(
+        hidden_roots=(
+            str(hidden_bin),
+            str(hidden_include),
+            str(selected_hidden_runtime),
+            str(hidden_home),
+            str(pathlib.Path("/dev")),
+        ),
+        replacement_roots=(),
+        host_runtime_paths=(str(runtime), str(selected_hidden_runtime), os.devnull),
+        device_paths=(os.devnull,),
+        read_only_paths=(
+            str(repository),
+            str(repository_python),
+            str(user_cache),
+            str(misc_cache),
+        ),
+        writable_paths=(
+            str(stage),
+            str(prefix),
+            str(worker_root),
+            str(fetch_cache),
+            str(log_path),
+            str(jobserver),
+        ),
+    )
+
+    monkeypatch.setattr(
+        build,
+        "select_namespace_host_device_worker_paths",
+        lambda *args, **kwargs: selected_host_paths,
+    )
+    monkeypatch.setattr(
+        build,
+        "compiler_driver_paths",
+        lambda spec: [build.ResolvedSandboxPath(str(compiler), str(compiler))],
+    )
+    monkeypatch.setattr(build, "_selected_compilers", lambda spec: ())
+    monkeypatch.setattr(
+        build, "stage_tool_paths", lambda: [build.ResolvedSandboxPath(str(tool), str(tool))]
+    )
+    monkeypatch.setattr(build, "tool_runtime_paths", lambda spec, tools: [])
+    monkeypatch.setattr(build, "system_compiler_header_paths", lambda spec: (str(headers),))
+    monkeypatch.setattr(build, "compiler_alias_symlink_paths", lambda spec: ())
+    monkeypatch.setattr(
+        spack.repo,
+        "PATH",
+        SimpleNamespace(
+            repos=[SimpleNamespace(root=str(repository), python_path=str(repository_python))]
+        ),
+    )
+    monkeypatch.setattr(spack.paths, "bin_path", str(spack_source_paths[0]))
+    monkeypatch.setattr(spack.paths, "lib_path", str(spack_source_paths[1]))
+    monkeypatch.setattr(spack.paths, "share_path", str(spack_source_paths[2]))
+    monkeypatch.setattr(spack.paths, "etc_path", str(spack_source_paths[3]))
+    monkeypatch.setattr(spack.store.STORE, "unpadded_root", str(host / "store"))
+    monkeypatch.setattr(spack.store.STORE, "upstreams", None)
+
+    activation, scratch = build.prepare_namespace_activation(
+        {}, spec, str(stage), str(log_path), (str(jobserver),), str(worker_root), str(fetch_cache)
+    )
+    try:
+        read_only_targets = {mount.target for mount in activation.policy.read_only_mounts}
+        read_write_targets = {mount.target for mount in activation.policy.read_write_mounts}
+        assert read_only_targets == {str(compiler), str(tool), str(headers), str(user_cache)}
+        assert read_write_targets == {
+            os.devnull,
+            str(stage),
+            str(prefix),
+            str(worker_root),
+            str(fetch_cache),
+            str(log_path),
+            str(jobserver),
+        }
+        assert str(runtime) not in read_only_targets
+        assert str(selected_hidden_runtime) not in activation.policy.hidden_roots
+        assert str(selected_hidden_runtime) not in read_only_targets
+        assert str(misc_cache) not in read_only_targets
+        assert str(repository) not in read_only_targets
+        assert str(dependency) not in read_only_targets
+        assert str(sbang) not in read_only_targets
+        assert sbang.exists()
+        spack.sandbox_namespaces.build_namespace_mount_plan_from_policy(
+            activation.policy, activation.mount_plan_stage
+        )
+    finally:
+        scratch.cleanup()
+
+
 def test_complete_namespace_policy_rejects_missing_selected_path(
     monkeypatch, tmp_path: pathlib.Path
 ):
@@ -1023,18 +1217,16 @@ def test_complete_namespace_policy_rejects_missing_selected_path(
             selected_paths._replace(compiler_paths=(str(compiler_link),)),
         )
 
-    with pytest.raises(
-        spack.sandbox_namespaces.NamespaceSetupError,
-        match="classified path is not below a hidden root",
-    ):
-        uncovered_temporary = tmp_path / "uncovered-temporary"
-        uncovered_temporary.mkdir()
-        namespace_filesystem_policy_and_plan_from_inputs(
-            {},
-            spec,
-            str(existing),
-            str(tmp_path / "mount-plan"),
-            selected_paths._replace(
-                compiler_paths=(str(compiler),), temporary_paths=(str(uncovered_temporary),)
-            ),
-        )
+    uncovered_temporary = tmp_path / "uncovered-temporary"
+    uncovered_temporary.mkdir()
+    policy, plan = namespace_filesystem_policy_and_plan_from_inputs(
+        {},
+        spec,
+        str(existing),
+        str(tmp_path / "mount-plan"),
+        selected_paths._replace(
+            compiler_paths=(str(compiler),), temporary_paths=(str(uncovered_temporary),)
+        ),
+    )
+    assert str(uncovered_temporary) in {mount.target for mount in policy.read_write_mounts}
+    assert str(uncovered_temporary) in {mount.target for mount in plan.restoration_mounts}

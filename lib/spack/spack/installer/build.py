@@ -113,6 +113,13 @@ class NamespacePolicyInputPaths(NamedTuple):
     temporary_paths: Tuple[str, ...]
 
 
+class NamespaceActivation(NamedTuple):
+    """Immutable namespace policy data prepared by trusted installer setup."""
+
+    policy: spack.sandbox_namespaces.NamespaceFilesystemPolicy
+    mount_plan_stage: str
+
+
 class NamespaceHostDeviceWorkerPaths(NamedTuple):
     """Trusted host, device, and worker-state paths selected before policy compilation."""
 
@@ -1101,6 +1108,9 @@ class BuildLifecycle:
         self.stage_parent: Optional[str] = None
         self.stage_path: Optional[str] = None
         self.prefix_pivoter = PrefixPivoter(str(spec.prefix), keep_prefix=keep_prefix)
+        self.namespace_mount_plan_scratch: Optional[
+            spack.sandbox_namespaces.NamespaceMountPlanScratch
+        ] = None
         self._prepared = False
         self._finalized = False
 
@@ -1131,17 +1141,22 @@ class BuildLifecycle:
         """Finalize host paths after the child namespace and process are gone."""
         if not self._prepared or self._finalized:
             return
-        if exitcode == ExitCode.SUCCESS:
-            self.prefix_pivoter.finalize(None)
-        elif exitcode == ExitCode.BUILD_CACHE_MISS:
-            self.prefix_pivoter.finalize(BinaryCacheMiss)
-        else:
-            self.prefix_pivoter.finalize(RuntimeError)
-        if exitcode in (ExitCode.SUCCESS, ExitCode.BUILD_CACHE_MISS) and not self.keep_stage:
-            assert self.stage_parent is not None
-            self.stage[0].path = os.path.join(self.stage[0].stage_root, self.stage[0].name)
-            shutil.rmtree(self.stage_parent, ignore_errors=True)
-        self._finalized = True
+        try:
+            if exitcode == ExitCode.SUCCESS:
+                self.prefix_pivoter.finalize(None)
+            elif exitcode == ExitCode.BUILD_CACHE_MISS:
+                self.prefix_pivoter.finalize(BinaryCacheMiss)
+            else:
+                self.prefix_pivoter.finalize(RuntimeError)
+            if exitcode in (ExitCode.SUCCESS, ExitCode.BUILD_CACHE_MISS) and not self.keep_stage:
+                assert self.stage_parent is not None
+                self.stage[0].path = os.path.join(self.stage[0].stage_root, self.stage[0].name)
+                shutil.rmtree(self.stage_parent, ignore_errors=True)
+        finally:
+            if self.namespace_mount_plan_scratch is not None:
+                self.namespace_mount_plan_scratch.cleanup()
+                self.namespace_mount_plan_scratch = None
+            self._finalized = True
 
 
 class BuildRequest(NamedTuple):
@@ -1165,6 +1180,7 @@ class BuildRequest(NamedTuple):
     stop_at: Optional[str]
     stage_parent: Optional[str] = None
     stage_path: Optional[str] = None
+    namespace_activation: Optional[NamespaceActivation] = None
 
 
 def worker_function(
@@ -1245,6 +1261,7 @@ def worker_function(
         log_path,
         spec=spec,
         stage_path=request.stage_parent or request.stage_path or spec.package.stage.path,
+        namespace_activation=request.namespace_activation,
     )
 
     # Use closefd=False because of the connection objects. Use line buffering.
@@ -1411,18 +1428,15 @@ def namespace_filesystem_policy_from_inputs(
     )
 
 
-def namespace_filesystem_policy_and_plan_from_inputs(
+def namespace_selected_filesystem_policy_from_inputs(
     config: dict,
     spec: spack.spec.Spec,
     stage_path: str,
-    mount_plan_stage: str,
     selected_paths: NamespacePolicyInputPaths,
     replacement_mounts: Iterable[Tuple[str, str]] = (),
     generated_symlinks: Iterable[spack.sandbox_namespaces.NamespaceGeneratedSymlink] = (),
-) -> Tuple[
-    spack.sandbox_namespaces.NamespaceFilesystemPolicy, spack.sandbox_namespaces.NamespaceMountPlan
-]:
-    """Compile a trusted selected-tree policy without activating it.
+) -> spack.sandbox_namespaces.NamespaceFilesystemPolicy:
+    """Build a trusted selected-tree policy without activating it.
 
     Host compiler, tool, header, runtime, and scoped temporary paths are
     explicit because a concrete compiler prefix such as ``/usr`` is too broad
@@ -1513,14 +1527,28 @@ def namespace_filesystem_policy_and_plan_from_inputs(
             result.append(path)
         return tuple(result)
 
-    effective_read_only = minimal_paths(requested_read_only)
     effective_read_write = minimal_paths(requested_read_write)
+    effective_read_only = minimal_paths(
+        path
+        for path in requested_read_only
+        if not any(
+            path == writable or os.path.commonpath((path, writable)) == writable
+            for writable in effective_read_write
+        )
+    )
 
-    hidden_roots = minimal_paths(requested_hidden_roots)
+    hidden_roots = minimal_paths(
+        root for root in requested_hidden_roots if root not in effective_read_only
+    )
+    mounted_read_only = tuple(
+        path
+        for path in effective_read_only
+        if any(os.path.commonpath((root, path)) == root for root in hidden_roots)
+    )
 
     policy = spack.sandbox_namespaces.build_namespace_filesystem_policy(
         hidden_roots,
-        ((path, path) for path in effective_read_only),
+        ((path, path) for path in mounted_read_only),
         ((path, path) for path in effective_read_write),
         replacement_mounts=replacement_mounts,
         generated_symlinks=generated_symlinks,
@@ -1540,12 +1568,118 @@ def namespace_filesystem_policy_and_plan_from_inputs(
                     f"{access} path is not represented by the policy: {path}",
                 )
 
-    assert_covered(requested_read_only, policy.read_only_mounts, "read-only")
+    assert_covered(mounted_read_only, policy.read_only_mounts, "read-only")
     assert_covered(requested_read_write, policy.read_write_mounts, "read-write")
+    return policy
+
+
+def namespace_filesystem_policy_and_plan_from_inputs(
+    config: dict,
+    spec: spack.spec.Spec,
+    stage_path: str,
+    mount_plan_stage: str,
+    selected_paths: NamespacePolicyInputPaths,
+    replacement_mounts: Iterable[Tuple[str, str]] = (),
+    generated_symlinks: Iterable[spack.sandbox_namespaces.NamespaceGeneratedSymlink] = (),
+) -> Tuple[
+    spack.sandbox_namespaces.NamespaceFilesystemPolicy, spack.sandbox_namespaces.NamespaceMountPlan
+]:
+    """Compile and validate a trusted selected-tree policy without activating it."""
+    policy = namespace_selected_filesystem_policy_from_inputs(
+        config, spec, stage_path, selected_paths, replacement_mounts, generated_symlinks
+    )
     plan = spack.sandbox_namespaces.build_namespace_mount_plan_from_policy(
         policy, mount_plan_stage
     )
     return policy, plan
+
+
+def prepare_namespace_activation(
+    config: dict,
+    spec: spack.spec.Spec,
+    stage_path: str,
+    log_path: str,
+    jobserver_paths: Iterable[str],
+    worker_root: str,
+    fetch_cache_path: str,
+) -> Tuple[NamespaceActivation, spack.sandbox_namespaces.NamespaceMountPlanScratch]:
+    """Select, compile, and lease one build's complete namespace policy."""
+    host_paths = select_namespace_host_device_worker_paths(
+        config,
+        spec,
+        stage_path,
+        log_path=log_path,
+        jobserver_paths=jobserver_paths,
+        worker_root=worker_root,
+        fetch_cache_path=fetch_cache_path,
+    )
+
+    compiler_paths = []
+    for entry in compiler_driver_paths(spec):
+        compiler_paths.append(entry.source)
+    for _language, compiler_path, _compiler_spec in _selected_compilers(spec):
+        compiler_paths.append(compiler_path)
+        compiler_paths.extend(entry.source for entry in compiler_support_paths(compiler_path))
+
+    tool_entries = stage_tool_paths()
+    tool_paths = [entry.source for entry in tool_entries]
+    tool_paths.extend(tool_runtime_paths(spec, tool_entries))
+
+    runtime_paths = list(host_paths.host_runtime_paths)
+    runtime_paths.extend(host_paths.read_only_paths)
+    runtime_paths.append(os.path.realpath(sys.executable))
+    runtime_paths.extend(
+        os.path.realpath(path) for path in sys.path if os.path.isabs(path) and os.path.exists(path)
+    )
+
+    writable_paths = set(host_paths.writable_paths)
+    writable_paths.update(host_paths.device_paths)
+
+    selected_paths = NamespacePolicyInputPaths(
+        host_paths.hidden_roots,
+        tuple(sorted(set(path for path in compiler_paths if os.path.exists(path)))),
+        tuple(sorted(set(path for path in tool_paths if os.path.exists(path)))),
+        tuple(system_compiler_header_paths(spec)),
+        tuple(sorted(set(path for path in runtime_paths if os.path.exists(path)))),
+        tuple(sorted(writable_paths)),
+    )
+    replacement_mounts = tuple((worker_root, root) for root in host_paths.replacement_roots)
+    generated_symlinks = tuple(compiler_alias_symlink_paths(spec))
+    policy = namespace_selected_filesystem_policy_from_inputs(
+        config, spec, stage_path, selected_paths, replacement_mounts, generated_symlinks
+    )
+
+    scratch = None
+    last_error = None
+    for base_path in (tempfile.gettempdir(), spack.paths.var_path, "/run/lock", "/var", "/opt"):
+        try:
+            scratch = spack.sandbox_namespaces.allocate_namespace_mount_plan_scratch(
+                policy,
+                stage_path,
+                excluded_paths=(worker_root, str(spec.prefix)),
+                base_path=base_path,
+            )
+            break
+        except OSError as error:
+            last_error = error
+    if scratch is None:
+        assert last_error is not None
+        raise last_error
+
+    try:
+        policy, _plan = namespace_filesystem_policy_and_plan_from_inputs(
+            config,
+            spec,
+            stage_path,
+            scratch.path,
+            selected_paths,
+            replacement_mounts,
+            generated_symlinks,
+        )
+    except BaseException:
+        scratch.cleanup()
+        raise
+    return NamespaceActivation(policy, scratch.path), scratch
 
 
 def validate_namespace_policy_before_threads(
@@ -1587,6 +1721,7 @@ def _prepare_namespace_sandbox_before_threads(
     selected_paths: Optional[NamespacePolicyInputPaths] = None,
     replacement_mounts: Iterable[Tuple[str, str]] = (),
     generated_symlinks: Iterable[spack.sandbox_namespaces.NamespaceGeneratedSymlink] = (),
+    namespace_activation: Optional[NamespaceActivation] = None,
 ) -> Optional[spack.sandbox.Sandbox]:
     """Prepare the namespace view and drop mount authority before ``Tee``.
 
@@ -1597,7 +1732,13 @@ def _prepare_namespace_sandbox_before_threads(
     if not config.get("enable", False):
         return None
 
-    if mount_plan_stage is not None or selected_paths is not None:
+    if namespace_activation is not None:
+        if mount_plan_stage is not None or selected_paths is not None:
+            raise spack.error.InstallError("Namespace activation received duplicate policy inputs")
+        mount_plan_stage = namespace_activation.mount_plan_stage
+    if namespace_activation is None and (
+        mount_plan_stage is not None or selected_paths is not None
+    ):
         if mount_plan_stage is None or selected_paths is None:
             raise spack.error.InstallError(
                 "Namespace policy validation requires selected paths and mount-plan scratch"
@@ -1619,12 +1760,19 @@ def _prepare_namespace_sandbox_before_threads(
         raise spack.error.InstallError(f"Cannot enable build sandbox: {error}") from error
 
     if isinstance(sandbox, spack.sandbox_namespaces.NamespaceSandbox):
-        hidden_dirs = default_hide_as_empty_dirs(spec)
-        if not sandbox.prepare_mount_tree(hidden_dirs, stage_path):
-            spack.util.tty.warn(
-                "Build sandbox could not mask host directories; kernel namespaces unavailable"
+        if namespace_activation is not None:
+            prepared = sandbox.prepare_filesystem_policy(
+                namespace_activation.policy, namespace_activation.mount_plan_stage
             )
-        elif not sandbox.drop_mount_authority():
+            if not prepared:
+                raise spack.error.InstallError("Cannot apply selected namespace filesystem policy")
+        else:
+            prepared = sandbox.prepare_mount_tree(default_hide_as_empty_dirs(spec), stage_path)
+            if not prepared:
+                spack.util.tty.warn(
+                    "Build sandbox could not mask host directories; kernel namespaces unavailable"
+                )
+        if prepared and not sandbox.drop_mount_authority():
             raise spack.error.InstallError("Cannot drop namespace mount authority")
     return sandbox
 
@@ -1637,11 +1785,17 @@ def _start_tee_after_namespace(
     log_path: str,
     spec: Optional[spack.spec.Spec] = None,
     stage_path: Optional[str] = None,
+    namespace_activation: Optional[NamespaceActivation] = None,
 ):
     sandbox = None
     if config.get("enable", False):
         assert spec is not None and stage_path is not None
-        sandbox = _prepare_namespace_sandbox_before_threads(config, spec, stage_path)
+        if namespace_activation is None:
+            sandbox = _prepare_namespace_sandbox_before_threads(config, spec, stage_path)
+        else:
+            sandbox = _prepare_namespace_sandbox_before_threads(
+                config, spec, stage_path, namespace_activation=namespace_activation
+            )
     return Tee(tee_control_r, tee_control_w, parent, log_path), sandbox
 
 
@@ -1654,11 +1808,19 @@ def _start_worker_output(
     log_path: str,
     spec: Optional[spack.spec.Spec] = None,
     stage_path: Optional[str] = None,
+    namespace_activation: Optional[NamespaceActivation] = None,
 ):
     state_stream = make_state_stream(state)
     try:
         tee, sandbox = _start_tee_after_namespace(
-            config, tee_control_r, tee_control_w, parent, log_path, spec, stage_path
+            config,
+            tee_control_r,
+            tee_control_w,
+            parent,
+            log_path,
+            spec,
+            stage_path,
+            namespace_activation,
         )
     except BaseException:
         error = traceback.format_exc()
@@ -1689,6 +1851,12 @@ def _enable_sandbox(
             raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
     namespace_module = getattr(spack, "sandbox_namespaces", None)
+    if (
+        namespace_module is not None
+        and isinstance(sandbox, namespace_module.NamespaceSandbox)
+        and sandbox.filesystem_policy_active
+    ):
+        return
     # Direct callers prepare the namespace view here. The install worker hands
     # in an already-prepared instance after its mount authority was dropped.
     if (
