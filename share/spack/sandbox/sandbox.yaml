@@ -22,6 +22,11 @@ empty_directory_paths:
 - path: /usr/share/aclocal
   unless_external_specs:
   - autoconf
+external_prefix_read_paths:
+- include
+- lib
+- lib64
+- share
 replacement_roots:
 - /tmp
 - /var/tmp

@@ -35,6 +35,7 @@ import spack.builder
 import spack.caches
 import spack.compilers.config
 import spack.config
+import spack.directory_layout
 import spack.error
 import spack.hooks
 import spack.mirrors.mirror
@@ -175,6 +176,20 @@ def _validate_absolute_path_list(policy_name: str, path: str, policy: dict, key:
         raise _policy_error(policy_name, path, key, "expected absolute paths")
 
 
+def _validate_relative_path_list(policy_name: str, path: str, policy: dict, key: str) -> None:
+    _validate_string_list(policy_name, path, policy, key)
+    for entry in policy[key]:
+        normalized = entry.replace("\\", "/")
+        parts = normalized.split("/")
+        if (
+            not normalized
+            or os.path.isabs(entry)
+            or normalized != os.path.normpath(normalized)
+            or any(part in ("", ".", "..") for part in parts)
+        ):
+            raise _policy_error(policy_name, path, key, "expected safe relative paths")
+
+
 def _validate_empty_directory_paths(policy_name: str, path: str, policy: dict) -> None:
     value = policy.get("empty_directory_paths")
     if not isinstance(value, list):
@@ -242,6 +257,7 @@ def _load_sandbox_policy(path: str = SANDBOX_POLICY_PATH) -> dict:
         _validate_string_list(policy_name, path, policy, key)
     for key in ("hidden_roots", "replacement_roots", "tmpfs_paths", "mount_plan_scratch_paths"):
         _validate_absolute_path_list(policy_name, path, policy, key)
+    _validate_relative_path_list(policy_name, path, policy, "external_prefix_read_paths")
     _validate_empty_directory_paths(policy_name, path, policy)
 
     device_symlinks = policy.get("device_symlinks")
@@ -586,6 +602,38 @@ def _canonical_required_paths(paths: Iterable[str], category: str) -> Tuple[str,
     return tuple(sorted(result))
 
 
+def required_build_dependency_paths(spec: spack.spec.Spec) -> Tuple[str, ...]:
+    result = []
+    for dependency, _ in spack.build_environment.effective_deptypes(
+        spec, context=spack.build_environment.Context.BUILD
+    ):
+        if dependency is spec or dependency.external:
+            continue
+        path = str(dependency.prefix)
+        if not os.path.isdir(path):
+            raise spack.directory_layout.InconsistentInstallDirectoryError(
+                f"Install prefix {path} does not exist."
+            )
+        result.append(path)
+    return tuple(result)
+
+
+def external_prefix_read_paths(
+    spec: spack.spec.Spec, policy: Optional[dict] = None
+) -> Tuple[str, ...]:
+    """Return configured existing read-only paths below external package prefixes."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    candidates: List[str] = []
+    for dependency in spec.traverse(root=False):
+        prefix = getattr(dependency, "external_path", None)
+        if not prefix:
+            continue
+        candidates.extend(
+            os.path.join(prefix, relative) for relative in policy["external_prefix_read_paths"]
+        )
+    return _canonical_existing_paths(path for path in candidates if os.path.isdir(path))
+
+
 def select_namespace_host_device_worker_paths(
     config: dict,
     spec: spack.spec.Spec,
@@ -615,6 +663,8 @@ def select_namespace_host_device_worker_paths(
         + spack.util.ld_so_conf.host_dynamic_linker_search_paths()
     )
     device_paths = _canonical_existing_paths(policy["device_nodes"], character_devices=True)
+    dependency_paths = required_build_dependency_paths(spec)
+    external_paths = external_prefix_read_paths(spec, policy)
 
     repositories = tuple(spack.repo.PATH.repos)
     read_only_candidates = [
@@ -625,7 +675,8 @@ def select_namespace_host_device_worker_paths(
         spack.paths.user_config_path,
         spack.paths.system_config_path,
         *host_runtime_paths,
-        *[str(dep.prefix) for dep in spec.traverse(root=False) if not dep.external],
+        *dependency_paths,
+        *external_paths,
         *[repo.root for repo in repositories],
         *[repo.python_path for repo in repositories if getattr(repo, "python_path", None)],
         os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"),
@@ -1580,7 +1631,7 @@ def namespace_selected_filesystem_policy_from_inputs(
         spack.paths.etc_path,
     )
 
-    read_only_paths = [str(dep.prefix) for dep in spec.traverse(root=False) if not dep.external]
+    read_only_paths: List[str] = []
     for _, paths in required_categories[1:-1]:
         read_only_paths.extend(paths)
     read_only_paths.extend(repository_roots)
@@ -2108,6 +2159,8 @@ def _enable_sandbox(
         for dep in spec.traverse(root=False):
             if not dep.external:
                 sandbox.allow_read(dep.prefix)
+        for path in external_prefix_read_paths(spec):
+            sandbox.allow_read(path)
 
         sandbox.allow_write(stage_path)
         sandbox.allow_write(spec.prefix)
