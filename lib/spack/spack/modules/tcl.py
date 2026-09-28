@@ -8,6 +8,7 @@ import os
 import re
 from typing import Any, Dict, List, Tuple
 
+import spack.error
 import spack.projections as proj
 import spack.spec
 import spack.store
@@ -53,6 +54,17 @@ class TclConfiguration(BaseConfiguration):
 
     def join_path(self, parts: Tuple[str, ...]) -> str:
         return " ".join([self.manipulate_path(token) for token in parts])
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        # The hash variant tells installations apart once module names drop the hash, a
+        # hashed name with variants defined would tell them apart twice
+        if self.variants_mode != "none" and self._config.get("hash_length", 7) != 0:
+            raise spack.error.ConfigError(
+                f"'variants: {self.variants_mode}' in the tcl configuration of the "
+                f"'{self.name}' module set requires 'hash_length: 0', as module variants "
+                "replace the hash in module names"
+            )
 
     @property
     def variants_mode(self) -> str:

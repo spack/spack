@@ -320,7 +320,9 @@ and fails with an error listing the installed configurations otherwise:
 
 A plain ``module load git`` still works, since the default value of each module variant is the value of the variant in the installed spec.
 
-The ``hash`` variant is not a Spack variant: it holds the hash of the installation, and Spack defines it when the module name does not include the hash, which is the case with ``hash_length: 0`` and projections that do not include the hash.
+The ``hash`` variant is not a Spack variant: it holds the hash of the installation, and replaces the hash in module names.
+``variants: all`` thus requires ``hash_length: 0``, and Spack reports a configuration error otherwise.
+Spack defines the ``hash`` variant when the module name does not include the hash, which is the case with projections that do not include it.
 It keeps the ``depends-on`` lines of dependent module files bound to the exact installation they were built against, see :ref:`module-variants-folding`.
 
 The ``variants`` key under the ``tcl`` module configuration accepts the values:
