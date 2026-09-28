@@ -337,6 +337,11 @@ def refresh(module_type, specs, args):
             message += "\nfile: {0}\n".format(filename)
             for x in writer_list:
                 message += "spec: {0}\n".format(x.spec.format(spec_fmt_str))
+            if len({x.spec.version for x in writer_list}) > 1:
+                message += (
+                    "installations of different versions cannot share a module file, "
+                    "add {version} to the projection\n"
+                )
         tty.error(message)
         tty.error("Operation aborted")
         raise SystemExit(1)

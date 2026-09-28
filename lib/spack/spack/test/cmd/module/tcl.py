@@ -66,6 +66,7 @@ def test_refresh_name_clash_without_variants(install_mockery, module_configurati
     out = module("tcl", "refresh", "-y", "--delete-tree", fail_on_error=False)
     assert module.returncode == 1
     assert "Name clashes detected in module files" in out
+    assert "installations of different versions cannot share a module file" not in out
 
 
 def test_rm_fold_variants(install_mockery, module_configuration, modulefile_filenames):
@@ -103,6 +104,7 @@ def test_refresh_name_clash_across_versions(install_mockery, module_configuratio
     assert "Name clashes detected in module files" in out
     assert "mpileaks@=2.2" in out
     assert "mpileaks@=2.3" in out
+    assert "installations of different versions cannot share a module file" in out
 
 
 def test_uninstall_does_not_recreate_module(
