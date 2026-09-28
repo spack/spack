@@ -814,6 +814,8 @@ def test_complete_namespace_policy_from_installer_inputs(monkeypatch, tmp_path: 
         {}, spec, str(stage_path), str(mount_plan_stage), selected_paths
     )
 
+    assert policy.read_only_view
+    assert plan.read_only_view
     read_only_targets = {pathlib.Path(mount.target) for mount in policy.read_only_mounts}
     assert read_only_targets == {
         compiler.resolve(),
