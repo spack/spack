@@ -2108,7 +2108,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
 
     platform = spack.platforms.by_name(spec.platform)
     if "macho" in platform.binary_formats:
-        relocate.relocate_macho_binaries(binaries, prefix_to_prefix)
+        relocate.relocate_macho_binaries(binaries, prefix_to_prefix, rpath_transform)
     elif "elf" in platform.binary_formats:
         relocate.relocate_elf_binaries(binaries, prefix_to_prefix, rpath_transform)
 

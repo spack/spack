@@ -6,7 +6,7 @@ import os
 import pathlib
 import shutil
 import sys
-from typing import Dict
+from typing import Dict, List
 
 import pytest
 
@@ -24,12 +24,14 @@ import spack.mirrors.utils
 import spack.old_installer
 import spack.package_base
 import spack.patch
+import spack.relocate
 import spack.repo
 import spack.store
 import spack.util.elf
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
+from spack.build_environment import dso_suffix
 from spack.config import Configuration
 from spack.error import InstallError
 from spack.main import SpackCommand
@@ -1066,7 +1068,16 @@ def test_install_spliced_from_binary_relocates_to_external_replacement(
     assert str(original_spec["splice-h"].prefix) not in content
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="RPATH relocation is tested on ELF only")
+def _get_rpaths(path: str) -> List[str]:
+    """Returns the RPATH entries of an ELF or Mach-O binary, in order"""
+    if sys.platform == "darwin":
+        return spack.relocate._macholib_get_paths(path)[0]
+    return spack.util.elf.get_rpaths(path) or []
+
+
+@pytest.mark.skipif(
+    sys.platform not in ("linux", "darwin"), reason="RPATH relocation is tested on ELF and Mach-O"
+)
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
     mutable_mock_env_path, install_mockery, mock_fetch, temporary_mirror, installer_variant
@@ -1090,7 +1101,7 @@ def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
     spack.installer_dispatch.create_installer([replacement.package]).install()
     spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
 
-    rpaths = spack.util.elf.get_rpaths(os.path.join(spliced.prefix.bin, "app")) or []
+    rpaths = _get_rpaths(os.path.join(spliced.prefix.bin, "app"))
     assert sorted(rpaths) == sorted(
         [spliced.prefix.lib, spliced["rpath-mid"].prefix.lib, spliced["rpath-other"].prefix.lib]
     )
@@ -1115,7 +1126,7 @@ def _install_root_spliced_with_external_mid(
         replacement = spack.concretize.concretize_one("rpath-mid")
 
     spack.installer_dispatch.create_installer([original_spec.package]).install()
-    rpaths = spack.util.elf.get_rpaths(os.path.join(original_spec.prefix.bin, "app")) or []
+    rpaths = _get_rpaths(os.path.join(original_spec.prefix.bin, "app"))
     assert rpaths.index(original_spec["rpath-mid"].prefix.lib) < rpaths.index(
         original_spec["rpath-other"].prefix.lib
     )
@@ -1127,7 +1138,9 @@ def _install_root_spliced_with_external_mid(
     return spliced
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="RPATH relocation is tested on ELF only")
+@pytest.mark.skipif(
+    sys.platform not in ("linux", "darwin"), reason="RPATH relocation is tested on ELF and Mach-O"
+)
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_puts_external_rpaths_last(
     mutable_mock_env_path,
@@ -1147,13 +1160,13 @@ def test_install_spliced_from_binary_puts_external_rpaths_last(
     """
     external_libdir = tmp_path / "external-mid" / "lib" / "x86_64-linux-gnu"
     external_libdir.mkdir(parents=True)
-    (external_libdir / "librpath-mid.so").touch()
+    (external_libdir / f"librpath-mid.{dso_suffix}").touch()
 
     spliced = _install_root_spliced_with_external_mid(
         str(tmp_path / "external-mid"), mutable_config, temporary_mirror
     )
 
-    rpaths = spack.util.elf.get_rpaths(os.path.join(spliced.prefix.bin, "app"))
+    rpaths = _get_rpaths(os.path.join(spliced.prefix.bin, "app"))
     assert rpaths == [
         spliced.prefix.lib,
         spliced["rpath-other"].prefix.lib,
@@ -1162,7 +1175,9 @@ def test_install_spliced_from_binary_puts_external_rpaths_last(
     ]
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="RPATH relocation is tested on ELF only")
+@pytest.mark.skipif(
+    sys.platform not in ("linux", "darwin"), reason="RPATH relocation is tested on ELF and Mach-O"
+)
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_has_no_rpaths_for_system_externals(
     mutable_mock_env_path,
@@ -1177,5 +1192,5 @@ def test_install_spliced_from_binary_has_no_rpaths_for_system_externals(
     """
     spliced = _install_root_spliced_with_external_mid("/usr", mutable_config, temporary_mirror)
 
-    rpaths = spack.util.elf.get_rpaths(os.path.join(spliced.prefix.bin, "app"))
+    rpaths = _get_rpaths(os.path.join(spliced.prefix.bin, "app"))
     assert rpaths == [spliced.prefix.lib, spliced["rpath-other"].prefix.lib]

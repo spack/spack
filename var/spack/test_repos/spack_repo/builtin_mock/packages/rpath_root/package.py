@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack_repo.builtin_mock.build_systems.generic import Package
 from spack_repo.builtin_mock.packages.garply.package import c_compiler
 
@@ -25,11 +27,12 @@ class RpathRoot(Package):
         rpaths = [prefix.lib] + [
             d.prefix.lib for d in spec.traverse(root=False, order="topo", deptype="link")
         ]
+        if sys.platform == "darwin":
+            # Leave room in the header for relocation, like the compiler wrapper does
+            flags = ["-Wl,-headerpad_max_install_names"]
+        else:
+            flags = ["-Wl,--disable-new-dtags"]
         mkdirp(prefix.bin)
         c_compiler()(
-            "-Wl,--disable-new-dtags",
-            *(f"-Wl,-rpath,{rpath}" for rpath in rpaths),
-            "-o",
-            prefix.bin.app,
-            "main.c",
+            *flags, *(f"-Wl,-rpath,{rpath}" for rpath in rpaths), "-o", prefix.bin.app, "main.c"
         )
