@@ -350,12 +350,14 @@ Several installations in one module file
 """"""""""""""""""""""""""""""""""""""""
 
 With :ref:`module variants<module-variants>`, several installations of the same package version can share one Tcl module file, and ``module load`` selects one of them by its variants.
-Spack folds installations into one module file when both of these hold:
+Spack folds installations into one module file when all of these hold:
 
 * ``variants`` is set to ``all`` in the ``tcl`` configuration
-* the installations are :ref:`projected<modules-projections>` to the same module file name, which is the case with ``hash_length: 0`` and projections that do not include the hash
+* the installations are of the same package version
+* the installations are :ref:`projected<modules-projections>` to the same module file name, which is the case with projections that do not include the hash
 
-With ``variants: none``, installations projected to the same module file name are a name clash, and ``spack module tcl refresh`` reports an error.
+Installations projected to the same module file name are otherwise a name clash, and ``spack module tcl refresh`` reports an error.
+Installations of different versions never share a module file, so a projection that leaves the version out, such as ``{name}``, clashes as soon as several versions of a package are installed: the projection should include ``{version}``.
 
 For example, with two installations of ``zlib@1.3.2`` that differ only in the ``shared`` variant, and the following configuration:
 
