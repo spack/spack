@@ -1600,3 +1600,23 @@ class TestTcl:
         uninstall("-y", spec_b)
         assert os.path.exists(module_file)
         assert not os.path.lexists(default_link)
+
+    def test_fold_variants_single_install_command(
+        self, install_mockery, module_configuration, installer_variant
+    ):
+        """Test the module file written by the install hooks holds every installation folded
+        into it when they are installed by the same command.
+        """
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", spec_a, spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+
+        module_file = writer_cls.from_spec(concrete_a, "default").layout.filename
+        assert module_file == writer_cls.from_spec(concrete_b, "default").layout.filename
+        with open(module_file, encoding="utf-8") as f:
+            content = f.read()
+        assert concrete_a.dag_hash(7) in content
+        assert concrete_b.dag_hash(7) in content

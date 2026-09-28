@@ -37,5 +37,9 @@ def post_install(spec, explicit: bool):
     _for_each_enabled(spec, "write", explicit)
 
 
+def post_register(spec, explicit: bool):
+    _for_each_enabled(spec, "write_folded", explicit)
+
+
 def post_uninstall(spec):
     _for_each_enabled(spec, "remove_installation", add_op=False)

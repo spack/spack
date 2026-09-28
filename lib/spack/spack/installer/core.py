@@ -20,6 +20,7 @@ import spack.binary_distribution
 import spack.config
 import spack.deprecation
 import spack.error
+import spack.hooks
 import spack.mirrors.mirror
 import spack.report
 import spack.spec
@@ -648,6 +649,11 @@ class PackageInstaller:
             )
             and self._save_to_db(database_actions, retained_read_locks)
         ):
+            # The post_install hooks ran in build processes that could not see these specs in
+            # the database, nor the ones registered by this write
+            for action in database_actions:
+                if isinstance(action, AddSpecAction):
+                    spack.hooks.post_register(action.spec, action.explicit)
             database_actions.clear()
 
     def _save_to_db(
