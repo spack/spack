@@ -14,6 +14,7 @@ class FakeLibc:
     def __init__(self):
         self.unshare_calls = []
         self.mount_calls = []
+        self.mount_setattr_calls = []
 
     def unshare(self, flags):
         self.unshare_calls.append(flags.value)
@@ -21,6 +22,10 @@ class FakeLibc:
 
     def mount(self, source, target, filesystemtype, flags, data):
         self.mount_calls.append((source, target, flags.value))
+        return 0
+
+    def mount_setattr(self, directory_fd, path, flags, attributes, size):
+        self.mount_setattr_calls.append((directory_fd.value, path, flags.value))
         return 0
 
     def capset(self, header, capabilities):
