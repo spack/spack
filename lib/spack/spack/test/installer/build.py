@@ -4,10 +4,19 @@
 """Tests for the installer.build module (PrefixPivoter and prefix management)."""
 
 import pathlib
+from types import SimpleNamespace
 
 import pytest
 
-from spack.installer.build import OVERWRITE_GARBAGE_SUFFIX, BinaryCacheMiss, PrefixPivoter
+import spack.installer.build as build
+import spack.util.timer
+from spack.installer.base import ExitCode
+from spack.installer.build import (
+    OVERWRITE_GARBAGE_SUFFIX,
+    BinaryCacheMiss,
+    BuildLifecycle,
+    PrefixPivoter,
+)
 
 
 @pytest.fixture
@@ -47,6 +56,120 @@ class TestPrefixPivoter:
         assert not (existing_prefix / "old_file").exists()
         # Only the existing_prefix directory should remain
         assert len(list(tmp_path.iterdir())) == 1
+
+
+class TestBuildLifecycle:
+    def _spec(self, tmp_path: pathlib.Path, prefix: pathlib.Path):
+        stage_parent = tmp_path / "stage"
+        stage = SimpleNamespace(name="stage", path=str(stage_parent), stage_root=str(tmp_path))
+
+        class Composite:
+            def __iter__(self):
+                return iter([stage])
+
+            def __getitem__(self, index):
+                return [stage][index]
+
+            @property
+            def path(self):
+                return stage.path
+
+        composite = Composite()
+        package = SimpleNamespace(stage=composite)
+        return SimpleNamespace(prefix=str(prefix), package=package), stage
+
+    @pytest.mark.parametrize("stage_parent", [None, "private-parent"])
+    def test_worker_restores_supervisor_stage_paths(self, tmp_path, monkeypatch, stage_parent):
+        stages = [
+            SimpleNamespace(name="source", path=str(tmp_path / "source")),
+            SimpleNamespace(name="resource", path=str(tmp_path / "resource")),
+        ]
+        spec = SimpleNamespace(external=False, package=SimpleNamespace(stage=stages))
+        parent = str(tmp_path / stage_parent) if stage_parent else None
+        request = SimpleNamespace(
+            spec=spec,
+            explicit=True,
+            install_policy="source_only",
+            run_tests=False,
+            stage_parent=parent,
+        )
+
+        def check_paths():
+            expected_parent = pathlib.Path(parent) if parent else tmp_path
+            assert [stage.path for stage in stages] == [
+                str(expected_parent / stage.name) for stage in stages
+            ]
+            raise RuntimeError("worker paths checked")
+
+        monkeypatch.setattr(spack.util.timer, "Timer", check_paths)
+        with pytest.raises(RuntimeError, match="worker paths checked"):
+            build._install(request, None, None)
+
+    def test_private_parent_does_not_repeat_long_stage_name(self, tmp_path):
+        prefix = tmp_path / "prefix"
+        spec, stage = self._spec(tmp_path, prefix)
+        stage.name = "spack-stage-trivial-install-test-package-1.0-" + "a" * 32
+        lifecycle = BuildLifecycle(spec, keep_stage=True)
+
+        lifecycle.prepare()
+        try:
+            parent = pathlib.Path(lifecycle.stage_parent)
+            assert parent.name.startswith(".spack-stage-")
+            assert len(parent.name) <= len(".spack-stage-") + 8
+            assert pathlib.Path(lifecycle.stage_path) == parent / stage.name
+        finally:
+            lifecycle.finalize(ExitCode.SUCCESS)
+            pathlib.Path(lifecycle.stage_parent).rmdir()
+
+    def test_success_removes_stage_parent_after_child_work(self, tmp_path: pathlib.Path):
+        prefix = tmp_path / "prefix"
+        spec, stage = self._spec(tmp_path, prefix)
+        lifecycle = BuildLifecycle(spec, keep_stage=False)
+
+        lifecycle.prepare(create_prefix_target=True)
+        assert lifecycle.stage_path is not None
+        assert lifecycle.stage_parent is not None
+        pathlib.Path(lifecycle.stage_path).mkdir()
+        (pathlib.Path(lifecycle.stage_path) / "config.log").write_text("ok")
+        lifecycle.finalize(ExitCode.SUCCESS)
+
+        assert not pathlib.Path(lifecycle.stage_parent).exists()
+        assert prefix.exists()
+        assert stage.path == str(tmp_path / "stage")
+
+    def test_failure_retains_stage_and_restores_prefix(self, tmp_path: pathlib.Path):
+        prefix = tmp_path / "prefix"
+        prefix.mkdir()
+        (prefix / "old_file").write_text("old")
+        spec, _ = self._spec(tmp_path, prefix)
+        lifecycle = BuildLifecycle(spec, keep_stage=False)
+
+        lifecycle.prepare(create_prefix_target=True)
+        assert lifecycle.stage_path is not None
+        pathlib.Path(lifecycle.stage_path).mkdir()
+        (pathlib.Path(lifecycle.stage_path) / "spack-src").mkdir()
+        pathlib.Path(prefix, "partial").write_text("partial", encoding="utf-8")
+        lifecycle.finalize(ExitCode.BUILD_ERROR)
+
+        assert pathlib.Path(lifecycle.stage_path, "spack-src").exists()
+        assert (prefix / "old_file").read_text() == "old"
+        assert not (prefix / "partial").exists()
+
+    def test_success_keeps_stage_when_requested(self, tmp_path: pathlib.Path):
+        prefix = tmp_path / "prefix"
+        spec, _ = self._spec(tmp_path, prefix)
+        lifecycle = BuildLifecycle(spec, keep_stage=True)
+
+        lifecycle.prepare()
+        assert lifecycle.stage_path is not None
+        assert lifecycle.stage_parent is not None
+        pathlib.Path(lifecycle.stage_path).mkdir()
+        lifecycle.finalize(ExitCode.SUCCESS)
+
+        assert pathlib.Path(lifecycle.stage_parent).is_dir()
+        assert pathlib.Path(lifecycle.stage_path).is_dir()
+        pathlib.Path(lifecycle.stage_path).rmdir()
+        pathlib.Path(lifecycle.stage_parent).rmdir()
 
     def test_existing_prefix_failure_restores_original_prefix(
         self, tmp_path: pathlib.Path, existing_prefix: pathlib.Path
