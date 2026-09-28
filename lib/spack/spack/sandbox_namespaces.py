@@ -6,10 +6,9 @@
 Linux user and mount namespace sandbox backend.
 
 Provides a capability probe for unprivileged namespaces, helpers to hide host
-directories with read-only empty tmpfs sources, and a transitional sandbox
-backend that combines the namespace with Landlock. The completed namespace
-policy will use hidden trees and bind-mounted allowlists by default; Landlock
-inside that namespace will be optional.
+directories with read-only empty tmpfs sources, and a namespace-native sandbox
+backend. The completed namespace policy uses hidden trees and bind-mounted
+allowlists by default; Landlock is used only by the separate fallback backend.
 """
 
 import ctypes
@@ -540,7 +539,25 @@ def build_namespace_filesystem_policy(
     ]
     classified_paths.extend((path.path, "generated") for path in canonical_generated)
     classified_paths.extend((path.path, "generated symlink") for path in canonical_symlinks)
-    _validate_non_overlapping_paths(classified_paths, "validate namespace policy classified paths")
+    sorted_classified_paths = sorted(classified_paths, key=lambda item: item[0])
+    for index, (path, category) in enumerate(sorted_classified_paths):
+        for previous_path, previous_category in sorted_classified_paths[:index]:
+            if path == previous_path:
+                _mount_plan_error(
+                    "validate namespace policy classified paths",
+                    f"duplicate or access-conflicting {category} and "
+                    f"{previous_category} path: {path}",
+                )
+            if _path_contains(previous_path, path) and not (
+                read_only_view
+                and previous_category == NamespaceMountAccess.READ_ONLY.value
+                and category == NamespaceMountAccess.READ_WRITE.value
+            ):
+                _mount_plan_error(
+                    "validate namespace policy classified paths",
+                    f"overlapping {previous_category} and {category} paths: "
+                    f"{previous_path} and {path}",
+                )
     _validate_non_overlapping_paths(
         ((mount.target, "replacement") for mount in canonical_replacement),
         "validate namespace policy replacement mounts",
@@ -654,15 +671,21 @@ def build_namespace_mount_plan_from_policy(
             _mount_plan_error(
                 "compile namespace policy", f"hidden root overlaps mount-plan scratch: {root}"
             )
-    classified_paths = [mount.target for mount in policy.read_only_mounts]
-    classified_paths.extend(mount.target for mount in policy.read_write_mounts)
-    classified_paths.extend(path.path for path in policy.generated_paths)
-    classified_paths.extend(path.path for path in policy.generated_symlinks)
-    for path in classified_paths:
+    hidden_read_only_paths = [mount.target for mount in policy.read_only_mounts]
+    hidden_generated_paths = [path.path for path in policy.generated_paths]
+    hidden_generated_paths.extend(path.path for path in policy.generated_symlinks)
+    for path in hidden_read_only_paths + hidden_generated_paths:
         if not any(_path_contains(root, path) for root in policy.hidden_roots):
             _mount_plan_error(
                 "compile namespace policy", f"classified path is not below a hidden root: {path}"
             )
+    if not policy.read_only_view:
+        for mount in policy.read_write_mounts:
+            if not any(_path_contains(root, mount.target) for root in policy.hidden_roots):
+                _mount_plan_error(
+                    "compile namespace policy",
+                    f"classified path is not below a hidden root: {mount.target}",
+                )
     mounts = policy.read_only_mounts + policy.read_write_mounts
     plan = _build_namespace_mount_plan(
         policy.hidden_roots,
@@ -962,10 +985,15 @@ def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> 
             os.makedirs(mount.source)
         for restoration in plan.restoration_mounts:
             mask = next(
-                mount
-                for mount in plan.mounts
-                if os.path.commonpath((mount.target, restoration.target)) == mount.target
+                (
+                    mount
+                    for mount in plan.mounts
+                    if os.path.commonpath((mount.target, restoration.target)) == mount.target
+                ),
+                None,
             )
+            if mask is None:
+                continue
             endpoint = os.path.join(mask.source, os.path.relpath(restoration.target, mask.target))
             if restoration.source_is_directory:
                 os.makedirs(endpoint, exist_ok=True)
@@ -1353,16 +1381,16 @@ def hide_directories_as_empty(
 
 
 class NamespaceSandbox(Sandbox):
-    """Sandbox backend that combines Linux user/mount namespaces with Landlock.
+    """Sandbox backend that applies Linux user/mount namespace filesystem policy.
 
     On Linux, when unprivileged user and mount namespaces are available, this
     backend is preferred over the Landlock-only backend because it can hide host
     filesystem content via empty mounts and bind mounts, rather than only
     denying access through Landlock rules.
 
-    The class delegates ``allow_read`` / ``allow_write`` to an internal
-    ``LandlockSandbox`` so that Landlock's deny rules operate on the
-    namespace-restricted mount tree.
+    The legacy narrow mount path may still delegate ``allow_read`` /
+    ``allow_write`` to an internal ``LandlockSandbox``. A complete selected
+    filesystem policy does not construct or apply Landlock.
     """
 
     def __init__(
@@ -1377,6 +1405,7 @@ class NamespaceSandbox(Sandbox):
         self._stage_path: Optional[str] = None
         self._granted_dirs: List[Path] = []
         self._mount_authority_dropped = False
+        self._filesystem_policy_active = False
         # Create the internal Landlock sandbox lazily unless selection already
         # preflighted and supplied it.
         self._landlock = landlock
@@ -1391,6 +1420,11 @@ class NamespaceSandbox(Sandbox):
     def namespace_ready(self) -> bool:
         """Return whether the private namespace and mount tree are active."""
         return self._namespace_ready
+
+    @property
+    def filesystem_policy_active(self) -> bool:
+        """Return whether the complete selected filesystem policy is active."""
+        return self._filesystem_policy_active
 
     def _ensure_landlock(self) -> Any:
         """Create the internal LandlockSandbox on first use."""
@@ -1440,6 +1474,7 @@ class NamespaceSandbox(Sandbox):
             return False
         libc = self.libc or ctypes.CDLL(None, use_errno=True)
         self._namespace_ready = _apply_namespace_mount_plan(plan, libc)
+        self._filesystem_policy_active = self._namespace_ready
         return self._namespace_ready
 
     def drop_mount_authority(self) -> bool:
@@ -1497,11 +1532,13 @@ class NamespaceSandbox(Sandbox):
         self._ensure_landlock()._allow_write(original, resolved)  # type: ignore[attr-defined]
 
     def apply(self, block_network: bool = False) -> None:
-        """Apply Landlock on top of the namespace-restricted mount tree.
+        """Apply legacy Landlock rules when no complete policy is active.
 
         If no rules were granted, an empty deny-by-default Landlock ruleset is
         still applied so the namespace is not left unconstrained.
         """
+        if self._filesystem_policy_active:
+            return
         self._ensure_landlock().apply(block_network=block_network)
 
     def cleanup(self) -> None:

@@ -302,6 +302,28 @@ def test_filesystem_policy_rejects_interleaved_classified_overlap(tmp_path):
         )
 
 
+def test_read_only_view_allows_writable_descendant(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    (hidden / "cache").mkdir()
+    read_only_source = tmp_path / "read-only-source"
+    writable_source = read_only_source / "writable"
+    writable_source.mkdir(parents=True)
+
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        read_only_mounts=[(str(read_only_source), str(hidden / "cache"))],
+        read_write_mounts=[(str(writable_source), str(hidden / "cache" / "writable"))],
+        read_only_view=True,
+    )
+    plan = ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "stage"))
+
+    assert [mount.target for mount in plan.restoration_mounts] == [
+        str(hidden / "cache"),
+        str(hidden / "cache" / "writable"),
+    ]
+
+
 def test_filesystem_policy_rejects_wrong_access_category(tmp_path):
     hidden = tmp_path / "hidden"
     hidden.mkdir()
@@ -835,6 +857,36 @@ def test_read_only_view_restores_explicit_writable_mounts(tmp_path):
     assert (0, ns.MOUNT_ATTR_RDONLY) in libc.mount_setattr_attributes
 
 
+def test_read_only_view_restores_writable_mount_outside_hidden_roots(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    writable = tmp_path / "writable"
+    writable.mkdir()
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)], read_write_mounts=[(str(writable), str(writable))], read_only_view=True
+    )
+
+    plan = ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "stage"))
+    libc = FakeLibc()
+    assert ns._apply_namespace_mount_plan(plan, libc)
+    assert plan.restoration_mounts[-1].target == str(writable)
+    assert libc.mount_setattr_calls[0] == (ns.AT_FDCWD, b"/", ns.AT_RECURSIVE)
+    assert (0, ns.MOUNT_ATTR_RDONLY) in libc.mount_setattr_attributes
+
+
+def test_writable_mount_outside_hidden_roots_requires_read_only_view(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    writable = tmp_path / "writable"
+    writable.mkdir()
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)], read_write_mounts=[(str(writable), str(writable))]
+    )
+
+    with pytest.raises(ns.NamespaceSetupError, match="not below a hidden root"):
+        ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "stage"))
+
+
 def test_mount_plan_validation_precedes_namespace_entry(namespace_setup, tmp_path):
     libc, _ = namespace_setup
     parent = tmp_path / "parent"
@@ -1291,6 +1343,8 @@ def test_live_read_only_view_rejects_passthrough_writes(tmp_path):
     passthrough.mkdir()
     writable_source = tmp_path / "writable-source"
     writable_source.mkdir()
+    writable_passthrough = tmp_path / "writable-passthrough"
+    writable_passthrough.mkdir()
     hidden = tmp_path / "hidden"
     hidden.mkdir()
     stage = tmp_path / "stage"
@@ -1304,11 +1358,15 @@ from spack.sandbox_namespaces import NamespaceSandbox, build_namespace_filesyste
 
 passthrough = Path(sys.argv[1])
 writable_source = Path(sys.argv[2])
-hidden = Path(sys.argv[3])
-stage = Path(sys.argv[4])
+writable_passthrough = Path(sys.argv[3])
+hidden = Path(sys.argv[4])
+stage = Path(sys.argv[5])
 policy = build_namespace_filesystem_policy(
     [str(hidden)],
-    read_write_mounts=[(str(writable_source), str(hidden / "writable"))],
+    read_write_mounts=[
+        (str(writable_source), str(hidden / "writable")),
+        (str(writable_passthrough), str(writable_passthrough)),
+    ],
     read_only_view=True,
 )
 sandbox = NamespaceSandbox()
@@ -1321,6 +1379,7 @@ except OSError as error:
 else:
     raise AssertionError("inherited passthrough tree remained writable")
 (hidden / "writable" / "must-work").write_text("writable")
+(writable_passthrough / "must-also-work").write_text("writable passthrough")
 os._exit(0)
 """
     result = subprocess.run(
@@ -1330,6 +1389,7 @@ os._exit(0)
             code,
             str(passthrough),
             str(writable_source),
+            str(writable_passthrough),
             str(hidden),
             str(stage),
         ],
@@ -1342,6 +1402,7 @@ os._exit(0)
     assert result.returncode == 0, result.stderr
     assert not (passthrough / "must-fail").exists()
     assert (writable_source / "must-work").read_text() == "writable"
+    assert (writable_passthrough / "must-also-work").read_text() == "writable passthrough"
     assert not list(hidden.iterdir())
 
 
@@ -1526,6 +1587,49 @@ def test_namespace_selection_does_not_preflight_landlock(monkeypatch):
     sandbox = spack.sandbox.get_sandbox()
     assert isinstance(sandbox, ns.NamespaceSandbox)
     assert sandbox._landlock is None
+
+
+def test_active_namespace_policy_skips_landlock(monkeypatch, tmp_path):
+    calls = []
+
+    class RecordingSandbox(ns.NamespaceSandbox):
+        def prepare_filesystem_policy(self, policy, mount_plan_stage):
+            calls.append(("prepare policy", policy, mount_plan_stage))
+            self._filesystem_policy_active = True
+            return True
+
+        def drop_mount_authority(self):
+            calls.append(("drop mount authority",))
+            return True
+
+        def allow_read(self, path):
+            calls.append(("read", path))
+
+        def allow_write(self, path):
+            calls.append(("write", path))
+
+        def apply(self, block_network=False):
+            calls.append(("apply", block_network))
+
+    sandbox = RecordingSandbox()
+    monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: sandbox)
+    monkeypatch.setattr(
+        ns, "freeze_namespace_sandbox_capability", lambda: ns.NamespaceCapability(True, None, None)
+    )
+    spec = SimpleNamespace(traverse=lambda **kwargs: [], prefix=tmp_path / "prefix")
+    activation = build.NamespaceActivation(object(), str(tmp_path / "mount-plan"))
+
+    assert (
+        build._prepare_namespace_sandbox_before_threads(
+            {"enable": True}, spec, str(tmp_path), namespace_activation=activation
+        )
+        is sandbox
+    )
+    build._enable_sandbox({"enable": True}, spec, str(tmp_path), sandbox=sandbox)
+    assert calls == [
+        ("prepare policy", activation.policy, activation.mount_plan_stage),
+        ("drop mount authority",),
+    ]
 
 
 def test_namespace_selection_uses_constrained_landlock_fallback(monkeypatch):

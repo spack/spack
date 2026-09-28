@@ -17,6 +17,7 @@ from spack.installer.ui import ChangeJobs, SetEcho
 from spack.store import Store
 from spack.test.installer.conftest import (
     DrivingUI,
+    FakeBuild,
     RecordingUI,
     Script,
     ScriptedLauncher,
@@ -142,6 +143,47 @@ def test_build_output_streams_to_frontend(temporary_store, mock_packages):
     assert received == payload
     assert ("state_changed", dag_hash, "staging") in ui.events
     assert ("state_changed", dag_hash, "finished") in ui.events
+
+
+def test_namespace_activation_uses_fetch_cache(
+    temporary_store, mock_packages, mutable_config, monkeypatch, tmp_path
+):
+    import spack.installer.core as core
+    import spack.sandbox_namespaces as ns
+
+    fetch_cache = tmp_path / "fetch-cache"
+    fetch_cache.mkdir()
+    misc_cache = tmp_path / "misc-cache"
+    misc_cache.mkdir()
+    mutable_config.set("config:sandbox:enable", True)
+    mutable_config.set("config:source_cache", str(fetch_cache))
+    mutable_config.set("config:misc_cache", str(misc_cache))
+    monkeypatch.setattr(
+        ns,
+        "namespace_sandbox_decision",
+        lambda: ns.NamespaceSandboxDecision(
+            ns.NamespaceSandboxBackend.NAMESPACE, ns.NamespaceCapability(True, None, None)
+        ),
+    )
+    selected_fetch_caches = []
+
+    class Scratch:
+        def attach_worker(self, pid):
+            pass
+
+        def cleanup(self):
+            pass
+
+    def prepare(*args):
+        selected_fetch_caches.append(args[-1])
+        return object(), Scratch()
+
+    monkeypatch.setattr(core, "prepare_namespace_activation", prepare)
+    monkeypatch.setattr(FakeBuild, "pid", 1234)
+    spec = _make_concrete("trivial-install-test-package")
+    _install(ScriptedLauncher({spec.name: Script()}), spec)
+
+    assert selected_fetch_caches == [str(fetch_cache)]
 
 
 def test_package_installer_with_injected_ui(temporary_store, mock_packages):
