@@ -1026,7 +1026,6 @@ def test_install_gate_reports_only_the_labels_not_allowed(
 @pytest.mark.regression("50560")
 def test_install_spliced_from_binary_relocates_to_external_replacement(
     mutable_mock_env_path,
-    temporary_store: Store,
     install_mockery,
     mock_fetch,
     temporary_mirror,
@@ -1070,12 +1069,7 @@ def test_install_spliced_from_binary_relocates_to_external_replacement(
 @pytest.mark.skipif(sys.platform != "linux", reason="RPATH relocation is tested on ELF only")
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
-    mutable_mock_env_path,
-    temporary_store: Store,
-    install_mockery,
-    mock_fetch,
-    temporary_mirror,
-    installer_variant,
+    mutable_mock_env_path, install_mockery, mock_fetch, temporary_mirror, installer_variant
 ):
     """Tests that installing a spliced spec from a binary cache drops the RPATH entries of nodes
     that are not in the spliced DAG.
@@ -1137,7 +1131,6 @@ def _install_root_spliced_with_external_mid(
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_puts_external_rpaths_last(
     mutable_mock_env_path,
-    temporary_store: Store,
     install_mockery,
     mock_fetch,
     temporary_mirror,
@@ -1173,7 +1166,6 @@ def test_install_spliced_from_binary_puts_external_rpaths_last(
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_has_no_rpaths_for_system_externals(
     mutable_mock_env_path,
-    temporary_store: Store,
     install_mockery,
     mock_fetch,
     temporary_mirror,

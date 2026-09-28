@@ -1946,7 +1946,7 @@ def _containing_prefix(path: bytes, prefixes: Container[bytes]) -> Optional[byte
     """Return the element of ``prefixes`` that is ``path`` or one of its parent directories"""
     while path not in prefixes:
         parent = os.path.dirname(path)
-        if parent == path:
+        if parent == path:  # path is / or windows equivalent
             return None
         path = parent
     return path
