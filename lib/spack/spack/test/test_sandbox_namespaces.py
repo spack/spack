@@ -7,19 +7,23 @@
 import errno
 import io
 import os
+import select
 import shutil
 import subprocess
 import sys
 import tarfile
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
+from typing import cast
 
 import pytest
 
+import spack.build_environment
 import spack.error
 import spack.installer.build as build
 import spack.sandbox
 import spack.sandbox_namespaces as ns
+import spack.spec
 import spack.util.tty
 
 
@@ -389,6 +393,88 @@ def test_filesystem_policy_compiles_generated_paths(tmp_path):
     assert (stage / "spack-empty-host-dirs/0/generated-file").is_file()
 
 
+def test_filesystem_policy_compiles_private_shared_memory(tmp_path):
+    hidden = tmp_path / "dev"
+    hidden.mkdir()
+    shared_memory = str(hidden / "shm")
+    descriptor_link = ns.NamespaceGeneratedSymlink(str(hidden / "fd"), "/proc/self/fd")
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        generated_symlinks=[descriptor_link],
+        tmpfs_paths=[shared_memory],
+        read_only_view=True,
+    )
+    plan = ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "scratch"))
+    assert plan.tmpfs_paths == (shared_memory,)
+    assert plan.generated_symlinks == (descriptor_link,)
+    libc = FakeLibc()
+    assert ns._apply_namespace_mount_plan(plan, libc)
+    assert os.readlink(tmp_path / "scratch/spack-empty-host-dirs/0/fd") == "/proc/self/fd"
+    assert (tmp_path / "scratch/spack-empty-host-dirs/0/shm").is_dir()
+    assert libc.mount_calls[-1] == (
+        b"tmpfs",
+        os.fsencode(shared_memory),
+        ns.MS_NOSUID | ns.MS_NODEV,
+    )
+    assert libc.mount_setattr_calls[0] == (ns.AT_FDCWD, b"/", ns.AT_RECURSIVE)
+
+
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        "relative",
+        "dotdot",
+        "outside",
+        "root",
+        "duplicate",
+        "nested",
+        "restored",
+        "generated",
+        "symlink",
+        "replacement",
+    ],
+)
+def test_private_tmpfs_policy_rejects_conflicts(tmp_path, invalid):
+    hidden = tmp_path / "dev"
+    hidden.mkdir()
+    shared_memory = str(hidden / "shm")
+    options = {}
+    paths = [shared_memory]
+    if invalid == "relative":
+        paths = ["dev/shm"]
+    elif invalid == "dotdot":
+        paths = [str(hidden / ".." / "shm")]
+    elif invalid == "outside":
+        paths = [str(tmp_path / "outside")]
+    elif invalid == "root":
+        paths = [str(hidden)]
+    elif invalid == "duplicate":
+        paths *= 2
+    elif invalid == "nested":
+        paths.append(shared_memory + "/child")
+    elif invalid == "restored":
+        options["read_write_mounts"] = [(str(tmp_path), shared_memory)]
+    elif invalid == "generated":
+        options["generated_paths"] = [ns.NamespaceGeneratedPath(shared_memory, True)]
+    elif invalid == "symlink":
+        options["generated_symlinks"] = [
+            ns.NamespaceGeneratedSymlink(shared_memory, "/proc/self/fd")
+        ]
+    elif invalid == "replacement":
+        options["replacement_mounts"] = [(str(tmp_path), str(hidden))]
+    with pytest.raises(ns.NamespaceSetupError):
+        ns.build_namespace_filesystem_policy([str(hidden)], tmpfs_paths=paths, **options)
+
+
+def test_private_tmpfs_handbuilt_policy_revalidated_before_entry(tmp_path, monkeypatch):
+    hidden = tmp_path / "dev"
+    hidden.mkdir()
+    policy = ns.NamespaceFilesystemPolicy((str(hidden),), tmpfs_paths=("relative",))
+    monkeypatch.setattr(ns, "_enter_user_mount_namespace", lambda *args: pytest.fail("entered"))
+    with pytest.raises(ns.NamespaceSetupError, match="invalid tmpfs path"):
+        ns.NamespaceSandbox().prepare_filesystem_policy(policy, str(tmp_path / "scratch"))
+
+
 def test_filesystem_policy_compiles_replacement_and_generated_alias(tmp_path):
     hidden = tmp_path / "hidden"
     hidden.mkdir()
@@ -407,9 +493,15 @@ def test_filesystem_policy_compiles_replacement_and_generated_alias(tmp_path):
 
     plan = ns.build_namespace_mount_plan_from_policy(policy, str(stage))
 
+    preserved_source = str(stage / "spack-preserved-host-paths" / "replacement-0")
+    assert plan.preserved_mounts == (
+        ns.NamespacePreservedMount(
+            str(replacement), preserved_source, True, ns.NamespaceMountAccess.READ_WRITE
+        ),
+    )
     assert plan.replacement_mounts == (
         ns.NamespacePreservedMount(
-            str(replacement), str(hidden), True, ns.NamespaceMountAccess.READ_WRITE
+            preserved_source, str(hidden), True, ns.NamespaceMountAccess.READ_WRITE
         ),
     )
     assert plan.generated_symlinks == (
@@ -1589,18 +1681,80 @@ def test_namespace_selection_does_not_preflight_landlock(monkeypatch):
     assert sandbox._landlock is None
 
 
-def test_active_namespace_policy_skips_landlock(monkeypatch, tmp_path):
+@pytest.mark.parametrize("failure", ["symlink", "tmpfs"])
+def test_private_device_setup_failure_stops_before_tee(
+    namespace_setup, monkeypatch, tmp_path, failure
+):
+    libc, _ = namespace_setup
+    hidden = tmp_path / "dev"
+    hidden.mkdir()
+    worker = tmp_path / "worker"
+    worker.mkdir()
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        read_write_mounts=[(str(worker), str(worker))],
+        generated_symlinks=[ns.NamespaceGeneratedSymlink(str(hidden / "fd"), "/proc/self/fd")],
+        tmpfs_paths=[str(hidden / "shm")],
+        read_only_view=True,
+    )
+    sandbox = ns.NamespaceSandbox(cast(ns.ctypes.CDLL, libc))
+    acquisitions = []
+    monkeypatch.setattr(
+        spack.sandbox, "get_sandbox", lambda: acquisitions.append(sandbox) or sandbox
+    )
+    monkeypatch.setattr(
+        sandbox, "drop_mount_authority", lambda: pytest.fail("drop after failed setup")
+    )
+    monkeypatch.setattr(build, "Tee", lambda *args: pytest.fail("Tee after failed setup"))
+
+    def fail(*args, **kwargs):
+        raise OSError(errno.EPERM, "D3 setup denied")
+
+    if failure == "symlink":
+        monkeypatch.setattr(ns.os, "symlink", fail)
+    else:
+        monkeypatch.setattr(ns, "_mount_private_tmpfs", fail)
+    inherited_environment = dict(os.environ)
+    inherited_tempdir = build.tempfile.tempdir
+    activation = build.NamespaceActivation(policy, str(tmp_path / "scratch"), str(worker))
+    channel = cast(build.IpcChannel, None)
+    with pytest.raises(OSError, match="D3 setup denied"):
+        build._start_tee_after_namespace(
+            {"enable": True},
+            channel,
+            None,
+            channel,
+            "build.log",
+            spack.spec.Spec(),
+            str(tmp_path),
+            activation,
+        )
+    assert acquisitions == [sandbox]
+    assert not sandbox.filesystem_policy_active
+    assert not sandbox.namespace_ready
+    assert os.environ == inherited_environment
+    assert build.tempfile.tempdir == inherited_tempdir
+    assert not list(worker.iterdir())
+
+
+@pytest.mark.parametrize("failure", [None, "policy", "authority"])
+def test_active_namespace_policy_skips_landlock(monkeypatch, tmp_path, failure):
     calls = []
+    worker_root = tmp_path / "worker with spaces"
+    worker_root.mkdir()
+    monkeypatch.setattr(os, "environ", dict(os.environ, JAVA_TOOL_OPTIONS="-Xmx256m"))
+    monkeypatch.setattr(build.tempfile, "tempdir", "/inherited-temp")
+    inherited_environment = dict(os.environ)
 
     class RecordingSandbox(ns.NamespaceSandbox):
-        def prepare_filesystem_policy(self, policy, mount_plan_stage):
-            calls.append(("prepare policy", policy, mount_plan_stage))
+        def prepare_filesystem_policy(self, policy, stage_path):
+            calls.append(("prepare policy", policy, stage_path))
             self._filesystem_policy_active = True
-            return True
+            return failure != "policy"
 
         def drop_mount_authority(self):
             calls.append(("drop mount authority",))
-            return True
+            return failure != "authority"
 
         def allow_read(self, path):
             calls.append(("read", path))
@@ -1616,20 +1770,378 @@ def test_active_namespace_policy_skips_landlock(monkeypatch, tmp_path):
     monkeypatch.setattr(
         ns, "freeze_namespace_sandbox_capability", lambda: ns.NamespaceCapability(True, None, None)
     )
-    spec = SimpleNamespace(traverse=lambda **kwargs: [], prefix=tmp_path / "prefix")
-    activation = build.NamespaceActivation(object(), str(tmp_path / "mount-plan"))
-
-    assert (
-        build._prepare_namespace_sandbox_before_threads(
-            {"enable": True}, spec, str(tmp_path), namespace_activation=activation
-        )
-        is sandbox
+    spec = spack.spec.Spec()
+    channel = cast(build.IpcChannel, None)
+    policy = ns.build_namespace_filesystem_policy(
+        [], read_write_mounts=[(str(worker_root), str(worker_root))], read_only_view=True
     )
+    activation = build.NamespaceActivation(policy, str(tmp_path / "mount-plan"), str(worker_root))
+
+    def start_tee(*args):
+        spack.build_environment.clean_environment().apply_modifications()
+        assert os.environ["HOME"] == str(worker_root / "home")
+        assert os.environ["XDG_CACHE_HOME"] == str(worker_root / "cache")
+        for variable in ("TMPDIR", "TMP", "TEMP"):
+            assert os.environ[variable] == str(worker_root / "tmp")
+        assert build.tempfile.gettempdir() == str(worker_root / "tmp")
+        assert os.environ["JAVA_TOOL_OPTIONS"].startswith("-Xmx256m ")
+        assert build.shlex.split(os.environ["JAVA_TOOL_OPTIONS"])[1:] == [
+            f"-Duser.home={worker_root / 'home'}",
+            f"-Djava.io.tmpdir={worker_root / 'tmp'}",
+        ]
+        for name in ("home", "cache", "tmp"):
+            assert (worker_root / name).is_dir()
+        calls.append(("tee",))
+        return object()
+
+    monkeypatch.setattr(build, "Tee", start_tee)
+
+    if failure:
+        with pytest.raises(spack.error.InstallError):
+            build._start_tee_after_namespace(
+                {"enable": True},
+                channel,
+                None,
+                channel,
+                "build.log",
+                spec,
+                str(tmp_path),
+                activation,
+            )
+        assert os.environ == inherited_environment
+        assert build.tempfile.tempdir == "/inherited-temp"
+        assert not list(worker_root.iterdir())
+        assert ("tee",) not in calls
+        return
+
+    _, prepared = build._start_tee_after_namespace(
+        {"enable": True}, channel, None, channel, "build.log", spec, str(tmp_path), activation
+    )
+    assert prepared is sandbox
     build._enable_sandbox({"enable": True}, spec, str(tmp_path), sandbox=sandbox)
     assert calls == [
         ("prepare policy", activation.policy, activation.mount_plan_stage),
         ("drop mount authority",),
+        ("tee",),
     ]
+
+
+@pytest.mark.parametrize(
+    "invalid", ["missing", "file", "symlink", "relative", "dotdot", "unselected"]
+)
+def test_namespace_worker_root_validation(tmp_path, invalid):
+    root = tmp_path / "worker"
+    root.mkdir()
+    policy = ns.build_namespace_filesystem_policy(
+        [], read_write_mounts=[(str(root), str(root))], read_only_view=True
+    )
+    if invalid == "missing":
+        root.rmdir()
+    elif invalid == "file":
+        root.rmdir()
+        root.touch()
+    elif invalid == "symlink":
+        alias = tmp_path / "alias"
+        alias.symlink_to(root)
+        root = alias
+    elif invalid == "relative":
+        root = os.path.relpath(root)
+    elif invalid == "dotdot":
+        root = root / ".." / "worker"
+    elif invalid == "unselected":
+        root = tmp_path
+    activation = build.NamespaceActivation(policy, str(tmp_path / "scratch"), str(root))
+    with pytest.raises((spack.error.InstallError, ns.NamespaceSetupError)):
+        build._validate_namespace_worker_root(activation)
+
+
+@pytest.mark.parametrize("name", ["home", "cache", "tmp"])
+@pytest.mark.parametrize("existing", ["directory", "file", "symlink"])
+def test_namespace_worker_environment_rejects_existing_paths(
+    tmp_path, monkeypatch, name, existing
+):
+    root = tmp_path / "worker"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    target = root / name
+    if existing == "directory":
+        target.mkdir()
+    elif existing == "file":
+        target.touch()
+    else:
+        target.symlink_to(outside)
+    monkeypatch.setattr(os, "environ", dict(os.environ))
+    monkeypatch.setattr(build.tempfile, "tempdir", "/inherited-temp")
+    inherited_environment = dict(os.environ)
+    with pytest.raises(FileExistsError):
+        build._configure_namespace_worker_environment(str(root))
+    assert os.environ == inherited_environment
+    assert build.tempfile.tempdir == "/inherited-temp"
+    assert not list(outside.iterdir())
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_namespace_worker_environment_unchanged_for_fallback(tmp_path, monkeypatch, enabled):
+    fallback = object()
+    monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: fallback)
+    monkeypatch.setattr(ns, "freeze_namespace_sandbox_capability", lambda: None)
+    monkeypatch.setattr(os, "environ", dict(os.environ))
+    monkeypatch.setattr(build.tempfile, "tempdir", "/inherited-temp")
+    inherited_environment = dict(os.environ)
+    sandbox = build._prepare_namespace_sandbox_before_threads(
+        {"enable": enabled}, spack.spec.Spec(), str(tmp_path)
+    )
+    assert sandbox is (fallback if enabled else None)
+    assert os.environ == inherited_environment
+    assert build.tempfile.tempdir == "/inherited-temp"
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux namespaces")
+def test_live_private_devices_and_concurrent_shared_memory(tmp_path):
+    if not ns.namespace_sandbox_available():
+        pytest.skip("unprivileged namespaces unavailable")
+    code = """
+import errno
+import os
+import stat
+import sys
+from pathlib import Path
+from spack.installer import build
+import spack.spec
+import spack.sandbox_namespaces as ns
+
+worker, scratch, host_shm, token = sys.argv[1:]
+data = build._load_sandbox_policy()
+devices = [(path, path) for path in data['device_nodes'] if os.path.exists(path)]
+device_ids = {path: os.stat(path).st_rdev for path, _ in devices}
+policy = ns.build_namespace_filesystem_policy(
+    ['/dev'], read_write_mounts=devices + [(worker, worker)],
+    generated_symlinks=[ns.NamespaceGeneratedSymlink(path, target)
+                        for path, target in data['device_symlinks'].items()],
+    tmpfs_paths=data['tmpfs_paths'], read_only_view=True,
+)
+sandbox = build._prepare_namespace_sandbox_before_threads(
+    {'enable': True}, spack.spec.Spec(), worker,
+    namespace_activation=build.NamespaceActivation(policy, scratch, worker),
+)
+assert sandbox.filesystem_policy_active
+assert set(os.listdir('/dev')) == {
+    Path(path).name for path, _ in devices
+} | {'shm', 'fd', 'stdin', 'stdout', 'stderr'}
+for path, device_id in device_ids.items():
+    assert stat.S_ISCHR(os.stat(path).st_mode)
+    assert os.stat(path).st_rdev == device_id
+assert stat.S_IMODE(os.stat('/dev/shm').st_mode) == 0o1777
+assert not os.path.exists(host_shm)
+for path, target in data['device_symlinks'].items():
+    assert os.readlink(path) == target
+with open('/dev/null', 'wb') as stream:
+    stream.write(b'discard')
+with open('/dev/null', 'rb') as stream:
+    assert stream.read(1) == b''
+with open('/dev/zero', 'rb') as stream:
+    assert stream.read(16) == bytes(16)
+for path in ('/dev/random', '/dev/urandom'):
+    descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+    try:
+        assert len(os.read(descriptor, 16)) == 16
+    finally:
+        os.close(descriptor)
+descriptor = os.open('/dev/full', os.O_WRONLY)
+try:
+    try:
+        os.write(descriptor, b'full')
+    except OSError as error:
+        assert error.errno == errno.ENOSPC
+    else:
+        raise AssertionError('/dev/full accepted write')
+finally:
+    os.close(descriptor)
+with open('/dev/shm/spack-concurrent', 'x+') as stream:
+    stream.write(token)
+    stream.flush()
+    with open('/dev/fd/' + str(stream.fileno())) as alias:
+        assert alias.read() == token
+    with open('/dev/stdout', 'w') as output:
+        output.write('ready\\n')
+    with open('/dev/stderr', 'w') as output:
+        output.write('descriptor stderr\\n')
+    with open('/dev/stdin') as input_stream:
+        assert input_stream.readline() == 'release\\n'
+    stream.seek(0)
+    assert stream.read() == token
+status = Path('/proc/self/status').read_text().splitlines()
+assert all(int(line.split()[1], 16) == 0 for line in status
+           if line.startswith(('CapEff:', 'CapPrm:', 'CapInh:')))
+try:
+    sandbox.bind_mount(worker)
+except ns.SandboxError:
+    pass
+else:
+    raise AssertionError('mount authority retained')
+os._exit(0)
+"""
+    processes = []
+    with build.tempfile.NamedTemporaryFile(prefix="spack-host-shm-", dir="/dev/shm") as host:
+        host.write(b"host-private")
+        host.flush()
+        try:
+            for index in range(2):
+                worker = tmp_path / f"worker-{index}"
+                worker.mkdir()
+                scratch = tmp_path / f"scratch-{index}"
+                scratch.mkdir()
+                processes.append(
+                    subprocess.Popen(
+                        [
+                            sys.executable,
+                            "-c",
+                            code,
+                            str(worker),
+                            str(scratch),
+                            host.name,
+                            str(index),
+                        ],
+                        env=dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path)),
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        universal_newlines=True,
+                    )
+                )
+            for process in processes:
+                assert select.select([process.stdout], [], [], 20)[0], "worker never became ready"
+                ready = process.stdout.readline()
+                if ready != "ready\n":
+                    _, errors = process.communicate(timeout=10)
+                    pytest.fail(errors)
+            for process in processes:
+                _, errors = process.communicate("release\n", timeout=20)
+                assert process.returncode == 0, errors
+                assert errors == "descriptor stderr\n"
+            host.seek(0)
+            assert host.read() == b"host-private"
+        finally:
+            for process in processes:
+                if process.poll() is None:
+                    process.kill()
+                process.communicate(timeout=10)
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux namespaces")
+def test_live_namespace_worker_environment(tmp_path):
+    if not ns.namespace_sandbox_available():
+        pytest.skip("unprivileged namespaces unavailable")
+    hidden = tmp_path / "hidden-home"
+    hidden.mkdir()
+    secret = hidden / "host-secret"
+    secret.write_text("private")
+    stage_parent = hidden / "stage-parent"
+    stage_parent.mkdir()
+    worker_root = stage_parent / "worker with 'single' and \"double\" quotes"
+    worker_root.mkdir()
+    replacement = tmp_path / "host-tmp"
+    replacement.mkdir()
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    inherited_environment = dict(os.environ)
+    inherited_tempdir = build.tempfile.tempdir
+    code = """
+import errno
+import os
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+from types import SimpleNamespace
+from spack.installer import build
+from spack.sandbox_namespaces import (
+    build_namespace_filesystem_policy, freeze_namespace_sandbox_capability,
+)
+
+hidden, stage_parent, root, replacement, scratch = map(Path, sys.argv[1:6])
+policy = build_namespace_filesystem_policy(
+    [str(hidden), str(replacement)],
+    read_write_mounts=[(str(stage_parent), str(stage_parent))],
+    replacement_mounts=[(str(root), str(replacement))],
+    read_only_view=True,
+)
+activation = build.NamespaceActivation(policy, str(scratch), str(root))
+assert freeze_namespace_sandbox_capability().available
+os.environ['JAVA_TOOL_OPTIONS'] = '-Xmx64m -Duser.home=/old -Djava.io.tmpdir=/old'
+os.environ.pop('_JAVA_OPTIONS', None)
+os.environ.pop('JDK_JAVA_OPTIONS', None)
+tempfile.tempdir = '/stale-parent-cache'
+
+def start_tee(*args):
+    for variable, name in (
+        ('HOME', 'home'), ('XDG_CACHE_HOME', 'cache'),
+        ('TMPDIR', 'tmp'), ('TMP', 'tmp'), ('TEMP', 'tmp'),
+    ):
+        path = Path(os.environ[variable])
+        assert path == root / name, (variable, path, root / name)
+        assert path.resolve() == path
+        assert path.stat().st_mode & 0o777 == 0o700
+        (path / variable).write_text('worker')
+    generated = Path(tempfile.mkdtemp())
+    assert generated.parent == root / 'tmp'
+    with tempfile.NamedTemporaryFile() as temporary:
+        assert Path(temporary.name).parent == root / 'tmp'
+        temporary.write(b'worker')
+    assert not (hidden / 'host-secret').exists()
+    (replacement / 'private-temp').write_text('replacement')
+    try:
+        (root.parent.parent.parent / 'must-fail').write_text('denied')
+    except OSError as error:
+        assert error.errno == errno.EROFS
+    else:
+        raise AssertionError('inherited view remained writable')
+    if sys.argv[6]:
+        result = subprocess.run(
+            [sys.argv[6], '-XshowSettings:properties', '-version'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10,
+        )
+        assert result.returncode == 0, result.stderr
+        for property_name, directory in (('user.home', 'home'), ('java.io.tmpdir', 'tmp')):
+            assert f'{property_name} = {root / directory}' in result.stderr, result.stderr
+    return object()
+
+build.Tee = start_tee
+_, sandbox = build._start_tee_after_namespace(
+    {'enable': True}, None, None, None, 'build.log', SimpleNamespace(),
+    str(stage_parent), activation,
+)
+assert sandbox.filesystem_policy_active
+os._exit(0)
+"""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            code,
+            str(hidden),
+            str(stage_parent),
+            str(worker_root),
+            str(replacement),
+            str(scratch),
+            shutil.which("java") or "",
+        ],
+        env=dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert os.environ == inherited_environment
+    assert build.tempfile.tempdir == inherited_tempdir
+    assert secret.read_text() == "private"
+    assert not list(replacement.iterdir())
+    assert (worker_root / "private-temp").read_text() == "replacement"
+    for name, variable in (("home", "HOME"), ("cache", "XDG_CACHE_HOME"), ("tmp", "TMPDIR")):
+        assert (worker_root / name / variable).read_text() == "worker"
 
 
 def test_namespace_selection_uses_constrained_landlock_fallback(monkeypatch):

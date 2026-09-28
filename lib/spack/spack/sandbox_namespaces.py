@@ -131,6 +131,7 @@ class NamespaceFilesystemPolicy(NamedTuple):
     replacement_mounts: Tuple[NamespaceMountRequest, ...] = ()
     generated_symlinks: Tuple[NamespaceGeneratedSymlink, ...] = ()
     read_only_view: bool = False
+    tmpfs_paths: Tuple[str, ...] = ()
 
 
 class NamespacePreservedMount(NamedTuple):
@@ -153,6 +154,7 @@ class NamespaceMountPlan(NamedTuple):
     replacement_mounts: Tuple[NamespacePreservedMount, ...] = ()
     generated_symlinks: Tuple[NamespaceGeneratedSymlink, ...] = ()
     read_only_view: bool = False
+    tmpfs_paths: Tuple[str, ...] = ()
 
 
 _active_namespace_mount_plan_scratch = set()
@@ -432,6 +434,7 @@ def build_namespace_filesystem_policy(
     replacement_mounts: Iterable[Tuple[str, str]] = (),
     generated_symlinks: Iterable[NamespaceGeneratedSymlink] = (),
     read_only_view: bool = False,
+    tmpfs_paths: Iterable[str] = (),
 ) -> NamespaceFilesystemPolicy:
     """Canonicalize and validate namespace filesystem intent.
 
@@ -529,16 +532,31 @@ def build_namespace_filesystem_policy(
             )
         canonical_symlink_list.append(
             NamespaceGeneratedSymlink(
-                os.path.abspath(symlink.path), os.path.realpath(os.path.abspath(symlink.target))
+                os.path.abspath(symlink.path), os.path.abspath(symlink.target)
             )
         )
     canonical_symlinks = tuple(sorted(canonical_symlink_list, key=lambda item: item.path))
+
+    canonical_tmpfs = []
+    for path in tmpfs_paths:
+        if not isinstance(path, str) or not os.path.isabs(path) or os.path.normpath(path) != path:
+            _mount_plan_error("validate namespace policy tmpfs", f"invalid tmpfs path: {path!r}")
+        if not any(_path_contains(root, path) for root in sorted_hidden_roots):
+            _mount_plan_error(
+                "validate namespace policy tmpfs", f"tmpfs is not below a hidden root: {path}"
+            )
+        if any(_path_contains(mount.target, path) for mount in canonical_replacement):
+            _mount_plan_error(
+                "validate namespace policy tmpfs", f"tmpfs overlaps a replacement root: {path}"
+            )
+        canonical_tmpfs.append(path)
 
     classified_paths = [
         (mount.target, mount.access.value) for mount in canonical_read_only + canonical_read_write
     ]
     classified_paths.extend((path.path, "generated") for path in canonical_generated)
     classified_paths.extend((path.path, "generated symlink") for path in canonical_symlinks)
+    classified_paths.extend((path, "tmpfs") for path in canonical_tmpfs)
     sorted_classified_paths = sorted(classified_paths, key=lambda item: item[0])
     for index, (path, category) in enumerate(sorted_classified_paths):
         for previous_path, previous_category in sorted_classified_paths[:index]:
@@ -597,6 +615,7 @@ def build_namespace_filesystem_policy(
         canonical_replacement,
         canonical_symlinks,
         read_only_view,
+        tuple(sorted(canonical_tmpfs)),
     )
 
 
@@ -645,6 +664,7 @@ def _validated_namespace_filesystem_policy(
         replacement_mounts,
         policy.generated_symlinks,
         policy.read_only_view,
+        policy.tmpfs_paths,
     )
     if policy != validated:
         _mount_plan_error("validate namespace policy", "policy is not canonical")
@@ -704,6 +724,7 @@ def build_namespace_mount_plan_from_policy(
         plan.replacement_mounts,
         policy.generated_symlinks,
         policy.read_only_view,
+        policy.tmpfs_paths,
     )
 
 
@@ -854,7 +875,8 @@ def _build_namespace_mount_plan(
             key=lambda item: (item[1][1].count(os.sep), item[1][1]),
         )
     )
-    replacement_requests = []
+    replacement_requests: List[NamespacePreservedMount] = []
+    replacement_preserved = []
     for request in replacement_mounts:
         if request.access is not NamespaceMountAccess.READ_WRITE:
             _mount_plan_error(
@@ -871,14 +893,18 @@ def _build_namespace_mount_plan(
                 "validate replacement target",
                 f"replacement target is not a hidden directory: {request.target}",
             )
+        preserved_source = os.path.join(preserved_root, f"replacement-{len(replacement_requests)}")
+        replacement_preserved.append(
+            NamespacePreservedMount(request.source, preserved_source, True, request.access)
+        )
         replacement_requests.append(
-            NamespacePreservedMount(request.source, request.target, True, request.access)
+            NamespacePreservedMount(preserved_source, request.target, True, request.access)
         )
     replacement_requests.sort(key=lambda item: (item.target, item.source))
     return NamespaceMountPlan(
         resolved_stage,
         mounts,
-        preserved_mounts,
+        preserved_mounts + tuple(replacement_preserved),
         restoration_mounts,
         tuple(generated_paths),
         tuple(replacement_requests),
@@ -898,7 +924,7 @@ def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> 
 
     os.makedirs(plan.stage_path, exist_ok=True)
 
-    for preserved in plan.preserved_mounts + plan.replacement_mounts:
+    for preserved in plan.preserved_mounts:
         if not os.path.exists(preserved.source):
             _mount_plan_error(
                 "apply mount plan source",
@@ -1017,6 +1043,9 @@ def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> 
             endpoint = os.path.join(mask.source, os.path.relpath(generated.path, mask.target))
             os.makedirs(os.path.dirname(endpoint), exist_ok=True)
             os.symlink(generated.target, endpoint)
+        for target in plan.tmpfs_paths:
+            mask = next(mount for mount in plan.mounts if _path_contains(mount.target, target))
+            os.makedirs(os.path.join(mask.source, os.path.relpath(target, mask.target)))
         _check_syscall(
             libc.mount(
                 None,
@@ -1066,7 +1095,23 @@ def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> 
             restoration_mount.source_is_directory,
             restoration_mount.access,
         )
+    for target in plan.tmpfs_paths:
+        _mount_private_tmpfs(libc, target)
     return True
+
+
+def _mount_private_tmpfs(libc: ctypes.CDLL, target: str) -> None:
+    """Create writable shared memory without exposing host devices or set-ID files."""
+    _check_syscall(
+        libc.mount(
+            b"tmpfs",
+            os.fsencode(target),
+            b"tmpfs",
+            ctypes.c_ulong(MS_NOSUID | MS_NODEV),
+            b"mode=1777",
+        ),
+        "mount(tmpfs shared memory)",
+    )
 
 
 def _enter_user_mount_namespace(libc, _probe_child: bool = False) -> None:
@@ -1158,8 +1203,10 @@ def _probe_namespace_capability(libc) -> NamespaceCapability:
         probe_root = tempfile.mkdtemp(prefix="spack-namespace-probe-")
         bind_source = os.path.join(probe_root, "source")
         bind_target = os.path.join(probe_root, "target")
+        shared_memory = os.path.join(probe_root, "shm")
         os.mkdir(bind_source)
         os.mkdir(bind_target)
+        os.mkdir(shared_memory)
     except OSError as error:
         if probe_root is not None:
             shutil.rmtree(probe_root, ignore_errors=True)
@@ -1221,7 +1268,36 @@ def _probe_namespace_capability(libc) -> NamespaceCapability:
                 _set_mount_read_only(libc, "/", True)
                 _set_mount_read_only(libc, bind_target, True)
                 _set_mount_writable(libc, bind_target, False)
+                _mount_private_tmpfs(libc, shared_memory)
+                descriptor_link = os.path.join(shared_memory, "fd")
+                os.symlink("/proc/self/fd", descriptor_link)
+                device_target = os.path.join(shared_memory, "null")
+                Path(device_target).touch()
+                _check_syscall(
+                    libc.mount(
+                        os.fsencode(os.devnull),
+                        os.fsencode(device_target),
+                        None,
+                        ctypes.c_ulong(MS_BIND),
+                        None,
+                    ),
+                    "mount(MS_BIND device probe)",
+                )
+                _set_mount_writable(libc, device_target, False)
                 _drop_namespace_capabilities(libc)
+                with open(os.path.join(shared_memory, "probe"), "w+", encoding="utf-8") as stream:
+                    stream.write("shared memory")
+                    stream.flush()
+                    with open(
+                        os.path.join(descriptor_link, str(stream.fileno())), encoding="utf-8"
+                    ) as alias:
+                        if alias.read() != "shared memory":
+                            raise OSError(errno.EIO, "descriptor link probe mismatch")
+                descriptor = os.open(device_target, os.O_WRONLY)
+                try:
+                    os.write(descriptor, b"device probe")
+                finally:
+                    os.close(descriptor)
             except NamespaceSetupError as error:
                 result = NamespaceCapability(False, error.operation, error.reason)
             except OSError as error:

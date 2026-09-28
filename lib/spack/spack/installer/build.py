@@ -118,6 +118,7 @@ class NamespaceActivation(NamedTuple):
 
     policy: spack.sandbox_namespaces.NamespaceFilesystemPolicy
     mount_plan_stage: str
+    worker_root: str
 
 
 class NamespaceHostDeviceWorkerPaths(NamedTuple):
@@ -200,8 +201,20 @@ def _load_sandbox_policy(path: str = SANDBOX_POLICY_PATH) -> dict:
     )
     for key in list_keys:
         _validate_string_list(policy_name, path, policy, key)
-    for key in ("hidden_roots", "replacement_roots"):
+    for key in ("hidden_roots", "replacement_roots", "tmpfs_paths", "mount_plan_scratch_paths"):
         _validate_absolute_path_list(policy_name, path, policy, key)
+
+    device_symlinks = policy.get("device_symlinks")
+    if not isinstance(device_symlinks, dict) or not all(
+        isinstance(link, str)
+        and os.path.isabs(link)
+        and isinstance(target, str)
+        and os.path.isabs(target)
+        for link, target in device_symlinks.items()
+    ):
+        raise _policy_error(
+            policy_name, path, "device_symlinks", "expected an absolute path-to-target mapping"
+        )
 
     aliases = policy.get("compiler_driver_aliases")
     languages = policy.get("compiler_languages")
@@ -1435,6 +1448,7 @@ def namespace_selected_filesystem_policy_from_inputs(
     selected_paths: NamespacePolicyInputPaths,
     replacement_mounts: Iterable[Tuple[str, str]] = (),
     generated_symlinks: Iterable[spack.sandbox_namespaces.NamespaceGeneratedSymlink] = (),
+    tmpfs_paths: Iterable[str] = (),
 ) -> spack.sandbox_namespaces.NamespaceFilesystemPolicy:
     """Build a trusted selected-tree policy without activating it.
 
@@ -1553,6 +1567,7 @@ def namespace_selected_filesystem_policy_from_inputs(
         replacement_mounts=replacement_mounts,
         generated_symlinks=generated_symlinks,
         read_only_view=True,
+        tmpfs_paths=tmpfs_paths,
     )
 
     def assert_covered(paths, mounts, access):
@@ -1581,12 +1596,19 @@ def namespace_filesystem_policy_and_plan_from_inputs(
     selected_paths: NamespacePolicyInputPaths,
     replacement_mounts: Iterable[Tuple[str, str]] = (),
     generated_symlinks: Iterable[spack.sandbox_namespaces.NamespaceGeneratedSymlink] = (),
+    tmpfs_paths: Iterable[str] = (),
 ) -> Tuple[
     spack.sandbox_namespaces.NamespaceFilesystemPolicy, spack.sandbox_namespaces.NamespaceMountPlan
 ]:
     """Compile and validate a trusted selected-tree policy without activating it."""
     policy = namespace_selected_filesystem_policy_from_inputs(
-        config, spec, stage_path, selected_paths, replacement_mounts, generated_symlinks
+        config,
+        spec,
+        stage_path,
+        selected_paths,
+        replacement_mounts,
+        generated_symlinks,
+        tmpfs_paths,
     )
     plan = spack.sandbox_namespaces.build_namespace_mount_plan_from_policy(
         policy, mount_plan_stage
@@ -1644,14 +1666,29 @@ def prepare_namespace_activation(
         tuple(sorted(writable_paths)),
     )
     replacement_mounts = tuple((worker_root, root) for root in host_paths.replacement_roots)
-    generated_symlinks = tuple(compiler_alias_symlink_paths(spec))
+    device_policy = _load_sandbox_policy()
+    tmpfs_paths = tuple(device_policy["tmpfs_paths"])
+    generated_symlinks = tuple(compiler_alias_symlink_paths(spec)) + tuple(
+        spack.sandbox_namespaces.NamespaceGeneratedSymlink(link, target)
+        for link, target in device_policy["device_symlinks"].items()
+    )
     policy = namespace_selected_filesystem_policy_from_inputs(
-        config, spec, stage_path, selected_paths, replacement_mounts, generated_symlinks
+        config,
+        spec,
+        stage_path,
+        selected_paths,
+        replacement_mounts,
+        generated_symlinks,
+        tmpfs_paths,
     )
 
     scratch = None
     last_error = None
-    for base_path in (tempfile.gettempdir(), spack.paths.var_path, "/run/lock", "/var", "/opt"):
+    for base_path in (
+        tempfile.gettempdir(),
+        spack.paths.var_path,
+        *device_policy["mount_plan_scratch_paths"],
+    ):
         try:
             scratch = spack.sandbox_namespaces.allocate_namespace_mount_plan_scratch(
                 policy,
@@ -1675,11 +1712,12 @@ def prepare_namespace_activation(
             selected_paths,
             replacement_mounts,
             generated_symlinks,
+            tmpfs_paths,
         )
     except BaseException:
         scratch.cleanup()
         raise
-    return NamespaceActivation(policy, scratch.path), scratch
+    return NamespaceActivation(policy, scratch.path, worker_root), scratch
 
 
 def validate_namespace_policy_before_threads(
@@ -1712,6 +1750,48 @@ def validate_namespace_policy_before_threads(
     )
 
 
+def _validate_namespace_worker_root(activation: NamespaceActivation) -> None:
+    """Require an existing canonical worker root covered by a writable identity mount."""
+    root = activation.worker_root
+    (canonical_root,) = _canonical_required_paths((root,), "worker root")
+    if root != canonical_root:
+        raise spack.error.InstallError("Namespace worker root must be canonical and absolute")
+    if (
+        not os.path.isabs(root)
+        or not os.path.isdir(root)
+        or not any(
+            mount.source == mount.target
+            and os.path.commonpath((mount.target, root)) == mount.target
+            for mount in activation.policy.read_write_mounts
+        )
+    ):
+        raise spack.error.InstallError("Namespace worker root requires a writable identity mount")
+
+
+def _configure_namespace_worker_environment(worker_root: str) -> None:
+    """Create private worker state and publish it only in the confined child."""
+    home = os.path.join(worker_root, "home")
+    cache = os.path.join(worker_root, "cache")
+    temporary = os.path.join(worker_root, "tmp")
+    for path in (home, cache, temporary):
+        os.mkdir(path, mode=0o700)
+    java_options = " ".join(
+        shlex.quote(option) for option in (f"-Duser.home={home}", f"-Djava.io.tmpdir={temporary}")
+    )
+    inherited_java_options = os.environ.get("JAVA_TOOL_OPTIONS", "")
+    os.environ.update(
+        HOME=home,
+        XDG_CACHE_HOME=cache,
+        TMPDIR=temporary,
+        TMP=temporary,
+        TEMP=temporary,
+        JAVA_TOOL_OPTIONS=" ".join(
+            option for option in (inherited_java_options, java_options) if option
+        ),
+    )
+    tempfile.tempdir = temporary
+
+
 def _prepare_namespace_sandbox_before_threads(
     config: dict,
     spec: spack.spec.Spec,
@@ -1725,9 +1805,8 @@ def _prepare_namespace_sandbox_before_threads(
 ) -> Optional[spack.sandbox.Sandbox]:
     """Prepare the namespace view and drop mount authority before ``Tee``.
 
-    The worker is still single-threaded here. The returned sandbox is reused
-    after recipe-controlled setup so that later code only grants and applies
-    Landlock; it cannot create additional mounts.
+    The worker is still single-threaded here. Complete policy activation also
+    configures worker-local state; the returned sandbox cannot create later mounts.
     """
     if not config.get("enable", False):
         return None
@@ -1761,6 +1840,7 @@ def _prepare_namespace_sandbox_before_threads(
 
     if isinstance(sandbox, spack.sandbox_namespaces.NamespaceSandbox):
         if namespace_activation is not None:
+            _validate_namespace_worker_root(namespace_activation)
             prepared = sandbox.prepare_filesystem_policy(
                 namespace_activation.policy, namespace_activation.mount_plan_stage
             )
@@ -1774,6 +1854,8 @@ def _prepare_namespace_sandbox_before_threads(
                 )
         if prepared and not sandbox.drop_mount_authority():
             raise spack.error.InstallError("Cannot drop namespace mount authority")
+        if prepared and namespace_activation is not None:
+            _configure_namespace_worker_environment(namespace_activation.worker_root)
     return sandbox
 
 

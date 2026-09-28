@@ -28,6 +28,17 @@ device_nodes:
 - /dev/tty
 - /dev/urandom
 - /dev/zero
+tmpfs_paths:
+- /dev/shm
+mount_plan_scratch_paths:
+- /run/lock
+- /var
+- /opt
+device_symlinks:
+  /dev/fd: /proc/self/fd
+  /dev/stdin: /proc/self/fd/0
+  /dev/stdout: /proc/self/fd/1
+  /dev/stderr: /proc/self/fd/2
 stage_programs:
 - 7z
 - bunzip2

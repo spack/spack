@@ -115,6 +115,9 @@ def test_namespace_policy_data_is_loaded_from_yaml():
     assert policy["hidden_roots"]
     assert policy["replacement_roots"] == ["/tmp", "/var/tmp"]
     assert "/dev/urandom" in policy["device_nodes"]
+    assert policy["tmpfs_paths"] == ["/dev/shm"]
+    assert policy["mount_plan_scratch_paths"] == ["/run/lock", "/var", "/opt"]
+    assert policy["device_symlinks"]["/dev/fd"] == "/proc/self/fd"
     assert "tar" in policy["stage_programs"]
     assert header_policy["version"] == 1
     assert header_policy["system_include_root"] == "/usr/include"
@@ -126,6 +129,9 @@ def test_namespace_policy_data_is_loaded_from_yaml():
     [
         (lambda policy: policy.update(version=2), "version"),
         (lambda policy: policy.update(hidden_roots="/usr/bin"), "hidden_roots"),
+        (lambda policy: policy.update(tmpfs_paths=["relative"]), "tmpfs_paths"),
+        (lambda policy: policy.update(device_symlinks=[]), "device_symlinks"),
+        (lambda policy: policy.update(device_symlinks={"/dev/fd": "relative"}), "device_symlinks"),
         (
             lambda policy: policy["compiler_driver_aliases"].update(cxx="g++"),
             "compiler_driver_aliases",
@@ -1122,10 +1128,26 @@ def test_prepare_namespace_activation_compiles_selected_production_policy(
     monkeypatch.setattr(spack.store.STORE, "unpadded_root", str(host / "store"))
     monkeypatch.setattr(spack.store.STORE, "upstreams", None)
 
+    inherited_environment = dict(os.environ)
+    inherited_tempdir = build.tempfile.tempdir
     activation, scratch = build.prepare_namespace_activation(
         {}, spec, str(stage), str(log_path), (str(jobserver),), str(worker_root), str(fetch_cache)
     )
     try:
+        assert activation.worker_root == str(worker_root)
+        assert activation.policy.tmpfs_paths == ("/dev/shm",)
+        assert set(activation.policy.generated_symlinks) == {
+            spack.sandbox_namespaces.NamespaceGeneratedSymlink("/dev/" + name, target)
+            for name, target in (
+                ("fd", "/proc/self/fd"),
+                ("stdin", "/proc/self/fd/0"),
+                ("stdout", "/proc/self/fd/1"),
+                ("stderr", "/proc/self/fd/2"),
+            )
+        }
+        assert os.environ == inherited_environment
+        assert build.tempfile.tempdir == inherited_tempdir
+        assert not list(worker_root.iterdir())
         read_only_targets = {mount.target for mount in activation.policy.read_only_mounts}
         read_write_targets = {mount.target for mount in activation.policy.read_write_mounts}
         assert read_only_targets == {str(compiler), str(tool), str(headers), str(user_cache)}
