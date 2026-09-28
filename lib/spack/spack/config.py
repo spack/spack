@@ -2686,6 +2686,11 @@ def _compose_migration_message(
         parts.append("Spack automatically migrated old resources.")
         if prefix_result["migrated"]:
             parts.append("  - Migrated: " + ", ".join(prefix_result["migrated"]) + ".")
+            if "environments" in prefix_result["migrated"]:
+                parts.append(
+                    "  - Environment views were not copied. Activate each environment and run "
+                    "`spack env view regenerate` to recreate them."
+                )
         if prefix_result["retained"]:
             parts.append("  - Retained: " + ", ".join(prefix_result["retained"]) + ".")
         parts.append("  - Existing installs and shared artifacts were not removed.")
