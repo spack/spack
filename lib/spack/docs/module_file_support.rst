@@ -278,6 +278,7 @@ Package variants in module files
 .. _Environment Modules: https://modules.readthedocs.io/en/stable/
 .. _variant: https://modules.readthedocs.io/en/stable/modulefile.html#mfcmd-variant
 .. _advanced module version specifiers: https://modules.readthedocs.io/en/stable/module.html#advanced-module-version-specifiers
+.. _collection_pin_version: https://modules.readthedocs.io/en/stable/module.html#mconfig-collection_pin_version
 
 Spack packages can be built with many different :ref:`variants<basic-variants>`, and it is not always obvious which variant configuration is associated with a module file.
 Tcl module files can define the package variants with the `variant`_ module file command of Environment Modules, so that users can check the variant configuration they load.
@@ -433,6 +434,21 @@ The ``hash`` variant tells them apart in the ``hdf5/1.14.6-gcc-15.2.1`` module f
 The ``depends-on`` lines of dependent module files state the ``hash`` variant only, so a dependent keeps loading the installation it was built against whatever installations are later folded into, or removed from, the module file of its dependency, and whatever variants that module file then defines.
 
 Like any other variant, ``hash`` left unset takes the value of the selected installation.
+
+.. note::
+
+   ``module save`` records a variant in a collection only when its value differs from the default the module file declares, and a folded module file declares the values of the selected installation as its defaults.
+   A collection thus records a plain ``module load zlib``, and ``module restore`` loads the first installation listed rather than the one saved.
+   Enable the `collection_pin_version`_ configuration option of Environment Modules to record every variant along with the module version, so that ``module restore`` brings back the installation that was loaded:
+
+   .. code-block:: console
+
+      $ module config collection_pin_version 1
+      $ module load zlib +shared
+      $ module save mywork
+      $ module saveshow mywork
+      module use --append /home/user/spack/share/spack/modules/linux-ubuntu24.04-alderlake
+      module load zlib/1.3.2-gcc-13.3.0 build_system=makefile hash=vzg6net +optimize +pic +shared
 
 Default module versions
 """""""""""""""""""""""
