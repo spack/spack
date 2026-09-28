@@ -64,6 +64,7 @@ from typing import (
     ClassVar,
     Deque,
     Dict,
+    Generic,
     Iterable,
     Iterator,
     List,
@@ -1147,14 +1148,16 @@ class CompilerFlag(str):
 _valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags")
 
 
+OptionValueT = TypeVar("OptionValueT", bound=vt.OptionValue)
+
 # typing.Dict bases are slow at runtime on Python 3.6
 if TYPE_CHECKING:
     _FlagMapBase = Dict[str, List[CompilerFlag]]
-    _OptionMapBase = Dict[str, vt.OptionValue]
+    _OptionMapBase = Dict[str, OptionValueT]
 else:
     _FlagMapBase = _OptionMapBase = dict
 
-OptionMapT = TypeVar("OptionMapT", bound="OptionMap")
+OptionMapT = TypeVar("OptionMapT", bound="OptionMap[Any]")
 
 
 @lang.lazy_lexicographic_ordering
@@ -5080,7 +5083,7 @@ class Spec:
 
 
 @lang.lazy_lexicographic_ordering
-class OptionMap(_OptionMapBase):
+class OptionMap(_OptionMapBase, Generic[OptionValueT]):
     """Base class for :class:`VariantMap` and :class:`UsageMap`: a map of option values, keyed
     by option name."""
 
@@ -5090,7 +5093,7 @@ class OptionMap(_OptionMapBase):
         for _, v in sorted(self.items()):
             yield v
 
-    def set(self, ospec: vt.OptionValue) -> None:
+    def set(self, ospec: OptionValueT) -> None:
         """Stores ``ospec`` under its own name, replacing any entry already there."""
         self[ospec.name] = ospec
 
@@ -5134,7 +5137,7 @@ class OptionMap(_OptionMapBase):
         return _variants_string(self, {})
 
 
-class VariantMap(OptionMap):
+class VariantMap(OptionMap[vt.VariantValue]):
     """Map of variant instances, keyed by variant name."""
 
     __slots__ = ()
@@ -5145,7 +5148,7 @@ class VariantMap(OptionMap):
         return self
 
 
-class UsageMap(OptionMap):
+class UsageMap(OptionMap[vt.UsageValue]):
     """Map of usage instances, keyed by usage name."""
 
     __slots__ = ()
