@@ -2040,10 +2040,12 @@ def test_live_namespace_worker_environment(tmp_path):
     secret.write_text("private")
     stage_parent = hidden / "stage-parent"
     stage_parent.mkdir()
+    stage_configure = stage_parent / "spack-stage-gmake" / "spack-src" / "configure"
+    stage_configure.parent.mkdir(parents=True)
+    stage_configure.write_text("stage source")
     worker_root = stage_parent / "worker with 'single' and \"double\" quotes"
     worker_root.mkdir()
-    replacement = tmp_path / "host-tmp"
-    replacement.mkdir()
+    replacement = hidden
     scratch = tmp_path / "scratch"
     scratch.mkdir()
     inherited_environment = dict(os.environ)
@@ -2063,7 +2065,7 @@ from spack.sandbox_namespaces import (
 
 hidden, stage_parent, root, replacement, scratch = map(Path, sys.argv[1:6])
 policy = build_namespace_filesystem_policy(
-    [str(hidden), str(replacement)],
+    [str(hidden)],
     read_write_mounts=[(str(stage_parent), str(stage_parent))],
     replacement_mounts=[(str(root), str(replacement))],
     read_only_view=True,
@@ -2091,6 +2093,10 @@ def start_tee(*args):
         assert Path(temporary.name).parent == root / 'tmp'
         temporary.write(b'worker')
     assert not (hidden / 'host-secret').exists()
+    assert (
+        (stage_parent / 'spack-stage-gmake' / 'spack-src' / 'configure').read_text()
+        == 'stage source'
+    )
     (replacement / 'private-temp').write_text('replacement')
     try:
         (root.parent.parent.parent / 'must-fail').write_text('denied')
@@ -2138,8 +2144,8 @@ os._exit(0)
     assert os.environ == inherited_environment
     assert build.tempfile.tempdir == inherited_tempdir
     assert secret.read_text() == "private"
-    assert not list(replacement.iterdir())
     assert (worker_root / "private-temp").read_text() == "replacement"
+    assert stage_configure.read_text() == "stage source"
     for name, variable in (("home", "HOME"), ("cache", "XDG_CACHE_HOME"), ("tmp", "TMPDIR")):
         assert (worker_root / name / variable).read_text() == "worker"
 

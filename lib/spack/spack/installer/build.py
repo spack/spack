@@ -465,6 +465,26 @@ def stage_tool_paths(policy: Optional[dict] = None) -> List[ResolvedSandboxPath]
     return result
 
 
+def stage_tool_alias_symlink_paths(
+    tool_entries: Iterable[ResolvedSandboxPath], hidden_roots: Iterable[str]
+) -> List[spack.sandbox_namespaces.NamespaceGeneratedSymlink]:
+    """Restore selected stage-tool spellings when their executables are symlinks."""
+    result = []
+    for entry in tool_entries:
+        spelling = which_string(entry.spelling)
+        if spelling is None:
+            continue
+        spelling = os.path.abspath(spelling)
+        alias = os.path.join(
+            os.path.realpath(os.path.dirname(spelling)), os.path.basename(spelling)
+        )
+        if alias == entry.source or os.path.realpath(spelling) != entry.source:
+            continue
+        if any(os.path.commonpath((root, alias)) == root for root in hidden_roots):
+            result.append(spack.sandbox_namespaces.NamespaceGeneratedSymlink(alias, entry.source))
+    return result
+
+
 def _canonical_existing_paths(
     paths: Iterable[str], *, character_devices: bool = False
 ) -> Tuple[str, ...]:
@@ -585,6 +605,8 @@ def tool_runtime_paths(spec: spack.spec.Spec, tool_paths) -> List[str]:
     result = []
     seen = set()
     for node in spec.traverse():
+        if getattr(node, "external", False):
+            continue
         prefix = os.path.realpath(str(node.prefix))
         try:
             owns_tool = any(os.path.commonpath((source, prefix)) == prefix for source in sources)
@@ -1466,8 +1488,9 @@ def namespace_selected_filesystem_policy_from_inputs(
         ("runtime", selected_paths.runtime_paths),
         ("temporary", selected_paths.temporary_paths),
     )
+    optional_categories = {"compiler", "header"}
     for category, paths in required_categories:
-        if not paths:
+        if not paths and category not in optional_categories:
             raise spack.sandbox_namespaces.NamespaceSetupError(
                 errno.EINVAL,
                 "select namespace policy inputs",
@@ -1475,7 +1498,7 @@ def namespace_selected_filesystem_policy_from_inputs(
             )
 
     repositories = tuple(spack.repo.PATH.repos)
-    repository_roots = tuple(repo.root for repo in repositories)
+    repository_roots = tuple(os.path.realpath(repo.root) for repo in repositories)
     if not repository_roots:
         raise spack.sandbox_namespaces.NamespaceSetupError(
             errno.EINVAL,
@@ -1626,6 +1649,14 @@ def prepare_namespace_activation(
     fetch_cache_path: str,
 ) -> Tuple[NamespaceActivation, spack.sandbox_namespaces.NamespaceMountPlanScratch]:
     """Select, compile, and lease one build's complete namespace policy."""
+    fetch_cache_path = os.path.abspath(fetch_cache_path)
+    if fetch_cache_path != os.path.realpath(fetch_cache_path):
+        raise spack.sandbox_namespaces.NamespaceSetupError(
+            errno.EINVAL,
+            "prepare namespace fetch cache",
+            f"fetch cache path is not canonical: {fetch_cache_path}",
+        )
+    os.makedirs(fetch_cache_path, mode=0o700, exist_ok=True)
     host_paths = select_namespace_host_device_worker_paths(
         config,
         spec,
@@ -1640,7 +1671,6 @@ def prepare_namespace_activation(
     for entry in compiler_driver_paths(spec):
         compiler_paths.append(entry.source)
     for _language, compiler_path, _compiler_spec in _selected_compilers(spec):
-        compiler_paths.append(compiler_path)
         compiler_paths.extend(entry.source for entry in compiler_support_paths(compiler_path))
 
     tool_entries = stage_tool_paths()
@@ -1649,7 +1679,9 @@ def prepare_namespace_activation(
 
     runtime_paths = list(host_paths.host_runtime_paths)
     runtime_paths.extend(host_paths.read_only_paths)
-    runtime_paths.append(os.path.realpath(sys.executable))
+    python_executable = os.path.abspath(sys.executable)
+    python_source = os.path.realpath(python_executable)
+    runtime_paths.append(python_source)
     runtime_paths.extend(
         os.path.realpath(path) for path in sys.path if os.path.isabs(path) and os.path.exists(path)
     )
@@ -1661,16 +1693,37 @@ def prepare_namespace_activation(
         host_paths.hidden_roots,
         tuple(sorted(set(path for path in compiler_paths if os.path.exists(path)))),
         tuple(sorted(set(path for path in tool_paths if os.path.exists(path)))),
-        tuple(system_compiler_header_paths(spec)),
+        tuple(path for path in system_compiler_header_paths(spec) if os.path.exists(path)),
         tuple(sorted(set(path for path in runtime_paths if os.path.exists(path)))),
         tuple(sorted(writable_paths)),
     )
     replacement_mounts = tuple((worker_root, root) for root in host_paths.replacement_roots)
     device_policy = _load_sandbox_policy()
     tmpfs_paths = tuple(device_policy["tmpfs_paths"])
-    generated_symlinks = tuple(compiler_alias_symlink_paths(spec)) + tuple(
-        spack.sandbox_namespaces.NamespaceGeneratedSymlink(link, target)
-        for link, target in device_policy["device_symlinks"].items()
+    generated_symlinks = tuple(
+        dict.fromkeys(
+            (
+                *compiler_alias_symlink_paths(spec),
+                *stage_tool_alias_symlink_paths(tool_entries, host_paths.hidden_roots),
+                *(
+                    (
+                        spack.sandbox_namespaces.NamespaceGeneratedSymlink(
+                            python_executable, python_source
+                        ),
+                    )
+                    if python_executable != python_source
+                    and any(
+                        os.path.commonpath((root, python_executable)) == root
+                        for root in host_paths.hidden_roots
+                    )
+                    else ()
+                ),
+                *(
+                    spack.sandbox_namespaces.NamespaceGeneratedSymlink(link, target)
+                    for link, target in device_policy["device_symlinks"].items()
+                ),
+            )
+        )
     )
     policy = namespace_selected_filesystem_policy_from_inputs(
         config,
