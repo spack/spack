@@ -4,6 +4,7 @@
 
 """Process-lifecycle regressions for the disposable namespace probe."""
 
+import builtins
 import ctypes
 import errno
 import os
@@ -163,6 +164,8 @@ def test_probe_transports_syscall_failure(monkeypatch):
         (1, "mount(tmpfs probe)"),
         (2, "mount(MS_REMOUNT, MS_RDONLY probe)"),
         (3, "mount(MS_BIND probe)"),
+        (4, "mount(tmpfs shared memory)"),
+        (5, "mount(MS_BIND device probe)"),
     ],
 )
 def test_probe_transports_mount_failure(monkeypatch, failing_call, operation):
@@ -242,6 +245,14 @@ def test_probe_removes_bind_mount_directories(monkeypatch, tmp_path):
 
     monkeypatch.setattr(ns.tempfile, "mkdtemp", make_probe_root)
     monkeypatch.setattr(ns, "_enter_user_mount_namespace", lambda *args, **kwargs: None)
+    real_open = open
+
+    def open_probe_file(path, *args, **kwargs):
+        if os.path.dirname(path) == str(probe_root / "shm" / "fd"):
+            path = str(probe_root / "shm" / "probe")
+        return real_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", open_probe_file)
 
     assert ns._probe_namespace_capability(SuccessfulLibc()).available
     assert not probe_root.exists()

@@ -19,6 +19,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.package_base
 import spack.spec
+import spack.stage
 import spack.util.environment
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
@@ -416,10 +417,18 @@ def test_wrapper_variables(
     setattr(dep_pkg, "libs", dep_libs)
     try:
         pkg = root.package
+        stage_path = pkg.stage.path
+        ordinary_env = EnvironmentModifications()
+        spack.build_environment.set_wrapper_variables(pkg, ordinary_env)
+        ordinary_env.apply_modifications()
+        assert f'"{stage_path}/"*' not in os.environ["SPACK_MANAGED_DIRS"]
+        monkeypatch.setattr(spack.stage, "stage_root", lambda config: "/relocated-stage-root")
         env_mods = EnvironmentModifications()
         spack.build_environment.set_wrapper_variables(pkg, env_mods)
 
         env_mods.apply_modifications()
+
+        assert f'"{stage_path}/"*' in os.environ["SPACK_MANAGED_DIRS"]
 
         def normpaths(paths):
             return [os.path.normpath(p) for p in paths]
