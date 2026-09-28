@@ -517,7 +517,7 @@ class SpecParser:
                                     noun = _SPEC_VALUED_EDGE_ATTRIBUTES[name]
                                     msg = f"expected a single spec as the {name}= {noun}"
                                     self._raise_parsing_error(msg)
-                                    self.curr, self.next = self.next, self.scanner.match()
+                                self.curr, self.next = self.next, self.scanner.match()
                             else:
                                 if not value and (
                                     not self.next or self.next.lastgroup == _END_EDGE_PROPERTIES
