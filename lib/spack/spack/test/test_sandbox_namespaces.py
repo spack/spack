@@ -2527,12 +2527,12 @@ def test_installer_mounts_before_landlock(monkeypatch, tmp_path, available, exte
 
     sandbox = RecordingSandbox()
     monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: sandbox)
-    spec = SimpleNamespace(
-        traverse=lambda **kw: [
-            SimpleNamespace(name="autoconf", external=external, prefix=tmp_path / "autoconf")
-        ],
-        prefix=tmp_path / "prefix",
+    dependency = (
+        spack.spec.Spec("autoconf", external_path=str(tmp_path / "autoconf"))
+        if external
+        else SimpleNamespace(name="autoconf", external=False, prefix=tmp_path / "autoconf")
     )
+    spec = SimpleNamespace(traverse=lambda **kw: [dependency], prefix=tmp_path / "prefix")
     build._enable_sandbox({"enable": True, "allow_network": False}, spec, str(tmp_path))
     assert calls[0] == ("prepare", hidden_dirs, str(tmp_path))
     if available:
@@ -2604,10 +2604,15 @@ def test_namespace_authority_drops_after_recipe_setup(monkeypatch, tmp_path):
 
 @pytest.mark.parametrize("external", [False, True])
 def test_default_mask_does_not_hide_tools(external):
-    spec = SimpleNamespace(
-        traverse=lambda **kw: [SimpleNamespace(name="autoconf", external=external)]
+    dependency = (
+        spack.spec.Spec("autoconf", external_path="/opt/autoconf")
+        if external
+        else SimpleNamespace(name="autoconf", external=False)
     )
-    assert build.default_hide_as_empty_dirs(spec) == ([] if external else ["/usr/share/aclocal"])
+    spec = SimpleNamespace(traverse=lambda **kw: [dependency])
+    assert build.configured_empty_directory_paths(cast(spack.spec.Spec, spec)) == (
+        [] if external else ["/usr/share/aclocal"]
+    )
 
 
 # Phases 4-6 have no implementation tests yet. They cover the policy-driven

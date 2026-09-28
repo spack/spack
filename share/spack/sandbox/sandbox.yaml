@@ -18,6 +18,10 @@ hidden_roots:
 - /usr/sbin
 - /usr/share
 - /var/tmp
+empty_directory_paths:
+- path: /usr/share/aclocal
+  unless_external_specs:
+  - autoconf
 replacement_roots:
 - /tmp
 - /var/tmp
