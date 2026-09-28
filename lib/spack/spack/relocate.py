@@ -82,18 +82,6 @@ def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
     return paths_to_paths
 
 
-def _transformed_macho_rpaths(
-    rpaths: List[str], paths_to_paths: Dict[str, str], rpath_transform: elf.RpathTransform
-) -> Optional[List[str]]:
-    """Return the rpaths obtained by applying ``rpath_transform`` and then ``paths_to_paths``
-    to ``rpaths``, or None if they are the same as applying ``paths_to_paths`` alone."""
-    transformed = [t.decode("utf-8") for t in rpath_transform([r.encode("utf-8") for r in rpaths])]
-    result = list(spack.util.lang.dedupe(paths_to_paths.get(r, r) for r in transformed))
-    if result == list(spack.util.lang.dedupe(paths_to_paths.get(r, r) for r in rpaths)):
-        return None
-    return result
-
-
 def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths, rpath_transform=None):
     """
     This function is used to make machO buildcaches on macOS by
@@ -121,16 +109,15 @@ def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths, rpath_t
         if new_dep and dep != new_dep:
             args += [("-change", dep, new_dep)]
 
-    transformed_rpaths = None
-    if rpath_transform is not None:
-        transformed_rpaths = _transformed_macho_rpaths(rpaths, paths_to_paths, rpath_transform)
-
     # -add_rpath appends, so entries are dropped or reordered by deleting all and adding back.
     # Adding runs in a second call, since an added entry may equal a deleted one.
     add_args = []
-    if transformed_rpaths is not None:
-        args += [("-delete_rpath", r) for r in spack.util.lang.dedupe(rpaths)]
-        add_args = [("-add_rpath", r) for r in transformed_rpaths]
+    if rpath_transform is not None:
+        transformed = [t.decode() for t in rpath_transform([r.encode() for r in rpaths])]
+        new_rpaths = list(spack.util.lang.dedupe(paths_to_paths.get(r, r) for r in transformed))
+        if new_rpaths != rpaths:
+            args += [("-delete_rpath", r) for r in spack.util.lang.dedupe(rpaths)]
+            add_args = [("-add_rpath", r) for r in new_rpaths]
     else:
         new_rpaths = []
         for orig_rpath in rpaths:

@@ -1024,6 +1024,16 @@ def test_install_gate_reports_only_the_labels_not_allowed(
     assert "CVE-2026-0002" not in message
 
 
+def _install_spliced_from_binary(original: Spec, replacement: Spec, mirror: str) -> Spec:
+    """Pushes the installed ``original`` to ``mirror``, uninstalls everything, and installs
+    ``original`` spliced with ``replacement`` from the binary cache. Returns the spliced spec."""
+    SpackCommand("buildcache")("push", "--unsigned", "--update-index", mirror, str(original))
+    SpackCommand("uninstall")("-ay")
+    spliced = original.splice(replacement, transitive=True)
+    spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
+    return spliced
+
+
 @pytest.mark.not_on_windows("lacking windows support for binary installs")
 @pytest.mark.regression("50560")
 def test_install_spliced_from_binary_relocates_to_external_replacement(
@@ -1054,18 +1064,17 @@ def test_install_spliced_from_binary_relocates_to_external_replacement(
         replacement = spack.concretize.concretize_one("splice-h+foo")
 
     spack.installer_dispatch.create_installer([original_spec.package]).install()
-    SpackCommand("buildcache")(
-        "push", "--unsigned", "--update-index", temporary_mirror, str(original_spec)
-    )
-    SpackCommand("uninstall")("-ay")
-
-    spliced = original_spec.splice(replacement, transitive=True)
-    spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
+    spliced = _install_spliced_from_binary(original_spec, replacement, temporary_mirror)
 
     with open(os.path.join(spliced.prefix, "splice-t"), encoding="utf-8") as f:
         content = f.read()
     assert f"splice-h: {external_prefix}splice-z" in content
     assert str(original_spec["splice-h"].prefix) not in content
+
+
+requires_elf_or_macho = pytest.mark.skipif(
+    sys.platform not in ("linux", "darwin"), reason="RPATH relocation is tested on ELF and Mach-O"
+)
 
 
 def _get_rpaths(path: str) -> List[str]:
@@ -1075,9 +1084,7 @@ def _get_rpaths(path: str) -> List[str]:
     return spack.util.elf.get_rpaths(path) or []
 
 
-@pytest.mark.skipif(
-    sys.platform not in ("linux", "darwin"), reason="RPATH relocation is tested on ELF and Mach-O"
-)
+@requires_elf_or_macho
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
     mutable_mock_env_path, install_mockery, mock_fetch, temporary_mirror, installer_variant
@@ -1092,14 +1099,7 @@ def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
     replacement = spack.concretize.concretize_one("rpath-mid~leaf")
 
     spack.installer_dispatch.create_installer([original_spec.package]).install()
-    SpackCommand("buildcache")(
-        "push", "--unsigned", "--update-index", temporary_mirror, str(original_spec)
-    )
-    SpackCommand("uninstall")("-ay")
-
-    spliced = original_spec.splice(replacement, transitive=True)
-    spack.installer_dispatch.create_installer([replacement.package]).install()
-    spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
+    spliced = _install_spliced_from_binary(original_spec, replacement, temporary_mirror)
 
     rpaths = _get_rpaths(os.path.join(spliced.prefix.bin, "app"))
     assert sorted(rpaths) == sorted(
@@ -1130,17 +1130,10 @@ def _install_root_spliced_with_external_mid(
     assert rpaths.index(original_spec["rpath-mid"].prefix.lib) < rpaths.index(
         original_spec["rpath-other"].prefix.lib
     )
-    SpackCommand("buildcache")("push", "--unsigned", "--update-index", mirror, str(original_spec))
-    SpackCommand("uninstall")("-ay")
-
-    spliced = original_spec.splice(replacement, transitive=True)
-    spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
-    return spliced
+    return _install_spliced_from_binary(original_spec, replacement, mirror)
 
 
-@pytest.mark.skipif(
-    sys.platform not in ("linux", "darwin"), reason="RPATH relocation is tested on ELF and Mach-O"
-)
+@requires_elf_or_macho
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_puts_external_rpaths_last(
     mutable_mock_env_path,
@@ -1175,9 +1168,7 @@ def test_install_spliced_from_binary_puts_external_rpaths_last(
     ]
 
 
-@pytest.mark.skipif(
-    sys.platform not in ("linux", "darwin"), reason="RPATH relocation is tested on ELF and Mach-O"
-)
+@requires_elf_or_macho
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_has_no_rpaths_for_system_externals(
     mutable_mock_env_path,

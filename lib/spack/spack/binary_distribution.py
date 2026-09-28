@@ -43,6 +43,7 @@ from typing import (
     cast,
 )
 
+import spack.build_environment
 import spack.caches
 import spack.config
 import spack.database
@@ -1955,15 +1956,12 @@ def _containing_prefix(path: bytes, prefixes: Container[bytes]) -> Optional[byte
 class _SplicedRpaths:
     """RPATH transform for a binary of a spliced spec, applied before prefix substitution.
 
-    Entries under a removed prefix are dropped, entries under a replaced prefix are replaced by
-    the directories it maps to, and entries under an external prefix are moved after all others,
-    as in a build. Duplicate entries are dropped.
+    Entries under a replaced prefix are replaced by the directories it maps to, which may be none,
+    and entries under an external prefix are moved after all others, as in a build. Duplicate
+    entries are dropped.
     """
 
-    def __init__(
-        self, removed: Iterable[str], replaced: Dict[str, List[str]], externals: Iterable[str]
-    ) -> None:
-        self.removed = {p.encode("utf-8") for p in removed}
+    def __init__(self, replaced: Dict[str, List[str]], externals: Iterable[str]) -> None:
         self.replaced = {
             p.encode("utf-8"): [d.encode("utf-8") for d in dirs] for p, dirs in replaced.items()
         }
@@ -1972,8 +1970,6 @@ class _SplicedRpaths:
     def __call__(self, rpaths: List[bytes]) -> List[bytes]:
         result: List[bytes] = []
         for rpath in rpaths:
-            if _containing_prefix(rpath, self.removed) is not None:
-                continue
             replaced_prefix = _containing_prefix(rpath, self.replaced)
             if replaced_prefix is not None:
                 result.extend(self.replaced[replaced_prefix])
@@ -1983,22 +1979,6 @@ class _SplicedRpaths:
             result, lambda r: _containing_prefix(r, self.externals) is not None
         )
         return list(spack.util.lang.dedupe(spack_built + external))
-
-
-def _external_library_dirs(external: spack.spec.Spec) -> List[str]:
-    """Return the directories a build adds to RPATH for a link dependency on an external that is
-    not in a system prefix
-    """
-    dirs: List[str] = []
-    try:
-        dirs.extend(external[external.name].libs.directories)
-    except spack.error.NoLibrariesError:
-        pass
-    for subdir in ("lib", "lib64"):
-        path = os.path.join(external.prefix, subdir)
-        if os.path.isdir(path):
-            dirs.append(path)
-    return list(spack.util.lang.dedupe(dirs))
 
 
 def relocate_package(spec: spack.spec.Spec) -> None:
@@ -2060,19 +2040,19 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     rpath_transform = None
     if spec.spliced:
         # Nodes of the build_spec without an analog in the spliced spec were removed by the splice
-        removed_prefixes = [
-            old_prefix
+        replaced_prefixes: Dict[str, List[str]] = {
+            old_prefix: []
             for dag_hash, old_prefix in hash_to_old_prefix.items()
             if dag_hash not in matched_old_hashes
-        ]
-        # A build adds no RPATH entry for externals in system prefixes
-        replaced_prefixes: Dict[str, List[str]] = {}
+        }
         for old_prefix, external in spliced_externals.items():
+            # A build adds no RPATH entry for externals in system prefixes
             if spack.util.environment.is_system_path(external.prefix):
                 replaced_prefixes[old_prefix] = []
                 continue
-            replaced_prefixes[old_prefix] = _external_library_dirs(external)
-            if not replaced_prefixes[old_prefix]:
+            dirs = spack.build_environment.link_dirs_of(external[external.name])
+            replaced_prefixes[old_prefix] = dirs
+            if not dirs:
                 warnings.warn(
                     f"no library directory found for external {external.name} at "
                     f"{external.prefix}, spliced into {spec.name}: its libraries will not be "
@@ -2083,7 +2063,7 @@ def relocate_package(spec: spack.spec.Spec) -> None:
             for s in relocation_specs
             if s.external and not spack.util.environment.is_system_path(s.prefix)
         ]
-        rpath_transform = _SplicedRpaths(removed_prefixes, replaced_prefixes, external_prefixes)
+        rpath_transform = _SplicedRpaths(replaced_prefixes, external_prefixes)
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix[old_layout_root] = str(spack.store.STORE.layout.root)
