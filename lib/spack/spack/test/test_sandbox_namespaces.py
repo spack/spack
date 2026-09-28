@@ -123,6 +123,281 @@ def test_probe_bypasses_reentry_guard(namespace_setup):
 # ---------------------------------------------------------------------------
 
 
+def test_filesystem_policy_is_immutable_and_deterministic(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    read_only_source = tmp_path / "read-only-source"
+    read_only_source.touch()
+    read_write_source = tmp_path / "read-write-source"
+    read_write_source.mkdir()
+
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        [(str(read_only_source), str(hidden / "z-read-only"))],
+        [(str(read_write_source), str(hidden / "a-read-write"))],
+        [ns.NamespaceGeneratedPath(str(hidden / "generated"), True)],
+    )
+
+    assert policy == ns.NamespaceFilesystemPolicy(
+        (str(hidden),),
+        (
+            ns.NamespaceMountRequest(
+                str(read_only_source),
+                str(hidden / "z-read-only"),
+                ns.NamespaceMountAccess.READ_ONLY,
+            ),
+        ),
+        (
+            ns.NamespaceMountRequest(
+                str(read_write_source),
+                str(hidden / "a-read-write"),
+                ns.NamespaceMountAccess.READ_WRITE,
+            ),
+        ),
+        (ns.NamespaceGeneratedPath(str(hidden / "generated"), True),),
+    )
+    with pytest.raises(AttributeError):
+        setattr(policy, "hidden_roots", ())
+
+
+def test_filesystem_policy_rejects_hidden_root_overlap(tmp_path):
+    hidden = tmp_path / "hidden"
+    child = hidden / "child"
+    child.mkdir(parents=True)
+
+    with pytest.raises(ns.NamespaceSetupError, match="hidden roots.*overlapping"):
+        ns.build_namespace_filesystem_policy([str(hidden), str(child)])
+
+
+def test_filesystem_policy_rejects_interleaved_hidden_root_overlap(tmp_path):
+    ancestor = tmp_path / "a"
+    descendant = ancestor / "child"
+    descendant.mkdir(parents=True)
+    interloper = tmp_path / "a-between"
+    interloper.mkdir()
+
+    with pytest.raises(ns.NamespaceSetupError, match="hidden roots.*overlapping"):
+        ns.build_namespace_filesystem_policy([str(ancestor), str(interloper), str(descendant)])
+
+
+def test_filesystem_policy_rejects_missing_hidden_root(tmp_path):
+    with pytest.raises(ns.NamespaceSetupError, match="hidden root does not exist"):
+        ns.build_namespace_filesystem_policy([str(tmp_path / "missing")])
+
+
+@pytest.mark.parametrize(
+    "invalid_input, operation, message, error_number",
+    [
+        ("file-root", "hidden root", "hidden root is not a directory", errno.ENOTDIR),
+        ("missing-source", "mount source", "mount source does not exist", errno.ENOENT),
+        ("outside-generated", "generated path", "not below a hidden root", errno.EINVAL),
+        ("invalid-generated", "generated path", "invalid generated path", errno.EINVAL),
+        ("root-target", "categories", "duplicate hidden root", errno.EINVAL),
+    ],
+)
+def test_filesystem_policy_rejects_invalid_inputs(
+    tmp_path, invalid_input, operation, message, error_number
+):
+    hidden = tmp_path / "hidden"
+    source = tmp_path / "source"
+    source.touch()
+    read_only = []
+    generated = []
+    if invalid_input == "file-root":
+        hidden.touch()
+    else:
+        hidden.mkdir()
+    if invalid_input == "missing-source":
+        read_only = [(str(tmp_path / "missing"), str(hidden / "target"))]
+    elif invalid_input == "outside-generated":
+        generated = [ns.NamespaceGeneratedPath(str(tmp_path / "outside"), True)]
+    elif invalid_input == "invalid-generated":
+        generated = [ns.NamespaceGeneratedPath(str(hidden / "generated"), "directory")]
+    elif invalid_input == "root-target":
+        read_only = [(str(source), str(hidden))]
+
+    with pytest.raises(ns.NamespaceSetupError, match=message) as caught:
+        ns.build_namespace_filesystem_policy([str(hidden)], read_only, generated_paths=generated)
+    assert caught.value.operation == "validate namespace policy " + operation
+    assert caught.value.errno == error_number
+
+
+def test_filesystem_policy_rejects_forged_read_write_access(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.touch()
+    policy = ns.NamespaceFilesystemPolicy(
+        (str(hidden),),
+        (),
+        (
+            ns.NamespaceMountRequest(
+                str(source), str(hidden / "target"), ns.NamespaceMountAccess.READ_ONLY
+            ),
+        ),
+    )
+
+    with pytest.raises(ns.NamespaceSetupError, match="invalid read-write mount") as caught:
+        ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "stage"))
+    assert caught.value.operation == "validate namespace policy access"
+
+
+def test_filesystem_policy_rejects_classified_path_containing_hidden_root(tmp_path):
+    parent = tmp_path / "parent"
+    hidden = parent / "hidden"
+    hidden.mkdir(parents=True)
+    source = tmp_path / "source"
+    source.mkdir()
+
+    with pytest.raises(ns.NamespaceSetupError, match="policy categories.*overlapping"):
+        ns.build_namespace_filesystem_policy([str(hidden)], [(str(source), str(parent))])
+
+
+@pytest.mark.parametrize("conflict", ["duplicate", "access", "overlap", "generated"])
+def test_filesystem_policy_rejects_classification_conflicts(tmp_path, conflict):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    first_source = tmp_path / "first-source"
+    second_source = tmp_path / "second-source"
+    first_source.mkdir()
+    second_source.mkdir()
+    first_target = hidden / "target"
+    second_target = first_target if conflict != "overlap" else first_target / "child"
+    read_only = [(str(first_source), str(first_target))]
+    read_write = []
+    generated = []
+    if conflict == "duplicate":
+        read_only.append((str(second_source), str(first_target)))
+    elif conflict in ("access", "overlap"):
+        read_write.append((str(second_source), str(second_target)))
+    else:
+        generated.append(ns.NamespaceGeneratedPath(str(first_target), False))
+
+    with pytest.raises(ns.NamespaceSetupError, match="classified paths"):
+        ns.build_namespace_filesystem_policy([str(hidden)], read_only, read_write, generated)
+
+
+def test_filesystem_policy_rejects_interleaved_classified_overlap(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    sources = []
+    for index in range(3):
+        source = tmp_path / f"source-{index}"
+        source.mkdir()
+        sources.append(source)
+
+    with pytest.raises(ns.NamespaceSetupError, match="classified paths.*overlapping"):
+        ns.build_namespace_filesystem_policy(
+            [str(hidden)],
+            [
+                (str(sources[0]), str(hidden / "a")),
+                (str(sources[1]), str(hidden / "a-between")),
+                (str(sources[2]), str(hidden / "a" / "child")),
+            ],
+        )
+
+
+def test_filesystem_policy_rejects_wrong_access_category(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+    policy = ns.NamespaceFilesystemPolicy(
+        (str(hidden),),
+        (
+            ns.NamespaceMountRequest(
+                str(source), str(hidden / "target"), ns.NamespaceMountAccess.READ_WRITE
+            ),
+        ),
+    )
+
+    with pytest.raises(ns.NamespaceSetupError, match="policy access.*read-only"):
+        ns.build_namespace_mount_plan_from_policy(policy, str(tmp_path / "stage"))
+
+
+def test_filesystem_policy_rejects_stage_below_hidden_root_before_namespace_entry(
+    namespace_setup, tmp_path
+):
+    libc, _ = namespace_setup
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    policy = ns.build_namespace_filesystem_policy([str(hidden)])
+
+    with pytest.raises(ns.NamespaceSetupError, match="stage must be outside hidden roots"):
+        ns.NamespaceSandbox(libc).prepare_filesystem_policy(policy, str(hidden / "mount-stage"))
+    assert libc.unshare_calls == []
+
+
+def test_filesystem_policy_rejects_hidden_root_in_reserved_scratch(tmp_path):
+    stage = tmp_path / "stage"
+    hidden = stage / "spack-preserved-host-paths" / "nested"
+    hidden.mkdir(parents=True)
+    policy = ns.build_namespace_filesystem_policy([str(hidden)])
+
+    with pytest.raises(ns.NamespaceSetupError, match="hidden root overlaps mount-plan scratch"):
+        ns.build_namespace_mount_plan_from_policy(policy, str(stage))
+
+
+def test_filesystem_policy_compiles_generated_paths(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    generated_dir = hidden / "generated-dir"
+    generated_file = hidden / "generated-file"
+    stage = tmp_path / "stage"
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        generated_paths=[
+            ns.NamespaceGeneratedPath(str(generated_file), False),
+            ns.NamespaceGeneratedPath(str(generated_dir), True),
+        ],
+    )
+
+    plan = ns.build_namespace_mount_plan_from_policy(policy, str(stage))
+    assert plan.generated_paths == (
+        ns.NamespaceGeneratedPath(str(generated_dir), True),
+        ns.NamespaceGeneratedPath(str(generated_file), False),
+    )
+    assert ns._apply_namespace_mount_plan(plan, FakeLibc())
+    assert (stage / "spack-empty-host-dirs/0/generated-dir").is_dir()
+    assert (stage / "spack-empty-host-dirs/0/generated-file").is_file()
+
+
+def test_mount_plan_does_not_recreate_disappeared_preserved_source(tmp_path):
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+    plan = ns.build_namespace_mount_plan(
+        [str(hidden)],
+        str(tmp_path / "stage"),
+        [
+            ns.NamespaceMountRequest(
+                str(source), str(hidden / "target"), ns.NamespaceMountAccess.READ_ONLY
+            )
+        ],
+    )
+    source.rmdir()
+
+    with pytest.raises(ns.NamespaceSetupError, match="mount source disappeared"):
+        ns._apply_namespace_mount_plan(plan, FakeLibc())
+    assert not source.exists()
+
+
+def test_filesystem_policy_validation_precedes_namespace_entry(namespace_setup, tmp_path):
+    libc, _ = namespace_setup
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source = tmp_path / "source"
+    source.mkdir()
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)], [(str(source), str(tmp_path / "outside"))]
+    )
+
+    with pytest.raises(ns.NamespaceSetupError, match="not below a hidden root"):
+        ns.NamespaceSandbox(libc).prepare_filesystem_policy(policy, str(tmp_path / "stage"))
+    assert libc.unshare_calls == []
+
+
 def test_empty_mount_tree_enters_namespace(namespace_setup, tmp_path):
     libc, _ = namespace_setup
     sandbox = ns.NamespaceSandbox(libc)
