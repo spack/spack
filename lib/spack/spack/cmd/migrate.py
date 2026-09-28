@@ -75,8 +75,13 @@ def _cleanup_old() -> None:
 
     for config_var in ("config:license_dir", "config:gpg_path", "config:environments_root"):
         value = spack.config.CONFIG.get(config_var, None)
-        if value and _under_old_dotspack(value):
-            references.append(f"{config_var} ({value})")
+        if not value:
+            continue
+        # environments_root can be a list; check each entry
+        values_to_check = value if isinstance(value, list) else [value]
+        for val in values_to_check:
+            if _under_old_dotspack(val):
+                references.append(f"{config_var} ({val})")
 
     if references:
         tty.die(

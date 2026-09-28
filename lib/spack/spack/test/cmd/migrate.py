@@ -88,6 +88,12 @@ def test_migrate_cleanup_old_removes_unreferenced_legacy_directory(
     old_user = Path(home_dir) / ".spack"
     old_user.mkdir()
     (old_user / "config.yaml").write_text("config: {}\n", encoding="utf-8")
+
+    # Create new user config location so fallback to ~/.spack is not used
+    new_user = Path(home_dir) / ".config" / "spack"
+    new_user.mkdir(parents=True)
+    (new_user / "config.yaml").write_text("config: {}\n", encoding="utf-8")
+
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     sp_migrate("cleanup-old")
