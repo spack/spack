@@ -368,15 +368,17 @@ class BinaryIndexCache:
             config: configuration to read the mirror list and TTL from.
         """
         self._init_local_index_cache()
-        self.mirrors_without_index = set()
 
         if mirror_metadata:
+            if mirror_metadata.url in self.mirrors_without_index:
+                self.mirrors_without_index.remove(mirror_metadata.url)
             supported_mirror_versions = {
                 (mirror_metadata.url, mirror_metadata.view): [mirror_metadata.version]
             }
             clear_cache = False
             regenerate_cache = False
         else:
+            self.mirrors_without_index = set()
             supported_mirror_versions = {
                 (m.fetch_url, m.fetch_view): m.supported_layout_versions
                 for m in spack.mirrors.mirror.MirrorCollection(binary=True, config=config).values()
@@ -563,6 +565,9 @@ class BinaryIndexCache:
             index_url = cache_class.get_index_url(mirror_url, mirror_view)
             if not web_util.url_exists(index_url):
                 raise BuildcacheIndexNotExists(f"Index not found in cache {index_url}")
+
+        if not cache_entry:
+            cache_entry = self._local_index_cache.get(str(mirror_metadata), {})
 
         handler: "IndexHandler" = self.get_index_handler(mirror_metadata, cache_entry)
         result = handler.conditional_fetch(force=force)
@@ -2816,6 +2821,9 @@ class IndexHandler:
 
     def push_index(self, db: BuildCacheDatabase):
         """Push a database as the index back to the cache"""
+        if spack.oci.image.is_oci_url(self.mirror_metadata.url):
+            raise NotImplementedError(f"{self.__class__.__name__} is not implemented for OCI")
+
         _url_push_index(self.mirror_metadata, db)
 
 

@@ -549,12 +549,12 @@ def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, cap
 def test_generate_package_index_push_failure(
     monkeypatch, tmp_path: pathlib.Path, mock_index_handler
 ):
-    mock_index_handler.fail_on_push = True
+    mock_index_handler.fail_to_push = True
 
-    def broken_read_specs(*args, **kwargs):
-        raise RuntimeError("Failed to read specs")
+    def _noop_read_specs(*args, **kwargs):
+        return
 
-    monkeypatch.setattr(spack.binary_distribution, "_read_specs", broken_read_specs)
+    monkeypatch.setattr(spack.binary_distribution, "_read_specs", _noop_read_specs)
 
     monkeypatch.setattr(
         spack.binary_distribution,

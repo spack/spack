@@ -1016,15 +1016,6 @@ def update_view(
 
     hashes = {h for e in envs for h in e.all_hashes()}
 
-    if not hashes:
-        # If this is append mode and there is nothing to
-        # append, skip updating the index
-        if update_mode == ViewUpdateMode.APPEND:
-            return
-
-        # This has to be a tty.warn or else the output is lost for tests
-        tty.warn("No specs found for view, creating an empty index")
-
     filter_fn = lambda x: x in hashes
 
     def _spec_by_hash(spec_hash: str) -> Optional[Spec]:
@@ -1033,15 +1024,25 @@ def update_view(
                 return e.get_one_by_hash(spec_hash)
         return None
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
-        spack.binary_distribution._url_update_index(
-            mirror_metadata,
-            tmpdir,
-            update_mode == ViewUpdateMode.APPEND,
-            filter_fn=filter_fn,
-            spec_by_hash=_spec_by_hash,
-            config=spack.config.CONFIG,
-        )
+    if hashes:
+        with tempfile.TemporaryDirectory(
+            dir=spack.stage.stage_root(spack.config.CONFIG)
+        ) as tmpdir:
+            spack.binary_distribution._url_update_index(
+                mirror_metadata,
+                tmpdir,
+                update_mode == ViewUpdateMode.APPEND,
+                filter_fn=filter_fn,
+                spec_by_hash=_spec_by_hash,
+                config=spack.config.CONFIG,
+            )
+
+    else:
+        # If this is append mode and there is nothing to
+        # append, skip updating the index
+        if update_mode != ViewUpdateMode.APPEND:
+            # This has to be a tty.warn or else the output is lost for tests
+            tty.warn("No specs found for view, creating an empty index")
 
     if update_keys:
         mirror_update_keys(mirror)
