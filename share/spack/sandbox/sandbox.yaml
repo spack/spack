@@ -42,19 +42,11 @@ device_symlinks:
 stage_programs:
 - 7z
 - bunzip2
-- cat
-- chmod
-- expr
 - git
 - gunzip
 - gzip
-- ls
-- make
 - patch
-- rm
-- sed
 - sh
-- sort
 - tar
 - unzip
 - xz
@@ -110,6 +102,7 @@ binutils_programs:
 - ar
 - nm
 - objcopy  # glib
+- objdump  # libzmq
 - ranlib
 - strip
 coreutils_install_programs:
@@ -132,6 +125,7 @@ coreutils_file_programs:
 - ls
 - od  # ninja
 - paste  # ncurses
+- readlink  # libbsd
 - realpath  # perl
 - sleep  # ncurses
 - split  # perl
@@ -160,6 +154,7 @@ build_utilities_programs:
 - fgrep  # bazel
 - file  # pkgconf, berkeley-db
 - find
+- gencat  # libelf
 - git
 - gzip  # font-util, git
 - grep

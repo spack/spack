@@ -437,11 +437,9 @@ def git_support_paths(git_path: str) -> List[ResolvedSandboxPath]:
     return [_resolved_sandbox_path(f"{git_path} --exec-path", exec_path)]
 
 
-def stage_tool_paths(policy: Optional[dict] = None) -> List[ResolvedSandboxPath]:
-    """Select stage tools, their script-helper closure, and Git's helper directory."""
-    policy = policy if policy is not None else _load_sandbox_policy()
+def _tool_paths_for_programs(programs: Iterable[str]) -> List[ResolvedSandboxPath]:
     helper_closure = {"gunzip": ("gzip", "sh"), "bunzip2": ("bzip2", "sh")}
-    names = list(policy["stage_programs"])
+    names = list(programs)
     for name in tuple(names):
         for helper in helper_closure.get(name, ()):
             if helper not in names:
@@ -463,6 +461,28 @@ def stage_tool_paths(policy: Optional[dict] = None) -> List[ResolvedSandboxPath]
                     seen.add((support.spelling, support.source))
                     result.append(support)
     return result
+
+
+def stage_tool_paths(policy: Optional[dict] = None) -> List[ResolvedSandboxPath]:
+    """Select fetch and expansion tools, their helper chain, and Git support."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    return _tool_paths_for_programs(policy["stage_programs"])
+
+
+def install_tool_paths(policy: Optional[dict] = None) -> List[ResolvedSandboxPath]:
+    """Select coreutils and build utilities needed during package installation."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    program_groups = (
+        "binutils_programs",
+        "coreutils_install_programs",
+        "coreutils_file_programs",
+        "coreutils_util_programs",
+        "build_utilities_programs",
+        "script_interpreter_programs",
+    )
+    return _tool_paths_for_programs(
+        program for group in program_groups for program in policy[group]
+    )
 
 
 def tool_alias_symlink_paths(
@@ -1676,7 +1696,7 @@ def prepare_namespace_activation(
         compiler_support_entries.extend(support_entries)
         compiler_paths.extend(entry.source for entry in support_entries)
 
-    tool_entries = stage_tool_paths()
+    tool_entries = list(dict.fromkeys((*stage_tool_paths(), *install_tool_paths())))
     tool_paths = [entry.source for entry in tool_entries]
     tool_paths.extend(tool_runtime_paths(spec, tool_entries))
 
