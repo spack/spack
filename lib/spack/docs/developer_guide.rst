@@ -345,6 +345,13 @@ It receives the spec as its only argument.
 A ``post_install`` hook runs within the install subprocess after installation finishes, but before the build stage is removed and the spec is registered in the database.
 It receives the spec and an optional boolean indicating whether this spec is an explicit user request, or a dependency.
 
+``post_register(spec, explicit)``
+"""""""""""""""""""""""""""""""""
+
+A ``post_register`` hook runs in the installer process once the spec is registered in the database, after its ``post_install`` hooks ran in the install subprocess.
+The installer registers specs in batches, so a ``post_install`` hook may not have seen in the database the specs registered along with its own.
+It receives the spec and a boolean indicating whether this spec is an explicit user request, or a dependency.
+
 ``pre_uninstall(spec)``
 """""""""""""""""""""""
 
