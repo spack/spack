@@ -1431,6 +1431,12 @@ class BaseModuleFileWriter:
                 return candidate
         return self.default_template
 
+    def write_folded(self) -> None:
+        """Writes the module file again if it folds this installation with others, so that it
+        lists the installations the database holds now."""
+        if self.layout.hold_other_installations:
+            self.write()
+
     def write(self, overwrite: bool = False) -> None:
         """Writes the module file.
 
