@@ -1952,6 +1952,38 @@ def absolutize_path_in_yaml(
         current[final_key] = new_value
 
 
+def _rewrite_sibling_env_path(
+    abs_path: str, old_envs_root: Optional[str], new_envs_root: Optional[str]
+) -> str:
+    """Rewrite path to sibling environment if under old envs root.
+
+    Args:
+        abs_path: Absolute path to check
+        old_envs_root: Root directory of old environments
+        new_envs_root: Root directory of new environments
+
+    Returns:
+        Path rewritten to new envs root if under old envs root, otherwise unchanged
+    """
+    if not (old_envs_root and new_envs_root):
+        return abs_path
+
+    abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
+    old_envs_root_norm = os.path.normpath(os.path.abspath(old_envs_root))
+    new_envs_root_norm = os.path.normpath(os.path.abspath(new_envs_root))
+
+    try:
+        rel_to_envs_root = os.path.relpath(abs_path_norm, old_envs_root_norm)
+        if not rel_to_envs_root.startswith(".."):
+            # Path is under old envs root (sibling env), rewrite to new location
+            return os.path.join(new_envs_root_norm, rel_to_envs_root)
+    except ValueError:
+        # Different drives on Windows
+        pass
+
+    return abs_path
+
+
 def process_env_file_paths(
     file_path: str,
     old_env_dir: str,
@@ -2012,21 +2044,11 @@ def process_env_file_paths(
                     modified = True
                 else:
                     # Rule 1a: Absolute path outside this env but inside envs root (sibling)
-                    if old_envs_root and new_envs_root:
-                        old_envs_root_norm = os.path.normpath(os.path.abspath(old_envs_root))
-                        new_envs_root_norm = os.path.normpath(os.path.abspath(new_envs_root))
-                        try:
-                            rel_to_envs_root = os.path.relpath(abs_path_norm, old_envs_root_norm)
-                            if not rel_to_envs_root.startswith(".."):
-                                # Path is under old envs root (sibling env), rewrite it
-                                new_path = os.path.join(new_envs_root_norm, rel_to_envs_root)
-                                absolutize_path_in_yaml(data, key_path, new_path)
-                                modified = True
-                            # else: Rule 4: Absolute path outside envs root → unchanged
-                        except ValueError:
-                            # Different drives → outside envs root, unchanged
-                            pass
-                    # else: Rule 4: Absolute path outside env, no envs_root info → unchanged
+                    rewritten = _rewrite_sibling_env_path(abs_path, old_envs_root, new_envs_root)
+                    if rewritten != abs_path:
+                        absolutize_path_in_yaml(data, key_path, rewritten)
+                        modified = True
+                    # else: Rule 4: Absolute path outside envs root → unchanged
             except ValueError:
                 # Different drives on Windows → outside env, unchanged
                 pass
@@ -2036,20 +2058,8 @@ def process_env_file_paths(
                 rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
                 if rel_to_old_env.startswith(".."):
                     # Rule 2: Relative path pointing outside env → make absolute
-                    # But: if pointing to sibling env, rewrite to new location
-                    target_path = abs_path
-                    if old_envs_root and new_envs_root:
-                        old_envs_root_norm = os.path.normpath(os.path.abspath(old_envs_root))
-                        new_envs_root_norm = os.path.normpath(os.path.abspath(new_envs_root))
-                        try:
-                            rel_to_envs_root = os.path.relpath(abs_path_norm, old_envs_root_norm)
-                            if not rel_to_envs_root.startswith(".."):
-                                # Path is under old envs root (sibling env being migrated)
-                                # Rewrite to new envs root location
-                                target_path = os.path.join(new_envs_root_norm, rel_to_envs_root)
-                        except ValueError:
-                            # Different drives, use old absolute path
-                            pass
+                    # But: if pointing to sibling env, rewrite to new location (Rule 2a)
+                    target_path = _rewrite_sibling_env_path(abs_path, old_envs_root, new_envs_root)
                     absolutize_path_in_yaml(data, key_path, target_path)
                     modified = True
                 # else: Rule 3: Relative path inside env → keep relative (no change)
