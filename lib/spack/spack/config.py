@@ -2128,6 +2128,24 @@ def process_config_file_paths(
     return data if modified else None
 
 
+def _can_migrate_to_location(location: str) -> bool:
+    """True if location doesn't exist or is an empty directory."""
+    if not os.path.exists(location):
+        return True
+
+    if not os.path.isdir(location):
+        tty.warn(f"{location} exists as a file, cannot migrate")
+        return False
+
+    if os.listdir(location):
+        tty.debug(f"{location} already has files, skipping migration")
+        return False
+
+    # Empty directory - safe to migrate
+    tty.debug(f"{location} exists but is empty, can migrate")
+    return True
+
+
 def _migrate_user_config() -> bool:
     """Programmatically migrate ~/.spack to ~/.config/spack.
 
@@ -2177,9 +2195,8 @@ def _migrate_user_config() -> bool:
         )
         return False
 
-    # Skip if new location already exists
-    if os.path.exists(new_default_cfg_location):
-        tty.debug(f"{new_default_cfg_location} already exists, skipping user config migration")
+    # Check if new location is safe for migration
+    if not _can_migrate_to_location(new_default_cfg_location):
         return False
 
     if not os.path.exists(old_location):
@@ -2218,13 +2235,14 @@ def _do_migrate_user_config(
     # Helper for _migrate_user_config: does the actual work of relocating config
     # files
 
-    # Check again if destination exists (might have been created by another process)
-    if os.path.exists(new_config_location):
-        tty.debug(
-            f"{new_config_location} already exists (created while waiting for lock), "
-            f"skipping user config migration"
-        )
+    # Re-check if destination is safe (might have changed while waiting for lock)
+    if not _can_migrate_to_location(new_config_location):
         return False
+
+    # If new location exists as empty directory, remove it so os.replace() can succeed
+    if os.path.exists(new_config_location):
+        os.rmdir(new_config_location)
+        tty.debug(f"Removed empty {new_config_location} to proceed with migration")
 
     # Use staging directory to make migration atomic
     config_parent = os.path.dirname(new_config_location)
