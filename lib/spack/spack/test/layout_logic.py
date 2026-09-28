@@ -16,12 +16,13 @@ import spack.paths
 import spack.util.spack_yaml as syaml
 
 
-def test_config_defaults_use_data_home(mock_spack_instance):
+def test_config_defaults_use_data_home(mock_spack_instance, monkeypatch):
     """Test that config defaults reference $data_home for various paths."""
     home_dir, base_prefix = mock_spack_instance
 
-    # Create a fresh configuration
+    # Create a fresh configuration and install it globally
     cfg = spack.config.create()
+    monkeypatch.setattr(spack.config, "CONFIG", cfg)
 
     # Get install_tree root - it should reference $data_home
     install_tree_root = cfg.get("config:install_tree:root")
