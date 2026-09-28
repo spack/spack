@@ -113,6 +113,13 @@ class NamespaceGeneratedPath(NamedTuple):
     is_directory: bool
 
 
+class NamespaceGeneratedSymlink(NamedTuple):
+    """One symlink created only in the namespace view."""
+
+    path: str
+    target: str
+
+
 class NamespaceFilesystemPolicy(NamedTuple):
     """Immutable filesystem intent validated before namespace mutation."""
 
@@ -120,6 +127,8 @@ class NamespaceFilesystemPolicy(NamedTuple):
     read_only_mounts: Tuple[NamespaceMountRequest, ...] = ()
     read_write_mounts: Tuple[NamespaceMountRequest, ...] = ()
     generated_paths: Tuple[NamespaceGeneratedPath, ...] = ()
+    replacement_mounts: Tuple[NamespaceMountRequest, ...] = ()
+    generated_symlinks: Tuple[NamespaceGeneratedSymlink, ...] = ()
 
 
 class NamespacePreservedMount(NamedTuple):
@@ -139,6 +148,8 @@ class NamespaceMountPlan(NamedTuple):
     preserved_mounts: Tuple[NamespacePreservedMount, ...] = ()
     restoration_mounts: Tuple[NamespacePreservedMount, ...] = ()
     generated_paths: Tuple[NamespaceGeneratedPath, ...] = ()
+    replacement_mounts: Tuple[NamespacePreservedMount, ...] = ()
+    generated_symlinks: Tuple[NamespaceGeneratedSymlink, ...] = ()
 
 
 class _CapabilityHeader(ctypes.Structure):
@@ -236,6 +247,8 @@ def build_namespace_filesystem_policy(
     read_only_mounts: Iterable[Tuple[str, str]] = (),
     read_write_mounts: Iterable[Tuple[str, str]] = (),
     generated_paths: Iterable[NamespaceGeneratedPath] = (),
+    replacement_mounts: Iterable[Tuple[str, str]] = (),
+    generated_symlinks: Iterable[NamespaceGeneratedSymlink] = (),
 ) -> NamespaceFilesystemPolicy:
     """Canonicalize and validate namespace filesystem intent.
 
@@ -290,15 +303,64 @@ def build_namespace_filesystem_policy(
                 "validate namespace policy generated path", f"invalid generated path: {path!r}"
             )
         canonical_generated_list.append(
-            NamespaceGeneratedPath(os.path.realpath(os.path.abspath(path.path)), path.is_directory)
+            NamespaceGeneratedPath(os.path.abspath(path.path), path.is_directory)
         )
     canonical_generated = tuple(sorted(canonical_generated_list, key=lambda item: item.path))
+
+    canonical_replacement_list = []
+    for source, target in replacement_mounts:
+        resolved_source = os.path.realpath(os.path.abspath(source))
+        resolved_target = os.path.realpath(os.path.abspath(target))
+        if not os.path.exists(resolved_source):
+            _mount_plan_error(
+                "validate namespace policy replacement source",
+                f"replacement source does not exist: {source}",
+                errno.ENOENT,
+            )
+        if not os.path.isdir(resolved_source):
+            _mount_plan_error(
+                "validate namespace policy replacement source",
+                f"replacement source is not a directory: {source}",
+                errno.ENOTDIR,
+            )
+        if resolved_target not in sorted_hidden_roots:
+            _mount_plan_error(
+                "validate namespace policy replacement target",
+                f"replacement target is not a hidden root: {target}",
+            )
+        canonical_replacement_list.append(
+            NamespaceMountRequest(
+                resolved_source, resolved_target, NamespaceMountAccess.READ_WRITE
+            )
+        )
+    canonical_replacement = tuple(
+        sorted(canonical_replacement_list, key=lambda item: (item.target, item.source))
+    )
+
+    canonical_symlink_list = []
+    for symlink in generated_symlinks:
+        if not isinstance(symlink, NamespaceGeneratedSymlink) or not os.path.isabs(symlink.target):
+            _mount_plan_error(
+                "validate namespace policy generated symlink",
+                f"invalid generated symlink: {symlink!r}",
+            )
+        canonical_symlink_list.append(
+            NamespaceGeneratedSymlink(
+                os.path.abspath(symlink.path), os.path.realpath(os.path.abspath(symlink.target))
+            )
+        )
+    canonical_symlinks = tuple(sorted(canonical_symlink_list, key=lambda item: item.path))
 
     classified_paths = [
         (mount.target, mount.access.value) for mount in canonical_read_only + canonical_read_write
     ]
     classified_paths.extend((path.path, "generated") for path in canonical_generated)
+    classified_paths.extend((path.path, "generated symlink") for path in canonical_symlinks)
     _validate_non_overlapping_paths(classified_paths, "validate namespace policy classified paths")
+    _validate_non_overlapping_paths(
+        ((mount.target, "replacement") for mount in canonical_replacement),
+        "validate namespace policy replacement mounts",
+    )
     for path, category in classified_paths:
         for root in sorted_hidden_roots:
             if path == root:
@@ -318,9 +380,21 @@ def build_namespace_filesystem_policy(
                 "validate namespace policy generated path",
                 f"generated path is not below a hidden root: {path}",
             )
+        if category == "generated symlink" and not any(
+            _path_contains(root, path) for root in sorted_hidden_roots
+        ):
+            _mount_plan_error(
+                "validate namespace policy generated symlink",
+                f"generated symlink is not below a hidden root: {path}",
+            )
 
     return NamespaceFilesystemPolicy(
-        sorted_hidden_roots, canonical_read_only, canonical_read_write, canonical_generated
+        sorted_hidden_roots,
+        canonical_read_only,
+        canonical_read_write,
+        canonical_generated,
+        canonical_replacement,
+        canonical_symlinks,
     )
 
 
@@ -347,8 +421,22 @@ def _validated_namespace_filesystem_policy(
                 "validate namespace policy access", f"invalid read-write mount: {mount!r}"
             )
         read_write_mounts.append((mount.source, mount.target))
+    replacement_mounts = []
+    for mount in policy.replacement_mounts:
+        if not isinstance(mount, NamespaceMountRequest) or (
+            mount.access is not NamespaceMountAccess.READ_WRITE
+        ):
+            _mount_plan_error(
+                "validate namespace policy access", f"invalid replacement mount: {mount!r}"
+            )
+        replacement_mounts.append((mount.source, mount.target))
     validated = build_namespace_filesystem_policy(
-        policy.hidden_roots, read_only_mounts, read_write_mounts, policy.generated_paths
+        policy.hidden_roots,
+        read_only_mounts,
+        read_write_mounts,
+        policy.generated_paths,
+        replacement_mounts,
+        policy.generated_symlinks,
     )
     if policy != validated:
         _mount_plan_error("validate namespace policy", "policy is not canonical")
@@ -378,19 +466,29 @@ def build_namespace_mount_plan_from_policy(
     classified_paths = [mount.target for mount in policy.read_only_mounts]
     classified_paths.extend(mount.target for mount in policy.read_write_mounts)
     classified_paths.extend(path.path for path in policy.generated_paths)
+    classified_paths.extend(path.path for path in policy.generated_symlinks)
     for path in classified_paths:
         if not any(_path_contains(root, path) for root in policy.hidden_roots):
             _mount_plan_error(
                 "compile namespace policy", f"classified path is not below a hidden root: {path}"
             )
     mounts = policy.read_only_mounts + policy.read_write_mounts
-    plan = _build_namespace_mount_plan(policy.hidden_roots, stage_path, mounts)
+    plan = _build_namespace_mount_plan(
+        policy.hidden_roots,
+        stage_path,
+        mounts,
+        policy.replacement_mounts,
+        policy.generated_paths,
+        policy.generated_symlinks,
+    )
     return NamespaceMountPlan(
         plan.stage_path,
         plan.mounts,
         plan.preserved_mounts,
         plan.restoration_mounts,
         policy.generated_paths,
+        plan.replacement_mounts,
+        policy.generated_symlinks,
     )
 
 
@@ -457,7 +555,12 @@ def build_namespace_mount_plan(
 
 
 def _build_namespace_mount_plan(
-    paths: Iterable[str], stage_path: str, preserved_sources: Iterable[NamespaceMountRequest]
+    paths: Iterable[str],
+    stage_path: str,
+    preserved_sources: Iterable[NamespaceMountRequest],
+    replacement_mounts: Iterable[NamespaceMountRequest] = (),
+    generated_paths: Iterable[NamespaceGeneratedPath] = (),
+    generated_symlinks: Iterable[NamespaceGeneratedSymlink] = (),
 ) -> NamespaceMountPlan:
     """Build concrete operations from canonical validated policy entries."""
     resolved_stage = os.path.realpath(os.path.abspath(stage_path))
@@ -536,12 +639,41 @@ def _build_namespace_mount_plan(
             key=lambda item: (item[1][1].count(os.sep), item[1][1]),
         )
     )
-    return NamespaceMountPlan(resolved_stage, mounts, preserved_mounts, restoration_mounts)
+    replacement_requests = []
+    for request in replacement_mounts:
+        if request.access is not NamespaceMountAccess.READ_WRITE:
+            _mount_plan_error(
+                "validate replacement access", f"invalid replacement access: {request!r}"
+            )
+        if not os.path.isdir(request.source):
+            _mount_plan_error(
+                "validate replacement source",
+                f"replacement source is not a directory: {request.source}",
+                errno.ENOTDIR,
+            )
+        if request.target not in sorted_targets:
+            _mount_plan_error(
+                "validate replacement target",
+                f"replacement target is not a hidden directory: {request.target}",
+            )
+        replacement_requests.append(
+            NamespacePreservedMount(request.source, request.target, True, request.access)
+        )
+    replacement_requests.sort(key=lambda item: (item.target, item.source))
+    return NamespaceMountPlan(
+        resolved_stage,
+        mounts,
+        preserved_mounts,
+        restoration_mounts,
+        tuple(generated_paths),
+        tuple(replacement_requests),
+        tuple(generated_symlinks),
+    )
 
 
 def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> bool:
     """Create and apply a previously validated namespace mount plan."""
-    if not plan.mounts and not plan.preserved_mounts:
+    if not plan.mounts and not plan.preserved_mounts and not plan.replacement_mounts:
         return True
 
     os.makedirs(plan.stage_path, exist_ok=True)
@@ -630,6 +762,13 @@ def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> 
             else:
                 os.makedirs(os.path.dirname(endpoint), exist_ok=True)
                 Path(endpoint).touch()
+        for generated in plan.generated_symlinks:
+            mask = next(
+                mount for mount in plan.mounts if _path_contains(mount.target, generated.path)
+            )
+            endpoint = os.path.join(mask.source, os.path.relpath(generated.path, mask.target))
+            os.makedirs(os.path.dirname(endpoint), exist_ok=True)
+            os.symlink(generated.target, endpoint)
         _check_syscall(
             libc.mount(
                 None,
@@ -643,6 +782,14 @@ def _apply_namespace_mount_plan(plan: NamespaceMountPlan, libc: ctypes.CDLL) -> 
 
     for mount in plan.mounts:
         apply_mount(mount.source, mount.target, True, False)
+    for replacement in plan.replacement_mounts:
+        apply_mount(
+            replacement.source,
+            replacement.target,
+            replacement.source_is_directory,
+            True,
+            replacement.access,
+        )
     for restoration_mount in plan.restoration_mounts:
         apply_mount(
             restoration_mount.source,
