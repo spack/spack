@@ -1870,6 +1870,19 @@ def _configure_namespace_worker_environment(worker_root: str) -> None:
     tempfile.tempdir = temporary
 
 
+def _require_staging_network(sandbox: Optional[spack.sandbox.Sandbox]) -> None:
+    """Reject a namespace worker whose network was isolated before staging."""
+    namespace_module = getattr(spack, "sandbox_namespaces", None)
+    if (
+        namespace_module is not None
+        and isinstance(sandbox, namespace_module.NamespaceSandbox)
+        and sandbox.network_namespace_active
+    ):
+        raise spack.error.InstallError(
+            "Network namespace must remain inactive while staging sources"
+        )
+
+
 def _prepare_namespace_sandbox_before_threads(
     config: dict,
     spec: spack.spec.Spec,
@@ -1884,7 +1897,8 @@ def _prepare_namespace_sandbox_before_threads(
     """Prepare the namespace view and drop mount authority before ``Tee``.
 
     The worker is still single-threaded here. Complete policy activation also
-    configures worker-local state; the returned sandbox cannot create later mounts.
+    configures worker-local state; mount authority is retained until sandbox
+    activation after staging.
     """
     if not config.get("enable", False):
         return None
@@ -1930,8 +1944,6 @@ def _prepare_namespace_sandbox_before_threads(
                 spack.util.tty.warn(
                     "Build sandbox could not mask host directories; kernel namespaces unavailable"
                 )
-        if prepared and not sandbox.drop_mount_authority():
-            raise spack.error.InstallError("Cannot drop namespace mount authority")
         if prepared and namespace_activation is not None:
             _configure_namespace_worker_environment(namespace_activation.worker_root)
     return sandbox
@@ -2016,9 +2028,16 @@ def _enable_sandbox(
         and isinstance(sandbox, namespace_module.NamespaceSandbox)
         and sandbox.filesystem_policy_active
     ):
+        if not config.get("allow_network", False):
+            try:
+                sandbox.prepare_network_namespace()
+            except spack.sandbox.SandboxError as e:
+                raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
+        if not sandbox.drop_mount_authority():
+            raise spack.error.InstallError("Cannot drop namespace mount authority")
         return
     # Direct callers prepare the namespace view here. The install worker hands
-    # in an already-prepared instance after its mount authority was dropped.
+    # in an already-prepared instance whose mount authority is dropped below.
     if (
         namespace_module is not None
         and isinstance(sandbox, namespace_module.NamespaceSandbox)
@@ -2029,8 +2048,11 @@ def _enable_sandbox(
             spack.util.tty.warn(
                 "Build sandbox could not mask host directories; kernel namespaces unavailable"
             )
-        elif not sandbox.drop_mount_authority():
-            raise spack.error.InstallError("Cannot drop namespace mount authority")
+        else:
+            if not config.get("allow_network", False):
+                sandbox.prepare_network_namespace()
+            if not sandbox.drop_mount_authority():
+                raise spack.error.InstallError("Cannot drop namespace mount authority")
 
     try:
         for dep in spec.traverse(root=False):
@@ -2056,7 +2078,7 @@ def _enable_sandbox(
         for p in config.get("allow_write", []):
             sandbox.allow_write(p)
 
-        sandbox.apply(block_network=not config.get("allow_network", True))
+        sandbox.apply(block_network=not config.get("allow_network", False))
     except spack.sandbox.SandboxError as e:
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
@@ -2164,6 +2186,7 @@ def _install(
             pass
         os.symlink(request.log_path, pkg.log_path)
 
+        _require_staging_network(sandbox)
         send_state("staging", state_stream)
 
         with timer.measure("stage"):

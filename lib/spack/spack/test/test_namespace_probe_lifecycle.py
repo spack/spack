@@ -19,6 +19,8 @@ import spack.sandbox_namespaces as ns
 @pytest.fixture(autouse=True)
 def reset_namespace_probe_result(monkeypatch):
     monkeypatch.setattr(ns, "_namespace_probe_result", None)
+    monkeypatch.setattr(ns, "_network_namespace_entered_pids", set())
+    monkeypatch.setattr(ns, "_enter_network_namespace", lambda libc: None)
 
 
 @pytest.mark.skipif(not hasattr(os, "fork"), reason="requires fork")
@@ -186,6 +188,28 @@ def test_probe_transports_mount_failure(monkeypatch, failing_call, operation):
     monkeypatch.setattr(ns, "_enter_user_mount_namespace", lambda *args, **kwargs: None)
     capability = ns._probe_namespace_capability(FailingLibc())
     assert capability == ns.NamespaceCapability(False, operation, "Operation not permitted")
+
+
+def test_probe_transports_network_namespace_failure(monkeypatch):
+    class SuccessfulLibc:
+        def mount(self, source, target, filesystemtype, flags, data):
+            return 0
+
+        def mount_setattr(self, directory_fd, path, flags, attributes, size):
+            return 0
+
+    monkeypatch.setattr(ns, "_enter_user_mount_namespace", lambda *args, **kwargs: None)
+
+    def fail_network_namespace(libc):
+        raise ns.NamespaceSetupError(
+            errno.EPERM, "unshare(CLONE_NEWNET)", "Operation not permitted"
+        )
+
+    monkeypatch.setattr(ns, "_enter_network_namespace", fail_network_namespace)
+    capability = ns._probe_namespace_capability(SuccessfulLibc())
+    assert capability == ns.NamespaceCapability(
+        False, "unshare(CLONE_NEWNET)", "Operation not permitted"
+    )
 
 
 @pytest.mark.skipif(not hasattr(os, "fork"), reason="requires fork")
