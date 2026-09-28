@@ -12,6 +12,7 @@ import spack.error
 import spack.spec
 from spack.config import Configuration
 from spack.installer.base import ExitCode
+from spack.installer.build import BuildLifecycle
 from spack.installer.core import PackageInstaller, read_connection, write_connection
 from spack.installer.ui import ChangeJobs, SetEcho
 from spack.store import Store
@@ -191,6 +192,7 @@ def test_capacity_serializes_launches(temporary_store, mock_packages):
     assert requests_at_finish == [1, 2]
 
 
+@pytest.mark.disable_clean_stage_check  # stopped builds retain their host-visible stage
 def test_stopped_at_phase_is_not_a_failure(temporary_store, mock_packages):
     """A build exiting with STOPPED_AT_PHASE raises nothing, reports no failure, and leaves no
     database record."""
@@ -338,6 +340,30 @@ def test_keyboard_interrupt_terminates_builds_and_flushes_db(temporary_store, mo
     assert launcher.hanging[0].terminated
     assert _record(temporary_store, dep) is not None
     assert _record(temporary_store, root) is None
+
+
+@pytest.mark.disable_clean_stage_check  # a failed launch keeps its private stage parent
+def test_launch_failure_finalizes_build_lifecycle(temporary_store, mock_packages, monkeypatch):
+    """When the launcher itself raises, the prepared build lifecycle is finalized as a build error
+    and the exception propagates."""
+    spec = _make_concrete("trivial-install-test-package")
+    finalized = []
+    original = BuildLifecycle.finalize
+
+    def record_finalize(self, exitcode):
+        finalized.append(exitcode)
+        original(self, exitcode)
+
+    monkeypatch.setattr(BuildLifecycle, "finalize", record_finalize)
+
+    def failing_launcher(request, jobserver):
+        raise RuntimeError("cannot launch")
+
+    with pytest.raises(RuntimeError, match="cannot launch"):
+        _install(failing_launcher, spec)
+
+    assert finalized == [ExitCode.BUILD_ERROR]
+    assert _record(temporary_store, spec) is None
 
 
 @pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root

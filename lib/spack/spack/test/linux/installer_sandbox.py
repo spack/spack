@@ -25,6 +25,7 @@ import spack.sandbox_base
 import spack.sandbox_namespaces as ns
 import spack.spec
 import spack.store
+import spack.util.ld_so_conf
 import spack.util.spack_yaml as syaml
 
 pytestmark = [
@@ -923,6 +924,107 @@ def test_complete_namespace_policy_from_installer_inputs(monkeypatch, tmp_path: 
     }
 
 
+def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: pathlib.Path):
+
+    host = tmp_path / "host"
+    for relative in ("bin", "lib", "share", "etc", "config", "repo", "store/bin"):
+        (host / relative).mkdir(parents=True)
+    runtime = host / "lib" / "libc.so"
+    runtime.touch()
+    dependency = host / "store" / "dependency"
+    dependency.mkdir()
+    install_prefix = host / "store" / "install"
+    install_prefix.mkdir()
+    stage = host / "stage"
+    stage.mkdir()
+    worker_root = host / "worker"
+    worker_root.mkdir()
+    fetch_cache = host / "fetch-cache"
+    fetch_cache.mkdir()
+    log_path = host / "worker.log"
+    log_path.touch()
+    jobserver = host / "jobserver_fifo"
+    jobserver.touch()
+    repository = host / "repo"
+    device = pathlib.Path(os.devnull)
+
+    monkeypatch.setattr(spack.paths, "bin_path", str(host / "bin"))
+    monkeypatch.setattr(spack.paths, "lib_path", str(host / "lib"))
+    monkeypatch.setattr(spack.paths, "share_path", str(host / "share"))
+    monkeypatch.setattr(spack.paths, "etc_path", str(host / "etc"))
+    monkeypatch.setattr(spack.paths, "user_config_path", str(host / "config"))
+    monkeypatch.setattr(spack.paths, "system_config_path", str(host / "config"))
+    monkeypatch.setattr(
+        spack.repo, "PATH", SimpleNamespace(repos=[SimpleNamespace(root=str(repository))])
+    )
+    monkeypatch.setattr(spack.store.STORE, "unpadded_root", str(host / "store"))
+    monkeypatch.setattr(spack.store.STORE, "upstreams", None)
+    monkeypatch.setattr(
+        spack.util.ld_so_conf, "host_dynamic_linker_search_paths", lambda: [str(runtime)]
+    )
+
+    spec = cast(
+        Any,
+        SimpleNamespace(
+            prefix=install_prefix,
+            traverse=lambda root=False: iter([SimpleNamespace(prefix=dependency, external=False)]),
+        ),
+    )
+    policy = {
+        "hidden_roots": [str(host / "store"), str(host / "stage")],
+        "replacement_roots": [str(host / "stage")],
+        "host_runtime_read_paths": [str(runtime), str(host / "missing-runtime")],
+        "file_runtime_read_paths": [],
+        "device_nodes": [str(device), str(host / "not-a-device")],
+    }
+
+    selected = build.select_namespace_host_device_worker_paths(
+        {"allow_read": [str(repository)], "allow_write": [str(worker_root)]},
+        spec,
+        str(stage),
+        log_path=str(log_path),
+        jobserver_paths=(str(jobserver),),
+        worker_root=str(worker_root),
+        fetch_cache_path=str(fetch_cache),
+        policy=policy,
+    )
+
+    assert selected.hidden_roots == tuple(
+        sorted((str((host / "stage").resolve()), str((host / "store").resolve())))
+    )
+    assert selected.replacement_roots == (str((host / "stage").resolve()),)
+    assert selected.host_runtime_paths == (str(runtime.resolve()),)
+    assert selected.device_paths == (str(device.resolve()),)
+    assert set(selected.read_only_paths) >= {
+        str((host / "bin").resolve()),
+        str((host / "lib").resolve()),
+        str((host / "share").resolve()),
+        str((host / "etc").resolve()),
+        str(dependency.resolve()),
+        str(repository.resolve()),
+    }
+    assert set(selected.writable_paths) >= {
+        str(stage.resolve()),
+        str(install_prefix.resolve()),
+        str(worker_root.resolve()),
+        str(fetch_cache.resolve()),
+        str(log_path.resolve()),
+        str(jobserver.resolve()),
+    }
+
+    with pytest.raises(ns.NamespaceSetupError, match="does not exist"):
+        build.select_namespace_host_device_worker_paths(
+            {},
+            spec,
+            str(stage),
+            log_path=None,
+            jobserver_paths=(),
+            worker_root=str(worker_root),
+            fetch_cache_path=str(host / "missing-fetch-cache"),
+            policy=policy,
+        )
+
+
 def test_complete_namespace_policy_rejects_missing_selected_path(
     monkeypatch, tmp_path: pathlib.Path
 ):
@@ -1029,6 +1131,60 @@ def test_worker_prepares_namespace_before_tee(monkeypatch):
         ("prepare", spec, "stage"),
         ("tee", ("control-r", "control-w", "parent", "build.log")),
     ]
+
+
+def test_namespace_policy_validation_precedes_namespace_mutation(monkeypatch, tmp_path):
+    calls = []
+
+    class RecordingSandbox(ns.NamespaceSandbox):
+        def prepare_mount_tree(self, hidden_dirs, stage_path):
+            calls.append(("prepare", hidden_dirs, stage_path))
+            return True
+
+    sandbox = RecordingSandbox()
+    for name in ("hidden", "tool", "header", "runtime", "temporary"):
+        (tmp_path / name).mkdir()
+    selected_paths = build.NamespacePolicyInputPaths(
+        hidden_roots=(str(tmp_path / "hidden"),),
+        compiler_paths=(str(tmp_path / "missing-compiler"),),
+        tool_paths=(str(tmp_path / "tool"),),
+        header_paths=(str(tmp_path / "header"),),
+        runtime_paths=(str(tmp_path / "runtime"),),
+        temporary_paths=(str(tmp_path / "temporary"),),
+    )
+    monkeypatch.setattr(
+        ns, "freeze_namespace_sandbox_capability", lambda: calls.append(("freeze",))
+    )
+    monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: sandbox)
+
+    with pytest.raises(ns.NamespaceSetupError, match="missing-compiler"):
+        build._prepare_namespace_sandbox_before_threads(
+            {"enable": True},
+            SimpleNamespace(prefix=tmp_path / "prefix", traverse=lambda **kwargs: []),
+            str(tmp_path / "stage"),
+            mount_plan_stage=str(tmp_path / "mount-plan"),
+            selected_paths=selected_paths,
+        )
+    assert calls == []
+
+
+def test_namespace_policy_validation_is_unconditional(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(
+        build,
+        "namespace_filesystem_policy_and_plan_from_inputs",
+        lambda *args, **kwargs: calls.append((args, kwargs)) or ("policy", "plan"),
+    )
+    selected_paths = build.NamespacePolicyInputPaths((), (), (), (), (), ())
+
+    assert build.validate_namespace_policy_before_threads(
+        {},
+        SimpleNamespace(),
+        str(tmp_path / "stage"),
+        str(tmp_path / "mount-plan"),
+        selected_paths,
+    )
+    assert calls
 
 
 def test_pre_thread_namespace_failure_is_reported(monkeypatch, tmp_path):

@@ -6,8 +6,10 @@
 
 import errno
 import os
+import shutil
 import subprocess
 import sys
+import tarfile
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 
@@ -1202,6 +1204,171 @@ os._exit(0)
     assert (source / "preserved-write").read_text() == "preserved"
     assert (source / "restored-write").read_text() == "restored"
     assert not list(hidden.iterdir())
+
+
+def test_disposable_namespace_compiler_and_source_build_evidence(tmp_path):
+    """Exercise a compiled read-only policy with real compiler and source-build tools."""
+    if not ns.namespace_sandbox_available():
+        pytest.skip("unprivileged namespaces unavailable")
+    cc = shutil.which("cc")
+    make = shutil.which("make")
+    tar = shutil.which("tar")
+    if cc is None or make is None or tar is None:
+        pytest.skip("C compiler, make, and tar are required for namespace build evidence")
+    cxx = shutil.which("c++")
+    fortran = shutil.which("gfortran")
+    git = shutil.which("git")
+    clang = shutil.which("clang")
+    clangxx = shutil.which("clang++")
+
+    source = tmp_path / "source"
+    source.mkdir()
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    mount_plan_stage = tmp_path / "mount-plan"
+    mount_plan_stage.mkdir()
+    archive_source = tmp_path / "archive-source"
+    archive_source.mkdir()
+    (archive_source / "hello.c").write_text(
+        '#include <stdio.h>\nint main(void) { puts("namespace-build"); return 0; }\n'
+    )
+    (archive_source / "configure").write_text(
+        "#!/bin/sh\n"
+        "cat > Makefile <<'EOF'\n"
+        "all: hello\n"
+        "hello: hello.c\n"
+        "\t$(CC) hello.c -o hello\n"
+        "EOF\n"
+    )
+    (archive_source / "configure").chmod(0o755)
+    archive = tmp_path / "hello.tar"
+    with tarfile.open(archive, "w") as stream:
+        stream.add(archive_source / "hello.c", arcname="hello.c")
+        stream.add(archive_source / "configure", arcname="configure")
+
+    policy = ns.build_namespace_filesystem_policy(
+        [str(hidden)],
+        read_write_mounts=[(str(source), str(hidden / "stage"))],
+        read_only_view=True,
+    )
+    plan = ns.build_namespace_mount_plan_from_policy(policy, str(mount_plan_stage))
+    assert plan.read_only_view
+
+    code = """
+import os
+import subprocess
+import sys
+from pathlib import Path
+from spack.sandbox_namespaces import NamespaceSandbox, build_namespace_filesystem_policy
+
+hidden = Path(sys.argv[1])
+archive = Path(sys.argv[2])
+mount_plan_stage = sys.argv[3]
+cc = sys.argv[4]
+cxx = sys.argv[5]
+fortran = sys.argv[6]
+git = sys.argv[7]
+tar = sys.argv[8]
+make = sys.argv[9]
+clang = sys.argv[10]
+clangxx = sys.argv[11]
+stage = hidden / "stage"
+policy = build_namespace_filesystem_policy(
+    [str(hidden)],
+    read_write_mounts=[(str(Path(sys.argv[12])), str(stage))],
+    read_only_view=True,
+)
+sandbox = NamespaceSandbox()
+assert sandbox.prepare_filesystem_policy(policy, mount_plan_stage)
+assert sandbox.drop_mount_authority()
+environment = dict(os.environ)
+environment.update(
+    TMPDIR=str(stage),
+    TMP=str(stage),
+    TEMP=str(stage),
+    HOME=str(stage),
+    XDG_CACHE_HOME=str(stage / "cache"),
+    CC=cc,
+)
+(stage / "cache").mkdir()
+if git:
+    subprocess.run([git, "--version"], check=True, env=environment)
+subprocess.run([tar, "-xf", str(archive), "-C", str(stage)], check=True, env=environment)
+subprocess.run(["/bin/sh", "configure"], check=True, cwd=str(stage), env=environment)
+subprocess.run([make, "-C", str(stage)], check=True, env=environment)
+subprocess.run([cc, "hello.c", "-o", "hello-cc"], check=True, cwd=str(stage), env=environment)
+if cxx or clangxx:
+    (stage / "hello.cpp").write_text("int main() { return 0; }" + chr(10))
+if cxx:
+    subprocess.run(
+        [cxx, "hello.cpp", "-o", "hello-cxx"], check=True, cwd=str(stage), env=environment
+    )
+if fortran:
+    (stage / "hello.f90").write_text("program hello" + chr(10) + "end program hello" + chr(10))
+    subprocess.run(
+        [fortran, "hello.f90", "-o", "hello-fortran"],
+        check=True,
+        cwd=str(stage),
+        env=environment,
+    )
+if clang:
+    subprocess.run(
+        [clang, "hello.c", "-o", "hello-clang"], check=True, cwd=str(stage), env=environment
+    )
+if clangxx:
+    subprocess.run(
+        [clangxx, "hello.cpp", "-o", "hello-clangxx"],
+        check=True,
+        cwd=str(stage),
+        env=environment,
+    )
+assert (stage / "hello").exists()
+assert (stage / "hello-cc").exists()
+if cxx:
+    assert (stage / "hello-cxx").exists()
+if fortran:
+    assert (stage / "hello-fortran").exists()
+if clang:
+    assert (stage / "hello-clang").exists()
+if clangxx:
+    assert (stage / "hello-clangxx").exists()
+os._exit(0)
+"""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            code,
+            str(hidden),
+            str(archive),
+            str(mount_plan_stage),
+            cc,
+            cxx or "",
+            fortran or "",
+            git or "",
+            tar or "",
+            make,
+            clang or "",
+            clangxx or "",
+            str(source),
+        ],
+        env=dict(os.environ, PYTHONPATH=os.pathsep.join(sys.path)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (source / "hello").exists()
+    assert (source / "hello-cc").exists()
+    if cxx:
+        assert (source / "hello-cxx").exists()
+    if fortran:
+        assert (source / "hello-fortran").exists()
+    if clang:
+        assert (source / "hello-clang").exists()
+    if clangxx:
+        assert (source / "hello-clangxx").exists()
 
 
 def test_live_read_only_view_rejects_passthrough_writes(tmp_path):
