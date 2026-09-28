@@ -9,16 +9,19 @@ import os
 import pathlib
 import sys
 import tempfile
+from types import SimpleNamespace
 from typing import Any, List, Tuple, cast
 
 import pytest
 
+import spack.compilers.config
 import spack.concretize
 import spack.error
 import spack.paths
 import spack.repo
 import spack.sandbox
 import spack.sandbox_namespaces
+import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 from spack.installer.build import _enable_sandbox
@@ -62,6 +65,7 @@ def test_namespace_policy_data_is_loaded_from_yaml():
     assert "tar" in policy["stage_programs"]
     assert header_policy["version"] == 1
     assert header_policy["system_include_root"] == "/usr/include"
+    assert header_policy["compiler_roots"] == ["/usr/lib/gcc", "/usr/lib64/gcc"]
 
 
 @pytest.mark.parametrize(
@@ -108,6 +112,321 @@ def test_linux_header_policy_rejects_unsafe_relative_paths(
     with pytest.raises(spack.error.InstallError, match=str(policy_path)) as error:
         build._load_linux_header_policy(str(policy_path))
     assert "glibc.files" in str(error.value)
+
+
+def test_linux_header_policy_rejects_relative_compiler_roots(tmp_path: pathlib.Path):
+    from spack.installer import build
+
+    policy = _minimal_header_policy(tmp_path)
+    policy["compiler_roots"] = ["relative"]
+    policy_path = tmp_path / "linux-header-policy.yaml"
+    _write_yaml(policy_path, policy)
+
+    with pytest.raises(spack.error.InstallError, match=str(policy_path)) as error:
+        build._load_linux_header_policy(str(policy_path))
+    assert "compiler_roots" in str(error.value)
+
+
+def _minimal_header_policy(include_root: pathlib.Path, maximum_major: int = 15) -> dict:
+    return {
+        "version": 1,
+        "system_include_root": str(include_root),
+        "compiler_roots": [str(include_root / "gcc")],
+        "glibc": {
+            "files": ["stdio.h"],
+            "directories": ["arpa"],
+            "target_files": ["fpu_control.h"],
+            "target_directories": ["bits", "sys"],
+        },
+        "linux": {"directories": ["linux"], "target_directories": ["asm"]},
+        "libstdcxx": {"maximum_major_for_non_gcc": maximum_major},
+    }
+
+
+def _compiler_spec(name: str, compilers: dict) -> SimpleNamespace:
+    return SimpleNamespace(name=name, extra_attributes={"compilers": compilers})
+
+
+@pytest.mark.parametrize("result", [None, (1, "/usr/bin/cc1"), (0, "cc1"), (0, "/usr/bin/cc1\n")])
+def test_compiler_query_failure_and_absolute_result(monkeypatch, result):
+    from spack.installer import build
+
+    def query(arguments, **kwargs):
+        assert arguments == ["/usr/bin/gcc", "-print-prog-name=cc1"]
+        if result is None:
+            raise OSError("compiler unavailable")
+        return SimpleNamespace(returncode=result[0], stdout=result[1])
+
+    monkeypatch.setattr(build.subprocess, "run", query)
+    expected = "/usr/bin/cc1" if result == (0, "/usr/bin/cc1\n") else None
+    assert build._compiler_query("/usr/bin/gcc", "-print-prog-name=cc1") == expected
+
+
+def test_selected_compilers_uses_language_edges_and_deduplicates(monkeypatch):
+    from spack.installer import build
+
+    compiler = _compiler_spec(
+        "llvm", {"c": "/usr/bin/clang", "cxx": "/usr/bin/clang++", "fortran": "/usr/bin/flang"}
+    )
+    edge = SimpleNamespace(spec=compiler, virtuals=("c",))
+    root = SimpleNamespace(
+        name="root", extra_attributes={}, edges_to_dependencies=lambda: [edge, edge]
+    )
+    spec = cast(spack.spec.Spec, SimpleNamespace(traverse=lambda: [root]))
+    monkeypatch.setattr(spack.compilers.config, "supported_compilers", lambda *, repo: ["gcc"])
+
+    selected = build._selected_compilers(spec)
+
+    assert [(language, path) for language, path, _ in selected] == [("c", "/usr/bin/clang")]
+
+
+def test_selected_compilers_includes_supported_compiler_nodes(monkeypatch):
+    from spack.installer import build
+
+    compiler = _compiler_spec(
+        "gcc", {"c": "/usr/bin/gcc", "cxx": "/usr/bin/g++", "fortran": "/usr/bin/gfortran"}
+    )
+    compiler.edges_to_dependencies = lambda: []
+    spec = SimpleNamespace(traverse=lambda: [compiler])
+    monkeypatch.setattr(spack.compilers.config, "supported_compilers", lambda *, repo: ["gcc"])
+
+    selected = build._selected_compilers(spec)
+
+    assert [(language, path) for language, path, _ in selected] == [
+        ("c", "/usr/bin/gcc"),
+        ("cxx", "/usr/bin/g++"),
+        ("fortran", "/usr/bin/gfortran"),
+    ]
+
+
+def test_compiler_support_paths_ignores_bare_names_and_spack_binutils(monkeypatch):
+    from spack.installer import build
+
+    policy = {
+        "compiler_programs": ["cc1", "cc1plus"],
+        "binutils_programs": ["as", "ld"],
+        "compiler_files": ["liblto_plugin.so"],
+    }
+    responses = {
+        "-print-prog-name=cc1": "/usr/libexec/cc1\n",
+        "-print-prog-name=cc1plus": "cc1plus\n",
+        "-print-prog-name=as": "/opt/libexec/spack/as\n",
+        "-print-prog-name=ld": "/usr/bin/ld\n",
+        "-print-file-name=liblto_plugin.so": "/usr/lib/liblto_plugin.so\n",
+    }
+    queries = []
+
+    def run(command, **kwargs):
+        queries.append(command[1])
+        return SimpleNamespace(returncode=0, stdout=responses[command[1]])
+
+    monkeypatch.setattr(build.subprocess, "run", run)
+
+    paths = build.compiler_support_paths("/usr/bin/cc", policy)
+
+    assert queries == list(responses)
+    assert paths == [
+        build.ResolvedSandboxPath("cc1", "/usr/libexec/cc1"),
+        build.ResolvedSandboxPath("ld", str(pathlib.Path("/usr/bin/ld").resolve())),
+        build.ResolvedSandboxPath("liblto_plugin.so", "/usr/lib/liblto_plugin.so"),
+    ]
+
+
+def test_gcc_installation_uses_configured_compiler_roots(tmp_path: pathlib.Path, monkeypatch):
+    from spack.installer import build
+
+    installation = tmp_path / "usr" / "lib" / "gcc" / "x86_64-linux-gnu" / "14"
+    library = installation / "libgcc.a"
+    library.parent.mkdir(parents=True)
+    library.touch()
+    monkeypatch.setattr(
+        build.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(returncode=0, stdout=f"{library}\n"),
+    )
+
+    policy = {"compiler_roots": [str(tmp_path / "usr" / "lib" / "gcc")]}
+
+    assert build._gcc_installation("cc", policy) == installation
+
+
+def test_compiler_driver_paths_preserve_alias_spellings(tmp_path: pathlib.Path, monkeypatch):
+    from spack.installer import build
+
+    compiler = tmp_path / "bin" / "clang"
+    compiler.parent.mkdir()
+    compiler.touch()
+    compiler_spec = _compiler_spec("llvm", {"c": str(compiler)})
+    edge = SimpleNamespace(spec=compiler_spec, virtuals=("c",))
+    root = SimpleNamespace(name="root", edges_to_dependencies=lambda: [edge])
+    spec = cast(spack.spec.Spec, SimpleNamespace(traverse=lambda: [root]))
+    policy = {"compiler_languages": ["c"], "compiler_driver_aliases": {"c": ["cc", "gcc"]}}
+    monkeypatch.setattr(spack.compilers.config, "supported_compilers", lambda *, repo: [])
+
+    assert build.compiler_driver_paths(spec, policy) == [
+        build.ResolvedSandboxPath(str(compiler), str(compiler)),
+        build.ResolvedSandboxPath(str(compiler.parent / "cc"), str(compiler)),
+        build.ResolvedSandboxPath(str(compiler.parent / "gcc"), str(compiler)),
+    ]
+    assert build.compiler_alias_symlink_paths(spec, policy) == [
+        spack.sandbox_namespaces.NamespaceGeneratedSymlink(
+            str(compiler.parent / "cc"), str(compiler)
+        ),
+        spack.sandbox_namespaces.NamespaceGeneratedSymlink(
+            str(compiler.parent / "gcc"), str(compiler)
+        ),
+    ]
+
+
+def test_compiler_driver_paths_give_generic_aliases_to_first_compiler(monkeypatch, tmp_path):
+    from spack.installer import build
+
+    compiler_bin = tmp_path / "bin"
+    compiler_bin.mkdir()
+    primary = compiler_bin / "g++-16"
+    secondary = compiler_bin / "g++-15"
+    primary.touch()
+    secondary.touch()
+    selected = [
+        ("cxx", str(primary), SimpleNamespace()),
+        ("cxx", str(secondary), SimpleNamespace()),
+    ]
+    monkeypatch.setattr(build, "_selected_compilers", lambda spec, policy: selected)
+    policy = {"compiler_driver_aliases": {"cxx": ["c++", "g++"]}}
+
+    assert build.compiler_driver_paths(cast(spack.spec.Spec, object()), policy) == [
+        build.ResolvedSandboxPath(str(primary), str(primary)),
+        build.ResolvedSandboxPath(str(compiler_bin / "c++"), str(primary)),
+        build.ResolvedSandboxPath(str(compiler_bin / "g++"), str(primary)),
+        build.ResolvedSandboxPath(str(secondary), str(secondary)),
+    ]
+
+
+def test_executable_support_paths_select_file_magic_and_cpp_cc1(
+    tmp_path: pathlib.Path, monkeypatch
+):
+    from spack.installer import build
+
+    magic = tmp_path / "magic.mgc"
+    magic.touch()
+    policy = {"file_runtime_read_paths": [str(magic)]}
+    monkeypatch.setattr(
+        build.subprocess,
+        "run",
+        lambda command, **kwargs: SimpleNamespace(returncode=0, stdout="/usr/lib/cc1\n"),
+    )
+
+    assert build.executable_support_paths("/usr/bin/file", policy) == [
+        build.ResolvedSandboxPath(str(magic), str(magic))
+    ]
+    assert build.executable_support_paths("/usr/bin/cpp", policy) == [
+        build.ResolvedSandboxPath("cc1", "/usr/lib/cc1")
+    ]
+
+
+def test_stage_tool_paths_include_helper_chain_and_git_exec_path(monkeypatch):
+    from spack.installer import build
+
+    policy = {"stage_programs": ["gunzip", "git"]}
+    tools = {
+        "gunzip": "/tools/gunzip",
+        "gzip": "/tools/gzip",
+        "sh": "/tools/sh",
+        "git": "/tools/git",
+    }
+    monkeypatch.setattr(build, "which_string", tools.get)
+    monkeypatch.setattr(
+        build.subprocess,
+        "run",
+        lambda command, **kwargs: SimpleNamespace(returncode=0, stdout="/tools/git-core\n"),
+    )
+
+    assert build.stage_tool_paths(policy) == [
+        build.ResolvedSandboxPath("gunzip", "/tools/gunzip"),
+        build.ResolvedSandboxPath("git", "/tools/git"),
+        build.ResolvedSandboxPath("/tools/git --exec-path", "/tools/git-core"),
+        build.ResolvedSandboxPath("gzip", "/tools/gzip"),
+        build.ResolvedSandboxPath("sh", "/tools/sh"),
+    ]
+
+
+def test_tool_runtime_paths_include_owner_and_link_run_dependencies(tmp_path: pathlib.Path):
+    from spack.installer import build
+
+    tool_prefix = tmp_path / "tar"
+    tool = tool_prefix / "bin" / "tar"
+    tool.parent.mkdir(parents=True)
+    tool.touch()
+    dependency = SimpleNamespace(prefix=tmp_path / "libiconv")
+    owner = SimpleNamespace(prefix=tool_prefix, traverse=lambda **kwargs: [dependency])
+    unrelated = SimpleNamespace(prefix=tmp_path / "unrelated")
+    spec = cast(spack.spec.Spec, SimpleNamespace(traverse=lambda: [owner, unrelated]))
+
+    assert build.tool_runtime_paths(spec, [build.ResolvedSandboxPath("tar", str(tool))]) == [
+        str(tool_prefix),
+        str(dependency.prefix),
+    ]
+
+
+def _system_gcc_layout(tmp_path: pathlib.Path):
+    install_root = tmp_path / "lib" / "gcc"
+    target = install_root / "test-linux-gnu"
+    (target / "15").mkdir(parents=True)
+    (target / "16").mkdir()
+    include_root = tmp_path / "include"
+    (include_root / "c++" / "15").mkdir(parents=True)
+    (include_root / "c++" / "16").mkdir()
+    return target, include_root
+
+
+@pytest.mark.parametrize("compiler_name, expected_version", [("llvm", "15"), ("gcc", "16")])
+def test_system_compiler_headers_select_libstdcxx_policy_version(
+    tmp_path: pathlib.Path, monkeypatch, compiler_name: str, expected_version: str
+):
+    from spack.installer import build
+
+    target, include_root = _system_gcc_layout(tmp_path)
+    compiler = _compiler_spec(compiler_name, {"cxx": "/usr/bin/clang++"})
+    edge = SimpleNamespace(spec=compiler, virtuals=("cxx",))
+    root = SimpleNamespace(name="root", extra_attributes={}, edges_to_dependencies=lambda: [edge])
+    spec = cast(spack.spec.Spec, SimpleNamespace(traverse=lambda: [root]))
+    policy = _minimal_header_policy(include_root)
+    monkeypatch.setattr(build, "_gcc_installation", lambda compiler_path, policy: target / "16")
+
+    paths = build.system_compiler_header_paths(spec, policy)
+
+    assert str(include_root / "stdio.h") in paths
+    assert str(include_root / "linux") in paths
+    assert str(include_root / "c++" / expected_version) in paths
+    assert str(include_root / "c++" / ("16" if expected_version == "15" else "15")) not in paths
+
+
+def test_system_compiler_headers_ignore_non_system_compilers(tmp_path: pathlib.Path):
+    from spack.installer import build
+
+    compiler = _compiler_spec("llvm", {"cxx": str(tmp_path / "clang++")})
+    edge = SimpleNamespace(spec=compiler, virtuals=("cxx",))
+    root = SimpleNamespace(name="root", extra_attributes={}, edges_to_dependencies=lambda: [edge])
+    spec = cast(spack.spec.Spec, SimpleNamespace(traverse=lambda: [root]))
+
+    assert build.system_compiler_header_paths(spec, _minimal_header_policy(tmp_path)) == []
+
+
+def test_gcc_installation_mask_excludes_permitted_cxx_installation(
+    tmp_path: pathlib.Path, monkeypatch
+):
+    from spack.installer import build
+
+    target, include_root = _system_gcc_layout(tmp_path)
+    compiler = _compiler_spec("llvm", {"cxx": "/usr/bin/clang++"})
+    edge = SimpleNamespace(spec=compiler, virtuals=("cxx",))
+    root = SimpleNamespace(name="root", extra_attributes={}, edges_to_dependencies=lambda: [edge])
+    spec = cast(spack.spec.Spec, SimpleNamespace(traverse=lambda: [root]))
+    monkeypatch.setattr(build, "_gcc_installation", lambda compiler_path, policy: target / "16")
+
+    assert build.gcc_installation_dirs_to_mask(spec, _minimal_header_policy(include_root)) == [
+        str(target / "16")
+    ]
 
 
 def test_allow_read_reports_both_the_requested_and_resolved_path(tmp_path: pathlib.Path):
@@ -475,7 +794,15 @@ def test_complete_namespace_policy_from_installer_inputs(monkeypatch, tmp_path: 
         Any, SimpleNamespace(prefix=install_prefix, traverse=lambda root=True: iter(dependencies))
     )
     selected_paths = NamespacePolicyInputPaths(
-        hidden_roots=(str(hidden_host_state),),
+        hidden_roots=(
+            str(hidden_host_state),
+            str(host / "usr"),
+            str(host / "repos-python"),
+            str(host / "store"),
+            str(host / "build"),
+            str(spack_prefix),
+            str(pathlib.Path(os.devnull).parent),
+        ),
         compiler_paths=(str(compiler),),
         tool_paths=(str(tool),),
         header_paths=(str(headers), str(compiler_headers)),
@@ -511,7 +838,7 @@ def test_complete_namespace_policy_from_installer_inputs(monkeypatch, tmp_path: 
         str(pathlib.Path(os.devnull).resolve().parent),
         str((host / "build").resolve()),
         str(hidden_host_state.resolve()),
-        str(repository_composition_root.resolve()),
+        str(repository_python_path.resolve()),
         str(spack_prefix.resolve()),
         str((host / "store").resolve()),
         str((host / "usr").resolve()),
@@ -542,29 +869,33 @@ def test_complete_namespace_policy_rejects_missing_selected_path(
 
     existing = tmp_path / "existing"
     existing.mkdir()
+    hidden = tmp_path / "hidden"
+    hidden.mkdir()
+    source_root = tmp_path / "source"
+    source_root.mkdir()
     missing = tmp_path / "missing-compiler"
     spec = cast(Any, SimpleNamespace(prefix=existing, traverse=lambda root=True: iter(())))
     selected_paths = NamespacePolicyInputPaths(
-        hidden_roots=(str(existing),),
+        hidden_roots=(str(hidden),),
         compiler_paths=(str(missing),),
-        tool_paths=(str(existing),),
-        header_paths=(str(existing),),
-        runtime_paths=(str(existing),),
+        tool_paths=(str(source_root),),
+        header_paths=(str(source_root),),
+        runtime_paths=(str(source_root),),
         temporary_paths=(str(existing),),
     )
     monkeypatch.setattr(
         spack.repo,
         "PATH",
-        SimpleNamespace(repos=[SimpleNamespace(root=str(existing), python_path=None)]),
+        SimpleNamespace(repos=[SimpleNamespace(root=str(source_root), python_path=None)]),
     )
-    monkeypatch.setattr(spack.paths, "bin_path", str(existing))
-    monkeypatch.setattr(spack.paths, "lib_path", str(existing))
-    monkeypatch.setattr(spack.paths, "share_path", str(existing))
-    monkeypatch.setattr(spack.paths, "etc_path", str(existing))
-    sbang = tmp_path / "store" / "bin" / "sbang"
+    monkeypatch.setattr(spack.paths, "bin_path", str(source_root))
+    monkeypatch.setattr(spack.paths, "lib_path", str(source_root))
+    monkeypatch.setattr(spack.paths, "share_path", str(source_root))
+    monkeypatch.setattr(spack.paths, "etc_path", str(source_root))
+    sbang = source_root / "store" / "bin" / "sbang"
     sbang.parent.mkdir(parents=True)
     sbang.touch()
-    monkeypatch.setattr(spack.store.STORE, "unpadded_root", str(tmp_path / "store"))
+    monkeypatch.setattr(spack.store.STORE, "unpadded_root", str(source_root / "store"))
     monkeypatch.setattr(spack.store.STORE, "upstreams", None)
 
     with pytest.raises(spack.sandbox_namespaces.NamespaceSetupError, match=str(missing)):
@@ -588,14 +919,17 @@ def test_complete_namespace_policy_rejects_missing_selected_path(
         )
 
     with pytest.raises(
-        spack.sandbox_namespaces.NamespaceSetupError, match="without hiding the filesystem root"
+        spack.sandbox_namespaces.NamespaceSetupError,
+        match="classified path is not below a hidden root",
     ):
+        uncovered_temporary = tmp_path / "uncovered-temporary"
+        uncovered_temporary.mkdir()
         namespace_filesystem_policy_and_plan_from_inputs(
             {},
             spec,
             str(existing),
             str(tmp_path / "mount-plan"),
             selected_paths._replace(
-                compiler_paths=(str(compiler),), temporary_paths=(tempfile.gettempdir(),)
+                compiler_paths=(str(compiler),), temporary_paths=(str(uncovered_temporary),)
             ),
         )

@@ -2,6 +2,9 @@
 # Paths are relative to /usr/include. Missing paths are ignored.
 version: 1
 system_include_root: /usr/include
+compiler_roots:
+- /usr/lib/gcc
+- /usr/lib64/gcc
 glibc:
   files:
   - aio.h
