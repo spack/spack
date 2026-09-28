@@ -14,8 +14,10 @@ from typing import Any, List, Tuple, cast
 
 import pytest
 
+import spack.build_environment
 import spack.compilers.config
 import spack.concretize
+import spack.directory_layout
 import spack.error
 import spack.paths
 import spack.repo
@@ -116,6 +118,7 @@ def test_namespace_policy_data_is_loaded_from_yaml():
     assert policy["empty_directory_paths"] == [
         {"path": "/usr/share/aclocal", "unless_external_specs": ["autoconf"]}
     ]
+    assert policy["external_prefix_read_paths"] == ["include", "lib", "lib64", "share"]
     assert policy["replacement_roots"] == ["/tmp", "/var/tmp"]
     assert "/dev/urandom" in policy["device_nodes"]
     assert policy["tmpfs_paths"] == ["/dev/shm"]
@@ -156,7 +159,19 @@ def test_namespace_policy_data_is_loaded_from_yaml():
             ),
             "empty_directory_paths[0].unless_external_specs",
         ),
+        (
+            lambda policy: policy.update(external_prefix_read_paths=["../etc"]),
+            "external_prefix_read_paths",
+        ),
+        (
+            lambda policy: policy.update(external_prefix_read_paths=["."]),
+            "external_prefix_read_paths",
+        ),
         (lambda policy: policy.update(tmpfs_paths=["relative"]), "tmpfs_paths"),
+        (
+            lambda policy: policy.update(mount_plan_scratch_paths=["relative"]),
+            "mount_plan_scratch_paths",
+        ),
         (lambda policy: policy.update(device_symlinks=[]), "device_symlinks"),
         (lambda policy: policy.update(device_symlinks={"/dev/fd": "relative"}), "device_symlinks"),
         (
@@ -814,6 +829,24 @@ def test_configured_empty_directory_paths_match_external_spec_constraints():
     ]
 
 
+def test_external_prefix_read_paths_select_configured_existing_subdirectories(tmp_path):
+    from spack.installer import build
+
+    prefix = tmp_path / "external"
+    expected = tuple(
+        sorted(str((prefix / relative).resolve()) for relative in ("include", "share"))
+    )
+    for path in expected:
+        pathlib.Path(path).mkdir(parents=True)
+    (prefix / "etc").mkdir()
+    (prefix / "lib").touch()
+    external = spack.spec.Spec("tool@1.2+feature", external_path=str(prefix))
+    spec = SimpleNamespace(traverse=lambda root=False: iter([external]))
+    policy = {"external_prefix_read_paths": ["include", "lib", "lib64", "share"]}
+
+    assert build.external_prefix_read_paths(spec, policy) == expected
+
+
 def test_namespace_filesystem_policy_from_installer_inputs(monkeypatch, tmp_path: pathlib.Path):
     if sys.platform != "linux":
         pytest.skip("Linux namespace filesystem policy")
@@ -943,6 +976,7 @@ def test_complete_namespace_policy_from_installer_inputs(monkeypatch, tmp_path: 
 
     dependencies = (
         SimpleNamespace(name="dependency", external=False, prefix=dependency_prefix),
+        SimpleNamespace(name="stale-build-dependency", external=False, prefix=host / "missing"),
         SimpleNamespace(name="external", external=True, prefix=external_prefix),
     )
     spec = cast(
@@ -961,7 +995,7 @@ def test_complete_namespace_policy_from_installer_inputs(monkeypatch, tmp_path: 
         compiler_paths=(str(compiler),),
         tool_paths=(str(tool),),
         header_paths=(str(headers), str(compiler_headers)),
-        runtime_paths=(str(runtime),),
+        runtime_paths=(str(runtime), str(dependency_prefix)),
         temporary_paths=(str(temporary_path),),
     )
 
@@ -1012,7 +1046,7 @@ def test_complete_namespace_policy_from_installer_inputs(monkeypatch, tmp_path: 
 
 
 def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: pathlib.Path):
-    from spack.installer.build import select_namespace_host_device_worker_paths
+    from spack.installer import build
 
     host = tmp_path / "host"
     for relative in ("bin", "lib", "share", "etc", "config", "repo", "store/bin"):
@@ -1021,6 +1055,13 @@ def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: 
     runtime.touch()
     dependency = host / "store" / "dependency"
     dependency.mkdir()
+    external_prefix = host / "store" / "external"
+    external_include = external_prefix / "include"
+    external_share = external_prefix / "share"
+    external_etc = external_prefix / "etc"
+    external_include.mkdir(parents=True)
+    external_share.mkdir()
+    external_etc.mkdir()
     install_prefix = host / "store" / "install"
     install_prefix.mkdir()
     stage = host / "stage"
@@ -1055,18 +1096,25 @@ def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: 
         Any,
         SimpleNamespace(
             prefix=install_prefix,
-            traverse=lambda root=False: iter([SimpleNamespace(prefix=dependency, external=False)]),
+            traverse=lambda root=False: iter(
+                [
+                    SimpleNamespace(prefix=dependency, external=False),
+                    spack.spec.Spec("external", external_path=str(external_prefix)),
+                ]
+            ),
         ),
     )
+    monkeypatch.setattr(build, "required_build_dependency_paths", lambda spec: (str(dependency),))
     policy = {
         "hidden_roots": [str(host / "store"), str(host / "stage")],
         "replacement_roots": [str(host / "stage")],
         "host_runtime_read_paths": [str(runtime), str(host / "missing-runtime")],
         "file_runtime_read_paths": [],
         "device_nodes": [str(device), str(host / "not-a-device")],
+        "external_prefix_read_paths": ["include", "lib", "lib64", "share"],
     }
 
-    selected = select_namespace_host_device_worker_paths(
+    selected = build.select_namespace_host_device_worker_paths(
         {"allow_read": [str(repository)], "allow_write": [str(worker_root)]},
         spec,
         str(stage),
@@ -1089,8 +1137,11 @@ def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: 
         str((host / "share").resolve()),
         str((host / "etc").resolve()),
         str(dependency.resolve()),
+        str(external_include.resolve()),
+        str(external_share.resolve()),
         str(repository.resolve()),
     }
+    assert str(external_etc.resolve()) not in selected.read_only_paths
     assert set(selected.writable_paths) >= {
         str(stage.resolve()),
         str(install_prefix.resolve()),
@@ -1101,7 +1152,7 @@ def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: 
     }
 
     with pytest.raises(spack.sandbox_namespaces.NamespaceSetupError, match="does not exist"):
-        select_namespace_host_device_worker_paths(
+        build.select_namespace_host_device_worker_paths(
             {},
             spec,
             str(stage),
@@ -1111,6 +1162,24 @@ def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: 
             fetch_cache_path=str(host / "missing-fetch-cache"),
             policy=policy,
         )
+
+
+def test_required_build_dependency_paths_rejects_missing_prefix(monkeypatch, tmp_path):
+    from spack.installer import build
+
+    root = SimpleNamespace(external=False)
+    dependency = SimpleNamespace(external=False, prefix=tmp_path / "missing")
+    monkeypatch.setattr(
+        spack.build_environment,
+        "effective_deptypes",
+        lambda spec, context: ((root, object()), (dependency, object())),
+    )
+
+    with pytest.raises(
+        spack.directory_layout.InconsistentInstallDirectoryError,
+        match=r"Install prefix .* does not exist\.",
+    ):
+        build.required_build_dependency_paths(root)
 
 
 def test_prepare_namespace_activation_compiles_selected_production_policy(
