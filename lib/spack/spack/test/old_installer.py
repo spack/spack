@@ -819,7 +819,7 @@ def test_setup_install_dir_grp(temporary_store: Store, install_mockery, monkeypa
     def _get_group(spec):
         return mock_group
 
-    def _chgrp(path, group, follow_symlinks=True):
+    def _chgrp(path, group):
         tty.msg(mock_chgrp_msg.format(path, group))
 
     monkeypatch.setattr(prefs, "get_package_group", _get_group)

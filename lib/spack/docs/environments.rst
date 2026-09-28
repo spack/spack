@@ -377,8 +377,6 @@ Otherwise, ``spack install`` will concretize the environment before installing t
    Use ``-p`` / ``--concurrent-packages`` to cap how many packages may build at once (unbounded by default).
    See :ref:`installing` for the full picture.
 
-   Alternatively, generate a ``Makefile`` with :ref:`spack env depfile <cmd-spack-env-depfile>` and drive the install through ``make`` instead.
-
 
 As it installs, ``spack install`` creates symbolic links in the ``logs/`` directory in the environment, allowing for easy inspection of build logs related to that environment.
 The ``spack install`` command also stores a Spack repo containing the ``package.py`` file used at install time for each package in the ``repos/`` directory in the environment.
@@ -1302,140 +1300,23 @@ The ``spack env deactivate`` command will remove the active view of the Spack en
 
 
 Generating Depfiles from Environments
-------------------------------------------
+-------------------------------------
 
-Spack can generate ``Makefile``\s that install an environment through ``make``.
+.. warning::
 
-This is *not* needed to install an environment in parallel: ``spack install`` already builds packages concurrently using a POSIX jobserver (see :ref:`installing`).
-``spack env depfile`` is useful when you want to drive a Spack install from your *own* ``Makefile``, embed it in a larger build, or hand off scheduling to ``make`` (for example, to depend on individual specs from other ``make`` targets).
+   ``spack env depfile`` is deprecated and will be removed in Spack v1.4.
 
-Generated ``Makefile``\s expose targets that can be included in existing ``Makefile``\s, to allow other targets to depend on the environment installation.
+``spack env depfile`` generates a ``Makefile`` that installs a concrete environment through ``make``, with one target per spec:
 
-A typical workflow is as follows:
+.. code-block:: console
 
-.. code-block:: spec
-
-   $ spack env create -d .
-   $ spack -e . add perl
-   $ spack -e . concretize
    $ spack -e . env depfile -o Makefile
-   $ make -j64
+   $ make -j16
 
-This generates a ``Makefile`` from a concretized environment in the current working directory, and ``make -j64`` installs the environment, exploiting parallelism across packages as much as possible.
-Each ``make`` target invokes ``spack install`` for one spec; Spack forwards ``make``'s jobserver into every package's build environment, so the same ``-j64`` budget bounds compile jobs across all in-flight installs.
-
-By default the following phony convenience targets are available:
-
-- ``make all``: installs the environment (default target);
-- ``make clean``: cleans files used by make, but does not uninstall packages.
-
-.. tip::
-
-   GNU Make version 4.3 and above have great support for output synchronization through the ``-O`` and ``--output-sync`` flags, which ensure that output is printed orderly per package install.
-   To get synchronized output with colors, use ``make -j<N> SPACK_COLOR=always --output-sync=recurse``.
-
-Specifying dependencies on generated ``make`` targets
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-An interesting question is how to include generated ``Makefile``\s in your own ``Makefile``\s.
-This comes up when you want to install an environment that provides executables required in a command for a make target of your own.
-
-The example below shows how to accomplish this: the ``env`` target specifies the generated ``spack/env`` target as a prerequisite, meaning that the environment gets installed and is available for use in the ``env`` target.
+This is no longer needed: ``spack install`` builds packages concurrently using a POSIX jobserver (see :ref:`installing`).
+When ``spack install`` runs as part of a ``make`` recipe, it joins the jobserver of the parent ``make``, so both share the same ``-j`` budget:
 
 .. code-block:: Makefile
 
-   SPACK ?= spack
-
-   .PHONY: all clean env
-
-   all: env
-
-   spack.lock: spack.yaml
-   	$(SPACK) -e . concretize -f
-
-   env.mk: spack.lock
-   	$(SPACK) -e . env depfile -o $@ --make-prefix spack
-
-   env: spack/env
-   	$(info environment installed!)
-
-   clean:
-   	rm -rf spack.lock env.mk spack/
-
-   ifeq (,$(filter clean,$(MAKECMDGOALS)))
-   include env.mk
-   endif
-
-This works as follows: when ``make`` is invoked, it first "remakes" the missing include ``env.mk`` as there is a target for it.
-This triggers concretization of the environment and makes Spack output ``env.mk``.
-At that point the generated target ``spack/env`` becomes available through ``include env.mk``.
-
-As it is typically undesirable to remake ``env.mk`` as part of ``make clean``, the include is conditional.
-
-.. note::
-
-   When including generated ``Makefile``\s, it is important to use the ``--make-prefix`` flag and use the non-phony target ``<prefix>/env`` as prerequisite, instead of the phony target ``<prefix>/all``.
-
-Building a subset of the environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The generated ``Makefile``\s contain install targets for each spec, identified by ``<name>-<version>-<hash>``.
-This allows you to install only a subset of the packages in the environment.
-When packages are unique in the environment, it's enough to know the name and let tab-completion fill out the version and hash.
-
-The following phony targets are available: ``install/<spec>`` to install the spec with its dependencies, and ``install-deps/<spec>`` to *only* install its dependencies.
-This can be useful when certain flags should only apply to dependencies.
-Below we show a use case where a spec is installed with verbose output (``spack install --verbose``) while its dependencies are installed silently:
-
-.. code-block:: console
-
-   $ spack env depfile -o Makefile
-
-   # Install dependencies in parallel, only show a log on error.
-   $ make -j16 install-deps/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--show-log-on-error
-
-   # Install the root spec with verbose output.
-   $ make -j16 install/python-3.11.0-<hash> SPACK_INSTALL_FLAGS=--verbose
-
-Adding post-install hooks
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Another advanced use-case of generated ``Makefile``\s is running a post-install command for each package.
-These "hooks" could be anything from printing a post-install message, running tests, or pushing just-built binaries to a build cache.
-
-This can be accomplished through the generated ``[<prefix>/]SPACK_PACKAGE_IDS`` variable.
-Assuming we have an active and concrete environment, we generate the associated ``Makefile`` with a prefix ``example``:
-
-.. code-block:: console
-
-   $ spack env depfile -o env.mk --make-prefix example
-
-And we now include it in a different ``Makefile``, in which we create a target ``example/push/%`` with ``%`` referring to a package identifier.
-This target depends on the particular package installation.
-In this target we automatically have the target-specific ``HASH`` and ``SPEC`` variables at our disposal.
-They are respectively the spec hash (excluding leading ``/``), and a human-readable spec.
-Finally, we have an entry point target ``push`` that will update the build cache index once every package is pushed.
-Note how this target uses the generated ``example/SPACK_PACKAGE_IDS`` variable to define its prerequisites.
-
-.. code-block:: Makefile
-
-   SPACK ?= spack
-   BUILDCACHE_DIR = $(CURDIR)/tarballs
-
-   .PHONY: all
-
-   all: push
-
-   include env.mk
-
-   example/push/%: example/install/%
-   	@mkdir -p $(dir $@)
-   	$(info About to push $(SPEC) to a buildcache)
-   	$(SPACK) -e . buildcache push --only=package $(BUILDCACHE_DIR) /$(HASH)
-   	@touch $@
-
-   push: $(addprefix example/push/,$(example/SPACK_PACKAGE_IDS))
-   	$(info Updating the buildcache index)
-   	$(SPACK) -e . buildcache update-index $(BUILDCACHE_DIR)
-   	$(info Done!)
-   	@touch $@
+   env:
+   	spack -e . install

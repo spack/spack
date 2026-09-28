@@ -8,8 +8,8 @@ import time
 import urllib.parse
 
 import spack.error
+import spack.store
 import spack.util.spack_json as sjson
-from spack.store import STORE
 from spack.util import tty
 
 
@@ -130,7 +130,7 @@ def sbom_path(spec, sbom_type="spdx-2.3"):
     Returns:
         Path to the SBOM file
     """
-    sbom_dir = os.path.join(STORE.layout.metadata_path(spec), "sbom")
+    sbom_dir = os.path.join(spack.store.STORE.layout.metadata_path(spec), "sbom")
     return os.path.join(sbom_dir, f"{sbom_type}.json")
 
 

@@ -1578,7 +1578,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a loads -d 'list
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a view -d 'manage the environment'"'"'s view'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'update the environment manifest to the latest schema format'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a revert -d 'restore the environment manifest to its previous format'
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a depfile -d 'generate a depfile to exploit parallel builds across specs'
+complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a depfile -d '(deprecated) generate a depfile to exploit parallel builds across specs'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a track -d 'track an environment from a directory in Spack'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a untrack -d 'untrack an environment from a directory in Spack'
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help

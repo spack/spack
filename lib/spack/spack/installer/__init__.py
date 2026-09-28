@@ -1,10 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""New installer that will ultimately replace installer.py. It features an event loop, non-blocking
-I/O, and a POSIX jobserver to limit concurrency. It also has a more advanced terminal UI. It's
-mostly self-contained to avoid interfering with the rest of Spack too much while it's being
-developed and tested.
+"""Spack's package installer. It features an event loop, non-blocking I/O, and a POSIX jobserver
+to limit concurrency. It also has a more advanced terminal UI.
 
 The installer consists of a UI process that manages multiple build processes and handles updates
 to the database. It detects or creates a jobserver, and then kicks off an event loop in which it
