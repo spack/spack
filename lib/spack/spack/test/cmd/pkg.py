@@ -248,6 +248,21 @@ def test_pkg_source(mock_packages: RepoPath):
         assert fake_source == contents
 
 
+@pytest.mark.regression("51440")
+def test_pkg_source_respects_namespace(mock_packages: RepoPath, repo_builder):
+    """A namespace selects the package's repo even when a higher-precedence repo shadows it."""
+    with open(mock_packages.filename_for_package_name("fake"), encoding="utf-8") as f:
+        builtin_source = f.read()
+    repo_builder.add_package("fake")
+
+    with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
+        with open(repos.filename_for_package_name("fake"), encoding="utf-8") as f:
+            shadowing_source = f.read()
+        assert shadowing_source != builtin_source
+        assert pkg("source", "fake") == shadowing_source
+        assert pkg("source", "builtin_mock.fake") == builtin_source
+
+
 def test_pkg_canonical_source(mock_packages):
     source = pkg("source", "multimethod")
     assert '@when("@2.0")' in source
