@@ -1157,6 +1157,18 @@ def test_default_install_tree(monkeypatch, default_config):
     assert s.format(projections["all"]) == "foo-baz/nonexistent-x.y.z-abc123"
 
 
+@pytest.mark.parametrize("platform", [None, "windows"])
+def test_default_sandbox_config(platform):
+    defaults_path = os.path.join(spack.paths.etc_path, "defaults")
+    scopes = [os.path.join(defaults_path, "base")]
+    if platform:
+        scopes.append(os.path.join(defaults_path, platform))
+    with spack.config.use_configuration(*scopes) as default_config:
+        sandbox = default_config.get("config:sandbox")
+        assert sandbox["enable"] is True
+        assert sandbox["allow_network"] is False
+
+
 @pytest.fixture
 def mock_include_scope(tmp_path):
     for subdir in ["defaults", "test1", "test2", "test3"]:

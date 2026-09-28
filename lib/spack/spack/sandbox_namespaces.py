@@ -29,6 +29,7 @@ from spack.sandbox_base import Sandbox, SandboxError
 # Linux namespace and mount flags.
 CLONE_NEWUSER = 0x10000000
 CLONE_NEWNS = 0x00020000
+CLONE_NEWNET = 0x40000000
 MS_BIND = 0x00001000
 MS_PRIVATE = 0x00040000
 MS_REC = 0x00004000
@@ -46,7 +47,7 @@ _EMPTY_SOURCE_FLAGS = MS_NOSUID | MS_NODEV | MS_NOEXEC
 
 
 class NamespaceCapability(NamedTuple):
-    """Result of probing unprivileged user and mount namespaces."""
+    """Result of probing user, mount, and network namespace setup."""
 
     available: bool
     operation: Optional[str]
@@ -271,6 +272,7 @@ def _check_syscall(result: int, name: str) -> int:
 # Process-local set of PIDs that have already entered the user/mount namespace.
 # Makes _enter_user_mount_namespace idempotent within a single process.
 _namespace_entered_pids: set = set()
+_network_namespace_entered_pids: set = set()
 
 # The installer probes before launching build workers. POSIX workers inherit
 # this result, avoiding a second fork after their logging thread has started.
@@ -1158,6 +1160,58 @@ def _enter_user_mount_namespace(libc, _probe_child: bool = False) -> None:
     _namespace_entered_pids.add(my_pid)
 
 
+def _configure_loopback() -> None:
+    """Bring ``lo`` up and verify its default IPv4/IPv6 addresses and Unix sockets."""
+    import fcntl
+    import socket
+    import struct
+
+    try:
+        request = bytearray(struct.pack("16sH22x", b"lo", 0))
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as control:
+            fcntl.ioctl(control.fileno(), 0x8913, request, True)  # SIOCGIFFLAGS
+            flags = struct.unpack_from("H", request, 16)[0]
+            if not flags & 0x1:  # IFF_UP
+                struct.pack_into("H", request, 16, flags | 0x1)
+                fcntl.ioctl(control.fileno(), 0x8914, request)  # SIOCSIFFLAGS
+
+        for family, address in ((socket.AF_INET, "127.0.0.1"),):
+            with socket.socket(family, socket.SOCK_DGRAM) as probe:
+                probe.bind((address, 0))
+                if probe.getsockname()[0] != address:
+                    raise OSError(errno.EADDRNOTAVAIL, f"loopback address missing: {address}")
+        if socket.has_ipv6:
+            with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as probe:
+                probe.bind(("::1", 0))
+                if probe.getsockname()[0] != "::1":
+                    raise OSError(errno.EADDRNOTAVAIL, "loopback address missing: ::1")
+
+        left, right = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            left.sendall(b"unix namespace probe")
+            if right.recv(64) != b"unix namespace probe":
+                raise OSError(errno.EIO, "Unix domain socket probe failed")
+        finally:
+            left.close()
+            right.close()
+    except OSError as error:
+        _raise_namespace_setup_error("configure network namespace loopback", error)
+
+
+def _enter_network_namespace(libc) -> None:
+    """Enter an isolated network namespace after mount containment is active."""
+    my_pid = os.getpid()
+    if my_pid in _network_namespace_entered_pids:
+        return
+    if my_pid not in _namespace_entered_pids:
+        _mount_plan_error(
+            "unshare(CLONE_NEWNET)", "a private user and mount namespace is required first"
+        )
+    _check_syscall(libc.unshare(ctypes.c_int(CLONE_NEWNET)), "unshare(CLONE_NEWNET)")
+    _configure_loopback()
+    _network_namespace_entered_pids.add(my_pid)
+
+
 def _drop_namespace_capabilities(libc) -> None:
     """Drop all capabilities gained by entering the private user namespace.
 
@@ -1189,7 +1243,7 @@ def _decode_capability(payload: bytes) -> NamespaceCapability:
 
 
 def _probe_namespace_capability(libc) -> NamespaceCapability:
-    """Probe namespace setup in a disposable child process.
+    """Probe user, mount, and network namespace setup in a disposable child.
 
     Forks, runs ``_enter_user_mount_namespace`` in the child, and reports
     a structured result through a pipe. The parent is never affected.
@@ -1284,6 +1338,7 @@ def _probe_namespace_capability(libc) -> NamespaceCapability:
                     "mount(MS_BIND device probe)",
                 )
                 _set_mount_writable(libc, device_target, False)
+                _enter_network_namespace(libc)
                 _drop_namespace_capabilities(libc)
                 with open(os.path.join(shared_memory, "probe"), "w+", encoding="utf-8") as stream:
                     stream.write("shared memory")
@@ -1333,7 +1388,7 @@ def _probe_namespace_capability(libc) -> NamespaceCapability:
 
 
 def namespace_sandbox_capability(libc: Optional[ctypes.CDLL] = None) -> NamespaceCapability:
-    """Return structured availability for unprivileged user and mount namespaces.
+    """Return structured availability for unprivileged user, mount, and network namespaces.
 
     Completed default-libc probes are cached. Parent-side operational failures
     remain retryable until a worker explicitly freezes its pre-thread result.
@@ -1362,7 +1417,7 @@ def namespace_sandbox_capability(libc: Optional[ctypes.CDLL] = None) -> Namespac
 
 
 def namespace_sandbox_available(libc: Optional[ctypes.CDLL] = None) -> bool:
-    """Return whether unprivileged user and mount namespaces can be used.
+    """Return whether unprivileged user, mount, and network namespaces can be used.
 
     Returns ``False`` off Linux or when the probe fails. Returns ``True`` when
     such a namespace can be created.
@@ -1481,6 +1536,7 @@ class NamespaceSandbox(Sandbox):
         self._stage_path: Optional[str] = None
         self._granted_dirs: List[Path] = []
         self._mount_authority_dropped = False
+        self._network_namespace_ready = False
         self._filesystem_policy_active = False
         # Create the internal Landlock sandbox lazily unless selection already
         # preflighted and supplied it.
@@ -1501,6 +1557,11 @@ class NamespaceSandbox(Sandbox):
     def filesystem_policy_active(self) -> bool:
         """Return whether the complete selected filesystem policy is active."""
         return self._filesystem_policy_active
+
+    @property
+    def network_namespace_active(self) -> bool:
+        """Return whether this process entered the isolated network namespace."""
+        return self._network_namespace_ready
 
     def _ensure_landlock(self) -> Any:
         """Create the internal LandlockSandbox on first use."""
@@ -1552,6 +1613,19 @@ class NamespaceSandbox(Sandbox):
         self._namespace_ready = _apply_namespace_mount_plan(plan, libc)
         self._filesystem_policy_active = self._namespace_ready
         return self._namespace_ready
+
+    def prepare_network_namespace(self) -> bool:
+        """Isolate networking and initialize loopback before dropping capabilities."""
+        if not self._namespace_ready:
+            raise SandboxError("Network namespace requires an active mount namespace")
+        if self._mount_authority_dropped:
+            raise SandboxError("Network namespace must be prepared before dropping capabilities")
+        if self._network_namespace_ready:
+            return True
+        libc = self.libc or ctypes.CDLL(None, use_errno=True)
+        _enter_network_namespace(libc)
+        self._network_namespace_ready = True
+        return True
 
     def drop_mount_authority(self) -> bool:
         """Irreversibly drop namespace capabilities after trusted mount setup.

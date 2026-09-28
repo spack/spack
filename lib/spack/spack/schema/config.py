@@ -240,11 +240,15 @@ properties: Dict[str, Any] = {
                 "properties": {
                     "enable": {
                         "type": "boolean",
-                        "description": "Enable or disable the build sandbox.",
+                        "default": True,
+                        "description": "Enable or disable the build sandbox (enabled by default).",
                     },
                     "allow_network": {
                         "type": "boolean",
-                        "description": "Allow TCP network access during the build phase.",
+                        "default": False,
+                        "description": "Allow direct network access during the build phase. "
+                        "When false on Linux, the install worker uses a private network "
+                        "namespace with loopback enabled.",
                     },
                     "allow_read": {
                         "type": "array",

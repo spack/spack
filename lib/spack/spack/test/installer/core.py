@@ -27,6 +27,12 @@ from spack.test.installer.conftest import (
 )
 
 
+@pytest.fixture(autouse=True)
+def disable_sandbox_for_event_loop_tests(mutable_config):
+    """Keep installer scheduling tests independent of the platform sandbox default."""
+    mutable_config.set("config:sandbox:enable", False)
+
+
 class TestPackageInstallerConstructor:
     """Tests for PackageInstaller constructor, especially capacity initialization."""
 
