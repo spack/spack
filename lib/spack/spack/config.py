@@ -2873,10 +2873,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
         )
 
-    # NOTE: Migration is now handled at config.py module load time, before CONFIG
-    # is created. See _perform_auto_migration_at_module_load() above for details.
-    # Migration is skipped when the command is 'spack isolate'.
-
 
 def create() -> Configuration:
     """Create a configuration using create_incremental(), return the last yielded result."""
