@@ -176,15 +176,18 @@ def _import_lib_targets(
         # via import libs to determine the proper association
         if verify_import_lib(lib, reloc_exe=reloc_exe):
             dll_path = get_importlib_target(lib, reloc_exe=reloc_exe)
-            if not dll_path:
-                tty.debug(
-                    f"Import lib {lib} does not reference a compatible DLL, skipping relocation..."
-                )
-                continue
             # The wrapper pads the DLL path it stores in the import library out to a
             # fixed width with path separators; normpath collapses that padding back
             # into the real path.
-            norm_dll_path = os.path.normpath(dll_path)
+            norm_dll_path = os.path.normpath(dll_path) if dll_path else ""
+            # The wrapper always records an absolute path, so a bare DLL name (or none)
+            # means the library was linked without it.
+            if not os.path.dirname(norm_dll_path):
+                tty.warn(
+                    f"Import lib {lib} was not linked by Spack's compiler wrapper, "
+                    "skipping relocation..."
+                )
+                continue
             # matches prefix component in dll_path inside import library
             # which is the absolute path to the dll the import library corresponds to
             # on the machine/stage where this import library was built
@@ -272,6 +275,10 @@ def relocate_win_rpath(spec):
         if stage_pe_loc:
             norm_stage_pe_loc = os.path.normpath(stage_pe_loc)
             pe_stage_to_prefix[norm_stage_pe_loc] = pe
+        elif pe_has_exports(pe):
+            # The wrapper tags every PE it links, so an untagged PE that others can
+            # link against was built without it.
+            tty.warn(f"{pe} exports symbols but was not linked by Spack's compiler wrapper")
     relocate_windows_binaries(targets, spec, pe_stage_to_prefix, stage=True)
 
 
@@ -747,6 +754,25 @@ def is_msvc_magic(f: IO[bytes]) -> bool:
     is_pe = f.read(4) == b"PE\x00\x00"
     f.seek(0)
     return is_pe
+
+
+def pe_has_exports(path: str) -> bool:
+    """Return whether the PE file at ``path`` has an export table."""
+    try:
+        with open(path, "rb") as f:
+            f.seek(0x3C)
+            (pe_offset,) = struct.unpack("<I", f.read(4))
+            # The optional header follows the 4 byte signature and 20 byte COFF header.
+            optional_header = pe_offset + 24
+            f.seek(optional_header)
+            (magic,) = struct.unpack("<H", f.read(2))
+            # NumberOfRvaAndSizes, then the data directories, the first of which is the
+            # export table's (RVA, size). Its offset differs between PE32 and PE32+.
+            f.seek(optional_header + (108 if magic == 0x20B else 92))
+            num_dirs, _, export_size = struct.unpack("<3I", f.read(12))
+    except (OSError, struct.error):
+        return False
+    return num_dirs > 0 and export_size > 0
 
 
 def is_binary(filename: str) -> bool:
