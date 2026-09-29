@@ -2798,47 +2798,40 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     old_gpg_home = spack.paths.old_gpg_path
     old_gpg_keys = spack.paths.old_gpg_keys_path
     if old_resources["gpg_keys"]:
-        configured_gpg_home = CONFIG.get("config:gpg_path")
-        configured_gpg_keys = CONFIG.get("config:gpg_keys_path")
         old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_home))
         data_home = substitute_path_variables("$data_home")
         target_gpg_home = os.path.join(data_home, "gpg")
         target_gpg_keys = os.path.join(data_home, "gpg-keys")
-        target_gpg_home_norm = os.path.normpath(os.path.expanduser(target_gpg_home))
-        target_gpg_keys_norm = os.path.normpath(os.path.expanduser(target_gpg_keys))
-        if configured_gpg_home is None:
-            configured_gpg_home = target_gpg_home
-        if configured_gpg_keys is None:
-            configured_gpg_keys = target_gpg_keys
-        configured_gpg_home = canonicalize_path(configured_gpg_home)
-        configured_gpg_keys = canonicalize_path(configured_gpg_keys)
         gnupghome = os.getenv("SPACK_GNUPGHOME")
 
-        # An explicit SPACK_GNUPGHOME is authoritative.  Only preserve the
-        # old location in layout when it explicitly selects that location.
+        # If SPACK_GNUPGHOME is set, record it in layout scope
         if gnupghome:
             gnupghome_norm = os.path.normpath(os.path.expanduser(gnupghome))
+            if "config" not in scope_config:
+                scope_config["config"] = {}
             if gnupghome_norm == old_gpg_norm:
-                if "config" not in scope_config:
-                    scope_config["config"] = {}
+                # User explicitly points to old location - keep it there
                 scope_config["config"]["gpg_path"] = old_gpg_home
                 scope_config["config"]["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
-        elif (
-            configured_gpg_home == target_gpg_home_norm
-            and configured_gpg_keys == target_gpg_keys_norm
-        ):
-            # With the default configuration, copy both GPG directories.
-            # If either fails, both stay in old locations.
+            else:
+                # User points to custom location - record it
+                scope_config["config"]["gpg_path"] = gnupghome
+                scope_config["config"]["gpg_keys_path"] = os.path.join(
+                    gnupghome, "private-keys-v1.d"
+                )
+                retained_resources.append(f"GPG data (using SPACK_GNUPGHOME: {gnupghome})")
+        else:
+            # No env var - migrate to new location
             if _migrate_gpg(old_gpg_home, target_gpg_home, old_gpg_keys, target_gpg_keys):
                 migrated_resources.append("GPG data")
             else:
+                # Migration failed - keep in old location
                 if "config" not in scope_config:
                     scope_config["config"] = {}
                 scope_config["config"]["gpg_path"] = old_gpg_home
                 scope_config["config"]["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
-        # A custom configured location is user-owned and remains untouched.
 
     def _handle_portable_resource(
         resource_name: str,
@@ -2892,27 +2885,24 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
             tty.debug(f"{resource_name.capitalize()} kept in old location: {old_path}")
 
     # 3. Handle licenses
+    # Always migrate if old licenses exist - no config checks needed
     if old_resources["licenses"]:
-        license_dir_config = CONFIG.get("config:license_dir")
         _handle_portable_resource(
             "licenses",
             "license_dir",
-            license_dir_config,
+            None,  # No config available yet - use default target
             spack.paths.old_licenses_path,
             "licenses",
             _migrate_licenses,
         )
 
     # 4. Handle environments
+    # Always migrate if old environments exist - no config checks needed
     if old_resources["environments"]:
-        envs_root_config = CONFIG.get("config:environments_root")
-        # For list configs, use first entry (where new resources would be created)
-        if isinstance(envs_root_config, list):
-            envs_root_config = envs_root_config[0] if envs_root_config else None
         _handle_portable_resource(
             "environments",
             "environments_root",
-            envs_root_config,
+            None,  # No config available yet - use default target
             spack.paths.old_envs_path,
             "environments",
             _migrate_environments,
@@ -3045,9 +3035,40 @@ def _detect_invoked_command():
     _invoked_command = _extract_command_from_argv()
 
 
+def _perform_auto_migration_at_module_load():
+    """Perform auto-migration at module load time if appropriate.
+
+    This runs before the CONFIG singleton is created, so migration functions
+    cannot rely on CONFIG being available.
+    """
+    if _invoked_command == "isolate" or _migration_done_at_module_load:
+        return
+
+    # Migrate spack prefix resources if they exist
+    if _has_old_prefix_resources():
+        lock_path = _migration_lock_path()
+        lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+        try:
+            with spack.util.lock.WriteTransaction(lock):
+                # Check again inside lock
+                if not os.path.exists(_migration_done_marker_path()):
+                    _do_migrate_spack_prefix()
+        except spack.util.lock.LockPermissionError:
+            # Read-only prefix: skip migration
+            pass
+        except spack.util.lock.LockTimeoutError as e:
+            # Can't proceed without migration
+            import spack.util.tty as tty
+            tty.die(f"Timed out waiting for migration lock: {e}")
+
+    # Always attempt home migration (works even on fresh installs)
+    _do_migrate_home()
+
+
 # Check migration state and detect command at module load time
 _check_migration_done_at_load()
 _detect_invoked_command()
+_perform_auto_migration_at_module_load()
 
 
 def reinitialize_global_state():
