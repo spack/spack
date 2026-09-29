@@ -3236,6 +3236,8 @@ _NOT_PRESENT = (
     spack.spec.InstallStatus.absent,
     spack.spec.InstallStatus.missing,
     spack.spec.InstallStatus.buildcache,
+    spack.spec.InstallStatus.spliced,
+    spack.spec.InstallStatus.spliced_from_source,
 )
 
 

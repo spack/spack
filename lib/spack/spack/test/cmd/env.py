@@ -5710,3 +5710,31 @@ def test_remove_reports_only_the_specs_it_removed(tmp_path: pathlib.Path):
 
         output = remove("mpileaks")
         assert "mpileaks has been removed" in output
+
+
+def test_env_install_false_status_spliced_spec(environment_from_manifest, install_mockery):
+    """Tests that `spack spec -I` shows a spliced spec that is not installed because of
+    install: false as [x].
+    """
+    zmpi = spack.concretize.concretize_one("zmpi")
+    PackageInstaller([zmpi.package], fake=True).install()
+    e = environment_from_manifest(
+        f"""\
+spack:
+  specs:
+  - spec: mpileaks
+    install: false
+  concretizer:
+    splice:
+      explicit:
+      - target: mpi
+        replacement: zmpi/{zmpi.dag_hash()}
+"""
+    )
+    with e:
+        output = spec("-I")
+
+    assert e.concrete_roots()[0].spliced
+    lines = output.splitlines()
+    for name in ("mpileaks", "callpath"):
+        assert any(line.startswith("[x]") and f"{name}@" in line for line in lines)
