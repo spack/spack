@@ -2156,10 +2156,7 @@ def _migrate_user_config() -> bool:
     """Programmatically migrate ~/.spack to ~/.config/spack.
 
     Only performs migration if:
-    - A "user" scope exists in the loaded configuration
-    - That scope would point to ~/.config/spack (if it existed) or is currently using
-      the fallback ~/.spack
-    - ~/.config/spack does not exist
+    - ~/.config/spack does not exist or is empty
     - ~/.spack exists
 
     Returns:
@@ -2167,39 +2164,6 @@ def _migrate_user_config() -> bool:
     """
     old_location = os.path.expanduser("~/.spack")
     new_default_cfg_location = os.path.expanduser("~/.config/spack")
-
-    # Check the include configuration to see if user scope is configured with new default
-    # We look at the config, not the loaded scope, to distinguish between:
-    # - path: ~/.config/spack (new default) + fallback → migrate
-    # - path: ~/.spack (explicit user choice) → don't migrate
-    include_config = CONFIG.get_config("include")
-    if not include_config:
-        tty.debug("No include configuration found, skipping user config migration")
-        return False
-
-    # get_config strips the top-level key, so include_config is the list directly
-    # Find the user scope entry in the include list
-    user_include_entry = None
-    for entry in include_config:
-        if isinstance(entry, dict) and entry.get("name") == "user":
-            user_include_entry = entry
-            break
-
-    if not user_include_entry:
-        tty.debug("No 'user' entry in include configuration, skipping user config migration")
-        return False
-
-    # Check if the configured path is the new default (~/.config/spack)
-    configured_path = user_include_entry.get("path", "")
-    configured_path_expanded = os.path.normpath(os.path.expanduser(configured_path))
-    expected_new_path = os.path.normpath(new_default_cfg_location)
-
-    if configured_path_expanded != expected_new_path:
-        tty.debug(
-            f"User scope configured with path {configured_path}, not the new default "
-            f"{new_default_cfg_location}, skipping user config migration"
-        )
-        return False
 
     # Check if new location is safe for migration
     if not _can_migrate_to_location(new_default_cfg_location):
@@ -2306,16 +2270,10 @@ def _migrate_package_repositories() -> bool:
     place only after the copy completes. The source is never modified.
     """
     old_path = spack.paths.old_package_repos_path
-    new_path = spack.paths.package_repos_path
+    # Use default location directly without triggering config resolution
+    new_path = os.path.join(spack.paths.default_state_home, "package_repos")
 
     if not os.path.isdir(old_path) or os.path.exists(new_path):
-        return False
-
-    # Only migrate if new_path is at the default location (not customized)
-    default_new_repos = os.path.join(spack.paths.default_state_home, "package_repos")
-    if os.path.normpath(os.path.abspath(new_path)) != os.path.normpath(
-        os.path.abspath(default_new_repos)
-    ):
         return False
 
     try:
