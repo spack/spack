@@ -119,12 +119,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def external_find(args):
     manifest_dir: str = args.cray_manifest if args.cray_manifest != "none" else ""
     if manifest_dir == "auto":
-        if (not args.all) or args.tags or args.packages:
-            # Backward-compatible behavior: do not search unless 'all' is given
+        print(repr(args))
+        if args.all or not (args.tags or args.packages):
+            # Backward-compatible behavior: search if 'all' is given
             # or tags/packages are omitted
-            manifest_dir = ""
-        else:
             manifest_dir = cray_manifest.default_path
+        else:
+            manifest_dir = ""
         if not os.path.isdir(manifest_dir):
             tty.debug("Default Cray manifest directory {manifest_dir} does not exist.")
             manifest_dir = ""
