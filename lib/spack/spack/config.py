@@ -27,6 +27,7 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 """
 
+import argparse
 import contextlib
 import copy
 import functools
@@ -156,6 +157,10 @@ ignore_user_fallback = False
 #: Whether the migration-done marker existed when this module was loaded
 #: Used by main.py to determine if config reload is needed after migration
 _migration_done_at_module_load = None
+
+#: The command being invoked (extracted from sys.argv at module load)
+#: Used to decide whether to skip auto-migration (e.g., for 'isolate')
+_invoked_command = None
 
 
 def substitute_include_path(path, context):
@@ -2991,6 +2996,42 @@ CONFIG = cast(Configuration, lang.Singleton(create_incremental))
 spack.platforms.on_host_changed.append(lambda: CONFIG.clear_caches())
 
 
+def _extract_command_from_argv(argv=None):
+    """Extract the spack command from argv without loading config.
+
+    Uses the same global option definitions as main.py via add_all_global_arguments().
+    Returns the command name (args.command[0]) or None if no command.
+
+    Args:
+        argv: Command line arguments (excluding 'spack' itself), or None for sys.argv[1:]
+
+    Returns:
+        Command name string, or None if no command present
+    """
+    if argv is None:
+        argv = sys.argv[1:]
+
+    # Import argparse_common to get global argument definitions
+    # This module is lightweight and has no circular dependencies
+    import spack.argparse_common
+
+    # Create minimal parser and add all global options using shared function
+    parser = argparse.ArgumentParser(add_help=False)
+    spack.argparse_common.add_all_global_arguments(parser)
+
+    # The command is everything that remains after global options
+    parser.add_argument("command", nargs=argparse.REMAINDER)
+
+    try:
+        args = parser.parse_args(argv)
+        if args.command and len(args.command) > 0:
+            return args.command[0]
+        return None
+    except SystemExit:
+        # Parser error (e.g., invalid option) - can't determine command
+        return None
+
+
 def _check_migration_done_at_load():
     """Check if migration was already done when config module loaded."""
     global _migration_done_at_module_load
@@ -2998,8 +3039,15 @@ def _check_migration_done_at_load():
     _migration_done_at_module_load = os.path.exists(marker_path)
 
 
-# Check migration state at module load time
+def _detect_invoked_command():
+    """Detect what command is being invoked at module load time."""
+    global _invoked_command
+    _invoked_command = _extract_command_from_argv()
+
+
+# Check migration state and detect command at module load time
 _check_migration_done_at_load()
+_detect_invoked_command()
 
 
 def reinitialize_global_state():
