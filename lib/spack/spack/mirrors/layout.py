@@ -121,6 +121,7 @@ def default_mirror_layout(
     """Returns a ``MirrorLayout`` object which keeps track of the relative
     storage path of the resource associated with the specified ``fetcher``."""
 
+    ext = None
     if spec:
         pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
         when_versions = pkg_cls.version_definitions(spec.version)
