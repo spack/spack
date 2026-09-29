@@ -20,6 +20,7 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.util.filesystem as fs
+import spack.variant
 import spack.version
 from spack.externals import (
     ExternalSpecsParser,
@@ -1154,9 +1155,9 @@ def specfile_for(config, mock_packages):
             ],
             "foo ^[deptypes=link when=+mpi] mpich",
         ),
-        # usages= is a spec-valued edge property like when=: the modifiers a dependent asks
-        # the dependency to enact on their shared edge. They are parsed and validated, but not
-        # stored on the edge yet, so they do not appear in the round-tripped string.
+        # usages= takes a bare set of options, written like variants: what a dependent asks
+        # the dependency to enact on their shared edge. They are parsed into a UsageMap, but
+        # not stored on the edge yet, so they do not appear in the round-tripped string.
         (
             "zlib-ng %[usages=+sarif] gcc",
             [
@@ -1280,7 +1281,7 @@ def test_edge_property_groups_parse_in_any_order(groups):
         "zlib-ng %[usages='+sarif' virtuals=c] gcc",
         "foo ^[deptypes=link usages=+sarif] mpich",
         "foo %[virtuals=c][usages=+sarif sanitizers=asan][when=%baz target=x86_64]gcc",
-        # a repeated request for the same modifier is not a conflict
+        # a repeated request for the same usage is not a conflict
         "foo %[usages=+sarif][usages=+sarif] gcc",
         "foo %[usages=~debug+sarif] gcc",
     ],
@@ -1292,6 +1293,31 @@ def test_usages_parse_but_are_not_stored(spec_str):
     """
     spec = spack.spec.Spec(spec_str)
     assert "sarif" not in str(spec)
+
+
+@pytest.mark.parametrize(
+    "usages_str,expected",
+    [
+        ("+sarif", "+sarif"),
+        ("~debug+sarif", "~debug+sarif"),
+        ("-debug", "~debug"),
+        ("sanitizers=asan", "sanitizers=asan"),
+        ("sanitizers=asan,ubsan", "sanitizers=asan,ubsan"),
+        ("sanitizers:=asan", "sanitizers:=asan"),
+        ("sanitizers='a b'", "sanitizers='a b'"),
+        ("+sarif sanitizers=asan", "+sarif sanitizers=asan"),
+    ],
+)
+def test_usage_map_of_a_usages_value(usages_str, expected):
+    """The value of a usages= edge property parses into a map of usages.
+
+    TODO (usages RFD): assert the map on the edge instead, once DependencySpec stores it.
+    """
+    usages = SpecParser(usages_str, spack.spec.Spec)._usage_map()
+    assert isinstance(usages, spack.spec.UsageMap)
+    assert all(isinstance(usage, spack.variant.UsageValue) for usage in usages.values())
+    # key-value pairs print with a leading space, to follow the name of a node
+    assert str(usages).lstrip() == expected
 
 
 @pytest.mark.parametrize(
@@ -1872,20 +1898,25 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         # a quoted condition is a single spec: neither two specs nor none
         ("foo ^[when='bar baz'] qux", "expected a single spec as the when= condition"),
         ("foo ^[when=''] qux", "expected a single spec as the when= condition"),
-        # usages= is spec-valued like when=, but its spec may only hold variants
-        ("foo %[usages=] gcc", "expected a spec after usages="),
-        ("foo %[usages=", "expected a spec after usages="),
-        ("foo %[usages=][virtuals=c] gcc", "expected a spec after usages="),
-        ("foo %[usages='+a bar'] gcc", "expected a single spec as the usages= value"),
-        ("foo %[usages=''] gcc", "expected a single spec as the usages= value"),
-        ("foo %[usages=clang] gcc", "usages= accepts only variants"),
-        ("foo %[usages=@1.2] gcc", "usages= accepts only variants"),
-        ("foo %[usages=target=x86_64] gcc", "usages= accepts only variants"),
-        ("foo %[usages=%bar] gcc", "usages= accepts only variants"),
-        ("foo %[usages=cflags=-O3] gcc", "usages= accepts only variants"),
-        # propagation of usages is not supported yet
-        ("foo %[usages=++sarif] gcc", "propagated variants are not supported in usages="),
-        ("foo %[usages=sanitizers==asan] gcc", "propagated variants are not supported in usages="),
+        # usages= takes a bare set of options, and at least one
+        ("foo %[usages=] gcc", "expected an option after usages="),
+        ("foo %[usages=", "expected an option after usages="),
+        ("foo %[usages=][virtuals=c] gcc", "expected an option after usages="),
+        ("foo %[usages=''] gcc", "expected an option after usages="),
+        ("foo %[usages='+a bar'] gcc", "usages= takes only options"),
+        ("foo %[usages=clang] gcc", "usages= takes only options"),
+        ("foo %[usages=@1.2] gcc", "usages= takes only options"),
+        ("foo %[usages=%bar] gcc", "usages= takes only options"),
+        ("foo %[usages=/abc] gcc", "usages= takes only options"),
+        # an unquoted usages= value swallows the edge attributes that follow it
+        ("foo %[usages=+sarif virtuals=c] gcc", '"virtuals" is an edge attribute of its own'),
+        ("foo %[usages=+sarif when=+mpi] gcc", '"when" is an edge attribute of its own'),
+        # a usage is requested of one dependency, so it is never propagated
+        ("foo %[usages=++sarif] gcc", "a usage cannot be propagated"),
+        ("foo %[usages=sanitizers==asan] gcc", "a usage cannot be propagated"),
+        # usages of the same name combine, so they can neither repeat nor conflict
+        ("foo %[usages=+sarif+sarif] gcc", 'Cannot specify usage "sarif" twice'),
+        ("foo %[usages=+sarif][usages=~sarif] gcc", "does not satisfy"),
         # the parts of an architecture and the namespace print unquoted, so they must be values
         # that parse without quotes, and a namespace a dotted identifier
         ("x os='a b'", "invalid value"),
