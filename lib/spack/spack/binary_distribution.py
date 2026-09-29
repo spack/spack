@@ -1933,9 +1933,8 @@ class _SpliceAnalogs:
         analogs = {*self.by_name.get(s.name, []), *common}
         if not analogs:
             return None
-        c = self.candidates
-        key = lambda i: (c[i].name == s.name, c[i].version, -i)
-        return c[max(analogs, key=key)]
+        key = lambda i: (self.candidates[i].name == s.name, self.candidates[i].version, -i)
+        return self.candidates[max(analogs, key=key)]
 
 
 def relocate_package(spec: spack.spec.Spec) -> None:
