@@ -94,7 +94,9 @@ properties: Dict[str, Any] = {
             },
             # (DEPRECATED) include concrete to be merged under the include key
             "include_concrete": include_concrete,
+            **spack.schema.merged.removed_sections,
         },
+        "deprecatedProperties": spack.schema.merged.removed_sections_errors,
     }
 }
 

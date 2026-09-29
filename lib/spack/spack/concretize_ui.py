@@ -5,13 +5,29 @@
 
 Defines the :class:`ConcretizerUI` contract (a headless no-op base) and the terminal
 :class:`TerminalUI` implementation.
+
+Concretization is reported as two nested spans, each with a ``started``/``finished`` pair:
+
+1. the concretization, one per request to concretize a set of specs;
+2. the group, inside which the configuration that drives concretization is fixed. Environments
+   define groups of user specs, a request without one has a single, default, group.
+
+Every span that opens closes exactly once, including when an exception passes through it. A close
+signals teardown and reports no outcome, so no callback takes an exception: anything raised
+propagates to the caller, which decides how to handle it.
 """
 
+import contextlib
 import enum
 import sys
+from typing import Iterator
 
 from spack.spec import Spec
 from spack.util import tty
+
+#: Name of the group of user specs that every concretization has. An environment can define more,
+#: a request without one has only this.
+DEFAULT_USER_SPEC_GROUP = "default"
 
 
 class SolveKind(enum.Enum):
@@ -33,15 +49,22 @@ class ConcretizerUI:
     Frontends therefore need no locking, and no capture of child output.
     """
 
-    def on_group_started(self, *, group: str, is_default: bool) -> None:
-        """A group of user specs is about to be concretized."""
-
-    def on_concretization_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
-        """``total`` user specs are about to be concretized as ``kind`` prescribes, over
-        ``processes`` processes. Called once per group of user specs, before any spec of that
-        group is reported, with ``total`` equal to the number of ``on_spec_concretized`` calls
-        that will follow for it.
+    def on_concretization_started(self) -> None:
+        """A concretization is about to start. Frontends use it to scope the state they keep
+        for one request.
         """
+
+    def on_concretization_finished(self) -> None:
+        """The concretization that started is over."""
+
+    def on_group_started(self, *, group: str, kind: SolveKind, total: int, processes: int) -> None:
+        """The ``group`` of user specs is about to be concretized as ``kind`` prescribes, over
+        ``processes`` processes. ``total`` is the number of ``on_spec_concretized`` calls that
+        will follow for this group, which frontends may use to show a percentage.
+        """
+
+    def on_group_finished(self) -> None:
+        """The group that started is over."""
 
     def on_spec_concretized(
         self, abstract: Spec, *, concrete: Spec, count: int, duration: float
@@ -58,6 +81,33 @@ class ConcretizerUI:
 HeadlessUI = ConcretizerUI
 
 
+@contextlib.contextmanager
+def concretization_span(ui: ConcretizerUI) -> Iterator[None]:
+    """Report the start and the end of a concretization. The end is reported even when the body
+    raises, so that a frontend can tear down what it painted. The exception propagates to the
+    caller without being passed to the frontend.
+    """
+    ui.on_concretization_started()
+    try:
+        yield
+    finally:
+        ui.on_concretization_finished()
+
+
+@contextlib.contextmanager
+def group_span(
+    ui: ConcretizerUI, *, group: str, kind: SolveKind, total: int, processes: int
+) -> Iterator[None]:
+    """Report the start and the end of one group of user specs. As for ``concretization_span``,
+    the end is reported even when the body raises.
+    """
+    ui.on_group_started(group=group, kind=kind, total=total, processes=processes)
+    try:
+        yield
+    finally:
+        ui.on_group_finished()
+
+
 class TerminalUI(ConcretizerUI):
     """Terminal frontend: announces groups and solves, and reports per-spec progress."""
 
@@ -65,15 +115,14 @@ class TerminalUI(ConcretizerUI):
         self.kind = SolveKind.TOGETHER
         self.total = 0
 
-    def on_group_started(self, *, group: str, is_default: bool) -> None:
-        if is_default:
-            return
-        tty.msg(f"Concretizing the '{group}' group of specs")
-
-    def on_concretization_started(self, *, kind: SolveKind, total: int, processes: int) -> None:
+    def on_group_started(self, *, group: str, kind: SolveKind, total: int, processes: int) -> None:
         self.kind = kind
         self.total = total
-        if kind is not SolveKind.SEPARATELY or total == 0:
+        if total == 0:
+            return
+        if group != DEFAULT_USER_SPEC_GROUP:
+            tty.msg(f"Concretizing the '{group}' group of specs")
+        if kind is not SolveKind.SEPARATELY:
             return
         msg = "Starting concretization"
         if processes > 1:

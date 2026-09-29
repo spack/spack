@@ -8,6 +8,7 @@ import sys
 import urllib.parse
 from typing import List, Optional, Tuple
 
+import spack.config
 import spack.repo
 import spack.stage
 from spack.spec import Spec
@@ -978,7 +979,9 @@ def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemA
         try:
             url_dict = find_versions_of_archive(args.url)
             if len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
-                url_dict_filtered = spack.stage.interactive_version_filter(url_dict)
+                url_dict_filtered = spack.stage.interactive_version_filter(
+                    url_dict, config=spack.config.CONFIG
+                )
                 if url_dict_filtered is None:
                     exit(0)
                 url_dict = url_dict_filtered
@@ -993,7 +996,11 @@ def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemA
             url_dict = {version: args.url}
 
         version_hashes = spack.stage.get_checksums_for_versions(
-            url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
+            url_dict,
+            name,
+            first_stage_function=guesser,
+            keep_stage=args.keep_stage,
+            config=spack.config.CONFIG,
         )
 
         versions = get_version_lines(version_hashes)

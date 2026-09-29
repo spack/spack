@@ -14,6 +14,7 @@ import urllib.error
 import urllib.request
 import urllib.response
 import warnings
+from datetime import datetime
 from pathlib import Path, PurePath
 from typing import Any, Callable, Dict, NamedTuple, Optional
 
@@ -21,6 +22,7 @@ import pytest
 
 import spack.binary_distribution
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.main
 import spack.mirrors.mirror
@@ -41,8 +43,11 @@ from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
+    BlobRecord,
     BuildcacheComponent,
     BuildcacheEntryError,
+    BuildcacheManifest,
+    ListMirrorSpecsError,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     compression_writer,
@@ -50,6 +55,7 @@ from spack.url_buildcache import (
     get_url_buildcache_class,
     get_valid_spec_file,
 )
+from spack.util.executable import ProcessError
 from spack.util.filesystem import join_path, readlink, working_dir
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
@@ -317,6 +323,51 @@ def test_generate_index_missing(
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+@pytest.mark.parametrize("view", ["", "test_view"])
+def test_push_index_keeps_records_of_other_formats(tmp_path: pathlib.Path, view: str):
+    """Pushing an index replaces only the record of the format it writes"""
+    mirror_dir = tmp_path / "mirror"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
+    install_cmd("--fake", "--no-cache", "libdwarf")
+    buildcache_cmd("push", "-u", str(mirror_dir), "libdwarf")
+
+    manifest_path = pathlib.Path(URLBuildcacheEntry.get_index_url(str(mirror_dir), view))
+    current_type = URLBuildcacheEntry.current_component_to_media_type(BuildcacheComponent.INDEX)
+
+    def update_index():
+        spack.binary_distribution._url_generate_package_index(mirror_url, str(tmp_path), name=view)
+
+    def records():
+        return json.loads(manifest_path.read_text(encoding="utf-8"))["data"]
+
+    # No index yet
+    update_index()
+    (current,) = records()
+    assert current["mediaType"] == current_type
+
+    # As if another Spack wrote the index
+    old = {**current, "mediaType": "application/vnd.spack.db.v1+json"}
+    manifest_path.write_text(json.dumps({"version": 3, "data": [old]}), encoding="utf-8")
+
+    for _ in range(2):  # merging twice gives the same result
+        update_index()
+        new, kept = records()
+        assert new["mediaType"] == current_type and kept == old
+
+    # This Spack reads the record of the current format
+    metadata = spack.url_buildcache.MirrorMetadata(
+        mirror_url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, view
+    )
+    result = spack.binary_distribution.DefaultIndexHandler(metadata, None).conditional_fetch()
+    assert result.hash == new["checksum"]
+
+    # An unreadable manifest is replaced
+    manifest_path.write_text("not json", encoding="utf-8")
+    update_index()
+    assert [r["mediaType"] for r in records()] == [current_type]
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
 def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config: Configuration):
     """Check use of binary cache index: perform an operation that
     instantiates it, and a second operation that reconstructs it.
@@ -325,7 +376,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config: Conf
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryIndexCache(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root, config=mutable_config),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -341,7 +392,7 @@ def test_use_bin_index(monkeypatch, tmp_path: pathlib.Path, mutable_config: Conf
     # Now the test
     buildcache_cmd("list", "-al")
     spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
-        index_cache_root
+        index_cache_root, config=mutable_config
     )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
@@ -358,7 +409,7 @@ def test_use_bin_index_active_env_with_view(
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryIndexCache(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root, config=mutable_config),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -378,7 +429,7 @@ def test_use_bin_index_active_env_with_view(
     # Now the test
     buildcache_cmd("list", "-al")
     spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
-        index_cache_root
+        index_cache_root, config=mutable_config
     )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
@@ -395,7 +446,7 @@ def test_use_bin_index_with_view(
     monkeypatch.setattr(
         spack.binary_distribution,
         "BINARY_INDEX",
-        spack.binary_distribution.BinaryIndexCache(index_cache_root),
+        spack.binary_distribution.BinaryIndexCache(index_cache_root, config=mutable_config),
     )
 
     # Create a mirror, configure us to point at it, install a spec, and
@@ -416,7 +467,7 @@ def test_use_bin_index_with_view(
     # Now the test
     buildcache_cmd("list", "-al")
     spack.binary_distribution.BINARY_INDEX = spack.binary_distribution.BinaryIndexCache(
-        index_cache_root
+        index_cache_root, config=mutable_config
     )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
@@ -447,7 +498,7 @@ def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
 
 def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, capfd):
     def mock_list_url(url, recursive=False):
-        raise Exception("Some HTTP error")
+        raise OSError("Some HTTP error")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
@@ -462,9 +513,28 @@ def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, cap
     )
 
 
+def test_generate_package_index_push_failure(monkeypatch, tmp_path: pathlib.Path):
+    monkeypatch.setattr(
+        spack.binary_distribution,
+        "get_entries_from_cache",
+        lambda url, component_type: ({"some-manifest": 0.0}, lambda x: x),
+    )
+
+    def broken_read_specs_and_push_index(*args, **kwargs):
+        raise RuntimeError("Couldn't push the index")
+
+    monkeypatch.setattr(
+        spack.binary_distribution, "_read_specs_and_push_index", broken_read_specs_and_push_index
+    )
+
+    test_url = "file:///fake/keys/dir"
+    with pytest.raises(GenerateIndexError, match="problem pushing package index"):
+        spack.binary_distribution._url_generate_package_index(test_url, str(tmp_path))
+
+
 def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
     def mock_list_url(url, recursive=False):
-        raise Exception("Test Exception handling")
+        raise OSError("Test Exception handling")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
 
@@ -1264,7 +1334,7 @@ def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
 
     index_blob_record = spack.binary_distribution.BlobRecord(
         os.stat(index_blob_path).st_size,
-        cache_class.BUILDCACHE_INDEX_MEDIATYPE,
+        cache_class.current_component_to_media_type(BuildcacheComponent.INDEX),
         "none",
         "sha256",
         index_json_hash,
@@ -1492,13 +1562,11 @@ def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Pa
     install_cmd("--fake", s.name)
     buildcache_cmd("push", "-u", str(mirror_dir / "nested"), s.name)
 
-    spec_manifests, _ = get_entries_from_cache(
-        str(mirror_url), str(tmp_path / "stage"), BuildcacheComponent.SPEC
-    )
+    spec_manifests, _ = get_entries_from_cache(str(mirror_url), BuildcacheComponent.SPEC)
 
     nested_mirror_url = url_util.path_to_file_url(str(mirror_dir / "nested"))
     spec_manifests_nested, _ = get_entries_from_cache(
-        str(nested_mirror_url), str(tmp_path / "stage"), BuildcacheComponent.SPEC
+        str(nested_mirror_url), BuildcacheComponent.SPEC
     )
 
     # Expected specs in root mirror
@@ -1510,6 +1578,99 @@ def test_get_entries_from_cache_nested_mirrors(monkeypatch, tmp_path: pathlib.Pa
     # Expected specs in nested mirror
     #   - zlib
     assert len(spec_manifests_nested) == 1
+
+
+class FakeAwsCli:
+    """Stand-in for the ``aws`` Executable used by _entries_from_cache_aws_cli."""
+
+    def __init__(self, output="", error=None):
+        self.output = output
+        self.error = error
+        self.calls = []
+
+    def __call__(self, *args, **kwargs):
+        self.calls.append(args)
+        if self.error is not None:
+            raise self.error
+        return self.output
+
+
+def test_entries_from_cache_aws_cli(monkeypatch):
+    """Verify that _entries_from_cache_aws_cli:
+    * Lists manifests using `aws s3 ls` (not downloading them)
+    * Filters out non-matching keys
+    * Properly reconstructs the full s3:// url for each matching manifest."""
+    ls_output = "\n".join(
+        [
+            "2022-08-15 17:54:40    3717621 "
+            "mirror/v3/manifests/spec/zlib/zlib-1.2.13-abcdefabcdefabcdefabcdefabcdefab"
+            ".spec.manifest.json",
+            # Does not match the "*.spec.manifest.json" include pattern, should be skipped.
+            "2022-08-15 17:54:41         42 mirror/v3/layout.json",
+            # Does not match `aws s3 ls` output format, should be ignored.
+            "not a valid aws s3 ls line",
+        ]
+    )
+    fake_aws = FakeAwsCli(output=ls_output)
+    monkeypatch.setattr(spack.url_buildcache, "which", lambda name: fake_aws)
+
+    filename_to_mtime, read_fn = spack.url_buildcache._entries_from_cache_aws_cli(
+        "s3://my-bucket/mirror", BuildcacheComponent.SPEC
+    )
+
+    assert read_fn is not None
+    assert filename_to_mtime == {
+        "s3://my-bucket/mirror/v3/manifests/spec/zlib/zlib-1.2.13-"
+        "abcdefabcdefabcdefabcdefabcdefab.spec.manifest.json": datetime(
+            2022, 8, 15, 17, 54, 40
+        ).timestamp()
+    }
+    assert len(fake_aws.calls) == 1
+    assert fake_aws.calls[0][:2] == ("s3", "ls")
+
+
+def test_entries_from_cache_aws_cli_no_aws(monkeypatch):
+    """Verify that we fall back gracefully (rather than erroring) when awscli is not available."""
+    monkeypatch.setattr(spack.url_buildcache, "which", lambda name: None)
+
+    filename_to_mtime, read_fn = spack.url_buildcache._entries_from_cache_aws_cli(
+        "s3://my-bucket/mirror", BuildcacheComponent.SPEC
+    )
+
+    assert filename_to_mtime is None
+    assert read_fn is None
+
+
+def test_entries_from_cache_aws_cli_process_error(monkeypatch):
+    """Verify that an `aws s3 ls` failure gets raised as ProcessError."""
+    fake_aws = FakeAwsCli(error=ProcessError("aws s3 ls failed"))
+    monkeypatch.setattr(spack.url_buildcache, "which", lambda name: fake_aws)
+
+    with pytest.raises(ListMirrorSpecsError):
+        spack.url_buildcache._entries_from_cache_aws_cli(
+            "s3://my-bucket/mirror", BuildcacheComponent.SPEC
+        )
+
+
+def test_get_entries_from_cache_falls_back_from_aws_cli(monkeypatch):
+    """Verify that get_entries_from_cache catches a failure from the aws-cli
+    listing strategy and falls back to the next strategy instead of re-raising."""
+    fallback_result = ({"the-manifest": 123.0}, lambda x: x)
+
+    def broken_aws_cli(url, component_type):
+        raise ListMirrorSpecsError("aws s3 ls failed")
+
+    def fake_fallback(url, component_type):
+        return fallback_result
+
+    monkeypatch.setattr(spack.url_buildcache, "_entries_from_cache_aws_cli", broken_aws_cli)
+    monkeypatch.setattr(spack.url_buildcache, "_entries_from_cache_fallback", fake_fallback)
+
+    result = spack.url_buildcache.get_entries_from_cache(
+        "s3://my-bucket/mirror", BuildcacheComponent.SPEC
+    )
+
+    assert result == fallback_result
 
 
 def test_mirror_metadata():
@@ -1609,12 +1770,14 @@ def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mut
     def no_index(*args, **kwargs):
         raise spack.binary_distribution.BuildcacheIndexNotExists("no index")
 
-    binary_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "index_cache"))
+    binary_index = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "index_cache"), config=mutable_config
+    )
     monkeypatch.setattr(binary_index, "_fetch_and_cache_index", no_index)
 
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        binary_index.update()
+        binary_index.update(config=mutable_config)
 
     concretization_warnings = [
         w for w in caught if "cannot be used in concretization" in str(w.message)
@@ -1625,14 +1788,16 @@ def test_update_does_not_warn_on_mirror_with_no_index(monkeypatch, tmp_path, mut
 
 def test_load_buildcache_index(monkeypatch, tmp_path):
     """Tests that load_buildcache_index uses the local cache (no network call)."""
-    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+    mock_index = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "idx"), config=spack.config.CONFIG
+    )
     regenerate_calls = []
     update_calls = []
 
     def fake_regenerate(clear_existing=False):
         regenerate_calls.append(clear_existing)
 
-    def fake_update(with_cooldown=False):
+    def fake_update(with_cooldown=False, *, config=None):
         update_calls.append(with_cooldown)
 
     monkeypatch.setattr(mock_index, "regenerate_spec_cache", fake_regenerate)
@@ -1646,7 +1811,9 @@ def test_load_buildcache_index(monkeypatch, tmp_path):
 
 def test_load_buildcache_index_degrades_gracefully(monkeypatch, tmp_path):
     """Tests that load_buildcache_index swallows errors; status display never breaks a command."""
-    mock_index = spack.binary_distribution.BinaryIndexCache(str(tmp_path / "idx"))
+    mock_index = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "idx"), config=spack.config.CONFIG
+    )
 
     def exploding_regenerate(clear_existing=False):
         raise OSError("disk error")
@@ -1707,3 +1874,22 @@ def test_select_signing_key_shows_fingerprints(monkeypatch):
     monkeypatch.setattr(spack.util.gpg, "signing_keys", lambda *a: keys)
     with pytest.raises(spack.binary_distribution.PickKeyException, match="AAAA\n  BBBB"):
         spack.binary_distribution.select_signing_key()
+
+
+@pytest.mark.parametrize(
+    "component,oldest",
+    [
+        (BuildcacheComponent.SPEC, "application/vnd.spack.spec.v5+json"),
+        (BuildcacheComponent.INDEX, "application/vnd.spack.db.v8+json"),
+    ],
+)
+def test_manifest_reads_older_media_types(component, oldest):
+    """Blobs of the formats layout v3 started with are still read, after the current ones."""
+    current = URLBuildcacheEntry.current_component_to_media_type(component)
+    media_types = URLBuildcacheEntry.component_to_media_types(component)
+    assert media_types[0] == current
+    assert URLBuildcacheEntry.oldest_component_to_media_type(component) == oldest
+
+    records = [BlobRecord(1, t, "gzip", "sha256", t) for t in (oldest, current)]
+    manifest = BuildcacheManifest(layout_version=3, data=records)
+    assert [r.checksum for r in manifest.get_blob_records(media_types)] == [current, oldest]

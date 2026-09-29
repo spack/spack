@@ -18,6 +18,7 @@ import spack.buildcache_migrate as migrate
 import spack.buildcache_prune
 import spack.cmd.buildcache
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.main
@@ -52,7 +53,9 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 @pytest.fixture()
 def mock_get_specs(database, monkeypatch):
     specs = database.query_local()
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
+    monkeypatch.setattr(
+        spack.binary_distribution, "update_cache_and_get_specs", lambda *args, **kwargs: specs
+    )
 
 
 @pytest.fixture()
@@ -65,7 +68,9 @@ def mock_get_specs_multiarch(database, monkeypatch):
             spec.architecture = spack.spec.ArchSpec("linux-rhel7-x86_64")
             break
 
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
+    monkeypatch.setattr(
+        spack.binary_distribution, "update_cache_and_get_specs", lambda *args, **kwargs: specs
+    )
 
 
 @pytest.mark.db
@@ -534,12 +539,12 @@ def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path,
 
     # nothing should be pushed due to --fail-fast.
     assert not os.listdir(tmp_path)
-    assert not spack.binary_distribution.update_cache_and_get_specs()
+    assert not spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
 
     with pytest.raises(spack.cmd.buildcache.PackageNotInstalledError):
         buildcache("push", "--update-index", "my-mirror", "mpileaks^mpich")
 
-    specs = spack.binary_distribution.update_cache_and_get_specs()
+    specs = spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
 
     # everything but mpich should be pushed
     mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
@@ -559,7 +564,7 @@ def test_allow_missing_when_dep_not_installed(tmp_path: pathlib.Path, mutable_da
     # There should be warnings but no errors
     buildcache("push", "--update-index", "--allow-missing", "my-mirror", "mpileaks^mpich")
 
-    specs = spack.binary_distribution.update_cache_and_get_specs()
+    specs = spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
 
     # Everything but mpich should be pushed
     mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
@@ -588,7 +593,7 @@ def test_push_without_build_deps(
     buildcache(
         "push", "--update-index", "--without-build-dependencies", "my-mirror", f"/{s.dag_hash()}"
     )
-    assert spack.binary_distribution.update_cache_and_get_specs() == [s]
+    assert spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG) == [s]
 
 
 @pytest.fixture(scope="function")
@@ -680,7 +685,7 @@ def test_install_v2_layout(
     assert "deprecated" in output
 
 
-def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
+def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config, mock_packages):
     """Make sure first unsigned migration results in usable buildcache,
     leaving the previous layout in place. Also test that a subsequent one
     doesn't need to migrate anything, and that using --delete-existing
@@ -706,6 +711,13 @@ def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
 
     assert "libdwarf" in output and "libelf" in output
 
+    # Migrated spec files are not labeled as the current format
+    manifests = list(test_mirror_path.glob("v3/manifests/spec/**/*.manifest.json"))
+    assert manifests
+    for manifest in manifests:
+        media_types = {b["mediaType"] for b in json.loads(manifest.read_text())["data"]}
+        assert "application/vnd.spack.spec.v5+json" in media_types
+
     output = buildcache("migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror")
 
     # A second migration of the same mirror indicates neither spec
@@ -717,7 +729,7 @@ def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
     assert not os.path.exists(build_cache_path)
 
 
-def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_config):
+def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_config, mock_packages):
     """Test a signed migration requires a signing key, requires the public
     key originally used to sign the pkgs, fails and prints reasonable messages
     if those requirements are unmet, and eventually succeeds when they are met."""
@@ -756,7 +768,7 @@ def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_conf
     assert "libdwarf" in output and "libelf" in output
 
 
-def test_unsigned_migrate_of_signed_mirror(v2_buildcache_layout, mutable_config):
+def test_unsigned_migrate_of_signed_mirror(v2_buildcache_layout, mutable_config, mock_packages):
     """Test spack can do an unsigned migration of a signed buildcache by
     ignoring signatures and skipping re-signing."""
 

@@ -107,11 +107,11 @@ def clean(parser, args):
 
     if args.stage:
         tty.msg("Removing all temporary build stages")
-        spack.stage.purge()
+        spack.stage.purge(config=spack.config.CONFIG)
 
     if args.downloads:
         tty.msg("Removing cached downloads")
-        spack.caches.FETCH_CACHE.destroy()
+        spack.caches.fetch_cache(spack.config.CONFIG).destroy()
 
     if args.failures:
         tty.msg("Removing install failure marks")

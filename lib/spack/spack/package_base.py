@@ -51,8 +51,8 @@ import spack.util.path
 import spack.util.web
 import spack.variant
 import spack.version
-import spack.version.git_ref_lookup
 from spack.compilers.adaptor import DeprecatedCompiler
+from spack.enums import Deprecation
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
@@ -62,7 +62,13 @@ from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.string import comma_and, quote
 from spack.util.typing import SupportsRichComparison
-from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
+from spack.version import (
+    ConcreteVersion,
+    GitVersion,
+    StandardVersion,
+    VersionError,
+    is_git_version,
+)
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -574,6 +580,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     splice_specs: Dict[spack.spec.Spec, Tuple[spack.spec.Spec, Union[None, str, List[str]]]]
     #: Class level dictionary populated by :func:`~spack.directives.redistribute` directives
     disable_redistribute: Dict[spack.spec.Spec, DisableRedistribute]
+    #: Class level dictionary populated by :func:`~spack.directives.deprecated` directives
+    deprecations: Dict[spack.spec.Spec, List[Deprecation]]
 
     #: Must be defined as a fallback for old specs that don't have the ``build_system`` variant
     default_buildsystem: str
@@ -1024,9 +1032,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         else:
             v_attrs = cls.versions.get(spec.version, {})
             if "commit" in v_attrs:
-                spec.variants["commit"] = spack.variant.SingleValuedVariant(
-                    "commit", v_attrs["commit"]
-                )
+                spec.variants.set(spack.variant.SingleValuedVariant("commit", v_attrs["commit"]))
                 return
             ref = v_attrs.get("tag") or v_attrs.get("branch")
 
@@ -1060,7 +1066,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             sha = spack.util.git.get_commit_sha(url, ref)
 
         if sha:
-            spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
+            spec.variants.set(spack.variant.SingleValuedVariant("commit", sha))
 
     def resolve_binary_provenance(self):
         """
@@ -1159,10 +1165,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     def _make_resource_stage(self, root_stage, resource):
         pretty_resource_name = fsys.polite_filename(f"{resource.name}-{self.version}")
-        return stg.ResourceStage(
+        return stg.resource_stage_from_config(
             resource.fetcher,
             root=root_stage,
             resource=resource,
+            config=spack.config.CONFIG,
             name=self._resource_stage(resource),
             mirror_paths=spack.mirrors.layout.default_mirror_layout(
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
@@ -1184,9 +1191,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         )
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = stg.compute_stage_name(s)
-        stage = stg.Stage(
+        stage_name = stg.compute_stage_name(s, config=spack.config.CONFIG)
+        stage = stg.stage_from_config(
             fetcher,
+            config=spack.config.CONFIG,
             mirror_paths=mirror_paths,
             mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
             name=stage_name,
@@ -1219,8 +1227,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 stage_link = None
             else:
                 stage_link = self.spec.format_path(link_format)
-            source_stage = stg.DevelopStage(
-                stg.compute_stage_name(self.spec), dev_path, stage_link
+            source_stage = stg.develop_stage_from_config(
+                stg.compute_stage_name(self.spec, config=spack.config.CONFIG),
+                dev_path,
+                stage_link,
+                config=spack.config.CONFIG,
             )
         else:
             source_stage = self._make_root_stage(self.fetcher)
@@ -1244,8 +1255,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             per_package_ref = os.path.join(patch.owner.split(".")[-1], name)
             mirror_ref = spack.mirrors.layout.default_mirror_layout(fetcher, per_package_ref)
 
-            return stg.Stage(
+            return stg.stage_from_config(
                 fetcher,
+                config=spack.config.CONFIG,
                 name=f"{stg.stage_prefix}-{uniqe_part}-patch-{fetch_digest}",
                 mirror_paths=mirror_ref,
                 mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
@@ -1632,33 +1644,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     "Will not fetch %s" % self.spec.format("{name}{@version}"), ck_msg
                 )
 
-        deprecated = spack.config.CONFIG.get("config:deprecated")
-        if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
-            tty.warn(
-                "{0} is deprecated and may be removed in a future Spack release.".format(
-                    self.spec.format("{name}{@version}")
-                )
-            )
-
-            # Ask the user whether to install deprecated version if we're
-            # interactive, but just fail if non-interactive.
-            dp_msg = (
-                "If you are willing to be a maintainer for this version "
-                "of the package, submit a PR to remove `deprecated=False"
-                "`, or use `--deprecated` to skip this check."
-            )
-            ignore_deprecation = False
-            if sys.stdout.isatty():
-                ignore_deprecation = tty.get_yes_or_no("  Fetch anyway?", default=False)
-
-                if ignore_deprecation:
-                    tty.debug("Fetching deprecated version. {0}".format(dp_msg))
-
-            if not ignore_deprecation:
-                raise spack.error.FetchError(
-                    "Will not fetch {0}".format(self.spec.format("{name}{@version}")), dp_msg
-                )
-
         self.stage.create()
         err_msg = None if not self.manual_download else self.download_instr
         start_time = time.time()
@@ -1814,27 +1799,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             else:
                 fsys.touch(no_patches_file)
 
-    @classmethod
-    def all_patches(cls):
-        """Retrieve all patches associated with the package.
-
-        Retrieves patches on the package itself as well as patches on the
-        dependencies of the package."""
-        patches = []
-        for _, patch_list in cls.patches.items():
-            for patch in patch_list:
-                patches.append(patch)
-
-        pkg_deps = cls.dependencies
-        for dep_name in pkg_deps:
-            for _, dependency in pkg_deps[dep_name].items():
-                for _, patch_list in dependency.patches.items():
-                    for patch in patch_list:
-                        patches.append(patch)
-
-        return patches
-
-    def content_hash(self, content: Optional[bytes] = None) -> str:
+    def content_hash(self, content: Optional[bytes] = None, *, repo: "spack.repo.RepoPath") -> str:
         """Create a hash based on the artifacts and patches used to build this package.
 
         This includes:
@@ -1847,6 +1812,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         happens to be called on a package with an abstract spec, only applicable (i.e.,
         determinable) portions of the hash will be included.
 
+        Args:
+            content: optionally provide the package.py contents to hash, instead of reading
+                them from ``repo``.
+            repo: repositories the package.py and the patches are read from.
         """
         # list of components to make up the hash
         hash_content = []
@@ -1882,11 +1851,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # we have to call package_hash *before* marking specs concrete
         if self.spec._patches_assigned():
             hash_content.extend(
-                ":".join((p.sha256, str(p.level))).encode("utf-8") for p in self.spec.patches
+                ":".join((p.sha256, str(p.level))).encode("utf-8")
+                for p in self.spec._patches_from(repo)
             )
 
         # package.py contents
-        hash_content.append(package_hash(self.spec, source=content).encode("utf-8"))
+        hash_content.append(package_hash(self.spec, source=content, repo=repo).encode("utf-8"))
 
         # put it all together and encode as base32
         b32_hash = base64.b32encode(
@@ -2702,9 +2672,6 @@ def _for_package_version(pkg, version=None):
                 f"Cannot fetch git version for {pkg.name}. Package has no 'git' attribute"
             )
         if isinstance(version, spack.version.GitVersion):
-            # Populate the version with comparisons to other commits
-            version.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(pkg.name))
-
             if not commit and version.is_commit:
                 commit = version.ref
             version_meta_data = pkg.versions.get(version.std_version)
@@ -2790,7 +2757,11 @@ def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -
         version = StandardVersion.from_string(version)
 
     details = pkg.versions.get(version)
-    return details is not None and details.get("deprecated", False)
+    if details is not None and details.get("deprecated", False):
+        return True
+
+    version_spec = spack.spec.Spec(f"{pkg.name}@={version}")
+    return any(version_spec.satisfies(constraint) for constraint in pkg.deprecations)
 
 
 def preferred_version(
@@ -2807,7 +2778,7 @@ def preferred_version(
 
     def _version_order(version_info):
         version, info = version_info
-        deprecated_key = not info.get("deprecated", False)
+        deprecated_key = not deprecated_version(pkg, version)
         return (deprecated_key, *concretization_version_order(version_info))
 
     version, _ = max(pkg.versions.items(), key=_version_order)
@@ -2846,10 +2817,8 @@ def non_default_variant(node: spack.spec.Spec, variant_name: str) -> spack.enums
 
 
 def sort_by_pkg_preference(
-    versions: Iterable[Union[GitVersion, StandardVersion]],
-    *,
-    pkg: Union[PackageBase, Type[PackageBase]],
-) -> List[Union[GitVersion, StandardVersion]]:
+    versions: Iterable[ConcreteVersion], *, pkg: Union[PackageBase, Type[PackageBase]]
+) -> List[ConcreteVersion]:
     """Sorts the list of versions passed in input according to the preferences in the package. The
     return value does not contain duplicate versions. Most preferred versions first.
     """
@@ -2858,8 +2827,8 @@ def sort_by_pkg_preference(
 
 
 def concretization_version_order(
-    version_info: Tuple[Union[GitVersion, StandardVersion], dict],
-) -> Tuple[bool, bool, bool, bool, Union[GitVersion, StandardVersion]]:
+    version_info: Tuple[ConcreteVersion, dict],
+) -> Tuple[bool, bool, bool, bool, ConcreteVersion]:
     """Version order key for concretization, where preferred > not preferred,
     finite > any infinite component; only if all are the same, do we use default version
     ordering.

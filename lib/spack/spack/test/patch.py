@@ -23,7 +23,8 @@ import spack.stage
 import spack.util.url as url_util
 from spack.repo import RepoPath
 from spack.spec import Spec
-from spack.stage import Stage
+from spack.stage import stage_from_config
+from spack.test.conftest import MockStageRoot
 from spack.util.executable import Executable
 from spack.util.filesystem import mkdirp, touch, working_dir
 
@@ -70,7 +71,7 @@ platform_url_sha = (
 def mock_patch_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch):
     # Don't disrupt the spack install directory with tests.
     mock_path = str(tmp_path_factory.mktemp("mock-patch-stage"))
-    monkeypatch.setattr(spack.stage, "_stage_root", mock_path)
+    monkeypatch.setattr(spack.stage, "stage_root", MockStageRoot(mock_path))
     return mock_path
 
 
@@ -97,7 +98,9 @@ def test_url_patch(mock_packages, mock_patch_stage, filename, sha256, archive_sh
     s = spack.concretize.concretize_one("patch")
 
     # make a stage
-    with Stage(url) as stage:  # TODO: url isn't used; maybe refactor Stage
+    with stage_from_config(
+        url, config=config
+    ) as stage:  # TODO: url isn't used; maybe refactor Stage
         stage.mirror_path = mock_patch_stage
 
         mkdirp(stage.source_path)
@@ -123,7 +126,7 @@ third line
                 )
         # apply the patch and compare files
         patch = spack.patch.UrlPatch(s.package, url, sha256=sha256, archive_sha256=archive_sha256)
-        patch_stage = Stage(patch.fetcher())
+        patch_stage = stage_from_config(patch.fetcher(), config=config)
         with patch_stage:
             patch_stage.create()
             patch_stage.fetch()
@@ -143,7 +146,7 @@ third line
         patch = spack.patch.UrlPatch(
             s.package, url, sha256=sha256, archive_sha256=archive_sha256, reverse=True
         )
-        patch_stage = Stage(patch.fetcher())
+        patch_stage = stage_from_config(patch.fetcher(), config=config)
         with patch_stage:
             patch_stage.create()
             patch_stage.fetch()
@@ -262,11 +265,15 @@ def test_nested_directives(mock_packages: RepoPath):
     when_unconditional = package.dependencies[Spec()]
     assert when_unconditional.keys() == {"fake", "libelf"}
     # fake has two unconditional URL patches
-    assert when_unconditional["fake"].patches.keys() == {Spec()}
-    assert len(when_unconditional["fake"].patches[Spec()]) == 2
+    fake_patches = when_unconditional["fake"].patches
+    assert fake_patches is not None
+    assert fake_patches.keys() == {Spec()}
+    assert len(fake_patches[Spec()]) == 2
     # libelf has one unconditional patch
-    assert when_unconditional["libelf"].patches.keys() == {Spec()}
-    assert len(when_unconditional["libelf"].patches[Spec()]) == 1
+    libelf_patches = when_unconditional["libelf"].patches
+    assert libelf_patches is not None
+    assert libelf_patches.keys() == {Spec()}
+    assert len(libelf_patches[Spec()]) == 1
 
     # there are multiple depends_on directives for libelf under the +foo when clause; these must be
     # reduced to a single Dependency object.
@@ -275,16 +282,20 @@ def test_nested_directives(mock_packages: RepoPath):
     assert when_foo["libelf"].spec == Spec("libelf@0.8.10")
     assert when_foo["libelf"].depflag == dt.BUILD | dt.LINK
     # there is one unconditional patch for libelf under the +foo when clause
-    assert len(when_foo["libelf"].patches) == 1
-    assert len(when_foo["libelf"].patches[Spec()]) == 1
+    foo_libelf_patches = when_foo["libelf"].patches
+    assert foo_libelf_patches is not None
+    assert len(foo_libelf_patches) == 1
+    assert len(foo_libelf_patches[Spec()]) == 1
 
     # libdwarf is a dependency when @1.0 with two patches applied from a single depends_on
     # statement, one conditional on the libdwarf version
     when_1_0 = package.dependencies[Spec("@1.0")]
     assert when_1_0.keys() == {"libdwarf"}
-    assert when_1_0["libdwarf"].patches.keys() == {Spec(), Spec("@20111030")}
-    assert len(when_1_0["libdwarf"].patches[Spec()]) == 1
-    assert len(when_1_0["libdwarf"].patches[Spec("@20111030")]) == 1
+    libdwarf_patches = when_1_0["libdwarf"].patches
+    assert libdwarf_patches is not None
+    assert libdwarf_patches.keys() == {Spec(), Spec("@20111030")}
+    assert len(libdwarf_patches[Spec()]) == 1
+    assert len(libdwarf_patches[Spec("@20111030")]) == 1
 
 
 @pytest.mark.not_on_windows("Test requires Autotools")
@@ -485,7 +496,7 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
     )
 
 
-def test_patch_no_file():
+def test_patch_no_file(config):
     # Give it the attributes we need to construct the error message
     FakePackage = collections.namedtuple("FakePackage", ["name", "namespace", "fullname"])
     fp = FakePackage("fake-package", "test", "fake-package")
@@ -495,7 +506,10 @@ def test_patch_no_file():
     patch = spack.patch.Patch(fp, "nonexistent_file", 0, "")
     patch.path = "test"
     with pytest.raises(spack.error.NoSuchPatchError, match="No such patch:"):
-        spack.patch.apply_patch(Stage("https://example.com/foo.patch").source_path, patch.path)
+        spack.patch.apply_patch(
+            stage_from_config("https://example.com/foo.patch", config=config).source_path,
+            patch.path,
+        )
 
 
 def test_patch_no_sha256():

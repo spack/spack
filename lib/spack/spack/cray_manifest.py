@@ -13,13 +13,13 @@ from spack.vendor.jsonschema import exceptions
 
 import spack.cmd
 import spack.compilers.config
+import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
-from spack import hash_types
 from spack.detection.path import ExecutablesFinder
 from spack.schema.cray_manifest import schema as manifest_schema
 from spack.util import tty
@@ -43,7 +43,9 @@ def translated_compiler_name(manifest_compiler_name):
     """
     if manifest_compiler_name in COMPILER_NAME_TRANSLATION:
         return COMPILER_NAME_TRANSLATION[manifest_compiler_name]
-    elif manifest_compiler_name in spack.compilers.config.supported_compilers():
+    elif manifest_compiler_name in spack.compilers.config.supported_compilers(
+        repo=spack.repo.PATH
+    ):
         return manifest_compiler_name
     else:
         raise spack.compilers.config.UnknownCompilerError(
@@ -175,15 +177,12 @@ def spec_from_entry(entry):
 
     (spec,) = spack.cmd.parse_specs(spec_str.split())
 
-    for ht in [hash_types.dag_hash, hash_types.build_hash, hash_types.full_hash]:
-        setattr(spec, ht.attr, entry["hash"])
-
+    spec._hash = entry["hash"]
     spec._concrete = True
-    spec._hashes_final = True
     spec.external_path = entry["prefix"]
     spec.origin = "external-db"
     spec.namespace = pkg_cls.namespace
-    spack.spec.Spec.ensure_valid_variants(spec)
+    spack.spec.Spec.ensure_valid_variants(spec, repo=spack.repo.PATH)
 
     return spec
 
@@ -214,8 +213,10 @@ def entries_to_specs(entries):
                 dep_spec = spec_dict[dep_hash]
                 parent_spec._add_dependency(dep_spec, depflag=depflag, virtuals=())
 
-    for spec in spec_dict.values():
-        spack.spec.reconstruct_virtuals_on_edges(spec)
+    # Edges above are added with virtuals=(), and the specs report the current format.
+    spack.repo.reconstruct_virtuals(
+        spec_dict.values(), repo=spack.repo.PATH, edges_lack_virtuals=True
+    )
 
     return spec_dict
 
@@ -247,10 +248,12 @@ def read(path, apply_updates):
             compilers.append(candidate)
     tty.debug(f"{path}: {str(len(compilers))} compilers read from manifest")
     # Filter out the compilers that already appear in the configuration
-    compilers = spack.compilers.config.select_new_compilers(compilers)
+    compilers = spack.compilers.config.select_new_compilers(
+        compilers, config=spack.config.CONFIG, repo=spack.repo.PATH
+    )
     if apply_updates and compilers:
         try:
-            spack.compilers.config.add_compiler_to_config(compilers)
+            spack.compilers.config.add_compiler_to_config(compilers, config=spack.config.CONFIG)
         except Exception:
             warnings.warn(
                 f"Could not add compilers from manifest: {path}"

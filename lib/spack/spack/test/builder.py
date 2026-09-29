@@ -8,6 +8,7 @@ import pytest
 
 import spack.builder
 import spack.concretize
+import spack.error
 import spack.paths
 import spack.repo
 from spack.util.filesystem import touch
@@ -259,3 +260,24 @@ def test_get_builder_class_accepts_objects_and_classes():
 
     # Names that are not defined in any package module are not builders
     assert spack.builder.get_builder_class(pkg_cls, "UnknownBuilder") is None
+
+
+def test_register_builder_rejects_duplicate_names():
+    """A build system name can be registered by only one builder class."""
+
+    @spack.builder.register_builder("test-duplicate")
+    class FirstBuilder:
+        pass
+
+    try:
+        # re-registering the same class is idempotent
+        assert spack.builder.register_builder("test-duplicate")(FirstBuilder) is FirstBuilder
+
+        with pytest.raises(spack.error.SpackError, match="already registered"):
+
+            @spack.builder.register_builder("test-duplicate")
+            class SecondBuilder:
+                pass
+
+    finally:
+        del spack.builder.BUILDER_CLS["test-duplicate"]

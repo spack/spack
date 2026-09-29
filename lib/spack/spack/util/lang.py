@@ -21,7 +21,6 @@ from typing import (
     Dict,
     Generic,
     Iterable,
-    Iterator,
     List,
     Mapping,
     Optional,
@@ -424,40 +423,6 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
         add_func_to_class("__hash__", h)
 
     return cls
-
-
-K = TypeVar("K")
-V = TypeVar("V")
-
-
-@lazy_lexicographic_ordering
-class HashableMap(typing.MutableMapping[K, V]):
-    """This is a hashable, comparable dictionary.  Hash is performed on
-    a tuple of the values in the dictionary."""
-
-    __slots__ = ("dict",)
-
-    def __init__(self):
-        self.dict: Dict[K, V] = {}
-
-    def __getitem__(self, key: K) -> V:
-        return self.dict[key]
-
-    def __setitem__(self, key: K, value: V) -> None:
-        self.dict[key] = value
-
-    def __iter__(self) -> Iterator[K]:
-        return iter(self.dict)
-
-    def __len__(self) -> int:
-        return len(self.dict)
-
-    def __delitem__(self, key: K) -> None:
-        del self.dict[key]
-
-    def _cmp_iter(self):
-        for _, v in sorted(self.dict.items()):
-            yield v
 
 
 def match_predicate(*args):

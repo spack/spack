@@ -8,6 +8,7 @@ import shlex
 import shutil
 import sys
 import tempfile
+import warnings
 from pathlib import Path
 from typing import List, Optional, Set, Tuple, Union
 
@@ -332,7 +333,6 @@ def env_activate(args):
     elif args.temp:
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
-        short_name = os.path.basename(env_path)
         view = not args.without_view
         ev.create_in_dir(env, with_view=view).write(regenerate=False)
         _tty_info(f"Created and activated temporary environment in {env_path}")
@@ -340,12 +340,10 @@ def env_activate(args):
     # Managed environment
     elif ev.exists(args.env_name) and not args.dir:
         env_path = ev.root(args.env_name)
-        short_name = args.env_name
 
     # Environment directory
     elif ev.is_env_dir(args.env_name):
         env_path = os.path.abspath(args.env_name)
-        short_name = os.path.basename(env_path)
 
     # create if user requested, and then recall recursively
     elif args.create:
@@ -357,8 +355,6 @@ def env_activate(args):
 
     else:
         tty.die("No such environment: '%s'" % args.env_name)
-
-    env_prompt = "[%s]" % short_name
 
     # We only support one active environment at a time, so deactivate the current one.
     if active_environment() is None:
@@ -381,7 +377,7 @@ def env_activate(args):
         view = ev.default_view_name
 
     cmds += spack.environment.shell.activate_header(
-        env=active_env, shell=args.shell, prompt=env_prompt if args.prompt else None, view=view
+        env=active_env, shell=args.shell, prompt=args.prompt, view=view
     )
     env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
     cmds += env_mods.shell_modifications(args.shell)
@@ -978,7 +974,7 @@ def env_revert(args):
 
 def env_depfile_setup_parser(subparser):
     """\
-    generate a depfile to exploit parallel builds across specs
+    (deprecated) generate a depfile to exploit parallel builds across specs
 
     requires the active environment to be concrete
     """
@@ -1032,6 +1028,12 @@ def env_depfile_setup_parser(subparser):
 
 
 def env_depfile(args):
+    warnings.warn(
+        "`spack env depfile` is deprecated and will be removed in Spack v1.4. Use "
+        "`spack install` instead, which builds packages in parallel and shares the jobserver "
+        "of a parent `make`."
+    )
+
     # Currently only make is supported.
     spack.cmd.require_active_env(args.subparser)
 

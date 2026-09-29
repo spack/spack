@@ -177,7 +177,19 @@ spec_node = {
         "propagate": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "List of variants to propagate (for abstract specs)",
+            "description": "List of compiler flag types to propagate (for abstract specs); "
+            "before the split into propagated_parameters it also listed variants",
+        },
+        "propagated_parameters": {
+            "type": "object",
+            "additionalProperties": True,
+            "description": "Propagated variants, i.e. ++foo or foo==bar (for abstract specs)",
+        },
+        "propagated_abstract": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "List of propagated multi-valued variants that are abstract, i.e. "
+            "foo==bar,baz instead of foo:==bar,baz (for abstract specs)",
         },
         "abstract": {
             "type": "array",
@@ -234,6 +246,12 @@ spec_node = {
             "type": "array",
             "items": {"type": "string"},
             "description": "List of patches, similar to the patches variant under parameters",
+        },
+        "provided_virtuals": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Virtual specs provided, e.g. mpi@3:, frozen at concretization. "
+            "Part of the DAG hash, since `provides` is stripped from the package hash.",
         },
         "dependencies": dependencies,
         "build_spec": build_spec,

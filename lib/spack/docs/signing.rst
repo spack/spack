@@ -157,7 +157,7 @@ The difference between signed and unsigned manifests is simply that the signed v
        },
        {
          "contentLength": 1000,
-         "mediaType": "application/vnd.spack.spec.v5+json",
+         "mediaType": "application/vnd.spack.spec.v6+json",
          "compression": "gzip",
          "checksumAlgorithm": "sha256",
          "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"

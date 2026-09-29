@@ -44,6 +44,13 @@ def register_builder(build_system_name: str):
     """
 
     def _decorator(cls):
+        existing = BUILDER_CLS.get(build_system_name)
+        if existing is not None and existing is not cls:
+            raise SpackError(
+                f"cannot register builder {cls.__module__}.{cls.__qualname__} for build system "
+                f"'{build_system_name}': already registered by "
+                f"{existing.__module__}.{existing.__qualname__}"
+            )
         cls.build_system = build_system_name
         BUILDER_CLS[build_system_name] = cls
         return cls
@@ -222,7 +229,7 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
     """Given a package object with an associated concrete spec,
     return the name of its build system."""
     try:
-        return pkg.spec.variants["build_system"].value
+        return str(pkg.spec.variants["build_system"].value)
     except KeyError as e:
         # We are reading an old spec without the build_system variant
         if hasattr(pkg, "default_buildsystem"):
