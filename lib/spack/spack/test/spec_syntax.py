@@ -1175,13 +1175,14 @@ def specfile_for(config, mock_packages):
             ],
             "zlib-ng %gcc",
         ),
-        # a quoted usages value is a value like any other, so other properties can follow it
+        # a usages= value is never quoted, so properties that follow it go in their own group
         (
-            "zlib-ng %[usages='+sarif' virtuals=c] gcc",
+            "zlib-ng %[usages=+sarif][virtuals=c] gcc",
             [
                 Token("UNQUALIFIED_PACKAGE_NAME", "zlib-ng"),
                 Token("DEPENDENCY", "%["),
-                Token("KEY_VALUE_PAIR", "usages='+sarif'"),
+                Token("KEY_VALUE_PAIR", "usages=+sarif"),
+                Token("END_EDGE_PROPERTIES", "]["),
                 Token("KEY_VALUE_PAIR", "virtuals=c"),
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
@@ -1278,7 +1279,10 @@ def test_edge_property_groups_parse_in_any_order(groups):
     "spec_str",
     [
         "zlib-ng %[usages=+sarif] gcc",
-        "zlib-ng %[usages='+sarif' virtuals=c] gcc",
+        # a usages= value is never quoted, so what follows it goes in its own group
+        "zlib-ng %[usages=+sarif][virtuals=c] gcc",
+        # the options in a usages= value may themselves be quoted
+        "zlib-ng %[usages=sanitizers='a b'] gcc",
         "foo ^[deptypes=link usages=+sarif] mpich",
         "foo %[virtuals=c][usages=+sarif sanitizers=asan][when=%baz target=x86_64]gcc",
         # a repeated request for the same usage is not a conflict
@@ -1309,15 +1313,15 @@ def test_usages_parse_but_are_not_stored(spec_str):
     ],
 )
 def test_usage_map_of_a_usages_value(usages_str, expected):
-    """The value of a usages= edge property parses into a map of usages.
+    """The value of a usages= edge property parses into a map of usages, keyed by name.
 
     TODO (usages RFD): assert the map on the edge instead, once DependencySpec stores it.
     """
     usages = SpecParser(usages_str, spack.spec.Spec)._usage_map()
-    assert isinstance(usages, spack.spec.UsageMap)
     assert all(isinstance(usage, spack.variant.UsageValue) for usage in usages.values())
+    # the parser returns a plain dict, which the edge is meant to turn into a UsageMap
     # key-value pairs print with a leading space, to follow the name of a node
-    assert str(usages).lstrip() == expected
+    assert str(spack.spec.UsageMap(usages)).lstrip() == expected
 
 
 @pytest.mark.parametrize(
@@ -1902,13 +1906,11 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("foo %[usages=] gcc", "expected an option after usages="),
         ("foo %[usages=", "expected an option after usages="),
         ("foo %[usages=][virtuals=c] gcc", "expected an option after usages="),
-        ("foo %[usages=''] gcc", "expected an option after usages="),
-        ("foo %[usages='+a bar'] gcc", "usages= takes only options"),
         ("foo %[usages=clang] gcc", "usages= takes only options"),
         ("foo %[usages=@1.2] gcc", "usages= takes only options"),
         ("foo %[usages=%bar] gcc", "usages= takes only options"),
         ("foo %[usages=/abc] gcc", "usages= takes only options"),
-        # an unquoted usages= value swallows the edge attributes that follow it
+        # a usages= value swallows the edge attributes that follow it
         ("foo %[usages=+sarif virtuals=c] gcc", '"virtuals" is an edge attribute of its own'),
         ("foo %[usages=+sarif when=+mpi] gcc", '"when" is an edge attribute of its own'),
         # a usage is requested of one dependency, so it is never propagated
@@ -1953,6 +1955,13 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
 )
 def test_error_conditions(text, match_string):
     with pytest.raises(SpecParsingError, match=match_string):
+        SpecParser(text, Spec).all_specs()
+
+
+@pytest.mark.parametrize("text", ["foo %[usages=''] gcc", "foo %[usages='+a bar'] gcc"])
+def test_a_usages_value_cannot_be_quoted(text):
+    """A usages= value extends to the closing bracket, so a quote around it is not spec syntax."""
+    with pytest.raises(SpecTokenizationError, match="unexpected characters in the spec string"):
         SpecParser(text, Spec).all_specs()
 
 
