@@ -166,12 +166,14 @@ def test_which_searches_pathext(tmp_path: pathlib.Path, monkeypatch):
 
     for name in ("script.bat", "prog.com", "prog.exe", "notes.txt", "extensionless"):
         (tmp_path / name).touch()
-
-    assert ex.which("script").path == str(tmp_path / "script.bat")
-    assert ex.which("script.bat").path == str(tmp_path / "script.bat")
+    script = ex.which("script")
+    bat_script = ex.which("script.bat")
+    assert script and script.path == str(tmp_path / "script.bat")
+    assert bat_script and bat_script.path == str(tmp_path / "script.bat")
 
     # PATHEXT determines which extension wins when several are present
-    assert ex.which("prog").path == str(tmp_path / "prog.com")
+    prog = ex.which("prog")
+    assert prog and prog.path == str(tmp_path / "prog.com")
 
     # files Windows does not consider executable are not found
     assert ex.which("notes") is None
