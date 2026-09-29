@@ -14,6 +14,7 @@ import spack.binary_distribution
 import spack.cmd
 import spack.concretize
 import spack.config
+import spack.debug_source
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
@@ -149,6 +150,16 @@ def setup_parser(subparser: argparse.ArgumentParser):
         metavar="GROUP",
         help="push only specs from the given environment group "
         "(can be specified multiple times, requires an active environment)",
+    )
+    push.add_argument(
+        "--debug-source", action="store_true", dest="push_debug_source",
+        help="also push captured debug source (out-of-prefix cache) for OCI mirrors, "
+        "keyed by build-id",
+    )
+    push.add_argument(
+        "--debug-symbols", action="store_true", dest="push_debug_symbols",
+        help="also push split debug symbols (out-of-prefix cache) for OCI mirrors, "
+        "keyed by build-id",
     )
     arguments.add_common_arguments(push, ["specs", "jobs"])
     push.set_defaults(func=push_fn, subparser=push)
@@ -612,6 +623,22 @@ def push_fn(args):
                 ),
             )
 
+        if args.push_debug_source or args.push_debug_symbols:
+            if not spack.oci.image.is_oci_url(mirror.push_url):
+                tty.warn(
+                    "--debug-source/--debug-symbols push is only supported for OCI mirrors "
+                    f"currently; {mirror.push_url} is not an OCI URL, skipping"
+                )
+            else:
+                target_image = spack.oci.oci.image_from_mirror(mirror)
+                for spec in specs:
+                    spack.debug_source.push_debug_artifacts(
+                        spec.package,
+                        target_image,
+                        push_source=args.push_debug_source,
+                        push_symbols=args.push_debug_symbols,
+                    )
+        
         # Finally tag all roots as a single image if requested.
         if args.tag:
             uploader.tag(args.tag, roots)

@@ -27,6 +27,8 @@ def create_installer(
     install_deps: bool = True,
     install_package: bool = True,
     install_source: bool = False,
+    debug_source: bool = False,
+    debug_symbols: bool = False,
     keep_prefix: bool = False,
     keep_stage: bool = False,
     restage: bool = True,
@@ -38,6 +40,7 @@ def create_installer(
     verbose: bool = False,
     concurrent_packages: Optional[int] = None,
     root_policy: Literal["auto", "cache_only", "source_only"] = "auto",
+    force_source_hashes: Optional[Set[str]] = None,
     dependencies_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     create_reports: bool = False,
 ) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
@@ -68,6 +71,8 @@ def create_installer(
         install_deps=install_deps,
         install_package=install_package,
         install_source=install_source,
+        debug_source=debug_source,  # type: ignore[call-arg]
+        debug_symbols=debug_symbols,  # type: ignore[call-arg]
         keep_prefix=keep_prefix,
         keep_stage=keep_stage,
         restage=restage,
@@ -80,5 +85,6 @@ def create_installer(
         concurrent_packages=concurrent_packages,
         root_policy=root_policy,
         dependencies_policy=dependencies_policy,
+        force_source_hashes=force_source_hashes,
         create_reports=create_reports,
     )
