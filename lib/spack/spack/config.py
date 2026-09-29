@@ -2417,24 +2417,6 @@ def _migrate_gpg(
     source_hash = _migration_source_hash()
     marker_name = f".migration-{source_hash}"
 
-    if os.path.exists(target_gpg_home):
-        marker_path = os.path.join(target_gpg_home, marker_name)
-        if os.path.exists(marker_path):
-            tty.debug(
-                f"GPG home already migrated from this spack instance (found marker {marker_name})"
-            )
-            return True
-        else:
-            tty.debug(
-                f"Cannot migrate GPG home: destination exists from different source: "
-                f"{target_gpg_home}"
-            )
-            return False
-
-    if os.path.exists(target_gpg_keys):
-        tty.debug(f"Cannot migrate GPG keys: destination already exists: {target_gpg_keys}")
-        return False
-
     # Prepare parent directories
     parent_dir = os.path.dirname(target_gpg_home)
     filesystem.mkdirp(parent_dir)
@@ -2447,27 +2429,58 @@ def _migrate_gpg(
 
         # Migrate GPG home (keyring)
         if gpg_home_exists:
-            staging_home = os.path.join(parent_dir, ".spack-gpg-home-staging")
-            # Clean up any stale staging directory from a previous failed attempt
-            if os.path.exists(staging_home):
-                shutil.rmtree(staging_home, ignore_errors=True)
-            shutil.copytree(old_gpg_home, staging_home)
-            os.chmod(staging_home, 0o700)
-            # Add migration marker to identify this source
-            with open(os.path.join(staging_home, marker_name), "w", encoding="utf-8") as f:
-                f.write(f"Migrated from {spack.paths.prefix}\n")
-            os.replace(staging_home, target_gpg_home)
-            staging_home = None
+            if os.path.exists(target_gpg_home):
+                marker_path = os.path.join(target_gpg_home, marker_name)
+                if os.path.exists(marker_path):
+                    tty.debug(
+                        f"GPG home already migrated from this spack instance "
+                        f"(found marker {marker_name})"
+                    )
+                else:
+                    tty.debug(
+                        f"Cannot migrate GPG home: destination exists from different source: "
+                        f"{target_gpg_home}"
+                    )
+                    return False
+            else:
+                staging_home = os.path.join(parent_dir, ".spack-gpg-home-staging")
+                # Clean up any stale staging directory from a previous failed attempt
+                if os.path.exists(staging_home):
+                    shutil.rmtree(staging_home, ignore_errors=True)
+                shutil.copytree(old_gpg_home, staging_home)
+                os.chmod(staging_home, 0o700)
+                # Add migration marker to identify this source
+                with open(os.path.join(staging_home, marker_name), "w", encoding="utf-8") as f:
+                    f.write(f"Migrated from {spack.paths.prefix}\n")
+                os.replace(staging_home, target_gpg_home)
+                staging_home = None
 
         # Migrate GPG keys directory
         if gpg_keys_exists:
-            staging_keys = os.path.join(parent_dir, ".spack-gpg-keys-staging")
-            # Clean up any stale staging directory from a previous failed attempt
-            if os.path.exists(staging_keys):
-                shutil.rmtree(staging_keys, ignore_errors=True)
-            shutil.copytree(old_gpg_keys, staging_keys)
-            os.replace(staging_keys, target_gpg_keys)
-            staging_keys = None
+            if os.path.exists(target_gpg_keys):
+                marker_path = os.path.join(target_gpg_keys, marker_name)
+                if os.path.exists(marker_path):
+                    tty.debug(
+                        f"GPG keys already migrated from this spack instance "
+                        f"(found marker {marker_name})"
+                    )
+                else:
+                    tty.debug(
+                        f"Cannot migrate GPG keys: destination exists from different source: "
+                        f"{target_gpg_keys}"
+                    )
+                    return False
+            else:
+                staging_keys = os.path.join(parent_dir, ".spack-gpg-keys-staging")
+                # Clean up any stale staging directory from a previous failed attempt
+                if os.path.exists(staging_keys):
+                    shutil.rmtree(staging_keys, ignore_errors=True)
+                shutil.copytree(old_gpg_keys, staging_keys)
+                # Add migration marker to identify this source
+                with open(os.path.join(staging_keys, marker_name), "w", encoding="utf-8") as f:
+                    f.write(f"Migrated from {spack.paths.prefix}\n")
+                os.replace(staging_keys, target_gpg_keys)
+                staging_keys = None
 
         # Both succeeded - old resources remain in place
         return True
