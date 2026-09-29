@@ -2047,6 +2047,7 @@ class PackageInstaller:
         install_source: bool = False,
         debug_source: bool = False,
         debug_symbols: bool = False,
+        force_source_hashes: Optional[Set[str]] = None,
         keep_prefix: bool = False,
         keep_stage: bool = False,
         restage: bool = True,
@@ -2066,6 +2067,7 @@ class PackageInstaller:
         self.install_source = install_source
         self.debug_source = debug_source
         self.debug_symbols = debug_symbols
+        self.force_source_hashes: Set[str] = force_source_hashes or set()
         self.stop_at = stop_at
         self.stop_before = stop_before
         self.tests: Union[bool, List[str], Set[str]] = tests
@@ -2572,6 +2574,8 @@ class PackageInstaller:
         """Compute the effective install policy based on the user policy and dynamic factors such
         as build cache availability and whether build dependencies can be skipped."""
         if dag_hash in self.build_graph.force_source:
+            return "source_only"
+        if is_root and dag_hash in self.force_source_hashes:
             return "source_only"
         policy = self.root_policy if is_root else self.dependencies_policy
         if policy == "auto" and not self.has_mirrors:

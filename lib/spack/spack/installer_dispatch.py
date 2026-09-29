@@ -40,6 +40,7 @@ def create_installer(
     verbose: bool = False,
     concurrent_packages: Optional[int] = None,
     root_policy: Literal["auto", "cache_only", "source_only"] = "auto",
+    force_source_hashes: Optional[Set[str]] = None,
     dependencies_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     create_reports: bool = False,
 ) -> Union["spack.installer.PackageInstaller", "spack.new_installer.PackageInstaller"]:
@@ -84,5 +85,6 @@ def create_installer(
         concurrent_packages=concurrent_packages,
         root_policy=root_policy,
         dependencies_policy=dependencies_policy,
+        force_source_hashes=force_source_hashes,
         create_reports=create_reports,
     )

@@ -190,6 +190,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         dest="debug_symbols",
         help="split debug symbols into an out-of-prefix debug cache",
     )
+    subparser.add_argument(
+        "--force-source",
+        action="store_true",
+        dest="force_source",
+        default=False,
+        help="force these explicitly-requested packages to build from source, "
+        "regardless of buildcache availability",
+    )
     arguments.add_common_arguments(subparser, ["no_checksum"])
     subparser.add_argument(
         "-v",
@@ -411,6 +419,9 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter)
             tty.die(msg)
 
     install_kwargs["tests"] = compute_tests_install_kwargs(specs_to_install, args.test)
+    install_kwargs["force_source_hashes"] = (
+        {s.dag_hash() for s in specs_to_install} if args.force_source else set()
+    )
 
     if args.overwrite:
         require_user_confirmation_for_overwrite(specs_to_install, args)
@@ -456,6 +467,9 @@ def install_without_active_env(args, install_kwargs, reporter):
 
     installs = [s.package for s in concrete_specs]
     install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
+    install_kwargs["force_source_hashes"] = (
+        {s.dag_hash() for s in concrete_specs} if args.force_source else set()
+    )
 
     try:
         builder = spack.installer_dispatch.create_installer(
