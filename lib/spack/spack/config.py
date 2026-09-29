@@ -3022,13 +3022,6 @@ def _extract_command_from_argv(argv=None):
         return None
 
 
-def _check_migration_done_at_load():
-    """Check if migration was already done when config module loaded."""
-    global _migration_done_at_module_load
-    marker_path = _migration_done_marker_path()
-    _migration_done_at_module_load = os.path.exists(marker_path)
-
-
 def _detect_invoked_command():
     """Detect what command is being invoked at module load time."""
     global _invoked_command
@@ -3041,17 +3034,17 @@ def _perform_auto_migration_at_module_load():
     This runs before the CONFIG singleton is created, so migration functions
     cannot rely on CONFIG being available.
     """
-    if _invoked_command == "isolate" or _migration_done_at_module_load:
+    if _invoked_command == "isolate":
         return
 
-    # Migrate spack prefix resources if they exist
-    if _has_old_prefix_resources():
+    marker_path = _migration_done_marker_path()
+
+    if _has_old_prefix_resources() and not os.path.exists(marker_path):
         lock_path = _migration_lock_path()
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
         try:
             with spack.util.lock.WriteTransaction(lock):
-                # Check again inside lock
-                if not os.path.exists(_migration_done_marker_path()):
+                if not os.path.exists(marker_path):
                     _do_migrate_spack_prefix()
         except spack.util.lock.LockPermissionError:
             # Read-only prefix: skip migration
@@ -3065,8 +3058,7 @@ def _perform_auto_migration_at_module_load():
     _do_migrate_home()
 
 
-# Check migration state and detect command at module load time
-_check_migration_done_at_load()
+# Check migration state and detect command at module load time (before config is read in)
 _detect_invoked_command()
 _perform_auto_migration_at_module_load()
 
