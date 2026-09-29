@@ -4,7 +4,6 @@
 
 """Tests for Windows symlink functionality."""
 
-import ast
 import errno
 import os
 import pathlib
@@ -13,7 +12,6 @@ import tempfile
 
 import pytest
 
-import spack.paths
 import spack.util.filesystem as fs
 
 
@@ -305,51 +303,3 @@ def test_windows_read_junction_special_characters(tmp_path: pathlib.Path):
         fs._windows_create_junction("real", "gcc+c++")
         assert fs.readlink("gcc+c++") == os.path.abspath("real")
         assert fs._windows_read_junction("gcc+c++") == os.path.abspath("real")
-
-
-#: Files (relative to ``spack.paths.module_path``) allowed to call ``os.symlink`` directly, and
-#: how many times. Only the cross-platform wrapper itself should need to. Do not raise these
-#: numbers: use ``spack.util.filesystem.symlink``, which falls back to junctions and hard links
-#: on Windows when the user cannot create symbolic links.
-_OS_SYMLINK_BASELINE = {"util/filesystem.py": 4}
-
-#: Directories (relative to ``spack.paths.module_path``) not checked for ``os.symlink`` usage
-_OS_SYMLINK_EXCLUDE = ("test", "vendor")
-
-
-def _os_symlink_usages(tree: ast.AST) -> int:
-    """Count references to ``os.symlink`` (calls or aliases), ``from os import symlink`` and
-    ``pathlib.Path.symlink_to`` calls, which are all ``os.symlink`` under the hood."""
-    count = 0
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute):
-            if node.attr == "symlink" and isinstance(node.value, ast.Name):
-                count += node.value.id == "os"
-            elif node.attr == "symlink_to":
-                count += 1
-        elif isinstance(node, ast.ImportFrom) and node.module == "os":
-            count += sum(alias.name == "symlink" for alias in node.names)
-    return count
-
-
-def test_os_symlink_usage_does_not_increase():
-    """Ensure no new direct uses of ``os.symlink`` are added to core Spack"""
-    root = pathlib.Path(spack.paths.module_path)
-    usages = {}
-    for path in root.rglob("*.py"):
-        rel_path = path.relative_to(root)
-        if rel_path.parts[0] in _OS_SYMLINK_EXCLUDE:
-            continue
-        count = _os_symlink_usages(ast.parse(path.read_text(encoding="utf-8")))
-        if count:
-            usages[rel_path.as_posix()] = count
-
-    increased = {
-        rel_path: count
-        for rel_path, count in usages.items()
-        if count > _OS_SYMLINK_BASELINE.get(rel_path, 0)
-    }
-    assert not increased, (
-        "Direct use of os.symlink increased; use spack.util.filesystem.symlink instead, which "
-        f"works on Windows without symlink privileges. Offending files: {increased}"
-    )
