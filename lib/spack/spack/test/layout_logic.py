@@ -40,12 +40,9 @@ def test_config_defaults_use_data_home(mock_spack_instance, monkeypatch):
     source_cache = cfg.get("config:source_cache")
     assert "$data_home" in source_cache, f"source_cache should use $data_home, got {source_cache}"
 
-    # Use the actual function that resolves environments_root (handles lists)
-    from spack.environment.environment import env_root_path
-
-    environments_root = env_root_path()
-    assert "$data_home" in environments_root or "data" in environments_root, (
-        f"environments_root should resolve to a path using $data_home, got {environments_root}"
+    environments_root = cfg.get("config:environments_root")
+    assert "$data_home" in environments_root, (
+        f"environments_root should use $data_home, got {environments_root}"
     )
 
     gpg_path = cfg.get("config:gpg_path")
