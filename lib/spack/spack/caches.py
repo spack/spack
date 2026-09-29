@@ -71,14 +71,3 @@ class MirrorCache(spack.fetch_strategy.FsCacheBase):
         super().store(fetcher, relative_dest)
 
 
-def reinitialize():
-    """Reinitialize global cache singletons.
-
-    Call this after reloading CONFIG to ensure cache locations reflect
-    the current configuration (e.g., after auto-migration creates layout scope).
-    """
-    global MISC_CACHE
-
-    MISC_CACHE = cast(
-        spack.util.file_cache.FileCache, spack.util.lang.Singleton(_create_global_misc_cache)
-    )
