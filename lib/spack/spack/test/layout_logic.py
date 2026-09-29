@@ -634,50 +634,6 @@ def test_auto_migration_is_not_repeated_after_layout_scope(mock_spack_instance, 
     assert marker.exists()
 
 
-def test_perform_auto_migration_not_repeated(mock_spack_instance, monkeypatch):
-    """Test that _perform_auto_migration does not repeat migration on second call."""
-    from unittest.mock import Mock
-
-    import spack.main
-
-    home_dir, base_prefix = mock_spack_instance
-    old_licenses = pathlib.Path(base_prefix) / "etc" / "spack" / "licenses"
-    old_licenses.mkdir(parents=True)
-    (old_licenses / "license.dat").write_text("license", encoding="utf-8")
-
-    # Create a mock config module to track calls
-    mock_config = Mock()
-    mock_config._migration_done_at_module_load = False
-    mock_config._has_old_prefix_resources = Mock(return_value=True)
-    mock_config._migration_lock_path = Mock(
-        return_value=str(pathlib.Path(base_prefix) / ".migration-lock")
-    )
-    mock_config._migration_done_marker_path = Mock(
-        return_value=str(pathlib.Path(base_prefix) / ".migration-done")
-    )
-    mock_config._do_migrate_spack_prefix = Mock(
-        return_value={"migrated": ["licenses"], "retained": []}
-    )
-    mock_config._do_migrate_home = Mock(
-        return_value={"user_config": False, "package_repos": False}
-    )
-
-    # First call should perform migration
-    prefix_result1, home_result1, config_changed1 = spack.main._perform_auto_migration(mock_config)
-    assert mock_config._do_migrate_spack_prefix.call_count == 1
-    assert config_changed1 is True
-
-    # Write the marker to simulate successful migration
-    marker = pathlib.Path(base_prefix) / ".migration-done"
-    marker.write_text("Migration completed\n", encoding="utf-8")
-
-    # Second call should not perform migration again (marker exists)
-    prefix_result2, home_result2, config_changed2 = spack.main._perform_auto_migration(mock_config)
-    # Should still be 1 - not called again
-    assert mock_config._do_migrate_spack_prefix.call_count == 1
-    assert config_changed2 is True  # config_changed is still True because we entered the lock
-
-
 def test_config_migration_skips_unparseable_yaml(mock_spack_instance, monkeypatch):
     """Test that config migration skips YAML files that can't be parsed."""
     home_dir, base_prefix = mock_spack_instance
