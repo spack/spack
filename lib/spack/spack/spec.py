@@ -1044,15 +1044,18 @@ class DependencySpec:
             self.propagation = other.propagation
         return changed
 
-    def _cmp_iter(self):
-        yield self.parent.name if self.parent else None
-        yield self.spec.name if self.spec else None
+    def _cmp_attr_iter(self):
         yield self.depflag
         yield self.virtuals
         yield self.direct
         yield self.propagation
         yield self.when
         yield tuple(self.usages._cmp_iter())
+
+    def _cmp_iter(self):
+        yield self.parent.name if self.parent else None
+        yield self.spec.name if self.spec else None
+        yield from self._cmp_attr_iter()
         yield self.spec  # tie-breaker for parallel edges: `^foo@1 ^foo+bar`
 
     def __hash__(self):
@@ -3397,6 +3400,7 @@ class Spec:
                 direct=other_edge.direct,
                 propagation=other_edge.propagation,
                 when=other_edge.when,  # no need to copy; when conditions are immutable
+                usages=other_edge.usages,
             )
             changed |= self._add_or_merge_edge(candidate, owned=False)
         return changed
@@ -3780,6 +3784,7 @@ class Spec:
                 propagation=edge_propagation,
                 direct=edge.direct,
                 when=edge.when,
+                usages=edge.usages,
             )
             # Don't use add_dependency_edge here, copy edges verbatim
             _add_edge_to_map(new_parent._dependencies, new_child.name, new_edge)
@@ -4062,11 +4067,7 @@ class Spec:
                     (
                         node_ids[id(edge.parent)],
                         node_ids[id(edge.spec)],
-                        edge.depflag,
-                        edge.virtuals,
-                        edge.direct,
-                        edge.propagation,
-                        edge.when,
+                        *tuple(edge._cmp_attr_iter()),
                     )
                 )
 
@@ -4077,7 +4078,7 @@ class Spec:
 
             # level 1 edges all start with zero
             for i, edge in enumerate(sorted_l1_edges, start=1):
-                yield (0, i, edge.depflag, edge.virtuals, edge.direct, edge.propagation, edge.when)
+                yield (0, i, *tuple(edge._cmp_attr_iter()))
 
             # yield remaining edges in the order they were encountered during traversal
             if edge_list:
