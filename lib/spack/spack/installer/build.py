@@ -229,6 +229,48 @@ def _validate_empty_directory_paths(policy_name: str, path: str, policy: dict) -
                 ) from error
 
 
+def _validate_external_spec_read_paths(policy_name: str, path: str, policy: dict) -> None:
+    value = policy.get("external_spec_read_paths")
+    if not isinstance(value, list):
+        raise _policy_error(policy_name, path, "external_spec_read_paths", "expected a list")
+    for index, entry in enumerate(value):
+        if not isinstance(entry, dict):
+            raise _policy_error(
+                policy_name, path, f"external_spec_read_paths[{index}]", "expected a mapping"
+            )
+        constraint = entry.get("spec")
+        if not isinstance(constraint, str):
+            raise _policy_error(
+                policy_name, path, f"external_spec_read_paths[{index}].spec", "expected a string"
+            )
+        try:
+            spack.spec.Spec(constraint)
+        except (spack.error.SpecError, spack.error.SpecSyntaxError) as error:
+            raise _policy_error(
+                policy_name,
+                path,
+                f"external_spec_read_paths[{index}].spec",
+                f"invalid spec {constraint!r}: {error}",
+            ) from error
+        patterns = entry.get("paths")
+        if not isinstance(patterns, list) or not all(
+            isinstance(pattern, str) for pattern in patterns
+        ):
+            raise _policy_error(
+                policy_name,
+                path,
+                f"external_spec_read_paths[{index}].paths",
+                "expected a list of strings",
+            )
+        if any(not os.path.isabs(pattern) or ".." in Path(pattern).parts for pattern in patterns):
+            raise _policy_error(
+                policy_name,
+                path,
+                f"external_spec_read_paths[{index}].paths",
+                "expected safe absolute path patterns",
+            )
+
+
 def _load_sandbox_policy(path: str = SANDBOX_POLICY_PATH) -> dict:
     """Load and validate the shipped namespace sandbox compatibility policy."""
     policy_name = "sandbox policy"
@@ -259,6 +301,7 @@ def _load_sandbox_policy(path: str = SANDBOX_POLICY_PATH) -> dict:
         _validate_absolute_path_list(policy_name, path, policy, key)
     _validate_relative_path_list(policy_name, path, policy, "external_prefix_read_paths")
     _validate_empty_directory_paths(policy_name, path, policy)
+    _validate_external_spec_read_paths(policy_name, path, policy)
 
     device_symlinks = policy.get("device_symlinks")
     if not isinstance(device_symlinks, dict) or not all(
@@ -631,7 +674,47 @@ def external_prefix_read_paths(
         candidates.extend(
             os.path.join(prefix, relative) for relative in policy["external_prefix_read_paths"]
         )
-    return _canonical_existing_paths(path for path in candidates if os.path.isdir(path))
+    prefix_directories = [path for path in candidates if os.path.isdir(path)]
+    configured_paths = [entry.source for entry in external_spec_read_path_entries(spec, policy)]
+    return _canonical_existing_paths((*prefix_directories, *configured_paths))
+
+
+def external_spec_read_path_entries(
+    spec: spack.spec.Spec, policy: Optional[dict] = None
+) -> Tuple[ResolvedSandboxPath, ...]:
+    """Return host paths selected by matching external dependency policy rules."""
+    policy = policy if policy is not None else _load_sandbox_policy()
+    dependencies = [
+        dependency
+        for dependency in spec.traverse(root=False)
+        if getattr(dependency, "external", False)
+    ]
+    result = []
+    seen = set()
+    for rule in policy["external_spec_read_paths"]:
+        if not any(dependency.satisfies(rule["spec"], deps=False) for dependency in dependencies):
+            continue
+        for pattern in rule["paths"]:
+            for spelling in glob.glob(pattern):
+                entry = _resolved_sandbox_path(spelling, spelling)
+                if not os.path.exists(entry.source):
+                    continue
+                if (entry.spelling, entry.source) not in seen:
+                    seen.add((entry.spelling, entry.source))
+                    result.append(entry)
+    return tuple(sorted(result))
+
+
+def external_spec_alias_symlink_paths(
+    spec: spack.spec.Spec, hidden_roots: Iterable[str], policy: Optional[dict] = None
+) -> Tuple[spack.sandbox_namespaces.NamespaceGeneratedSymlink, ...]:
+    """Restore configured external host path spellings that resolve through symlinks."""
+    return tuple(
+        spack.sandbox_namespaces.NamespaceGeneratedSymlink(entry.spelling, entry.source)
+        for entry in external_spec_read_path_entries(spec, policy)
+        if entry.spelling != entry.source
+        and any(os.path.commonpath((root, entry.spelling)) == root for root in hidden_roots)
+    )
 
 
 def select_namespace_host_device_worker_paths(
@@ -1829,6 +1912,7 @@ def prepare_namespace_activation(
                 *tool_alias_symlink_paths(
                     (*tool_entries, *compiler_support_entries), host_paths.hidden_roots
                 ),
+                *external_spec_alias_symlink_paths(spec, host_paths.hidden_roots),
                 *(
                     (
                         spack.sandbox_namespaces.NamespaceGeneratedSymlink(
