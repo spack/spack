@@ -966,7 +966,7 @@ class DependencySpec:
         direct: bool = False,
         propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
-        usages: Optional[UsageMap] = None,
+        usages: Optional["UsageMap"] = None,
     ):
         if direct is False and propagation != PropagationPolicy.NONE:
             raise InvalidEdgeError("only direct dependencies can be propagated")
@@ -978,7 +978,7 @@ class DependencySpec:
         self.direct = direct
         self.propagation = propagation
         self.when = when or EMPTY_SPEC
-        self.usages = usages or UsageMap()
+        self.usages = usages.copy() if usages is not None else UsageMap()
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -1013,7 +1013,7 @@ class DependencySpec:
             propagation=self.propagation,
             direct=self.direct,
             when=self.when,
-            usages=self.usages.copy()
+            usages=self.usages,
         )
 
     def _constrain(self, other: "DependencySpec") -> bool:
@@ -1075,7 +1075,9 @@ class DependencySpec:
 
     def __repr__(self) -> str:
         keywords = [
-            f"depflag={self.depflag}", f"virtuals={self.virtuals}", f"usages={self.usages!r}"
+            f"depflag={self.depflag}",
+            f"virtuals={self.virtuals}",
+            f"usages={self.usages!r}",
         ]
 
         if self.direct:
@@ -1141,7 +1143,8 @@ class DependencySpec:
         return f"{parent_str}{sigil}{attrs_str}{virtuals}{dep_str}"
 
     def _satisfies_edge_attributes(self, other: "DependencySpec") -> bool:
-        """Helper function for satisfaction tests, which checks edge attributes and the target node.
+        """Helper function for ``satisfies``, which checks edge attributes and the target node.
+
         It skips verification of the parent node."""
         name_mismatch = other.spec.name and self.spec.name != other.spec.name
         if name_mismatch and other.spec.name not in self.virtuals:
@@ -1165,14 +1168,17 @@ class DependencySpec:
         if not name_mismatch:
             return self.spec._satisfies_node(other.spec)
 
-        # Right-hand side is a virtual provided by the left-hand side. Virtuals currently support only
-        # names and versions, so if anything else is set on the rhs we return false, which allows
-        # future implementation to relax it once variants on virtuals become meaningful.
+        # Right-hand side is a virtual provided by the left-hand side. Virtuals currently support
+        # only names and versions, so if anything else is set on the rhs we return false, which
+        # allows future implementation to relax it once variants on virtuals become meaningful.
         if not constrains_only_name_and_versions(other.spec):
             return False
 
-        # The edge already says lhs provides the virtual; frozen versions matter if rhs narrows them
-        return other.spec.versions == spack.version.any_version or self.spec._provides_virtual(other.spec)
+        # The edge already says lhs provides the virtual; frozen versions matter if rhs narrows
+        # them
+        return other.spec.versions == spack.version.any_version or self.spec._provides_virtual(
+            other.spec
+        )
 
     def satisfies(self, other: "DependencySpec") -> bool:
         """Whether every DAG satisfying ``self`` satisfies ``other``."""
@@ -1196,7 +1202,7 @@ class DependencySpec:
             return True
         return _satisfies_dependencies(self.spec, other.spec)
 
-    def satisfying_edges(self, spec: "Spec") -> Iterator[DependencySpec]:
+    def satisfying_edges(self, spec: "Spec") -> Iterator["DependencySpec"]:
         """Yield every edge in ``spec`` that satisfies ``self`` structurally, ignoring the
         target's own dependencies, in priority order: direct deps of all types, then the historical
         compiler node, then a BFS over transitive link/run deps."""
@@ -2222,6 +2228,7 @@ class Spec:
         direct: bool = False,
         propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
+        usages: Optional["UsageMap"] = None,
     ):
         """Called by the parser to add another spec as a dependency.
 
@@ -2231,6 +2238,7 @@ class Spec:
             direct: if True denotes a direct dependency (associated with the % sigil)
             propagation: propagation policy for this edge
             when: optional condition under which dependency holds
+            usages: optional UsageMap of options on the edge
         """
         self.add_dependency_edge(
             spec,
@@ -2239,6 +2247,7 @@ class Spec:
             direct=direct,
             when=when,
             propagation=propagation,
+            usages=usages,
         )
 
     def add_dependency_edge(
@@ -2250,6 +2259,7 @@ class Spec:
         direct: bool = False,
         propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
+        usages: Optional["UsageMap"] = None,
     ):
         """Add a dependency edge to this spec.
 
@@ -2260,9 +2270,13 @@ class Spec:
             direct: if True denotes a direct dependency
             propagation: propagation policy for this edge
             when: if non-None, condition under which dependency holds
+            usages: optional UsageMap of options on the edge
         """
         if when is None:
             when = EMPTY_SPEC
+
+        if usages is None:
+            usages = UsageMap()
 
         # An edge object already registered on both the parent and the child is updated in place,
         # rather than treated as a second, competing constraint: both sides have to see the same
@@ -2271,6 +2285,7 @@ class Spec:
             if id(dependency_spec) == id(edge.spec) and edge.when == when:
                 edge.update_deptypes(depflag=depflag)
                 edge.update_virtuals(virtuals=virtuals)
+                edge.usages.constrain(usages)
                 return
 
         candidate = DependencySpec(
@@ -2281,6 +2296,7 @@ class Spec:
             direct=direct,
             propagation=propagation,
             when=when,
+            usages=usages,
         )
         self._add_or_merge_edge(candidate)
 
@@ -2325,9 +2341,7 @@ class Spec:
                     break
 
         if merged_edge is None and any(
-            edge.satisfies(candidate)
-            for edges in self._dependencies.values()
-            for edge in edges
+            edge.satisfies(candidate) for edges in self._dependencies.values() for edge in edges
         ):
             return False
 
@@ -2752,6 +2766,8 @@ class Spec:
                             dep_attrs["parameters"]["when"] = str(dspec.when)
                         if dspec.propagation != PropagationPolicy.NONE:
                             dep_attrs["parameters"]["propagation"] = dspec.propagation.name
+                    if dspec.usages:
+                        dep_attrs["parameters"].update(dspec.usages.to_dict())
                     dependencies.append(dep_attrs)
 
             d["dependencies"] = dependencies
@@ -2911,6 +2927,8 @@ class Spec:
 
         The keys can be either a string or a Spec or a tuple containing the
         Spec and the dependency types.
+
+        The spec cannot contain virtuals on edges nor usages.
 
         Args:
             spec_dict: the dictionary containing the spec literal
@@ -4754,7 +4772,9 @@ class Spec:
 
             edge.parent._dependencies[self.name].remove(edge)
             self._dependents[edge.parent.name].remove(edge)
-            edge.parent._add_dependency(replacement, depflag=edge.depflag, virtuals=edge.virtuals)
+            edge.parent._add_dependency(
+                replacement, depflag=edge.depflag, virtuals=edge.virtuals, usages=edge.usages
+            )
 
     def _splice_helper(self, replacement):
         """Main loop of a transitive splice.
@@ -4934,7 +4954,9 @@ class Spec:
                 copy._build_spec = orig.build_spec.copy()
             else:
                 for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
-                    copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
+                    copy._add_dependency(
+                        edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals, usages=edge.usages
+                    )
 
         return spec
 
@@ -5107,13 +5129,7 @@ class OptionMap(_OptionMapBase, Generic[OptionValueT]):
         return True
 
     def intersects(self: OptionMapT, other: OptionMapT) -> bool:
-        common = set(self.values()) & set(other.values())
-        for name in common:
-            self_value = self[name]
-            other_value = other[name]
-            if not self_value.intersect(other_value):
-                return False
-        return True
+        return self.conflict(other) is None
 
     def conflict(
         self: OptionMapT, other: OptionMapT
@@ -5163,6 +5179,24 @@ class UsageMap(OptionMap[vt.UsageValue]):
     """Map of usage instances, keyed by usage name."""
 
     __slots__ = ()
+
+    def to_dict(self):
+        if not self:
+            return {}
+        usages = dict(sorted(u.yaml_entry() for u in self.values()))
+        abstract = sorted(v.name for v in self.values() if not v.concrete)
+        return {"usages": usages, "abstract_usages": abstract}
+
+    @classmethod
+    def from_dict(cls, dictionary: Optional[Dict[str, Any]]):
+        result = cls()
+        if dictionary is None:
+            return result
+
+        abstract = dictionary.get("abstract_usages", [])
+        for name, values in dictionary.get("usages", {}).items():
+            result[name] = vt.UsageValue.from_node_dict(name, values, abstract=name in abstract)
+        return result
 
 
 def _propagated_bool_conflict(
@@ -5419,6 +5453,7 @@ class DepSpecComponents(NamedTuple):
     direct: bool
     when: str = ""
     propagation: str = PropagationPolicy.NONE.name
+    usages: Optional[Dict[str, Any]] = None
 
 
 _SPECFILE_READERS: Dict[int, Type["SpecfileReaderBase"]] = {}
@@ -5616,6 +5651,7 @@ def wire_spec_nodes(
                 direct=dep.direct,
                 when=Spec(dep.when) if dep.when else EMPTY_SPEC,
                 propagation=PropagationPolicy[dep.propagation],
+                usages=UsageMap.from_dict(dep.usages),
             )
             _add_edge_to_map(node_spec._dependencies, edge.spec.name, edge)
             _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
@@ -5825,6 +5861,10 @@ class SpecfileV5(SpecfileV4):
             direct=parameters.get("direct", False),
             when=parameters.get("when", ""),
             propagation=parameters.get("propagation", PropagationPolicy.NONE.name),
+            usages={
+                "usages": parameters.get("usages", {}),
+                "abstract_usages": parameters.get("abstract_usages", []),
+            },
         )
 
 

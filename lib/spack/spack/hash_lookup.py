@@ -95,7 +95,11 @@ def lookup_hash(
         current_node = result if key == result.name else result[key]
         child_node = node_lookup.get(id(edge.spec), edge.spec.copy())
         current_node._add_dependency(
-            child_node, depflag=edge.depflag, virtuals=edge.virtuals, direct=edge.direct
+            child_node,
+            depflag=edge.depflag,
+            virtuals=edge.virtuals,
+            direct=edge.direct,
+            usages=edge.usages,
         )
 
     return result

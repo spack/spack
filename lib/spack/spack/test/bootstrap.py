@@ -701,7 +701,7 @@ def test_source_failures_point_at_the_backtrace_flag(
 
 @pytest.mark.parametrize("flag", ["debug", "SHOW_BACKTRACE"])
 def test_source_failures_include_their_traceback_when_the_flag_is_set(
-        fake_bootstrap_type, backtrace_flags, flag, database_store
+    fake_bootstrap_type, backtrace_flags, flag, database_store
 ):
     """Tests that either flag turns the tracebacks on, and the hint to enable them off."""
     backtrace_flags(**{flag: True})

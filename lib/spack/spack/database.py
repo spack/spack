@@ -826,6 +826,7 @@ class Database:
                     depflag=dt.canonicalize(dep.deptypes),
                     virtuals=dep.virtuals,
                     direct=dep.direct,
+                    usages=spack.spec.UsageMap.from_dict(dep.usages),
                 )
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
@@ -1075,7 +1076,7 @@ class Database:
             else:
                 child_record = self._data[edge.spec.dag_hash()]
             parent_record.spec._add_dependency(
-                child_record.spec, depflag=edge.depflag, virtuals=edge.virtuals
+                child_record.spec, depflag=edge.depflag, virtuals=edge.virtuals, usages=edge.usages
             )
 
         # Then store edges
@@ -1288,7 +1289,9 @@ class Database:
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
                 assert record, f"Missing dependency {dep.spec.short_spec} in DB"
-                new_spec._add_dependency(record.spec, depflag=dep.depflag, virtuals=dep.virtuals)
+                new_spec._add_dependency(
+                    record.spec, depflag=dep.depflag, virtuals=dep.virtuals, usages=dep.usages
+                )
                 if not upstream:
                     record.ref_count += 1
 

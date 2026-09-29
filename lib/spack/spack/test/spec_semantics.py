@@ -3063,6 +3063,24 @@ def test_copy_does_not_share_flag_instances(mock_packages):
         assert x == y and x.propagate == y.propagate and x.flag_group == y.flag_group
 
 
+def test_dependency_edge_owns_usages(mock_packages):
+    """Edges copy usage maps on construction, so rewiring or copying an edge cannot mutate the
+    source edge or a caller-owned map."""
+    usages = spack.spec.UsageMap()
+    usages.set(spack.variant.UsageValue.from_string_or_bool("foo", True))
+    edge = DependencySpec(
+        Spec("pkg-a"), Spec("pkg-b"), depflag=dt.LINK, virtuals=(), usages=usages
+    )
+    copy = edge.copy()
+
+    assert edge.usages is not usages
+    assert copy.usages is not edge.usages
+    copy.usages.set(spack.variant.UsageValue.from_string_or_bool("bar", True))
+
+    assert "bar" not in edge.usages
+    assert "bar" not in usages
+
+
 @pytest.mark.parametrize(
     "parent_str,child_str,kwargs,expected_str,expected_repr",
     [
