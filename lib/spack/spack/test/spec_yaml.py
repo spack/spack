@@ -30,6 +30,7 @@ import spack.repo
 import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+import spack.variant
 from spack.spec import Spec, save_dependency_specfiles
 from spack.test.conftest import RepoBuilder
 from spack.util.spack_yaml import SpackYAMLError, syaml_dict
@@ -604,6 +605,24 @@ def test_direct_edges_and_round_tripping_to_dict(spec_str, config, mock_packages
             continue
         for dependency_data in node["dependencies"]:
             assert "direct" not in dependency_data["parameters"]
+
+
+def test_edge_usages_round_trip():
+    usages = spack.spec.UsageMap()
+    usages.set(spack.variant.UsageValue.from_string_or_bool("enabled", True))
+    usages.set(spack.variant.UsageValue.from_string_or_bool("features", "a,b"))
+    original = Spec("pkg-a")
+    original.add_dependency_edge(
+        Spec("pkg-b"), depflag=dt.LINK, virtuals=(), direct=True, usages=usages
+    )
+
+    dependency_parameters = original.to_dict()["spec"]["nodes"][0]["dependencies"][0]["parameters"]
+    assert dependency_parameters["usages"] == {"enabled": True, "features": ["a", "b"]}
+    assert dependency_parameters["abstract_usages"] == ["features"]
+
+    for reconstructed in (Spec.from_yaml(original.to_yaml()), Spec.from_json(original.to_json())):
+        assert reconstructed == original
+        assert reconstructed.edges_to_dependencies()[0].usages == usages
 
 
 def test_parallel_deptype_edges_survive_round_trip(mock_packages):
