@@ -155,7 +155,7 @@ properties: Dict[str, Any] = {
             },
             "environments_root": {
                 "type": "string",
-                "description": "Directory where Spack managed environments are created and stored.",
+                "description": "Directory where Spack managed environments are created and stored",
             },
             "connect_timeout": {
                 "type": "integer",
