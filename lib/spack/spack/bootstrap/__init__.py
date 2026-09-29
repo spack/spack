@@ -9,6 +9,8 @@ from .core import (
     ensure_clingo_importable_or_raise,
     ensure_core_dependencies,
     ensure_gpg_in_path_or_raise,
+    ensure_msvc_compiler_wrappers_or_raise,
+    ensure_msvc_relocate_or_raise,
     ensure_patchelf_in_path_or_raise,
     ensure_winsdk_external_or_raise,
 )
@@ -25,6 +27,8 @@ __all__ = [
     "ensure_gpg_in_path_or_raise",
     "ensure_patchelf_in_path_or_raise",
     "ensure_winsdk_external_or_raise",
+    "ensure_msvc_compiler_wrappers_or_raise",
+    "ensure_msvc_relocate_or_raise",
     "is_bootstrapping",
     "status_message",
     "store_path",

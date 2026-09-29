@@ -55,6 +55,7 @@ from spack.compilers.adaptor import DeprecatedCompiler
 from spack.enums import Deprecation
 from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
+from spack.relocate import relocate_win_rpath
 from spack.resource import Resource
 from spack.util import tty
 from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
@@ -136,11 +137,20 @@ class WindowsRPath:
         # be doing in this method
         # Spack should in general not modify things it has not installed
         # we can reasonably expect externals to have their link interface properly established
-        if sys.platform == "win32" and not self.spec.external:
-            win_rpath = WindowsSimulatedRPath(self)
-            win_rpath.add_library_dependent(*self.win_add_library_dependent())
-            win_rpath.add_rpath(*self.win_add_rpath())
-            win_rpath.establish_link()
+        if sys.platform != "win32" or self.spec.external:
+            return
+        if self.spec.satisfies("%compiler-wrapper"):
+            cw = self.spec["compiler-wrapper"]
+            # The Windows compiler-wrapper package only carries code once the real
+            # MSVC wrapper is available; otherwise it installs a placeholder and we
+            # fall back to the symlink-based simulated rpath.
+            if cw.package.has_code:
+                relocate_win_rpath(self.spec)
+            else:
+                win_rpath = WindowsSimulatedRPath(self)
+                win_rpath.add_library_dependent(*self.win_add_library_dependent())
+                win_rpath.add_rpath(*self.win_add_rpath())
+                win_rpath.establish_link()
 
 
 #: Registers which are the detectable packages, by repo and package name
