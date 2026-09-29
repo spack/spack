@@ -2939,6 +2939,15 @@ def _perform_auto_migration_at_module_load():
 
     marker_path = _migration_done_marker_path()
 
+    if not os.path.exists(marker_path):
+        # Migrate user config scope and package repos. An entirely-new spack
+        # instance can do this (and needs to in order to access user config
+        # in new location). This occurs whether or not there are resources in
+        # the spack prefix that need to be migrated, but not if the
+        # `spack isolate` command has been run (in which case it will write
+        # the same migration marker as auto-migration)
+        _do_migrate_home()
+
     if _has_old_prefix_resources() and not os.path.exists(marker_path):
         lock_path = _migration_lock_path()
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
@@ -2952,9 +2961,6 @@ def _perform_auto_migration_at_module_load():
         except spack.util.lock.LockTimeoutError as e:
             # Some other auto-migration process is taking too long, bail vs. hang
             tty.die(f"Timed out waiting for migration lock: {e}")
-
-    # Always attempt home migration (works even on fresh installs)
-    _do_migrate_home()
 
 
 # Detect command and perform auto-migration at module load time (before CONFIG is created)
