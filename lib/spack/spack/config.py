@@ -1821,7 +1821,8 @@ def _detect_old_resources() -> Dict[str, bool]:
 
     return {
         "installs": _has_entries(opt_spack, ignore=["gpg"]),
-        "gpg_keys": _has_entries(os.path.join(opt_spack, "gpg")),
+        "gpg_keys": _has_entries(spack.paths.old_gpg_path)
+        or _has_entries(spack.paths.old_gpg_keys_path),
         "licenses": _has_entries(spack.paths.old_licenses_path),
         "environments": _has_entries(spack.paths.old_envs_path),
     }
