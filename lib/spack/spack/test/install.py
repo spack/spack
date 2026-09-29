@@ -1028,7 +1028,8 @@ def _install_spliced_from_binary(original: Spec, replacement: Spec, mirror: str)
     """Pushes the installed ``original`` to ``mirror``, uninstalls everything, and installs
     ``original`` spliced with ``replacement`` from the binary cache. Returns the spliced spec."""
     SpackCommand("buildcache")("push", "--unsigned", "--update-index", mirror, str(original))
-    SpackCommand("uninstall")("-ay")
+    for installed in spack.store.STORE.db.query():
+        PackageBase.uninstall_by_spec(installed, force=True)
     spliced = original.splice(replacement, transitive=True)
     spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
     return spliced
@@ -1037,7 +1038,6 @@ def _install_spliced_from_binary(original: Spec, replacement: Spec, mirror: str)
 @pytest.mark.not_on_windows("lacking windows support for binary installs")
 @pytest.mark.regression("50560")
 def test_install_spliced_from_binary_relocates_to_external_replacement(
-    mutable_mock_env_path,
     install_mockery,
     mock_fetch,
     temporary_mirror,
@@ -1087,7 +1087,7 @@ def _get_rpaths(path: str) -> List[str]:
 @requires_elf_or_macho
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
-    mutable_mock_env_path, install_mockery, mock_fetch, temporary_mirror, installer_variant
+    install_mockery, mock_fetch, temporary_mirror, installer_variant
 ):
     """Tests that installing a spliced spec from a binary cache drops the RPATH entries of nodes
     that are not in the spliced DAG.
@@ -1136,7 +1136,6 @@ def _install_root_spliced_with_external_mid(
 @requires_elf_or_macho
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_puts_external_rpaths_last(
-    mutable_mock_env_path,
     install_mockery,
     mock_fetch,
     temporary_mirror,
@@ -1171,12 +1170,7 @@ def test_install_spliced_from_binary_puts_external_rpaths_last(
 @requires_elf_or_macho
 @pytest.mark.requires_executables("gcc")
 def test_install_spliced_from_binary_has_no_rpaths_for_system_externals(
-    mutable_mock_env_path,
-    install_mockery,
-    mock_fetch,
-    temporary_mirror,
-    mutable_config: Configuration,
-    installer_variant,
+    install_mockery, mock_fetch, temporary_mirror, mutable_config: Configuration, installer_variant
 ):
     """Tests that installing a spliced spec from a binary cache adds no RPATH entry for a
     spliced-in external in a system prefix, as a build would not.
