@@ -3052,6 +3052,7 @@ def _perform_auto_migration_at_module_load():
         except spack.util.lock.LockTimeoutError as e:
             # Can't proceed without migration
             import spack.util.tty as tty
+
             tty.die(f"Timed out waiting for migration lock: {e}")
 
     # Always attempt home migration (works even on fresh installs)

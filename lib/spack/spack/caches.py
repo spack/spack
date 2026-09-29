@@ -69,5 +69,3 @@ class MirrorCache(spack.fetch_strategy.FsCacheBase):
         Note: archives package sources even if not normally cached (e.g. tip of hg/git branch).
         """
         super().store(fetcher, relative_dest)
-
-
