@@ -19,7 +19,8 @@ empty_file_name = ".spack-empty"
 
 
 def remove_link(src, dest):
-    if not fs.islink(dest):
+    # On Windows without symlink privileges, file links are hard links, which are not links
+    if not (fs.islink(dest) or (os.path.exists(dest) and os.path.samefile(src, dest))):
         raise ValueError("%s is not a link tree!" % dest)
     # remove if dest is a hardlink/symlink to src; this will only
     # be false if two packages are merged into a prefix and have a
