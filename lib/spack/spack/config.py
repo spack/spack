@@ -154,10 +154,6 @@ CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")
 #: Global flag to ignore user-fallback scope during config processing
 ignore_user_fallback = False
 
-#: Whether the migration-done marker existed when this module was loaded
-#: Used by main.py to determine if config reload is needed after migration
-_migration_done_at_module_load = None
-
 #: The command being invoked (extracted from sys.argv at module load)
 #: Used to decide whether to skip auto-migration (e.g., for 'isolate')
 _invoked_command = None
@@ -2639,21 +2635,19 @@ def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
 def _do_migrate_home() -> Dict[str, bool]:
     """Migrate user config and package repos from ~/.spack to new XDG locations.
 
-    This is independent of $spack prefix migration and runs based on whether:
-    - No isolate scope is active
+    This is independent of $spack prefix migration and runs whenever:
     - Old locations have content
     - New locations don't exist (checked by individual migration functions)
 
     This allows users who git pull a new Spack to get their ~/.spack migrated
     regardless of what's in the $spack prefix.
 
+    Note: The caller (_perform_auto_migration_at_module_load) skips all migration
+    when the command is 'spack isolate', so we don't need to check that here.
+
     Returns:
         Dict with keys 'user_config' and 'package_repos', values True if migrated
     """
-    # Don't migrate if isolation is active
-    isolate_include = os.path.join(_isolate_scope_path(), "include.yaml")
-    if os.path.exists(isolate_include):
-        return {"user_config": False, "package_repos": False}
 
     tty.debug("Home directory migration called")
 
@@ -2922,10 +2916,9 @@ def create_incremental() -> Generator[Configuration, None, None]:
             DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES
         )
 
-    # NOTE: Migration is now handled in main.py after command parsing, not during
-    # config initialization. See _do_migrate_spack_prefix() and _do_migrate_home()
-    # in this module, and main.py for details.
-    # The old migration check code with $spack-global locking has been removed.
+    # NOTE: Migration is now handled at config.py module load time, before CONFIG
+    # is created. See _perform_auto_migration_at_module_load() above for details.
+    # Migration is skipped when the command is 'spack isolate'.
     #
     # Old resources (e.g., environments in var/spack/environments) are accessible
     # immediately via fallback paths in the default config (e.g., environments_root
@@ -3015,7 +3008,7 @@ def _perform_auto_migration_at_module_load():
     _do_migrate_home()
 
 
-# Check migration state and detect command at module load time (before config is read in)
+# Detect command and perform auto-migration at module load time (before CONFIG is created)
 _detect_invoked_command()
 _perform_auto_migration_at_module_load()
 
