@@ -47,9 +47,10 @@ def _isolate_include_config(new_user_path):
     # The override replaces the standard_scopes include list. Keep the layout
     # scope visible because it contains old-resource redirects and may be
     # updated later by commands such as `spack migrate undo`.
+    # Layout scope comes first (lower priority) so user scope can override it.
     include_list = [
-        user_scope_dict,
         {"name": "layout", "path": "$spack/etc/spack/layout", "optional": True},
+        user_scope_dict,
     ]
 
     # Create a syaml_str with override marker for the key
