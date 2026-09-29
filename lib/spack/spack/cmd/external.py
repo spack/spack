@@ -119,7 +119,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 def external_find(args):
     manifest_dir: str = args.cray_manifest if args.cray_manifest != "none" else ""
     if manifest_dir == "auto":
-        print(repr(args))
         if args.all or not (args.tags or args.packages):
             # Backward-compatible behavior: search if 'all' is given
             # or tags/packages are omitted
@@ -303,7 +302,6 @@ def external_list(args):
     # Print all the detectable packages
     tty.msg("Detectable packages per repository")
     for namespace, pkgs in sorted(spack.package_base.detectable_packages.items()):
-        print("Repository:", namespace)
         colify.colify(pkgs, indent=4, output=sys.stdout)
 
 
