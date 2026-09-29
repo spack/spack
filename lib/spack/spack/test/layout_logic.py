@@ -595,7 +595,7 @@ def test_auto_migration_skips_existing_package_repository_destination(
     (new_repo / "source").write_text("new", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate_spack_prefix()
+    spack.config._do_migrate_home()
 
     assert (new_repo / "source").read_text(encoding="utf-8") == "new"
     assert not (new_repos / "second").exists()
