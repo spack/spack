@@ -7,7 +7,7 @@ import pytest
 
 import spack.concretize
 from spack.environment.list import SpecListParser
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 
 DEFAULT_EXPANSION = [
@@ -205,3 +205,18 @@ class TestSpecList:
         # Ensure that only mpich~debug is selected, and that the assembled spec remains abstract.
         assert len(result.specs) == 1
         assert result.specs[0] == Spec(f"mpileaks ^callpath ^mpich/{mpich_2.dag_hash(5)}")
+
+    @pytest.mark.regression("51703")
+    def test_exclusion_with_conditional_dependencies(self):
+        """Tests that we can exclude some spec using conditional dependencies in the exclusion."""
+        parser = SpecListParser()
+        result = parser.parse_user_specs(
+            name="specs",
+            yaml_list=[
+                {
+                    "matrix": [["libunwind"], ["%[when=%c]c=gcc", "%[when=%c]c=llvm"]],
+                    "exclude": ["libunwind %[when=%c]c=gcc"],
+                }
+            ],
+        )
+        assert len(result.specs) == 1

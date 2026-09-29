@@ -193,7 +193,7 @@ function __fish_spack_gpg_keys
 end
 
 function __fish_spack_installed_compilers
-    spack compilers | grep -v '^[=-]\|^$'
+    spack compilers
 end
 
 function __fish_spack_installed_packages

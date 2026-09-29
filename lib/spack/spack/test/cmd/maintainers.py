@@ -7,7 +7,7 @@ import re
 import pytest
 
 import spack.main
-import spack.repo
+from spack.repo import RepoPath
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
@@ -15,6 +15,7 @@ maintainers = spack.main.SpackCommand("maintainers")
 
 MAINTAINED_PACKAGES = [
     "gcc-runtime",
+    "invalid-maintainer",
     "maintainers-1",
     "maintainers-2",
     "maintainers-3",
@@ -33,17 +34,19 @@ def test_maintained():
     assert out == MAINTAINED_PACKAGES
 
 
-def test_unmaintained():
+def test_unmaintained(mock_packages: RepoPath):
     out = split(maintainers("--unmaintained"))
-    assert out == sorted(set(spack.repo.all_package_names()) - set(MAINTAINED_PACKAGES))
+    assert out == sorted(set(mock_packages.all_package_names()) - set(MAINTAINED_PACKAGES))
 
 
-def test_all(capfd):
-    with capfd.disabled():
-        out = split(maintainers("--all"))
+def test_all():
+    out = split(maintainers("--all"))
     assert out == [
         "gcc-runtime:",
         "haampie",
+        "invalid-maintainer:",
+        "github_user1,",
+        "github_user2",
         "maintainers-1:",
         "user1,",
         "user2",
@@ -60,15 +63,17 @@ def test_all(capfd):
         "user2",
     ]
 
-    with capfd.disabled():
-        out = split(maintainers("--all", "maintainers-1"))
+    out = split(maintainers("--all", "maintainers-1"))
     assert out == ["maintainers-1:", "user1,", "user2"]
 
 
-def test_all_by_user(capfd):
-    with capfd.disabled():
-        out = split(maintainers("--all", "--by-user"))
+def test_all_by_user():
+    out = split(maintainers("--all", "--by-user"))
     assert out == [
+        "github_user1:",
+        "invalid-maintainer",
+        "github_user2:",
+        "invalid-maintainer",
         "haampie:",
         "gcc-runtime",
         "user0:",
@@ -87,8 +92,7 @@ def test_all_by_user(capfd):
         "maintainers-3",
     ]
 
-    with capfd.disabled():
-        out = split(maintainers("--all", "--by-user", "user1", "user2"))
+    out = split(maintainers("--all", "--by-user", "user1", "user2"))
     assert out == [
         "user1:",
         "maintainers-1,",
@@ -113,43 +117,36 @@ def test_no_args_by_user():
 
 
 def test_mutex_args_fail():
-    with pytest.raises(SystemExit):
+    with pytest.raises(spack.main.SpackCommandError):
         maintainers("--maintained", "--unmaintained")
 
 
-def test_maintainers_list_packages(capfd):
-    with capfd.disabled():
-        out = split(maintainers("maintainers-1"))
+def test_maintainers_list_packages():
+    out = split(maintainers("maintainers-1"))
     assert out == ["user1", "user2"]
 
-    with capfd.disabled():
-        out = split(maintainers("maintainers-1", "maintainers-2"))
+    out = split(maintainers("maintainers-1", "maintainers-2"))
     assert out == ["user1", "user2", "user3"]
 
-    with capfd.disabled():
-        out = split(maintainers("maintainers-2"))
+    out = split(maintainers("maintainers-2"))
     assert out == ["user2", "user3"]
 
 
-def test_maintainers_list_fails(capfd):
+def test_maintainers_list_fails():
     out = maintainers("pkg-a", fail_on_error=False)
     assert not out
     assert maintainers.returncode == 1
 
 
-def test_maintainers_list_by_user(capfd):
-    with capfd.disabled():
-        out = split(maintainers("--by-user", "user1"))
+def test_maintainers_list_by_user():
+    out = split(maintainers("--by-user", "user1"))
     assert out == ["maintainers-1", "maintainers-3", "py-extension1"]
 
-    with capfd.disabled():
-        out = split(maintainers("--by-user", "user1", "user2"))
+    out = split(maintainers("--by-user", "user1", "user2"))
     assert out == ["maintainers-1", "maintainers-2", "maintainers-3", "py-extension1"]
 
-    with capfd.disabled():
-        out = split(maintainers("--by-user", "user2"))
+    out = split(maintainers("--by-user", "user2"))
     assert out == ["maintainers-1", "maintainers-2", "maintainers-3", "py-extension1"]
 
-    with capfd.disabled():
-        out = split(maintainers("--by-user", "user3"))
+    out = split(maintainers("--by-user", "user3"))
     assert out == ["maintainers-2", "maintainers-3"]

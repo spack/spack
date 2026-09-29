@@ -447,7 +447,6 @@ def migrate_v2_imports(
             elif isinstance(node, ast.ImportFrom):
                 # Keep track of old style spack.pkg imports, to be replaced.
                 if node.module and node.module.startswith("spack.pkg.") and node.level == 0:
-
                     depth = node.module.count(".")
 
                     # not all python versions have end_lineno for ImportFrom

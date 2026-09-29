@@ -9,8 +9,8 @@ import re
 import pytest
 
 import spack.paths
-from spack.llnl.util.filesystem import mkdirp, touch
 from spack.main import SpackCommand
+from spack.util.filesystem import mkdirp, touch
 
 license = SpackCommand("license")
 

@@ -1,5 +1,5 @@
 diff --git a/lib/spack/spack/vendor/ruamel/yaml/comments.py b/lib/spack/spack/vendor/ruamel/yaml/comments.py
-index 1badeda585..892c868af3 100644
+index cf121823a3..dae5e10750 100644
 --- a/lib/spack/spack/vendor/ruamel/yaml/comments.py
 +++ b/lib/spack/spack/vendor/ruamel/yaml/comments.py
 @@ -497,7 +497,7 @@ def copy_attributes(self, t, memo=None):
@@ -11,3 +11,12 @@ index 1badeda585..892c868af3 100644
                  else:
                      setattr(t, a, getattr(self, a))
          # fmt: on
+@@ -628,7 +628,7 @@ def __deepcopy__(self, memo):
+         memo[id(self)] = res
+         for k in self:
+             res.append(copy.deepcopy(k, memo))
+-            self.copy_attributes(res, memo=memo)
++        self.copy_attributes(res, memo=memo)
+         return res
+ 
+     def __add__(self, other):

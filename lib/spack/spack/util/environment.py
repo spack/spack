@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Set, unset or modify environment variables."""
+
 import collections
 import contextlib
 import inspect
@@ -17,12 +18,12 @@ import warnings
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional, Tuple, Union
 
 import spack.error
-from spack.llnl.path import path_to_os_path, system_path_filter
-from spack.llnl.util import tty
-from spack.llnl.util.lang import dedupe
+from spack.util import tty
+from spack.util.lang import dedupe
+from spack.util.path import path_to_os_path, system_path_filter
 
 # List is invariant, so List[str] is not a subtype of List[Union[str, pathlib.PurePath]].
-# Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exlude it
+# Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exclude it
 # in the type hint. So, use an awkward union type to allow (mixed) str and PurePath items.
 ListOfPaths = Union[List[str], List[pathlib.PurePath], List[Union[str, pathlib.PurePath]]]
 
@@ -36,6 +37,7 @@ if sys.platform == "win32":
         "C:\\ProgramData",
     ]
     SUFFIXES = []
+    DEFAULT_SHELL = os.environ.get("SPACK_SHELL", "bat")
 else:
     SYSTEM_PATHS = ["/", "/usr", "/usr/local"]
     SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
@@ -43,16 +45,9 @@ else:
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
-#: used in the compiler wrapper's `/usr/lib|/usr/lib64|...)` case entry
+#: used in the compiler wrapper's ``/usr/lib|/usr/lib64|...)`` case entry
 SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
-_SHELL_SET_STRINGS = {
-    "sh": "export {0}={1};\n",
-    "csh": "setenv {0} {1};\n",
-    "fish": "set -gx {0} {1};\n",
-    "bat": 'set "{0}={1}"\n',
-    "pwsh": "$Env:{0}='{1}'\n",
-}
 
 class ShellCmdString:
     """Formats commands to set or unset an environment variable for a given shell."""
@@ -220,7 +215,7 @@ def prune_duplicate_paths(paths: List[Path]) -> List[Path]:
 
 def get_path(name: str) -> List[Path]:
     """Given the name of an environment variable containing multiple
-    paths separated by 'os.pathsep', returns a list of the paths.
+    paths separated by :data:`os.pathsep`, returns a list of the paths.
     """
     path = os.environ.get(name, "").strip()
     if path:
@@ -229,8 +224,8 @@ def get_path(name: str) -> List[Path]:
 
 
 def env_flag(name: str) -> bool:
-    """Given the name of an environment variable, returns True if it is set to
-    'true' or to '1', False otherwise.
+    """Given the name of an environment variable, returns True if the lowercase value is set to
+    ``true`` or to ``1``, False otherwise.
     """
     if name in os.environ:
         value = os.environ[name].lower()
@@ -239,7 +234,7 @@ def env_flag(name: str) -> bool:
 
 
 def path_set(var_name: str, directories: List[Path]):
-    """Sets the variable passed as input to the `os.pathsep` joined list of directories."""
+    """Sets the variable passed as input to the :data:`os.pathsep` joined list of directories."""
     path_str = os.pathsep.join(str(dir) for dir in directories)
     os.environ[var_name] = path_str
 
@@ -290,7 +285,7 @@ def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]]
 
     Args:
         path: path of the file to write
-        environment: environment to be writte. If None os.environ is used.
+        environment: environment to be written. If None os.environ is used.
     """
     use_env = environment or os.environ
     hidden_vars = {"PS1", "PWD", "OLDPWD", "TERM_SESSION_ID"}
@@ -423,7 +418,7 @@ class NamePathModifier(NameValueModifier):
     """Base class for modifiers that modify the value of an environment variable
     that is a path."""
 
-    __slots__ = ("name", "value", "separator", "trace")
+    __slots__ = ()
 
     def __init__(
         self,
@@ -739,7 +734,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             value: flags to be appended
-            sep: separator for the flags (default: " ")
+            sep: separator for the flags (default: ``" "``)
         """
         value = _validate_value(name, value)
         item = AppendFlagsEnv(name, value, separator=sep, trace=self._trace())
@@ -760,7 +755,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             value: flags to be removed
-            sep: separator for the flags (default: " ")
+            sep: separator for the flags (default: ``" "``)
         """
         value = _validate_value(name, value)
         item = RemoveFlagsEnv(name, value, separator=sep, trace=self._trace())
@@ -773,7 +768,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             elements: ordered list paths
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         elements = [_validate_path_value(name, x) for x in elements]
         item = SetPath(name, elements, separator=separator, trace=self._trace())
@@ -787,7 +782,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be appended
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = AppendPath(name, path, separator=separator, trace=self._trace())
@@ -801,7 +796,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be prepended
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = PrependPath(name, path, separator=separator, trace=self._trace())
@@ -815,7 +810,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be removed
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = RemoveFirstPath(name, path, separator=separator, trace=self._trace())
@@ -829,7 +824,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be removed
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = RemoveLastPath(name, path, separator=separator, trace=self._trace())
@@ -843,7 +838,7 @@ class EnvironmentModifications:
         Args:
             name: name of the environment variable
             path: path to be removed
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         path = _validate_path_value(name, path)
         item = RemovePath(name, path, separator=separator, trace=self._trace())
@@ -855,7 +850,7 @@ class EnvironmentModifications:
 
         Args:
             name: name of the environment variable
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         item = PruneDuplicatePaths(name, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
@@ -876,7 +871,8 @@ class EnvironmentModifications:
         return len(old_mods) != len(new_mods)
 
     def is_unset(self, variable_name: str) -> bool:
-        """Returns True if the last modification to a variable is to unset it, False otherwise."""
+        """Returns :data:`True` if the last modification to a variable is to unset it,
+        :data:`False` otherwise."""
         modifications = self.group_by_name()
         if variable_name not in modifications:
             return False
@@ -934,7 +930,7 @@ class EnvironmentModifications:
 
     def shell_modifications(
         self,
-        shell: str = "sh" if sys.platform != "win32" else os.environ.get("SPACK_SHELL", "bat"),
+        shell: str = DEFAULT_SHELL,
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:
@@ -1053,9 +1049,20 @@ class EnvironmentModifications:
             ]
         )
 
+        before_kwargs = {**kwargs}
+        if sys.platform == "win32":
+            # Windows cannot source os.devnull, but it can echo from it
+            # so we override the "source" action in the method that
+            # extracts the env (environment_after_sourcing_files)
+            if "source_command" not in kwargs:
+                before_kwargs["source_command"] = "echo"
+
         # Compute the environments before and after sourcing
+
+        # First look at the environment after doing nothing to
+        # establish baseline
         before = sanitize(
-            environment_after_sourcing_files(os.devnull, **kwargs),
+            environment_after_sourcing_files(os.devnull, **before_kwargs),
             exclude=exclude,
             include=include,
         )
@@ -1095,7 +1102,7 @@ class EnvironmentModifications:
         modified_variables.sort()
 
         def return_separator_if_any(*args):
-            separators = ":", ";"
+            separators = [os.pathsep] if sys.platform == "win32" else [":", ";"]
             for separator in separators:
                 for arg in args:
                     if separator in arg:
@@ -1240,19 +1247,19 @@ def inspect_path(
     ``/usr/include`` and ``/usr/lib64``. If found we want to prepend
     ``/usr/include`` to ``CPATH`` and ``/usr/lib64`` to ``MY_LIB64_PATH``.
 
-        .. code-block:: python
+    .. code-block:: python
 
-            # Set up the dictionary containing the inspection
-            inspections = {
-                'include': ['CPATH'],
-                'lib64': ['MY_LIB64_PATH']
-            }
+        # Set up the dictionary containing the inspection
+        inspections = {
+            "include": ["CPATH"],
+            "lib64": ["MY_LIB64_PATH"]
+        }
 
-            # Get back the list of command needed to modify the environment
-            env = inspect_path('/usr', inspections)
+        # Get back the list of command needed to modify the environment
+        env = inspect_path("/usr", inspections)
 
-            # Eventually execute the commands
-            env.apply_modifications()
+        # Eventually execute the commands
+        env.apply_modifications()
     """
     if exclude is None:
         exclude = lambda x: False
@@ -1333,7 +1340,7 @@ def environment_after_sourcing_files(
     if sys.platform == "win32":
         shell_cmd = kwargs.get("shell", "cmd.exe")
         shell_options = kwargs.get("shell_options", "/C")
-        suppress_output = kwargs.get("suppress_output", "")
+        suppress_output = kwargs.get("suppress_output", "> nul")
         source_command = kwargs.get("source_command", "")
     else:
         shell_cmd = kwargs.get("shell", "/bin/bash")
@@ -1345,23 +1352,37 @@ def environment_after_sourcing_files(
     def _source_single_file(file_and_args, environment):
         shell_options_list = shell_options.split()
 
+        # The command below is a single string handed to a shell, so the file to be sourced,
+        # its arguments, and the interpreter are quoted to survive word splitting. The shell
+        # operators around them (source_command, suppress_output, concatenate_on_success) are
+        # shell syntax, and must be left alone.
+        if sys.platform == "win32":
+            # cmd.exe does not follow POSIX quoting rules, so pass arguments through unchanged
+            quoted_args = [str(x) for x in file_and_args]
+            python_exe = sys.executable
+        else:
+            quoted_args = [shlex.quote(str(x)) for x in file_and_args]
+            python_exe = shlex.quote(sys.executable)
+
         source_file = [source_command]
-        source_file.extend(x for x in file_and_args)
+        source_file.extend(quoted_args)
         source_file = " ".join(source_file)
 
         dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
-        dump_environment_cmd = sys.executable + f' -E -c "{dump_cmd}"'
+        dump_environment_cmd = python_exe + f' -E -c "{dump_cmd}"'
 
         # Try to source the file
-        source_file_arguments = " ".join(
-            [source_file, suppress_output, concatenate_on_success, dump_environment_cmd]
+        source_file_arguments = (
+            f"{source_file} {suppress_output} {concatenate_on_success} {dump_environment_cmd}"
         )
 
+        # Popens argument processing can break command invocations
+        # on Windows, compose to a string to avoid said processing
+        cmd = [shell_cmd, *shell_options_list, source_file_arguments]
+        cmd = " ".join(cmd) if sys.platform == "win32" else cmd
+
         with subprocess.Popen(
-            [shell_cmd, *shell_options_list, source_file_arguments],
-            env=environment,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            cmd, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         ) as shell:
             output, _ = shell.communicate()
 

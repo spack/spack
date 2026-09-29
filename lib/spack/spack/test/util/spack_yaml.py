@@ -4,7 +4,7 @@
 
 import re
 
-import spack.config
+from spack.config import Configuration
 from spack.main import SpackCommand
 
 config_cmd = SpackCommand("config")
@@ -21,7 +21,7 @@ def check_blame(element, file_name, line=None):
     """Check that `config blame config` gets right file/line for an element.
 
     This runs `spack config blame config` and scrapes the output for a
-    particular YAML key. It thne checks that the requested file/line info
+    particular YAML key. It then checks that the requested file/line info
     is also on that line.
 
     Line is optional; if it is ``None`` we just check for the
@@ -52,11 +52,11 @@ def test_config_blame(config):
     check_blame("dirty", config_file, 15)
 
 
-def test_config_blame_with_override(config):
+def test_config_blame_with_override(config: Configuration):
     """check blame for an element from an override scope"""
     config_file = config.get_config_filename("site", "config")
 
-    with spack.config.override("config:install_tree", {"root": "foobar"}):
+    with config.override("config:install_tree", {"root": "foobar"}):
         check_blame("install_tree", "overrides")
 
         check_blame("source_cache", config_file, 11)

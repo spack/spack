@@ -7,7 +7,6 @@ import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 import spack.directives_meta
-import spack.error
 import spack.fetch_strategy
 import spack.repo
 import spack.spec
@@ -96,7 +95,7 @@ class RemoveDirectives(ast.NodeTransformer):
         # opposed to function calls through a variable callback). We remove them.
         #
         # Note that changes to directives (e.g., a preferred version change or a hash
-        # chnage on an archive) are already represented in the spec *outside* the
+        # change on an archive) are already represented in the spec *outside* the
         # package hash.
         return (
             None
@@ -157,7 +156,7 @@ class RemoveDirectives(ast.NodeTransformer):
         if self.in_classdef:
             return node
 
-        # guard against recrusive class definitions
+        # guard against recursive class definitions
         self.in_classdef = True
         self.generic_visit(node)
         self.in_classdef = False
@@ -259,7 +258,7 @@ class ResolveMultiMethods(ast.NodeTransformer):
     when we know that they will not affect package behavior.
 
     If we're at version 4.0, we know that implementation 1 will win, because some @when
-    for 2, 3, and 4 will be `False`. We should only include implementation 1.
+    for 2, 3, and 4 will be ``False``. We should only include implementation 1.
 
     If we're at version 1.0, we know that implementation 2 will win, because it
     overrides implementation 1.  We should only include implementation 2.
@@ -335,7 +334,11 @@ class ResolveMultiMethods(ast.NodeTransformer):
 
 
 def canonical_source(
-    spec, filter_multimethods: bool = True, source: Optional[bytes] = None
+    spec: spack.spec.Spec,
+    filter_multimethods: bool = True,
+    source: Optional[bytes] = None,
+    *,
+    repo: spack.repo.RepoPath,
 ) -> str:
     """Get canonical source for a spec's package.py by unparsing its AST.
 
@@ -343,11 +346,16 @@ def canonical_source(
         filter_multimethods: By default, filter multimethods out of the AST if they are known
             statically to be unused. Supply False to disable.
         source: Optionally provide a string to read python code from.
+        repo: repositories the package.py is read from, when ``source`` is not given.
     """
-    return unparse(package_ast(spec, filter_multimethods, source=source), py_ver_consistent=True)
+    return unparse(
+        package_ast(spec, filter_multimethods, source=source, repo=repo), py_ver_consistent=True
+    )
 
 
-def package_hash(spec, source: Optional[bytes] = None) -> str:
+def package_hash(
+    spec: spack.spec.Spec, source: Optional[bytes] = None, *, repo: spack.repo.RepoPath
+) -> str:
     """Get a hash of a package's canonical source code.
 
     This function is used to determine whether a spec needs a rebuild when a
@@ -355,24 +363,29 @@ def package_hash(spec, source: Optional[bytes] = None) -> str:
 
     Arguments:
         source: Optionally provide a string to read python code from.
-
+        repo: repositories the package.py is read from, when ``source`` is not given.
     """
-    source = canonical_source(spec, filter_multimethods=True, source=source)
+    source = canonical_source(spec, filter_multimethods=True, source=source, repo=repo)
     return spack.util.hash.b32_hash(source)
 
 
-def package_ast(spec, filter_multimethods: bool = True, source: Optional[bytes] = None) -> ast.AST:
+def package_ast(
+    spec: spack.spec.Spec,
+    filter_multimethods: bool = True,
+    source: Optional[bytes] = None,
+    *,
+    repo: spack.repo.RepoPath,
+) -> ast.AST:
     """Get the AST for the ``package.py`` file corresponding to ``spec``.
 
     Arguments:
         filter_multimethods: By default, filter multimethods out of the AST if they are known
             statically to be unused. Supply False to disable.
         source: Optionally provide a string to read python code from.
+        repo: repositories the package.py is read from, when ``source`` is not given.
     """
-    spec = spack.spec.Spec(spec)
-
     if source is None:
-        filename = spack.repo.PATH.filename_for_package_name(spec.name)
+        filename = repo.filename_for_package_name(spec.fullname)
         with open(filename, "rb") as f:
             source = f.read()
 
@@ -392,7 +405,3 @@ def package_ast(spec, filter_multimethods: bool = True, source: Optional[bytes] 
         root = ResolveMultiMethods(tagger.methods).visit(root)
 
     return root
-
-
-class PackageHashError(spack.error.SpackError):
-    """Raised for all errors encountered during package hashing."""

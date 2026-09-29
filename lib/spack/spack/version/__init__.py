@@ -3,15 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """
-This module implements Version and version-ish objects.  These are:
+This module implements Version and version-ish objects. These are:
 
-StandardVersion: A single version of a package.
-ClosedOpenRange: A range of versions of a package.
-VersionList: A ordered list of Version and VersionRange elements.
-
-The set of Version and ClosedOpenRange is totally ordered wiht <
-defined as Version(x) < VersionRange(Version(y), Version(x))
-if Version(x) <= Version(y).
+* :class:`~spack.version.version_types.StandardVersion`: A single version of a package.
+* :class:`~spack.version.version_types.ClosedOpenRange`: A range of versions of a package.
+* :class:`~spack.version.version_types.VersionList`: A ordered list of Version and VersionRange
+  elements.
 """
 
 from .common import (

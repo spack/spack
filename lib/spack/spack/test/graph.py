@@ -7,9 +7,9 @@ import spack.concretize
 import spack.graph
 
 
-def test_dynamic_dot_graph_mpileaks(default_mock_concretization):
+def test_dynamic_dot_graph_mpileaks(config, mock_packages):
     """Test dynamically graphing the mpileaks package."""
-    s = default_mock_concretization("mpileaks")
+    s = spack.concretize.concretize_one("mpileaks")
     stream = io.StringIO()
     spack.graph.graph_dot([s], out=stream)
     dot = stream.getvalue()

@@ -1,0 +1,8 @@
+enable:
+  - tcl
+tcl:
+  hierarchical: true
+  all:
+    autoload: none
+  hierarchy:
+    - mpi

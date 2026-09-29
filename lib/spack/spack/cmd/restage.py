@@ -5,7 +5,6 @@
 import argparse
 
 import spack.cmd
-import spack.llnl.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "revert checked out package source code"
@@ -19,7 +18,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def restage(parser, args):
     if not args.specs:
-        tty.die("spack restage requires at least one package spec.")
+        args.subparser.error("requires at least one package spec")
 
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:

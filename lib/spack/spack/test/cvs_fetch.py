@@ -9,9 +9,9 @@ import pytest
 
 import spack.concretize
 from spack.fetch_strategy import CvsFetchStrategy
-from spack.llnl.util.filesystem import mkdirp, touch, working_dir
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.version import Version
 
 pytestmark = pytest.mark.skipif(not which("cvs"), reason="requires CVS to be installed")
@@ -70,14 +70,14 @@ def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
             assert os.path.isfile(file_path)
 
 
-def test_cvs_extra_fetch(tmp_path: pathlib.Path):
+def test_cvs_extra_fetch(tmp_path: pathlib.Path, config):
     """Ensure a fetch after downloading is effectively a no-op."""
     testpath = str(tmp_path)
 
     fetcher = CvsFetchStrategy(cvs=":pserver:not-a-real-cvs-repo%module=not-a-real-module")
     assert fetcher is not None
 
-    with Stage(fetcher, path=testpath) as stage:
+    with stage_from_config(fetcher, path=testpath, config=config) as stage:
         assert stage is not None
 
         source_path = stage.source_path

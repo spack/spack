@@ -2,16 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
 import sys
+from typing import Optional, Type
 
-import spack.llnl.util.tty as tty
+from spack.util import tty
 
 #: at what level we should write stack traces or short error messages
 #: this is module-scoped because it needs to be set very early
 debug = 0
 
-#: whether to show a backtrace when an error is printed, enabled with --backtrace.
+#: whether to show a backtrace when an error is printed, enabled with ``--backtrace``.
 SHOW_BACKTRACE = False
 
 
@@ -24,7 +24,7 @@ class SpackError(Exception):
     Subclasses can be found in the modules they have to do with.
     """
 
-    def __init__(self, message, long_message=None):
+    def __init__(self, message: str, long_message: Optional[str] = None) -> None:
         super().__init__()
         self.message = message
         self._long_message = long_message
@@ -78,26 +78,23 @@ class SpackError(Exception):
         sys.exit(1)
 
     def __str__(self):
-        msg = self.message
         if self._long_message:
-            msg += "\n    %s" % self._long_message
-        return msg
+            return f"{self.message}\n    {self._long_message}"
+        return self.message
 
     def __repr__(self):
-        args = [repr(self.message), repr(self.long_message)]
-        args = ",".join(args)
-        qualified_name = inspect.getmodule(self).__name__ + "." + type(self).__name__
-        return qualified_name + "(" + args + ")"
+        qualified_name = type(self).__module__ + "." + type(self).__name__
+        return f"{qualified_name}({repr(self.message)}, {repr(self.long_message)})"
 
     def __reduce__(self):
-        return type(self), (self.message, self.long_message)
+        # Pickle reconstructs an exception by calling its class, which fails for the many
+        # subclasses whose __init__ takes something other than (message, long_message)
+        return _rebuild_error, (type(self),), self.__dict__
 
 
-class UnsupportedPlatformError(SpackError):
-    """Raised by packages when a platform is not supported"""
-
-    def __init__(self, message):
-        super().__init__(message)
+def _rebuild_error(cls: Type["SpackError"]) -> "SpackError":
+    """Build an error without calling __init__, so pickle can restore its state onto it."""
+    return cls.__new__(cls)
 
 
 class NoLibrariesError(SpackError):
@@ -117,6 +114,10 @@ class NoHeadersError(SpackError):
 
 class SpecError(SpackError):
     """Superclass for all errors that occur while constructing specs."""
+
+
+class InvalidVirtualOnEdgeError(SpecError):
+    """Raised when an edge requires a virtual that does not exist in the repository."""
 
 
 class UnsatisfiableSpecError(SpecError):
@@ -219,3 +220,42 @@ class NoChecksumException(SpackError):
 
 class CompilerError(SpackError):
     """Raised if something goes wrong when probing or querying a compiler."""
+
+
+class SpecFilenameError(SpecError):
+    """Raised when a spec file name is invalid."""
+
+
+class NoSuchSpecFileError(SpecFilenameError):
+    """Raised when a spec file doesn't exist."""
+
+
+class ExplicitDatabaseUpgradeError(SpackError):
+    """Raised to request an explicit DB upgrade to the user"""
+
+    def __init__(self, db_version, expected_version, root, spack_version):
+        self.db_version = db_version
+        self.expected_version = expected_version
+        self.root = root
+        long_message = (
+            f"You will need to either:"
+            f"\n"
+            f"\n  1. Migrate the database to v{expected_version}, or"
+            f"\n  2. Use a new database by changing config:install_tree:root."
+            f"\n"
+            f"\nTo migrate the database at {root} "
+            f"\nto version {expected_version}, run:"
+            f"\n"
+            f"\n    spack reindex"
+            f"\n"
+            f"\nNOTE that if you do this, older Spack versions will no longer"
+            f"\nbe able to read the database. However, `spack reindex` will create a"
+            f"\nbackup, in case you want to revert."
+            f"\n"
+            f"\nIf you still need your old database, you can instead run"
+            f"\n`spack config edit config` and set install_tree:root to a new location."
+        )
+        super().__init__(
+            f"database is v{db_version}, but Spack v{spack_version} needs v{expected_version}",
+            long_message=long_message,
+        )

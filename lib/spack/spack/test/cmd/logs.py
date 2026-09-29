@@ -11,12 +11,13 @@ from io import BytesIO, TextIOWrapper
 
 import pytest
 
-import spack
 import spack.cmd.logs
 import spack.concretize
+import spack.error
 import spack.main
 import spack.spec
 from spack.main import SpackCommand
+from spack.store import Store
 
 logs = SpackCommand("logs")
 install = SpackCommand("install")
@@ -47,25 +48,22 @@ def _rewind_collect_and_decode(rw_stream):
     return rw_stream.read().decode("utf-8")
 
 
-@pytest.fixture
-def disable_capture(capfd):
-    with capfd.disabled():
-        yield
-
-
-def test_logs_cmd_errors(install_mockery, mock_fetch, mock_archive, mock_packages):
+def test_logs_cmd_errors(
+    temporary_store: Store, install_mockery, mock_fetch, mock_archive, mock_packages
+):
     spec = spack.concretize.concretize_one("pkg-c")
-    assert not spec.installed
+    assert not temporary_store.db.installed(spec)
 
-    with pytest.raises(spack.main.SpackCommandError, match="is not installed or staged"):
+    with pytest.raises(spack.error.SpackError, match="is not installed or staged"):
         logs("pkg-c")
 
-    with pytest.raises(spack.main.SpackCommandError, match="Too many specs"):
+    with pytest.raises(spack.main.SpackCommandError) as e:
         logs("pkg-c mpi")
+    assert e.value.code == 2
 
     install("pkg-c")
     os.remove(spec.package.install_log_path)
-    with pytest.raises(spack.main.SpackCommandError, match="No logs are available"):
+    with pytest.raises(spack.error.SpackError, match="No logs are available"):
         logs("pkg-c")
 
 
@@ -75,7 +73,9 @@ def _write_string_to_path(string, path):
         f.write(string.encode("utf-8"))
 
 
-def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, disable_capture):
+def test_dump_logs(
+    temporary_store: Store, install_mockery, mock_fetch, mock_archive, mock_packages
+):
     """Test that ``spack log`` can find (and print) the logs for partial
     builds and completed installs.
 
@@ -87,7 +87,7 @@ def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, dis
 
     # Sanity check, make sure this test is checking what we want: to
     # start with
-    assert not concrete_spec.installed
+    assert not temporary_store.db.installed(concrete_spec)
 
     stage_log_content = "test_log stage output\nanother line"
     installed_log_content = "test_log install output\nhere to test multiple lines"

@@ -1,9 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import codecs
 import collections
 import hashlib
+import io
 import os
 import platform
 import posixpath
@@ -12,12 +12,11 @@ import socket
 import time
 import warnings
 import xml.sax.saxutils
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 from urllib.request import Request
 
 import spack
-import spack.llnl.util.tty as tty
 import spack.paths
 import spack.platforms
 import spack.spec
@@ -25,9 +24,11 @@ import spack.tengine
 import spack.util.git
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.llnl.util.filesystem import working_dir
+from spack.util import tty
 from spack.util.crypto import checksum
-from spack.util.log_parse import parse_log_events
+from spack.util.ctest_log_parser import Match, Severity
+from spack.util.filesystem import working_dir
+from spack.util.log_parse import scan_log
 
 from .base import Reporter
 from .extract import extract_test_parts
@@ -58,6 +59,10 @@ MAP_PHASES_TO_CDASH = {
 # Initialize data structures common to each phase's report.
 CDASH_PHASES = set(MAP_PHASES_TO_CDASH.values())
 CDASH_PHASES.add("update")
+
+#: Lines of log context reported around each error and warning
+CDASH_CONTEXT = 6
+
 # CDash request timeout in seconds
 SPACK_CDASH_TIMEOUT = 45
 
@@ -78,10 +83,10 @@ class CDash(Reporter):
     ``spack install``::
 
         spack install --cdash-upload-url=\\
-            https://mydomain.com/cdash/submit.php?project=Spack <spec>
+            https://example.com/cdash/submit.php?project=Spack <spec>
 
     In this example, results will be uploaded to the *Spack* project on the
-    CDash instance hosted at https://mydomain.com/cdash.
+    CDash instance hosted at ``https://example.com/cdash``.
     """
 
     def __init__(self, configuration: CDashConfiguration):
@@ -133,6 +138,22 @@ class CDash(Reporter):
             buildname = buildname[:190]
         return buildname
 
+    @staticmethod
+    def clean_log_event(match: Match, loglines: List[str]) -> Dict[str, Any]:
+        """Render a matched log line and its context as the escaped fields the template wants."""
+        index = match.line_no - 1
+        pre_context = loglines[max(0, index - CDASH_CONTEXT) : index]
+        post_context = loglines[index + 1 : index + 1 + CDASH_CONTEXT]
+        escape = xml.sax.saxutils.escape
+        return {
+            "line_no": match.line_no,
+            "text": escape(loglines[index].rstrip()),
+            "pre_context": escape("\n".join(line.rstrip() for line in pre_context)),
+            "post_context": escape("\n".join(line.rstrip() for line in post_context)),
+            "source_file": escape(match.source_file) if match.source_file else "",
+            "source_line_no": match.source_line_no if match.source_file else "",
+        }
+
     def build_report_for_package(self, report_dir, package, duration):
         if "stdout" not in package:
             # Skip reporting on packages that do not generate output.
@@ -174,7 +195,7 @@ class CDash(Reporter):
                 report_data[cdash_phase]["loglines"].append(xml.sax.saxutils.escape(line))
 
         # something went wrong pre-cdash "configure" phase b/c we have an exception and only
-        # "update" was encounterd.
+        # "update" was encountered.
         # dump the report in the configure line so teams can see what the issue is
         if len(phases_encountered) == 1 and package.get("exception"):
             # TODO this mapping is not ideal since these are pre-configure errors
@@ -184,7 +205,7 @@ class CDash(Reporter):
             phases_encountered.append(cdash_phase)
 
             log_message = (
-                "Pre-configure errors occured in Spack's process that terminated the "
+                "Pre-configure errors occurred in Spack's process that terminated the "
                 "build process prematurely.\nSpack output::\n{0}".format(
                     xml.sax.saxutils.escape(package["exception"])
                 )
@@ -203,7 +224,11 @@ class CDash(Reporter):
         for phase in phases_encountered:
             report_data[phase]["endtime"] = self.endtime
             report_data[phase]["log"] = "\n".join(report_data[phase]["loglines"])
-            errors, warnings = parse_log_events(report_data[phase]["loglines"])
+            loglines = report_data[phase]["loglines"]
+            blocks = scan_log(loglines, context=0)
+            matches = [match for block in blocks for match in block.matches.values()]
+            errors = [m for m in matches if m.severity is Severity.ERROR]
+            warnings = [m for m in matches if m.severity is Severity.WARNING]
 
             # Convert errors to warnings if the package reported success.
             if package["result"] == "success":
@@ -221,29 +246,12 @@ class CDash(Reporter):
                     report_data[phase]["status"] = 1
 
             if phase == "build":
-                # Convert log output from ASCII to Unicode and escape for XML.
-                def clean_log_event(event):
-                    event = vars(event)
-                    event["text"] = xml.sax.saxutils.escape(event["text"])
-                    event["pre_context"] = xml.sax.saxutils.escape("\n".join(event["pre_context"]))
-                    event["post_context"] = xml.sax.saxutils.escape(
-                        "\n".join(event["post_context"])
-                    )
-                    # source_file and source_line_no are either strings or
-                    # the tuple (None,).  Distinguish between these two cases.
-                    if event["source_file"][0] is None:
-                        event["source_file"] = ""
-                        event["source_line_no"] = ""
-                    else:
-                        event["source_file"] = xml.sax.saxutils.escape(event["source_file"])
-                    return event
-
-                report_data[phase]["errors"] = []
-                report_data[phase]["warnings"] = []
-                for error in errors:
-                    report_data[phase]["errors"].append(clean_log_event(error))
-                for warning in warnings:
-                    report_data[phase]["warnings"].append(clean_log_event(warning))
+                report_data[phase]["errors"] = [
+                    self.clean_log_event(match, loglines) for match in errors
+                ]
+                report_data[phase]["warnings"] = [
+                    self.clean_log_event(match, loglines) for match in warnings
+                ]
 
             if phase == "update":
                 report_data[phase]["revision"] = self.revision
@@ -452,13 +460,13 @@ class CDash(Reporter):
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
             try:
-                response = web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
-                if self.current_package_name not in self.buildIds:
-                    resp_value = codecs.getreader("utf-8")(response).read()
-                    match = self.buildid_regexp.search(resp_value)
-                    if match:
-                        buildid = match.group(1)
-                        self.buildIds[self.current_package_name] = buildid
+                with web_util.urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                    if self.current_package_name not in self.buildIds:
+                        resp_value = io.TextIOWrapper(response, encoding="utf-8").read()
+                        match = self.buildid_regexp.search(resp_value)
+                        if match:
+                            buildid = match.group(1)
+                            self.buildIds[self.current_package_name] = buildid
             except Exception as e:
                 print(f"Upload to CDash failed: {e}")
 

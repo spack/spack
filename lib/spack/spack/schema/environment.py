@@ -4,32 +4,50 @@
 """Schema for environment modifications. Meant for inclusion in other
 schemas.
 """
+
 import collections.abc
 from typing import Any, Dict
 
-array_of_strings_or_num = {
-    "type": "array",
-    "default": [],
-    "items": {"anyOf": [{"type": "string"}, {"type": "number"}]},
-}
-
 dictionary_of_strings_or_num = {
     "type": "object",
-    "patternProperties": {r"\w[\w-]*": {"anyOf": [{"type": "string"}, {"type": "number"}]}},
+    "additionalProperties": {"anyOf": [{"type": "string"}, {"type": "number"}]},
 }
 
-definition: Dict[str, Any] = {
+env_modifications: Dict[str, Any] = {
     "type": "object",
+    "description": "Environment variable modifications to apply at runtime",
     "default": {},
     "additionalProperties": False,
     "properties": {
-        "set": dictionary_of_strings_or_num,
-        "unset": array_of_strings_or_num,
-        "prepend_path": dictionary_of_strings_or_num,
-        "append_path": dictionary_of_strings_or_num,
-        "remove_path": dictionary_of_strings_or_num,
+        "set": {
+            "description": "Environment variables to set to specific values",
+            **dictionary_of_strings_or_num,
+        },
+        "unset": {
+            "description": "Environment variables to remove/unset",
+            "default": [],
+            "type": "array",
+            "items": {"type": "string"},
+        },
+        "prepend_path": {
+            "description": "Environment variables to prepend values to (typically PATH-like "
+            "variables)",
+            **dictionary_of_strings_or_num,
+        },
+        "append_path": {
+            "description": "Environment variables to append values to (typically PATH-like "
+            "variables)",
+            **dictionary_of_strings_or_num,
+        },
+        "remove_path": {
+            "description": "Values to remove from PATH-like environment variables",
+            **dictionary_of_strings_or_num,
+        },
     },
 }
+
+#: $ref pointer for use in merged schema
+ref_env_modifications = {"$ref": "#/definitions/env_modifications"}
 
 
 def parse(config_obj):

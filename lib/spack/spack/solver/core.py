@@ -1,57 +1,23 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Low-level wrappers around clingo API and other basic functionality related to ASP"""
-import importlib
-import pathlib
-from types import ModuleType
-from typing import Any, Callable, NamedTuple, Optional, Tuple, Union
+"""Basic data structures used to build Spack's ASP program"""
 
-import spack.platforms
-from spack.llnl.util import lang
+from typing import Any, Dict, NamedTuple, Optional, Tuple
 
+from spack.util import lang
 
-def _ast_getter(*names: str) -> Callable[[Any], Any]:
-    """Helper to retrieve AST attributes from different versions of the clingo API"""
-
-    def getter(node):
-        for name in names:
-            result = getattr(node, name, None)
-            if result:
-                return result
-        raise KeyError(f"node has no such keys: {names}")
-
-    return getter
+#: Type used for quoted string cache
+QuotedStrings = Dict[str, str]
 
 
-ast_type = _ast_getter("ast_type", "type")
-ast_sym = _ast_getter("symbol", "term")
-
-
-class AspObject:
-    """Object representing a piece of ASP code."""
-
-
-def _id(thing: Any) -> Union[str, int, AspObject]:
-    """Quote string if needed for it to be a valid identifier."""
-    if isinstance(thing, bool):
-        return f'"{thing}"'
-    elif isinstance(thing, (AspObject, int)):
-        return thing
-    else:
-        if isinstance(thing, str):
-            # escape characters that cannot be in clingo strings
-            thing = thing.replace("\\", r"\\")
-            thing = thing.replace("\n", r"\n")
-            thing = thing.replace('"', r"\"")
-        return f'"{thing}"'
-
-
-class AspVar(AspObject):
+class AspVar:
     """Represents a variable in an ASP rule, allows for conditionally generating
     rules"""
 
-    def __init__(self, name: str):
+    __slots__ = ("name",)
+
+    def __init__(self, name: str) -> None:
         self.name = name
 
     def __str__(self) -> str:
@@ -59,16 +25,16 @@ class AspVar(AspObject):
 
 
 @lang.key_ordering
-class AspFunction(AspObject):
+class AspFunction:
     """A term in the ASP logic program"""
 
-    __slots__ = ["name", "args"]
+    __slots__ = ("name", "args")
 
-    def __init__(self, name: str, args: Optional[Tuple[Any, ...]] = None) -> None:
+    def __init__(self, name: str, args: Tuple[Any, ...] = ()) -> None:
         self.name = name
-        self.args = () if args is None else tuple(args)
+        self.args = args
 
-    def _cmp_key(self) -> Tuple[str, Optional[Tuple[Any, ...]]]:
+    def _cmp_key(self) -> Tuple[str, Tuple[Any, ...]]:
         return self.name, self.args
 
     def __call__(self, *args: Any) -> "AspFunction":
@@ -92,141 +58,97 @@ class AspFunction(AspObject):
             attr("version", "foo", "bar")
 
         """
-        return AspFunction(self.name, self.args + args)
+        return AspFunction(self.name, args if not self.args else self.args + args)
 
     def __str__(self) -> str:
-        args = f"({','.join(str(_id(arg)) for arg in self.args)})"
-        return f"{self.name}{args}"
+        return self.to_str({})
+
+    def to_str(self, quoted: QuotedStrings) -> str:
+        """The ASP representation of this function, reusing the literals in ``quoted``."""
+        args = self.args
+        # nearly every function takes one or two arguments; those need neither list nor join
+        if len(args) == 1:
+            return f"{self.name}({asp_argument(args[0], quoted)})"
+        if len(args) == 2:
+            return f"{self.name}({asp_argument(args[0], quoted)},{asp_argument(args[1], quoted)})"
+        return f"{self.name}({','.join([asp_argument(arg, quoted) for arg in args])})"
+
+    def args_str(self, quoted: QuotedStrings) -> str:
+        """The arguments as they appear between the parentheses of this function."""
+        return ",".join([asp_argument(arg, quoted) for arg in self.args])
 
     def __repr__(self) -> str:
         return str(self)
 
 
+def quote(arg: str, quoted: QuotedStrings) -> str:
+    """The ASP literal for the string ``arg``: escaped, in double quotes, and kept for reuse."""
+    return quoted.get(arg) or _quote(arg, quoted)
+
+
+def quote_once(arg: str) -> str:
+    """The ASP literal for a string that is not expected to come up again."""
+    return '"' + arg.replace("\\", r"\\").replace("\n", r"\n").replace('"', r"\"") + '"'
+
+
+#: Constant that determines the maximum length of a string that's kept in the quoted cache
+MAX_QUOTED_LENGTH = 32
+
+
+def _quote(arg: str, quoted: QuotedStrings) -> str:
+    """Compute the ASP literal for ``arg``, and keep it if it is short; see :func:`quote`."""
+    result = quote_once(arg)
+    if len(arg) <= MAX_QUOTED_LENGTH:
+        quoted[arg] = result
+    return result
+
+
+def asp_argument(arg: Any, quoted: QuotedStrings) -> str:
+    """The ASP representation of a single argument of a function."""
+    # exact type checks first, ordered by frequency
+    if type(arg) is str:
+        return quoted.get(arg) or _quote(arg, quoted)
+    if type(arg) is AspFunction:
+        return arg.to_str(quoted)
+    if type(arg) is int or type(arg) is AspVar:
+        return str(arg)
+    # subclasses miss the checks above: config values are syaml_str / syaml_int. bool is
+    # an int subclass, but is not a number in ASP, so it is quoted below.
+    if isinstance(arg, int) and not isinstance(arg, bool):
+        return str(arg)
+    if isinstance(arg, str):
+        return quoted.get(arg) or _quote(arg, quoted)
+    return f'"{arg}"'
+
+
 class _AspFunctionBuilder:
-    def __getattr__(self, name):
-        return AspFunction(name)
+    def __getattr__(self, name: str) -> AspFunction:
+        # Writing to __dict__ directly caches the result so repeated access to the
+        # same name bypasses __getattr__ and hits the instance dict instead.
+        # Safe because AspFunction objects are never mutated.
+        f = AspFunction(name)
+        self.__dict__[name] = f
+        return f
 
 
 #: Global AspFunction builder
 fn = _AspFunctionBuilder()
 
-_CLINGO_MODULE: Optional[ModuleType] = None
 
-
-def clingo() -> ModuleType:
-    """Lazy imports the Python module for clingo, and returns it."""
-    if _CLINGO_MODULE is not None:
-        return _CLINGO_MODULE
-
-    try:
-        clingo_mod = importlib.import_module("clingo")
-        # Make sure we didn't import an empty module
-        _ensure_clingo_or_raise(clingo_mod)
-    except ImportError:
-        clingo_mod = None
-
-    if clingo_mod is not None:
-        return _set_clingo_module_cache(clingo_mod)
-
-    clingo_mod = _bootstrap_clingo()
-    return _set_clingo_module_cache(clingo_mod)
-
-
-def _set_clingo_module_cache(clingo_mod: ModuleType) -> ModuleType:
-    """Sets the global cache to the lazy imported clingo module"""
-    global _CLINGO_MODULE
-    importlib.import_module("clingo.ast")
-    _CLINGO_MODULE = clingo_mod
-    return clingo_mod
-
-
-def _ensure_clingo_or_raise(clingo_mod: ModuleType) -> None:
-    """Ensures the clingo module can access expected attributes, otherwise raises an error."""
-    # These are imports that may be problematic at top level (circular imports). They are used
-    # only to provide exhaustive details when erroring due to a broken clingo module.
-    import spack.config
-    import spack.paths as sp
-    import spack.util.path as sup
-
-    try:
-        clingo_mod.Symbol
-    except AttributeError:
-        assert clingo_mod.__file__ is not None, "clingo installation is incomplete or invalid"
-        # Reaching this point indicates a broken clingo installation
-        # If Spack derived clingo, suggest user re-run bootstrap
-        # if non-spack, suggest user investigate installation
-        # assume Spack is not responsible for broken clingo
-        msg = (
-            f"Clingo installation at {clingo_mod.__file__} is incomplete or invalid."
-            "Please repair installation or re-install. "
-            "Alternatively, consider installing clingo via Spack."
-        )
-        # check whether Spack is responsible
-        if (
-            pathlib.Path(
-                sup.canonicalize_path(
-                    spack.config.CONFIG.get("bootstrap:root", sp.default_user_bootstrap_path)
-                )
-            )
-            in pathlib.Path(clingo_mod.__file__).parents
-        ):
-            # Spack is responsible for the broken clingo
-            msg = (
-                "Spack bootstrapped copy of Clingo is broken, "
-                "please re-run the bootstrapping process via command `spack bootstrap now`."
-                " If this issue persists, please file a bug at: github.com/spack/spack"
-            )
-        raise RuntimeError(
-            "Clingo installation may be broken or incomplete, "
-            "please verify clingo has been installed correctly"
-            "\n\nClingo does not provide symbol clingo.Symbol"
-            f"{msg}"
-        )
-
-
-def clingo_cffi() -> bool:
-    """Returns True if clingo uses the CFFI interface"""
-    return hasattr(clingo().Symbol, "_rep")
-
-
-def _bootstrap_clingo() -> ModuleType:
-    """Bootstraps the clingo module and returns it"""
-    import spack.bootstrap
-
-    with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_clingo_importable_or_raise()
-        clingo_mod = importlib.import_module("clingo")
-
-    return clingo_mod
-
-
-def parse_files(*args, **kwargs):
-    """Wrapper around clingo parse_files, that dispatches the function according
-    to clingo API version.
-    """
-    clingo()
-    try:
-        return importlib.import_module("clingo.ast").parse_files(*args, **kwargs)
-    except (ImportError, AttributeError):
-        return clingo().parse_files(*args, **kwargs)
-
-
-def parse_term(*args, **kwargs):
-    """Wrapper around clingo parse_term, that dispatches the function according
-    to clingo API version.
-    """
-    clingo()
-    try:
-        return importlib.import_module("clingo.symbol").parse_term(*args, **kwargs)
-    except (ImportError, AttributeError):
-        return clingo().parse_term(*args, **kwargs)
-
-
-class NodeArgument(NamedTuple):
+class NodeId(NamedTuple):
     """Represents a node in the DAG"""
 
     id: str
     pkg: str
+
+
+def min_dupe_node(*, pkg: str) -> NodeId:
+    """Given a package name, returns the "min_dupe_id" node in the ASP encoding.
+
+    Args:
+        pkg: name of a package
+    """
+    return NodeId(id="0", pkg=pkg)
 
 
 class NodeFlag(NamedTuple):
@@ -236,58 +158,9 @@ class NodeFlag(NamedTuple):
     source: str
 
 
-def intermediate_repr(sym):
-    """Returns an intermediate representation of clingo models for Spack's spec builder.
-
-    Currently, transforms symbols from clingo models either to strings or to NodeArgument objects.
-
-    Returns:
-        This will turn a ``clingo.Symbol`` into a string or NodeArgument, or a sequence of
-        ``clingo.Symbol`` objects into a tuple of those objects.
-    """
-    # TODO: simplify this when we no longer have to support older clingo versions.
-    if isinstance(sym, (list, tuple)):
-        return tuple(intermediate_repr(a) for a in sym)
-
-    try:
-        if sym.name == "node":
-            return NodeArgument(
-                id=intermediate_repr(sym.arguments[0]), pkg=intermediate_repr(sym.arguments[1])
-            )
-        elif sym.name == "node_flag":
-            return NodeFlag(
-                flag_type=intermediate_repr(sym.arguments[0]),
-                flag=intermediate_repr(sym.arguments[1]),
-                flag_group=intermediate_repr(sym.arguments[2]),
-                source=intermediate_repr(sym.arguments[3]),
-            )
-    except RuntimeError:
-        # This happens when using clingo w/ CFFI and trying to access ".name" for symbols
-        # that are not functions
-        pass
-
-    if clingo_cffi():
-        # Clingo w/ CFFI will throw an exception on failure
-        try:
-            return sym.string
-        except RuntimeError:
-            return str(sym)
-    else:
-        return sym.string or str(sym)
-
-
-def extract_args(model, predicate_name):
-    """Extract the arguments to predicates with the provided name from a model.
-
-    Pull out all the predicates with name ``predicate_name`` from the model, and
-    return their intermediate representation.
-    """
-    return [intermediate_repr(sym.arguments) for sym in model if sym.name == predicate_name]
-
-
 class SourceContext:
     """Tracks context in which a Spec's clause-set is generated (i.e.
-    with ``SpackSolverSetup.spec_clauses``).
+    with ``SpecClauseGenerator.spec_clauses``).
 
     Facts generated for the spec may include this context.
     """
@@ -300,8 +173,3 @@ class SourceContext:
         # in that case).
         self.source = "none" if source is None else source
         self.wrap_node_requirement: Optional[bool] = None
-
-
-def using_libc_compatibility() -> bool:
-    """Returns True if we are currently using libc compatibility"""
-    return spack.platforms.host().name == "linux"

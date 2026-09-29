@@ -7,11 +7,11 @@ import io
 import sys
 
 import spack.cmd
-import spack.llnl.util.tty.colify as colify
 import spack.repo
+from spack.util.tty import colify
 
 description = "list packages that provide a particular virtual package"
-section = "basic"
+section = "query"
 level = "long"
 
 

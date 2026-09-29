@@ -17,5 +17,5 @@ class PyNumpy(Package):
     version("1.25.0", md5="0123456789abcdef0123456789abcdef")
 
     extends("python")
-    depends_on("py-setuptools@=59", type=("build", "run"))
+    depends_on("py-setuptools@=59", type="build")
     depends_on("gmake@4.1", type="build")

@@ -8,10 +8,12 @@ import os
 import spack.cmd
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.package_base
+import spack.store
 import spack.traverse
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "expand downloaded archive in preparation for install"
 section = "build"
@@ -36,7 +38,7 @@ class StageFilter:
         if spec.external:
             return True
 
-        if self.skip_installed and spec.installed:
+        if self.skip_installed and spack.store.STORE.db.installed(spec):
             return True
 
         if any(spec.satisfies(exclude) for exclude in self.exclusions):
@@ -65,15 +67,15 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def stage(parser, args):
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     exclusion_specs = spack.cmd.parse_specs(args.exclude, concretize=False)
     filter = StageFilter(exclusion_specs, args.skip_installed)
 
     if not args.specs:
-        env = ev.active_environment()
+        env = active_environment()
         if not env:
-            tty.die("`spack stage` requires a spec or an active environment")
+            args.subparser.error("requires a spec or an active environment")
         return _stage_env(env, filter)
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
@@ -84,7 +86,7 @@ def stage(parser, args):
 
     # prevent multiple specs from extracting in the same folder
     if len(specs) > 1 and custom_path:
-        tty.die("`--path` requires a single spec, but multiple were provided")
+        args.subparser.error("--path requires a single spec, but multiple were provided")
 
     specs = spack.cmd.matching_specs_from_env(specs)
     for spec in specs:
@@ -104,7 +106,6 @@ def stage(parser, args):
 def _stage_env(env: ev.Environment, filter):
     tty.msg(f"Staging specs from environment {env.name}")
     for spec in spack.traverse.traverse_nodes(env.concrete_roots()):
-
         if filter(spec):
             continue
 

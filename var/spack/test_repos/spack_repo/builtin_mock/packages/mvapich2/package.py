@@ -17,3 +17,6 @@ class Mvapich2(Package):
         description="List of the ROMIO file systems to activate",
         values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
     )
+    variant("noauto", default=False, description="Adds a conflict with 'auto' for tests")
+
+    conflicts("file_systems=auto", when="+noauto")

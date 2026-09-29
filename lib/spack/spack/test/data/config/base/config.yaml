@@ -1,0 +1,3 @@
+# This file is here strictly so that the base include directory will work
+config:
+  dirty: false

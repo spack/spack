@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Aliases for microarchitecture features."""
+from typing import Callable, Dict
+
 from .schema import TARGETS_JSON, LazyDictionary
 
-_FEATURE_ALIAS_PREDICATE = {}
+_FEATURE_ALIAS_PREDICATE: Dict[str, Callable] = {}
 
 
 class FeatureAliasTest:

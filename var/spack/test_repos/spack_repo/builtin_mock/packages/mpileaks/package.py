@@ -22,11 +22,14 @@ class Mpileaks(Package):
     variant("opt", default=False, description="Optimized variant")
     variant("shared", default=True, description="Build shared library")
     variant("static", default=True, description="Build static library")
+    variant("fortran", default=False, description="Enable fortran API")
 
     depends_on("mpi")
     depends_on("callpath")
 
     depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     # Will be used to try raising an exception
     libs = None

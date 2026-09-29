@@ -5,6 +5,7 @@
 """Generators that support writing out pipelines for various CI platforms,
 using a common pipeline graph definition.
 """
+
 import spack.error
 
 _generators = {}

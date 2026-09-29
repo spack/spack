@@ -7,7 +7,6 @@ import pathlib
 
 import pytest
 
-import spack
 import spack.util.module_cmd
 from spack.util.module_cmd import (
     get_path_args_from_module_line,

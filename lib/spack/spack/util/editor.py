@@ -11,13 +11,13 @@ specified editor fails (e.g. no DISPLAY for a graphical editor). If
 neither variable is set, we fall back to one of several common editors,
 raising an OSError if we are unable to find one.
 """
+
 import os
 import shlex
 from typing import Callable, List
 
-import spack.config
-import spack.llnl.util.tty as tty
 import spack.util.executable
+from spack.util import tty
 
 #: editors to try if VISUAL and EDITOR are not set
 _default_editors = ["vim", "vi", "emacs", "nano", "notepad"]
@@ -64,9 +64,9 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
 
     This will try to execute the following, in order:
 
-      1. $VISUAL <args>    # the "visual" editor (per POSIX)
-      2. $EDITOR <args>    # the regular editor (per POSIX)
-      3. some default editor (see ``_default_editors``) with <args>
+    1. ``$VISUAL <args>``: the "visual" editor (per POSIX)
+    2. ``$EDITOR <args>``: the regular editor (per POSIX)
+    3. some default editor (see ``_default_editors``) with <args>
 
     If an environment variable isn't defined, it is skipped.  If it
     points to something that can't be executed, we'll print a
@@ -76,7 +76,6 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
     Arguments:
         args: args to pass to editor
 
-    Optional Arguments:
         exec_fn: invoke this function to run; use ``spack.util.editor.executable`` if you
             want something that returns, instead of the default ``os.execv()``.
     """
@@ -98,9 +97,6 @@ def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> b
             return exec_fn(exe, args) == 0
 
         except (OSError, spack.util.executable.ProcessError) as e:
-            if spack.config.get("config:debug"):
-                raise
-
             # Show variable we were trying to use, if it's from one
             if var:
                 exe = "$%s (%s)" % (var, exe)

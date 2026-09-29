@@ -7,12 +7,13 @@ import argparse
 import spack.cmd
 import spack.config
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.package_base
 import spack.traverse
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.util import tty
 
-description = "patch expanded archive sources in preparation for install"
+description = "patch expanded sources in preparation for install"
 section = "build"
 level = "long"
 
@@ -24,13 +25,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def patch(parser, args):
     if not args.specs:
-        env = ev.active_environment()
+        env = active_environment()
         if not env:
-            tty.die("`spack patch` requires a spec or an active environment")
+            args.subparser.error("requires a spec or an active environment")
         return _patch_env(env)
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     specs = spack.cmd.parse_specs(args.specs, concretize=False)
     specs = spack.cmd.matching_specs_from_env(specs)

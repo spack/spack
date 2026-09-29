@@ -43,7 +43,7 @@ def test_deconcretize_root(test_env):
     with ev.read("test") as e:
         output = deconcretize("-y", "--root", "pkg-b@1.0")
         assert "No matching specs to deconcretize" in output
-        assert len(e.concretized_order) == 2
+        assert len(e.concretized_roots) == 2
 
         deconcretize("-y", "--root", "pkg-a@2.0")
         specs = [s for s, _ in e.concretized_specs()]
@@ -59,7 +59,7 @@ def test_deconcretize_all_root(test_env):
 
         output = deconcretize("-y", "--root", "--all", "pkg-b")
         assert "No matching specs to deconcretize" in output
-        assert len(e.concretized_order) == 2
+        assert len(e.concretized_roots) == 2
 
         deconcretize("-y", "--root", "--all", "pkg-a")
         specs = [s for s, _ in e.concretized_specs()]

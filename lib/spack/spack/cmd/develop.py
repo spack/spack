@@ -10,16 +10,15 @@ import spack.cmd
 import spack.config
 import spack.environment
 import spack.fetch_strategy
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.spec
 import spack.stage
-import spack.util.path
 import spack.version
 from spack.cmd.common import arguments
 from spack.error import SpackError
+from spack.util import tty
 
-description = "add a spec to an environment's dev-build information"
+description = "add a spec to an environment's develop: section"
 section = "environments"
 level = "long"
 
@@ -42,12 +41,27 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=True,
         help=(
             "(default) clone the package unless the path already exists, "
-            "use --force to overwrite"
+            "use ``--force`` to overwrite"
         ),
     )
 
     subparser.add_argument(
-        "-f", "--force", help="remove any files or directories that block cloning source code"
+        "--no-modify-concrete-specs",
+        action="store_false",
+        default=True,
+        dest="apply_changes",
+        help=(
+            "do not mutate concrete specs to have dev_path provenance."
+            " This requires a later `spack concretize --force` command to use develop specs"
+        ),
+    )
+
+    subparser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        help="remove any files or directories that block cloning source code",
     )
 
     subparser.add_argument(
@@ -93,7 +107,7 @@ def assure_concrete_spec(env: spack.environment.Environment, spec: spack.spec.Sp
                 if not m_spec.satisfies(test_spec):
                     raise SpackError(
                         f"{spec.name}: has multiple concrete instances in the graph that can't be"
-                        " satisified by a single develop spec. To use `spack develop` ensure one"
+                        " satisfied by a single develop spec. To use `spack develop` ensure one"
                         " of the following:"
                         f"\n a) {spec.name} nodes can satisfy the same develop spec (minimally "
                         "this means they all share the same version)"
@@ -137,7 +151,7 @@ def _update_config(spec, path):
     def change_fn(section):
         section[spec.name] = entry
 
-    spack.config.change_or_add("develop", find_fn, change_fn)
+    spack.config.CONFIG.change_or_add("develop", find_fn, change_fn)
 
 
 def update_env(
@@ -145,6 +159,7 @@ def update_env(
     spec: spack.spec.Spec,
     specified_path: Optional[str] = None,
     build_dir: Optional[str] = None,
+    apply_changes: bool = True,
 ):
     """
     Update the spack.yaml file with additions or changes from a develop call
@@ -158,12 +173,16 @@ def update_env(
 
     with env.write_transaction():
         if build_dir is not None:
-            spack.config.add(
+            spack.config.CONFIG.add(
                 f"packages:{spec.name}:package_attributes:build_directory:{build_dir}",
                 env.scope_name,
             )
         # add develop spec and update path
         _update_config(spec, specified_path)
+
+        # If we are automatically mutating the concrete specs for dev provenance, do so
+        if apply_changes:
+            env.apply_develop([spec], [_abs_code_path(env, spec, specified_path)])
 
 
 def _clone(spec: spack.spec.Spec, abspath: str, force: bool = False):
@@ -185,7 +204,7 @@ def _abs_code_path(
     env: spack.environment.Environment, spec: spack.spec.Spec, path: Optional[str] = None
 ):
     src_path = path if path else spec.name
-    return spack.util.path.canonicalize_path(src_path, default_wd=env.path)
+    return spack.config.canonicalize_path(src_path, default_wd=env.path)
 
 
 def _dev_spec_generator(args, env):
@@ -195,11 +214,11 @@ def _dev_spec_generator(args, env):
     """
     if not args.spec:
         if args.clone is False:
-            raise SpackError("No spec provided to spack develop command")
+            args.subparser.error("no spec provided")
 
         for name, entry in env.dev_specs.items():
             path = entry.get("path", name)
-            abspath = spack.util.path.canonicalize_path(path, default_wd=env.path)
+            abspath = spack.config.canonicalize_path(path, default_wd=env.path)
             # Both old syntax `spack develop pkg@x` and new syntax `spack develop pkg@=x`
             # are currently supported.
             spec = spack.spec.parse_with_version_concrete(entry["spec"])
@@ -207,9 +226,9 @@ def _dev_spec_generator(args, env):
     else:
         specs = spack.cmd.parse_specs(args.spec)
         if (args.path or args.build_directory) and len(specs) > 1:
-            raise SpackError(
-                "spack develop requires at most one named spec when using the --path or"
-                " --build-directory arguments"
+            args.subparser.error(
+                "requires at most one named spec when using the --path or --build-directory "
+                "arguments"
             )
 
         for spec in specs:
@@ -225,15 +244,16 @@ def _dev_spec_generator(args, env):
                     for s in concrete_specs:
                         for node_spec in s.traverse(direction="parents", root=True):
                             tty.debug(f"Recursive develop for {node_spec.name}")
-                            yield node_spec, _abs_code_path(env, node_spec, args.path)
+                            dev_spec = spack.spec.Spec(node_spec.format("{name}@{versions}"))
+                            yield dev_spec, _abs_code_path(env, node_spec, args.path)
             else:
                 yield spec, _abs_code_path(env, spec, args.path)
 
 
 def develop(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="develop")
+    env = spack.cmd.require_active_env(args.subparser)
 
     for spec, abspath in _dev_spec_generator(args, env):
         assure_concrete_spec(env, spec)
         setup_src_code(spec, abspath, clone=args.clone, force=args.force)
-        update_env(env, spec, args.path, args.build_directory)
+        update_env(env, spec, args.path, args.build_directory, args.apply_changes)

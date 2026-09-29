@@ -4,8 +4,9 @@
 import enum
 from typing import Dict, List
 
+import spack.repo
 import spack.spec
-from spack.llnl.util import lang
+from spack.util import lang
 
 from .libraries import CompilerPropertyDetector
 
@@ -17,8 +18,8 @@ class Languages(enum.Enum):
 
 
 class CompilerAdaptor:
-    """Provides access to compiler attributes via `Package.compiler`. Useful for
-    packages which do not yet access compiler properties via `self.spec[language]`.
+    """Provides access to compiler attributes via ``Package.compiler``. Useful for
+    packages which do not yet access compiler properties via ``self.spec[language]``.
     """
 
     def __init__(
@@ -79,7 +80,9 @@ class CompilerAdaptor:
             if compiler in seen:
                 continue
             seen.add(compiler)
-            result.extend(CompilerPropertyDetector(compiler).implicit_rpaths())
+            result.extend(
+                CompilerPropertyDetector(compiler, repo=spack.repo.PATH).implicit_rpaths()
+            )
         return result
 
     @property

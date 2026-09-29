@@ -628,7 +628,7 @@ class CommentedSeq(MutableSliceableSequence, list, CommentedBase):  # type: igno
         memo[id(self)] = res
         for k in self:
             res.append(copy.deepcopy(k, memo))
-            self.copy_attributes(res, memo=memo)
+        self.copy_attributes(res, memo=memo)
         return res
 
     def __add__(self, other):

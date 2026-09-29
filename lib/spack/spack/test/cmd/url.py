@@ -5,9 +5,9 @@ import re
 
 import pytest
 
-import spack.repo
 from spack.cmd.url import name_parsed_correctly, url_summary, version_parsed_correctly
 from spack.main import SpackCommand
+from spack.repo import RepoPath
 from spack.url import UndetectableVersionError
 
 url = SpackCommand("url")
@@ -115,30 +115,29 @@ def test_url_summary(mock_packages):
     assert out_correct_versions == correct_versions
 
 
-def test_url_stats(capfd, mock_packages):
-    with capfd.disabled():
-        output = url("stats")
-        npkgs = "%d packages" % len(spack.repo.all_package_names())
-        assert npkgs in output
-        assert "url" in output
-        assert "git" in output
-        assert "schemes" in output
-        assert "versions" in output
-        assert "resources" in output
+def test_url_stats(mock_packages: RepoPath):
+    output = url("stats")
+    npkgs = "%d packages" % len(mock_packages.all_package_names())
+    assert npkgs in output
+    assert "url" in output
+    assert "git" in output
+    assert "schemes" in output
+    assert "versions" in output
+    assert "resources" in output
 
-        output = url("stats", "--show-issues")
-        npkgs = "%d packages" % len(spack.repo.all_package_names())
-        assert npkgs in output
-        assert "url" in output
-        assert "git" in output
-        assert "schemes" in output
-        assert "versions" in output
-        assert "resources" in output
+    output = url("stats", "--show-issues")
+    npkgs = "%d packages" % len(mock_packages.all_package_names())
+    assert npkgs in output
+    assert "url" in output
+    assert "git" in output
+    assert "schemes" in output
+    assert "versions" in output
+    assert "resources" in output
 
-        assert "Package URLs with md5 hashes" in output
-        assert "needs-relocation" in output
-        assert "https://cmake.org/files/v3.4/cmake-0.0.0.tar.gz" in output
+    assert "Package URLs with md5 hashes" in output
+    assert "needs-relocation" in output
+    assert "https://cmake.org/files/v3.4/cmake-0.0.0.tar.gz" in output
 
-        assert "Package URLs with http urls" in output
-        assert "zmpi" in output
-        assert "http://www.spack-fake-zmpi.org/downloads/zmpi-1.0.tar.gz" in output
+    assert "Package URLs with http urls" in output
+    assert "zmpi" in output
+    assert "http://www.spack-fake-zmpi.org/downloads/zmpi-1.0.tar.gz" in output

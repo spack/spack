@@ -5,7 +5,7 @@ import re
 
 import pytest
 
-import spack.container.writers as writers
+from spack.container import writers
 
 
 def test_manifest(minimal_configuration):

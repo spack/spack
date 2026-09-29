@@ -2,38 +2,158 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
+import concurrent.futures
 import email.message
 import errno
+import functools
+import io
 import json
 import os
+import random
 import re
 import shutil
+import socket
 import ssl
 import stat
 import sys
+import time
 import traceback
 import urllib.parse
+import warnings
 from html.parser import HTMLParser
+from http.client import IncompleteRead
 from pathlib import Path, PurePosixPath
-from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import IO, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
+
+from spack.vendor.typing_extensions import ParamSpec
 
 import spack
 import spack.config
 import spack.error
-import spack.llnl.url
 import spack.util.executable
-import spack.util.parallel
-import spack.util.path
+import spack.util.url
 import spack.util.url as url_util
-from spack.llnl.util import lang, tty
-from spack.llnl.util.filesystem import mkdirp, rename, working_dir
+from spack.util import lang, tty
+from spack.util import s3 as s3_util
+from spack.util.filesystem import mkdirp, working_dir
 
 from .executable import CommandNotFoundError, Executable
 from .gcs import GCSBlob, GCSBucket, GCSHandler
-from .s3 import UrllibS3Handler, get_s3_session
+
+
+class Retry:
+    """Wrapper class around retry logic"""
+
+    def __init__(
+        self,
+        total: int = 5,
+        backoff_factor: float = 1.0,
+        backoff_jitter: float = 0.0,
+        backoff_max: float = 120.0,
+    ):
+        self.total = total
+        self.count = 0
+        self.backoff_factor = backoff_factor
+        self.backoff_jitter = backoff_jitter
+        self.backoff_max = backoff_max
+
+        if self.backoff_max <= 0:
+            raise ValueError("Maximum backoff must be a positive value")
+        if self.total < 1:
+            raise ValueError("Retry total must be at least 1")
+
+    def is_last_attempt(self):
+        """Return if this the retry counter is on last attempt"""
+        return self.count >= self.total - 1
+
+    def is_exhausted(self):
+        """Return if this the retry counter is exhausted"""
+        return self.count >= self.total
+
+    def backoff(self) -> float:
+        """Return the backoff duration in seconds for the current attempt"""
+        value: float = self.backoff_factor * (2 ** (self.count - 1))
+        if self.backoff_jitter != 0.0:
+            value += random.random() * self.backoff_jitter
+        return float(max(0, min(self.backoff_max, value)))
+
+    def sleep(self) -> None:
+        """Sleep for the backoff duration of the current attempt"""
+        time.sleep(self.backoff())
+
+    def __iter__(self):
+        """Convenient iterator function that handles doing backoff automatically"""
+        self.count = 0
+        while True:
+            yield self.count
+            self.count += 1
+            if self.is_exhausted():
+                break
+            self.sleep()
+
+
+def is_transient_error(e: Exception) -> bool:
+    """Return True for HTTP/network errors that are worth retrying."""
+
+    if isinstance(e, HTTPError) and (500 <= e.code < 600 or e.code == 429):
+        return True
+    if isinstance(e, URLError) and isinstance(e.reason, socket.timeout):
+        return True
+    if isinstance(e, (socket.timeout, IncompleteRead)):
+        return True
+    # exceptions not inherited from the above used in urllib3 and botocore.
+    if type(e).__name__ in (
+        "ConnectionClosedError",
+        "IncompleteReadError",
+        "ProtocolError",
+        "ReadTimeoutError",
+        "ResponseStreamingError",
+    ):
+        return True
+    return False
+
+
+def is_precondition_error(e: Exception) -> bool:
+    """Return True if HTTP/Boto3 error is related to a precondition error.
+
+    Examples of precontition errors:
+        HTTP status code 412
+        Boto error 'PreconditionFailed'
+    """
+    if isinstance(e, HTTPError) and 412 == e.code:
+        return True
+
+    # Handle boto errors types by string name to avoid import
+    if "PreconditionFailed" in str(e):
+        return True
+
+    return False
+
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def retry_on_transient_error(
+    f: Callable[_P, _R], retry: Optional[Retry] = None
+) -> Callable[_P, _R]:
+    """Retry a function on transient HTTP/network errors with exponential backoff."""
+
+    @functools.wraps(f)
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        _retry = retry or Retry()
+        for _ in _retry:
+            try:
+                return f(*args, **kwargs)
+            except Exception as e:
+                if not _retry.is_last_attempt() and is_transient_error(e):
+                    continue
+                raise
+        raise AssertionError("unreachable")
+
+    return wrapper
 
 
 class DetailedHTTPError(HTTPError):
@@ -56,17 +176,41 @@ class DetailedHTTPError(HTTPError):
         return DetailedHTTPError, (self.req, self.code, self.msg, self.hdrs, None)
 
 
+class DetailedURLError(URLError):
+    def __init__(self, req: Request, reason):
+        super().__init__(reason)
+        self.req = req
+
+    def __str__(self):
+        return f"{self.req.get_method()} {self.req.get_full_url()} errored with: {self.reason}"
+
+    def __reduce__(self):
+        return DetailedURLError, (self.req, self.reason)
+
+
 class SpackHTTPDefaultErrorHandler(HTTPDefaultErrorHandler):
     def http_error_default(self, req, fp, code, msg, hdrs):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
 
+class SpackHTTPSHandler(HTTPSHandler):
+    """A custom HTTPS handler that shows more detailed error messages on connection failure."""
+
+    def https_open(self, req):
+        try:
+            return super().https_open(req)
+        except HTTPError:
+            raise
+        except URLError as e:
+            raise DetailedURLError(req, e.reason) from e
+
+
 def custom_ssl_certs() -> Optional[Tuple[bool, str]]:
     """Returns a tuple (is_file, path) if custom SSL certifates are configured and valid."""
-    ssl_certs = spack.config.get("config:ssl_certs")
+    ssl_certs = spack.config.CONFIG.get("config:ssl_certs")
     if not ssl_certs:
         return None
-    path = spack.util.path.substitute_path_variables(ssl_certs)
+    path = spack.config.substitute_path_variables(ssl_certs)
     if not os.path.isabs(path):
         tty.debug(f"certs: relative path not allowed: {path}")
         return None
@@ -114,24 +258,24 @@ def set_curl_env_for_ssl_certs(curl: Executable) -> None:
 
 
 def _urlopen():
-    s3 = UrllibS3Handler()
+    s3 = s3_util.UrllibS3Handler()
     gcs = GCSHandler()
     error_handler = SpackHTTPDefaultErrorHandler()
 
     # One opener with HTTPS ssl enabled
     with_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl_create_default_context()), error_handler
+        s3, gcs, SpackHTTPSHandler(context=ssl_create_default_context()), error_handler
     )
 
     # One opener with HTTPS ssl disabled
     without_ssl = build_opener(
-        s3, gcs, HTTPSHandler(context=ssl._create_unverified_context()), error_handler
+        s3, gcs, SpackHTTPSHandler(context=ssl._create_unverified_context()), error_handler
     )
 
     # And dynamically dispatch based on the config:verify_ssl.
     def dispatch_open(fullurl, data=None, timeout=None):
-        opener = with_ssl if spack.config.get("config:verify_ssl", True) else without_ssl
-        timeout = timeout or spack.config.get("config:connect_timeout", 10)
+        opener = with_ssl if spack.config.CONFIG.get("config:verify_ssl", True) else without_ssl
+        timeout = timeout or spack.config.CONFIG.get("config:connect_timeout", 10)
         return opener.open(fullurl, data, timeout)
 
     return dispatch_open
@@ -164,7 +308,7 @@ class LinkParser(HTMLParser):
 
         # GitLab uses a javascript function to place dropdown links:
         #  <div class="js-source-code-dropdown" ...
-        #   data-download-links="[{"path":"/graphviz/graphviz/-/archive/12.0.0/graphviz-12.0.0.zip",...},...]"/>
+        #   data-download-links="[{"path":"/graphviz/graphviz/-/archive/12.0.0/graphviz-12.0.0.zip",...},...]"/>  # noqa: E501
         if tag == "div" and ("class", "js-source-code-dropdown") in attrs:
             try:
                 links_str = next(val for key, val in attrs if key == "data-download-links")
@@ -228,8 +372,52 @@ def read_from_url(url, accept_content_type=None):
     return response.url, response.headers, response
 
 
-def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
+def _read_text(url: str) -> str:
+    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    with urlopen(request) as response:
+        return io.TextIOWrapper(response, encoding="utf-8").read()
+
+
+def _read_json(url: str):
+    request = Request(url, headers={"User-Agent": SPACK_USER_AGENT})
+    with urlopen(request) as response:
+        return json.load(response)
+
+
+_read_text_with_retry = retry_on_transient_error(_read_text)
+_read_json_with_retry = retry_on_transient_error(_read_json)
+
+
+def read_text(url: str) -> str:
+    """Fetch url and return the response body decoded as UTF-8 text."""
+    try:
+        return _read_text_with_retry(url)
+    except OSError as e:
+        raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
+
+
+def read_json(url: str):
+    """Fetch url and return the response body parsed as JSON."""
+    try:
+        return _read_json_with_retry(url)
+    except OSError as e:
+        raise SpackWebError(f"Download of {url} failed: {e.__class__.__name__}: {e}")
+
+
+def push_to_url(
+    local_file_path,
+    remote_path,
+    keep_original=True,
+    content_type: Optional[str] = None,
+    if_match: Optional[str] = None,
+):
     remote_url = urllib.parse.urlparse(remote_path)
+    if if_match and remote_url.scheme != "s3":
+        warnings.warn(
+            "Pushing to URL with `if_match` is only supported for s3:// URLS\n"
+            "Files may be overwritten unexpectedly."
+        )
+
     if remote_url.scheme == "file":
         remote_file_path = url_util.local_file_path(remote_url)
         mkdirp(os.path.dirname(remote_file_path))
@@ -237,7 +425,7 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
             shutil.copy(local_file_path, remote_file_path)
         else:
             try:
-                rename(local_file_path, remote_file_path)
+                shutil.move(local_file_path, remote_file_path)
             except OSError as e:
                 if e.errno == errno.EXDEV:
                     # NOTE(opadron): The above move failed because it crosses
@@ -250,15 +438,14 @@ def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=Non
                     raise
 
     elif remote_url.scheme == "s3":
-        if extra_args is None:
-            extra_args = {}
+        extra_args = {}
+        if if_match is not None:
+            # API ref https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+            extra_args.update({"IfMatch": if_match})
+        if content_type is not None:
+            extra_args.update({"ContentType": content_type})
 
-        remote_path = remote_url.path
-        while remote_path.startswith("/"):
-            remote_path = remote_path[1:]
-
-        s3 = get_s3_session(remote_url, method="push")
-        s3.upload_file(local_file_path, remote_url.netloc, remote_path, ExtraArgs=extra_args)
+        s3_util.push_object(remote_path, local_file_path, extra_args)
 
         if not keep_original:
             os.remove(local_file_path)
@@ -283,8 +470,8 @@ def base_curl_fetch_args(url, timeout=0):
     It also uses the following configuration option to set an additional
     argument as needed:
 
-        * config:connect_timeout (int): connection timeout
-        * config:verify_ssl (str): Perform SSL verification
+    * config:connect_timeout (int): connection timeout
+    * config:verify_ssl (str): Perform SSL verification
 
     Arguments:
         url (str): URL whose contents will be fetched
@@ -300,7 +487,7 @@ def base_curl_fetch_args(url, timeout=0):
         "-L",  # resolve 3xx redirects
         url,
     ]
-    if not spack.config.get("config:verify_ssl"):
+    if not spack.config.CONFIG.get("config:verify_ssl"):
         curl_args.append("-k")
 
     if sys.stdout.isatty() and tty.msg_enabled():
@@ -308,7 +495,7 @@ def base_curl_fetch_args(url, timeout=0):
     else:
         curl_args.append("-sS")  # show errors if fail
 
-    connect_timeout = spack.config.get("config:connect_timeout", 10)
+    connect_timeout = spack.config.CONFIG.get("config:connect_timeout", 10)
     if timeout:
         connect_timeout = max(int(connect_timeout), int(timeout))
     if connect_timeout > 0:
@@ -358,13 +545,13 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
     """Retrieves text-only URL content using the configured fetch method.
     It determines the fetch method from:
 
-        * config:url_fetch_method (str): fetch method to use (e.g., 'curl')
+    * config:url_fetch_method (str): fetch method to use (e.g., 'curl')
 
-    If the method is `curl`, it also uses the following configuration
+    If the method is ``curl``, it also uses the following configuration
     options:
 
-        * config:connect_timeout (int): connection time out
-        * config:verify_ssl (str): Perform SSL verification
+    * config:connect_timeout (int): connection time out
+    * config:verify_ssl (str): Perform SSL verification
 
     Arguments:
         url (str): URL whose contents are to be fetched
@@ -385,9 +572,9 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
     filename = os.path.basename(url)
     path = os.path.join(dest_dir, filename)
 
-    fetch_method = spack.config.get("config:url_fetch_method")
+    fetch_method = spack.config.CONFIG.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
-    if fetch_method.startswith("curl"):
+    if fetch_method and fetch_method.startswith("curl"):
         curl_exe = curl or require_curl()
         curl_args = fetch_method.split()[1:] + ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
@@ -401,9 +588,7 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     else:
         try:
-            _, _, response = read_from_url(url)
-
-            output = codecs.getreader("utf-8")(response).read()
+            output = read_text(url)
             if output:
                 with working_dir(dest_dir, create=True):
                     with open(filename, "w", encoding="utf-8") as f:
@@ -417,12 +602,23 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
     return None
 
 
+def _url_exists_urllib_impl(url):
+    with urlopen(
+        Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
+        timeout=spack.config.CONFIG.get("config:connect_timeout", 10),
+    ) as _:
+        pass
+
+
+_url_exists_urllib = retry_on_transient_error(_url_exists_urllib_impl)
+
+
 def url_exists(url, curl=None):
     """Determines whether url exists.
 
-    A scheme-specific process is used for Google Storage (`gs`) and Amazon
-    Simple Storage Service (`s3`) URLs; otherwise, the configured fetch
-    method defined by `config:url_fetch_method` is used.
+    A scheme-specific process is used for Google Storage (``gs``) and Amazon
+    Simple Storage Service (``s3``) URLs; otherwise, the configured fetch
+    method defined by ``config:url_fetch_method`` is used.
 
     Arguments:
         url (str): URL whose existence is being checked
@@ -435,7 +631,7 @@ def url_exists(url, curl=None):
     url_result = urllib.parse.urlparse(url)
 
     # Use curl if configured to do so
-    fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+    fetch_method = spack.config.CONFIG.get("config:url_fetch_method", "urllib")
     use_curl = fetch_method.startswith("curl") and url_result.scheme not in ("gs", "s3")
     if use_curl:
         curl_exe = curl or require_curl()
@@ -443,30 +639,18 @@ def url_exists(url, curl=None):
         # Telling curl to fetch the first byte (-r 0-0) is supposed to be
         # portable.
         curl_args = fetch_method.split()[1:] + ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
-        if not spack.config.get("config:verify_ssl"):
+        if not spack.config.CONFIG.get("config:verify_ssl"):
             curl_args.append("-k")
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
         return curl_exe.returncode == 0
 
     # Otherwise use urllib.
     try:
-        urlopen(
-            Request(url, method="HEAD", headers={"User-Agent": SPACK_USER_AGENT}),
-            timeout=spack.config.get("config:connect_timeout", 10),
-        )
+        _url_exists_urllib(url)
         return True
-    except OSError as e:
+    except Exception as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
-
-
-def _debug_print_delete_results(result):
-    if "Deleted" in result:
-        for d in result["Deleted"]:
-            tty.debug("Deleted {0}".format(d["Key"]))
-    if "Errors" in result:
-        for e in result["Errors"]:
-            tty.debug("Failed to delete {0} ({1})".format(e["Key"], e["Message"]))
 
 
 def remove_url(url, recursive=False):
@@ -481,36 +665,7 @@ def remove_url(url, recursive=False):
         return
 
     if url.scheme == "s3":
-        # Try to find a mirror for potential connection information
-        s3 = get_s3_session(url, method="push")
-        bucket = url.netloc
-        if recursive:
-            # Because list_objects_v2 can only return up to 1000 items
-            # at a time, we have to paginate to make sure we get it all
-            prefix = url.path.strip("/")
-            paginator = s3.get_paginator("list_objects_v2")
-            pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
-
-            delete_request = {"Objects": []}
-            for item in pages.search("Contents"):
-                if not item:
-                    continue
-
-                delete_request["Objects"].append({"Key": item["Key"]})
-
-                # Make sure we do not try to hit S3 with a list of more
-                # than 1000 items
-                if len(delete_request["Objects"]) >= 1000:
-                    r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
-                    _debug_print_delete_results(r)
-                    delete_request = {"Objects": []}
-
-            # Delete any items that remain
-            if len(delete_request["Objects"]):
-                r = s3.delete_objects(Bucket=bucket, Delete=delete_request)
-                _debug_print_delete_results(r)
-        else:
-            s3.delete_object(Bucket=bucket, Key=url.path.lstrip("/"))
+        s3_util.delete_objects(url, recursive)
         return
 
     elif url.scheme == "gs":
@@ -523,53 +678,6 @@ def remove_url(url, recursive=False):
         return
 
     # Don't even try for other URL schemes.
-
-
-def _iter_s3_contents(contents, prefix):
-    for entry in contents:
-        key = entry["Key"]
-
-        if not key.startswith("/"):
-            key = "/" + key
-
-        key = os.path.relpath(key, prefix)
-
-        if key == ".":
-            continue
-
-        yield key
-
-
-def _list_s3_objects(client, bucket, prefix, num_entries, start_after=None):
-    list_args = dict(Bucket=bucket, Prefix=prefix[1:], MaxKeys=num_entries)
-
-    if start_after is not None:
-        list_args["StartAfter"] = start_after
-
-    result = client.list_objects_v2(**list_args)
-
-    last_key = None
-    if result["IsTruncated"]:
-        last_key = result["Contents"][-1]["Key"]
-
-    iter = _iter_s3_contents(result["Contents"], prefix)
-
-    return iter, last_key
-
-
-def _iter_s3_prefix(client, url, num_entries=1024):
-    key = None
-    bucket = url.netloc
-    prefix = re.sub(r"^/*", "/", url.path)
-
-    while True:
-        contents, key = _list_s3_objects(client, bucket, prefix, num_entries, start_after=key)
-
-        for x in contents:
-            yield x
-
-        if not key:
-            break
 
 
 def _iter_local_prefix(path):
@@ -593,19 +701,40 @@ def list_url(url, recursive=False):
         ]
 
     if url.scheme == "s3":
-        s3 = get_s3_session(url, method="fetch")
-        if recursive:
-            return list(_iter_s3_prefix(s3, url))
-
-        return list(set(key.split("/", 1)[0] for key in _iter_s3_prefix(s3, url)))
+        return s3_util.list_objects(url, recursive)
 
     elif url.scheme == "gs":
         gcs = GCSBucket(url)
         return gcs.get_all_blobs(recursive=recursive)
 
 
+def stat_url(url: str) -> Optional[Tuple[int, float]]:
+    """Get stat result for a URL.
+
+    Args:
+        url: URL to get stat result for
+    Returns:
+        A tuple of (size, mtime) if the URL exists, None otherwise.
+    """
+    parsed_url = urllib.parse.urlparse(url)
+
+    if parsed_url.scheme == "file":
+        local_file_path = url_util.local_file_path(parsed_url)
+        assert isinstance(local_file_path, str)
+        try:
+            url_stat = Path(local_file_path).stat()
+        except FileNotFoundError:
+            return None
+        return url_stat.st_size, url_stat.st_mtime
+
+    elif parsed_url.scheme == "s3":
+        return s3_util.stat_object(url)
+    else:
+        raise NotImplementedError(f"Unrecognized URL scheme: {parsed_url.scheme}")
+
+
 def spider(
-    root_urls: Union[str, Iterable[str]], depth: int = 0, concurrency: Optional[int] = None
+    root_urls: Union[str, Iterable[str]], depth: int = 0, *, executor: concurrent.futures.Executor
 ):
     """Get web pages from root URLs.
 
@@ -615,7 +744,7 @@ def spider(
     Args:
         root_urls: root urls used as a starting point for spidering
         depth: level of recursion into links
-        concurrency: number of simultaneous requests that can be sent
+        executor: executor the requests are submitted to
 
     Returns:
         A dict of pages visited (URL) mapped to their full text and the set of visited links.
@@ -632,23 +761,20 @@ def spider(
         root = urllib.parse.urlparse(root_str)
         spider_args.append((root, go_deeper, _visited))
 
-    with spack.util.parallel.make_concurrent_executor(concurrency, require_fork=False) as tp:
-        while current_depth <= depth:
-            tty.debug(
-                f"SPIDER: [depth={current_depth}, max_depth={depth}, urls={len(spider_args)}]"
-            )
-            results = [tp.submit(_spider, *one_search_args) for one_search_args in spider_args]
-            spider_args = []
-            go_deeper = current_depth < depth
-            for future in results:
-                sub_pages, sub_links, sub_spider_args, sub_visited = future.result()
-                _visited.update(sub_visited)
-                sub_spider_args = [(x, go_deeper, _visited) for x in sub_spider_args]
-                pages.update(sub_pages)
-                links.update(sub_links)
-                spider_args.extend(sub_spider_args)
+    while current_depth <= depth:
+        tty.debug(f"SPIDER: [depth={current_depth}, max_depth={depth}, urls={len(spider_args)}]")
+        results = [executor.submit(_spider, *one_search_args) for one_search_args in spider_args]
+        spider_args = []
+        go_deeper = current_depth < depth
+        for future in results:
+            sub_pages, sub_links, sub_spider_args, sub_visited = future.result()
+            _visited.update(sub_visited)
+            sub_spider_args = [(x, go_deeper, _visited) for x in sub_spider_args]
+            pages.update(sub_pages)
+            links.update(sub_links)
+            spider_args.extend(sub_spider_args)
 
-            current_depth += 1
+        current_depth += 1
 
     return pages, links
 
@@ -681,7 +807,8 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
         if not response_url or not response:
             return pages, links, subcalls, _visited
 
-        page = codecs.getreader("utf-8")(response).read()
+        with response:
+            page = io.TextIOWrapper(response, encoding="utf-8").read()
         pages[response_url] = page
 
         # Parse out the include-fragments in the page
@@ -708,7 +835,8 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             if not fragment_response_url or not fragment_response:
                 continue
 
-            fragment = codecs.getreader("utf-8")(fragment_response).read()
+            with fragment_response:
+                fragment = io.TextIOWrapper(fragment_response, encoding="utf-8").read()
             fragments.add(fragment)
 
             pages[fragment_response_url] = fragment
@@ -725,7 +853,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
             links.add(abs_link)
 
             # Skip stuff that looks like an archive
-            if any(raw_link.endswith(s) for s in spack.llnl.url.ALLOWED_ARCHIVE_TYPES):
+            if any(raw_link.endswith(s) for s in spack.util.url.ALLOWED_ARCHIVE_TYPES):
                 continue
 
             # Skip already-visited links

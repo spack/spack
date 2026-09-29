@@ -25,12 +25,12 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       packages: ${{ steps.filter.outputs.packages }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         if: ${{ github.event_name == 'push' || github.event_name == 'merge_group' }}
         with:
           fetch-depth: 0
             # For pull requests it's not necessary to checkout the code
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d  # v4.0.1
         id: filter
         with:
           # For merge group events, compare against the target branch (main)
@@ -88,12 +88,10 @@ jobs:
     steps:
     - name: Success
       run: |
-        if [ "${{ needs.prechecks.result }}" == "failure" ] || [ "${{ needs.prechecks.result }}" == "canceled" ]; then
-          echo "Unit tests failed."
-          exit 1
-        else
-          exit 0
-        fi
+        [ "${{ needs.prechecks.result }}" = "success" ] && exit 0
+        [ "${{ needs.prechecks.result }}" = "skipped" ] && exit 0
+        echo "Unit tests failed."
+        exit 1
 
   coverage:
     needs: [ unit-tests, prechecks ]
@@ -109,12 +107,14 @@ jobs:
     steps:
     - name: Status summary
       run: |
-        if [ "${{ needs.unit-tests.result }}" == "failure" ] || [ "${{ needs.unit-tests.result }}" == "canceled" ]; then
+        if [ "${{ needs.unit-tests.result }}" = "success" ] || [ "${{ needs.unit-tests.result }}" = "skipped" ]; then
+          if [ "${{ needs.bootstrap.result }}" = "success" ] || [ "${{ needs.bootstrap.result }}" = "skipped" ]; then
+            exit 0
+          else
+            echo "Bootstrap tests failed."
+            exit 1
+          fi
+        else
           echo "Unit tests failed."
           exit 1
-        elif [ "${{ needs.bootstrap.result }}" == "failure" ] || [ "${{ needs.bootstrap.result }}" == "canceled" ]; then
-          echo "Bootstrap tests failed."
-          exit 1
-        else
-          exit 0
         fi

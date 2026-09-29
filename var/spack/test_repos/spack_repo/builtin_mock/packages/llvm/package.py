@@ -33,6 +33,7 @@ class Llvm(Package, CompilerPackage):
 
     provides("c", "cxx", when="+clang")
     provides("fortran", when="+flang")
+    provides("libllvm")
 
     depends_on("c")
 

@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/url_buildcache_manifest.py
    :lines: 11-
 """
+
 from typing import Any, Dict
 
 properties: Dict[str, Any] = {

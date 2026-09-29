@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import codecs
 import enum
 import fnmatch
 import gzip
@@ -11,39 +10,42 @@ import json
 import os
 import re
 import shutil
+import urllib.parse
 from contextlib import closing, contextmanager
+from datetime import datetime
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.jsonschema
 
-import spack.config as config
+import spack.config
 import spack.database
 import spack.error
-import spack.hash_types as ht
-import spack.llnl.util.filesystem as fsys
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
+import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack import config
+from spack.mirrors.mirror import BINARY_MEDIA_TYPE_VERSION
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
+from spack.util import tty
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
-from spack.util.executable import which
+from spack.util.executable import ProcessError, which
 
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
 CURRENT_BUILD_CACHE_LAYOUT_VERSION = 3
 
-#: The layout version spack can current install
-SUPPORTED_LAYOUT_VERSIONS = (3, 2)
-
 #: The name of the default buildcache index manifest file
 INDEX_MANIFEST_FILE = "index.manifest.json"
+
+#: Simple regex for matching spec hashes
+SPEC_HASH_RE = re.compile(r"^[a-z0-9]{32}$")
 
 
 class BuildcacheComponent(enum.Enum):
@@ -54,6 +56,8 @@ class BuildcacheComponent(enum.Enum):
     they're used to map buildcache objects to their respective media types.
     """
 
+    # manifest files
+    MANIFEST = enum.auto()
     # metadata file for a binary package
     SPEC = enum.auto()
     # things that live in the blobs directory
@@ -139,18 +143,12 @@ class BuildcacheManifest:
             data=[BlobRecord.from_dict(blob_json) for blob_json in manifest_json["data"]],
         )
 
-    def get_blob_records(self, media_type: str) -> List[BlobRecord]:
-        """Return any blob records from the manifest matching the given media type"""
-        matches: List[BlobRecord] = []
-
-        for record in self.data:
-            if record.media_type == media_type:
-                matches.append(record)
-
-        if matches:
-            return matches
-
-        raise NoSuchBlobException(f"Manifest has no blobs of type {media_type}")
+    def get_blob_records(self, media_types: List[str]) -> List[BlobRecord]:
+        """Return the blob records from the manifest of the given media types, in their order"""
+        matches = [r for t in media_types for r in self.data if r.media_type == t]
+        if not matches:
+            raise NoSuchBlobException(f"Manifest has no blobs of type {', '.join(media_types)}")
+        return matches
 
 
 class URLBuildcacheEntry:
@@ -158,7 +156,7 @@ class URLBuildcacheEntry:
 
     This class manages access to a versioned buildcache entry by providing
     a means to download both the metadata (spec file) and compressed archive.
-    It also provides methods for accessing the paths/urls associcated with
+    It also provides methods for accessing the paths/urls associated with
     buildcache entries.
 
     Starting with buildcache layout version 3, it is not possible to know
@@ -170,7 +168,7 @@ class URLBuildcacheEntry:
     To help with downloading, this class manages two spack.spec.Stage objects
     internally, which must be destroyed when finished.  Specifically, if you
     call either of the following methods on an instance, you must eventually also
-    call destroy():
+    call destroy()::
 
         fetch_metadata()
         fetch_archive()
@@ -185,13 +183,26 @@ class URLBuildcacheEntry:
 
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/manifests/.+")
     LAYOUT_VERSION = 3
-    BUILDCACHE_INDEX_MEDIATYPE = f"application/vnd.spack.db.v{spack.database._DB_VERSION}+json"
-    SPEC_MEDIATYPE = f"application/vnd.spack.spec.v{spack.spec.SPECFILE_FORMAT_VERSION}+json"
-    TARBALL_MEDIATYPE = "application/vnd.spack.install.v2.tar+gzip"
-    PUBLIC_KEY_MEDIATYPE = "application/pgp-keys"
-    PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
+    #: Media types of each component that are read, newest first. The first is the one written.
+    MEDIA_TYPES = {
+        BuildcacheComponent.INDEX: [
+            f"application/vnd.spack.db.v{i}+json"
+            for i in reversed(range(8, spack.database._DB_VERSION[0] + 1))
+        ],
+        BuildcacheComponent.SPEC: [
+            f"application/vnd.spack.spec.v{i}+json"
+            for i in reversed(range(5, spack.spec.SPECFILE_FORMAT_VERSION + 1))
+        ],
+        BuildcacheComponent.KEY: ["application/pgp-keys"],
+        BuildcacheComponent.KEY_INDEX: ["application/vnd.spack.keyindex.v1+json"],
+        BuildcacheComponent.TARBALL: [
+            f"application/vnd.spack.install.v{i}.tar+gzip"
+            for i in reversed(range(2, BINARY_MEDIA_TYPE_VERSION + 1))
+        ],
+    }
     BUILDCACHE_INDEX_FILE = "index.manifest.json"
     COMPONENT_PATHS = {
+        BuildcacheComponent.MANIFEST: [f"v{LAYOUT_VERSION}", "manifests"],
         BuildcacheComponent.BLOB: ["blobs"],
         BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "manifests", "index"],
         BuildcacheComponent.KEY: [f"v{LAYOUT_VERSION}", "manifests", "key"],
@@ -234,7 +245,7 @@ class URLBuildcacheEntry:
 
         layout_contents = {"signing": "gpg"}
 
-        with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             local_layout_path = os.path.join(tmpdir, "layout.json")
             with open(local_layout_path, "w", encoding="utf-8") as fd:
                 json.dump(layout_contents, fd)
@@ -245,7 +256,7 @@ class URLBuildcacheEntry:
 
     @classmethod
     def get_base_url(cls, manifest_url: str) -> str:
-        """Given any manifest url (i.e. one containing 'v3/manifests/') return the
+        """Given any manifest url (i.e. one containing ``v3/manifests/``) return the
         base part of the url"""
         rematch = cls.SPEC_URL_REGEX.match(manifest_url)
         if not rematch:
@@ -253,11 +264,11 @@ class URLBuildcacheEntry:
         return rematch.group(1)
 
     @classmethod
-    def get_index_url(cls, mirror_url: str):
+    def get_index_url(cls, mirror_url: str, view: Optional[str] = None):
         return url_util.join(
             mirror_url,
             *cls.get_relative_path_components(BuildcacheComponent.INDEX),
-            cls.BUILDCACHE_INDEX_FILE,
+            url_util.join(view or "", cls.BUILDCACHE_INDEX_FILE),
         )
 
     @classmethod
@@ -274,6 +285,21 @@ class URLBuildcacheEntry:
         return f"{spec_formatted}.spec.manifest.json"
 
     @classmethod
+    def hash_from_manifest_name(cls, file) -> str:
+        """Extract the hash from a manifest file name"""
+        # Strip any leading prefix path and file suffix
+        manifest_name = file.split("/")[-1].replace(".spec.manifest.json", "")
+        parts = manifest_name.split("-")
+        if len(parts) < 3:
+            raise ValueError("Expected file with format <package-*>-<version>-<spec_hash>")
+        spec_hash = parts[-1]
+        if not SPEC_HASH_RE.match(spec_hash):
+            raise ValueError(
+                f"Expected spec hash with pattern {SPEC_HASH_RE.pattern} found {spec_hash}"
+            )
+        return spec_hash
+
+    @classmethod
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
         """Given a concrete spec and a base url, return the full url where the
         spec manifest should be found"""
@@ -284,12 +310,12 @@ class URLBuildcacheEntry:
 
     @classmethod
     def get_buildcache_component_include_pattern(
-        cls, buildcache_component: Optional[BuildcacheComponent] = None
+        cls, buildcache_component: BuildcacheComponent
     ) -> str:
         """Given a buildcache component, return the glob pattern that can be used
         to match it in a directory listing.  If None is provided, return a catch-all
         pattern that will match all buildcache components."""
-        if buildcache_component is None:
+        if buildcache_component is BuildcacheComponent.MANIFEST:
             return "*.manifest.json"
         elif buildcache_component == BuildcacheComponent.SPEC:
             return "*.spec.manifest.json"
@@ -303,20 +329,22 @@ class URLBuildcacheEntry:
         raise BuildcacheEntryError(f"Not a manifest component: {buildcache_component}")
 
     @classmethod
-    def component_to_media_type(cls, component: BuildcacheComponent) -> str:
-        """Mapping from buildcache component to media type"""
-        if component == BuildcacheComponent.SPEC:
-            return cls.SPEC_MEDIATYPE
-        elif component == BuildcacheComponent.TARBALL:
-            return cls.TARBALL_MEDIATYPE
-        elif component == BuildcacheComponent.INDEX:
-            return cls.BUILDCACHE_INDEX_MEDIATYPE
-        elif component == BuildcacheComponent.KEY:
-            return cls.PUBLIC_KEY_MEDIATYPE
-        elif component == BuildcacheComponent.KEY_INDEX:
-            return cls.PUBLIC_KEY_INDEX_MEDIATYPE
+    def component_to_media_types(cls, component: BuildcacheComponent) -> List[str]:
+        """Media types of a buildcache component that are read, newest first"""
+        if component in cls.MEDIA_TYPES:
+            return cls.MEDIA_TYPES[component]
 
         raise BuildcacheEntryError(f"Not a blob component: {component}")
+
+    @classmethod
+    def current_component_to_media_type(cls, component: BuildcacheComponent) -> str:
+        """Media type of a buildcache component that is written"""
+        return cls.component_to_media_types(component)[0]
+
+    @classmethod
+    def oldest_component_to_media_type(cls, component: BuildcacheComponent) -> str:
+        """Oldest media type of a buildcache component that is read"""
+        return cls.component_to_media_types(component)[-1]
 
     def get_local_spec_path(self) -> str:
         """Convenience method to return the local path of a fetched spec file"""
@@ -332,7 +360,7 @@ class URLBuildcacheEntry:
         if not self.manifest:
             raise BuildcacheEntryError("Read manifest before accessing blob records")
 
-        records = self.manifest.get_blob_records(self.component_to_media_type(blob_type))
+        records = self.manifest.get_blob_records(self.component_to_media_types(blob_type))
 
         if len(records) == 0:
             raise BuildcacheEntryError(f"Manifest has no blob record of type {blob_type}")
@@ -367,7 +395,7 @@ class URLBuildcacheEntry:
         """
         if record not in self.stages:
             blob_url = self.get_blob_url(self.mirror_url, record)
-            blob_stage = spack.stage.Stage(blob_url)
+            blob_stage = spack.stage.stage_from_config(blob_url, config=spack.config.CONFIG)
 
             # Fetch the blob, or else cleanup and exit early
             try:
@@ -407,7 +435,7 @@ class URLBuildcacheEntry:
 
         for component in components:
             component_blobs = self.manifest.get_blob_records(
-                self.component_to_media_type(component)
+                self.component_to_media_types(component)
             )
 
             if len(component_blobs) == 0:
@@ -421,22 +449,20 @@ class URLBuildcacheEntry:
     @classmethod
     def verify_and_extract_manifest(cls, manifest_contents: str, verify: bool = False) -> dict:
         """Possibly verify clearsig, then extract contents and return as json"""
-        magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
-        if manifest_contents.startswith(magic_string):
+        if spack.util.gpg.is_clearsig(manifest_contents):
             if verify:
-                # Rry to verify and raise if we fail
-                with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+                # Try to verify and raise if we fail
+                with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
                     manifest_path = os.path.join(tmpdir, "manifest.json.sig")
                     with open(manifest_path, "w", encoding="utf-8") as fd:
                         fd.write(manifest_contents)
                     if not try_verify(manifest_path):
                         raise NoVerifyException("Signature could not be verified")
 
-            return spack.spec.Spec.extract_json_from_clearsig(manifest_contents)
-        else:
-            if verify:
-                raise NoVerifyException("Required signature was not found on manifest")
-            return json.loads(manifest_contents)
+            return spack.util.gpg.extract_json_from_clearsig(manifest_contents)
+        elif verify:
+            raise NoVerifyException("Required signature was not found on manifest")
+        return json.loads(manifest_contents)
 
     def read_manifest(self, manifest_url: Optional[str] = None) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest.
@@ -447,7 +473,7 @@ class URLBuildcacheEntry:
         if self.manifest:
             if not manifest_url or manifest_url == self.remote_manifest_url:
                 # We already have a manifest, so now calling this method without a specific
-                # manifiest url, or with the same one we have internally, then skip reading
+                # manifest url, or with the same one we have internally, then skip reading
                 # again, and just return the manifest we already read.
                 return self.manifest
 
@@ -464,8 +490,7 @@ class URLBuildcacheEntry:
         manifest_contents = ""
 
         try:
-            _, _, manifest_file = web_util.read_from_url(manifest_url)
-            manifest_contents = codecs.getreader("utf-8")(manifest_file).read()
+            manifest_contents = web_util.read_text(manifest_url)
         except (web_util.SpackWebError, OSError) as e:
             raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
 
@@ -566,6 +591,7 @@ class URLBuildcacheEntry:
         # write the manifest to a temporary location
         manifest_file_name = f"{manifest_name}.manifest.json"
         manifest_path = os.path.join(tmpdir, manifest_file_name)
+        os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest.to_dict(), f, indent=0, separators=(",", ":"))
             # Note: when using gpg clear sign, we need to avoid long lines (19995
@@ -583,23 +609,17 @@ class URLBuildcacheEntry:
         web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
 
     @classmethod
-    def push_local_file_as_blob(
+    def push_blob_from_file(
         cls,
         local_file_path: str,
         mirror_url: str,
-        manifest_name: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
-    ) -> None:
-        """Convenience method to push a local file to a mirror as a blob.  Both manifest
-        and blob are pushed as a component of the given component_type.  If compression
-        is 'gzip' the blob will be compressed before pushing, otherwise it will be pushed
-        uncompressed."""
-        cache_class = get_url_buildcache_class()
+    ) -> BlobRecord:
+        """Push a local file as a blob of the given component type and return its record"""
         checksum_algo = "sha256"
-        blob_to_push = local_file_path
 
-        with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
 
             with compression_writer(blob_to_push, compression, checksum_algo) as (
@@ -610,15 +630,30 @@ class URLBuildcacheEntry:
 
             record = BlobRecord(
                 checker.length,
-                cache_class.component_to_media_type(component_type),
+                cls.current_component_to_media_type(component_type),
                 compression,
                 checksum_algo,
                 checker.hexdigest(),
             )
-            manifest = BuildcacheManifest(
-                layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
-            )
             cls.push_blob(mirror_url, blob_to_push, record)
+
+        return record
+
+    @classmethod
+    def push_local_file_as_blob(
+        cls,
+        local_file_path: str,
+        mirror_url: str,
+        manifest_name: str,
+        component_type: BuildcacheComponent,
+        compression: str = "none",
+    ) -> None:
+        """Push a local file as a blob and a manifest with just that blob"""
+        record = cls.push_blob_from_file(local_file_path, mirror_url, component_type, compression)
+        manifest = BuildcacheManifest(
+            layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
+        )
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             cls.push_manifest(
                 mirror_url, manifest_name, manifest, tmpdir, component_type=component_type
             )
@@ -639,7 +674,7 @@ class URLBuildcacheEntry:
         found.  Thus, any pre-existing files are first removed.
         """
 
-        spec_dict = spec.to_dict(hash=ht.dag_hash)
+        spec_dict = spec.to_dict()
         # TODO: Remove this key once oci buildcache no longer uses it
         spec_dict["buildcache_layout_version"] = 2
         tarball_content_length = os.stat(tarball_path).st_size
@@ -668,7 +703,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 tarball_content_length,
-                self.TARBALL_MEDIATYPE,
+                self.current_component_to_media_type(BuildcacheComponent.TARBALL),
                 compression,
                 checksum_algorithm,
                 tarball_checksum,
@@ -696,7 +731,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 metadata_size,
-                self.SPEC_MEDIATYPE,
+                self.current_component_to_media_type(BuildcacheComponent.SPEC),
                 compression,
                 checksum_algorithm,
                 metadata_checksum,
@@ -747,6 +782,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
     LAYOUT_VERSION = 2
     BUILDCACHE_INDEX_FILE = "index.json"
     COMPONENT_PATHS = {
+        BuildcacheComponent.MANIFEST: ["build_cache"],
         BuildcacheComponent.BLOB: ["build_cache"],
         BuildcacheComponent.INDEX: ["build_cache"],
         BuildcacheComponent.KEY: ["build_cache", "_pgp"],
@@ -872,7 +908,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
                 f"Mirror {self.mirror_url} does not have signed metadata for spec"
             )
 
-        self.spec_stage = spack.stage.Stage(self.remote_spec_url)
+        self.spec_stage = spack.stage.stage_from_config(
+            self.remote_spec_url, config=spack.config.CONFIG
+        )
 
         # Fetch the spec file, or else cleanup and exit early
         try:
@@ -931,7 +969,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             self.spec_stage.destroy()
             self.spec_stage = None
 
-        self.archive_stage = spack.stage.Stage(self.remote_archive_url)
+        self.archive_stage = spack.stage.stage_from_config(
+            self.remote_archive_url, config=spack.config.CONFIG
+        )
 
         # Fetch the archive file, or else cleanup and exit early
         try:
@@ -967,7 +1007,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
     @classmethod
     def get_buildcache_component_include_pattern(
-        cls, buildcache_component: Optional[BuildcacheComponent] = None
+        cls, buildcache_component: BuildcacheComponent
     ) -> str:
         raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
 
@@ -1076,80 +1116,83 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
         tty.warn(msg)
 
 
-def _entries_from_cache_aws_cli(
-    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
-):
-    """Use aws cli to sync all manifests into a local temporary directory.
+def _entries_from_cache_aws_cli(url: str, component_type: BuildcacheComponent):
+    """Use aws cli to list manifests for a component type.
 
     Args:
         url: prefix of the build cache on s3
-        tmpspecsdir: path to temporary directory to use for writing files
         component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
         A tuple where the first item is a list of local file paths pointing
         to the manifests that should be read from the mirror, and the
         second item is a function taking a url or file path and returning
-        a `URLBuildcacheEntry` for that manifest.
+        a :class:`URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
     file_list = None
     aws = which("aws")
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-
     if not aws:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
+        tty.warn("Failed to use aws CLI to retrieve specs, falling back to parallel fetch")
         return file_list, read_fn
 
     def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
         cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
-        cache_entry.read_manifest(manifest_url=f"file://{manifest_path}")
+        cache_entry.read_manifest(manifest_url=manifest_path)
         return cache_entry
 
-    include_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
+    # Use aws s3 ls to get mtimes of manifests
+    include_pattern = re.compile(
+        fnmatch.translate(cache_class.get_buildcache_component_include_pattern(component_type))
+    )
+    component_prefix = cache_class.get_relative_path_components(component_type)
+    ls_command_args = ["s3", "ls", "--recursive", url_util.join(url, *component_prefix)]
+    # 2022-08-15 17:54:40    3717621 aws/s3/prefix/to/the/object.json.txt.tar.gz
+    s3_ls_regex = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\d+\s+(.+)$")
 
-    sync_command_args = [
-        "s3",
-        "sync",
-        "--exclude",
-        "*",
-        "--include",
-        include_pattern,
-        url,
-        tmpspecsdir,
-    ]
-
-    tty.debug(f"Using aws s3 sync to download manifests from {url} to {tmpspecsdir}")
+    filename_to_mtime: Dict[str, float] = {}
 
     try:
-        aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        file_list = fsys.find(tmpspecsdir, [include_pattern])
+        parsed_url = urllib.parse.urlparse(url)
         read_fn = file_read_method
-    except Exception:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
 
-    return file_list, read_fn
+        # Use `aws s3 ls` to get mtimes of manifests as it is tends to be faster than
+        # list_objects_v2
+        for line in aws(*ls_command_args, output=str, error=os.devnull).splitlines():
+            match = s3_ls_regex.match(line)
+            if match:
+                filename = match.group(2)
+                if not include_pattern.fullmatch(filename):
+                    continue
+
+                filename = urllib.parse.urlunparse(parsed_url._replace(path=filename))
+                filename_to_mtime[filename] = datetime.strptime(
+                    match.group(1), "%Y-%m-%d %H:%M:%S"
+                ).timestamp()
+    except ProcessError as e:
+        msg = "Failed to use aws s3 ls to retrieve spec list, falling back to parallel fetch"
+        raise ListMirrorSpecsError(msg) from e
+
+    return filename_to_mtime, read_fn
 
 
-def _entries_from_cache_fallback(
-    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
-):
+def _entries_from_cache_fallback(url: str, component_type: BuildcacheComponent):
     """Use spack.util.web module to get a list of all the manifests at the remote url.
 
     Args:
         url: Base url of mirror (location of manifest files)
-        tmpspecsdir: path to temporary directory to use for writing files
         component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
         A tuple where the first item is a list of absolute file paths or
         urls pointing to the manifests that should be read from the mirror,
         and the second item is a function taking a url or file path of a manifest and
-        returning a `URLBuildcacheEntry` for that manifest.
+        returning a :class:`URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
-    file_list = None
+    filename_to_mtime = None
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
@@ -1159,37 +1202,36 @@ def _entries_from_cache_fallback(
         return cache_entry
 
     try:
-        file_list = [
-            url_util.join(url, entry)
-            for entry in web_util.list_url(url, recursive=True)
-            if fnmatch.fnmatch(
-                entry, cache_class.get_buildcache_component_include_pattern(component_type)
-            )
-        ]
+        filename_to_mtime = {}
+        component_path_parts = cache_class.get_relative_path_components(component_type)
+        component_prefix: str = url_util.join(url, *component_path_parts)
+        component_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
+        for entry in web_util.list_url(component_prefix, recursive=True):
+            if fnmatch.fnmatch(entry, component_pattern):
+                entry_url = url_util.join(component_prefix, entry)
+                stat_result = web_util.stat_url(entry_url)
+                if stat_result is not None:
+                    filename_to_mtime[entry_url] = stat_result[1]  # mtime is second element
         read_fn = url_read_method
-    except Exception as err:
-        # If we got some kind of S3 (access denied or other connection error), the first non
-        # boto-specific class in the exception is Exception.  Just print a warning and return
-        tty.warn(f"Encountered problem listing packages at {url}: {err}")
+    except OSError as e:
+        # Backend-specific errors (e.g. those from S3 and GCS) get normalized to OSError.
+        raise ListMirrorSpecsError(f"Encountered problem listing packages at {url}: {e}") from e
 
-    return file_list, read_fn
+    return filename_to_mtime, read_fn
 
 
-def get_entries_from_cache(
-    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
-):
+def get_entries_from_cache(url: str, component_type: BuildcacheComponent):
     """Get a list of all the manifests in the mirror and a function to read them.
 
     Args:
         url: Base url of mirror (location of spec files)
-        tmpspecsdir: Temporary location for writing files
         component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
         A tuple where the first item is a list of absolute file paths or
         urls pointing to the manifests that should be read from the mirror,
         and the second item is a function taking a url or file path and
-        returning a `URLBuildcacheEntry` for that manifest.
+        returning a :class:`URLBuildcacheEntry` for that manifest.
     """
     callbacks: List[Callable] = []
     if url.startswith("s3://"):
@@ -1197,12 +1239,18 @@ def get_entries_from_cache(
 
     callbacks.append(_entries_from_cache_fallback)
 
+    last_error = None
     for specs_from_cache_fn in callbacks:
-        file_list, read_fn = specs_from_cache_fn(url, tmpspecsdir, component_type)
-        if file_list:
-            return file_list, read_fn
+        try:
+            file_to_mtime_mapping, read_fn = specs_from_cache_fn(url, component_type)
+            if file_to_mtime_mapping:
+                return file_to_mtime_mapping, read_fn
+        except ListMirrorSpecsError as e:
+            tty.warn(f"{e}")
+            last_error = e
+            continue
 
-    raise ListMirrorSpecsError("Failed to get list of entries from {0}".format(url))
+    raise ListMirrorSpecsError(f"Failed to list specs in url {url}") from last_error
 
 
 def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:
@@ -1228,12 +1276,15 @@ def _get_compressor(compression: str, writable: io.BufferedIOBase) -> io.Buffere
 @contextmanager
 def compression_writer(output_path: str, compression: str, checksum_algo: str):
     """Create and return a writer capable of writing compressed data. Available
-    options for compression are "gzip" or "none", checksum_algo is used to pick
-    the checksum algorithm used by the ChecksumWriter.
+    options for ``compression`` are ``"gzip"`` or ``"none"``, ``checksum_algo`` is used to pick
+    the checksum algorithm used by the :class:`~spack.util.archive.ChecksumWriter`.
 
-    Yields a tuple containing:
-        io.IOBase: writer that can compress (or not) as it writes
-        ChecksumWriter: provides checksum and length of written data
+    Yields:
+        A tuple containing
+
+        * An :class:`io.BufferedIOBase` writer that can compress (or not) as it writes
+        * A :class:`~spack.util.archive.ChecksumWriter` that provides checksum and length of
+          written data
     """
     with open(output_path, "wb") as writer, ChecksumWriter(
         fileobj=writer, algorithm=hash_fun_for_algo(checksum_algo)
@@ -1275,7 +1326,7 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
     try:
         as_string = binary_content.decode("utf-8")
         if path.endswith(".json.sig"):
-            spec_dict = spack.spec.Spec.extract_json_from_clearsig(as_string)
+            spec_dict = spack.util.gpg.extract_json_from_clearsig(as_string)
         else:
             spec_dict = json.loads(as_string)
     except Exception as e:
@@ -1312,7 +1363,7 @@ def try_verify(specfile_path):
     Returns:
         ``True`` if the signature could be verified, ``False`` otherwise.
     """
-    suppress = config.get("config:suppress_gpg_warnings", False)
+    suppress = config.CONFIG.get("config:suppress_gpg_warnings", False)
 
     try:
         spack.util.gpg.verify(specfile_path, suppress_warnings=suppress)
@@ -1322,78 +1373,102 @@ def try_verify(specfile_path):
     return True
 
 
-class MirrorURLAndVersion:
+class MirrorMetadata:
     """Simple class to hold a mirror url and a buildcache layout version
 
-    This class is used by BinaryCacheIndex to produce a key used to keep
+    This class is used by BinaryIndexCache to produce a key used to keep
     track of downloaded/processed buildcache index files from remote mirrors
     in some layout version."""
 
-    url: str
-    version: int
+    __slots__ = ("url", "version", "view")
 
-    def __init__(self, url: str, version: int):
+    def __init__(self, url: str, version: int, view: Optional[str] = None):
         self.url = url
         self.version = version
+        self.view = view
 
     def __str__(self):
-        return f"{self.url}__v{self.version}"
+        return f"{self:_url__v_version?___view}"
 
     def __eq__(self, other):
-        if isinstance(other, MirrorURLAndVersion):
-            return self.url == other.url and self.version == other.version
-        return False
+        if not isinstance(other, MirrorMetadata):
+            return NotImplemented
+        return self.url == other.url and self.version == other.version and self.view == other.view
 
     def __hash__(self):
-        return hash((self.url, self.version))
+        return hash((self.url, self.version, self.view))
+
+    def __format__(self, format_spec):
+        """Format the mirror metadata
+
+        Format Spec:
+            _url:     metadata.url
+            _version: metadata.version
+            _view:    metadata.view
+            ?:        delimiter to wrap conditional printing based on optional view
+
+        Example
+
+            f"{meta_data:_url?^_view?@v_version}"
+
+            Expansion without a view:
+                https://my-mirror.com/prefix@v3
+
+            Expansion with a view:
+                https://my-mirror.com/prefix^my-view@v3
+        """
+        if not format_spec:
+            format_spec = "_url@_version?-_view"
+
+        formatted = []
+        parts = format_spec.split("?")
+        for p in parts:
+            formatted.append(
+                p.replace("_url", self.url)
+                .replace("_version", str(self.version))
+                .replace("_view", str(self.view))
+            )
+        if self.view:
+            return "".join(formatted)
+        else:
+            return "".join(formatted[0::2])
 
     @classmethod
-    def from_string(cls, s: str):
-        parts = s.split("__v")
-        return cls(parts[0], int(parts[1]))
+    def from_string(cls, s: str) -> "MirrorMetadata":
+        m = re.match(r"^(.*)__v([0-9]+)(?:__(.*))?$", s)
+        if not m:
+            raise MirrorMetadataError(f"Malformed string {s}")
 
+        url, version, view = m.groups()
+        return cls(url, int(version), view)
 
-class MirrorForSpec:
-    """Simple holder for a mirror (represented by a url and a layout version) and
-    an associated concrete spec"""
-
-    url_and_version: MirrorURLAndVersion
-    spec: spack.spec.Spec
-
-    def __init__(self, url_and_version: MirrorURLAndVersion, spec: spack.spec.Spec):
-        self.url_and_version = url_and_version
-        self.spec = spec
+    def strip_view(self) -> "MirrorMetadata":
+        return MirrorMetadata(self.url, self.version)
 
 
 class InvalidMetadataFile(spack.error.SpackError):
     """Raised when spack encounters a spec file it cannot understand or process"""
 
-    pass
-
 
 class BuildcacheEntryError(spack.error.SpackError):
     """Raised for problems finding or accessing binary cache entry on mirror"""
-
-    pass
 
 
 class NoSuchBlobException(spack.error.SpackError):
     """Raised when manifest does have some requested type of requested type"""
 
-    pass
-
 
 class NoVerifyException(BuildcacheEntryError):
     """Raised if file fails signature verification"""
-
-    pass
 
 
 class UnknownBuildcacheLayoutError(BuildcacheEntryError):
     """Raised when unrecognized buildcache layout version is encountered"""
 
-    pass
-
 
 class ListMirrorSpecsError(spack.error.SpackError):
     """Raised when unable to retrieve list of specs from the mirror"""
+
+
+class MirrorMetadataError(spack.error.SpackError):
+    """Raised when unable to interpret a MirrorMetadata string"""

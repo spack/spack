@@ -6,7 +6,7 @@ import collections.abc
 import copy
 import functools
 import os
-from typing import Callable, Dict, List, Optional, Tuple, Type
+from typing import Callable, Dict, List, Optional, Tuple, Type, Union
 
 import spack.directives
 import spack.error
@@ -20,7 +20,7 @@ import spack.util.environment
 from spack.error import SpackError
 from spack.util.prefix import Prefix
 
-#: Builder classes, as registered by the "builder" decorator
+#: Builder classes, as registered by the ``builder`` decorator
 BUILDER_CLS: Dict[str, Type["Builder"]] = {}
 
 #: Map id(pkg) to a builder, to avoid creating multiple
@@ -44,6 +44,13 @@ def register_builder(build_system_name: str):
     """
 
     def _decorator(cls):
+        existing = BUILDER_CLS.get(build_system_name)
+        if existing is not None and existing is not cls:
+            raise SpackError(
+                f"cannot register builder {cls.__module__}.{cls.__qualname__} for build system "
+                f"'{build_system_name}': already registered by "
+                f"{existing.__module__}.{existing.__qualname__}"
+            )
         cls.build_system = build_system_name
         BUILDER_CLS[build_system_name] = cls
         return cls
@@ -68,11 +75,17 @@ class _PhaseAdapter:
         return self.phase_fn(self.builder.pkg, spec, prefix)
 
 
-def get_builder_class(pkg, name: str) -> Optional[Type["Builder"]]:
+def get_builder_class(
+    pkg: Union["spack.package_base.PackageBase", Type["spack.package_base.PackageBase"]], name: str
+) -> Optional[Type["Builder"]]:
     """Return the builder class if a package module defines it."""
-    cls = getattr(pkg.module, name, None)
-    if cls and spack.repo.is_package_module(cls.__module__):
-        return cls
+    pkg_cls = pkg if isinstance(pkg, type) else type(pkg)
+    for current_cls in pkg_cls.__mro__:
+        if not hasattr(current_cls, "module"):
+            continue
+        maybe_builder = getattr(current_cls.module, name, None)
+        if maybe_builder and spack.repo.is_package_module(maybe_builder.__module__):
+            return maybe_builder
     return None
 
 
@@ -216,7 +229,7 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
     """Given a package object with an associated concrete spec,
     return the name of its build system."""
     try:
-        return pkg.spec.variants["build_system"].value
+        return str(pkg.spec.variants["build_system"].value)
     except KeyError as e:
         # We are reading an old spec without the build_system variant
         if hasattr(pkg, "default_buildsystem"):
@@ -424,17 +437,19 @@ class BaseBuilder(metaclass=BuilderMeta):
        class AnyBuilder(BaseBuilder):
            @run_after("install")
            def fixup_install(self):
-                # do something after the package is installed
-                pass
+               # do something after the package is installed
+               pass
 
            def setup_build_environment(self, env: EnvironmentModifications) -> None:
-                env.set("MY_ENV_VAR", "my_value")
+               env.set("MY_ENV_VAR", "my_value")
 
-        class CMakeBuilder(cmake.CMakeBuilder, AnyBuilder):
-            pass
 
-        class AutotoolsBuilder(autotools.AutotoolsBuilder, AnyBuilder):
-            pass
+       class CMakeBuilder(cmake.CMakeBuilder, AnyBuilder):
+           pass
+
+
+       class AutotoolsBuilder(autotools.AutotoolsBuilder, AnyBuilder):
+           pass
     """
 
     def __init__(self, pkg: spack.package_base.PackageBase) -> None:
@@ -507,7 +522,7 @@ class Builder(BaseBuilder, collections.abc.Sequence):
     """A builder is a class that, given a package object (i.e. associated with concrete spec),
     knows how to install it.
 
-    The builder behaves like a sequence, and when iterated over return the "phases" of the
+    The builder behaves like a sequence, and when iterated over return the ``phases`` of the
     installation in the correct order.
     """
 
@@ -636,13 +651,16 @@ class BuilderWithDefaults(Builder):
 def apply_macos_rpath_fixups(builder: Builder):
     """On Darwin, make installed libraries more easily relocatable.
 
-    Some build systems (handrolled, autotools, makefiles) can set their own
-    rpaths that are duplicated by spack's compiler wrapper. This fixup
-    interrogates, and postprocesses if necessary, all libraries installed
-    by the code.
+    Some build systems (handrolled, autotools, makefiles) can set their own rpaths that are
+    duplicated by spack's compiler wrapper. This fixup interrogates, and postprocesses if
+    necessary, all libraries installed by the code.
 
-    It should be added as a @run_after to packaging systems (or individual
-    packages) that do not install relocatable libraries by default.
+    It should be added as a :func:`~spack.phase_callbacks.run_after` to packaging systems (or
+    individual packages) that do not install relocatable libraries by default.
+
+    Example::
+
+        run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
 
     Args:
         builder: builder that installed the package
@@ -736,7 +754,7 @@ class GenericBuilder(BuilderWithDefaults):
                pass
     """
 
-    #: A generic package has only the "install" phase
+    #: A generic package has only the ``install`` phase
     phases = ("install",)
 
     #: Names associated with package methods in the old build-system format

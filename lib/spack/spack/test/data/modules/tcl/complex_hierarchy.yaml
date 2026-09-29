@@ -1,0 +1,26 @@
+enable:
+  - tcl
+tcl:
+  hash_length: 0
+
+  hierarchical: true
+
+  core_compilers:
+    - 'clang@15.0.0'
+
+  core_specs:
+    - 'mpich@3.0.1'
+
+  hierarchy:
+    - lapack
+    - blas
+    - mpi
+    - python
+
+  filter_hierarchy_specs:
+    'mpileaks@:2.1': [mpi]
+
+  verbose: false
+
+  all:
+    autoload: all

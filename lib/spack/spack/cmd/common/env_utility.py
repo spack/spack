@@ -7,12 +7,11 @@ import os
 import spack.cmd
 import spack.deptypes as dt
 import spack.error
-import spack.llnl.util.tty as tty
-import spack.spec
 import spack.store
 from spack import build_environment, traverse
 from spack.cmd.common import arguments
-from spack.context import Context
+from spack.enums import Context
+from spack.util import tty
 from spack.util.environment import dump_environment, pickle_environment
 
 
@@ -60,7 +59,7 @@ class AreDepsInstalledVisitor:
             return False
 
         spec = item.edge.spec
-        if not spec.external and not spec.installed:
+        if not spec.external and not spack.store.STORE.db.installed(spec):
             self.has_uninstalled_deps = True
             return False
 
@@ -112,7 +111,7 @@ def emulate_env_utility(cmd_name, context: Context, args):
             f"Not all dependencies of {spec.name} are installed. "
             f"Cannot setup {context} environment:",
             spec.tree(
-                status_fn=spack.spec.Spec.install_status,
+                status_fn=spack.store.STORE.db.install_status,
                 hashlen=7,
                 hashes=True,
                 # This shows more than necessary, but we cannot dynamically change deptypes

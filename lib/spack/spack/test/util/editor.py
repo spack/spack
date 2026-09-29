@@ -8,7 +8,7 @@ import sys
 import pytest
 
 import spack.util.editor as ed
-from spack.llnl.util.filesystem import set_executable
+from spack.util.filesystem import set_executable
 
 pytestmark = [
     pytest.mark.usefixtures("working_env"),
@@ -30,7 +30,7 @@ def clean_env_vars():
 
 @pytest.fixture(autouse=True)
 def working_editor_test_env(working_env):
-    """Don't leak environent variables between functions here."""
+    """Don't leak environment variables between functions here."""
 
 
 # parameterized fixture for editor var names

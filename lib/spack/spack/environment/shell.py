@@ -134,7 +134,7 @@ def deactivate_commands(shell):
                     fi;
                     unset SPACK_OLD_PS1;
                 fi
-                """
+            """
         )
 
     return cmds
@@ -227,7 +227,7 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
     # become PATH variables.
     #
 
-    env_vars_yaml = spack.config.get("env_vars", None)
+    env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
 
@@ -241,7 +241,7 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
             "Environment view is broken due to a missing package or repo.\n",
             "  To activate without views enabled, activate with:\n",
             "    spack env activate -V {0}\n".format(env.name),
-            "  To remove it and resolve the issue, " "force concretize with the command:\n",
+            "  To remove it and resolve the issue, force concretize with the command:\n",
             "    spack -e {0} concretize --force".format(env.name),
         )
 

@@ -7,15 +7,15 @@ import collections
 import sys
 
 import spack.cmd
-import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
+from spack.util import tty
+from spack.util.tty.colify import colify
 
 description = "show packages that depend on another"
-section = "basic"
+section = "query"
 level = "long"
 
 
@@ -43,7 +43,7 @@ def inverted_dependencies():
     names to possible dependencies.
 
     Virtual packages are included as sources, so that you can query
-    dependents of, e.g., `mpi`, but virtuals are not included as
+    dependents of, e.g., ``mpi``, but virtuals are not included as
     actual dependents.
     """
     dag = collections.defaultdict(set)
@@ -87,10 +87,10 @@ def get_dependents(pkg_name, ideps, transitive=False, dependents=None):
 def dependents(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
-        tty.die("spack dependents takes only one spec.")
+        args.subparser.error("takes only one spec")
 
     if args.installed:
-        env = ev.active_environment()
+        env = active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = "{name}{@version}{/hash:7}{%compiler}"

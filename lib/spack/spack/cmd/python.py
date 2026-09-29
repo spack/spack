@@ -10,12 +10,14 @@ import runpy
 import sys
 
 import spack
-import spack.llnl.util.tty as tty
 import spack.repo
+from spack.util import tty
 
 description = "launch an interpreter as spack would launch a command"
 section = "developer"
 level = "long"
+
+IS_WINDOWS = sys.platform == "win32"
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
@@ -69,11 +71,11 @@ def python(parser, args, unknown_args):
         return
 
     if unknown_args:
-        tty.die("Unknown arguments:", " ".join(unknown_args))
+        args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
 
     # Unexpected behavior from supplying both
     if args.python_command and args.python_args:
-        tty.die("You can only specify a command OR script, but not both.")
+        args.subparser.error("you can only specify a command OR script, but not both")
 
     # Ensure that spack.repo.PATH is initialized
     spack.repo.PATH.repos
@@ -134,12 +136,14 @@ def python_interpreter(args):
             propagate_exceptions_from(console)
             console.runsource(args.python_command)
         else:
-            # Provides readline support, allowing user to use arrow keys
-            console.push("import readline")
-            # Provide tabcompletion
-            console.push("from rlcompleter import Completer")
-            console.push("readline.set_completer(Completer(locals()).complete)")
-            console.push('readline.parse_and_bind("tab: complete")')
+            # no readline module on Windows
+            if not IS_WINDOWS:
+                # Provides readline support, allowing user to use arrow keys
+                console.push("import readline")
+                # Provide tabcompletion
+                console.push("from rlcompleter import Completer")
+                console.push("readline.set_completer(Completer(locals()).complete)")
+                console.push('readline.parse_and_bind("tab: complete")')
 
             console.interact(
                 "Spack version %s\nPython %s, %s %s"

@@ -1,0 +1,74 @@
+bootstrap:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/bootstrap/**
+
+binary-caches:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/binary_distribution.py
+  - any-glob-to-any-file: lib/spack/spack/cmd/buildcache.py
+
+ci:
+- changed-files:
+  - any-glob-to-any-file: .ci/**
+  - any-glob-to-any-file: .github/**
+  - any-glob-to-any-file: lib/spack/spack/ci/**
+
+commands:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/cmd/**
+
+config:
+- changed-files:
+  - any-glob-to-any-file: etc/spack/**
+  - any-glob-to-any-file: lib/spack/spack/cmd/config.py
+  - any-glob-to-any-file: lib/spack/spack/config.py
+  - any-glob-to-any-file: lib/spack/spack/schema/**
+
+docs:
+- changed-files:
+  - any-glob-to-any-file: .readthedocs.yml
+  - any-glob-to-any-file: lib/spack/docs/**
+
+environments:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/cmd/env.py
+  - any-glob-to-any-file: lib/spack/spack/environment/**
+
+mirrors:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/cmd/mirror.py
+  - any-glob-to-any-file: lib/spack/spack/mirrors/**
+
+modules:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/cmd/module.py
+  - any-glob-to-any-file: lib/spack/spack/modules/**
+
+solver:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/solver/**
+
+style:
+- changed-files:
+  - any-glob-to-any-file: .flake8
+  - any-glob-to-any-file: .github/workflows/prechecks.yml
+  - any-glob-to-any-file: .github/workflows/requirements/style/**
+  - any-glob-to-any-file: lib/spack/spack/cmd/style.py
+  - any-glob-to-any-file: pyproject.toml
+
+unit-tests:
+- changed-files:
+  - any-glob-to-any-file: .codecov.yml
+  - any-glob-to-any-file: lib/spack/spack/cmd/unit_test.py
+  - any-glob-to-any-file: lib/spack/spack/test/**
+  - any-glob-to-any-file: pyproject.toml
+  - any-glob-to-any-file: pytest.ini
+  - any-glob-to-any-file: var/spack/test_repos/**
+
+vendor:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/vendor/**
+
+versions:
+- changed-files:
+  - any-glob-to-any-file: lib/spack/spack/version/**

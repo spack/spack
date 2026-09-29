@@ -6,11 +6,12 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/env_vars.py
    :lines: 15-
 """
+
 from typing import Any, Dict
 
 import spack.schema.environment
 
-properties: Dict[str, Any] = {"env_vars": spack.schema.environment.definition}
+properties: Dict[str, Any] = {"env_vars": spack.schema.environment.ref_env_modifications}
 
 #: Full schema with metadata
 schema = {
@@ -19,4 +20,5 @@ schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
+    "definitions": {"env_modifications": spack.schema.environment.env_modifications},
 }

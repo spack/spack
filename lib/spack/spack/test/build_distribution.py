@@ -10,7 +10,7 @@ import pytest
 import spack.binary_distribution as bd
 import spack.concretize
 import spack.mirrors.mirror
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 

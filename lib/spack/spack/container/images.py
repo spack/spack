@@ -2,14 +2,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Manages the details on the images used in the various stages."""
+
 import json
 import os
 import shlex
 import sys
 
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
+import spack.util.filesystem as fs
 import spack.util.git
+from spack.util import tty
 
 #: Global variable used to cache in memory the content of images.json
 _data = None
@@ -35,7 +36,7 @@ def build_info(image, spack_version):
 
     Args:
         image (str): image to be used at run-time. Should be of the form
-            <image_name>:<image_tag> e.g. "ubuntu:18.04"
+            <image_name>:<image_tag> e.g. ``"ubuntu:18.04"``
         spack_version (str): version of Spack that we want to use to build
 
     Returns:
@@ -57,10 +58,10 @@ def os_package_manager_for(image):
 
     Args:
         image (str): image to be used at run-time. Should be of the form
-            <image_name>:<image_tag> e.g. "ubuntu:18.04"
+            <image_name>:<image_tag> e.g. ``"ubuntu:18.04"``
 
     Returns:
-        Name of the package manager, e.g. "apt" or "yum"
+        Name of the package manager, e.g. ``"apt"`` or ``"yum"``
     """
     name = data()["images"][image]["os_package_manager"]
     return name

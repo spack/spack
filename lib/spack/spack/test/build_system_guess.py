@@ -44,7 +44,7 @@ def url_and_build_system(request, tmp_path: pathlib.Path):
     the correct build-system guess
     """
     tar = spack.util.executable.which("tar", required=True)
-    import spack.llnl.util.filesystem as fs
+    import spack.util.filesystem as fs
 
     with fs.working_dir(str(tmp_path)):
         filename, system = request.param
@@ -56,9 +56,9 @@ def url_and_build_system(request, tmp_path: pathlib.Path):
         yield url, system
 
 
-def test_build_systems(url_and_build_system):
+def test_build_systems(url_and_build_system, config):
     url, build_system = url_and_build_system
-    with spack.stage.Stage(url) as stage:
+    with spack.stage.stage_from_config(url, config=config) as stage:
         stage.fetch()
         guesser = spack.cmd.create.BuildSystemAndLanguageGuesser()
         guesser(stage.archive_file, url)

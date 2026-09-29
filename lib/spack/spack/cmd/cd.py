@@ -8,7 +8,7 @@ import spack.cmd.common
 import spack.cmd.location
 
 description = "cd to spack directories in the shell"
-section = "developer"
+section = "user environment"
 level = "long"
 
 

@@ -5,7 +5,7 @@
 import hashlib
 from typing import BinaryIO, Callable, Dict, Optional
 
-import spack.llnl.util.tty as tty
+from spack.util import tty
 
 HashFactory = Callable[[], "hashlib._Hash"]
 
@@ -14,8 +14,8 @@ hashes = {"sha256": 32, "md5": 16, "sha1": 20, "sha224": 28, "sha384": 48, "sha5
 # Note: keys are ordered by popularity for earliest return in ``hash_key in version_dict`` checks.
 
 
-#: size of hash digests in bytes, mapped to algoritm names
-_size_to_hash = dict((v, k) for k, v in hashes.items())
+#: size of hash digests in bytes, mapped to algorithm names
+_size_to_hash = {v: k for k, v in hashes.items()}
 
 
 #: List of deprecated hash functions. On some systems, these cannot be
@@ -103,7 +103,7 @@ class Checker:
     with.  e.g., if the digest is 32 hex characters long this will
     use md5.
 
-    Example: know your tarball should hash to 'abc123'.  You want
+    Example: know your tarball should hash to ``abc123``.  You want
     to check files against this.  You would use this class like so::
 
        hexdigest = 'abc123'

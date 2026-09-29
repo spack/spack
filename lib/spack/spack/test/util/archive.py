@@ -13,12 +13,12 @@ import pytest
 
 import spack.util.crypto
 import spack.version
-from spack.llnl.util.filesystem import working_dir
 from spack.util.archive import (
     gzip_compressed_tarfile,
     reproducible_tarfile_from_prefix,
     retrieve_commit_from_archive,
 )
+from spack.util.filesystem import working_dir
 
 
 def test_gzip_compressed_tarball_is_reproducible(tmp_path: Path, monkeypatch):
@@ -196,15 +196,25 @@ def test_reproducible_tarfile_from_prefix_path_to_name(tmp_path: Path):
         ]
 
 
-@pytest.mark.parametrize("ref", ("test-branch", "test-tag"))
+@pytest.mark.parametrize("ref", ("test-branch", "test-tag", "annotated-tag"))
 def test_get_commits_from_archive(mock_git_repository, tmp_path: Path, ref):
+    git_exe = mock_git_repository.git_exe
     with working_dir(str(tmp_path)):
         archive_file = str(tmp_path / "archive.tar.gz")
         path_to_name = lambda path: PurePath(path).relative_to(mock_git_repository.path).as_posix()
+
+        # round trip the git repo, the desired ref will always be checked out
+        git_exe("-C", mock_git_repository.path, "checkout", ref)
         with gzip_compressed_tarfile(archive_file) as (tar, _, _):
             reproducible_tarfile_from_prefix(
                 tar=tar, prefix=mock_git_repository.path, path_to_name=path_to_name
             )
+        git_exe(
+            "-C",
+            mock_git_repository.path,
+            "checkout",
+            mock_git_repository.checks["default"].revision,
+        )
         commit = retrieve_commit_from_archive(archive_file, ref)
         assert commit
         assert spack.version.is_git_commit_sha(commit)

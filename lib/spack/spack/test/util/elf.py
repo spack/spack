@@ -8,11 +8,11 @@ import pathlib
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
 import spack.platforms
-import spack.util.elf as elf
 import spack.util.executable
+import spack.util.filesystem as fs
 from spack.hooks.drop_redundant_rpaths import drop_redundant_rpaths
+from spack.util import elf
 
 
 # note that our elf parser is platform independent... but I guess creating an elf file

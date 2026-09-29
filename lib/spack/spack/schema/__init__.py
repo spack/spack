@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This module contains jsonschema files for all of Spack's YAML formats."""
+
 import copy
 import typing
 import warnings
@@ -19,7 +20,7 @@ class DeprecationMessage(typing.NamedTuple):
 
 def _validate_spec(validator, is_spec, instance, schema):
     """Check if all additional keys are valid specs."""
-    import spack.spec_parser
+    import spack.spec
 
     if not validator.is_type(instance, "object"):
         return
@@ -30,7 +31,7 @@ def _validate_spec(validator, is_spec, instance, schema):
         if spec_str in properties:
             continue
         try:
-            spack.spec_parser.parse(spec_str)
+            spack.spec.parse(spec_str)
         except SpecSyntaxError:
             yield jsonschema.ValidationError(f"the key '{spec_str}' is not a valid spec")
 
@@ -75,7 +76,7 @@ Validator = validators.extend(
 def _append(string: str) -> bool:
     """Test if a spack YAML string is an append.
 
-    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `+:`,
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in ``+:``,
     and if they do, their values append lower-precedence
     configs.
 
@@ -89,7 +90,7 @@ def _append(string: str) -> bool:
 def _prepend(string: str) -> bool:
     """Test if a spack YAML string is an prepend.
 
-    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `+:`,
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in ``+:``,
     and if they do, their values prepend lower-precedence
     configs.
 
@@ -102,7 +103,7 @@ def _prepend(string: str) -> bool:
 def override(string: str) -> bool:
     """Test if a spack YAML string is an override.
 
-    See ``spack_yaml`` for details.  Keys in Spack YAML can end in `::`,
+    See ``spack_yaml`` for details.  Keys in Spack YAML can end in ``::``,
     and if they do, their values completely replace lower-precedence
     configs instead of merging into them.
 
@@ -114,7 +115,7 @@ def merge_yaml(dest, source, prepend=False, append=False):
     """Merges source into dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
-    case dest was None to begin with, e.g.:
+    case dest was None to begin with, e.g.::
 
        dest = merge_yaml(dest, source)
 
@@ -124,11 +125,11 @@ def merge_yaml(dest, source, prepend=False, append=False):
     appear before keys from ``dest``.
 
     Config file authors can optionally end any attribute in a dict
-    with `::` instead of `:`, and the key will override that of the
+    with ``::`` instead of ``:``, and the key will override that of the
     parent instead of merging.
 
-    `+:` will extend the default prepend merge strategy to include string concatenation
-    `-:` will change the merge strategy to append, it also includes string concatentation
+    ``+:`` will extend the default prepend merge strategy to include string concatenation
+    ``-:`` will change the merge strategy to append, it also includes string concatenation
     """
 
     def they_are(t):

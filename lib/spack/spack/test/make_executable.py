@@ -7,6 +7,7 @@ Tests for Spack's built-in parallel make support.
 
 This just tests whether the right args are getting passed to make.
 """
+
 import os
 import pathlib
 

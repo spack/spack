@@ -4,14 +4,15 @@
 
 import os
 import pathlib
-import sys
-from textwrap import dedent
 
 import pytest
 
+import spack.cmd.list
 import spack.paths
 import spack.repo
 from spack.main import SpackCommand
+from spack.repo import RepoPath
+from spack.test.conftest import RepoBuilder
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
@@ -25,25 +26,13 @@ def test_list():
 
 
 def test_list_cli_output_format(mock_tty_stdout):
-    out = list("mpileaks")
-    # Currently logging on Windows detaches stdout
-    # from the terminal so we miss some output during tests
-    # TODO: (johnwparent): Once logging is amended on Windows,
-    # restore this test
-    if not sys.platform == "win32":
-        out_str = dedent(
-            """\
-    mpileaks
-    ==> 1 packages
-    """
-        )
-    else:
-        out_str = dedent(
-            """\
-        mpileaks
-        """
-        )
-    assert out == out_str
+    assert (
+        list("mpileaks")
+        == """\
+mpileaks
+==> 1 packages
+"""
+    )
 
 
 def test_list_filter():
@@ -77,6 +66,8 @@ def test_list_format_version_json():
     output = list("--format", "version_json")
     assert '{"name": "zmpi",' in output
     assert '{"name": "dyninst",' in output
+    assert "packages/zmpi/package.py" in output
+
     import json
 
     json.loads(output)
@@ -89,6 +80,48 @@ def test_list_format_html():
 
     assert '<div class="section" id="hdf5">' in output
     assert "<h1>hdf5" in output
+    assert "packages/hdf5/package.py" in output
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://github.com/spack/spack-packages.git",
+        "https://github.com/spack/spack-packages",
+        "git@github.com:spack/spack-packages.git",
+        "ssh://git@github.com/spack/spack-packages.git",
+        "https://user:token@github.com/spack/spack-packages.git",
+    ],
+)
+def test_list_url_schemes(mock_git_packages_repo, url):
+    """Confirm the official spack-packages repo is recognized in any url scheme."""
+    repo = mock_git_packages_repo(url)
+    with spack.repo.use_repositories(repo):
+        output = list("--format", "version_json", "hdf5")
+
+    assert (
+        "https://github.com/spack/spack-packages/blob/develop/"
+        "spack_repo/builtin_mock/packages/hdf5/package.py" in output
+    )
+    # a credentialed url must never leak the credentials into the emitted url
+    assert "token" not in output
+
+
+def test_list_format_local_repo():
+    """Confirm a file path is returned for a path-configured (no remote_info) repository."""
+    output = list("--format", "version_json", "hdf5")
+    assert "github.com" not in output
+    assert "file://" in output
+    assert "packages/hdf5/package.py" in output
+
+
+def test_list_format_non_github_repo(mock_git_packages_repo):
+    """Confirm a file path is returned for a non-github (e.g. gitlab) repository."""
+    repo = mock_git_packages_repo("https://gitlab.com/username/my-packages.git")
+    with spack.repo.use_repositories(repo):
+        output = list("--format", "version_json", "hdf5")
+        assert "github.com" not in output
+        assert "file://" in output
 
 
 def test_list_update(tmp_path: pathlib.Path):
@@ -132,13 +165,13 @@ def test_list_tags():
     assert "mpich2" in output
 
 
-def test_list_count():
+def test_list_count(mock_packages: RepoPath):
     output = list("--count")
-    assert int(output.strip()) == len(spack.repo.all_package_names())
+    assert int(output.strip()) == len(mock_packages.all_package_names())
 
     output = list("--count", "py-")
     assert int(output.strip()) == len(
-        [name for name in spack.repo.all_package_names() if "py-" in name]
+        [name for name in mock_packages.all_package_names() if "py-" in name]
     )
 
 
@@ -154,3 +187,34 @@ def test_list_repos():
 
         assert total_pkgs > mock_pkgs > builder_pkgs
         assert both_repos == total_pkgs
+
+
+@pytest.mark.usefixtures("config")
+def test_list_github_url_fails(repo_builder: RepoBuilder, monkeypatch):
+    with spack.repo.use_repositories(repo_builder.root):
+        repo_builder.add_package("pkg-a")
+        repo = spack.repo.PATH.repos[0]
+        pkg = repo.get_pkg_class("pkg-a")
+
+        old_path = repo.python_path
+        try:
+            # Check that a repository with no python path has no URL
+            monkeypatch.setattr(repo, "python_path", None)
+            assert spack.cmd.list.github_url(pkg) is None, (
+                "Expected no python path means unable to determine the repo URL"
+            )
+
+            # Check that a repository path that doesn't exist has no URL
+            monkeypatch.setattr(repo, "python_path", "/repo/root/does/not/exists")
+            assert spack.cmd.list.github_url(pkg) is None, (
+                "Expected bad repo path means unable to determine the repo URL"
+            )
+        finally:
+            monkeypatch.setattr(repo, "python_path", old_path)
+
+        # A repository without a configured git url (remote_info is None) yields a file URI
+        assert repo.remote_info is None
+        filepath = spack.cmd.list.github_url(pkg)
+        assert filepath and filepath.startswith("file://"), (
+            "Expected a path-configured repo results in a file URI"
+        )
