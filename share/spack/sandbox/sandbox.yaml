@@ -27,6 +27,12 @@ external_prefix_read_paths:
 - lib
 - lib64
 - share
+external_spec_read_paths:
+- spec: llvm
+  paths:
+  - /usr/bin/clang*
+  - /usr/bin/llvm*
+  - /usr/lib/llvm-*
 replacement_roots:
 - /tmp
 - /var/tmp
@@ -100,6 +106,7 @@ compiler_programs:
 - cc1plus
 - f951
 - collect2
+- llvm-config
 - lto1
 - lto-wrapper
 - cpp

@@ -8,6 +8,18 @@
 Sandbox Future Work
 ===================
 
+Host package ownership discovery
+--------------------------------
+
+Dependency-specific host path patterns in ``sandbox.yaml`` are a temporary way to expose files needed by external packages whose prefix is a shared system prefix such as ``/usr``.
+They are read-only, apply only when the concrete build DAG contains a matching external dependency, and avoid granting the entire external prefix.
+
+A future implementation should replace these curated patterns with package-file ownership data from the host distribution package manager.
+Initial backends should query ``dpkg`` and RPM databases, with other package managers added over time.
+Spack should map an external dependency to its owning host packages and grant only their required files and directories.
+Package database data remains untrusted input: paths must be absolute, canonicalized, constrained to the selected package records, and admitted read-only.
+Tests should cover missing databases, stale or malformed records, symlinked programs, packages split across multiple host records, and external specs that have no host-package mapping.
+
 Filesystem-type path selection
 ------------------------------
 

@@ -119,6 +119,9 @@ def test_namespace_policy_data_is_loaded_from_yaml():
         {"path": "/usr/share/aclocal", "unless_external_specs": ["autoconf"]}
     ]
     assert policy["external_prefix_read_paths"] == ["include", "lib", "lib64", "share"]
+    assert policy["external_spec_read_paths"] == [
+        {"spec": "llvm", "paths": ["/usr/bin/clang*", "/usr/bin/llvm*", "/usr/lib/llvm-*"]}
+    ]
     assert policy["replacement_roots"] == ["/tmp", "/var/tmp"]
     assert "/dev/urandom" in policy["device_nodes"]
     assert policy["tmpfs_paths"] == ["/dev/shm"]
@@ -166,6 +169,41 @@ def test_namespace_policy_data_is_loaded_from_yaml():
         (
             lambda policy: policy.update(external_prefix_read_paths=["."]),
             "external_prefix_read_paths",
+        ),
+        (
+            lambda policy: policy.update(
+                external_spec_read_paths=[{"spec": "llvm", "paths": ["../usr/lib/llvm-*"]}]
+            ),
+            "external_spec_read_paths[0].paths",
+        ),
+        (lambda policy: policy.update(external_spec_read_paths=None), "external_spec_read_paths"),
+        (
+            lambda policy: policy.update(external_spec_read_paths=[None]),
+            "external_spec_read_paths[0]",
+        ),
+        (
+            lambda policy: policy.update(external_spec_read_paths=[{"paths": []}]),
+            "external_spec_read_paths[0].spec",
+        ),
+        (
+            lambda policy: policy.update(external_spec_read_paths=[{"spec": "@", "paths": []}]),
+            "external_spec_read_paths[0].spec",
+        ),
+        (
+            lambda policy: policy.update(external_spec_read_paths=[{"spec": "llvm"}]),
+            "external_spec_read_paths[0].paths",
+        ),
+        (
+            lambda policy: policy.update(
+                external_spec_read_paths=[{"spec": "llvm", "paths": [1]}]
+            ),
+            "external_spec_read_paths[0].paths",
+        ),
+        (
+            lambda policy: policy.update(
+                external_spec_read_paths=[{"spec": "llvm", "paths": ["/usr/../etc/*"]}]
+            ),
+            "external_spec_read_paths[0].paths",
         ),
         (lambda policy: policy.update(tmpfs_paths=["relative"]), "tmpfs_paths"),
         (
@@ -842,9 +880,55 @@ def test_external_prefix_read_paths_select_configured_existing_subdirectories(tm
     (prefix / "lib").touch()
     external = spack.spec.Spec("tool@1.2+feature", external_path=str(prefix))
     spec = SimpleNamespace(traverse=lambda root=False: iter([external]))
-    policy = {"external_prefix_read_paths": ["include", "lib", "lib64", "share"]}
+    policy = {
+        "external_prefix_read_paths": ["include", "lib", "lib64", "share"],
+        "external_spec_read_paths": [],
+    }
 
     assert build.external_prefix_read_paths(spec, policy) == expected
+
+
+def test_external_spec_read_paths_match_external_dependency_and_preserve_alias(tmp_path):
+    from spack.installer import build
+
+    host = tmp_path / "usr"
+    llvm_root = host / "lib" / "llvm-18"
+    llvm_config = llvm_root / "bin" / "llvm-config"
+    llvm_config.parent.mkdir(parents=True)
+    llvm_config.touch()
+    bin_dir = host / "bin"
+    bin_dir.mkdir()
+    llvm_config_alias = bin_dir / "llvm-config"
+    llvm_config_alias.symlink_to(pathlib.Path("..") / "lib" / "llvm-18" / "bin" / "llvm-config")
+    (bin_dir / "llvm-missing").symlink_to(llvm_root / "missing")
+
+    llvm = spack.spec.Spec("llvm@18+clang", external_path=str(host))
+    spec = SimpleNamespace(traverse=lambda root=False: iter([llvm]))
+    policy = {
+        "external_prefix_read_paths": [],
+        "external_spec_read_paths": [
+            {
+                "spec": "llvm+clang",
+                "paths": [str(bin_dir / "llvm*"), str(llvm_config_alias), str(llvm_root)],
+            }
+        ],
+    }
+
+    assert build.external_prefix_read_paths(spec, policy) == (
+        str(llvm_root.resolve()),
+        str(llvm_config),
+    )
+    assert build.external_spec_alias_symlink_paths(spec, [str(host)], policy) == (
+        spack.sandbox_namespaces.NamespaceGeneratedSymlink(
+            str(llvm_config_alias), str(llvm_config)
+        ),
+    )
+
+    other = spack.spec.Spec("other", external_path=str(host))
+    nonmatching = SimpleNamespace(traverse=lambda root=False: iter([other]))
+    assert build.external_prefix_read_paths(nonmatching, policy) == ()
+    assert build.external_spec_alias_symlink_paths(nonmatching, [str(host)], policy) == ()
+    assert build.external_spec_alias_symlink_paths(spec, [str(tmp_path / "hidden")], policy) == ()
 
 
 def test_namespace_filesystem_policy_from_installer_inputs(monkeypatch, tmp_path: pathlib.Path):
@@ -1112,6 +1196,7 @@ def test_namespace_selects_host_device_and_worker_inputs(monkeypatch, tmp_path: 
         "file_runtime_read_paths": [],
         "device_nodes": [str(device), str(host / "not-a-device")],
         "external_prefix_read_paths": ["include", "lib", "lib64", "share"],
+        "external_spec_read_paths": [],
     }
 
     selected = build.select_namespace_host_device_worker_paths(
