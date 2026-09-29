@@ -1,12 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Tests for the Windows PE relocation support built on the MSVC compiler wrapper.
-"""
+"""Tests for the Windows PE relocation support built on the MSVC compiler wrapper."""
 
 import io
 import os
 import pathlib
+import shutil
+import struct
+import tarfile
 
 import pytest
 
@@ -325,6 +327,31 @@ def test_is_msvc_magic_synthetic(data, expected):
     assert spack.relocate.is_msvc_magic(io.BytesIO(data)) is expected
 
 
+@pytest.mark.parametrize(
+    "name,expected", [("calc.dll", True), ("plain.dll", True), ("tester.exe", False)]
+)
+def test_pe_has_exports_on_fixtures(name, expected):
+    assert spack.relocate.pe_has_exports(fixture(name)) is expected
+
+
+def test_pe_has_exports_on_pe32(tmp_path: pathlib.Path):
+    """The fixtures are all PE32+. A PE32 optional header puts its data directories 16
+    bytes earlier."""
+    pe = bytearray(synth_pe())
+    optional_header = 0x40 + 24
+    pe[optional_header : optional_header + 2] = struct.pack("<H", 0x10B)
+    # NumberOfRvaAndSizes, then the export table's RVA and size
+    pe[optional_header + 92 : optional_header + 104] = struct.pack("<3I", 16, 0x2000, 0x40)
+    target = tmp_path / "x86.dll"
+    target.write_bytes(bytes(pe))
+
+    assert spack.relocate.pe_has_exports(str(target)) is True
+
+
+def test_pe_has_exports_on_non_pe(tmp_path: pathlib.Path):
+    assert spack.relocate.pe_has_exports(_not_a_pe(tmp_path)) is False
+
+
 @pytest.mark.parametrize("name", ["calc.dll", "calc.lib"])
 def test_file_type_classifies_pe_as_binary(name):
     """``file_type`` is what keeps PEs out of the text-relocation path. One of each
@@ -497,6 +524,24 @@ def test_import_lib_targets_ignores_non_lib_targets(reloc_exe):
 
     assert result == {}
     assert reloc_exe.calls == []
+
+
+@pytest.mark.parametrize("reported", ["calc.dll", None], ids=["bare-name", "no-name"])
+def test_import_lib_targets_warns_on_lib_linked_without_wrapper(reported, reloc_exe, capsys):
+    """The wrapper stores the DLL's absolute path in every import library it links.
+    Stock link.exe stores only the DLL name, which ``--report`` prints only when it is
+    too long for the archive member header."""
+    lib = r"C:\install\pkg\lib\calc.lib"
+    reloc_exe.add_import_lib_raw(lib, reported)
+
+    result = spack.relocate._import_lib_targets(
+        [lib], {r"C:\stage\pkg": r"C:\install\pkg"}, reloc_exe=reloc_exe
+    )
+
+    assert result == {}
+    err = capsys.readouterr().err
+    assert lib in err
+    assert "compiler wrapper" in err
 
 
 class _WrapperPackage:
@@ -787,6 +832,23 @@ def test_relocate_win_rpath_skips_symlinks(temporary_store, reloc_exe, stage_tre
     assert "alias.dll" not in env["SPACK_RELOCATE_PATH"]
 
 
+@pytest.mark.parametrize(
+    "vendored,warns", [("plain.dll", True), ("tester.exe", False)], ids=["exports", "no-exports"]
+)
+def test_relocate_win_rpath_warns_on_untagged_pe_with_exports(
+    vendored, warns, temporary_store, reloc_exe, stage_tree, capsys
+):
+    """The wrapper tags every PE it links, so an untagged PE that exports symbols was
+    linked without it."""
+    spec, _, _ = stage_tree
+    vendor = os.path.join(spec.prefix, "bin", "vendor.dll")
+    shutil.copyfile(fixture(vendored), vendor)
+
+    spack.relocate.relocate_win_rpath(spec)
+
+    assert (vendor in capsys.readouterr().err) is warns
+
+
 def test_relocate_win_rpath_enforces_the_path_budget(
     tmp_path: pathlib.Path, sfn_disabled, temporary_store, reloc_exe, monkeypatch
 ):
@@ -808,6 +870,51 @@ def test_relocate_win_rpath_enforces_the_path_budget(
         spack.relocate.relocate_win_rpath(_FakeSpec(name="pkg", prefix=str(prefix)))
 
     assert reloc_exe.calls == [], "nothing is rewritten once the check fails"
+
+
+def test_relocate_win_rpath_whole_prefix(
+    tmp_path: pathlib.Path, sfn_enabled, temporary_store, reloc_exe, capsys
+):
+    """Every fixture installed into one prefix, relocated from the resources the wrapper
+    embedded in them."""
+    prefix = tmp_path / "install" / "pkg"
+    layout = {
+        "bin": ["calc.dll", "tester.exe", "plain.dll", "sfn_calc.dll"],
+        "lib": ["calc.lib", "sfn_calc.lib", "static.lib"],
+    }
+    for subdir, names in layout.items():
+        (prefix / subdir).mkdir(parents=True)
+        for name in names:
+            shutil.copyfile(fixture(name), prefix / subdir / name)
+
+    def installed(subdir: str, name: str) -> str:
+        return str(prefix / subdir / name)
+
+    reloc_exe.add_import_lib(installed("lib", "calc.lib"), link_path("calc.dll"))
+    reloc_exe.add_import_lib(installed("lib", "sfn_calc.lib"), link_path("sfn_calc.dll"))
+    reloc_exe.add_static_lib(installed("lib", "static.lib"))
+
+    spack.relocate.relocate_win_rpath(_FakeSpec(name="pkg", prefix=str(prefix)))
+
+    pe_calls = {c[c.index("--pe") + 1]: c for c in reloc_exe.calls if "--pe" in c}
+    assert set(pe_calls) == {installed("bin", name) for name in layout["bin"]}
+    coff_for_pe = {pe: c[c.index("--coff") + 1] for pe, c in pe_calls.items() if "--coff" in c}
+    assert coff_for_pe == {
+        installed("bin", "calc.dll"): installed("lib", "calc.lib"),
+        installed("bin", "sfn_calc.dll"): installed("lib", "sfn_calc.lib"),
+    }
+
+    env = env_of(reloc_exe.envs[-1])
+    mapping = dict(p.split("|") for p in env["SPACK_RELOCATE_PATH"].split(os.pathsep))
+    assert mapping == {
+        link_path(name): installed("bin", name)
+        for name in ("calc.dll", "tester.exe", "sfn_calc.dll")
+    }
+
+    # plain.dll exports symbols without the wrapper's resource; nothing else is suspect
+    err = capsys.readouterr().err
+    assert err.count("Warning:") == 1
+    assert installed("bin", "plain.dll") in err
 
 
 class _FakeWrapperNode:
@@ -988,3 +1095,65 @@ def test_relocate_package_relocates_on_sfn_map_alone(mock_spec, relocation_recor
     assert prefixes == {}
     assert sfn_prefixes == {r"C:\old\opt\SPACK~1\PKG": str(spec.prefix)}
 
+
+def test_create_tarball_records_sfn_prefixes(mock_spec, tmp_path: pathlib.Path):
+    """Every prefix in ``hash_to_prefix`` gets its 8.3 form recorded, so DLL paths the
+    wrapper stored in short form can be relocated on extraction."""
+    os.makedirs(mock_spec.prefix)
+    tarball = tmp_path / "pkg.tar.gz"
+
+    bd.create_tarball(mock_spec, str(tarball))
+
+    with tarfile.open(tarball) as tar:
+        name = next(n for n in tar.getnames() if n.endswith(".spack/binary_distribution"))
+        buildinfo = syaml.load(tar.extractfile(name))
+    assert buildinfo["hash_to_prefix_sfn"] == {
+        h: fsys.windows_sfn(p) for h, p in buildinfo["hash_to_prefix"].items()
+    }
+
+
+class _TarballStage:
+    """The parts of a download stage ``extract_tarball`` uses."""
+
+    def __init__(self, path: str):
+        self.save_filename = path
+
+    def destroy(self):
+        pass
+
+
+def test_extract_tarball_runs_relocate_exe(
+    mock_spec, tmp_path: pathlib.Path, monkeypatch, sfn_enabled, reloc_exe
+):
+    """Installing a tarball pushed from another prefix passes each PE to relocate.exe,
+    with the old prefix (in long and 8.3 form) mapped to the new one and the import
+    library paired with its DLL."""
+    spec = mock_spec
+    monkeypatch.setattr(spack.platforms, "by_name", lambda name: _PePlatform())
+
+    old_prefix = tmp_path / "old-store" / "pkg"
+    (old_prefix / "bin").mkdir(parents=True)
+    (old_prefix / "lib").mkdir()
+    for rel in ("bin/calc.dll", "bin/tester.exe", "lib/calc.lib"):
+        shutil.copyfile(fixture(os.path.basename(rel)), old_prefix / rel)
+    buildinfo = bd.get_buildinfo_dict(spec)
+    buildinfo["hash_to_prefix"][spec.dag_hash()] = str(old_prefix)
+    tarball = str(tmp_path / "pkg.tar.gz")
+    bd._do_create_tarball(tarball, str(old_prefix), buildinfo, [str(old_prefix)])
+
+    new_prefix = str(spec.prefix)
+    new_dll = os.path.join(new_prefix, "bin", "calc.dll")
+    new_lib = os.path.join(new_prefix, "lib", "calc.lib")
+    reloc_exe.add_import_lib(new_lib, str(old_prefix / "bin" / "calc.dll"))
+
+    bd.extract_tarball(spec, _TarballStage(tarball))  # type: ignore[arg-type]
+
+    pe_calls = {c[c.index("--pe") + 1]: c for c in reloc_exe.calls if "--pe" in c}
+    assert set(pe_calls) == {new_dll, os.path.join(new_prefix, "bin", "tester.exe")}
+    dll_call = pe_calls[new_dll]
+    assert dll_call[dll_call.index("--coff") + 1] == new_lib
+
+    env = env_of(reloc_exe.envs[-1])
+    mapping = dict(p.split("|") for p in env["SPACK_RELOCATE_PATH"].split(os.pathsep))
+    assert mapping[str(old_prefix)] == new_prefix
+    assert mapping[fsys.windows_sfn(str(old_prefix))] == new_prefix
