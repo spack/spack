@@ -4,7 +4,6 @@
 
 """Tests for reinitialize_global_state() to verify global singletons update after CONFIG swap."""
 
-
 import spack.binary_distribution
 import spack.caches
 import spack.config
