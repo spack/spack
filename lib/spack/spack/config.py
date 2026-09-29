@@ -151,9 +151,6 @@ CONFIGURABLE_VARS = ("state_home", "cache_home", "data_home", "user_cache_path")
 _CVARS_RE = "|".join(CONFIGURABLE_VARS)
 CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
 
-#: Global flag to ignore user-fallback scope during config processing
-ignore_user_fallback = False
-
 #: The command being invoked (extracted from sys.argv at module load)
 #: Used to decide whether to skip auto-migration (e.g., for 'isolate')
 _invoked_command = None
@@ -1451,7 +1448,6 @@ class OptionalInclude:
 
 class IncludePath(OptionalInclude):
     path: str
-    fallback: Optional[str]
     sha256: str
     destination: Optional[str]
 
@@ -1468,14 +1464,6 @@ class IncludePath(OptionalInclude):
         context_prefix = f"({self.name}) " if self.name else ""
         context = f"{context_prefix}{path}"
         self.path = substitute_include_path(path, context)
-
-        # Fallback path to use if primary path doesn't exist
-        fallback_path = entry.get("fallback", "")
-        if fallback_path:
-            fallback_context = f"{context_prefix}{fallback_path}"
-            self.fallback = substitute_include_path(fallback_path, fallback_context)
-        else:
-            self.fallback = None
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1509,55 +1497,24 @@ class IncludePath(OptionalInclude):
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
-        # Determine which path to use: primary or fallback
-        path_to_use = self.path
-
         # An absolute path does not need a local base directory.
-        if os.path.isabs(path_to_use):
+        if os.path.isabs(self.path):
             tty.debug(f"The included path ({self}) is absolute so needs no base directory")
             base = None
         else:
-            base = self.base_directory(path_to_use, parent_scope)
+            base = self.base_directory(self.path, parent_scope)
 
         # Make sure to use a proper working directory when obtaining the local
         # path for a local (or remote) file.
-        tty.debug(f"Local base directory for {path_to_use} is {base}")
+        tty.debug(f"Local base directory for {self.path} is {base}")
 
-        canonical_path = canonicalize_path(path_to_use, base)
+        canonical_path = canonicalize_path(self.path, base)
         config_path = rfc_util.local_path(canonical_path, self.sha256, base)
         assert config_path
 
-        # Check if we should use fallback: primary doesn't exist but fallback does
-        if self.fallback and not os.path.exists(config_path):
-            tty.debug(
-                f"Primary path {path_to_use} does not exist, checking fallback {self.fallback}"
-            )
-
-            # Compute fallback path
-            if os.path.isabs(self.fallback):
-                fallback_base = None
-            else:
-                fallback_base = self.base_directory(self.fallback, parent_scope)
-
-            fallback_canonical = canonicalize_path(self.fallback, fallback_base)
-            fallback_config_path = rfc_util.local_path(
-                fallback_canonical, self.sha256, fallback_base
-            )
-            assert fallback_config_path
-
-            # Only use fallback if it exists
-            if os.path.exists(fallback_config_path):
-                tty.debug(f"Using existing fallback path: {fallback_config_path}")
-                path_to_use = self.fallback
-                base = fallback_base
-                canonical_path = fallback_canonical
-                config_path = fallback_config_path
-            else:
-                tty.debug(f"Fallback {self.fallback} also does not exist, using primary path")
-
         self.destination = config_path
 
-        scope = self._scope(path_to_use, self.destination, parent_scope)
+        scope = self._scope(self.path, self.destination, parent_scope)
         if scope is not None:
             self._scopes = [scope]
 
@@ -2919,10 +2876,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # NOTE: Migration is now handled at config.py module load time, before CONFIG
     # is created. See _perform_auto_migration_at_module_load() above for details.
     # Migration is skipped when the command is 'spack isolate'.
-    #
-    # Old resources (e.g., environments in var/spack/environments) are accessible
-    # immediately via fallback paths in the default config (e.g., environments_root
-    # list with fallback to old location).
 
 
 def create() -> Configuration:
