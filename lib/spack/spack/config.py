@@ -2745,7 +2745,6 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     def _handle_portable_resource(
         resource_name: str,
         config_key: str,
-        configured_value: Optional[str],
         old_path: str,
         target_subdir: str,
         migrate_fn: Callable[[str, str], bool],
@@ -2755,33 +2754,14 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
         Args:
             resource_name: Display name (e.g., "licenses", "environments")
             config_key: Config key (e.g., "license_dir", "environments_root")
-            configured_value: The configured value from config (already extracted from lists)
             old_path: Old location path
             target_subdir: Subdirectory under $data_home for target
             migrate_fn: Function to perform the migration (returns True on success)
         """
-        # Check if user has custom configuration
         data_home = substitute_path_variables("$data_home")
         target_path = os.path.join(data_home, target_subdir)
-        target_norm = os.path.normpath(os.path.expanduser(target_path))
 
-        if configured_value is None:
-            configured = target_path
-        else:
-            configured = canonicalize_path(configured_value)
-
-        if configured != target_norm:
-            # Custom location - don't migrate, keep in old location
-            tty.debug(
-                f"{resource_name.capitalize()} configured to custom location {configured}, "
-                f"not migrating from {old_path}"
-            )
-            if "config" not in scope_config:
-                scope_config["config"] = {}
-            scope_config["config"][config_key] = old_path
-            return
-
-        # Attempt migration with default config
+        # Always migrate to default location (no config checks since CONFIG doesn't exist yet)
         if migrate_fn(old_path, target_path):
             migrated_resources.append(resource_name)
             tty.debug(f"Copied {resource_name} from {old_path} to {target_path}")
@@ -2794,24 +2774,20 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
             tty.debug(f"{resource_name.capitalize()} kept in old location: {old_path}")
 
     # 3. Handle licenses
-    # Always migrate if old licenses exist - no config checks needed
     if old_resources["licenses"]:
         _handle_portable_resource(
             "licenses",
             "license_dir",
-            None,  # No config available yet - use default target
             spack.paths.old_licenses_path,
             "licenses",
             _migrate_licenses,
         )
 
     # 4. Handle environments
-    # Always migrate if old environments exist - no config checks needed
     if old_resources["environments"]:
         _handle_portable_resource(
             "environments",
             "environments_root",
-            None,  # No config available yet - use default target
             spack.paths.old_envs_path,
             "environments",
             _migrate_environments,
