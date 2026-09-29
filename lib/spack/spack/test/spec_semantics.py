@@ -3071,21 +3071,25 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "callpath",
             {"virtuals": ()},
             "mpileaks ^callpath",
-            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=())",
+            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=(), usages={})",
         ),
         (
             "mpileaks",
             "callpath",
             {"virtuals": ("mpi", "lapack")},
             "mpileaks ^lapack,mpi=callpath",
-            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=('lapack', 'mpi'))",
+            "DependencySpec('mpileaks', 'callpath', depflag=0, "
+            "virtuals=('lapack', 'mpi'), usages={})",
         ),
         (
             "",
             "callpath",
             {"virtuals": ("mpi", "lapack"), "direct": True},
             " %lapack,mpi=callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
+            (
+                "DependencySpec('', 'callpath', depflag=0, "
+                "virtuals=('lapack', 'mpi'), usages={}, direct=True)"
+            ),
         ),
         (
             "",
@@ -3096,15 +3100,15 @@ def test_copy_does_not_share_flag_instances(mock_packages):
                 "propagation": PropagationPolicy.PREFERENCE,
             },
             " %%lapack,mpi=callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True,"
-            " propagation=PropagationPolicy.PREFERENCE)",
+            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), usages={},"
+            " direct=True, propagation=PropagationPolicy.PREFERENCE)",
         ),
         (
             "",
             "callpath",
             {"virtuals": (), "direct": True, "propagation": PropagationPolicy.PREFERENCE},
             " %%callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=(), direct=True,"
+            "DependencySpec('', 'callpath', depflag=0, virtuals=(), usages={}, direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
         (
@@ -3112,8 +3116,8 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "callpath+bar",
             {"virtuals": (), "direct": True, "propagation": PropagationPolicy.PREFERENCE},
             "mpileaks+foo %%callpath+bar",
-            "DependencySpec('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), direct=True,"
-            " propagation=PropagationPolicy.PREFERENCE)",
+            "DependencySpec('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), usages={},"
+            " direct=True, propagation=PropagationPolicy.PREFERENCE)",
         ),
         # an anonymous child is named *, so that foo=bar is not read as a virtual assignment
         (
@@ -3121,14 +3125,15 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "foo=bar",
             {"virtuals": ()},
             "mpileaks ^* foo=bar",
-            "DependencySpec('mpileaks', 'foo=bar', depflag=0, virtuals=())",
+            "DependencySpec('mpileaks', 'foo=bar', depflag=0, virtuals=(), usages={})",
         ),
         (
             "mpileaks",
             "@4.0",
             {"virtuals": ("c",), "direct": True},
             "mpileaks %[virtuals=c] @4.0",
-            "DependencySpec('mpileaks', '@4.0', depflag=0, virtuals=('c',), direct=True)",
+            "DependencySpec('mpileaks', '@4.0', depflag=0, "
+            "virtuals=('c',), usages={}, direct=True)",
         ),
     ],
 )

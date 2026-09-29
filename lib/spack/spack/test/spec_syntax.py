@@ -1153,7 +1153,7 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "mpich"),
             ],
-            "foo ^[deptypes=link when=+mpi] mpich",
+            "foo ^[deptypes=link][when=+mpi] mpich",
         ),
         # usages= takes a bare set of options, written like variants: what a dependent asks
         # the dependency to enact on their shared edge. They are parsed into a UsageMap, but
@@ -1245,7 +1245,7 @@ def specfile_for(config, mock_packages):
                 Token("KEY_VALUE_PAIR", "deptypes=link"),
                 Token("END_EDGE_PROPERTIES", "] c=gcc"),
             ],
-            "foo %[deptypes=link when=+a] c=gcc",
+            "foo %[deptypes=link][when=+a] c=gcc",
         ),
     ],
 )
@@ -2330,7 +2330,7 @@ def test_edge_property_groups_in_when_condition():
         # virtuals of an anonymous spec stay in the edge attributes, there is no name to
         # substitute them with
         ("%[virtuals=c] *", "%[virtuals=c] *"),
-        ("%[deptypes=build virtuals=c] *", "%[deptypes=build virtuals=c] *"),
+        ("%[deptypes=build][virtuals=c] *", "%[deptypes=build][virtuals=c] *"),
         ("^[virtuals=c,cxx] *", "^[virtuals=c,cxx] *"),
         ("%[virtuals=c] *@4.0 foo=bar", "%[virtuals=c] @4.0 foo=bar"),
         # a star is a package name, so name=* is a variant value, not a substitute
@@ -2338,7 +2338,7 @@ def test_edge_property_groups_in_when_condition():
         # a when= value is a spec, which extends to the closing bracket and is printed unquoted
         ("%[when=a=*]", "%[when=a='*'] *"),
         ("""x %[when="a=']'"] gcc""", "x %[when=a=']'] gcc"),
-        ("foo ^[when=bar virtuals=c] baz", "foo ^[when=bar virtuals=c] baz"),
+        ("foo ^[virtuals=c][when=bar] baz", "foo ^[when=bar] c=baz"),
         ("foo when=bar", "foo when=bar"),
         # a quoted when= is a value like any other, so it can precede other edge attributes
         ("foo ^[when='+x' virtuals=c] bar", "foo ^[when=+x] c=bar"),
@@ -2346,9 +2346,9 @@ def test_edge_property_groups_in_when_condition():
         ("foo ^[when='+x']c=bar", "foo ^[when=+x] c=bar"),
         # repeated edge attributes combine: conditions are constrained, like virtuals accumulate
         ("x ^[when='+a' when='+b'] y", "x ^[when=+a+b] y"),
-        ("%[when='@1,2' virtuals=c] *", "%[virtuals=c when=@1:2] *"),
-        ("%[virtuals=c when=@1,2] *", "%[virtuals=c when=@1:2] *"),
-        ("%[deptypes=build virtuals=c when=@1,2] *", "%[deptypes=build virtuals=c when=@1:2] *"),
+        ("%[when='@1,2' virtuals=c] *", "%[virtuals=c][when=@1:2] *"),
+        ("%[virtuals=c when=@1,2] *", "%[virtuals=c][when=@1:2] *"),
+        ("%[deptypes=build virtuals=c when=@1,2] *", "%[deptypes=build][virtuals=c][when=@1:2] *"),
         ("x %[when=%c=gcc] y", "x %[when=%c=gcc] y"),
         # a version bound is never truncated at a "." to make room for a key=value pair
         ("@:a.a=''", "a.a=''"),
