@@ -474,14 +474,14 @@ def _specs_to_be_packaged(
         deptype = dt.ALL
     else:
         deptype = dt.RUN | dt.LINK | dt.TEST
+    if "package" not in things_to_install:
+        # Traverse from the dependencies instead, so that requested specs that other requested
+        # specs depend on are still pushed
+        requested = [d for s in requested for d in s.dependencies(deptype=deptype)]
     specs = [
         s
         for s in traverse.traverse_nodes(
-            requested,
-            root="package" in things_to_install,
-            deptype=deptype,
-            order="breadth",
-            key=traverse.by_dag_hash,
+            requested, deptype=deptype, order="breadth", key=traverse.by_dag_hash
         )
         if not s.external
     ]
