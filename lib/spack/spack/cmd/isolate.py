@@ -277,7 +277,7 @@ def _undo_isolate():
         home_result = spack.config._do_migrate_home()
 
     # Show migration summary
-    msg = spack.config._migration_message(prefix_result, home_result)
+    msg = spack.config._compose_migration_message(prefix_result, home_result)
     if msg:
         tty.msg(msg)
 
