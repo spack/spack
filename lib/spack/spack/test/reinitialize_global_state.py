@@ -14,14 +14,36 @@ import spack.store
 
 def test_reinitialize_replaces_store_singleton(tmp_path, monkeypatch):
     """Test that reinitialize_global_state() creates a new STORE singleton."""
-    # Get initial STORE
+    # Create two install directories
+    install_root_1 = tmp_path / "opt" / "spack1"
+    install_root_2 = tmp_path / "opt" / "spack2"
+    install_root_1.mkdir(parents=True)
+    install_root_2.mkdir(parents=True)
+
+    # Set up config_1 and initialize
+    config_1 = spack.config.create()
+    config_1.set("config:install_tree:root", str(install_root_1))
+    monkeypatch.setattr(spack.config, "CONFIG", config_1)
+    spack.store.reinitialize()
+
     initial_store = spack.store.STORE
+    assert initial_store.root == str(install_root_1)
+
+    # Swap to config_2
+    config_2 = spack.config.create()
+    config_2.set("config:install_tree:root", str(install_root_2))
+    monkeypatch.setattr(spack.config, "CONFIG", config_2)
+
+    # BEFORE reinitialize: STORE should still be same object with old path
+    assert spack.store.STORE is initial_store
+    assert spack.store.STORE.root == str(install_root_1)
 
     # Reinitialize
     spack.config.reinitialize_global_state()
 
-    # STORE should be a different object
+    # AFTER reinitialize: STORE should be different object with new path
     assert spack.store.STORE is not initial_store
+    assert spack.store.STORE.root == str(install_root_2)
 
 
 def test_reinitialize_replaces_cache_singleton(tmp_path, monkeypatch):
@@ -76,8 +98,73 @@ def test_reinitialize_after_config_swap_uses_new_paths(tmp_path, monkeypatch):
     config_2.set("config:misc_cache", str(cache_dir_2))
     monkeypatch.setattr(spack.config, "CONFIG", config_2)
 
+    # BEFORE reinitialize: cache should still use old path
+    assert str(spack.caches.MISC_CACHE.root) == str(cache_dir_1)
+
     # Call reinitialize_global_state
     spack.config.reinitialize_global_state()
 
-    # Cache should now use config_2 path
+    # AFTER reinitialize: cache should now use config_2 path
     assert str(spack.caches.MISC_CACHE.root) == str(cache_dir_2)
+
+
+def test_config_swap_without_reinitialize_keeps_old_values(tmp_path, monkeypatch):
+    """Test that swapping CONFIG alone doesn't update singletons until reinitialize."""
+    cache_dir_1 = tmp_path / "cache1"
+    cache_dir_2 = tmp_path / "cache2"
+    cache_dir_1.mkdir()
+    cache_dir_2.mkdir()
+
+    # Set up config_1 and initialize
+    config_1 = spack.config.create()
+    config_1.set("config:misc_cache", str(cache_dir_1))
+    monkeypatch.setattr(spack.config, "CONFIG", config_1)
+    spack.caches.reinitialize()
+
+    cache_after_init = spack.caches.MISC_CACHE
+    assert str(cache_after_init.root) == str(cache_dir_1)
+
+    # Swap to config_2 but DON'T reinitialize
+    config_2 = spack.config.create()
+    config_2.set("config:misc_cache", str(cache_dir_2))
+    monkeypatch.setattr(spack.config, "CONFIG", config_2)
+
+    # Singleton should be the same object with old path
+    assert spack.caches.MISC_CACHE is cache_after_init
+    assert str(spack.caches.MISC_CACHE.root) == str(cache_dir_1)
+
+    # Only after reinitialize_global_state should it update
+    spack.config.reinitialize_global_state()
+    assert spack.caches.MISC_CACHE is not cache_after_init
+    assert str(spack.caches.MISC_CACHE.root) == str(cache_dir_2)
+
+
+def test_multiple_reinitialization_cycles(tmp_path, monkeypatch):
+    """Test that reinitialize can be called multiple times with different configs."""
+    cache_dir_1 = tmp_path / "cache1"
+    cache_dir_2 = tmp_path / "cache2"
+    cache_dir_3 = tmp_path / "cache3"
+    cache_dir_1.mkdir()
+    cache_dir_2.mkdir()
+    cache_dir_3.mkdir()
+
+    # Config 1
+    config_1 = spack.config.create()
+    config_1.set("config:misc_cache", str(cache_dir_1))
+    monkeypatch.setattr(spack.config, "CONFIG", config_1)
+    spack.config.reinitialize_global_state()
+    assert str(spack.caches.MISC_CACHE.root) == str(cache_dir_1)
+
+    # Config 2
+    config_2 = spack.config.create()
+    config_2.set("config:misc_cache", str(cache_dir_2))
+    monkeypatch.setattr(spack.config, "CONFIG", config_2)
+    spack.config.reinitialize_global_state()
+    assert str(spack.caches.MISC_CACHE.root) == str(cache_dir_2)
+
+    # Config 3
+    config_3 = spack.config.create()
+    config_3.set("config:misc_cache", str(cache_dir_3))
+    monkeypatch.setattr(spack.config, "CONFIG", config_3)
+    spack.config.reinitialize_global_state()
+    assert str(spack.caches.MISC_CACHE.root) == str(cache_dir_3)
