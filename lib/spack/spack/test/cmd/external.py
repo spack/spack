@@ -211,6 +211,7 @@ def test_find_external_manifest_failure(mutable_config, tmp_path: pathlib.Path, 
     def fail():
         raise Exception()
 
+    monkeypatch.setattr(spack.cray_manifest, "default_path", test_manifest_dir)
     monkeypatch.setattr(spack.cmd.external, "_collect_and_consume_cray_manifest_files", fail)
     monkeypatch.setenv("PATH", "")
     output = external("find")
