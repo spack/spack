@@ -262,7 +262,8 @@ def _undo_isolate():
         shutil.rmtree(layout_scope_path)
         tty.msg(f"Removed layout scope: {layout_scope_path}")
 
-    # Remove migration marker and run auto-migration to set up layout scope with old resource pointers
+    # Remove migration marker and run auto-migration to set up layout scope
+    # with old resource pointers
     marker_path = spack.config._migration_done_marker_path()
     if os.path.exists(marker_path):
         os.remove(marker_path)
@@ -274,7 +275,6 @@ def _undo_isolate():
     with spack.util.lock.WriteTransaction(lock):
         prefix_result = spack.config._do_migrate_spack_prefix()
         home_result = spack.config._do_migrate_home()
-
 
     # Show migration summary
     msg = spack.config._migration_message(prefix_result, home_result)
