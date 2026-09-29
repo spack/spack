@@ -9,7 +9,8 @@ directive, with a reason, a severity, and the advisory labels it refers to.
 Which deprecations are tolerated is defined by ``packages:<name>:deprecation:allow``, a list of
 selectors falling back to ``packages:all`` and finally to the legacy ``config:deprecated`` flag.
 A directive without labels is skipped when at least one selector matches it, and a directive
-with labels when each of its labels is matched by at least one selector.
+with labels when each of its labels is matched by at least one selector, or fixed by a patch
+applied to the spec (``patch(..., fixes=[...])``).
 
 This module centralizes that policy so the concretization-time gate and the install-time gate
 cannot drift.
@@ -23,7 +24,13 @@ import spack.deptypes as dt
 import spack.error
 import spack.repo
 import spack.traverse
-from spack.enums import ConfigScopePriority, Deprecation, DeprecationReason, DeprecationSeverity
+from spack.enums import (
+    LEGACY_DEPRECATION_LABEL,
+    ConfigScopePriority,
+    Deprecation,
+    DeprecationReason,
+    DeprecationSeverity,
+)
 
 if TYPE_CHECKING:
     import spack.spec
@@ -33,7 +40,7 @@ class Violation(NamedTuple):
     """A single disallowed deprecation on a spec"""
 
     constraint: "spack.spec.Spec"
-    #: The deprecation, with only the labels the policy does not allow
+    #: The deprecation, with only the labels the policy does not allow and no patch fixes
     deprecation: Deprecation
 
 
@@ -218,6 +225,8 @@ class Policy:
     def disallowed(self, spec: "spack.spec.Spec") -> List[Violation]:
         """Returns the list of deprecation-policy violations for a spec. External specs are
         exempted since they are not under Spack's control.
+
+        A label fixed by a patch applied to the spec is not a violation.
         """
         if spec.external:
             return []
@@ -228,14 +237,50 @@ class Policy:
             return []
 
         violations = []
+        fixed: Optional[Set[str]] = None
         for constraint, entries in pkg_cls.deprecations.items():
             if not spec.satisfies(constraint):
                 continue
             for entry in entries:
                 refused = self.refused(spec.name, entry)
+
+                # Now look at labels that are fixed by a patch()
+                if refused is not None and can_be_fixed(refused.labels):
+                    # Lazily construct which labels are fixed for this spec
+                    if fixed is None:
+                        fixed = fixed_labels(spec, repo=self.repo)
+                    labels = tuple(x for x in refused.labels if x not in fixed)
+                    refused = refused._replace(labels=labels) if labels else None
+
+                # If there are still labels append them to the list
                 if refused is not None:
                     violations.append(Violation(constraint, refused))
+
         return violations
+
+
+def can_be_fixed(labels: Iterable[str]) -> bool:
+    """Return True if a patch may fix one of the labels. The label Spack records for
+    ``version(..., deprecated=True)`` is never fixed, since ``patch(fixes=...)`` refuses it.
+    """
+    return any(x != LEGACY_DEPRECATION_LABEL for x in labels)
+
+
+def fixed_labels(spec: "spack.spec.Spec", *, repo: spack.repo.RepoPath) -> Set[str]:
+    """Return the deprecation labels fixed by the patches applied to a concrete spec.
+
+    The patches are looked up in ``repo``, so a spec whose patches are no longer there has no
+    label fixed.
+
+    Args:
+        spec: the concrete spec.
+        repo: the repositories the patches are looked up in.
+    """
+    try:
+        patches = spec._patches_from(repo)
+    except (spack.error.SpecError, spack.repo.RepoError):
+        return set()
+    return {label for patch in patches for label in patch.fixes}
 
 
 def deprecated_spec_str(pkg_name: str, constraint: "spack.spec.Spec") -> str:
