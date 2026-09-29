@@ -2776,11 +2776,7 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     # 3. Handle licenses
     if old_resources["licenses"]:
         _handle_portable_resource(
-            "licenses",
-            "license_dir",
-            spack.paths.old_licenses_path,
-            "licenses",
-            _migrate_licenses,
+            "licenses", "license_dir", spack.paths.old_licenses_path, "licenses", _migrate_licenses
         )
 
     # 4. Handle environments

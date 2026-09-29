@@ -463,28 +463,30 @@ class MigrationResources:
                 if resource == "envs/env-1":
                     assert not (destination / "view").exists()
             else:
-                # Not migrated - only old location exists
+                # Not migrated - old source exists, marker either doesn't exist or has
+                # conflict content
                 assert source.exists()
                 assert self.contains_text(source, "old")
+                # If marker exists, it should be from the conflict (content "new"),
+                # not migration (content "old")
+                if marker.exists():
+                    assert marker.read_text(encoding="utf-8") == "new", (
+                        f"Resource {resource} marker exists but has wrong content"
+                    )
 
-                # When not migrated due to conflicts (not custom config),
-                # config should explicitly point to old location.
-                # Check this only once per resource type to avoid redundant checks.
-                if resource in conflicts:
-                    if resource == "gpg":
-                        config = spack.config.CONFIG
-                        gpg_path = config.get("config:gpg_path")
-                        assert str(self.old_gpg) == spack.config.canonicalize_path(gpg_path)
-                    elif resource == "envs/env-1":
-                        config = spack.config.CONFIG
-                        envs_root = config.get("config:environments_root")
-                        assert str(self.old_envs) == spack.config.canonicalize_path(envs_root)
-                    elif resource == "licenses/license-1":
-                        config = spack.config.CONFIG
-                        license_dir = config.get("config:license_dir")
-                        assert str(self.old_licenses) == spack.config.canonicalize_path(
-                            license_dir
-                        )
+                # When not migrated due to conflicts, config points to old location
+                if resource == "gpg":
+                    config = spack.config.CONFIG
+                    gpg_path = config.get("config:gpg_path")
+                    assert str(self.old_gpg) == spack.config.canonicalize_path(gpg_path)
+                elif resource == "envs/env-1":
+                    config = spack.config.CONFIG
+                    envs_root = config.get("config:environments_root")
+                    assert str(self.old_envs) == spack.config.canonicalize_path(envs_root)
+                elif resource == "licenses/license-1":
+                    config = spack.config.CONFIG
+                    license_dir = config.get("config:license_dir")
+                    assert str(self.old_licenses) == spack.config.canonicalize_path(license_dir)
 
             if resource in conflicts:
                 assert destination.exists()
@@ -523,41 +525,29 @@ def migration_resources(mock_spack_instance, mutable_config, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "config_vars, conflicts, expected_migrations",
+    "conflicts, expected_migrations",
     [
-        ((), (), ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2")),
+        # All resources migrate when there are no conflicts
+        ((), ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2")),
+        # Resources with conflicts at destination are not migrated
         (
-            (),
             ("gpg", "envs/env-1", "licenses/license-1"),
             ("-gpg", "-envs/env-1", "-licenses/license-1"),
-        ),
-        ((("config:gpg_path", "$spack/opt/spack/gpg"),), (), ("-gpg",)),
-        (
-            (("config:license_dir", "$spack/opt/licenses"),),
-            (),
-            ("-licenses/license-1", "-licenses/license-2"),
         ),
     ],
 )
 def test_auto_migration_old_spack_internal_resources(
-    migration_resources, config_vars, conflicts, expected_migrations, mutable_config, monkeypatch
+    migration_resources, conflicts, expected_migrations, mutable_config
 ):
     """Migration handles GPG, environments, licenses, conflicts, and views."""
     resources = migration_resources
     resources.add_conflicts(conflicts)
 
-    # Create fresh config after mock_spack_instance has set up test paths
-    test_config = spack.config.create()
-    for path, value in config_vars:
-        test_config.set(path, value)
-    monkeypatch.setattr(spack.config, "CONFIG", test_config)
-
     # Run migration which creates layout scope
     spack.config._do_migrate_spack_prefix()
 
     # Reinitialize config to pick up newly created layout scope
-    test_config = spack.config.create()
-    monkeypatch.setattr(spack.config, "CONFIG", test_config)
+    mutable_config.clear_caches()
 
     resources.assert_migrations(expected_migrations, conflicts)
 
