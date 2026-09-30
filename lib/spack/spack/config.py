@@ -2136,14 +2136,25 @@ def _migrate_with_staging(
         if not _is_nonempty_directory(old_path):
             return False
 
-        # If destination exists and is empty, remove it so os.rename() can succeed
-        if os.path.exists(new_path):
-            if os.path.isdir(new_path) and not os.listdir(new_path):
-                os.rmdir(new_path)
-                tty.debug(f"Removed empty {new_path} to proceed with migration")
-            else:
-                # Not empty or not a directory - can't migrate
-                return False
+        # Check destination and verify we can write to it
+        try:
+            if os.path.exists(new_path):
+                if os.path.isdir(new_path) and not os.listdir(new_path):
+                    os.rmdir(new_path)
+                    tty.debug(f"Removed empty {new_path} to proceed with migration")
+                else:
+                    # Not empty or not a directory - can't migrate
+                    return False
+
+            # Verify we have permissions to create new_path by testing with makedirs
+            # This creates the directory so os.rename() will work later
+            os.makedirs(new_path, exist_ok=True)
+            # Remove it immediately so os.rename() from staging will work
+            os.rmdir(new_path)
+
+        except PermissionError:
+            # Cannot write to destination - migration not possible
+            return False
 
         # Clean up stale staging directory from previous failed attempt
         if os.path.exists(staging_path):
