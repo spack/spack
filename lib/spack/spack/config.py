@@ -2160,11 +2160,8 @@ def _migrate_with_staging(
         if os.path.exists(staging_path):
             shutil.rmtree(staging_path, ignore_errors=True)
 
-        # Create staging directory and populate it
-        os.makedirs(staging_path, exist_ok=True)
+        # Callback creates staging directory and populates it
         tty.debug(f"Migrating {description} from {old_path} to {new_path}")
-
-        # Callback does the actual work of populating staging
         prepare_staging_callback(old_path, staging_path, new_path)
 
         # Atomically rename staging to final destination
