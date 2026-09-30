@@ -28,7 +28,7 @@ from typing import (
 )
 
 import spack.error
-import spack.spec_parser
+import spack.util.string
 import spack.util.tty.color
 from spack.util import lang
 
@@ -531,7 +531,7 @@ class OptionValue:
             value_str = "*"
         else:
             value_str = ",".join(str(x) for x in self.values)
-        return f"{self.name}{concrete}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
+        return f"{self.name}{concrete}{delim}{spack.util.string.quote_if_needed(value_str)}"
 
     def __str__(self) -> str:
         return self.string()
@@ -587,7 +587,7 @@ class VariantValue(OptionValue):
         if abbreviate_patches and self.name == "patches" and self.values:
             delim = "==" if propagated else "="
             value_str = ",".join(str(x)[:7] for x in self.values)
-            return f"{self.name}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
+            return f"{self.name}{delim}{spack.util.string.quote_if_needed(value_str)}"
         return super().string(propagated=propagated)
 
 

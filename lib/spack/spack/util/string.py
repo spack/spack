@@ -5,7 +5,31 @@
 standard library
 """
 
+import re
 from typing import List, Optional, Sequence
+
+#: Values that match this (e.g., variants, flags) can be left unquoted in Spack output
+NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-]+$")
+
+
+def quote_if_needed(value: str) -> str:
+    """Add quotes around the value if it requires quotes, i.e. unless it matches
+    :data:`NO_QUOTES_NEEDED`. Single quotes are used, or double quotes around a value that
+    contains single quotes. There is no escaping: a value that contains both kinds of quotes
+    cannot be written in a spec string.
+
+    Raises:
+        ValueError: if the value contains both single and double quotes
+    """
+    if NO_QUOTES_NEEDED.match(value):
+        return value
+    if "'" not in value:
+        return f"'{value}'"
+    if '"' not in value:
+        return f'"{value}"'
+    raise ValueError(
+        f"cannot quote the value {value!r}: it contains both single and double quotes"
+    )
 
 
 def comma_list(sequence: Sequence[str], article: str = "") -> str:

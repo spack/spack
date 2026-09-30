@@ -91,6 +91,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, Union
 
 import spack.deptypes
 import spack.error
+import spack.variant
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
@@ -99,7 +100,6 @@ from spack.util.tty import color
 
 if TYPE_CHECKING:
     import spack.spec
-    import spack.variant
 
 #: Valid name for specs and variants. Here we are not using
 #: the previous ``w[\w.-]*`` since that would match most
@@ -148,9 +148,6 @@ SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
 UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)(?:[a-zA-Z0-9-_\.\/]*)(?:\.json|\.yaml)"
 FILENAME = WINDOWS_FILENAME if sys.platform == "win32" else UNIX_FILENAME
-
-#: Values that match this (e.g., variants, flags) can be left unquoted in Spack output
-NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-]+$")
 
 
 class SpecTokenizationError(spack.error.SpecSyntaxError):
@@ -229,26 +226,6 @@ def strip_quotes(string: str) -> str:
     if len(string) >= 2 and string[0] in "'\"" and string[-1] == string[0]:
         return string[1:-1]
     return string
-
-
-def quote_if_needed(value: str) -> str:
-    """Add quotes around the value if it requires quotes, i.e. unless it matches
-    :data:`NO_QUOTES_NEEDED`. Single quotes are used, or double quotes around a value that
-    contains single quotes. There is no escaping: a value that contains both kinds of quotes
-    cannot be written in a spec string.
-
-    Raises:
-        spack.error.SpecSyntaxError: if the value contains both single and double quotes
-    """
-    if NO_QUOTES_NEEDED.match(value):
-        return value
-    if "'" not in value:
-        return f"'{value}'"
-    if '"' not in value:
-        return f'"{value}"'
-    raise spack.error.SpecSyntaxError(
-        f"cannot quote the value {value!r}: it contains both single and double quotes"
-    )
 
 
 # Token kinds: names of the top-level capture groups in FAST_SPEC_REGEX, compared against
@@ -464,7 +441,7 @@ class SpecParser:
                     # Collect edge attributes (key=value pairs) up to the closing bracket
                     attributes: Dict[str, List[str]] = {}
                     conditions: Optional["spack.spec.Spec"] = None
-                    usages: Optional[Dict[str, "spack.variant.UsageValue"]] = None
+                    usages: Optional[Dict[str, spack.variant.UsageValue]] = None
                     substitute = None
                     while True:
                         if not self.curr:
@@ -483,7 +460,7 @@ class SpecParser:
                         else:
                             name = ""
 
-                        if kind == _KEY_VALUE_PAIR and name not in ("when", "usages"):
+                        if name not in ("when", "usages"):
                             if name not in ("deptypes", "virtuals"):
                                 msg = (
                                     "the only edge attributes that are currently accepted are "
@@ -535,10 +512,12 @@ class SpecParser:
 
                         elif name == "usages":
                             # The options are never quoted, so the value always extends up to
-                            # the closing bracket: the tokenizer is context free, so restart
-                            # the scanner at the value, which is either that of the pair
-                            # (usages=+sarif) or what follows a bare USAGES token (usages=@1.2,
-                            # which is not an option and raises).
+                            # the closing bracket. The tokenizer is context free, so
+                            # usages=+sarif has already matched as one pair whose value is the
+                            # opaque blob "+sarif"; restart the scanner at that value to
+                            # tokenize the options themselves. A value that cannot be a pair
+                            # value, e.g. usages=@1.2, instead arrives as a bare USAGES token,
+                            # and rescanning after it raises on the non-option.
                             token = self.curr
                             value = self.curr.group(_KV_VALUE) if kind == _KEY_VALUE_PAIR else ""
                             self._rescan(self.curr.start(_KV_VALUE) if value else self.curr.end())
@@ -655,7 +634,7 @@ class SpecParser:
 
         return root_spec
 
-    def _usage_map(self) -> Dict[str, "spack.variant.UsageValue"]:
+    def _usage_map(self) -> Dict[str, spack.variant.UsageValue]:
         """Parse the value of a ``usages=`` edge property into a map of usages, keyed by name.
 
         The scanner is at the first option on entry, and ``self.curr`` is the closing bracket
@@ -665,9 +644,7 @@ class SpecParser:
         The map is a plain dict rather than a ``spack.spec.UsageMap``, so that this module stays
         free of ``spack.spec``; the caller of the parser is the one that builds the map.
         """
-        import spack.variant  # circular at import time: spack.variant imports this module
-
-        usages: Dict[str, "spack.variant.UsageValue"] = {}
+        usages: Dict[str, spack.variant.UsageValue] = {}
 
         # The lookahead is shifted in locals for speed and written back on return
         curr, next, scanner = self.curr, self.next, self.scanner

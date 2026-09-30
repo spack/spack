@@ -1434,7 +1434,7 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         # Use double quotes if internal single quotes are present
         (["zlib", "cflags='-O3 -g' +bar baz"], '''zlib cflags="'-O3 -g' +bar baz"'''),
         # There is no escaping: a value cannot contain both kinds of quotes
-        (["zlib", '''cflags='-O3 -g' "+bar baz"'''], spack.error.SpecSyntaxError),
+        (["zlib", '''cflags='-O3 -g' "+bar baz"'''], ValueError),
         # and a backslash is a character like any other: the compiler gets the define as typed
         (["zlib", r"cflags=-DCHAR=\'x\'"], r'''zlib cflags="-DCHAR=\'x\'"'''),
         # Ensure that empty strings are handled correctly on CLI
