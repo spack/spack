@@ -27,6 +27,7 @@ import spack.concretize_ui
 import spack.config
 import spack.context
 import spack.deptypes as dt
+import spack.directives
 import spack.environment as ev
 import spack.error
 import spack.externals_config
@@ -1954,6 +1955,25 @@ spack:
         with mutable_config.override("concretizer:reuse", True):
             s = spack.concretize.concretize_one("pkg-c")
         assert s.namespace == "builtin_mock"
+
+    def test_usages_bypass_solver(self, mock_packages):
+        gcc_cls = mock_packages.get_pkg_class("gcc")
+        old_usages = gcc_cls.usages
+        gcc_cls.usages = {}
+        spack.directives.usage("sarif", default=False)(gcc_cls)
+        try:
+            default = spack.concretize.concretize_one("callpath %c=gcc")
+            requested = spack.concretize.concretize_one("callpath %[usages=+sarif] c=gcc")
+        finally:
+            gcc_cls.usages = old_usages
+
+        assert not default.edges_to_dependencies("gcc")[0].usages["sarif"].value
+        assert requested.edges_to_dependencies("gcc")[0].usages["sarif"].value
+        assert str(requested).split(" %[usages=+sarif] c=gcc", 1)[0] == str(requested.root)
+
+        for edge in requested.traverse_edges(root=False):
+            if edge.parent.name != "callpath" and edge.spec.name == "gcc":
+                assert not edge.usages["sarif"].value
 
     @pytest.mark.regression("45538")
     def test_reuse_from_other_namespace_no_raise(

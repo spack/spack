@@ -950,7 +950,7 @@ class PyclingoDriver:
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
-            post_process_concretization_result(spec_dict, context=setup.context)
+            post_process_concretization_result(spec_dict, context=setup.context, input_specs=specs)
 
         if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
             raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
@@ -3291,6 +3291,55 @@ def reorder_flags(specs: SpecDict) -> None:
             spec.compiler_flags.update({flag_type: ordered_flags})
 
 
+def _usage_definitions_for_spec(
+    spec: spack.spec.Spec, *, repo: spack.repo.RepoPath
+) -> Dict[str, vt.Usage]:
+    """Return the highest-precedence usage definitions applicable to ``spec``."""
+    pkg_cls = repo.get_pkg_class(spec.fullname)
+    applicable = (
+        (usage.precedence, usage)
+        for when, usages in pkg_cls.usages.items()
+        if spec.satisfies(when)
+        for usage in usages.values()
+    )
+    return {usage.name: usage for _, usage in sorted(applicable, key=lambda item: item[0])}
+
+
+def _apply_usage_defaults_and_input_requests(
+    inputs: Sequence[spack.spec.Spec], specs: SpecDict, *, repo: spack.repo.RepoPath
+) -> None:
+    """Temporary pre-solver bypass for usages.
+
+    Set defaults for every usage defined by the child package, then overlay usage requests from
+    structurally matching edges in the abstract inputs. This deliberately ignores unification and
+    other solver semantics and should be removed when usages are represented in ASP.
+    """
+    input_edges = [
+        edge for root in inputs for edge in root.traverse_edges(root=False, cover="edges")
+    ]
+    seen = set()
+    for root in specs.values():
+        for edge in root.traverse_edges(root=False, cover="edges"):
+            if id(edge) in seen:
+                continue
+            seen.add(id(edge))
+            usages = spack.spec.UsageMap()
+            for usage in _usage_definitions_for_spec(edge.spec, repo=repo).values():
+                usages.set(usage.make_default())
+            for input_edge in input_edges:
+                if not input_edge.usages:
+                    continue
+                constraint = input_edge.copy()
+                constraint.usages = spack.spec.UsageMap()
+                same_direct_parent = (
+                    not input_edge.direct or edge.parent.name == input_edge.parent.name
+                )
+                if same_direct_parent and edge._satisfies_edge_attributes(constraint):
+                    for usage in input_edge.usages.values():
+                        usages.set(usage.copy())
+            edge.usages = usages
+
+
 def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> None:
     """Post-processing steps that need information present from a run of clingo.
 
@@ -3321,7 +3370,10 @@ def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> 
 
 
 def post_process_concretization_result(
-    specs: SpecDict, *, context: "spack.context.SpackContext"
+    specs: SpecDict,
+    *,
+    context: "spack.context.SpackContext",
+    input_specs: Sequence[spack.spec.Spec],
 ) -> None:
     """Update concretization results after *every* concretization, even cached ones.
 
@@ -3358,6 +3410,8 @@ def post_process_concretization_result(
 
         # check for commits must happen after all version adaptations are complete
         _specs_with_commits(s, repo=context.repo)
+
+    _apply_usage_defaults_and_input_requests(input_specs, specs, repo=context.repo)
 
     # mark concrete and assign hashes to all specs in the solve
     spack.spec.assign_hashes(roots.values(), repo=context.repo)
