@@ -50,6 +50,7 @@ from spack.directives import (
     redistribute,
     requires,
     resource,
+    usage,
     variant,
     version,
 )
@@ -550,6 +551,7 @@ __all__ = [
     "test_part",
     "touch",
     "tty",
+    "usage",
     "variant",
     "ver",
     "version",

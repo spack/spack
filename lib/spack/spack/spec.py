@@ -4508,7 +4508,12 @@ class Spec:
                 if new_name:
                     edge.spec.name = new_name
 
-                parts.append(edge.format(head=False, color=color))
+                sigil = "%" if _force_direct else None
+                parts.append(
+                    edge.format(
+                        format_string, sigil=sigil, head=False, deptypes=deptypes, color=color
+                    )
+                )
             finally:
                 edge.spec.name = old_name
 
@@ -4522,7 +4527,9 @@ class Spec:
             if not include(edge):
                 continue
             sigil = "%" if _force_direct else "^"  # hack til direct deps represented better
-            parts.append(edge.format(sigil=sigil, head=False, color=color))
+            parts.append(
+                edge.format(format_string, sigil=sigil, head=False, deptypes=deptypes, color=color)
+            )
 
             # also recursively add any direct dependencies of transitive dependencies
             if edge.spec._dependencies:
