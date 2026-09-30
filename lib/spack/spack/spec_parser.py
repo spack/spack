@@ -580,6 +580,7 @@ class SpecParser:
                         "virtuals": virtuals_tuple,
                         "propagation": propagation,
                         "when": conditions,
+                        "usages": usages,
                     }
                     if is_direct:
                         if dep_spec.name in LEGACY_COMPILER_TO_BUILTIN:
@@ -608,6 +609,7 @@ class SpecParser:
                         "depflag": 0,
                         "virtuals": virtuals_tuple,
                         "propagation": propagation,
+                        "usages": None,
                     }
                     if is_direct:
                         if dep_spec.name in LEGACY_COMPILER_TO_BUILTIN:
