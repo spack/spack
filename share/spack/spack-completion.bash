@@ -724,7 +724,7 @@ _spack_ci_rebuild_index() {
 }
 
 _spack_ci_rebuild() {
-    SPACK_COMPREPLY="-h --help -t --tests --no-fail-fast --fail-fast --timeout -j --jobs"
+    SPACK_COMPREPLY="-h --help -t --tests --no-fail-fast --fail-fast --timeout --push --no-push -j --jobs"
 }
 
 _spack_ci_reproduce_build() {
