@@ -20,21 +20,6 @@ level = "long"
 ISOLATE_SCOPE_PATH = os.path.join(spack.paths.etc_path, "isolate")
 
 
-def _isolate_repos_config(new_user_path):
-    current_repos_config = spack.config.CONFIG.get("repos")
-    new_repos_config = {}
-    for key, value in current_repos_config.items():
-        if isinstance(value, str):
-            new_repos_config[key] = value
-        if isinstance(value, dict):
-            if "destination" not in value:
-                value["destination"] = os.path.join(new_user_path, "repos", key)
-                new_repos_config[key] = value
-
-    with open(os.path.join(ISOLATE_SCOPE_PATH, "repos.yaml"), "w", encoding="utf-8") as f:
-        syaml.dump({"repos": new_repos_config}, f)
-
-
 def _isolate_include_config(new_user_path):
     """Write include.yaml with include:: override to redirect user scope."""
     user_scope_dict = {
@@ -44,23 +29,19 @@ def _isolate_include_config(new_user_path):
         "prefer_modify": True,
     }
 
-    # The override replaces the standard_scopes include list. Keep the layout
-    # scope visible because it contains old-resource redirects and may be
-    # updated later by commands such as `spack migrate undo`.
+    # Keep the layout scope visible because it contains old-resource redirects
+    # and may be updated later by commands such as `spack migrate undo`.
     # Layout scope comes first (lower priority) so user scope can override it.
     include_list = [
         {"name": "layout", "path": "$spack/etc/spack/layout", "optional": True},
         user_scope_dict,
     ]
 
-    # Create a syaml_str with override marker for the key
     include_key = syaml.syaml_str("include")
+    # The override replaces the standard_scopes include list.
     include_key.override = True  # type: ignore[attr-defined]
-
-    # Create the dict with the marked key
     include_data = syaml.syaml_dict([(include_key, include_list)])
 
-    # Write to isolate scope's include.yaml
     include_yaml_path = os.path.join(ISOLATE_SCOPE_PATH, "include.yaml")
     with open(include_yaml_path, "w", encoding="utf-8") as f:
         syaml.dump_config(include_data, f)
@@ -118,9 +99,6 @@ def _setup_isolate_scope(
     return config_path, final_user_path
 
 
-# _get_new_user_scope no longer needed - moved into _isolate_include_config
-
-
 def _ensure_destination_setup(destination: str, overwrite: bool):
     if os.path.exists(destination):
         if overwrite:
@@ -129,9 +107,6 @@ def _ensure_destination_setup(destination: str, overwrite: bool):
             raise Exception(f"Isolation destination: {destination} already exists")
     os.mkdir(destination)
     return os.path.abspath(destination)
-
-
-# _preserve_and_extract_include no longer needed - we don't modify etc/spack/include.yaml
 
 
 def setup_parser(subparser: ArgumentParser):

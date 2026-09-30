@@ -1739,22 +1739,6 @@ def _layout_scope_path() -> str:
     return os.path.join(spack.paths.etc_path, "layout")
 
 
-def _isolate_scope_path() -> str:
-    """Path to the isolate scope directory."""
-    return os.path.join(spack.paths.etc_path, "isolate")
-
-
-def _is_spack_writable() -> bool:
-    """Check if $spack/etc/spack is writable."""
-    etc_spack = spack.paths.etc_path
-    return os.access(etc_spack, os.W_OK)
-
-
-def _has_layout_scope() -> bool:
-    """Check if layout scope exists."""
-    return os.path.exists(_layout_scope_path())
-
-
 def _detect_old_resources() -> Dict[str, bool]:
     """Detect presence of old Spack-internal resources.
 
