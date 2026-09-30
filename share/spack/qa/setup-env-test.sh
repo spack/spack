@@ -64,6 +64,7 @@ spack -m install --fake shell-a
 a_install=$(spack location -i shell-a)
 a_module=$(spack -m module tcl find shell-a)
 
+spack -m install --fake shell-b
 b_install=$(spack location -i shell-b)
 b_module=$(spack -m module tcl find shell-b)
 
