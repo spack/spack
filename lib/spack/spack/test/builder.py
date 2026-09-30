@@ -232,7 +232,6 @@ def test_dependent_callback_rejects_out_of_range_phase(builder_test_repository, 
 
 def test_parallel_edges_run_dependent_callback_once(builder_test_repository, monkeypatch):
     spec = spack.concretize.concretize_one("callbacks")
-    dependency = spec["dependentcallback"]
     edge = spec.edges_to_dependencies("dependentcallback")[0]
     spec._dependencies["dependentcallback"].append(edge.copy())
 
