@@ -57,8 +57,6 @@ _spack_env_append() {
         eval "current=\"\${${varname}}\""
         export $varname="$current$sep$value"
     fi
-
-    export $varname=$result
 }
 
 # _spack_env_prepend varname value sep
@@ -78,8 +76,6 @@ _spack_env_prepend() { # if not exporting then use lowercase
         eval "current=\"\${${varname}}\""
         export $varname="$value$sep$current"
     fi
-
-    export $varname=$result
 }
 
 # _spack_env_remove_value varname value sep

@@ -123,8 +123,9 @@ def deactivate_commands(shell):
             " $spack_prompt}"
         )
     else:
-        cmds += textwrap.dedent(
-            """
+        cmds += (
+            textwrap.dedent(
+                """
                 alias despacktivate > /dev/null 2>&1 && unalias despacktivate;
                 if [ ! -z ${SPACK_OLD_PS1+x} ]; then
                     if [ "$SPACK_OLD_PS1" = '$$$$' ]; then
@@ -135,6 +136,8 @@ def deactivate_commands(shell):
                     unset SPACK_OLD_PS1;
                 fi
             """
+            ).strip()
+            + "\n"
         )
 
     return cmds
