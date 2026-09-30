@@ -2676,8 +2676,8 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     # Inherit permissions from parent ($spack/etc/spack) for shared installations
     filesystem.mkdirp(layout_scope_path, default_perms="parents")
 
-    # Config to write to the layout scope
-    scope_config: Dict[str, Any] = {}
+    # Accumulate config changes here
+    config_changes: Dict[str, Any] = {}
     migrated_resources: List[str] = []
     retained_resources: List[str] = []
 
@@ -2686,11 +2686,7 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     # carried into the new configuration.
     if old_resources["installs"]:
         retained_resources.append("existing installs")
-        if "config" not in scope_config:
-            scope_config["config"] = {}
-        scope_config["config"]["install_tree"] = {
-            "root": os.path.join(spack.paths.prefix, "opt", "spack")
-        }
+        config_changes["install_tree"] = {"root": os.path.join(spack.paths.prefix, "opt", "spack")}
         tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
     # 2. Handle GPG (both keyring and keys directory)
@@ -2708,19 +2704,15 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
         # If SPACK_GNUPGHOME is set, record it in layout scope
         if gnupghome:
             gnupghome_norm = os.path.normpath(os.path.expanduser(gnupghome))
-            if "config" not in scope_config:
-                scope_config["config"] = {}
             if gnupghome_norm == old_gpg_norm:
                 # User explicitly points to old location - keep it there
-                scope_config["config"]["gpg_path"] = old_gpg_home
-                scope_config["config"]["gpg_keys_path"] = old_gpg_keys
+                config_changes["gpg_path"] = old_gpg_home
+                config_changes["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
             else:
                 # User points to custom location - record it
-                scope_config["config"]["gpg_path"] = gnupghome
-                scope_config["config"]["gpg_keys_path"] = os.path.join(
-                    gnupghome, "private-keys-v1.d"
-                )
+                config_changes["gpg_path"] = gnupghome
+                config_changes["gpg_keys_path"] = os.path.join(gnupghome, "private-keys-v1.d")
                 retained_resources.append(f"GPG data (using SPACK_GNUPGHOME: {gnupghome})")
         else:
             # No env var - migrate to new location
@@ -2728,10 +2720,8 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
                 migrated_resources.append("GPG data")
             else:
                 # Migration failed - keep in old location
-                if "config" not in scope_config:
-                    scope_config["config"] = {}
-                scope_config["config"]["gpg_path"] = old_gpg_home
-                scope_config["config"]["gpg_keys_path"] = old_gpg_keys
+                config_changes["gpg_path"] = old_gpg_home
+                config_changes["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
 
     def _handle_portable_resource(
@@ -2761,9 +2751,7 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
             tty.debug(f"Copied {resource_name} from {old_path} to {target_path}")
         else:
             # Migration failed - keep in old location
-            if "config" not in scope_config:
-                scope_config["config"] = {}
-            scope_config["config"][config_key] = old_path
+            config_changes[config_key] = old_path
             retained_resources.append(f"{resource_name} (kept in the old location)")
             tty.debug(f"{resource_name.capitalize()} kept in old location: {old_path}")
 
@@ -2783,11 +2771,13 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
             _migrate_environments,
         )
 
-    # Write config scope files to the layout scope
-    if "config" in scope_config:
+    # Write config scope files to the layout scope only if we have config changes
+    if config_changes:
         with open(config_path, "w", encoding="utf-8") as f:
-            syaml.dump({"config": scope_config["config"]}, f)
+            syaml.dump({"config": config_changes}, f)
         tty.debug(f"Wrote config.yaml to {config_path}")
+    else:
+        tty.debug("No config changes needed, skipping config.yaml")
 
     tty.debug(f"Created layout scope for auto-migration: {layout_scope_path}")
 
