@@ -38,7 +38,6 @@ import spack.error
 import spack.filesystem_view as fsv
 import spack.installer_dispatch
 import spack.package_base
-import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.schema.spec_list
@@ -87,8 +86,10 @@ spack_env_view_var = "SPACK_ENV_VIEW"
 #: Validation error for a currently activate environment that failed to parse
 _active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
-#: default path where environments are stored in the spack tree
-default_env_path = os.path.join(spack.paths.var_path, "environments")
+#: default path where environments are stored (XDG-compliant location)
+default_env_path = os.path.join(
+    os.path.expanduser("~"), ".local", "share", "spack", "environments"
+)
 
 
 #: Name of the input yaml file for an environment
