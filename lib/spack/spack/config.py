@@ -2729,7 +2729,9 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     old_gpg_keys = spack.paths.old_gpg_keys_path
     if old_resources["gpg_keys"]:
         old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_home))
-        data_home = substitute_path_variables("$data_home")
+        # Compute data_home directly without config (CONFIG doesn't exist yet)
+        expanded_home = os.path.expanduser("~")
+        data_home = os.path.join(expanded_home, ".local", "share", "spack")
         target_gpg_home = os.path.join(data_home, "gpg")
         target_gpg_keys = os.path.join(data_home, "gpg-keys")
         gnupghome = os.getenv("SPACK_GNUPGHOME")
