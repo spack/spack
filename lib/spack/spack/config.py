@@ -40,6 +40,7 @@ import sys
 import tempfile
 import warnings
 from collections import defaultdict
+from enum import Enum
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union, cast
 
@@ -80,6 +81,15 @@ from spack.util.cpus import cpus_available
 from spack.util.spack_yaml import get_mark_from_yaml_data
 
 from .enums import ConfigScopePriority
+
+
+class DestinationCheck(Enum):
+    """Actions for destination verification callback in migration."""
+
+    PROCEED = "proceed"  # Destination is clear, proceed with migration
+    SKIP = "skip"  # Already migrated correctly, skip but return success
+    FAIL = "fail"  # Conflict detected, abort migration
+
 
 #: Dict from section names -> schema for that section
 SECTION_SCHEMAS: Dict[str, Any] = {
@@ -2103,17 +2113,20 @@ def _migrate_with_staging(
     lock_name: str,
     staging_name: str,
     description: str,
+    verify_destination_callback=None,
 ) -> bool:
-    """Generic migration function for resources that used to be in
-    $HOME (user config and package repos).
+    """Generic migration function for resources.
 
     Common pattern for atomic migrations:
     1. Check source exists and has content
     2. Check destination doesn't exist or is empty
     3. Acquire lock
-    4. Create staging directory
-    5. Call callback to populate staging (copy/process files)
-    6. Atomically rename staging to destination
+    4. Optional: verify destination with callback (this is for resources
+       that used to be in the spack prefix and were not shared between
+       instances)
+    5. Create staging directory
+    6. Call callback to populate staging (copy/process files)
+    7. Atomically rename staging to destination
     """
     if not _is_nonempty_directory(old_path):
         return False
@@ -2132,6 +2145,14 @@ def _migrate_with_staging(
 
     try:
         lock.acquire_write()
+
+        if verify_destination_callback:
+            action = verify_destination_callback(new_path)
+            if action == DestinationCheck.SKIP:
+                return True
+            elif action == DestinationCheck.FAIL:
+                return False
+            # PROCEED continues normal flow
 
         if not _is_nonempty_directory(old_path):
             return False
@@ -2218,6 +2239,14 @@ def _prepare_package_repos_staging(old_path, staging_path, new_path):
     shutil.copytree(old_path, staging_path, symlinks=True)
 
 
+def _prepare_gpg_staging(old_path, staging_path, marker_name):
+    """Callback for GPG migration - copy directory, set permissions, add marker."""
+    shutil.copytree(old_path, staging_path)
+    os.chmod(staging_path, 0o700)
+    with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
+        f.write(f"Migrated from {spack.paths.prefix}\n")
+
+
 def _migrate_user_config() -> bool:
     """Copy config files from ~/.spack to ~/.config/spack."""
     old_location = os.path.expanduser("~/.spack")
@@ -2299,91 +2328,51 @@ def _migrate_gpg(
     if not gpg_home_exists and not gpg_keys_exists:
         return True
 
-    # Check if our migration already succeeded in a prior interrupted attempt
+    # Compute marker name for this spack instance
     source_hash = _migration_source_hash()
     marker_name = f".migration-{source_hash}"
 
-    # Prepare parent directories
-    parent_dir = os.path.dirname(target_gpg_home)
-    try:
-        filesystem.mkdirp(parent_dir)
-    except (OSError, PermissionError):
-        # Cannot create destination directory - migration not possible
-        return False
+    def verify_with_marker(dest_path):
+        """Check destination for migration marker."""
+        if not os.path.exists(dest_path):
+            return DestinationCheck.PROCEED
+        marker_path = os.path.join(dest_path, marker_name)
+        if os.path.exists(marker_path):
+            tty.debug(f"Already migrated from this spack instance (found marker {marker_name})")
+            return DestinationCheck.SKIP
+        tty.debug(f"Cannot migrate: destination exists from different source: {dest_path}")
+        return DestinationCheck.FAIL
 
-    lock = spack.util.lock.Lock(os.path.join(parent_dir, ".lock"), default_timeout=120)
-    staging_home = None
-    staging_keys = None
+    if gpg_home_exists:
+        success = _migrate_with_staging(
+            old_path=old_gpg_home,
+            new_path=target_gpg_home,
+            prepare_staging_callback=lambda old, staging, new: _prepare_gpg_staging(
+                old, staging, marker_name
+            ),
+            lock_name=".gpg-home-migration.lock",
+            staging_name=".spack-gpg-home-staging",
+            description="GPG home",
+            verify_destination_callback=verify_with_marker,
+        )
+        if not success:
+            return False
 
-    try:
-        lock.acquire_write()
+    # Only proceed to gpg_keys if gpg_home succeeded (or didn't exist)
+    if gpg_keys_exists:
+        return _migrate_with_staging(
+            old_path=old_gpg_keys,
+            new_path=target_gpg_keys,
+            prepare_staging_callback=lambda old, staging, new: _prepare_gpg_staging(
+                old, staging, marker_name
+            ),
+            lock_name=".gpg-keys-migration.lock",
+            staging_name=".spack-gpg-keys-staging",
+            description="GPG keys",
+            verify_destination_callback=verify_with_marker,
+        )
 
-        # Migrate GPG home (keyring)
-        if gpg_home_exists:
-            if os.path.exists(target_gpg_home):
-                marker_path = os.path.join(target_gpg_home, marker_name)
-                if os.path.exists(marker_path):
-                    tty.debug(
-                        f"GPG home already migrated from this spack instance "
-                        f"(found marker {marker_name})"
-                    )
-                else:
-                    tty.debug(
-                        f"Cannot migrate GPG home: destination exists from different source: "
-                        f"{target_gpg_home}"
-                    )
-                    return False
-            else:
-                staging_home = os.path.join(parent_dir, ".spack-gpg-home-staging")
-                # Clean up any stale staging directory from a previous failed attempt
-                if os.path.exists(staging_home):
-                    shutil.rmtree(staging_home, ignore_errors=True)
-                shutil.copytree(old_gpg_home, staging_home)
-                os.chmod(staging_home, 0o700)
-                # Add migration marker to identify this source
-                with open(os.path.join(staging_home, marker_name), "w", encoding="utf-8") as f:
-                    f.write(f"Migrated from {spack.paths.prefix}\n")
-                os.replace(staging_home, target_gpg_home)
-                staging_home = None
-
-        # Migrate GPG keys directory
-        if gpg_keys_exists:
-            if os.path.exists(target_gpg_keys):
-                marker_path = os.path.join(target_gpg_keys, marker_name)
-                if os.path.exists(marker_path):
-                    tty.debug(
-                        f"GPG keys already migrated from this spack instance "
-                        f"(found marker {marker_name})"
-                    )
-                else:
-                    tty.debug(
-                        f"Cannot migrate GPG keys: destination exists from different source: "
-                        f"{target_gpg_keys}"
-                    )
-                    return False
-            else:
-                staging_keys = os.path.join(parent_dir, ".spack-gpg-keys-staging")
-                # Clean up any stale staging directory from a previous failed attempt
-                if os.path.exists(staging_keys):
-                    shutil.rmtree(staging_keys, ignore_errors=True)
-                shutil.copytree(old_gpg_keys, staging_keys)
-                # Add migration marker to identify this source
-                with open(os.path.join(staging_keys, marker_name), "w", encoding="utf-8") as f:
-                    f.write(f"Migrated from {spack.paths.prefix}\n")
-                os.replace(staging_keys, target_gpg_keys)
-                staging_keys = None
-
-        # Both succeeded - old resources remain in place
-        return True
-    except (OSError, shutil.Error) as e:
-        tty.warn(f"Failed to migrate GPG directories: {e}")
-        return False
-    finally:
-        if staging_home is not None:
-            shutil.rmtree(staging_home, ignore_errors=True)
-        if staging_keys is not None:
-            shutil.rmtree(staging_keys, ignore_errors=True)
-        lock.release_write()
+    return True
 
 
 def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
