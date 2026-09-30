@@ -2891,6 +2891,8 @@ def _perform_auto_migration_at_module_load():
         return
 
     marker_path = _migration_done_marker_path()
+    home_result = {"user_config": False, "package_repos": False}
+    prefix_result = {"migrated": [], "retained": []}
 
     if not os.path.exists(marker_path):
         # Migrate user config scope and package repos. An entirely-new spack
@@ -2899,7 +2901,7 @@ def _perform_auto_migration_at_module_load():
         # the spack prefix that need to be migrated, but not if the
         # `spack isolate` command has been run (in which case it will write
         # the same migration marker as auto-migration)
-        _do_migrate_home()
+        home_result = _do_migrate_home()
 
     if _has_old_prefix_resources() and not os.path.exists(marker_path):
         lock_path = _migration_lock_path()
@@ -2907,13 +2909,18 @@ def _perform_auto_migration_at_module_load():
         try:
             with spack.util.lock.WriteTransaction(lock):
                 if not os.path.exists(marker_path):
-                    _do_migrate_spack_prefix()
+                    prefix_result = _do_migrate_spack_prefix()
         except spack.util.lock.LockPermissionError:
             # Read-only prefix: skip migration
             pass
         except spack.util.lock.LockTimeoutError as e:
             # Some other auto-migration process is taking too long, bail vs. hang
             tty.die(f"Timed out waiting for migration lock: {e}")
+
+    # Show migration summary
+    msg = _compose_migration_message(prefix_result, home_result)
+    if msg:
+        tty.msg(msg)
 
 
 # Detect command and perform auto-migration at module load time (before CONFIG is created)
