@@ -1813,6 +1813,7 @@ def walk_yaml_for_paths(
     # Keys whose string values should be treated as paths
     PATH_KEYS = {
         "include",
+        "include_concrete",
         "build_stage",
         "test_stage",
         "source_cache",
