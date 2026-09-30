@@ -2449,14 +2449,16 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
             entries_to_copy.append(entry)
 
         # Define view exclusion callback for environment copies
-        from spack.environment.environment import MARKER_FILE
+        # Use hardcoded marker instead of importing from environment module to avoid
+        # circular imports during module load time
+        VIEW_MARKER_FILE = ".spack-view"
 
         def ignore_views(directory, names):
-            """Exclude view directories (identified by MARKER_FILE) during environment copy."""
+            """Exclude view directories (identified by .spack-view marker) during environment copy."""
             ignored = []
             for name in names:
                 path = os.path.join(directory, name)
-                if os.path.isdir(path) and os.path.exists(os.path.join(path, MARKER_FILE)):
+                if os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
                     ignored.append(name)
                     tty.debug(f"Excluding view directory: {path}")
             return ignored
@@ -2776,7 +2778,9 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
             target_subdir: Subdirectory under $data_home for target
             migrate_fn: Function to perform the migration (returns True on success)
         """
-        data_home = substitute_path_variables("$data_home")
+        # Compute data_home directly without config (CONFIG doesn't exist yet)
+        expanded_home = os.path.expanduser("~")
+        data_home = os.path.join(expanded_home, ".local", "share", "spack")
         target_path = os.path.join(data_home, target_subdir)
 
         # Always migrate to default location (no config checks since CONFIG doesn't exist yet)
