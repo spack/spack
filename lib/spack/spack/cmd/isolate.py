@@ -5,7 +5,7 @@ import os
 import shutil
 import sys
 from argparse import ArgumentParser
-from typing import Tuple
+from typing import Dict, List, Tuple
 
 import spack.config
 import spack.paths
@@ -45,6 +45,11 @@ def _isolate_include_config(new_user_path):
     include_yaml_path = os.path.join(ISOLATE_SCOPE_PATH, "include.yaml")
     with open(include_yaml_path, "w", encoding="utf-8") as f:
         syaml.dump_config(include_data, f)
+
+
+def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
+    """Return location settings for data created by an isolated Spack."""
+    return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
 
 
 def _setup_isolate_scope(
@@ -167,7 +172,7 @@ def _do_isolate(args):
             "build_stage:": ["$tempdir/$user/spack-stage", os.path.join(destination, "stage")],
             "test_stage:": os.path.join(destination, "test-stage"),
             "misc_cache:": os.path.join(destination, "cache"),
-            "locations": spack.config._isolate_locations_config(destination),
+            "locations": _isolate_locations_config(destination),
         }
     }
 

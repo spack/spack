@@ -2566,11 +2566,6 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     return True
 
 
-def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
-    """Return location settings for data created by an isolated Spack."""
-    return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
-
-
 def _do_migrate_home() -> Dict[str, bool]:
     """Migrate user config and package repos from ~/.spack to new XDG locations.
 
