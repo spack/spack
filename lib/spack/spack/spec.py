@@ -944,7 +944,7 @@ class DependencySpec:
         direct: whether the edge is a direct edge in an abstract spec.
         propagation: whether the edge is propagated as a preference to other nodes.
         when: conditional for when the edge is applied.
-        usages: UsagesMap reflecting the options present on the edge.
+        usages: options for how parent uses spec that are not node properties of spec.
     """
 
     __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when", "propagation", "usages"
