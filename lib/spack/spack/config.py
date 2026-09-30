@@ -2218,7 +2218,7 @@ def _prepare_config_staging(old_location, staging_path, new_location):
 
 def _prepare_package_repos_staging(old_path, staging_path, new_path):
     """Callback for package repos migration - simple copytree."""
-    shutil.copytree(old_path, staging_path, symlinks=True, dirs_exist_ok=True)
+    shutil.copytree(old_path, staging_path, symlinks=True)
 
 
 def _migrate_user_config() -> bool:
