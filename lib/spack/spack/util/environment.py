@@ -41,7 +41,7 @@ if sys.platform == "win32":
 else:
     SYSTEM_PATHS = ["/", "/usr", "/usr/local"]
     SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
-    DEFAULT_SHELL = "sh"
+    DEFAULT_SHELL = os.environ.get("SPACK_SHELL", "sh")
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
@@ -52,53 +52,144 @@ SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for 
 class ShellCmdString:
     """Formats commands to set or unset an environment variable for a given shell."""
 
-    _SET_STRINGS = {
-        "sh": "export {0}={1}",
-        "csh": "setenv {0} {1}",
-        "fish": "set -gx {0} {1}",
-        "bat": 'set "{0}={1}"',
-        "pwsh": "$Env:{0}='{1}'",
-    }
-
-    _UNSET_STRINGS = {
-        "sh": "unset {0}",
-        "csh": "unsetenv {0}",
-        "fish": "set -e {0}",
-        "bat": 'set "{0}="',
-        "pwsh": "Set-Item -Path Env:{0}",
-    }
-
-    #: separator used to terminate a statement and join it with the next one
-    _JOIN_STRINGS = {"sh": ";\n", "csh": ";\n", "fish": ";\n", "bat": "\n", "pwsh": "\n"}
-
     def __init__(self, shell: str):
         self.shell = shell
+        self.separator = ":" if shell not in ("bat", "pwsh") else ";"
+
+    def shell_quote(self, value: str, shell: Optional[str] = None) -> str:
+        """Quote a string for safe use in a shell script.
+
+        Args:
+            value: The string to quote
+            shell: The target shell (sh, csh, fish, bat, pwsh)
+
+        Returns:
+            A properly quoted string safe for the target shell
+        """
+        if not shell:
+            shell = self.shell
+        if not value:
+            return '""' if shell == "bat" else "''"
+
+        if shell == "csh":
+            if "'" in value or any(c in value for c in ' \t\n$`\\";&|<>(){}[]!*?'):
+                return "'" + value.replace("'", "'\\''") + "'"
+            return value
+        elif shell == "fish":
+            if "'" in value or any(c in value for c in ' \t\n$`\\";&|<>(){}[]!*?'):
+                return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+            return value
+        elif shell == "bat":
+            # bat uses double quotes. The %~N syntax strips quotes when passing to helpers.
+            # Double any existing double quotes to escape them.
+            # Also escape % as %% to prevent variable expansion (%PATH% -> %%PATH%%).
+            return '"' + value.replace('"', '""').replace("%", "%%") + '"'
+        elif shell == "pwsh":
+            # "," builds an array, and "@", "#", "-" are special only at the start of a token
+            if (
+                "'" in value
+                or any(c in value for c in ' \t\n$`";&|<>(){}[],')
+                or value[0] in "@#-"
+            ):
+                return "'" + value.replace("'", "''") + "'"
+            return value
+        else:
+            return shlex.quote(value)
+
+    def shell_fn(self, name: str, shell: str = "sh") -> str:
+        """Return a reference that invokes one of the ``_spack_env_*`` helpers.
+
+        Every shell but cmd can define these as functions and call them by bare name. cmd has
+        no functions, so ``environment-mods.bat`` stores each dispatch in an environment
+        variable of the same name, which the generated script expands.
+
+        Args:
+            name: name of the helper, e.g. ``_spack_env_prepend``
+            shell: The target shell (sh, csh, fish, bat, pwsh)
+        """
+        return f"%{name}%" if shell == "bat" else name
+
+    def append(self, name: str, value: str) -> str:
+        """Returns the command to append a value to an environment variable."""
+        cmd = self.shell_fn("_spack_env_append", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
+    def prepend(self, name: str, value: str) -> str:
+        """Returns the command to prepend a value to an environment variable."""
+        cmd = self.shell_fn("_spack_env_prepend", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
+    def prune_duplicates(self, name: str) -> str:
+        """Returns the command to prune duplicate values from an environment variable."""
+        cmd = self.shell_fn("_spack_env_prune_duplicates", self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
+
+        return f"{cmd} {name} {sep}\n"
+
+    def remove_first(self, name: str, value: str) -> str:
+        """Returns the command to remove the first occurrence of a value
+        from an environment variable."""
+        cmd = self.shell_fn("_spack_env_remove_first", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
+    def remove_last(self, name: str, value: str) -> str:
+        """Returns the command to remove the last occurrence of a value
+        from an environment variable."""
+        cmd = self.shell_fn("_spack_env_remove_last", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
+
+        return f"{cmd} {name} {value} {sep}\n"
+
+    def remove_value(self, name: str, value: str) -> str:
+        """Returns the command to remove a value from an environment variable."""
+        cmd = self.shell_fn("_spack_env_remove_value", self.shell)
+        value = self.shell_quote(value, self.shell)
+        sep = self.shell_quote(self.separator, self.shell)
+        name = self.shell_quote(name)
+
+        return f"{cmd} {name} {value} {sep}\n"
 
     def set(self, name: str, value: str) -> str:
         """Returns the command to set an environment variable to a value."""
-        return self._SET_STRINGS[self.shell].format(name, value)
+        cmd = self.shell_fn("_spack_env_set", self.shell)
+        value = self.shell_quote(value, self.shell)
+        name = self.shell_quote(name)
+
+        return f"{cmd} {name} {value}\n"
 
     def unset(self, name: str) -> str:
         """Returns the command to unset an environment variable."""
-        return self._UNSET_STRINGS[self.shell].format(name)
+        cmd = self.shell_fn("_spack_env_unset", self.shell)
+        name = self.shell_quote(name)
 
-    def alias(self, name: str, code: str) -> List[str]:
+        return f"{cmd} {name}\n"
+
+    def alias(self, name: str, code: str) -> str:
         if self.shell == "csh":
-            return [f'alias {name} "{code}"']
+            return f'alias {name} "{code}"\n'
         elif self.shell == "fish":
-            return [f"function {name}", code, "end"]
+            return f"function {name}\n{code}\nend\n"
         elif self.shell in ("bat", "pwsh"):
             # Not implemented in Windows shells
-            return []
+            return ""
         else:
             # posix shell
-            return [f"alias {name}='{code}'"]
-
-    def join(self, cmds: List[str]) -> str:
-        """Joins a list of commands into a single, terminated script."""
-        cmds = cmds + [""]
-        sep = self._JOIN_STRINGS[self.shell]
-        return sep.join(cmds)
+            return f"alias {name}='{code}'\n"
 
 
 TRACING_ENABLED = False
@@ -115,13 +206,6 @@ def is_system_path(path: Path) -> bool:
 def filter_system_paths(paths: Iterable[Path]) -> List[Path]:
     """Returns a copy of the input where system paths are filtered out."""
     return [p for p in paths if not is_system_path(p)]
-
-
-def deprioritize_system_paths(paths: List[Path]) -> List[Path]:
-    """Reorders input paths by putting system paths at the end of the list, otherwise
-    preserving order.
-    """
-    return list(sorted(paths, key=is_system_path))
 
 
 def prune_duplicate_paths(paths: List[Path]) -> List[Path]:
@@ -296,6 +380,9 @@ class NameModifier:
         """Apply the modification to the mapping passed as input"""
         raise NotImplementedError("must be implemented by derived classes")
 
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        raise NotImplementedError("must be implemented by derived classes")
+
 
 class NameValueModifier:
     """Base class for modifiers that modify the value of an environment variable."""
@@ -322,6 +409,9 @@ class NameValueModifier:
     def execute(self, env: MutableMapping[str, str]):
         """Apply the modification to the mapping passed as input"""
         raise NotImplementedError("must be implemented by derived classes")
+
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        raise NotImplementedError(f"must be implemented by derived classes\n{self}")
 
 
 class NamePathModifier(NameValueModifier):
@@ -361,6 +451,10 @@ class SetEnv(NameValueModifier):
         tty.debug(f"SetEnv: {self.name}={self.value}", level=3)
         env[self.name] = self.value
 
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        return shell_cmd.set(self.name, str(self.value))
+
 
 class AppendFlagsEnv(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
@@ -370,12 +464,20 @@ class AppendFlagsEnv(NameValueModifier):
         else:
             env[self.name] = self.value
 
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        return shell_cmd.append(self.name, str(self.value))
+
 
 class UnsetEnv(NameModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"UnsetEnv: {self.name}", level=3)
         # Avoid throwing if the variable was not set
         env.pop(self.name, None)
+
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        return shell_cmd.unset(self.name)
 
 
 class RemoveFlagsEnv(NameValueModifier):
@@ -385,6 +487,10 @@ class RemoveFlagsEnv(NameValueModifier):
         flags = environment_value.split(self.separator) if environment_value else []
         flags = [f for f in flags if f != self.value]
         env[self.name] = self.separator.join(flags)
+
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        return shell_cmd.remove_value(self.name, str(self.value))
 
 
 class SetPath(NameValueModifier):
@@ -404,6 +510,10 @@ class SetPath(NameValueModifier):
         tty.debug(f"SetPath: {self.name}={self.value}", level=3)
         env[self.name] = self.value
 
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        return shell_cmd.set(self.name, str(self.value))
+
 
 class AppendPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
@@ -413,6 +523,11 @@ class AppendPath(NamePathModifier):
         directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
         env[self.name] = self.separator.join(directories)
 
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        return shell_cmd.append(self.name, value)
+
 
 class PrependPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
@@ -421,6 +536,12 @@ class PrependPath(NamePathModifier):
         directories = environment_value.split(self.separator) if environment_value else []
         directories = [path_to_os_path(os.path.normpath(self.value)).pop()] + directories
         env[self.name] = self.separator.join(directories)
+
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        value = path_to_os_path(os.path.normpath(self.value)).pop()
+
+        return shell_cmd.prepend(self.name, value)
 
 
 class RemoveFirstPath(NamePathModifier):
@@ -434,6 +555,10 @@ class RemoveFirstPath(NamePathModifier):
             directories.remove(val)
         env[self.name] = self.separator.join(directories)
 
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        return shell_cmd.remove_first(self.name, str(self.value))
+
 
 class RemoveLastPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
@@ -445,6 +570,10 @@ class RemoveLastPath(NamePathModifier):
         if val in directories:
             directories.remove(val)
         env[self.name] = self.separator.join(directories[::-1])
+
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        return shell_cmd.remove_last(self.name, str(self.value))
 
 
 class RemovePath(NamePathModifier):
@@ -459,16 +588,10 @@ class RemovePath(NamePathModifier):
         ]
         env[self.name] = self.separator.join(directories)
 
-
-class DeprioritizeSystemPaths(NameModifier):
-    def execute(self, env: MutableMapping[str, str]):
-        tty.debug(f"DeprioritizeSystemPaths: {self.name}", level=3)
-        environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator) if environment_value else []
-        directories = deprioritize_system_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        )
-        env[self.name] = self.separator.join(directories)
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        return shell_cmd.remove_value(self.name, value)
 
 
 class PruneDuplicatePaths(NameModifier):
@@ -480,6 +603,10 @@ class PruneDuplicatePaths(NameModifier):
             [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
         )
         env[self.name] = self.separator.join(directories)
+
+    def cache_command(self, shell: str = DEFAULT_SHELL):
+        shell_cmd = ShellCmdString(shell)
+        return shell_cmd.prune_duplicates(self.name)
 
 
 def _validate_path_value(name: str, value: Any) -> Union[str, pathlib.PurePath]:
@@ -717,17 +844,6 @@ class EnvironmentModifications:
         item = RemovePath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    def deprioritize_system_paths(self, name: str, separator: str = os.pathsep) -> None:
-        """Stores a request to deprioritize system paths in a path list,
-        otherwise preserving the order.
-
-        Args:
-            name: name of the environment variable
-            separator: separator for the paths (default: :data:`os.pathsep`)
-        """
-        item = DeprioritizeSystemPaths(name, separator=separator, trace=self._trace())
-        self.env_modifications.append(item)
-
     def prune_duplicate_paths(self, name: str, separator: str = os.pathsep) -> None:
         """Stores a request to remove duplicates from a path list, otherwise
         preserving the order.
@@ -818,34 +934,54 @@ class EnvironmentModifications:
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:
-        """Return shell code to apply the modifications."""
+        """Return shell code to apply the modifications.
+
+        Args:
+            shell: Target shell type (sh, csh, fish, bat, pwsh)
+            explicit: If True, generate resolved export statements for provenance.
+                     If False, generate _spack_env_* function calls for runtime.
+            env: Base environment to apply modifications to when explicit=True.
+        """
         modifications = self.group_by_name()
 
-        env = os.environ if env is None else env
-        new_env = dict(env.items())
-
-        for _, actions in sorted(modifications.items()):
-            for modifier in actions:
-                modifier.execute(new_env)
-
-        if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
-            new_env["MANPATH"] += os.pathsep
-
         shell_cmd = ShellCmdString(shell)
-        cmds = []
+        if explicit:
+            env = os.environ if env is None else env
+            new_env = dict(env.items())
 
-        for name in sorted(set(modifications)):
-            new = new_env.get(name, None)
-            old = env.get(name, None)
-            if explicit or new != old:
-                if new is None:
-                    cmds.append(shell_cmd.unset(name))
-                else:
-                    value = new_env[name]
-                    if shell not in ("bat", "pwsh"):
-                        value = shlex.quote(value)
-                    cmds.append(shell_cmd.set(name, value))
-        return shell_cmd.join(cmds)
+            for _, actions in sorted(modifications.items()):
+                for modifier in actions:
+                    modifier.execute(new_env)
+
+            if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
+                new_env["MANPATH"] += os.pathsep
+
+            cmds = ""
+            for name in sorted(set(modifications)):
+                new = new_env.get(name, None)
+                old = env.get(name, None)
+                if new != old:
+                    if new is None:
+                        cmds += f"_spack_env_unset {name}\n"
+                    else:
+                        value = new_env[name]
+                        value = shell_cmd.shell_quote(value, shell)
+                        cmds += f"_spack_env_set {name} {value}\n"
+            return cmds
+        else:
+            cache_commands = ""
+            for _, actions in sorted(modifications.items()):
+                for modifier in actions:
+                    cache_commands += modifier.cache_command(shell)
+
+            if "MANPATH" in modifications:
+                fn = shell_cmd.shell_fn("_spack_env_append", shell)
+                empty = shell_cmd.shell_quote("", shell)
+                cache_commands += (
+                    f"{fn} MANPATH {empty} {shell_cmd.shell_quote(os.pathsep, shell)}\n"
+                )
+
+            return cache_commands
 
     @staticmethod
     def from_sourcing_file(

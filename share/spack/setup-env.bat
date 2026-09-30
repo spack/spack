@@ -60,6 +60,12 @@ if not defined EDITOR (
    set EDITOR=notepad
 )
 
+:: Set shell being used
+set "SPACK_SHELL=bat"
+
+:: Load environment modification functions for spack load/unload
+call "%~dp0environment-mods.bat"
+
 @echo **********************************************************************
 @echo ** Spack Package Manager
 @echo **********************************************************************
