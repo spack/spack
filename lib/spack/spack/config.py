@@ -2308,7 +2308,12 @@ def _migrate_gpg(
 
     # Prepare parent directories
     parent_dir = os.path.dirname(target_gpg_home)
-    filesystem.mkdirp(parent_dir)
+    try:
+        filesystem.mkdirp(parent_dir)
+    except (OSError, PermissionError):
+        # Cannot create destination directory - migration not possible
+        return False
+
     lock = spack.util.lock.Lock(os.path.join(parent_dir, ".lock"), default_timeout=120)
     staging_home = None
     staging_keys = None
@@ -2392,7 +2397,12 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
     source_hash = _migration_source_hash()
     marker_name = f".migration-{source_hash}"
 
-    filesystem.mkdirp(dst_dir)
+    try:
+        filesystem.mkdirp(dst_dir)
+    except (OSError, PermissionError):
+        # Cannot create destination directory - migration not possible
+        return False
+
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
     try:
         lock.acquire_write()
@@ -2516,7 +2526,13 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     src_entries = sorted(os.listdir(src_dir))
     if not src_entries:
         return True
-    filesystem.mkdirp(dst_dir)
+
+    try:
+        filesystem.mkdirp(dst_dir)
+    except (OSError, PermissionError):
+        # Cannot create destination directory - migration not possible
+        return False
+
     copied = []
 
     for entry in src_entries:
