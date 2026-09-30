@@ -31,11 +31,12 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.
 
         # Remove the virtual entry from the normalized configuration
         data = packages_yaml.pop(pkg_name)
-        is_buildable = data.get("buildable", True)
-        if not is_buildable:
+        if "buildable" in data:
             for provider in repo.providers_for(pkg_name):
                 entry = packages_yaml.setdefault(provider.name, {})
-                entry["buildable"] = False
+                # An explicit setting on the provider itself takes precedence over the
+                # virtual's "buildable" setting
+                entry.setdefault("buildable", data["buildable"])
 
         externals = data.get("externals", [])
 

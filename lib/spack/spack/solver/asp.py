@@ -1872,47 +1872,41 @@ class SpackSolverSetup:
                 requirement_weight += 1
 
     def buildable_constraints(self, packages_with_externals):
-        """Facts on 'buildable' constraints from packages.yaml,
-        including per-package and all:buildable.
+        """Emit buildable_false facts. For each package, 'buildable' is taken from
+        the first of these that is set:
+
+            1. packages:<pkg>:buildable
+            2. packages:<virtual>:buildable, for virtuals the package provides
+            3. packages:all:buildable  (default: True)
         """
         all_buildable = packages_with_externals.get("all", {}).get("buildable", True)
+        from_virtuals = self._buildable_from_virtuals(packages_with_externals)
 
-        if all_buildable:
-            # Emit buildable_false only for packages explicitly marked non-buildable
-            self.gen.h1("External packages")
-            for pkg_name, data in packages_with_externals.items():
-                if pkg_name == "all":
-                    continue
-                if pkg_name not in self.pkgs:
-                    continue
-                if not data.get("buildable", True):
-                    self.gen.h2(f"External package: {pkg_name}")
-                    self.gen.fact(fn.buildable_false(pkg_name))
-            return
-
-        # packages:all:buildable is False - mark every package non-buildable unless
-        # it is explicitly buildable or provides a virtual that is explicitly buildable
-        self.gen.h1("Buildable constraints from packages:all:buildable")
-        packages_config = spack.config.CONFIG.get("packages", {})
-        buildable_virtuals = {
-            v
-            for v, vdata in packages_config.items()
-            if spack.repo.PATH.is_virtual(v) and vdata.get("buildable", False)
-        }
-
+        self.gen.h1("Buildable constraints")
         for pkg_name in sorted(self.pkgs):
-            pkg_data = packages_with_externals.get(pkg_name, {})
-            if pkg_data.get("buildable", False):
-                continue
+            pkg_setting = packages_with_externals.get(pkg_name, {}).get("buildable")
+            if pkg_setting is None:
+                pkg_setting = from_virtuals.get(pkg_name, all_buildable)
 
-            if any(
-                provider.name == pkg_name
-                for virtual_name in buildable_virtuals
-                for provider in spack.repo.PATH.providers_for(virtual_name)
-            ):
-                continue
+            if not pkg_setting:
+                self.gen.h2(f"Non-buildable package: {pkg_name}")
+                self.gen.fact(fn.buildable_false(pkg_name))
 
-            self.gen.fact(fn.buildable_false(pkg_name))
+    @staticmethod
+    def _buildable_from_virtuals(packages_config):
+        """Map each provider to the 'buildable' value implied by the virtuals it provides.
+
+        Only virtuals with an explicit 'buildable' setting count. A provider is
+        buildable if any of its virtuals allows it.
+        """
+        settings = collections.defaultdict(list)
+        for name, data in packages_config.items():
+            if "buildable" not in data or not spack.repo.PATH.is_virtual(name):
+                continue
+            for provider in spack.repo.PATH.providers_for(name):
+                settings[provider.name].append(data["buildable"])
+
+        return {provider: any(values) for provider, values in settings.items()}
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
