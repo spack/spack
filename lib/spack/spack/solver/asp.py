@@ -3584,6 +3584,7 @@ class Solver:
             context=self.context,
             factory=specs_factory,
             packages_with_externals=self.packages_with_externals,
+            ui=self.ui,
         )
 
     @staticmethod

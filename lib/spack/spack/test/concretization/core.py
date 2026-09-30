@@ -2802,7 +2802,7 @@ packages:
         request_str = "callpath ^mpich"
         reused = spack.concretize.concretize_one(f"{request_str} ^dyninst@8.1.1")
         monkeypatch.setattr(
-            spack.solver.reuse, "_specs_from_mirror", lambda binary_index, config: [reused]
+            spack.solver.reuse, "_specs_from_mirror", lambda binary_index, config, ui: [reused]
         )
 
         # Exclude dyninst from reuse, so we expect that the old version is not taken into account
@@ -5392,7 +5392,7 @@ def test_specs_from_mirror_warns_when_index_missing(monkeypatch):
     monkeypatch.setattr(binary_index, "get_all_built_specs", lambda: [])
 
     with pytest.warns(UserWarning, match="cannot be used in concretization"):
-        spack.solver.reuse._specs_from_mirror(binary_index, spack.config.CONFIG)
+        spack.solver.reuse._specs_from_mirror(binary_index, spack.config.CONFIG, HeadlessUI())
 
 
 @pytest.mark.parametrize(
