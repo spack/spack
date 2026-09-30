@@ -2528,7 +2528,12 @@ def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
 
 
 def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
-    """Copy licenses individually without claiming to lock out manual edits."""
+    """Copy licenses individually without claiming to lock out manual edits.
+
+    Symlinks are copied as symlinks (not dereferenced), preserving their targets.
+    Since the old license directory remains in place after migration, symlinks
+    pointing to old locations will continue to work.
+    """
     if not os.path.exists(src_dir):
         return True
 
@@ -2537,13 +2542,23 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
         return True
     filesystem.mkdirp(dst_dir)
     copied = []
+
     for entry in src_entries:
         src_path = os.path.join(src_dir, entry)
         dst_path = os.path.join(dst_dir, entry)
         try:
-            if os.path.exists(dst_path):
+            if os.path.lexists(dst_path):
                 # Check if content matches (prior copy or identical from another checkout)
-                if os.path.isfile(src_path) and os.path.isfile(dst_path):
+                if os.path.islink(src_path) and os.path.islink(dst_path):
+                    # For symlinks, compare targets
+                    if os.readlink(src_path) == os.readlink(dst_path):
+                        tty.debug(
+                            f"License symlink {entry} already exists with matching target, "
+                            f"skipping"
+                        )
+                        copied.append(entry)
+                        continue
+                elif os.path.isfile(src_path) and os.path.isfile(dst_path):
                     with open(src_path, "rb") as f:
                         src_hash = spack.util.hash.b32_hash(
                             f.read().decode("utf-8", errors="replace")
@@ -2569,10 +2584,12 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                         continue
                 # Hash mismatch or type mismatch - stop migration
                 raise FileExistsError(dst_path)
+
             if os.path.isdir(src_path):
-                shutil.copytree(src_path, dst_path)
+                shutil.copytree(src_path, dst_path, symlinks=True)
             else:
-                shutil.copy2(src_path, dst_path)
+                # Copy file or symlink (follow_symlinks=False preserves symlinks)
+                shutil.copy2(src_path, dst_path, follow_symlinks=False)
             copied.append(entry)
         except (OSError, shutil.Error) as e:
             tty.warn(

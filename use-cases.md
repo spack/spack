@@ -142,6 +142,7 @@ The existence of `.migration-done` marker means that migration evaluation has co
 - Spack attempts to copy license entries from the old default location (`$spack/etc/spack/licenses`) to the new default location (`$data_home/licenses`), regardless of what `config:license_dir` is configured to.
 - Entries are processed in sorted (alphabetical) order for deterministic behavior across platforms.
 - Entries are copied individually; old licenses remain in place.
+- Symlinks are copied as symlinks (not dereferenced), preserving their targets. This includes symlinks pointing back into the old license directory or to external locations. Since old license files are never deleted, these symlinks continue to work after migration.
 - Migration stops at the first collision or failure; successfully copied entries before that point remain at both old and new locations.
 - Migration does not use a destination lock because license files may be edited outside Spack.
 - If migration is abandoned or incomplete, the old license directory is recorded in layout scope.
