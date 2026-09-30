@@ -425,6 +425,38 @@ mpich:
     @pytest.mark.parametrize(
         "conf_str",
         [
+            # 'mpi' is listed before 'lapack'
+            """\
+mpi:
+  buildable: true
+lapack:
+  buildable: true
+""",
+            # same settings, opposite order: the outcome must not depend on it
+            """\
+lapack:
+  buildable: true
+mpi:
+  buildable: true
+""",
+        ],
+    )
+    def test_buildable_true_for_provider_of_multiple_virtuals(self, conf_str):
+        """A package providing several virtuals ("low-priority-provider", which
+        provides both "mpi" and "lapack") is buildable only if *all* of those virtuals
+        allow it, and the result must not depend on the order the virtuals are listed
+        in the configuration.
+        """
+        conf = syaml.load_config(conf_str)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        spec = concretize("many-virtual-consumer ^low-priority-provider")
+        assert spec["mpi"].name == "low-priority-provider"
+        assert spec["lapack"].name == "low-priority-provider"
+
+    @pytest.mark.parametrize(
+        "conf_str",
+        [
             # 'mpi' (non-buildable) is listed before 'lapack' (buildable)
             """\
 mpi:
@@ -441,13 +473,59 @@ mpi:
 """,
         ],
     )
-    def test_buildable_true_for_provider_of_multiple_virtuals(self, conf_str):
-        """A package providing several virtuals (e.g. "low-priority-provider", which
-        provides both "mpi" and "lapack") is buildable if any of those virtuals allows
-        it, and the result must not depend on the order the virtuals are listed in the
-        configuration.
+    def test_buildable_false_if_any_virtual_not_buildable(self, conf_str):
+        """A package providing several virtuals is not buildable if *any* of those
+        virtuals disallows it, regardless of the order the virtuals are listed in
+        the configuration.
         """
         conf = syaml.load_config(conf_str)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("many-virtual-consumer ^low-priority-provider")
+
+    def test_buildable_false_all_requires_every_virtual_explicitly_true(self):
+        """When 'packages:all:buildable' is false, a virtual without an explicit
+        setting inherits that default. So a package providing multiple virtuals
+        needs every one of them explicitly set to 'buildable: true' before it is
+        itself considered buildable.
+        """
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+many-virtual-consumer:
+  buildable: true
+mpi:
+  buildable: true
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        # 'lapack' has no explicit setting, so it inherits 'all: buildable: false'
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("many-virtual-consumer ^low-priority-provider")
+
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+many-virtual-consumer:
+  buildable: true
+mpi:
+  buildable: true
+lapack:
+  buildable: true
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
         spack.config.CONFIG.set("packages", conf, scope="concretize")
 
         spec = concretize("many-virtual-consumer ^low-priority-provider")

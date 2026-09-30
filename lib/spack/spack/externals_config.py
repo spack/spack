@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Helpers to build an ExternalSpecsParser from Spack configuration."""
 
-import collections
 import itertools
 from typing import TYPE_CHECKING, Any, Dict, Set
 
@@ -25,8 +24,10 @@ if TYPE_CHECKING:
 
 
 def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.RepoPath) -> None:
-    # Buildable settings from all virtuals are collected.
-    buildable_from_virtuals = collections.defaultdict(list)
+    all_buildable = packages_yaml.get("all", {}).get("buildable", True)
+
+    # Explicit "buildable" settings for virtuals, keyed by virtual name
+    virtual_buildable: Dict[str, bool] = {}
 
     for pkg_name in list(packages_yaml.keys()):
         is_virtual = repo.is_virtual(pkg_name)
@@ -36,8 +37,7 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.
         # Remove the virtual entry from the normalized configuration
         data = packages_yaml.pop(pkg_name)
         if "buildable" in data:
-            for provider in repo.providers_for(pkg_name):
-                buildable_from_virtuals[provider.name].append(data["buildable"])
+            virtual_buildable[pkg_name] = data["buildable"]
 
         externals = data.get("externals", [])
 
@@ -48,11 +48,26 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.
             entry = packages_yaml.setdefault(provider, {})
             entry.setdefault("externals", []).extend(specs)
 
-    for provider, values in buildable_from_virtuals.items():
+    if not virtual_buildable:
+        return
+
+    providers: Set[str] = set()
+    for virtual in virtual_buildable:
+        providers.update(p.name for p in repo.providers_for(virtual))
+
+    for provider in providers:
+        # A provider is buildable only if *all* of the virtuals it provides are buildable.
+        # Virtuals without an explicit setting fall back to "packages:all:buildable", so
+        # that e.g. "all:buildable:false" requires every virtual to be explicitly enabled.
+        pkg_cls = repo.get_pkg_class(provider)
+        values = [
+            virtual_buildable.get(virtual, all_buildable)
+            for virtual in pkg_cls.provided_virtual_names()
+        ]
         entry = packages_yaml.setdefault(provider, {})
         # An explicit setting on the provider itself takes precedence over the virtuals'
-        # "buildable" settings. A provider is buildable if *any* of its virtuals allows it.
-        entry.setdefault("buildable", any(values))
+        # "buildable" settings.
+        entry.setdefault("buildable", all(values))
 
 
 def external_config_with_implicit_externals(
