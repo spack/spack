@@ -2231,7 +2231,7 @@ class Spec:
         direct: bool = False,
         propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
-        usages: Optional[Union["UsageMap", Dict[str, UsageValue]]] = None,
+        usages: Optional[Union["UsageMap", Dict[str, vt.UsageValue]]] = None,
     ):
         """Called by the parser to add another spec as a dependency.
 

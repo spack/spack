@@ -1156,8 +1156,7 @@ def specfile_for(config, mock_packages):
             "foo ^[deptypes=link][when=+mpi] mpich",
         ),
         # usages= takes a bare set of options, written like variants: what a dependent asks
-        # the dependency to enact on their shared edge. They are parsed into a UsageMap, but
-        # not stored on the edge yet, so they do not appear in the round-tripped string.
+        # the dependency to enact on their shared edge.
         (
             "zlib-ng %[usages=+sarif] gcc",
             [
@@ -1173,7 +1172,7 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
             ],
-            "zlib-ng %gcc",
+            "zlib-ng %[usages=+sarif] gcc",
         ),
         # a usages= value is never quoted, so properties that follow it go in their own group
         (
@@ -1187,7 +1186,7 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
             ],
-            "zlib-ng %c=gcc",
+            "zlib-ng %[usages=+sarif] c=gcc",
         ),
         # usages= on a transitive edge, next to a plain edge property
         (
@@ -1200,7 +1199,7 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "mpich"),
             ],
-            "foo ^[deptypes=link] mpich",
+            "foo ^[deptypes=link][usages=+sarif] mpich",
         ),
         # three groups of edge properties, one per attribute kind
         (
@@ -1218,7 +1217,7 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
             ],
-            "foo %[when=%baz target=x86_64] c=gcc",
+            "foo %[when=%baz target=x86_64][usages=+sarif sanitizers=asan] c=gcc",
         ),
         # repeated usages= groups accumulate, like repeated when= conditions
         (
@@ -1232,7 +1231,7 @@ def specfile_for(config, mock_packages):
                 Token("END_EDGE_PROPERTIES", "]"),
                 Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
             ],
-            "foo %gcc",
+            "foo %[usages=~debug+sarif] gcc",
         ),
         # a second group of edge properties closed by a fused virtual assignment
         (
@@ -1263,16 +1262,14 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
     ),
 )
 def test_edge_property_groups_parse_in_any_order(groups):
-    """Groups of edge properties denote the same edge whatever order they are written in.
-
-    TODO (usages RFD): assert the modifiers on the edge once DependencySpec stores them.
-    """
+    """Groups of edge properties denote the same edge whatever order they are written in."""
     spec = spack.spec.Spec(f"foo %{''.join(groups)}gcc")
-    assert str(spec) == "foo %[when=%baz target=x86_64] c=gcc"
+    assert str(spec) == ("foo %[when=%baz target=x86_64][usages=+sarif sanitizers=asan] c=gcc")
 
     edge = spec.edges_to_dependencies(name="gcc")[0]
     assert edge.virtuals == ("c",)
     assert edge.when == spack.spec.Spec("%baz target=x86_64")
+    assert str(edge.usages) == "+sarif sanitizers=asan"
 
 
 @pytest.mark.parametrize(
@@ -1290,13 +1287,10 @@ def test_edge_property_groups_parse_in_any_order(groups):
         "foo %[usages=~debug+sarif] gcc",
     ],
 )
-def test_usages_parse_but_are_not_stored(spec_str):
-    """Usages parse cleanly, but are dropped until the edge can hold them.
-
-    TODO (usages RFD): replace with round-trip assertions once DependencySpec stores them.
-    """
+def test_usages_round_trip_on_edges(spec_str):
     spec = spack.spec.Spec(spec_str)
-    assert "sarif" not in str(spec)
+    assert spack.spec.Spec(str(spec)) == spec
+    assert spec.edges_to_dependencies()[0].usages
 
 
 @pytest.mark.parametrize(
@@ -1313,10 +1307,7 @@ def test_usages_parse_but_are_not_stored(spec_str):
     ],
 )
 def test_usage_map_of_a_usages_value(usages_str, expected):
-    """The value of a usages= edge property parses into a map of usages, keyed by name.
-
-    TODO (usages RFD): assert the map on the edge instead, once DependencySpec stores it.
-    """
+    """The value of a usages= edge property parses into a map of usages, keyed by name."""
     usages = SpecParser(usages_str, spack.spec.Spec)._usage_map()
     assert all(isinstance(usage, spack.variant.UsageValue) for usage in usages.values())
     # the parser returns a plain dict, which the edge is meant to turn into a UsageMap

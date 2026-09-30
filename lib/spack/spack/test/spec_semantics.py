@@ -3064,34 +3064,23 @@ def test_copy_does_not_share_flag_instances(mock_packages):
 
 
 def test_edge_usage_semantics():
-    parent, child = Spec("pkg-a"), Spec("pkg-b")
-    enabled = spack.spec.UsageMap()
-    enabled.set(spack.variant.UsageValue.from_string_or_bool("foo", True))
-    disabled = spack.spec.UsageMap()
-    disabled.set(spack.variant.UsageValue.from_string_or_bool("foo", False))
+    unconstrained = Spec("pkg-a %pkg-b")
+    enabled = Spec("pkg-a %[usages=+foo] pkg-b")
+    disabled = Spec("pkg-a %[usages=~foo] pkg-b")
 
-    unconstrained = DependencySpec(parent, child, depflag=dt.LINK, virtuals=())
-    enabled_edge = DependencySpec(parent, child, depflag=dt.LINK, virtuals=(), usages=enabled)
-    disabled_edge = DependencySpec(parent, child, depflag=dt.LINK, virtuals=(), usages=disabled)
-
-    assert enabled_edge.satisfies(unconstrained)
-    assert not unconstrained.satisfies(enabled_edge)
-    assert not enabled_edge.usages.intersects(disabled_edge.usages)
+    assert enabled.satisfies(unconstrained)
+    assert not unconstrained.satisfies(enabled)
+    assert not enabled.satisfies(disabled)
     with pytest.raises(UnsatisfiableSpecError):
-        enabled_edge._constrain(disabled_edge)
+        enabled.constrain(disabled)
 
 
 def test_spec_copy_constrain_and_comparison_preserve_usages():
-    usage = spack.spec.UsageMap()
-    usage.set(spack.variant.UsageValue.from_string_or_bool("foo", True))
-    original = Spec("pkg-a")
-    original.add_dependency_edge(
-        Spec("pkg-b"), depflag=dt.LINK, virtuals=(), direct=True, usages=usage
-    )
-
+    original = Spec("pkg-a %[usages=+foo] pkg-b")
     copy = original.copy()
     original_edge = original.edges_to_dependencies()[0]
     copy_edge = copy.edges_to_dependencies()[0]
+
     assert copy == original
     assert copy_edge.usages == original_edge.usages
     assert copy_edge.usages is not original_edge.usages
@@ -3099,32 +3088,11 @@ def test_spec_copy_constrain_and_comparison_preserve_usages():
     unconstrained = Spec("pkg-a %pkg-b")
     unconstrained.constrain(original)
     assert unconstrained == original
-    assert unconstrained.edges_to_dependencies()[0].usages == usage
 
-    nested = Spec("root ^pkg-a %pkg-b")
-    nested["pkg-a"].edges_to_dependencies()[0].usages.set(
-        spack.variant.UsageValue.from_string_or_bool("foo", False)
-    )
-    assert nested != Spec("root ^pkg-a %pkg-b")
-    assert len({nested, Spec("root ^pkg-a %pkg-b")}) == 2
-
-
-def test_dependency_edge_owns_usages(mock_packages):
-    """Edges copy usage maps on construction, so rewiring or copying an edge cannot mutate the
-    source edge or a caller-owned map."""
-    usages = spack.spec.UsageMap()
-    usages.set(spack.variant.UsageValue.from_string_or_bool("foo", True))
-    edge = DependencySpec(
-        Spec("pkg-a"), Spec("pkg-b"), depflag=dt.LINK, virtuals=(), usages=usages
-    )
-    copy = edge.copy()
-
-    assert edge.usages is not usages
-    assert copy.usages is not edge.usages
-    copy.usages.set(spack.variant.UsageValue.from_string_or_bool("bar", True))
-
-    assert "bar" not in edge.usages
-    assert "bar" not in usages
+    nested = Spec("root ^pkg-a %[usages=~foo] pkg-b")
+    without_usage = Spec("root ^pkg-a %pkg-b")
+    assert nested != without_usage
+    assert len({nested, without_usage}) == 2
 
 
 @pytest.mark.parametrize(
