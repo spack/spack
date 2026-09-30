@@ -460,7 +460,7 @@ class SpecParser:
                         else:
                             name = ""
 
-                        if name not in ("when", "usages"):
+                        if kind == _KEY_VALUE_PAIR and name not in ("when", "usages"):
                             if name not in ("deptypes", "virtuals"):
                                 msg = (
                                     "the only edge attributes that are currently accepted are "
