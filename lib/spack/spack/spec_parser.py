@@ -13,8 +13,10 @@ Here is the EBNF grammar for a spec::
     node_option   = @version_list | variant | hash
 
     edge_properties = edge_group { edge_group }
-    edge_group      = [ { key_value | when=quoted_spec } [ when=spec ] ]
+    edge_group      = [ { key_value | when=quoted_spec } [ when=spec | usages=usages ] ]
     quoted_spec     = " spec " | ' spec '
+    usages          = option { option }
+    option          = bool_variant | key_value
 
     virtual_assignment = id { , id } = (id | namespace id)
     hash          = / [a-zA-Z0-9_]+
@@ -56,12 +58,23 @@ value is a package name, is a virtual assignment ``%c,cxx=gcc`` rather than a va
 anonymous dependency (write ``%* foo=bar`` for the latter). ``*`` is the name of an anonymous
 node.
 
-The ``when=`` edge property is a condition on the edge, and its unquoted value is a spec that
-extends up to the closing bracket: in ``^[virtuals=mpi when=+mpi] mpich`` the condition is
-``+mpi``, while in ``^[when=+mpi virtuals=mpi] mpich`` the ``virtuals=mpi`` pair is part of the
-condition. Edge properties following an unquoted condition go in a separate bracket group,
-``^[when=+mpi][virtuals=mpi] mpich``, or the condition can be quoted,
-``^[when='+mpi' virtuals=mpi] mpich``, making it a value like any other.
+Two edge properties take more than a plain value. The ``when=`` property is a condition on the
+edge, and its value is a spec. The ``usages=`` property is a set of options that the dependent
+requests of the dependency for this edge only, e.g. ``zlib-ng %[usages=+sarif] gcc``; its
+options are written like variants, and cannot be propagated. Usages are parsed and validated,
+but not yet stored on the edge, so they do not appear in the parsed spec.
+
+Such a value extends up to the closing bracket: in ``^[virtuals=mpi when=+mpi] mpich`` the
+condition is ``+mpi``, while in ``^[when=+mpi virtuals=mpi] mpich`` the ``virtuals=mpi`` pair is
+part of the condition. Edge properties that follow one go in a separate bracket group, as in
+``^[when=+mpi][virtuals=mpi] mpich``. Bracket groups come in any order, so
+``%[when=%baz target=x86_64][virtuals=c][usages=+sarif sanitizers=asan] gcc`` and any permutation
+of its three groups denote the same edge.
+
+A ``when=`` condition may also be quoted, ``^[when='+mpi' virtuals=mpi] mpich``, which makes it a
+value like any other, so that more properties can follow it in the same group. A ``usages=`` value
+is never quoted, since a separate bracket group says the same thing; the options in it may be,
+as in ``%[usages=sanitizers='a b'] gcc``.
 
 There is one ambiguity: since ``-`` is allowed in an id, you need to put
 whitespace space before ``-variant`` for it to be tokenized properly.  You can
@@ -74,10 +87,11 @@ expansion when it is the first character in an id typed on the command line.
 import os
 import re
 import sys
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, Union
 
 import spack.deptypes
 import spack.error
+import spack.variant
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
@@ -134,9 +148,6 @@ SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
 UNIX_FILENAME = r"(?:\.|\/|[a-zA-Z0-9-_]*\/)(?:[a-zA-Z0-9-_\.\/]*)(?:\.json|\.yaml)"
 FILENAME = WINDOWS_FILENAME if sys.platform == "win32" else UNIX_FILENAME
-
-#: Values that match this (e.g., variants, flags) can be left unquoted in Spack output
-NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-]+$")
 
 
 class SpecTokenizationError(spack.error.SpecSyntaxError):
@@ -217,26 +228,6 @@ def strip_quotes(string: str) -> str:
     return string
 
 
-def quote_if_needed(value: str) -> str:
-    """Add quotes around the value if it requires quotes, i.e. unless it matches
-    :data:`NO_QUOTES_NEEDED`. Single quotes are used, or double quotes around a value that
-    contains single quotes. There is no escaping: a value that contains both kinds of quotes
-    cannot be written in a spec string.
-
-    Raises:
-        spack.error.SpecSyntaxError: if the value contains both single and double quotes
-    """
-    if NO_QUOTES_NEEDED.match(value):
-        return value
-    if "'" not in value:
-        return f"'{value}'"
-    if '"' not in value:
-        return f'"{value}"'
-    raise spack.error.SpecSyntaxError(
-        f"cannot quote the value {value!r}: it contains both single and double quotes"
-    )
-
-
 # Token kinds: names of the top-level capture groups in FAST_SPEC_REGEX, compared against
 # match.lastgroup in the parser.
 _END_EDGE_PROPERTIES = "END_EDGE_PROPERTIES"
@@ -245,6 +236,7 @@ _VERSION = "VERSION"
 _BOOL_VARIANT = "BOOL_VARIANT"
 _KEY_VALUE_PAIR = "KEY_VALUE_PAIR"
 _WHEN = "WHEN"
+_USAGES = "USAGES"
 _FILENAME = "FILENAME"
 _FULLY_QUALIFIED_PACKAGE_NAME = "FULLY_QUALIFIED_PACKAGE_NAME"
 _UNQUALIFIED_PACKAGE_NAME = "UNQUALIFIED_PACKAGE_NAME"
@@ -318,6 +310,9 @@ SPEC_TOKENS: Dict[str, str] = {
     # ``when=`` of edge properties whose spec is not a value, e.g. ``^[when=@1.2] dep``; otherwise
     # ``when=+foo`` is a key-value pair like any other, and ``when`` a variant name elsewhere
     _WHEN: r"when=",
+    # ``usages=`` likewise, for the options the dependent requests on the edge, so that a value
+    # that is no option, e.g. ``%[usages=@1.2] dep``, is an error about usages, not about tokens
+    _USAGES: r"usages=",
     # path to a spec file, e.g. ``./foo/bar.json``
     _FILENAME: FILENAME,
     # package name with namespace, e.g. ``builtin.mpich``
@@ -446,20 +441,33 @@ class SpecParser:
                     # Collect edge attributes (key=value pairs) up to the closing bracket
                     attributes: Dict[str, List[str]] = {}
                     conditions: Optional["spack.spec.Spec"] = None
+                    usages: Optional[Dict[str, spack.variant.UsageValue]] = None
                     substitute = None
                     while True:
                         if not self.curr:
                             self._raise_parsing_error("expected `]` to close the edge attributes")
 
                         kind = self.curr.lastgroup
-                        if kind == _KEY_VALUE_PAIR and self.curr.group(_KV_NAME) != "when":
+                        # ``when`` and ``usages`` take a spec and a set of options respectively,
+                        # whether they come as a bare WHEN / USAGES token or as a key-value
+                        # pair whose value happens to tokenize, as in ``when=+mpi``.
+                        if kind == _KEY_VALUE_PAIR:
                             name = self.curr.group(_KV_NAME)
+                        elif kind == _WHEN:
+                            name = "when"
+                        elif kind == _USAGES:
+                            name = "usages"
+                        else:
+                            name = ""
+
+                        if kind == _KEY_VALUE_PAIR and name not in ("when", "usages"):
                             if name not in ("deptypes", "virtuals"):
                                 msg = (
                                     "the only edge attributes that are currently accepted are "
-                                    '"deptypes", "virtuals", and a "when=<spec>" condition; an '
-                                    "unquoted condition extends to the closing bracket, so put "
-                                    "attributes after it in a separate bracket group"
+                                    '"deptypes", "virtuals", "usages=<options>", and a '
+                                    '"when=<spec>" condition; a usages= value and an unquoted '
+                                    "when= value extend to the closing bracket, so put "
+                                    "attributes after them in a separate bracket group"
                                 )
                                 self._raise_parsing_error(msg)
                             value = strip_quotes(self.curr.group(_KV_VALUE))
@@ -470,7 +478,7 @@ class SpecParser:
                             )
                             self.curr, self.next = self.next, self.scanner.match()
 
-                        elif kind == _KEY_VALUE_PAIR or kind == _WHEN:
+                        elif name == "when":
                             # The condition is a spec. Quoted, it is a value like any other pair.
                             # Unquoted, it extends up to the closing bracket: the tokenizer is
                             # context free, so restart the scanner at the value, which is either
@@ -501,6 +509,33 @@ class SpecParser:
                                 conditions = condition
                             else:
                                 conditions.constrain(condition)
+
+                        elif name == "usages":
+                            # The options are never quoted, so the value always extends up to
+                            # the closing bracket. The tokenizer is context free, so
+                            # usages=+sarif has already matched as one pair whose value is the
+                            # opaque blob "+sarif"; restart the scanner at that value to
+                            # tokenize the options themselves. A value that cannot be a pair
+                            # value, e.g. usages=@1.2, instead arrives as a bare USAGES token,
+                            # and rescanning after it raises on the non-option.
+                            token = self.curr
+                            value = self.curr.group(_KV_VALUE) if kind == _KEY_VALUE_PAIR else ""
+                            self._rescan(self.curr.start(_KV_VALUE) if value else self.curr.end())
+                            group = self._usage_map()
+                            # Repeated usages combine too, by constraining those of the same name
+                            if usages is None:
+                                usages = group
+                            else:
+                                for usage_name, usage in group.items():
+                                    mine = usages.get(usage_name)
+                                    if mine is None:
+                                        usages[usage_name] = usage
+                                        continue
+                                    try:
+                                        mine.constrain(usage)
+                                    except spack.error.SpecError as e:
+                                        self.curr = token
+                                        self._raise_parsing_error(str(e))
 
                         elif kind == _END_EDGE_PROPERTIES:
                             # ][ opens another group of edge properties, as in
@@ -535,6 +570,10 @@ class SpecParser:
 
                     dep_spec = self._parse_node(initial_name=substitute)
 
+                    # Usages are parsed above, but not attached to the edge: a spec string that
+                    # requests them parses without error and drops them.
+                    # TODO (usages RFD): pass ``usages`` on once DependencySpec stores them; the
+                    # edge is the one that turns the dict into a UsageMap.
                     edge_kwargs = {
                         "direct": is_direct,
                         "depflag": depflag,
@@ -594,6 +633,77 @@ class SpecParser:
             self._raise_parsing_error("unexpected token")
 
         return root_spec
+
+    def _usage_map(self) -> Dict[str, spack.variant.UsageValue]:
+        """Parse the value of a ``usages=`` edge property into a map of usages, keyed by name.
+
+        The scanner is at the first option on entry, and ``self.curr`` is the closing bracket
+        on return, since the value of a ``usages=`` is never quoted and so always runs to the
+        end of its bracket group. It holds at least one option, each written like a variant.
+
+        The map is a plain dict rather than a ``spack.spec.UsageMap``, so that this module stays
+        free of ``spack.spec``; the caller of the parser is the one that builds the map.
+        """
+        usages: Dict[str, spack.variant.UsageValue] = {}
+
+        # The lookahead is shifted in locals for speed and written back on return
+        curr, next, scanner = self.curr, self.next, self.scanner
+
+        while curr:
+            kind = curr.lastgroup
+            value: Union[str, bool]
+            self.curr = curr  # the errors below point at this token
+
+            if kind == _BOOL_VARIANT:
+                prefix = curr.group(_BV_PREFIX)
+                name = curr.group(_BV_NAME)
+                value = prefix.startswith("+")
+                propagate = len(prefix) == 2
+                concrete = True
+
+            elif kind == _KEY_VALUE_PAIR:
+                name = curr.group(_KV_NAME)
+                sep = curr.group(_KV_SEP)
+                value = strip_quotes(curr.group(_KV_VALUE))
+                propagate = "==" in sep
+                concrete = sep.startswith(":")
+
+            elif kind == _END_EDGE_PROPERTIES:
+                # The closing bracket ends the options, and the caller accepts it
+                break
+
+            else:
+                # A version, a hash, a sigil, a package name, ...: not an option, and the value
+                # runs to the closing bracket, so there is nothing else this token could be.
+                if kind == _UNEXPECTED:
+                    self._raise_tokenization_error()
+                self._raise_parsing_error(
+                    "usages= takes only options, e.g. usages=+sarif sanitizers=asan"
+                )
+
+            if propagate:
+                self._raise_parsing_error("a usage cannot be propagated")
+            if name in spack.variant.RESERVED_USAGE_NAMES:
+                self._raise_parsing_error(
+                    f'"{name}" is an edge attribute of its own, not a usage; a usages= value '
+                    "extends to the closing bracket, so put other attributes in a separate "
+                    "bracket group"
+                )
+            if name in usages:
+                self._raise_parsing_error(f'Cannot specify usage "{name}" twice')
+            usages[name] = spack.variant.UsageValue.from_string_or_bool(
+                name, value, concrete=concrete
+            )
+
+            # Accept the token
+            curr = next
+            next = scanner.match() if curr is not None else None
+
+        self.curr, self.next = curr, next
+        if not usages:
+            # The value ran straight into the closing bracket, or into the end of the input
+            self._raise_parsing_error("expected an option after usages=")
+        return usages
 
     def _rescan(self, pos: int) -> None:
         """Restart the scanner at ``pos`` in the input, the value of an unquoted when= condition"""

@@ -179,7 +179,7 @@ def quote_kvp(string: str) -> str:
     else:
         if "".join(text for _, text, _ in tokens) == string:
             return string
-    return f"{key}{delim}{spack.spec_parser.quote_if_needed(value)}"
+    return f"{key}{delim}{spack.util.string.quote_if_needed(value)}"
 
 
 def parse_specs(

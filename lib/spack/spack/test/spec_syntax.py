@@ -20,6 +20,7 @@ import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.util.filesystem as fs
+import spack.variant
 import spack.version
 from spack.externals import (
     ExternalSpecsParser,
@@ -1154,6 +1155,85 @@ def specfile_for(config, mock_packages):
             ],
             "foo ^[deptypes=link when=+mpi] mpich",
         ),
+        # usages= takes a bare set of options, written like variants: what a dependent asks
+        # the dependency to enact on their shared edge. They are parsed into a UsageMap, but
+        # not stored on the edge yet, so they do not appear in the round-tripped string.
+        (
+            "zlib-ng %[usages=+sarif] gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "zlib-ng"),
+                Token("DEPENDENCY", "%[", edge_bracket="["),
+                Token(
+                    "KEY_VALUE_PAIR",
+                    "usages=+sarif",
+                    kv_name="usages",
+                    kv_sep="=",
+                    kv_value="+sarif",
+                ),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "zlib-ng %gcc",
+        ),
+        # a usages= value is never quoted, so properties that follow it go in their own group
+        (
+            "zlib-ng %[usages=+sarif][virtuals=c] gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "zlib-ng"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "usages=+sarif"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "virtuals=c"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "zlib-ng %c=gcc",
+        ),
+        # usages= on a transitive edge, next to a plain edge property
+        (
+            "foo ^[deptypes=link usages=+sarif] mpich",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "^["),
+                Token("KEY_VALUE_PAIR", "deptypes=link"),
+                Token("KEY_VALUE_PAIR", "usages=+sarif"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "mpich"),
+            ],
+            "foo ^[deptypes=link] mpich",
+        ),
+        # three groups of edge properties, one per attribute kind
+        (
+            "foo %[when=%baz target=x86_64][virtuals=c][usages=+sarif sanitizers=asan]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "when=%baz"),
+                Token("KEY_VALUE_PAIR", "target=x86_64"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "virtuals=c"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "usages=+sarif"),
+                Token("KEY_VALUE_PAIR", "sanitizers=asan"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %[when=%baz target=x86_64] c=gcc",
+        ),
+        # repeated usages= groups accumulate, like repeated when= conditions
+        (
+            "foo %[usages=+sarif][usages=~debug]gcc",
+            [
+                Token("UNQUALIFIED_PACKAGE_NAME", "foo"),
+                Token("DEPENDENCY", "%["),
+                Token("KEY_VALUE_PAIR", "usages=+sarif"),
+                Token("END_EDGE_PROPERTIES", "]["),
+                Token("KEY_VALUE_PAIR", "usages=~debug"),
+                Token("END_EDGE_PROPERTIES", "]"),
+                Token("UNQUALIFIED_PACKAGE_NAME", "gcc"),
+            ],
+            "foo %gcc",
+        ),
         # a second group of edge properties closed by a fused virtual assignment
         (
             "foo %[when=+a][deptypes=link] c=gcc",
@@ -1174,6 +1254,74 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
     has_detailed_tokens = any(t[2] for t in tokens)
     assert tokens == parser.tokens(with_subgroups=has_detailed_tokens)
     assert expected_roundtrip == str(parser.next_spec())
+
+
+@pytest.mark.parametrize(
+    "groups",
+    itertools.permutations(
+        ["[when=%baz target=x86_64]", "[virtuals=c]", "[usages=+sarif sanitizers=asan]"]
+    ),
+)
+def test_edge_property_groups_parse_in_any_order(groups):
+    """Groups of edge properties denote the same edge whatever order they are written in.
+
+    TODO (usages RFD): assert the modifiers on the edge once DependencySpec stores them.
+    """
+    spec = spack.spec.Spec(f"foo %{''.join(groups)}gcc")
+    assert str(spec) == "foo %[when=%baz target=x86_64] c=gcc"
+
+    edge = spec.edges_to_dependencies(name="gcc")[0]
+    assert edge.virtuals == ("c",)
+    assert edge.when == spack.spec.Spec("%baz target=x86_64")
+
+
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        "zlib-ng %[usages=+sarif] gcc",
+        # a usages= value is never quoted, so what follows it goes in its own group
+        "zlib-ng %[usages=+sarif][virtuals=c] gcc",
+        # the options in a usages= value may themselves be quoted
+        "zlib-ng %[usages=sanitizers='a b'] gcc",
+        "foo ^[deptypes=link usages=+sarif] mpich",
+        "foo %[virtuals=c][usages=+sarif sanitizers=asan][when=%baz target=x86_64]gcc",
+        # a repeated request for the same usage is not a conflict
+        "foo %[usages=+sarif][usages=+sarif] gcc",
+        "foo %[usages=~debug+sarif] gcc",
+    ],
+)
+def test_usages_parse_but_are_not_stored(spec_str):
+    """Usages parse cleanly, but are dropped until the edge can hold them.
+
+    TODO (usages RFD): replace with round-trip assertions once DependencySpec stores them.
+    """
+    spec = spack.spec.Spec(spec_str)
+    assert "sarif" not in str(spec)
+
+
+@pytest.mark.parametrize(
+    "usages_str,expected",
+    [
+        ("+sarif", "+sarif"),
+        ("~debug+sarif", "~debug+sarif"),
+        ("-debug", "~debug"),
+        ("sanitizers=asan", "sanitizers=asan"),
+        ("sanitizers=asan,ubsan", "sanitizers=asan,ubsan"),
+        ("sanitizers:=asan", "sanitizers:=asan"),
+        ("sanitizers='a b'", "sanitizers='a b'"),
+        ("+sarif sanitizers=asan", "+sarif sanitizers=asan"),
+    ],
+)
+def test_usage_map_of_a_usages_value(usages_str, expected):
+    """The value of a usages= edge property parses into a map of usages, keyed by name.
+
+    TODO (usages RFD): assert the map on the edge instead, once DependencySpec stores it.
+    """
+    usages = SpecParser(usages_str, spack.spec.Spec)._usage_map()
+    assert all(isinstance(usage, spack.variant.UsageValue) for usage in usages.values())
+    # the parser returns a plain dict, which the edge is meant to turn into a UsageMap
+    # key-value pairs print with a leading space, to follow the name of a node
+    assert str(spack.spec.UsageMap(usages)).lstrip() == expected
 
 
 @pytest.mark.parametrize(
@@ -1286,7 +1434,7 @@ def test_parse_multiple_specs(text, tokens, expected_specs):
         # Use double quotes if internal single quotes are present
         (["zlib", "cflags='-O3 -g' +bar baz"], '''zlib cflags="'-O3 -g' +bar baz"'''),
         # There is no escaping: a value cannot contain both kinds of quotes
-        (["zlib", '''cflags='-O3 -g' "+bar baz"'''], spack.error.SpecSyntaxError),
+        (["zlib", '''cflags='-O3 -g' "+bar baz"'''], ValueError),
         # and a backslash is a character like any other: the compiler gets the define as typed
         (["zlib", r"cflags=-DCHAR=\'x\'"], r'''zlib cflags="-DCHAR=\'x\'"'''),
         # Ensure that empty strings are handled correctly on CLI
@@ -1754,6 +1902,23 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         # a quoted condition is a single spec: neither two specs nor none
         ("foo ^[when='bar baz'] qux", "expected a single spec as the when= condition"),
         ("foo ^[when=''] qux", "expected a single spec as the when= condition"),
+        # usages= takes a bare set of options, and at least one
+        ("foo %[usages=] gcc", "expected an option after usages="),
+        ("foo %[usages=", "expected an option after usages="),
+        ("foo %[usages=][virtuals=c] gcc", "expected an option after usages="),
+        ("foo %[usages=clang] gcc", "usages= takes only options"),
+        ("foo %[usages=@1.2] gcc", "usages= takes only options"),
+        ("foo %[usages=%bar] gcc", "usages= takes only options"),
+        ("foo %[usages=/abc] gcc", "usages= takes only options"),
+        # a usages= value swallows the edge attributes that follow it
+        ("foo %[usages=+sarif virtuals=c] gcc", '"virtuals" is an edge attribute of its own'),
+        ("foo %[usages=+sarif when=+mpi] gcc", '"when" is an edge attribute of its own'),
+        # a usage is requested of one dependency, so it is never propagated
+        ("foo %[usages=++sarif] gcc", "a usage cannot be propagated"),
+        ("foo %[usages=sanitizers==asan] gcc", "a usage cannot be propagated"),
+        # usages of the same name combine, so they can neither repeat nor conflict
+        ("foo %[usages=+sarif+sarif] gcc", 'Cannot specify usage "sarif" twice'),
+        ("foo %[usages=+sarif][usages=~sarif] gcc", "does not satisfy"),
         # the parts of an architecture and the namespace print unquoted, so they must be values
         # that parse without quotes, and a namespace a dotted identifier
         ("x os='a b'", "invalid value"),
@@ -1790,6 +1955,13 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
 )
 def test_error_conditions(text, match_string):
     with pytest.raises(SpecParsingError, match=match_string):
+        SpecParser(text, Spec).all_specs()
+
+
+@pytest.mark.parametrize("text", ["foo %[usages=''] gcc", "foo %[usages='+a bar'] gcc"])
+def test_a_usages_value_cannot_be_quoted(text):
+    """A usages= value extends to the closing bracket, so a quote around it is not spec syntax."""
+    with pytest.raises(SpecTokenizationError, match="unexpected characters in the spec string"):
         SpecParser(text, Spec).all_specs()
 
 

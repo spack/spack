@@ -1280,7 +1280,7 @@ class FlagMap(_FlagMapBase):
             # Do not sort by propagation yes/no, but group by it, which preserves the order.
             for propagate, group in itertools.groupby(flags, key=lambda flag: flag.propagate):
                 sigil = "==" if propagate else "="
-                value = spack.spec_parser.quote_if_needed(" ".join(group))
+                value = spack.util.string.quote_if_needed(" ".join(group))
                 result += f" {flag_type}{sigil}{value}"
 
         # TODO: somehow add this space only if something follows in Spec.format()
