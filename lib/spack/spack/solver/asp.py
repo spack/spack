@@ -1878,35 +1878,19 @@ class SpackSolverSetup:
             1. packages:<pkg>:buildable
             2. packages:<virtual>:buildable, for virtuals the package provides
             3. packages:all:buildable  (default: True)
+
+        Note that ``packages_with_externals`` already accounts for virtual package 'buildable'
+        settings via ``spack.externals_config._normalize_packages_yaml``.
         """
         all_buildable = packages_with_externals.get("all", {}).get("buildable", True)
-        from_virtuals = self._buildable_from_virtuals(packages_with_externals)
 
         self.gen.h1("Buildable constraints")
         for pkg_name in sorted(self.pkgs):
-            pkg_setting = packages_with_externals.get(pkg_name, {}).get("buildable")
-            if pkg_setting is None:
-                pkg_setting = from_virtuals.get(pkg_name, all_buildable)
+            pkg_setting = packages_with_externals.get(pkg_name, {}).get("buildable", all_buildable)
 
             if not pkg_setting:
                 self.gen.h2(f"Non-buildable package: {pkg_name}")
                 self.gen.fact(fn.buildable_false(pkg_name))
-
-    @staticmethod
-    def _buildable_from_virtuals(packages_config):
-        """Map each provider to the 'buildable' value implied by the virtuals it provides.
-
-        Only virtuals with an explicit 'buildable' setting count. A provider is
-        buildable if any of its virtuals allows it.
-        """
-        settings = collections.defaultdict(list)
-        for name, data in packages_config.items():
-            if "buildable" not in data or not spack.repo.PATH.is_virtual(name):
-                continue
-            for provider in spack.repo.PATH.providers_for(name):
-                settings[provider.name].append(data["buildable"])
-
-        return {provider: any(values) for provider, values in settings.items()}
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""

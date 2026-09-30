@@ -422,6 +422,38 @@ mpich:
         spec = concretize("mpich")
         assert spec["mpich"].name == "mpich"
 
+    @pytest.mark.parametrize(
+        "conf_str",
+        [
+            # 'mpi' (non-buildable) is listed before 'lapack' (buildable)
+            """\
+mpi:
+  buildable: false
+lapack:
+  buildable: true
+""",
+            # same settings, opposite order: the outcome must not depend on it
+            """\
+lapack:
+  buildable: true
+mpi:
+  buildable: false
+""",
+        ],
+    )
+    def test_buildable_true_for_provider_of_multiple_virtuals(self, conf_str):
+        """A package providing several virtuals (e.g. "low-priority-provider", which
+        provides both "mpi" and "lapack") is buildable if any of those virtuals allows
+        it, and the result must not depend on the order the virtuals are listed in the
+        configuration.
+        """
+        conf = syaml.load_config(conf_str)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        spec = concretize("many-virtual-consumer ^low-priority-provider")
+        assert spec["mpi"].name == "low-priority-provider"
+        assert spec["lapack"].name == "low-priority-provider"
+
     def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are
         # configured in the same file and therefore convenient to test here.

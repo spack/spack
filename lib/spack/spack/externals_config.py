@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Helpers to build an ExternalSpecsParser from Spack configuration."""
 
+import collections
 import itertools
 from typing import TYPE_CHECKING, Any, Dict, Set
 
@@ -24,6 +25,9 @@ if TYPE_CHECKING:
 
 
 def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.RepoPath) -> None:
+    # Buildable settings from all virtuals are collected.
+    buildable_from_virtuals = collections.defaultdict(list)
+
     for pkg_name in list(packages_yaml.keys()):
         is_virtual = repo.is_virtual(pkg_name)
         if pkg_name == "all" or not is_virtual:
@@ -33,10 +37,7 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.
         data = packages_yaml.pop(pkg_name)
         if "buildable" in data:
             for provider in repo.providers_for(pkg_name):
-                entry = packages_yaml.setdefault(provider.name, {})
-                # An explicit setting on the provider itself takes precedence over the
-                # virtual's "buildable" setting
-                entry.setdefault("buildable", data["buildable"])
+                buildable_from_virtuals[provider.name].append(data["buildable"])
 
         externals = data.get("externals", [])
 
@@ -46,6 +47,12 @@ def _normalize_packages_yaml(packages_yaml: Dict[str, Any], *, repo: spack.repo.
         for provider, specs in itertools.groupby(externals, key=keyfn):
             entry = packages_yaml.setdefault(provider, {})
             entry.setdefault("externals", []).extend(specs)
+
+    for provider, values in buildable_from_virtuals.items():
+        entry = packages_yaml.setdefault(provider, {})
+        # An explicit setting on the provider itself takes precedence over the virtuals'
+        # "buildable" settings. A provider is buildable if *any* of its virtuals allows it.
+        entry.setdefault("buildable", any(values))
 
 
 def external_config_with_implicit_externals(
