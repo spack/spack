@@ -257,7 +257,6 @@ def test_path_manipulation(env):
     assert os.environ["PATH_LIST_WITH_DUPLICATES"].count(make_path("duplicate")) == 1
 
 
-
 def test_extend(env):
     """Tests that we can construct a list of environment modifications
     starting from another list.

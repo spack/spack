@@ -23,13 +23,14 @@ import spack.environment.generate_env_scripts as env_script
 import spack.environment.shell
 import spack.tengine
 import spack.util.filesystem as fs
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.llnl.util.filesystem import islink, symlink
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import cescape, colorize
+from spack.environment import depfile
 from spack.traverse import traverse_nodes
 from spack.util import string, tty
 from spack.util.filesystem import islink, symlink
+from spack.util.tty.colify import colify
+from spack.util.tty.color import cescape, colorize
 
 description = "manage environments"
 section = "environments"
@@ -355,8 +356,6 @@ def env_activate(args):
 
     else:
         tty.die("No such environment: '%s'" % args.env_name)
-
-    env_prompt = f"[{short_name}]" if args.prompt else None
 
     # We only support one active environment at a time, so deactivate the current one.
     if active_environment():

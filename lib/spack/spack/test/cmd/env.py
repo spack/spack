@@ -28,6 +28,7 @@ import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.solver.asp
+import spack.spec
 import spack.stage
 import spack.store
 import spack.util.environment

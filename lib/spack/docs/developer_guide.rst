@@ -467,6 +467,7 @@ In this example, we use it outside of a logger that is already defined:
 
 This is not to say that this would be the best way to implement an integration with the logger (you would probably want to write a custom logger, or you could have the hook defined within the logger), but it serves as an example of writing a hook.
 
+
 Unit tests
 ----------
 

@@ -145,68 +145,6 @@ def despacktivate_cmds(shell):
     return shell_cmd.alias("despacktivate", "spack env deactivate")
 
 
-def activate_prompt_cmds(shell, prompt):
-
-    if not prompt:
-        return ""
-
-    bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
-    zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
-
-    cmds = ""
-
-    if shell == "csh":
-        cmds += "if (! $?SPACK_OLD_PROMPT ) "
-        cmds += f"_spack_env_set SPACK_OLD_PROMPT {prompt}\n"
-        cmds += f"_spack_env_set prompt {prompt}\n"
-    elif shell == "fish":
-        if "color" in os.getenv("TERM", ""):
-            prompt = colorize(f"@G{prompt} ", color=True)
-        #
-        # NOTE: We're not changing the fish_prompt function (which is fish's
-        # solution to the PS1 variable) here. This is a bit fiddly, and easy to
-        # screw up => spend time reasearching a solution. Feedback welcome.
-        #
-    elif shell == "bat":
-        # TODO: Color
-        if prompt:
-            old_prompt = os.environ.get("SPACK_OLD_PROMPT")
-            if not old_prompt:
-                old_prompt = os.environ.get("PROMPT")
-            cmds += f"_spack_env_set SPACK_OLD_PROMPT {old_prompt}"
-            cmds += f"_spack_env_set PROMPT {prompt} $P$G"
-    elif shell == "pwsh":
-        cmds += (
-            "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
-            ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
-            '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
-            '"%s PS $pth>"}' % prompt
-        )
-    else:
-        cmds = textwrap.dedent(
-            rf"""
-            if [ -z ${{SPACK_OLD_PS1+x}} ]; then
-                if [ -z ${{PS1+x}} ]; then
-                    PS1='$$$$';
-                fi;
-                export SPACK_OLD_PS1="${{PS1}}";
-            fi;
-            if [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
-                [ -n "${{BASH:-}}" ];
-            then
-                export PS1="{bash_color_prompt} ${{PS1}}";
-            elif [ -n "${{TERM:-}}" ] && [ "${{TERM#*color}}" != "${{TERM}}" ] && \
-                    [ -n "${{ZSH_NAME:-}}" ];
-            then
-                export PS1="{zsh_color_prompt} ${{PS1}}";
-            else
-                export PS1="{prompt} ${{PS1}}";
-            fi
-            """
-        ).lstrip("\n")
-    return cmds
-
-
 def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
     """Compute environment modifications for activating an environment.
 
