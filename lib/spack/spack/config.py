@@ -2454,7 +2454,8 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         VIEW_MARKER_FILE = ".spack-view"
 
         def ignore_views(directory, names):
-            """Exclude view directories (identified by .spack-view marker) during environment copy."""
+            """Exclude view directories (identified by .spack-view marker) during environment
+            copy."""
             ignored = []
             for name in names:
                 path = os.path.join(directory, name)
