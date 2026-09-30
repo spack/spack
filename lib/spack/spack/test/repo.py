@@ -1042,3 +1042,21 @@ def test_unknownpkgerror_match_fails(mock_packages):
 def test_unknownpkgerror_str_repo():
     """Ensure reasonable error message when repo is a string."""
     assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))
+
+
+def test_provided_specs_intersects_matching_clauses():
+    """Clauses for one virtual are intersected; disjoint ones provide nothing."""
+    spec = spack.spec.Spec("pkg@1.5")
+    when = spack.spec.Spec("@1:")
+    clauses = [
+        (when, spack.spec.Spec("mpi@:3")),
+        (when, spack.spec.Spec("mpi@2:")),
+        (spack.spec.Spec("@2:"), spack.spec.Spec("mpi@4:")),  # does not match
+        (when, spack.spec.Spec("lapack@:1")),
+        (when, spack.spec.Spec("lapack@2:")),  # disjoint with the previous one
+        (when, spack.spec.Spec("blas")),
+    ]
+    assert spack.repo._provided_specs(spec, clauses) == (
+        spack.spec.Spec("blas"),
+        spack.spec.Spec("mpi@2:3"),
+    )

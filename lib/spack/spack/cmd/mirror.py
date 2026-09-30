@@ -283,9 +283,7 @@ def _configure_access_pair(args, id_tok, id_variable_tok, secret_variable_tok, d
         return None
 
     def _default_value(id_):
-        if isinstance(default, list):
-            return default[0] if id_ == "id" else default[1]
-        elif isinstance(default, dict):
+        if isinstance(default, dict):
             return default.get(id_)
         else:
             return None
@@ -390,10 +388,10 @@ def mirror_add_archive(args):
         url = url_util.path_to_file_url(os.path.abspath(url))
 
     # When no directory is provided, the source cache is used, like `spack mirror create`
-    mirror_root = args.directory or spack.caches.fetch_cache_location()
+    mirror_root = args.directory or spack.caches.fetch_cache_location(config=spack.config.CONFIG)
 
     fetcher = spack.fetch_strategy.URLFetchStrategy(url=url)
-    with spack.stage.Stage(fetcher) as stage:
+    with spack.stage.stage_from_config(fetcher, config=spack.config.CONFIG) as stage:
         stage.fetch()
 
         # The archive is stored content-addressed, named after its sha256 checksum
@@ -683,7 +681,7 @@ def mirror_create(args):
         )
 
     # When no directory is provided, the source dir is used
-    path = args.directory or spack.caches.fetch_cache_location()
+    path = args.directory or spack.caches.fetch_cache_location(config=spack.config.CONFIG)
 
     mirror_specs = _specs_to_mirror(args)
     workers = args.jobs

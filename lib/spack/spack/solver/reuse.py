@@ -9,6 +9,7 @@ from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
 import spack.config
+import spack.deprecation
 import spack.repo
 import spack.spec
 import spack.traverse
@@ -16,10 +17,12 @@ import spack.util.path
 from spack.active_environment import active_environment
 from spack.enums import InstallRecordStatus
 from spack.externals import ExternalSpecsParser
-from spack.externals_config import create_external_parser, external_config_with_implicit_externals
+from spack.externals_config import (
+    all_libcs,
+    create_external_parser,
+    external_config_with_implicit_externals,
+)
 from spack.spec_filter import SpecFilter
-
-from .runtimes import all_libcs
 
 if typing.TYPE_CHECKING:
     import spack.context
@@ -295,7 +298,9 @@ class ReusableSpecsSelector:
                     )
                 )
 
-    def reusable_specs(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
+    def reusable_specs(
+        self, specs: List[spack.spec.Spec], *, policy: Optional[spack.deprecation.Policy] = None
+    ) -> List[spack.spec.Spec]:
         result = []
         for reuse_source in self.reuse_sources:
             result.extend(reuse_source.selected_specs())
@@ -303,4 +308,5 @@ class ReusableSpecsSelector:
         if self.reuse_strategy == ReuseStrategy.DEPENDENCIES:
             result = [spec for spec in result if not any(root in spec for root in specs)]
 
-        return result
+        # Never hand the solver an artifact the deprecation policy would refuse to install
+        return spack.deprecation.reusable(result, policy=policy)

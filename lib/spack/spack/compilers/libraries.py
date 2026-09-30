@@ -325,12 +325,12 @@ class DefaultDynamicLinkerFilter:
 
 
 def dynamic_linker_filter_for(
-    node: spack.spec.Spec, *, repo: spack.repo.RepoPath
+    node: spack.spec.Spec, *, repo: spack.repo.RepoPath, cache: "CompilerCache"
 ) -> Optional[DefaultDynamicLinkerFilter]:
     compiler = compiler_spec(node)
     if compiler is None:
         return None
-    detector = CompilerPropertyDetector(compiler, repo=repo)
+    detector = CompilerPropertyDetector(compiler, repo=repo, cache=cache)
     dynamic_linker = detector.default_dynamic_linker()
     if dynamic_linker is None:
         return None

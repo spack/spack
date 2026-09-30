@@ -1,20 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import TYPE_CHECKING, Set, Tuple
+from typing import Tuple
 
-import spack.compilers.config
-import spack.compilers.libraries
 import spack.hash_lookup
 import spack.spec
-import spack.util.libc
 import spack.version
 
 from .core import SourceContext, fn
 from .versions import Provenance
-
-if TYPE_CHECKING:
-    import spack.context
 
 #: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
 COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
@@ -270,22 +264,3 @@ class RuntimePropertyRecorder:
 
         self._setup.trigger_rules()
         self._setup.effect_rules()
-
-
-def all_libcs(context: "spack.context.SpackContext") -> Set[spack.spec.Spec]:
-    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
-    libc determined from the current Python process if dynamically linked."""
-    cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
-    libcs = set()
-    for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
-        candidate = spack.compilers.libraries.CompilerPropertyDetector(
-            c, repo=context.repo, cache=cache
-        ).default_libc()
-        if candidate is not None:
-            libcs.add(candidate)
-
-    if libcs:
-        return libcs
-
-    libc = spack.util.libc.libc_from_current_python_process()
-    return {libc} if libc else set()

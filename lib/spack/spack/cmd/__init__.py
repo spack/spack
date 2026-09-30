@@ -173,7 +173,7 @@ def quote_kvp(string: str) -> str:
 
     key, delim, value = match.groups()
     try:
-        tokens = spack.spec_parser.SpecParser(string).tokens()
+        tokens = spack.spec_parser.SpecParser(string, spack.spec.Spec).tokens()
     except spack.error.SpecSyntaxError:
         pass
     else:
@@ -195,7 +195,7 @@ def parse_specs(
     arg_string = " ".join([quote_kvp(arg) for arg in args])
 
     toolchains = spack.config.CONFIG.get("toolchains", {})
-    specs = spack.spec_parser.parse(arg_string, toolchains=toolchains)
+    specs = spack.spec.parse(arg_string, toolchains=toolchains)
     if not concretize:
         return specs
 

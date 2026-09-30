@@ -24,6 +24,8 @@ exit 1
 # Line above is a shell no-op, and ends a python multi-line comment.
 # The code above runs this file with our preferred python interpreter.
 
+import atexit
+import gc
 import os
 import sys
 
@@ -46,4 +48,7 @@ from spack.main import main  # noqa: E402
 
 # Once we've set up the system path, run the spack main method
 if __name__ == "__main__":
+    # Skip the costly garbage collection of all objects at interpreter shutdown
+    if hasattr(gc, "freeze"):  # Python 3.7+
+        atexit.register(gc.freeze)
     sys.exit(main())

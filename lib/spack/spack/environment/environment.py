@@ -168,7 +168,7 @@ sep_re = re.escape(os.sep)
 valid_environment_name_re = rf"^\w[{sep_re}\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-CURRENT_LOCKFILE_VERSION = 7
+CURRENT_LOCKFILE_VERSION = 8
 
 
 READER_CLS = {
@@ -179,6 +179,7 @@ READER_CLS = {
     5: spack.spec.SpecfileV4,
     6: spack.spec.SpecfileV5,
     7: spack.spec.SpecfileV5,
+    8: spack.spec.SpecfileV6,
 }
 
 
@@ -1152,6 +1153,8 @@ class Environment:
         #: Previously active environment
         self._previous_active = None
         self._dev_specs = None
+        #: Fingerprint of the lockfile on disk, None if there is none
+        self._lockfile_fingerprint_on_disk: Optional[Tuple[Any, ...]] = None
 
         # Load the manifest file contents into memory
         self._load_manifest_file()
@@ -1214,6 +1217,10 @@ class Environment:
         if os.path.exists(self.lock_path):
             with open(self.lock_path, encoding="utf-8") as f:
                 read_lock_version = self._read_lockfile(f)["_meta"]["lockfile-version"]
+
+            # Lockfiles are keyed by DAG hash from v4 on; older ones are always rewritten
+            if read_lock_version >= 4:
+                self._lockfile_fingerprint_on_disk = self._lockfile_fingerprint()
 
             if read_lock_version == 1:
                 tty.debug(f"Storing backup of {self.lock_path} at {self._lock_backup_v1_path}")
@@ -1410,6 +1417,7 @@ class Environment:
         self._dev_specs = {}
         self.concretized_roots = []
         self.specs_by_hash = {}  # concretized specs by hash
+        self._lockfile_fingerprint_on_disk = None
 
         self.included_concrete_spec_data = {}  # concretized specs from lockfile of included envs
         self.included_concretized_roots = {}  # root specs of the included envs, keyed by env path
@@ -2050,7 +2058,8 @@ class Environment:
         Arguments:
             spec: user spec that resulted in the concrete spec
             concrete: spec concretized within this environment
-            new: whether to write this spec's package to the env repo on write()
+            new: concretized in this session: write() copies its package to the env repo and
+                rewrites the lockfile
         """
         assert concrete.concrete
         h = concrete.dag_hash()
@@ -2350,6 +2359,11 @@ class Environment:
 
         return concrete_specs
 
+    def _lockfile_fingerprint(self) -> Tuple[Any, ...]:
+        """Roots and included data, which determine the lockfile content up to version metadata"""
+        roots = tuple((str(x.root), x.hash, x.group) for x in self.concretized_roots)
+        return roots, self.included_concrete_spec_data
+
     def _concrete_roots_dict(self):
         if not self.has_groups():
             return [{"hash": x.hash, "spec": str(x.root)} for x in self.concretized_roots]
@@ -2365,7 +2379,6 @@ class Environment:
 
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
-        lockfile_version = CURRENT_LOCKFILE_VERSION if self.has_groups() else 6
         concrete_specs = self._concrete_specs_dict()
         root_specs = self._concrete_roots_dict()
 
@@ -2382,7 +2395,7 @@ class Environment:
             # metadata about the format
             "_meta": {
                 "file-type": "spack-lockfile",
-                "lockfile-version": lockfile_version,
+                "lockfile-version": CURRENT_LOCKFILE_VERSION,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
             # spack version information
@@ -2528,6 +2541,10 @@ class Environment:
                 _, bhash, _ = reader.extract_build_spec_info_from_node_dict(node_dict)
                 specs_by_hash[lockfile_key]._build_spec = specs_by_hash[bhash]
 
+        # The DAG is wired by hand above, so reconstruct what spec formats before v6 omit
+        if reader.SPEC_VERSION < 6:
+            spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=spack.repo.PATH)
+
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to
         # keep.  This is only required as long as we support older lockfile
@@ -2562,15 +2579,13 @@ class Environment:
             self.ensure_env_directory_exists(dot_env=True)
             self.update_environment_repository()
             self.manifest.flush()
-            # Write the lock file last. This is useful for Makefiles
-            # with `spack.lock: spack.yaml` rules, where the target
-            # should be newer than the prerequisite to avoid
-            # redundant re-concretization.
+            # Write the lock file last, so `spack.lock: spack.yaml` Makefile rules see it as newer
             self.update_lockfile()
         else:
             self.ensure_env_directory_exists(dot_env=False)
             with fs.safe_remove(self.lock_path):
                 self.manifest.flush()
+            self._lockfile_fingerprint_on_disk = None
 
         if regenerate:
             self.regenerate_views()
@@ -2579,8 +2594,16 @@ class Environment:
             x.new = False
 
     def update_lockfile(self) -> None:
+        """Write the lockfile, unless nothing changed since it was read or last written"""
+        fingerprint = self._lockfile_fingerprint()
+        if fingerprint == self._lockfile_fingerprint_on_disk and not any(
+            x.new for x in self.concretized_roots
+        ):
+            return
+
         with fs.write_tmp_and_move(self.lock_path, encoding="utf-8") as f:
             sjson.dump(self._to_lockfile_dict(), stream=f)
+        self._lockfile_fingerprint_on_disk = fingerprint
 
     def ensure_env_directory_exists(self, dot_env: bool = False) -> None:
         """Ensure that the root directory of the environment exists
@@ -2603,7 +2626,8 @@ class Environment:
 
     def _add_to_environment_repository(self, spec_node: Spec) -> None:
         """Add the root node of the spec to the environment repository"""
-        namespace: str = spec_node.namespace
+        namespace = spec_node.namespace
+        assert namespace is not None
         repository = spack.repo.create_or_construct(
             root=os.path.join(self.repos_path, namespace),
             namespace=namespace,

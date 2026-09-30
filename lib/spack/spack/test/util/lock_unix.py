@@ -584,6 +584,33 @@ def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
                 pass
 
 
+def test_read_lock_on_read_only_filesystem(tmp_path: pathlib.Path, monkeypatch):
+    """A read lock still succeeds when open() fails with EROFS (read-only filesystem)."""
+    lockfile = tmp_path / "lockfile"
+    touch(str(lockfile))
+
+    real_open = os.open
+
+    def _open(path, flags, *args, **kwargs):
+        if path == str(lockfile) and (flags & os.O_RDWR):
+            raise OSError(errno.EROFS, "Read-only file system")
+        return real_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(os, "open", _open)
+
+    lock = lk.Lock(str(lockfile))
+
+    with lk.ReadTransaction(lock):
+        pass
+    assert isinstance(lock.backend, lk.PosixBackend)
+    assert lock.backend._file_ref is not None
+    assert lock.backend._file_ref.fh.mode == "rb"
+
+    with pytest.raises(lk.LockROFileError):
+        with lk.WriteTransaction(lock):
+            pass
+
+
 def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
     """read-only directory, writable lockfile."""
     touch(lock_path)
@@ -1156,6 +1183,43 @@ def test_try_transaction_with_exception(lock_path):
 
     assert vals["exception"]
     assert vals["released_write"]
+    assert lock._reads == 0 and lock._writes == 0
+
+
+@pytest.mark.parametrize(
+    "transaction",
+    [lk.ReadTransaction, lk.WriteTransaction, lk.TryReadTransaction, lk.TryWriteTransaction],
+)
+def test_transaction_acquire_fn_raises(lock_path, transaction):
+    """An exception in the acquire function releases the lock without running the release
+    function, and the lock can be used again afterwards."""
+    # counters for acquire and release
+    num_acquired, num_released = 0, 0
+
+    def acquire_raise_on_first_call():
+        nonlocal num_acquired
+        num_acquired += 1
+        if num_acquired == 1:
+            raise ValueError()
+
+    def release(t, v, tb):
+        nonlocal num_released
+        num_released += 1
+
+    lock = lk.Lock(lock_path)
+
+    with pytest.raises(ValueError):
+        with transaction(lock, acquire=acquire_raise_on_first_call, release=release):
+            pass
+
+    assert num_released == 0
+    assert lock._reads == 0 and lock._writes == 0
+
+    with transaction(lock, acquire=acquire_raise_on_first_call, release=release):
+        pass
+
+    assert num_acquired == 2
+    assert num_released == 1
     assert lock._reads == 0 and lock._writes == 0
 
 

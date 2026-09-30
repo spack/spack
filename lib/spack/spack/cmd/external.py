@@ -131,11 +131,14 @@ def external_find(args):
         names=args.packages, tags=args.tags, exclude=args.exclude
     )
     detected_packages = spack.detection.by_path(
-        candidate_packages, path_hints=args.path, max_workers=args.jobs
+        candidate_packages, repo=spack.repo.PATH, path_hints=args.path, max_workers=args.jobs
     )
 
     new_specs = spack.detection.update_configuration(
-        detected_packages, scope=args.scope, buildable=not args.not_buildable
+        detected_packages,
+        config=spack.config.CONFIG,
+        scope=args.scope,
+        buildable=not args.not_buildable,
     )
 
     # If the user runs `spack external find --not-buildable mpich` we also mark `mpi` non-buildable

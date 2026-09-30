@@ -25,7 +25,7 @@ SPEC_CACHE: Dict[str, spack.spec.Spec] = {}
 def get_spec(spec_str: str) -> spack.spec.Spec:
     """Get a spec from the cache, or create it if not present."""
     if spec_str not in SPEC_CACHE:
-        SPEC_CACHE[spec_str] = spack.spec._ImmutableSpec(spec_str)
+        SPEC_CACHE[spec_str] = spack.spec._CachedSpec(spec_str)
     return SPEC_CACHE[spec_str]
 
 

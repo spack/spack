@@ -17,12 +17,11 @@ import spack.package_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
-import spack.spec_parser
 import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import EnvironmentManifestFile
+from spack.environment.environment import CURRENT_LOCKFILE_VERSION, EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
 from spack.util.lang import Singleton, ensure_unwrapped
@@ -1734,7 +1733,7 @@ spack:
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
         toolchains = mutable_config.get("toolchains", {})
-        s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
+        s = spack.spec.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
 
@@ -1886,7 +1885,7 @@ spack:
             spack.spec.Spec("mpich"),
         ]
 
-    def test_environment_without_groups_use_lockfile_v6(self, create_temporary_manifest):
+    def test_environment_without_groups_has_no_group_attribute(self, create_temporary_manifest):
         manifest = create_temporary_manifest(
             """
 spack:
@@ -1898,7 +1897,7 @@ spack:
         with ev.Environment(manifest.manifest_dir) as e:
             e.concretize()
             lockfile_data = e._to_lockfile_dict()
-            assert lockfile_data["_meta"]["lockfile-version"] == 6
+            assert lockfile_data["_meta"]["lockfile-version"] == CURRENT_LOCKFILE_VERSION
             assert all("group" not in x for x in lockfile_data["roots"])
 
     def test_independent_groups_concretization(self, create_temporary_manifest):
@@ -2297,3 +2296,74 @@ def test_env_substitution_reaches_the_unwrapped_configuration(
         expanded = spack.config.canonicalize_path("$env/concretization", config=configuration)
 
     assert expanded == os.path.join(env.path, "concretization")
+
+
+@pytest.mark.usefixtures("mutable_config")
+class TestLockfileWrites:
+    """The lockfile is only written when its content changes"""
+
+    @pytest.fixture
+    def lockfile(self, tmp_path: pathlib.Path) -> pathlib.Path:
+        (tmp_path / "spack.yaml").write_text("spack:\n  specs:\n  - mpileaks\n")
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
+            e.write()
+        return tmp_path / ev.lockfile_name
+
+    def test_unchanged_lockfile_is_not_rewritten(self, lockfile, monkeypatch):
+        def fail(*args, **kwargs):
+            raise AssertionError("the lockfile was rewritten")
+
+        monkeypatch.setattr(ev.environment.sjson, "dump", fail)
+        with ev.Environment(lockfile.parent) as e:
+            e.write()
+
+    def test_older_lockfile_keeps_its_version_until_reconcretized(self, lockfile):
+        data = json.loads(lockfile.read_text())
+        current = data["_meta"]["lockfile-version"]
+        data["_meta"]["lockfile-version"] = current - 1
+        lockfile.write_text(json.dumps(data))
+        before = lockfile.read_bytes()
+
+        with ev.Environment(lockfile.parent) as e:
+            e.write()
+        assert lockfile.read_bytes() == before
+
+        with ev.Environment(lockfile.parent) as e:
+            e.concretize(force=True)
+            e.write()
+        assert json.loads(lockfile.read_text())["_meta"]["lockfile-version"] == current
+
+    def test_lockfile_v7_reconstructs_provided_virtuals(self, lockfile):
+        """A v7 lockfile does not record provided virtuals, so they are reconstructed on read."""
+        with ev.Environment(lockfile.parent) as e:
+            expected = {s.dag_hash(): s.provided_virtuals for s in e.all_specs()}
+        assert any(expected.values())
+
+        data = json.loads(lockfile.read_text())
+        data["_meta"]["lockfile-version"] = 7
+        data["_meta"]["specfile-version"] = 5
+        for node in data["concrete_specs"].values():
+            node.pop("provided_virtuals", None)
+            node["annotations"]["original_specfile_version"] = 5
+        lockfile.write_text(json.dumps(data))
+
+        with ev.Environment(lockfile.parent) as e:
+            assert {s.dag_hash(): s.provided_virtuals for s in e.all_specs()} == expected
+
+    def test_lockfile_written_when_roots_change(self, lockfile):
+        def roots():
+            return {r["spec"] for r in json.loads(lockfile.read_text())["roots"]}
+
+        with ev.Environment(lockfile.parent) as e:
+            e.add("libelf")
+            e.concretize()
+            e.write()
+        assert roots() == {"mpileaks", "libelf"}
+
+        # Removing a root changes the lockfile without concretizing anything new
+        with ev.Environment(lockfile.parent) as e:
+            e.remove("libelf")
+            e.concretize()
+            e.write()
+        assert roots() == {"mpileaks"}

@@ -970,10 +970,10 @@ def test_repo_show_version_updates_success(mock_git_package_changes):
 
     with spack.repo.use_repositories(test_repo):
         # commits are ordered from newest to oldest after reversal
-        # commits[-2] = add v2.1.5, commits[-4] = add v2.1.7 and v2.1.8
+        # commits[-3] = add v2.1.5, commits[-5] = add v2.1.7 and v2.1.8
         # Find versions added between these commits
         # Includes v2.1.6 (git version), v2.1.7, and v2.1.8 (sha256 versions)
-        output = repo("show-version-updates", test_repo.root, commits[-2], commits[-4])
+        output = repo("show-version-updates", test_repo.root, commits[-3], commits[-5])
 
         # Verify all three versions are included
         assert "diff-test@" in output
@@ -1004,8 +1004,8 @@ def test_repo_show_version_updates_excludes_manual_packages(monkeypatch, mock_gi
             "show-version-updates",
             "--no-manual-packages",
             test_repo.root,
-            commits[-2],
-            commits[-4],
+            commits[-3],
+            commits[-5],
         )
 
         # Package should be excluded
@@ -1029,8 +1029,8 @@ def test_repo_show_version_updates_excludes_non_redistributable(
             "show-version-updates",
             "--only-redistributable",
             test_repo.root,
-            commits[-2],
-            commits[-4],
+            commits[-3],
+            commits[-5],
         )
 
         # Package should be excluded
@@ -1043,10 +1043,10 @@ def test_repo_show_version_updates_excludes_git_versions(mock_git_package_change
     test_repo, _, commits = mock_git_package_changes
 
     with spack.repo.use_repositories(test_repo):
-        # commits[-3] = add v2.1.6 (git version), commits[-4] = add v2.1.7 and v2.1.8 (sha256)
+        # commits[-4] = add v2.1.6 (git version), commits[-5] = add v2.1.7 and v2.1.8 (sha256)
         # Without --no-git-versions, v2.1.6 would be included
         output = repo(
-            "show-version-updates", "--no-git-versions", test_repo.root, commits[-3], commits[-4]
+            "show-version-updates", "--no-git-versions", test_repo.root, commits[-4], commits[-5]
         )
 
         # v2.1.6 (git version) should be excluded
@@ -1072,7 +1072,7 @@ def test_repo_show_version_updates_excludes_deprecated(monkeypatch, mock_git_pac
 
         # Run show-version-updates with --no-deprecated flag
         output = repo(
-            "show-version-updates", "--no-deprecated", test_repo.root, commits[-2], commits[-4]
+            "show-version-updates", "--no-deprecated", test_repo.root, commits[-3], commits[-5]
         )
 
         # v2.1.7 (deprecated) should be excluded

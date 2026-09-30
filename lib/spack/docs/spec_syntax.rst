@@ -620,6 +620,25 @@ Edge attributes are always specified as key-value pairs:
 
    root ^[key=value] dep
 
+To specify multiple attributes, put each attribute in its own enclosing brackets.
+
+.. code-block:: spec
+
+   root ^[key=value][other=value] dep
+
+Repeated attributes combine, so ``virtuals`` and ``deptypes`` are accumulated, and ``when`` conditions are constrained together.
+For instance:
+
+.. code-block:: spec
+
+   root ^[virtuals=c][deptypes=build][virtuals=cxx][when=+foo][deptypes=run][when=target=x86_64] dep
+
+is equivalent to:
+
+.. code-block:: spec
+
+   root ^[virtuals=c,cxx][deptypes=build,run][when=+foo target=x86_64] dep
+
 In the following sections we'll discuss the edge attributes that are currently allowed in the spec syntax.
 
 Virtuals
@@ -654,11 +673,12 @@ We can express conditional constraints by specifying the ``when`` edge attribute
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
 
 The value of ``when`` is a spec, which extends up to the closing bracket.
-It is therefore the last edge attribute, unless it is quoted:
+An edge attribute that follows an unquoted condition would be parsed as part of it, so it goes in a separate group of brackets, unless the condition is quoted:
 
 .. code-block:: spec
 
    $ spack install hdf5 ^[virtuals=mpi when=+mpi] mpich@3.1
+   $ spack install hdf5 ^[when=+mpi][virtuals=mpi] mpich@3.1
    $ spack install hdf5 ^[when='+mpi' virtuals=mpi] mpich@3.1
 
 Dependency propagation

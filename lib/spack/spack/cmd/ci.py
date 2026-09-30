@@ -529,7 +529,7 @@ def ci_rebuild(args):
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
     # Clear the stage directory
-    spack.stage.purge()
+    spack.stage.purge(config=cfg.CONFIG)
 
     # If the installation succeeded and we're running stand-alone tests for
     # the package, run them and copy the output. Failures of any kind should
@@ -750,7 +750,7 @@ def validate_standard_versions(
             url_dict[version] = url
 
     version_hashes = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, fetch_options=pkg.fetch_options
+        url_dict, pkg.name, fetch_options=pkg.fetch_options, config=cfg.CONFIG
     )
 
     for version, sha in version_hashes.items():
@@ -780,7 +780,7 @@ def validate_git_versions(
     for version in versions:
         fetcher = spack.package_base.for_package_version(pkg, version)
         assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-        with spack.stage.Stage(fetcher) as stage:
+        with spack.stage.stage_from_config(fetcher, config=cfg.CONFIG) as stage:
             known_commit = pkg.versions[version]["commit"]
             try:
                 stage.fetch()

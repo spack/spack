@@ -47,7 +47,7 @@ def check_json_round_trip(spec):
     assert spec.eq_dag(spec_from_json)
 
 
-def test_read_spec_from_signed_json():
+def test_read_spec_from_signed_json(mock_packages):
     spec_dir = os.path.join(spack.paths.test_path, "data", "mirrors", "signed_json")
     file_name = (
         "linux-ubuntu18.04-haswell-gcc-8.4.0-"
@@ -503,6 +503,9 @@ e: *id002
         "hdf5~~mpi++shared",
         "hdf5 cflags==-g foo==bar cxxflags==-O3",
         "hdf5 cflags=-g foo==bar cxxflags==-O3",
+        # the same variant name, both as a variant and propagated
+        "hdf5+mpi++mpi",
+        "hdf5 foo=a,b foo==b",
         "hdf5%gcc",
         "hdf5%cmake",
         "hdf5^gcc",
@@ -542,6 +545,10 @@ def test_pickle_roundtrip_for_abstract_specs(spec_str):
         'zlib cflags="-O2 -g"',
         # several dimensions at once
         "zlib ++mpi cflags==-g foo=bar,baz target=x86_64:",
+        # the same variant name, both as a variant and propagated, abstract and concrete
+        "zlib+mpi++mpi",
+        "zlib foo=a,b foo==b",
+        "zlib foo:=a,b foo==b",
     ],
 )
 def test_dict_roundtrip_for_abstract_specs(spec_str):
@@ -554,6 +561,20 @@ def test_dict_roundtrip_for_abstract_specs(spec_str):
     assert s == t
     assert str(s) == str(t)
     assert s.to_dict() == t.to_dict()
+
+
+def test_from_dict_reads_legacy_propagate_list():
+    """Node dicts written before propagated variants had their own attribute listed them under
+    "parameters" with their name in "propagate"."""
+    node = {
+        "name": "hdf5",
+        "parameters": {"mpi": True, "foo": ["bar", "baz"], "cxxstd": ["17"]},
+        "propagate": ["foo", "mpi", "cxxstd"],
+        "abstract": ["foo", "cxxstd"],
+        "concrete": False,
+    }
+    reconstructed = spack.spec.SpecfileLatest.from_node_dict(node)
+    assert reconstructed == spack.spec.Spec("hdf5++mpi foo==bar,baz cxxstd==17")
 
 
 def test_specfile_alias_is_updated():
@@ -628,6 +649,21 @@ def test_pickle_preserves_identity_and_prefix(config, mock_packages):
 
     # Test that the specs are the same as dicts
     assert mpileaks_before.to_dict() == mpileaks_after.to_dict()
+
+
+def test_edge_virtuals_reconstructed_for_specfile_v3(config, mock_packages):
+    """Virtuals on edges are recorded from v4 on, so a v3 spec file needs them reconstructed."""
+    as_dict = spack.concretize.concretize_one("mpileaks ^mpich").to_dict()
+    as_dict["spec"]["_meta"]["version"] = 3
+    for node in as_dict["spec"]["nodes"]:
+        node.pop("provided_virtuals", None)
+        node.pop("annotations")
+        for dep in node.get("dependencies", ()):
+            dep["type"] = list(dep.pop("parameters")["deptypes"])
+
+    reread = Spec.from_dict(as_dict)
+    assert reread.original_spec_format() == 3
+    assert "mpi" in reread.edges_to_dependencies(name="mpich")[0].virtuals
 
 
 def test_load_specfile_with_no_nodes():

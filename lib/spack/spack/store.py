@@ -20,7 +20,6 @@ import contextlib
 import filecmp
 import os
 import pathlib
-import re
 import shutil
 import sys
 import uuid
@@ -65,22 +64,6 @@ def parse_install_tree(config: spack.config.Configuration) -> Tuple[str, str, Di
         padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 
     projections = install_tree.get("projections", spack.directory_layout.default_projections)
-
-    # Handle backwards compatibility for padding
-    old_pad = re.search(r"\$padding(:\d+)?|\${padding(:\d+)?}", unpadded_root)
-    if old_pad:
-        if padded_length:
-            msg = "Ignoring deprecated padding option in install_tree root "
-            msg += "because new syntax padding is present."
-            tty.warn(msg)
-        else:
-            unpadded_root = unpadded_root.replace(old_pad.group(0), "")
-            if old_pad.group(1) or old_pad.group(2):
-                length_group = 2 if "{" in old_pad.group(0) else 1
-                padded_length = int(old_pad.group(length_group)[1:])
-            else:
-                padded_length = spack.util.path.get_system_path_max()
-                padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 
     unpadded_root = unpadded_root.rstrip(os.path.sep)
 

@@ -73,3 +73,18 @@ class RecordingUI(ConcretizerUI):
         self, abstract: Spec, *, concrete: Spec, count: int, duration: float
     ) -> None:
         self.concretized.append((abstract, concrete, count, duration))
+
+
+class UnusableGlobal:
+    """Stands in for a process global that the code under test must not reach for."""
+
+    def __init__(self, name: str) -> None:
+        self._name = name
+
+    def __getattr__(self, item):
+        # pickle looks up optional dunder methods, and on load it does so before _name is set
+        if item.startswith("__") and item.endswith("__"):
+            raise AttributeError(item)
+        raise AssertionError(
+            f"{self._name} was read instead of the injected context (attribute {item!r})"
+        )

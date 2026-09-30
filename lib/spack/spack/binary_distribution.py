@@ -86,7 +86,7 @@ from spack.oci.oci import (
 )
 from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util import file_cache, timer, tty
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp
@@ -266,7 +266,9 @@ class BinaryIndexCache:
                 self._specs_already_associated.add(cached_index_hash)
 
     def _associate_built_specs_with_mirror(self, cache_key, mirror_metadata: MirrorMetadata):
-        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with tempfile.TemporaryDirectory(
+            dir=spack.stage.stage_root(spack.config.CONFIG)
+        ) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
             with self._index_file_cache.read_transaction(cache_key) as f:
@@ -670,12 +672,22 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: 
         db._write_to_file(f)
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_class.push_local_file_as_blob(
-        index_json_path,
-        cache_prefix,
-        url_util.join(name, "index") if name else "index",
-        BuildcacheComponent.INDEX,
-        compression="none",
+    manifest_name = url_util.join(name, "index") if name else "index"
+    manifest_url = cache_class.get_index_url(cache_prefix, name)
+    try:
+        old = cache_class(cache_prefix, allow_unsigned=True).read_manifest(manifest_url).data
+    except Exception as e:  # missing or unreadable: start from scratch
+        tty.debug(f"No usable index manifest at {manifest_url}: {e}")
+        old = []
+
+    record = cache_class.push_blob_from_file(
+        index_json_path, cache_prefix, BuildcacheComponent.INDEX
+    )
+    # Keep records of other formats so other Spack versions keep their snapshot
+    kept = [r for r in old if r.media_type != record.media_type]
+    manifest = BuildcacheManifest(CURRENT_BUILD_CACHE_LAYOUT_VERSION, [record, *kept])
+    cache_class.push_manifest(
+        cache_prefix, manifest_name, manifest, temp_dir, component_type=BuildcacheComponent.INDEX
     )
     cache_class.maybe_push_layout_json(cache_prefix)
 
@@ -750,37 +762,27 @@ def _url_generate_package_index(
     Return:
         None
     """
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        try:
-            with timer.measure("list"):
-                filename_to_mtime_mapping, read_fn = get_entries_from_cache(
-                    url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
-                )
-            file_list = list(filename_to_mtime_mapping.keys())
-        except ListMirrorSpecsError as e:
-            raise GenerateIndexError(f"Unable to generate package index: {e}") from e
-
-        tty.debug(f"Retrieving spec descriptor files from {url} to build index")
-
-        if not db:
-            db = BuildCacheDatabase(tmpdir)
-            db._write()
-
-        try:
-            _read_specs_and_push_index(
-                file_list,
-                read_fn,
-                name,
-                filter_fn,
-                url,
-                db,
-                str(db.database_directory),
-                timer=timer,
+    try:
+        with timer.measure("list"):
+            filename_to_mtime_mapping, read_fn = get_entries_from_cache(
+                url, component_type=BuildcacheComponent.SPEC
             )
-        except Exception as e:
-            raise GenerateIndexError(
-                f"Encountered problem pushing package index to {url}: {e}"
-            ) from e
+        file_list = list(filename_to_mtime_mapping.keys())
+    except ListMirrorSpecsError as e:
+        raise GenerateIndexError(f"Unable to generate package index: {e}") from e
+
+    tty.debug(f"Retrieving spec descriptor files from {url} to build index")
+
+    if not db:
+        db = BuildCacheDatabase(tmpdir)
+        db._write()
+
+    try:
+        _read_specs_and_push_index(
+            file_list, read_fn, name, filter_fn, url, db, str(db.database_directory), timer=timer
+        )
+    except Exception as e:
+        raise GenerateIndexError(f"Encountered problem pushing package index to {url}: {e}") from e
 
 
 def generate_key_index(mirror_url: str, tmpdir: str) -> None:
@@ -1009,7 +1011,7 @@ class Uploader:
         self.mirror.ensure_mirror_usable("push")
 
     def __enter__(self):
-        self._tmpdir = tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root())
+        self._tmpdir = tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG))
         self._executor = spack.util.parallel.make_concurrent_executor()
 
         self.tmpdir = self._tmpdir.__enter__()
@@ -1890,6 +1892,51 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
+def _virtuals_by_node(root: spack.spec.Spec) -> Dict[int, Set[str]]:
+    """Return the virtuals each node in the DAG of ``root`` provides, in the context of ``root``,
+    keyed by the ``id`` of the node. Same semantics as ``Spec._virtuals_provided``.
+    """
+    result: Dict[int, Set[str]] = defaultdict(set)
+    result[id(root)] = {v.name for v in root.provided_virtuals}
+    for edge in root.traverse_edges(root=False, cover="edges"):
+        result[id(edge.spec)].update(edge.virtuals)
+    return result
+
+
+class _SpliceAnalogs:
+    """Finds the node of the build spec that a node of a spliced spec replaced.
+
+    Candidates are the nodes of the build spec that ``Spec._splice_match`` accepts: those with the
+    same name, and those providing a superset of the virtuals the node provides.
+
+    Among them, same name is preferred, then higher version, then the first in traversal order,
+    as in ``Spec.splice``. The index is built in a single pass over the DAGs of both specs.
+    """
+
+    def __init__(self, spec: spack.spec.Spec) -> None:
+        # Candidates are referred to by their position in traversal order
+        self.candidates = list(spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
+        self.by_name: Dict[str, List[int]] = defaultdict(list)
+        self.by_virtual: Dict[str, Set[int]] = defaultdict(set)
+        build_spec_virtuals = _virtuals_by_node(spec.build_spec)
+        for i, d in enumerate(self.candidates):
+            self.by_name[d.name].append(i)
+            for virtual in build_spec_virtuals[id(d)]:
+                self.by_virtual[virtual].add(i)
+        self.spec_virtuals = _virtuals_by_node(spec)
+
+    def __call__(self, s: spack.spec.Spec) -> Optional[spack.spec.Spec]:
+        # For each virtual s provides, the candidates providing it
+        providers = [self.by_virtual.get(v, set()) for v in self.spec_virtuals[id(s)]]
+        # Candidates providing all virtuals of s; none if s provides no virtuals
+        common = set.intersection(*providers) if providers else set()
+        analogs = {*self.by_name.get(s.name, []), *common}
+        if not analogs:
+            return None
+        key = lambda i: (self.candidates[i].name == s.name, self.candidates[i].version, -i)
+        return self.candidates[max(analogs, key=key)]
+
+
 def relocate_package(spec: spack.spec.Spec) -> None:
     """Relocate binaries and text files in the given spec prefix, based on its buildinfo file."""
     spec_prefix = str(spec.prefix)
@@ -1925,27 +1972,15 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # the new spack store root.
 
     # If the spec is spliced, we need to handle the simultaneous mapping from the old install_tree
-    # to the new install_tree and from the build_spec to the spliced spec. Because foo.build_spec
-    # is foo for any non-spliced spec, we can simplify by checking for spliced-in nodes by checking
-    # for nodes not in the build_spec without any explicit check for whether the spec is spliced.
-    # An analog in this algorithm is any spec that shares a name or provides the same virtuals in
-    # the context of the relevant root spec. This ensures that the analog for a spec s is the spec
-    # that s replaced when we spliced.
+    # to the new install_tree and from the build_spec to the spliced spec. Nodes the splice did
+    # not change keep their hash. For the others, the old prefix is the one of their analog: the
+    # node of the build_spec they replaced.
     relocation_specs = specs_to_relocate(spec)
-    build_spec_ids = {id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)}
+    splice_analogs = _SpliceAnalogs(spec) if spec.spliced else None
     for s in relocation_specs:
         analog = s
-        if id(s) not in build_spec_ids:
-            analogs = [
-                d
-                for d in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)
-                if s._splice_match(d, self_root=spec, other_root=spec.build_spec)
-            ]
-            if analogs:
-                # Prefer same-name analogs and prefer higher versions
-                # This matches the preferences in spack.spec.Spec.splice, so we
-                # will find same node
-                analog = max(analogs, key=lambda a: (a.name == s.name, a.version))
+        if splice_analogs is not None and s.dag_hash() not in hash_to_old_prefix:
+            analog = splice_analogs(s) or s
 
         lookup_dag_hash = analog.dag_hash()
         if lookup_dag_hash in hash_to_old_prefix:
@@ -2381,7 +2416,9 @@ def _trust_keys_v2(mirror_url, yes_to_all=False, install=False, trust=False, for
     for fingerprint, key_attributes in json_index["keys"].items():
         link = os.path.join(keys_url, fingerprint + ".pub")
 
-        with Stage(link, name="build_cache", keep=True) as stage:
+        with stage_from_config(
+            link, name="build_cache", keep=True, config=spack.config.CONFIG
+        ) as stage:
             if os.path.exists(stage.save_filename) and force:
                 os.remove(stage.save_filename)
             if not os.path.exists(stage.save_filename):
@@ -2609,7 +2646,7 @@ class IndexHandler:
             cache_class.verify_and_extract_manifest(result, verify=False)
         )
         blob_record = manifest.get_blob_records(
-            cache_class.component_to_media_type(BuildcacheComponent.INDEX)
+            cache_class.component_to_media_types(BuildcacheComponent.INDEX)
         )[0]
         return blob_record
 

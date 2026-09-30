@@ -52,7 +52,6 @@ import spack.schema
 import spack.schema.bootstrap
 import spack.schema.cdash
 import spack.schema.ci
-import spack.schema.compilers
 import spack.schema.concretizer
 import spack.schema.config
 import spack.schema.definitions
@@ -82,7 +81,6 @@ from .enums import ConfigScopePriority
 
 #: Dict from section names -> schema for that section
 SECTION_SCHEMAS: Dict[str, Any] = {
-    "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
     "definitions": spack.schema.definitions.schema,
     "env_vars": spack.schema.env_vars.schema,

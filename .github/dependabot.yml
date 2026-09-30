@@ -8,6 +8,7 @@ updates:
   - package-ecosystem: "pip"
     directories:
      - "/.github/workflows/requirements/coverage"
+     - "/.github/workflows/requirements/import-check"
      - "/.github/workflows/requirements/style"
      - "/.github/workflows/requirements/unit_tests"
      - "/lib/spack/docs"

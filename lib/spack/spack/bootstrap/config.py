@@ -15,6 +15,7 @@ import spack.paths
 import spack.platforms
 import spack.repo
 import spack.store
+from spack.error import ExplicitDatabaseUpgradeError
 from spack.util import tty
 
 #: Reference counter for the bootstrapping configuration context manager
@@ -101,6 +102,11 @@ def ensure_bootstrap_configuration() -> Generator:
         else:
             with _ensure_bootstrap_configuration():
                 yield
+    except ExplicitDatabaseUpgradeError as e:
+        # Adjust database upgrade error messages to include -b flag when in bootstrap mode
+        if e._long_message:
+            e._long_message = e._long_message.replace("spack reindex", "spack -b reindex")
+        raise
     finally:
         _REF_COUNT -= 1
 

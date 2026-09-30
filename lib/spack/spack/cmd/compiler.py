@@ -10,6 +10,7 @@ import spack.binary_distribution
 import spack.cmd
 import spack.compilers.config
 import spack.config
+import spack.repo
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
@@ -84,7 +85,11 @@ def compiler_find(args):
     """
     paths = args.add_paths or None
     new_compilers = spack.compilers.config.find_compilers(
-        path_hints=paths, scope=args.scope, max_workers=args.jobs
+        path_hints=paths,
+        config=spack.config.CONFIG,
+        repo=spack.repo.PATH,
+        scope=args.scope,
+        max_workers=args.jobs,
     )
     if new_compilers:
         n = len(new_compilers)
@@ -96,11 +101,14 @@ def compiler_find(args):
     else:
         tty.msg("Found no new compilers")
     tty.msg("Compilers are defined in the following files:")
-    colify(spack.compilers.config.compiler_config_files(), indent=4)
+    config_files = spack.compilers.config.compiler_config_files(
+        spack.config.CONFIG, repo=spack.repo.PATH
+    )
+    colify(config_files, indent=4)
 
 
 def compiler_remove(args):
-    remover = spack.compilers.config.CompilerRemover(spack.config.CONFIG)
+    remover = spack.compilers.config.CompilerRemover(spack.config.CONFIG, repo=spack.repo.PATH)
     candidates = remover.mark_compilers(match=args.compiler_spec, scope=args.scope)
     if not candidates:
         tty.die(f"No compiler matches '{args.compiler_spec}'")
@@ -230,13 +238,15 @@ def compiler_list(args):
 
 
 def _all_available_compilers(scope: Optional[str], remote: bool) -> List[Spec]:
-    supported_compilers = spack.compilers.config.supported_compilers()
+    supported_compilers = spack.compilers.config.supported_compilers(repo=spack.repo.PATH)
 
     def _is_compiler(x):
         return x.name in supported_compilers and x.package.supported_languages and not x.external
 
     compilers_from_store = [x for x in spack.store.STORE.db.query() if _is_compiler(x)]
-    compilers_from_yaml = spack.compilers.config.all_compilers(scope=scope, init_config=False)
+    compilers_from_yaml = spack.compilers.config.all_compilers(
+        spack.config.CONFIG, repo=spack.repo.PATH, scope=scope, init_config=False
+    )
     compilers = compilers_from_yaml + compilers_from_store
 
     if remote:

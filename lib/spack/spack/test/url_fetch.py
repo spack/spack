@@ -19,7 +19,7 @@ import spack.url
 import spack.util.web as web_util
 import spack.version
 from spack.config import Configuration
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util import crypto, tty
 from spack.util.executable import which
 from spack.util.filesystem import is_exe, working_dir
@@ -81,7 +81,7 @@ def test_urlfetchstrategy_bad_url(tmp_path: pathlib.Path, mutable_config, method
     mutable_config.set("config:url_fetch_method", method)
     fetcher = fs.URLFetchStrategy(url=(tmp_path / "does-not-exist").as_uri())
 
-    with Stage(fetcher, path=str(tmp_path / "stage")):
+    with stage_from_config(fetcher, path=str(tmp_path / "stage"), config=mutable_config):
         with pytest.raises(fs.FailedDownloadError) as exc:
             fetcher.fetch()
 
@@ -102,7 +102,7 @@ def test_fetch_options(mutable_config: Configuration, tmp_path: pathlib.Path, mo
             url=mock_archive.url, fetch_options={"cookie": "True", "timeout": 10}
         )
 
-        with Stage(fetcher, path=str(tmp_path)):
+        with stage_from_config(fetcher, path=str(tmp_path), config=mutable_config):
             assert fetcher.archive_file is None
             fetcher.fetch()
             archive_file = fetcher.archive_file
@@ -126,7 +126,7 @@ def test_fetch_curl_options(
 
         monkeypatch.setattr(type(fetcher.curl), "__call__", check_args)
 
-        with Stage(fetcher, path=str(tmp_path)):
+        with stage_from_config(fetcher, path=str(tmp_path), config=mutable_config):
             assert fetcher.archive_file is None
             with pytest.raises(StopIteration):
                 fetcher.fetch()
@@ -139,7 +139,7 @@ def test_archive_file_errors(
     """Ensure FetchStrategy commands may only be used as intended"""
     with mutable_config.override("config:url_fetch_method", _fetch_method):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url)
-        with Stage(fetcher, path=str(tmp_path)) as stage:
+        with stage_from_config(fetcher, path=str(tmp_path), config=mutable_config) as stage:
             assert fetcher.archive_file is None
             with pytest.raises(fs.NoArchiveFileError):
                 fetcher.archive(str(tmp_path))
@@ -295,7 +295,7 @@ def test_url_with_status_bar(
     monkeypatch.setattr(tty, "msg_enabled", is_true)
     with mutable_config.override("config:url_fetch_method", "curl"):
         fetcher = fs.URLFetchStrategy(url=mock_archive.url)
-        with Stage(fetcher, path=testpath) as stage:
+        with stage_from_config(fetcher, path=testpath, config=mutable_config) as stage:
             assert fetcher.archive_file is None
             stage.fetch()
 
@@ -308,7 +308,7 @@ def test_url_extra_fetch(tmp_path: pathlib.Path, mutable_config, mock_archive, _
     """Ensure a fetch after downloading is effectively a no-op."""
     mutable_config.set("config:url_fetch_method", _fetch_method)
     fetcher = fs.URLFetchStrategy(url=mock_archive.url)
-    with Stage(fetcher, path=str(tmp_path)) as stage:
+    with stage_from_config(fetcher, path=str(tmp_path), config=mutable_config) as stage:
         assert fetcher.archive_file is None
         stage.fetch()
         archive_file = fetcher.archive_file
@@ -357,7 +357,7 @@ def test_missing_curl(tmp_path: pathlib.Path, missing_curl, mutable_config, monk
     mutable_config.set("config:url_fetch_method", "curl")
     fetcher = fs.URLFetchStrategy(url="http://example.com/file.tar.gz")
     with pytest.raises(spack.error.FetchError, match="curl is required but not found"):
-        with Stage(fetcher, path=str(tmp_path)) as stage:
+        with stage_from_config(fetcher, path=str(tmp_path), config=mutable_config) as stage:
             stage.fetch()
 
 

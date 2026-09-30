@@ -1004,7 +1004,7 @@ _spack_dependents() {
 _spack_deprecate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -y --yes-to-all -d --dependencies -D --no-dependencies -i --install-deprecator -I --no-install-deprecator -l --link-type"
+        SPACK_COMPREPLY="-h --help -y --yes-to-all -d --dependencies -D --no-dependencies -i --install-deprecator -I --no-install-deprecator"
     else
         _all_packages
     fi

@@ -90,7 +90,7 @@ def complete_architecture(node: spack.spec.Spec, repo: spack.repo.RepoPath) -> N
             node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
         node.architecture.complete_with_defaults()
     else:
-        node.constrain(spack.spec.Spec.default_arch())
+        node.architecture = spack.spec.ArchSpec.default_arch()
         node.architecture.target = spack.archspec.HOST_TARGET_FAMILY
 
     node.namespace = repo.repo_for_pkg(node.name).namespace
@@ -230,24 +230,24 @@ class ExternalSpecsParser:
         self,
         external_dicts: List[ExternalDict],
         *,
+        repo: spack.repo.RepoPath,
         complete_node: CompleteNodeFn = complete_variants_and_architecture,
         allow_nonexisting: bool = True,
-        repo: Optional[spack.repo.RepoPath] = None,
     ):
         """Initializes a class to manage and process external specifications in ``packages.yaml``.
 
         Args:
             external_dicts: list of ExternalDict objects to provide external specifications.
+            repo: package repository to query
             complete_node: a callable ``(node, repo)`` that completes a node with missing variants,
                 targets, etc. It is invoked with this parser's ``repo``.
             allow_nonexisting: whether to allow non-existing packages. Defaults to True.
-            repo: package repository to query. If None, the global ``spack.repo.PATH`` is used.
 
         Raises:
             spack.repo.UnknownPackageError: if a package does not exist,
                 and allow_nonexisting is False.
         """
-        self.repo = spack.repo.repo_or_default(repo)
+        self.repo = repo
         self.external_dicts = external_dicts
         self.specs_by_external_id: Dict[str, ExternalSpecAndConfig] = {}
         self.specs_by_name: Dict[str, List[ExternalSpecAndConfig]] = {}
@@ -265,7 +265,8 @@ class ExternalSpecsParser:
         # Attach dependencies to externals
         self._create_edges()
         # Mark the specs as concrete
-        spack.spec.finalize_concretization(self.nodes, repo=self.repo)
+        spack.repo.freeze_provided_virtuals(self.nodes, repo=self.repo)
+        spack.spec.assign_hashes(self.nodes, repo=self.repo)
 
     def _create_edges(self):
         for eid, entry in self.specs_by_external_id.items():
@@ -311,10 +312,13 @@ class ExternalSpecsParser:
                     # Infer the deptype if only '%' was used in the spec
                     inferred_virtuals = []
                     for name, current_flag in deptypes_by_package.items():
-                        if not dependency_node.intersects(name):
+                        # An abstract node matches a virtual only through its providers
+                        is_virtual = self.repo.is_virtual(name)
+                        candidates = self.repo.providers_for(name) if is_virtual else (name,)
+                        if not any(dependency_node.intersects(c) for c in candidates):
                             continue
                         depflag |= current_flag
-                        if self.repo.is_virtual(name):
+                        if is_virtual:
                             inferred_virtuals.append(name)
                     virtuals = tuple(inferred_virtuals)
                 elif depflag == spack.deptypes.NONE:
@@ -456,9 +460,9 @@ class ExternalSpecsParser:
         return result
 
 
-def external_spec(config: ExternalDict) -> spack.spec.Spec:
+def external_spec(config: ExternalDict, *, repo: spack.repo.RepoPath) -> spack.spec.Spec:
     """Returns an external spec from a dictionary representation."""
-    return ExternalSpecsParser([config]).all_specs()[0]
+    return ExternalSpecsParser([config], repo=repo).all_specs()[0]
 
 
 class DuplicateExternalError(SpackError):
