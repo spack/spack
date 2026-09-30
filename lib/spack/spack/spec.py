@@ -2231,7 +2231,7 @@ class Spec:
         direct: bool = False,
         propagation: PropagationPolicy = PropagationPolicy.NONE,
         when: Optional["Spec"] = None,
-        usages: Optional["UsageMap"] = None,
+        usages: Optional[Union["UsageMap", Dict[str, UsageValue]]] = None,
     ):
         """Called by the parser to add another spec as a dependency.
 
@@ -2243,6 +2243,11 @@ class Spec:
             when: optional condition under which dependency holds
             usages: optional UsageMap of options on the edge
         """
+        if usages is not None and not isinstance(usages, UsageMap):
+            # Parser passes a dict to avoid circular dependency
+            # UsageMap constructor can construct from dict
+            usages = UsageMap(usages)
+
         self.add_dependency_edge(
             spec,
             depflag=depflag,
