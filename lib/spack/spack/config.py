@@ -2086,165 +2086,159 @@ def _can_migrate_to_location(location: str) -> bool:
         return False
 
     # Empty directory - safe to migrate
-    tty.debug(f"{location} exists but is empty, can migrate")
     return True
 
 
-def _migrate_user_config() -> bool:
-    """Programmatically migrate ~/.spack to ~/.config/spack.
-
-    Only performs migration if:
-    - ~/.config/spack does not exist or is empty
-    - ~/.spack exists
-
-    Returns:
-        True if migration was performed, False if skipped
-    """
-    old_location = os.path.expanduser("~/.spack")
-    new_default_cfg_location = os.path.expanduser("~/.config/spack")
-
-    # Check if new location is safe for migration
-    if not _can_migrate_to_location(new_default_cfg_location):
-        return False
-
-    if not os.path.exists(old_location):
-        tty.debug("No ~/.spack to migrate")
-        return False
-
-    # Find config files to migrate
-    config_files: List[str] = []
-    if os.path.isdir(old_location):
-        found = filesystem.find(old_location, ["*.yaml", "*.yml"], recursive=True)
-        package_repos_dir = os.path.join(old_location, "package_repos")
-        config_files = [
-            os.path.relpath(f, old_location)
-            for f in found
-            if not filesystem.path_contains_subdirectory(f, package_repos_dir)
-        ]
-
-    if not config_files:
-        tty.debug("No config files found in ~/.spack to migrate")
-        return False
-
-    # Lock the destination parent directory to prevent concurrent migrations
-    config_parent = os.path.dirname(new_default_cfg_location)
-    filesystem.mkdirp(config_parent)
-    lock_path = os.path.join(config_parent, ".spack-user-config-migration.lock")
-
-    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-    with spack.util.lock.WriteTransaction(lock):
-        result = _do_migrate_user_config(old_location, new_default_cfg_location, config_files)
-    return result
-
-
-def _do_migrate_user_config(
-    old_location: str, new_config_location: str, config_files: List[str]
-) -> bool:
-    # Helper for _migrate_user_config: does the actual work of relocating config
-    # files
-
-    # Re-check if destination is safe (might have changed while waiting for lock)
-    if not _can_migrate_to_location(new_config_location):
-        return False
-
-    # If new location exists as empty directory, remove it so os.replace() can succeed
-    if os.path.exists(new_config_location):
-        os.rmdir(new_config_location)
-        tty.debug(f"Removed empty {new_config_location} to proceed with migration")
-
-    # Use staging directory to make migration atomic
-    config_parent = os.path.dirname(new_config_location)
-    staging_path = os.path.join(config_parent, ".spack-config-staging")
-
-    # Clean up any stale staging directory from a previous failed attempt
-    if os.path.exists(staging_path):
-        shutil.rmtree(staging_path, ignore_errors=True)
-
+def _is_nonempty_directory(path: str) -> bool:
     try:
-        # Perform migration to staging directory
-        os.makedirs(staging_path, exist_ok=True)
-        tty.debug(f"Migrating config files from {old_location} to {new_config_location}")
-
-        for config_file in config_files:
-            old_path = os.path.join(old_location, config_file)
-            staging_file_path = os.path.join(staging_path, config_file)
-
-            try:
-                # Process paths using migrate command logic (handles the 4 path rewriting rules)
-                # Pass new_config_location (not staging_path) so paths are rewritten for final
-                # destination
-                modified_data = process_config_file_paths(
-                    old_path, old_location, new_config_location
-                )
-
-                # Ensure parent directory exists in staging
-                os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
-
-                if modified_data is not None:
-                    with open(staging_file_path, "w", encoding="utf-8") as f:
-                        syaml.dump(modified_data, f)
-                else:
-                    shutil.copy2(old_path, staging_file_path)
-            except (syaml.SpackYAMLError, OSError) as e:
-                # Skip files that can't be parsed or read (e.g., backup dirs with broken YAML)
-                tty.debug(f"Skipping {config_file} during migration: {e}")
-                continue
-
-        # Atomically rename staging to final destination
-        os.rename(staging_path, new_config_location)
-        tty.debug(f"User config migrated from {old_location} to {new_config_location}")
-        return True
-    except (OSError, shutil.Error) as e:
-        tty.warn(f"Failed to migrate user config: {e}")
-        if os.path.exists(staging_path):
-            shutil.rmtree(staging_path, ignore_errors=True)
-        return False
-
-
-def _migrate_package_repositories() -> bool:
-    """Copy legacy package repositories to the new default state location.
-
-    The legacy tree is copied to a sibling staging directory and renamed into
-    place only after the copy completes. The source is never modified.
-    """
-    old_path = spack.paths.old_package_repos_path
-    # Use default location directly without triggering config resolution
-    new_path = os.path.join(spack.paths.default_state_home, "package_repos")
-
-    if not os.path.isdir(old_path) or os.path.exists(new_path):
-        return False
-
-    try:
-        if not os.listdir(old_path):
-            return False
+        return bool(os.listdir(path))
     except OSError:
         return False
 
+
+def _migrate_with_staging(
+    old_path: str,
+    new_path: str,
+    prepare_staging_callback,
+    lock_name: str,
+    staging_name: str,
+    description: str,
+) -> bool:
+    """Generic migration function for resources that used to be in
+    $HOME (user config and package repos).
+
+    Common pattern for atomic migrations:
+    1. Check source exists and has content
+    2. Check destination doesn't exist or is empty
+    3. Acquire lock
+    4. Create staging directory
+    5. Call callback to populate staging (copy/process files)
+    6. Atomically rename staging to destination
+    """
+    if not _is_nonempty_directory(old_path):
+        return False
+
+    # These checks have to be repeated inside the lock, but they will
+    # almost always trigger an early return (skip locking).
+    if not _can_migrate_to_location(new_path):
+        return False
+
+    # Prepare parent directory, staging path, and lock
     parent = os.path.dirname(new_path)
-    staging_path = os.path.join(parent, ".package-repos-migration")
-    lock_path = os.path.join(parent, ".spack-package-repos-migration-lock")
+    staging_path = os.path.join(parent, staging_name)
+    lock_path = os.path.join(parent, lock_name)
     filesystem.mkdirp(parent)
     lock = spack.util.lock.Lock(lock_path, default_timeout=120)
 
     try:
-        # A user-facing timeout message could be added if migration contention
-        # becomes observable in practice.
         lock.acquire_write()
-        if os.path.exists(new_path) or not os.path.isdir(old_path):
+
+        if not _is_nonempty_directory(old_path):
             return False
+
+        # If destination exists and is empty, remove it so os.rename() can succeed
+        if os.path.exists(new_path):
+            if os.path.isdir(new_path) and not os.listdir(new_path):
+                os.rmdir(new_path)
+                tty.debug(f"Removed empty {new_path} to proceed with migration")
+            else:
+                # Not empty or not a directory - can't migrate
+                return False
+
+        # Clean up stale staging directory from previous failed attempt
         if os.path.exists(staging_path):
-            shutil.rmtree(staging_path)
-        shutil.copytree(old_path, staging_path, symlinks=True)
+            shutil.rmtree(staging_path, ignore_errors=True)
+
+        # Create staging directory and populate it
+        os.makedirs(staging_path, exist_ok=True)
+        tty.debug(f"Migrating {description} from {old_path} to {new_path}")
+
+        # Callback does the actual work of populating staging
+        prepare_staging_callback(old_path, staging_path, new_path)
+
+        # Atomically rename staging to final destination
         os.rename(staging_path, new_path)
-        tty.debug(f"Copied package repositories from {old_path} to {new_path}")
+        tty.debug(f"{description.capitalize()} migrated from {old_path} to {new_path}")
         return True
+
     except (OSError, shutil.Error) as e:
-        tty.warn(f"Failed to migrate package repositories: {e}")
+        tty.warn(f"Failed to migrate {description}: {e}")
         if os.path.exists(staging_path):
             shutil.rmtree(staging_path, ignore_errors=True)
         return False
     finally:
         lock.release_write()
+
+
+def _prepare_config_staging(old_location, staging_path, new_location):
+    """Callback for config migration - processes and copies config files."""
+    # Find config files to migrate
+    found = filesystem.find(old_location, ["*.yaml", "*.yml"], recursive=True)
+    package_repos_dir = os.path.join(old_location, "package_repos")
+    config_files = [
+        os.path.relpath(f, old_location)
+        for f in found
+        if not filesystem.path_contains_subdirectory(f, package_repos_dir)
+    ]
+
+    for config_file in config_files:
+        old_path = os.path.join(old_location, config_file)
+        staging_file_path = os.path.join(staging_path, config_file)
+
+        try:
+            # Process paths using migrate command logic (handles the 4 path rewriting
+            # rules). Pass new_location (not staging_path) so paths are rewritten for
+            # final destination
+            modified_data = process_config_file_paths(old_path, old_location, new_location)
+
+            # Ensure parent directory exists in staging
+            os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
+
+            if modified_data is not None:
+                with open(staging_file_path, "w", encoding="utf-8") as f:
+                    syaml.dump(modified_data, f)
+            else:
+                shutil.copy2(old_path, staging_file_path)
+        except (syaml.SpackYAMLError, OSError) as e:
+            # Skip files that can't be parsed or read (e.g., backup dirs with broken YAML)
+            tty.debug(f"Skipping {config_file} during migration: {e}")
+            continue
+
+
+def _prepare_package_repos_staging(old_path, staging_path, new_path):
+    """Callback for package repos migration - simple copytree."""
+    shutil.copytree(old_path, staging_path, symlinks=True, dirs_exist_ok=True)
+
+
+def _migrate_user_config() -> bool:
+    """Copy config files from ~/.spack to ~/.config/spack."""
+    old_location = os.path.expanduser("~/.spack")
+    new_location = os.path.expanduser("~/.config/spack")
+
+    return _migrate_with_staging(
+        old_path=old_location,
+        new_path=new_location,
+        prepare_staging_callback=_prepare_config_staging,
+        lock_name=".spack-user-config-migration.lock",
+        staging_name=".spack-config-staging",
+        description="user config",
+    )
+
+
+def _migrate_package_repositories() -> bool:
+    """Copy legacy package repositories to the new default state location."""
+    old_path = spack.paths.old_package_repos_path
+    # Use default location directly without triggering config resolution
+    new_path = os.path.join(spack.paths.default_state_home, "package_repos")
+
+    return _migrate_with_staging(
+        old_path=old_path,
+        new_path=new_path,
+        prepare_staging_callback=_prepare_package_repos_staging,
+        lock_name=".spack-package-repos-migration-lock",
+        staging_name=".package-repos-migration",
+        description="package repositories",
+    )
 
 
 def _migration_lock_path() -> str:
