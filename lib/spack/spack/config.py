@@ -2074,11 +2074,11 @@ def process_config_file_paths(
 
 def _can_migrate_to_location(location: str) -> bool:
     """True if location doesn't exist or is an empty directory."""
-    if not os.path.exists(location):
+    if not os.path.lexists(location):
         return True
 
     if not os.path.isdir(location):
-        tty.warn(f"{location} exists as a file, cannot migrate")
+        tty.warn(f"{location} exists as a file or dangling symlink, cannot migrate")
         return False
 
     if os.listdir(location):
@@ -2138,7 +2138,7 @@ def _migrate_with_staging(
 
         # Check destination and verify we can write to it
         try:
-            if os.path.exists(new_path):
+            if os.path.lexists(new_path):
                 if os.path.isdir(new_path) and not os.listdir(new_path):
                     os.rmdir(new_path)
                     tty.debug(f"Removed empty {new_path} to proceed with migration")
