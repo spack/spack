@@ -2265,32 +2265,15 @@ def _migration_source_hash() -> str:
 
 
 def _has_old_prefix_resources() -> bool:
-    """Check if there are any old resources in $spack that might need migration.
-
-    This is a lightweight check done before attempting to acquire the migration lock.
-    It allows fresh Spack instances with no old data to skip migration entirely without
-    needing write access to $spack.
-
-    Returns:
-        True if any old resources exist, False otherwise
-    """
-    # Check for old installs
-    if os.path.exists(os.path.join(spack.paths.prefix, "opt", "spack")):
-        return True
-
-    # Check for old environments
-    if os.path.exists(spack.paths.old_envs_path):
-        return True
-
-    # Check for old GPG data
-    if os.path.exists(spack.paths.old_gpg_path) or os.path.exists(spack.paths.old_gpg_keys_path):
-        return True
-
-    # Check for old licenses
-    if os.path.exists(spack.paths.old_licenses_path):
-        return True
-
-    return False
+    """Check if there are any old resources in $spack that might need migration."""
+    check = [
+        os.path.join(spack.paths.prefix, "opt", "spack"),
+        spack.paths.old_envs_path,
+        spack.paths.old_gpg_path,
+        spack.paths.old_gpg_keys_path,
+        spack.paths.old_licenses_path,
+    ]
+    return any(os.path.exists(x) for x in check)
 
 
 def _migrate_gpg(
