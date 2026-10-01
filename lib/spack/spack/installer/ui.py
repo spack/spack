@@ -225,7 +225,7 @@ class TerminalUI(InstallerUI):
             color = coloring.get_color_when(stdout)
         self.color = coloring.get_colors(color)
 
-        #: Verbose mode only applies to non-TTY where we want to track a single build log.
+        #: Verbose mode tracks one build log only for non-TTY output.
         self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
         #: When True, suppress all terminal output (process is in background).
@@ -247,21 +247,24 @@ class TerminalUI(InstallerUI):
         self.headless = headless
 
     def refresh_interval(self) -> Optional[float]:
-        # Only an interactive, foreground terminal animates the spinner; a suppressed (headless)
-        # or non-tty frontend needs no periodic redraw.
-        if self.headless or not self.is_tty:
-            return None
-        return SPINNER_INTERVAL
+        # Only a foreground TTY overview animates the spinner; full-screen log view,
+        # headless mode, and non-TTY output need no periodic redraw.
+        if self.overview_mode and self.is_tty and not self.headless:
+            return SPINNER_INTERVAL
+        return None
 
     def on_build_added(self, info: BuildInfo) -> None:
-        """Add a new build to the display and mark the display as dirty."""
+        """Add a build, mark the display dirty, and enable required log forwarding."""
         info.start_time = int(self.get_time())
         self.builds[info.id] = info
         self.dirty = True
-        # Track the new build's logs when we're not already following another build. This applies
-        # only in non-TTY verbose mode.
+        # Track the new build's logs when we're not already following another build.
         if self.verbose and not self.tracked_build_id:
             self.tracked_build_id = info.id
+            self.commands.append(SetEcho(info.id, True))
+        # When on a tty, receive the logs so on_log_output() can parse the progress
+        # lines and when switched to overview mode, display them in the overview.
+        elif self.is_tty:
             self.commands.append(SetEcho(info.id, True))
 
     def on_build_removed(self, build_id: str) -> None:
@@ -285,7 +288,8 @@ class TerminalUI(InstallerUI):
             self.search_mode = False
             self.overview_mode = True
             self.dirty = True
-            self.commands.append(SetEcho(self.tracked_build_id, False))
+            if not self.is_tty:
+                self.commands.append(SetEcho(self.tracked_build_id, False))
             self.tracked_build_id = ""
 
     def search_input(self, char: str) -> None:
@@ -362,7 +366,7 @@ class TerminalUI(InstallerUI):
         self.overview_mode = False
 
         # Stop following the previous and start following the new build.
-        if self.tracked_build_id:
+        if self.tracked_build_id and not self.is_tty:
             self.commands.append(SetEcho(self.tracked_build_id, False))
 
         self.tracked_build_id = new_build_id
