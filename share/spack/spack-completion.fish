@@ -1803,12 +1803,13 @@ set -g __fish_spack_optspecs_spack_external h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a find -d 'add external packages to packages.yaml'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a list -d 'list detectable packages, by repository and name'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a ls -d 'list detectable packages, by repository and name'
+complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a show -d 'show the externals in configuration, with the ids dependencies can use'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a read-cray-manifest -d 'consume a Spack-compatible description of externally-installed packages, including dependency relationships'
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -d 'show this help message and exit'
 
 # spack external find
-set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= p/path= scope= all t/tag= j/jobs=
+set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= dependencies p/path= scope= all t/tag= j/jobs=
 
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -d 'show this help message and exit'
@@ -1816,6 +1817,8 @@ complete -c spack -n '__fish_spack_using_command external find' -l not-buildable
 complete -c spack -n '__fish_spack_using_command external find' -l not-buildable -d 'packages with detected externals won'"'"'t be built with Spack'
 complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -f -a exclude
 complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -d 'packages to exclude from search'
+complete -c spack -n '__fish_spack_using_command external find' -l dependencies -f -a dependencies
+complete -c spack -n '__fish_spack_using_command external find' -l dependencies -d 'detect the dependencies of the packages found from the libraries they load, and the packages that own those libraries'
 complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -d 'one or more alternative search paths for finding externals'
 complete -c spack -n '__fish_spack_using_command external find' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
@@ -1836,6 +1839,12 @@ complete -c spack -n '__fish_spack_using_command external list' -s h -l help -d 
 set -g __fish_spack_optspecs_spack_external_ls h/help
 complete -c spack -n '__fish_spack_using_command external ls' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external ls' -s h -l help -d 'show this help message and exit'
+
+# spack external show
+set -g __fish_spack_optspecs_spack_external_show h/help
+
+complete -c spack -n '__fish_spack_using_command external show' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command external show' -s h -l help -d 'show this help message and exit'
 
 # spack external read-cray-manifest
 set -g __fish_spack_optspecs_spack_external_read_cray_manifest h/help file= directory= ignore-default-dir dry-run fail-on-error

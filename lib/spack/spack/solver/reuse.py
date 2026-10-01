@@ -10,13 +10,12 @@ from typing import Any, Callable, List, Mapping, Optional
 import spack.binary_distribution
 import spack.config
 import spack.deprecation
-import spack.repo
 import spack.spec
 import spack.traverse
 import spack.util.path
 from spack.active_environment import active_environment
 from spack.enums import InstallRecordStatus
-from spack.externals import ExternalSpecsParser
+from spack.externals import ExternalDict, ExternalSpecAndConfig, ExternalSpecsParser
 from spack.externals_config import (
     all_libcs,
     create_external_parser,
@@ -73,10 +72,9 @@ def _external_db_hashes(store: "spack.store.Store") -> typing.FrozenSet[str]:
 
 def _is_reusable(
     spec: spack.spec.Spec,
-    packages_with_externals,
+    external_parser: ExternalSpecsParser,
     local: bool,
     *,
-    repo: spack.repo.RepoPath,
     external_db_hashes: typing.FrozenSet[str] = frozenset(),
 ) -> bool:
     """A spec is reusable if it's not a dev spec, it's imported from the cray manifest, it's not
@@ -85,14 +83,13 @@ def _is_reusable(
     1. Externals in build caches: avoid installing an external on the build machine not
        available on the target machine
     2. Local externals: avoid reusing an external if the local config changes. This helps in
-       particular when a user removes an external from packages.yaml, and expects that that
-       takes effect immediately.
+       particular when a user removes an external from packages.yaml, or adds dependencies to
+       it, and expects that that takes effect immediately.
 
     Arguments:
         spec: the spec to check
-        packages_with_externals: the pre-processed packages configuration
+        external_parser: the externals in the pre-processed packages configuration
         local: whether the spec comes from a local source (the store or an environment)
-        repo: repository used to look up the virtuals a package provides
         external_db_hashes: dag hashes of locally installed specs imported from a cray manifest
     """
     if "dev_path" in spec.variants:
@@ -108,37 +105,59 @@ def _is_reusable(
     if local and spec.dag_hash() in external_db_hashes:
         return True
 
-    try:
-        provided = repo.get(spec).provided_virtual_names()
-    except spack.repo.RepoError:
-        provided = []
+    return any(
+        _matches_external(spec, entry, external_parser)
+        for entry in external_parser.specs_by_name.get(spec.name, [])
+    )
 
-    for name in {spec.name, *provided}:
-        for entry in packages_with_externals.get(name, {}).get("externals", []):
-            expected_prefix = entry.get("prefix")
-            if expected_prefix is not None:
-                expected_prefix = spack.util.path.path_to_os_path(expected_prefix)[0]
-            if (
-                spec.satisfies(entry["spec"])
-                and spec.external_path == expected_prefix
-                and spec.external_modules == entry.get("modules")
-            ):
-                return True
 
-    return False
+def _matches_external_config(spec: spack.spec.Spec, config: ExternalDict) -> bool:
+    """Returns True if an external spec has the prefix and modules of a packages.yaml entry, and
+    satisfies its spec.
+    """
+    expected_prefix = config.get("prefix")
+    if expected_prefix is not None:
+        expected_prefix = spack.util.path.path_to_os_path(expected_prefix)[0]
+    return (
+        spec.satisfies(config["spec"])
+        and spec.external_path == expected_prefix
+        and spec.external_modules == config.get("modules")
+    )
+
+
+def _matches_external(
+    spec: spack.spec.Spec, entry: ExternalSpecAndConfig, external_parser: ExternalSpecsParser
+) -> bool:
+    """Returns True if an external spec matches a packages.yaml entry, and has a matching
+    dependency for each dependency of the entry. The spec may have more dependencies than the
+    entry, as it may have more variants than the spec of the entry.
+
+    Dependencies of dependencies are not compared: they are externals themselves, and the solver
+    does not reuse a spec whose dependencies are not reusable.
+    """
+    if not _matches_external_config(spec, entry.config):
+        return False
+
+    actual = {edge.spec.name: edge.spec for edge in spec.edges_to_dependencies()}
+    for edge in entry.spec.edges_to_dependencies():
+        expected = edge.spec
+        if expected.name not in actual:
+            return False
+        dependency_config = next(
+            x.config for x in external_parser.specs_by_name[expected.name] if x.spec is expected
+        )
+        if not _matches_external_config(actual[expected.name], dependency_config):
+            return False
+    return True
 
 
 def reusable_external_specs(context: "spack.context.SpackContext") -> List[spack.spec.Spec]:
     """Return the reusable external specs declared in a context's ``packages.yaml``."""
     packages_with_externals = external_config_with_implicit_externals(context)
+    external_parser = create_external_parser(packages_with_externals, context=context)
     spec_filter = spec_filter_from_packages_yaml(
-        external_parser=create_external_parser(packages_with_externals, context=context),
-        is_reusable=functools.partial(
-            _is_reusable,
-            packages_with_externals=packages_with_externals,
-            local=True,
-            repo=context.repo,
-        ),
+        external_parser=external_parser,
+        is_reusable=functools.partial(_is_reusable, external_parser=external_parser, local=True),
     )
     return spec_filter.selected_specs()
 
@@ -194,20 +213,19 @@ class ReusableSpecsSelector:
         # Local import to break circular dependencies
         import spack.environment
 
-        configuration, store, repo = context.config, context.store, context.repo
+        configuration, store = context.config, context.store
         external_parser = create_external_parser(packages_with_externals, context=context)
         # Membership in this set replaces a per-spec query_by_spec_hash on the store
         external_db_hashes = _external_db_hashes(store)
         # _is_reusable only varies by local vs. build cache, so bind the two variants once
         local_is_reusable = functools.partial(
             _is_reusable,
-            packages_with_externals=packages_with_externals,
+            external_parser=external_parser,
             local=True,
-            repo=repo,
             external_db_hashes=external_db_hashes,
         )
         mirror_is_reusable = functools.partial(
-            _is_reusable, packages_with_externals=packages_with_externals, local=False, repo=repo
+            _is_reusable, external_parser=external_parser, local=False
         )
         self.reuse_strategy = ReuseStrategy.ROOTS
         reuse_yaml = configuration.get("concretizer:reuse", False)
