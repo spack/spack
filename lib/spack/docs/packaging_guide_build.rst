@@ -545,11 +545,11 @@ The callback receives the dependent package instance:
            # run after the dependent's final phase
            ...
 
-The phase selector is argument required.
+The phase argument is required.
 A string names a phase of the dependent's builder.
 An integer uses normal Python indexing into the dependent builder's ordered phase list, so ``-1`` selects its last phase.
 An invalid integer index is an error; a named phase that the dependent does not have simply does not select a callback.
-The optional ``when`` constraint applies to the dependency package, not the dependent.
+The optional ``when`` argument applies to the dependency package, not the dependent.
 
 For a given dependent phase, dependency callbacks run before callbacks defined by the dependent, both before and after the phase.
 The complete order is:
@@ -561,7 +561,7 @@ The complete order is:
 #. dependent ``run_after`` callbacks.
 
 Dependency callbacks are considered only for direct dependency nodes and run once per dependency node, even if parallel edges connect the same two nodes.
-Their order follows the direct dependency edge iteration order; no ordering among those callbacks is guaranteed.
+Their order follows the direct dependency edge iteration order; there is no guarantee of any ordering relative to dependency relationships among the direct dependencies.
 These callbacks run as part of the dependent's source build, so they should modify only the dependent's build tree or installation prefix.
 They must not modify the already-installed dependency prefix.
 
