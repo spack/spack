@@ -147,6 +147,43 @@ def test_spec_deptypes_edges():
     assert types["dt-diamond-bottom"] == ["b   ", "blr "]
 
 
+def test_spec_deptype_filters_build_only():
+    """``--deptype=link,run`` omits build-only deps and their subgraphs."""
+    output = spec(
+        "--types",
+        "--cover",
+        "edges",
+        "--no-install-status",
+        "--deptype=link,run",
+        "dtbuild1",
+    )
+    types = _parse_types(output)
+
+    assert "dtbuild1" in types
+    assert "dtlink2" in types
+    assert "dtrun2" in types
+    assert "dtbuild2" not in types
+
+
+def test_spec_deptype_edges_omits_build_only_edge():
+    """Build-only edges are not shown even when the same node is also a link/run dep."""
+    output = spec(
+        "--types",
+        "--cover",
+        "edges",
+        "--no-install-status",
+        "--deptype=link,run",
+        "dt-diamond",
+    )
+    types = _parse_types(output)
+
+    assert types["dt-diamond"] == ["    "]
+    assert types["dt-diamond-left"] == ["bl  "]
+    assert types["dt-diamond-right"] == ["bl  "]
+    # left -> bottom is build-only, so only the right -> bottom edge remains
+    assert types["dt-diamond-bottom"] == ["blr "]
+
+
 def test_spec_returncode():
     with pytest.raises(SpackCommandError):
         spec()
