@@ -91,6 +91,7 @@ __all__ = [
     "requires",
     "redistribute",
     "can_splice",
+    "usage",
 ]
 
 _patch_order_index = 0

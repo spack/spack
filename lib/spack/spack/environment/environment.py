@@ -2535,6 +2535,7 @@ class Environment:
                     depflag=dt.canonicalize(dep.deptypes),
                     virtuals=dep.virtuals,
                     direct=dep.direct,
+                    usages=spack.spec.UsageMap.from_dict(dep.usages),
                 )
 
             if "build_spec" in node_dict:

@@ -606,6 +606,20 @@ def test_direct_edges_and_round_tripping_to_dict(spec_str, config, mock_packages
             assert "direct" not in dependency_data["parameters"]
 
 
+def test_edge_usages_round_trip():
+    original = Spec("pkg-a %[usages=+enabled features=a,b] pkg-b")
+    dependency_parameters = original.to_dict()["spec"]["nodes"][0]["dependencies"][0]["parameters"]
+    assert dependency_parameters["usages"] == {"enabled": True, "features": ["a", "b"]}
+    assert dependency_parameters["abstract_usages"] == ["features"]
+
+    for reconstructed in (Spec.from_yaml(original.to_yaml()), Spec.from_json(original.to_json())):
+        assert reconstructed == original
+        assert (
+            reconstructed.edges_to_dependencies()[0].usages
+            == original.edges_to_dependencies()[0].usages
+        )
+
+
 def test_parallel_deptype_edges_survive_round_trip(mock_packages):
     """Two parallel edges to one package, differing only in deptype, share one child node once
     read back from JSON. Sharing the child must not merge them into one edge."""

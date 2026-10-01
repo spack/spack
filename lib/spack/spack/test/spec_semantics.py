@@ -2747,7 +2747,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                     ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),),
+                ((0, 1, 0, (), False, PropagationPolicy.NONE, Spec(), tuple()),),
             ),
         ],
         # root with multiple deps
@@ -2761,9 +2761,9 @@ EMPTY_FLG = Spec().compiler_flags
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),
-                    (0, 2, 0, (), False, PropagationPolicy.NONE, Spec()),
-                    (0, 3, 0, (), False, PropagationPolicy.NONE, Spec()),
+                    (0, 1, 0, (), False, PropagationPolicy.NONE, Spec(), tuple()),
+                    (0, 2, 0, (), False, PropagationPolicy.NONE, Spec(), tuple()),
+                    (0, 3, 0, (), False, PropagationPolicy.NONE, Spec(), tuple()),
                 ),
             ),
         ],
@@ -2778,9 +2778,9 @@ EMPTY_FLG = Spec().compiler_flags
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), True, PropagationPolicy.NONE, Spec()),
-                    (0, 2, 0, (), True, PropagationPolicy.NONE, Spec()),
-                    (0, 3, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (0, 1, 0, (), True, PropagationPolicy.NONE, Spec(), tuple()),
+                    (0, 2, 0, (), True, PropagationPolicy.NONE, Spec(), tuple()),
+                    (0, 3, 0, (), True, PropagationPolicy.NONE, Spec(), tuple()),
                 ),
             ),
         ],
@@ -2798,12 +2798,12 @@ EMPTY_FLG = Spec().compiler_flags
                     ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_PVAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), False, PropagationPolicy.NONE, Spec()),
-                    (0, 2, 0, (), False, PropagationPolicy.NONE, Spec()),
-                    (1, 3, 0, (), True, PropagationPolicy.NONE, Spec()),
-                    (1, 4, 0, (), True, PropagationPolicy.NONE, Spec()),
-                    (2, 5, 0, (), True, PropagationPolicy.NONE, Spec()),
-                    (2, 6, 0, (), True, PropagationPolicy.NONE, Spec()),
+                    (0, 1, 0, (), False, PropagationPolicy.NONE, Spec(), tuple()),
+                    (0, 2, 0, (), False, PropagationPolicy.NONE, Spec(), tuple()),
+                    (1, 3, 0, (), True, PropagationPolicy.NONE, Spec(), tuple()),
+                    (1, 4, 0, (), True, PropagationPolicy.NONE, Spec(), tuple()),
+                    (2, 5, 0, (), True, PropagationPolicy.NONE, Spec(), tuple()),
+                    (2, 6, 0, (), True, PropagationPolicy.NONE, Spec(), tuple()),
                 ),
             ),
         ],
@@ -3063,6 +3063,38 @@ def test_copy_does_not_share_flag_instances(mock_packages):
         assert x == y and x.propagate == y.propagate and x.flag_group == y.flag_group
 
 
+def test_edge_usage_semantics():
+    unconstrained = Spec("pkg-a %pkg-b")
+    enabled = Spec("pkg-a %[usages=+foo] pkg-b")
+    disabled = Spec("pkg-a %[usages=~foo] pkg-b")
+
+    assert enabled.satisfies(unconstrained)
+    assert not unconstrained.satisfies(enabled)
+    assert not enabled.satisfies(disabled)
+    with pytest.raises(UnsatisfiableSpecError):
+        enabled.constrain(disabled)
+
+
+def test_spec_copy_constrain_and_comparison_preserve_usages():
+    original = Spec("pkg-a %[usages=+foo] pkg-b")
+    copy = original.copy()
+    original_edge = original.edges_to_dependencies()[0]
+    copy_edge = copy.edges_to_dependencies()[0]
+
+    assert copy == original
+    assert copy_edge.usages == original_edge.usages
+    assert copy_edge.usages is not original_edge.usages
+
+    unconstrained = Spec("pkg-a %pkg-b")
+    unconstrained.constrain(original)
+    assert unconstrained == original
+
+    nested = Spec("root ^pkg-a %[usages=~foo] pkg-b")
+    without_usage = Spec("root ^pkg-a %pkg-b")
+    assert nested != without_usage
+    assert len({nested, without_usage}) == 2
+
+
 @pytest.mark.parametrize(
     "parent_str,child_str,kwargs,expected_str,expected_repr",
     [
@@ -3071,21 +3103,25 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "callpath",
             {"virtuals": ()},
             "mpileaks ^callpath",
-            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=())",
+            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=(), usages={})",
         ),
         (
             "mpileaks",
             "callpath",
             {"virtuals": ("mpi", "lapack")},
             "mpileaks ^lapack,mpi=callpath",
-            "DependencySpec('mpileaks', 'callpath', depflag=0, virtuals=('lapack', 'mpi'))",
+            "DependencySpec('mpileaks', 'callpath', depflag=0, "
+            "virtuals=('lapack', 'mpi'), usages={})",
         ),
         (
             "",
             "callpath",
             {"virtuals": ("mpi", "lapack"), "direct": True},
             " %lapack,mpi=callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True)",
+            (
+                "DependencySpec('', 'callpath', depflag=0, "
+                "virtuals=('lapack', 'mpi'), usages={}, direct=True)"
+            ),
         ),
         (
             "",
@@ -3096,15 +3132,15 @@ def test_copy_does_not_share_flag_instances(mock_packages):
                 "propagation": PropagationPolicy.PREFERENCE,
             },
             " %%lapack,mpi=callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), direct=True,"
-            " propagation=PropagationPolicy.PREFERENCE)",
+            "DependencySpec('', 'callpath', depflag=0, virtuals=('lapack', 'mpi'), usages={},"
+            " direct=True, propagation=PropagationPolicy.PREFERENCE)",
         ),
         (
             "",
             "callpath",
             {"virtuals": (), "direct": True, "propagation": PropagationPolicy.PREFERENCE},
             " %%callpath",
-            "DependencySpec('', 'callpath', depflag=0, virtuals=(), direct=True,"
+            "DependencySpec('', 'callpath', depflag=0, virtuals=(), usages={}, direct=True,"
             " propagation=PropagationPolicy.PREFERENCE)",
         ),
         (
@@ -3112,8 +3148,8 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "callpath+bar",
             {"virtuals": (), "direct": True, "propagation": PropagationPolicy.PREFERENCE},
             "mpileaks+foo %%callpath+bar",
-            "DependencySpec('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), direct=True,"
-            " propagation=PropagationPolicy.PREFERENCE)",
+            "DependencySpec('mpileaks+foo', 'callpath+bar', depflag=0, virtuals=(), usages={},"
+            " direct=True, propagation=PropagationPolicy.PREFERENCE)",
         ),
         # an anonymous child is named *, so that foo=bar is not read as a virtual assignment
         (
@@ -3121,14 +3157,15 @@ def test_copy_does_not_share_flag_instances(mock_packages):
             "foo=bar",
             {"virtuals": ()},
             "mpileaks ^* foo=bar",
-            "DependencySpec('mpileaks', 'foo=bar', depflag=0, virtuals=())",
+            "DependencySpec('mpileaks', 'foo=bar', depflag=0, virtuals=(), usages={})",
         ),
         (
             "mpileaks",
             "@4.0",
             {"virtuals": ("c",), "direct": True},
             "mpileaks %[virtuals=c] @4.0",
-            "DependencySpec('mpileaks', '@4.0', depflag=0, virtuals=('c',), direct=True)",
+            "DependencySpec('mpileaks', '@4.0', depflag=0, "
+            "virtuals=('c',), usages={}, direct=True)",
         ),
     ],
 )

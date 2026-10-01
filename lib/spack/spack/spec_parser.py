@@ -61,8 +61,7 @@ node.
 Two edge properties take more than a plain value. The ``when=`` property is a condition on the
 edge, and its value is a spec. The ``usages=`` property is a set of options that the dependent
 requests of the dependency for this edge only, e.g. ``zlib-ng %[usages=+sarif] gcc``; its
-options are written like variants, and cannot be propagated. Usages are parsed and validated,
-but not yet stored on the edge, so they do not appear in the parsed spec.
+options are written like variants, and cannot be propagated.
 
 Such a value extends up to the closing bracket: in ``^[virtuals=mpi when=+mpi] mpich`` the
 condition is ``+mpi``, while in ``^[when=+mpi virtuals=mpi] mpich`` the ``virtuals=mpi`` pair is
@@ -570,16 +569,13 @@ class SpecParser:
 
                     dep_spec = self._parse_node(initial_name=substitute)
 
-                    # Usages are parsed above, but not attached to the edge: a spec string that
-                    # requests them parses without error and drops them.
-                    # TODO (usages RFD): pass ``usages`` on once DependencySpec stores them; the
-                    # edge is the one that turns the dict into a UsageMap.
                     edge_kwargs = {
                         "direct": is_direct,
                         "depflag": depflag,
                         "virtuals": virtuals_tuple,
                         "propagation": propagation,
                         "when": conditions,
+                        "usages": usages,
                     }
                     if is_direct:
                         if dep_spec.name in LEGACY_COMPILER_TO_BUILTIN:
@@ -608,6 +604,7 @@ class SpecParser:
                         "depflag": 0,
                         "virtuals": virtuals_tuple,
                         "propagation": propagation,
+                        "usages": None,
                     }
                     if is_direct:
                         if dep_spec.name in LEGACY_COMPILER_TO_BUILTIN:

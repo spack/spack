@@ -1045,7 +1045,10 @@ class ConcreteSpecsByHash(collections.abc.Mapping):
 
                 # Rewire edges
                 container_parent.add_dependency_edge(
-                    dependency_spec=container_child, depflag=edge.depflag, virtuals=edge.virtuals
+                    dependency_spec=container_child,
+                    depflag=edge.depflag,
+                    virtuals=edge.virtuals,
+                    usages=edge.usages,
                 )
         return True
 

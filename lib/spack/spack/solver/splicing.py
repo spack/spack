@@ -70,12 +70,19 @@ def _resolve_collected_splices(
                 splice = [s for s in immediate if s.child_hash == edge.spec.dag_hash()][0]
                 # If the spec being splice in is also spliced
                 splice_spec = already_resolved.get(splice.splice_spec, splice.splice_spec)
-                new_spec.add_dependency_edge(splice_spec, depflag=depflag, virtuals=edge.virtuals)
+                new_spec.add_dependency_edge(
+                    splice_spec, depflag=depflag, virtuals=edge.virtuals, usages=edge.usages
+                )
             elif edge.spec in already_resolved:
                 new_spec.add_dependency_edge(
-                    already_resolved[edge.spec], depflag=depflag, virtuals=edge.virtuals
+                    already_resolved[edge.spec],
+                    depflag=depflag,
+                    virtuals=edge.virtuals,
+                    usages=edge.usages,
                 )
             else:
-                new_spec.add_dependency_edge(edge.spec, depflag=depflag, virtuals=edge.virtuals)
+                new_spec.add_dependency_edge(
+                    edge.spec, depflag=depflag, virtuals=edge.virtuals, usages=edge.usages
+                )
         already_resolved[spec] = new_spec
     return already_resolved

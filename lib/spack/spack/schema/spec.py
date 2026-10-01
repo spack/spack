@@ -131,6 +131,16 @@ dependencies_v4_plus = {
                         "description": "Propagation policy of a direct dependency (only on "
                         "abstract specs)",
                     },
+                    "usages": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "description": "Usages keyed by name, with single or multiple values",
+                    },
+                    "abstract_usages": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Abstract multi-value usages (only on abstract specs)",
+                    },
                 },
             },
         },
