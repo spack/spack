@@ -216,3 +216,4 @@ pkg_fact(Package, version_satisfies(Constraint, Version)) :-
 #defined trigger_node/3.
 #defined imposed_nodes/2.
 #defined variant_single_value/2.
+#defined has_provider/1.
