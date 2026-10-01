@@ -144,7 +144,7 @@ def clingo_library() -> Any:
     """Return a process-global ``clingo.core.Library`` (clingo 6 only).
 
     A single shared library lets symbols produced by one control object be reused by another
-    (e.g. when ``raise_if_errors`` feeds a model from the main solve into a second control).
+    (e.g. when ``ErrorHandler.reasons`` feeds a model from the main solve into a second control).
     """
     clingo()  # ensure the clingo module is importable / bootstrapped
     return importlib.import_module("clingo.core").Library()

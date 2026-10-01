@@ -479,3 +479,29 @@ def test_named_group_is_shown_above_its_rows(terminal):
 
     kept, last = terminal.screen()
     assert shows(kept, "apps", "2 specs", "(2 processes)") and last == ""
+
+
+def test_explaining_a_failure_is_a_phase_on_a_terminal(terminal):
+    """Tests that the search for the causes of a failure is shown on the status line."""
+    ui = terminal.ui
+    with concretization_span(ui):
+        start_solve(ui, "zlib")
+        ui.on_phase(ConcretizationPhase.EXPLAIN)
+        assert shows(terminal.screen()[-1], "explaining", "zlib")
+        assert not any(shows(line, "Analyzing") for line in terminal.screen())
+
+
+@pytest.mark.parametrize("task", [None, 0])
+def test_explaining_a_failure_prints_a_line_off_a_terminal(task, terminal, capsys):
+    """Tests that off a terminal the search for the causes of a failure prints a line, since
+    nothing else is printed until it ends, whether or not it is part of a task.
+    """
+    ui = terminal.frontend(live=False)
+    with concretization_span(ui):
+        ui.on_group_started(group="default", kind=SolveKind.TOGETHER, total=1, processes=1)
+        ui.on_phase(ConcretizationPhase.SOLVE, task=task, spec=Spec("zlib"))
+        ui.on_phase(ConcretizationPhase.EXPLAIN, task=task, spec=Spec("zlib"))
+
+    out = capsys.readouterr().out
+    assert out.count("Analyzing the cause of the failure") == 1
+    assert terminal.screen() == [""]
