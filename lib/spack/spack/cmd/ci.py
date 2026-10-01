@@ -65,9 +65,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     generate.add_argument(
         "--output-file",
         default=None,
-        help="pathname for the generated gitlab ci yaml file\n\n"
+        help="pathname for the generated gitlab ci yaml or json file\n\n"
         "path to the file where generated jobs file should be written. "
-        "default is .gitlab-ci.yml in the root of the repository",
+        "default is .gitlab-ci.yml for gitlab and ci.json for json in the root of the repository",
     )
     prune_dag_group = generate.add_mutually_exclusive_group()
     prune_dag_group.add_argument(
