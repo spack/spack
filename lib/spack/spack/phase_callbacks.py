@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-from typing import Optional
+from typing import Optional, Union
 
 from spack.util import lang
 
@@ -22,6 +22,23 @@ CallbackTemporaryStage = collections.namedtuple(
 _RUN_BEFORE = CallbackTemporaryStage(attribute_name="_run_before_callbacks", callbacks=[])
 #: Shared global state to aggregate "@run_after" callbacks
 _RUN_AFTER = CallbackTemporaryStage(attribute_name="_run_after_callbacks", callbacks=[])
+#: Shared global state to aggregate "@run_before_dependent" callbacks
+_RUN_BEFORE_DEPENDENT = CallbackTemporaryStage(
+    attribute_name="_run_before_dependent_callbacks", callbacks=[]
+)
+#: Shared global state to aggregate "@run_after_dependent" callbacks
+_RUN_AFTER_DEPENDENT = CallbackTemporaryStage(
+    attribute_name="_run_after_dependent_callbacks", callbacks=[]
+)
+
+PhaseSelector = Union[str, int]
+
+
+def _validate_phase_selector(phase: PhaseSelector) -> None:
+    if isinstance(phase, bool) or not isinstance(phase, (str, int)):
+        raise TypeError("phase must be a phase name or integer index")
+    if isinstance(phase, str) and not phase:
+        raise ValueError("phase name cannot be empty")
 
 
 class PhaseCallbacksMeta(type):
@@ -35,7 +52,12 @@ class PhaseCallbacksMeta(type):
     """
 
     def __new__(mcs, name, bases, attr_dict):
-        for temporary_stage in (_RUN_BEFORE, _RUN_AFTER):
+        for temporary_stage in (
+            _RUN_BEFORE,
+            _RUN_AFTER,
+            _RUN_BEFORE_DEPENDENT,
+            _RUN_AFTER_DEPENDENT,
+        ):
             staged_callbacks = temporary_stage.callbacks
 
             # Here we have an adapter from an old-style package. This means there is no
@@ -113,7 +135,51 @@ class PhaseCallbacksMeta(type):
 
         return _decorator
 
+    @staticmethod
+    def run_after_dependent(phase: PhaseSelector, when: Optional[str] = None):
+        """Decorator to register a function to run after a phase of a dependent package.
+
+        String selectors name a phase. Integer selectors index the dependent builder's ordered
+        phase list using normal Python indexing.
+
+        Args:
+            phase: dependent phase name or index after which the function must run.
+            when: condition on this dependency under which the function is run.
+        """
+        _validate_phase_selector(phase)
+
+        def _decorator(fn):
+            key = (phase, when)
+            item = (key, fn)
+            _RUN_AFTER_DEPENDENT.callbacks.append(item)
+            return fn
+
+        return _decorator
+
+    @staticmethod
+    def run_before_dependent(phase: PhaseSelector, when: Optional[str] = None):
+        """Decorator to register a function to run before a phase of a dependent package.
+
+        String selectors name a phase. Integer selectors index the dependent builder's ordered
+        phase list using normal Python indexing.
+
+        Args:
+            phase: dependent phase name or index before which the function must run.
+            when: condition on this dependency under which the function is run.
+        """
+        _validate_phase_selector(phase)
+
+        def _decorator(fn):
+            key = (phase, when)
+            item = (key, fn)
+            _RUN_BEFORE_DEPENDENT.callbacks.append(item)
+            return fn
+
+        return _decorator
+
 
 # Export these names as standalone to be used in packages
 run_after = PhaseCallbacksMeta.run_after
+run_after_dependent = PhaseCallbacksMeta.run_after_dependent
 run_before = PhaseCallbacksMeta.run_before
+run_before_dependent = PhaseCallbacksMeta.run_before_dependent

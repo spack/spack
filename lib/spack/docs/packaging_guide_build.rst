@@ -490,6 +490,8 @@ In those cases, the build system could use some help, for which we give a few ex
    single: phase; before and after callbacks
    single: run_before (decorator)
    single: run_after (decorator)
+   single: run_before_dependent (decorator)
+   single: run_after_dependent (decorator)
    :name: before_after_build_phases
 
 Before and after build phases
@@ -520,6 +522,48 @@ Instead of overriding the entire phase, you can use ``@run_before`` and ``@run_a
 Then ``when="+extras"`` will ensure that the custom post-install phase is only run conditionally.
 
 The function body should contain the actual instructions you want to run before or after the build phase, which can involve :ref:`running executables <running_build_executables>` and creating or copying files to the ``prefix`` directory using convenience functions from :ref:`Spack's Python Package API <python-package-api>`.
+
+Callbacks on dependent phases
+-----------------------------
+
+A dependency can also register code to run before or after a phase of each package that directly depends on it.
+Use ``@run_before_dependent`` and ``@run_after_dependent`` on a method of the dependency package or builder.
+The callback receives the dependent package instance:
+
+.. code-block:: python
+
+   class MyCompiler(CompilerPackage):
+       ...
+
+       @run_before_dependent("build")
+       def prepare_dependent_build(self, dependent_pkg):
+           # prepare files owned by the dependent before its build phase
+           ...
+
+       @run_after_dependent(-1, when="@2:")
+       def collect_dependent_artifacts(self, dependent_pkg):
+           # run after the dependent's final phase
+           ...
+
+The phase argument is required.
+A string names a phase of the dependent's builder.
+An integer uses normal Python indexing into the dependent builder's ordered phase list, so ``-1`` selects its last phase.
+An invalid integer index is an error; a named phase that the dependent does not have simply does not select a callback.
+The optional ``when`` argument applies to the dependency package, not the dependent.
+
+For a given dependent phase, dependency callbacks run before callbacks defined by the dependent, both before and after the phase.
+The complete order is:
+
+#. dependency ``run_before_dependent`` callbacks;
+#. dependent ``run_before`` callbacks;
+#. the dependent phase;
+#. dependency ``run_after_dependent`` callbacks;
+#. dependent ``run_after`` callbacks.
+
+Dependency callbacks are considered only for direct dependency nodes and run once per dependency node, even if parallel edges connect the same two nodes.
+Their order follows the direct dependency edge iteration order; there is no guarantee of any ordering relative to dependency relationships among the direct dependencies.
+These callbacks run as part of the dependent's source build, so they should modify only the dependent's build tree or installation prefix.
+They must not modify the already-installed dependency prefix.
 
 .. _overriding-phases:
 
