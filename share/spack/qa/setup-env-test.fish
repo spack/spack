@@ -322,6 +322,8 @@ title 'Testing `spack cd`'
 spt_contains "usage: spack cd " spack cd -h
 spt_contains "usage: spack cd " spack cd --help
 spt_contains "cd $b_install" spack cd -i shell-b
+spt_contains "cd $b_install" spack -C "$QA_DIR" cd -i shell-b
+spt_contains "cd $b_install" spack -c config:ccache:true --color always cd -i shell-b
 
 title 'Testing `spack module`'
 spt_contains "usage: spack module " spack -m module -h
