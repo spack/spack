@@ -3196,16 +3196,123 @@ def _windows_create_junction(source: str, link: str):
     elif not os.path.isdir(source):
         raise SymlinkError("Source path is not a directory, cannot create a junction.")
 
-    import subprocess
+    tty.debug(f"Creating junction {link} pointing to {source}")
+    # Junction targets must be absolute and cannot carry the \\?\ long path prefix
+    target = os.path.abspath(source)
+    if target.startswith("\\\\?\\"):
+        target = target[4:]
+    # A junction is an empty directory with a mount point reparse point attached. The
+    # reparse data holds the NT namespace target (substitute name) followed by the
+    # user facing target (print name), each null terminated.
+    substitute_name = f"\\??\\{target}"
+    print_name = target
+    path_buffer = f"{substitute_name}\0{print_name}\0"
+    wchar_size = ctypes.sizeof(wintypes.WCHAR)
+    # Lengths are in bytes of UTF-16 and exclude the null terminators
+    substitute_name_length = len(substitute_name.encode("utf-16-le"))
+    print_name_length = len(print_name.encode("utf-16-le"))
+    path_buffer_length = len(path_buffer.encode("utf-16-le"))
 
-    cmd = ["cmd", "/C", "mklink", "/J", link, source]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = proc.communicate()
-    tty.debug(out.decode())
-    if proc.returncode != 0:
-        err_str = err.decode()
-        tty.error(err_str)
-        raise SymlinkError("Make junction command returned a non-zero return code.", err_str)
+    class MountPointReparseDataBuffer(ctypes.Structure):
+        _fields_ = [
+            ("ReparseTag", wintypes.ULONG),
+            ("ReparseDataLength", wintypes.USHORT),
+            ("Reserved", wintypes.USHORT),
+            ("SubstituteNameOffset", wintypes.USHORT),
+            ("SubstituteNameLength", wintypes.USHORT),
+            ("PrintNameOffset", wintypes.USHORT),
+            ("PrintNameLength", wintypes.USHORT),
+            ("PathBuffer", wintypes.WCHAR * (path_buffer_length // wchar_size)),
+        ]
+
+    # ReparseDataLength covers everything after the Reserved field
+    reparse_data_offset = MountPointReparseDataBuffer.SubstituteNameOffset.offset
+    reparse_data_length = ctypes.sizeof(MountPointReparseDataBuffer) - reparse_data_offset
+    maximum_reparse_data_buffer_size = 16 * 1024
+    if ctypes.sizeof(MountPointReparseDataBuffer) > maximum_reparse_data_buffer_size:
+        raise SymlinkError(f"Source path {source} is too long to create a junction.")
+
+    io_reparse_tag_mount_point = 0xA0000003
+    reparse_data = MountPointReparseDataBuffer(
+        ReparseTag=io_reparse_tag_mount_point,
+        ReparseDataLength=reparse_data_length,
+        Reserved=0,
+        SubstituteNameOffset=0,
+        SubstituteNameLength=substitute_name_length,
+        PrintNameOffset=substitute_name_length + wchar_size,
+        PrintNameLength=print_name_length,
+        PathBuffer=path_buffer,
+    )
+
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    _CreateFileW = k32.CreateFileW
+    _CreateFileW.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    ]
+    _CreateFileW.restype = wintypes.HANDLE
+    _DeviceIoControl = k32.DeviceIoControl
+    _DeviceIoControl.argtypes = [
+        wintypes.HANDLE,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+        wintypes.LPVOID,
+    ]
+    _DeviceIoControl.restype = wintypes.BOOL
+    _CloseHandle = k32.CloseHandle
+    _CloseHandle.argtypes = [wintypes.HANDLE]
+    _CloseHandle.restype = wintypes.BOOL
+
+    generic_write = 0x40000000
+    open_existing = 3
+    file_flag_open_reparse_point = 0x00200000
+    # Required to obtain a handle to a directory
+    file_flag_backup_semantics = 0x02000000
+    fsctl_set_reparse_point = 0x000900A4
+    invalid_handle_value = wintypes.HANDLE(-1).value
+
+    os.mkdir(link)
+    try:
+        handle = _CreateFileW(
+            link,
+            generic_write,
+            0,
+            None,
+            open_existing,
+            file_flag_open_reparse_point | file_flag_backup_semantics,
+            None,
+        )
+        if handle == invalid_handle_value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            bytes_returned = wintypes.DWORD()
+            success = _DeviceIoControl(
+                handle,
+                fsctl_set_reparse_point,
+                ctypes.byref(reparse_data),
+                ctypes.sizeof(reparse_data),
+                None,
+                0,
+                ctypes.byref(bytes_returned),
+                None,
+            )
+            if not success:
+                raise ctypes.WinError(ctypes.get_last_error())
+        finally:
+            _CloseHandle(handle)
+    except OSError as e:
+        # Don't leave behind the plain directory that would have become the junction
+        os.rmdir(link)
+        raise SymlinkError(f"Failed to create junction {link} pointing to {source}") from e
 
 
 def _windows_create_hard_link(path: str, link: str):
