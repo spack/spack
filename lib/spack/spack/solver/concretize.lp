@@ -71,6 +71,7 @@ hash_imposes_node_flag(Hash, Pkg, FlagType, Flag) :- imposed_constraint(Hash, "n
 
 pkg_has_variant(PackageNode, Variant) :- node_has_variant(PackageNode, Variant, _).
 node_has_variant_value(PackageNode, Variant) :- attr("variant_value", PackageNode, Variant, _).
+has_host_variant_default(Package, VName) :- variant_default_value_from_host(Package, VName, _).
 has_pkg_yaml_variant_default(Package, VName) :- variant_default_value_from_packages_yaml(Package, VName, _).
 has_cli_variant_default(Package, VName) :- attr("variant_default_value_from_cli", node(min_dupe_id, Package), VName, _).
 has_variant_penalty_fact(Pkg, VID, Val) :- pkg_fact(Pkg, variant_penalty(VID, Val, _)).
@@ -1475,12 +1476,21 @@ node_has_variant(PackageNode, Name, SelectedVariantID) :-
 
 % -- Associate the definition's default values with the node
 % note that the package.py variant defaults are associated with a particular definition, but
-% packages.yaml and CLI are associated with just the variant name.
+% host detection, packages.yaml and CLI are associated with just the variant name.
 % Also, settings specified on the CLI apply to all duplicates, but always have
 % `min_dupe_id` as their node id.
+% Precedence, from lowest to highest: package.py < host < packages.yaml < CLI.
 variant_default_value(node(ID, Package), VariantName, Value) :-
   node_has_variant(node(ID, Package), VariantName, VariantID),
   pkg_fact(Package, variant_default_value_from_package_py(VariantID, Value)),
+  not has_host_variant_default(Package, VariantName),
+  not has_pkg_yaml_variant_default(Package, VariantName),
+  not has_cli_variant_default(Package, VariantName).
+
+% Defaults derived from inspecting the host (e.g. GPUs detected by archspec)
+variant_default_value(node(ID, Package), VariantName, Value) :-
+  node_has_variant(node(ID, Package), VariantName, _),
+  variant_default_value_from_host(Package, VariantName, Value),
   not has_pkg_yaml_variant_default(Package, VariantName),
   not has_cli_variant_default(Package, VariantName).
 
@@ -1685,6 +1695,7 @@ variant_single_value(PackageNode, Variant)
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
+#defined variant_default_value_from_host/3.
 #defined variant_default_value_from_packages_yaml/3.
 #defined variant_default_value_from_package_py/2.
 
