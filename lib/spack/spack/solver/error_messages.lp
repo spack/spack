@@ -199,6 +199,7 @@ pkg_fact(Package, version_satisfies(Constraint, Version)) :-
 #defined imposed_constraint/5.
 #defined imposed_constraint/6.
 #defined condition_cause/4.
+#defined condition_reason/2.
 #defined condition_nodes/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
@@ -211,4 +212,7 @@ pkg_fact(Package, version_satisfies(Constraint, Version)) :-
 #defined build/1.
 #defined node_has_variant/3.
 #defined provider/2.
+#defined has_provider/1.
+#defined trigger_node/3.
+#defined imposed_nodes/2.
 #defined variant_single_value/2.
