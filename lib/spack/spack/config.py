@@ -2710,9 +2710,10 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
                 config_changes["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
             else:
-                # User points to custom location - record it
                 config_changes["gpg_path"] = gnupghome
-                config_changes["gpg_keys_path"] = os.path.join(gnupghome, "private-keys-v1.d")
+                # There is no analog of SPACK_GNUPGHOME for import keys: if we
+                # aren't moving the GPG db we don't move the keys either
+                config_changes["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append(f"GPG data (using SPACK_GNUPGHOME: {gnupghome})")
         else:
             # No env var - migrate to new location
