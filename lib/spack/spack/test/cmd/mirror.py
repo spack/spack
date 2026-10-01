@@ -5,6 +5,7 @@
 import hashlib
 import os
 import pathlib
+import re
 
 import pytest
 
@@ -14,9 +15,11 @@ import spack.concretize
 import spack.environment as ev
 import spack.mirrors.utils
 import spack.package_base
+import spack.repo
 import spack.spec
 import spack.util.crypto
 import spack.util.git
+import spack.util.tty as tty
 import spack.util.url as url_util
 import spack.version
 from spack.config import Configuration
@@ -818,3 +821,105 @@ def test_mirror_skip_placeholder_pkg(tmp_path: pathlib.Path):
     )
     assert result is False
     assert not mirror_stats.errors
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize(
+    "extra_args,expected",
+    [
+        ([], {"deprecated-tool-2.0.tar.gz"}),
+        (["--deprecated"], {"deprecated-tool-1.0.tar.gz", "deprecated-tool-2.0.tar.gz"}),
+    ],
+)
+def test_mirror_create_skips_disallowed_versions(
+    extra_args, expected, tmp_path: pathlib.Path, mock_packages, mock_fetch, mutable_config
+):
+    """Tests that expanding the versions of a spec skips the versions the deprecation policy does
+    not allow, unless --deprecated is passed.
+    """
+    mirror_dir = tmp_path / "mirror"
+    mutable_config.set("config:checksum", False)
+    mirror(
+        "create",
+        "-d",
+        str(mirror_dir),
+        "--versions-per-spec",
+        "all",
+        *extra_args,
+        "deprecated-tool",
+    )
+    assert set(os.listdir(mirror_dir / "deprecated-tool")) == expected
+
+
+def test_versions_per_spec_counts_allowed_versions(mock_packages, mutable_config):
+    """Tests that versions skipped by the deprecation policy do not count towards the number of
+    versions per spec.
+    """
+    # Allows deprecated-with-labels@2.0 and @1.0, but not @3.0
+    mutable_config.set(
+        "packages:deprecated-with-labels:deprecation:allow",
+        [{"labels": ["CVE-2026-0002", "GHSA-aaaa-bbbb-cccc"]}, {"reason": ["unspecified"]}],
+    )
+    args = MockMirrorArgs(specs="deprecated-with-labels", versions_per_spec="2")
+    mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
+    assert {str(s.version) for s in mirror_specs} == {"2.0", "1.0"}
+
+
+def test_mirror_all_skips_disallowed_versions(mock_packages, config):
+    """Tests that mirroring every package skips the versions the deprecation policy does not
+    allow.
+    """
+    args = MockMirrorArgs(all=True)
+    mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
+    assert {str(s.version) for s in mirror_specs if s.name == "deprecated-tool"} == {"2.0"}
+
+
+@pytest.mark.parametrize("versions_per_spec", ["3", "all"])
+def test_versions_per_spec_skips_versions_with_disallowed_dependencies(
+    versions_per_spec, mock_packages, config, repo_builder
+):
+    """Tests that expanding the versions of a spec skips the versions that need a dependency the
+    deprecation policy does not allow.
+    """
+    repo_builder.add_package("pinned", dependencies=[("deprecated-tool@1.0", None, "@1.0")])
+    args = MockMirrorArgs(specs="pinned", versions_per_spec=versions_per_spec)
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
+    assert {str(s.version) for s in mirror_specs} == {"3.0", "2.0"}
+
+
+def test_versions_per_spec_do_not_get_patches_of_other_versions(mock_packages, config):
+    """Tests that the additional versions of a spec are concretized with their own patches."""
+    args = MockMirrorArgs(specs="patch", versions_per_spec="3")
+    mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
+    assert {str(s.version) for s in mirror_specs} == {"2.0", "1.0.2", "1.0.1"}
+
+
+def test_versions_per_spec_follow_the_request(mock_packages, config):
+    """Tests that the additional versions of a spec match its version range, and have the
+    variants it requests.
+    """
+    args = MockMirrorArgs(specs="variant-values@2: v=foo", versions_per_spec="3")
+    mirror_specs = spack.cmd.mirror._specs_to_mirror(args)
+    assert {str(s.version) for s in mirror_specs} == {"3.0", "2.0"}
+    assert all(s.satisfies("v=foo") for s in mirror_specs)
+
+
+def test_mirror_all_reports_skipped_versions_once(mock_packages, config, capsys, monkeypatch):
+    """Tests that mirroring every package reports the versions skipped by the deprecation policy
+    with a single line, lists them only when verbose, and leaves out the excluded ones.
+    """
+    args = MockMirrorArgs(all=True, exclude_specs="deprecated-with-labels")
+
+    spack.cmd.mirror._specs_to_mirror(args)
+    out = capsys.readouterr().out
+    summary = re.findall(r"Skipping (\d+) deprecated versions? not allowed", out)
+    assert len(summary) == 1
+    assert "deprecated-tool@1.0" not in out
+
+    monkeypatch.setattr(tty, "_verbose", True)
+    spack.cmd.mirror._specs_to_mirror(args)
+    listed = re.findall(r"Skipping (\S+@\S+): not allowed", capsys.readouterr().out)
+    assert "deprecated-tool@1.0" in listed
+    assert not any(x.startswith("deprecated-with-labels@") for x in listed)
+    assert len(listed) == int(summary[0])
