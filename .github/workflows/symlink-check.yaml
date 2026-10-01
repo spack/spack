@@ -1,0 +1,38 @@
+name: symlink-check
+
+on:
+  workflow_call:
+
+jobs:
+  # Check we don't add direct uses of os.symlink, which fails on Windows without symlink privileges
+  symlink-check:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+    # PR: use the base of the PR as the old commit
+    - name: Checkout PR base commit
+      if: github.event_name == 'pull_request'
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      with:
+        ref: ${{ github.event.pull_request.base.sha }}
+        path: old
+    # not a PR: use the previous commit as the old commit
+    - name: Checkout previous commit
+      if: github.event_name != 'pull_request'
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      with:
+        fetch-depth: 2
+        path: old
+    - name: Checkout previous commit
+      if: github.event_name != 'pull_request'
+      run: git -C old reset --hard HEAD^
+
+    - name: Checkout new commit
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      with:
+        path: new
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+      with:
+        python-version: '3.13'
+    - name: os.symlink usage check
+      run: python new/.github/workflows/bin/symlink-check.py --baseline old/lib/spack/spack new/lib/spack/spack

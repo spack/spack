@@ -3006,45 +3006,32 @@ def _windows_symlink(
     privileges.
 
     Junction: A link to a directory on the same or different volume (drive letter) but not to a
-    remote directory. Don't need System Administrator privileges."""
+    remote directory. Don't need System Administrator privileges.
+
+    Hard links are indistinguishable from the file they link to, so ``islink`` and ``readlink``
+    treat them as regular files."""
     source_path = os.path.normpath(src)
-    win_source_path = source_path
     link_path = os.path.normpath(dst)
 
     # Perform basic checks to make sure symlinking will succeed
     if os.path.lexists(link_path):
         raise AlreadyExistsError(f"Link path ({link_path}) already exists. Cannot create link.")
 
-    if not os.path.exists(source_path):
-        if os.path.isabs(source_path):
-            # An absolute source path that does not exist will result in a broken link.
-            raise SymlinkError(
-                f"Source path ({source_path}) is absolute but does not exist. Resulting "
-                f"link would be broken so not making link."
-            )
-        else:
-            # os.symlink can create a link when the given source path is relative to
-            # the link path. Emulate this behavior and check to see if the source exists
-            # relative to the link path ahead of link creation to prevent broken
-            # links from being made.
-            link_parent_dir = os.path.dirname(link_path)
-            relative_path = os.path.join(link_parent_dir, source_path)
-            if os.path.exists(relative_path):
-                # In order to work on windows, the source path needs to be modified to be
-                # relative because hardlink/junction dont resolve relative paths the same
-                # way as os.symlink. This is ignored on other operating systems.
-                win_source_path = relative_path
-            else:
-                raise SymlinkError(
-                    f"The source path ({source_path}) is not relative to the link path "
-                    f"({link_path}). Resulting link would be broken so not making link."
-                )
+    # Like os.symlink, a relative source path is relative to the directory containing the link,
+    # not to the current working directory. Hard links and junctions do not resolve relative
+    # paths this way, so they are created from the resolved path.
+    resolved_source_path = os.path.join(os.path.dirname(link_path), source_path)
+    if not os.path.exists(resolved_source_path):
+        raise SymlinkError(
+            f"Source path ({source_path}) does not exist relative to the link path "
+            f"({link_path}). Resulting link would be broken so not making link."
+        )
 
     # Create the symlink
     if not _windows_can_symlink():
-        _windows_create_link(win_source_path, link_path)
+        _windows_create_link(resolved_source_path, link_path)
     else:
-        os.symlink(source_path, link_path, target_is_directory=os.path.isdir(source_path))
+        os.symlink(source_path, link_path, target_is_directory=os.path.isdir(resolved_source_path))
 
 
 def _windows_islink(path: str) -> bool:
@@ -3053,8 +3040,8 @@ def _windows_islink(path: str) -> bool:
     For Non-Windows: a link can be determined with the os.path.islink method.
     Windows-only methods will return false for other operating systems.
 
-    For Windows: spack considers symlinks, hard links, and junctions to
-    all be links, so if any of those are True, return True.
+    For Windows: spack considers symlinks and junctions to be links. Hard links are not, since
+    there is no way to tell which of the paths sharing a file is the link.
 
     Args:
         path (str): path to check if it is a link.
@@ -3062,7 +3049,7 @@ def _windows_islink(path: str) -> bool:
     Returns:
          bool - whether the path is any kind link or not.
     """
-    return any([os.path.islink(path), _windows_is_junction(path), _windows_is_hardlink(path)])
+    return os.path.islink(path) or _windows_is_junction(path)
 
 
 def _windows_is_hardlink(path: str) -> bool:
@@ -3125,30 +3112,30 @@ def _windows_can_symlink() -> bool:
         return False
 
     tempdir = tempfile.mkdtemp()
-
-    dpath = os.path.join(tempdir, "dpath")
-    fpath = os.path.join(tempdir, "fpath.txt")
-
-    dlink = os.path.join(tempdir, "dlink")
-    flink = os.path.join(tempdir, "flink.txt")
-
-    touchp(fpath)
-    mkdirp(dpath)
-
     try:
-        os.symlink(dpath, dlink)
-        can_symlink_directories = os.path.islink(dlink)
-    except OSError:
-        can_symlink_directories = False
+        dpath = os.path.join(tempdir, "dpath")
+        fpath = os.path.join(tempdir, "fpath.txt")
 
-    try:
-        os.symlink(fpath, flink)
-        can_symlink_files = os.path.islink(flink)
-    except OSError:
-        can_symlink_files = False
+        dlink = os.path.join(tempdir, "dlink")
+        flink = os.path.join(tempdir, "flink.txt")
 
-    # Cleanup the test directory
-    shutil.rmtree(tempdir)
+        touchp(fpath)
+        mkdirp(dpath)
+
+        try:
+            os.symlink(dpath, dlink)
+            can_symlink_directories = os.path.islink(dlink)
+        except OSError:
+            can_symlink_directories = False
+
+        try:
+            os.symlink(fpath, flink)
+            can_symlink_files = os.path.islink(flink)
+        except OSError:
+            can_symlink_files = False
+    finally:
+        # Cleanup the test directory
+        shutil.rmtree(tempdir, ignore_errors=True)
 
     return can_symlink_directories and can_symlink_files
 
@@ -3223,41 +3210,16 @@ def _windows_create_hard_link(path: str, link: str):
 
 
 def _windows_readlink(path: str, *, dir_fd=None):
-    """Spack utility to override of os.readlink method to work cross platform"""
-    if _windows_is_hardlink(path):
-        return _windows_read_hard_link(path)
-    elif _windows_is_junction(path):
+    """Spack utility to override of os.readlink method to work cross platform. Like os.readlink,
+    this raises OSError for hard links, since they are regular files."""
+    # os.readlink can read junctions from Python 3.8 onwards
+    if sys.version_info < (3, 8) and _windows_is_junction(path):
         return _windows_read_junction(path)
-    else:
-        return sanitize_win_longpath(os.readlink(path, dir_fd=dir_fd))
-
-
-def _windows_read_hard_link(link: str) -> str:
-    """Find all of the files that point to the same inode as the link"""
-    if sys.platform != "win32":
-        raise SymlinkError("Can't read hard link on non-Windows OS.")
-    link = os.path.abspath(link)
-    fsutil_cmd = ["fsutil", "hardlink", "list", link]
-    proc = subprocess.Popen(fsutil_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = proc.communicate()
-    if proc.returncode != 0:
-        raise SymlinkError(f"An error occurred while reading hard link: {err.decode()}")
-
-    # fsutil response does not include the drive name, so append it back to each linked file.
-    drive, link_tail = os.path.splitdrive(os.path.abspath(link))
-    links = set([os.path.join(drive, p) for p in out.decode().splitlines()])
-    links.remove(link)
-    if len(links) == 1:
-        return links.pop()
-    elif len(links) > 1:
-        # TODO: How best to handle the case where 3 or more paths point to a single inode?
-        raise SymlinkError(f"Found multiple paths pointing to the same inode {links}")
-    else:
-        raise SymlinkError("Cannot determine hard link source path.")
+    return sanitize_win_longpath(os.readlink(path, dir_fd=dir_fd))
 
 
 def _windows_read_junction(link: str):
-    """Find the path that a junction points to."""
+    """Find the path that a junction points to. Only needed before Python 3.8."""
     if sys.platform != "win32":
         raise SymlinkError("Can't read junction on non-Windows OS.")
 
@@ -3270,7 +3232,7 @@ def _windows_read_junction(link: str):
     out, err = proc.communicate()
     if proc.returncode != 0:
         raise SymlinkError(f"An error occurred while reading junction: {err.decode()}")
-    matches = re.search(rf"<JUNCTION>\s+{link_basename} \[(.*)]", out.decode())
+    matches = re.search(rf"<JUNCTION>\s+{re.escape(link_basename)} \[(.*)]", out.decode())
     if matches:
         return matches.group(1)
     else:
@@ -3310,8 +3272,12 @@ class SymlinkError(OSError):
     """
 
 
-class AlreadyExistsError(SymlinkError):
+class AlreadyExistsError(SymlinkError, FileExistsError):
     """Link path already exists."""
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.errno = errno.EEXIST
 
 
 def fix_darwin_install_name(path: str) -> None:

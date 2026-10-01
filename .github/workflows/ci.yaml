@@ -81,6 +81,10 @@ jobs:
     needs: [ changes ]
     uses: ./.github/workflows/import-check.yaml
 
+  symlink-check:
+    needs: [ changes ]
+    uses: ./.github/workflows/symlink-check.yaml
+
   all-prechecks:
     needs: [ prechecks ]
     if: ${{ always() }}

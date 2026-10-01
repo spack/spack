@@ -11,6 +11,7 @@ import sys
 from typing import IO, Dict, List, Optional, Set, Tuple
 
 import spack.repo
+import spack.util.filesystem as fs
 import spack.util.naming
 import spack.util.spack_yaml
 
@@ -193,13 +194,19 @@ def migrate_v1_to_v2(
         if ino in ino_to_relpath:
             # link by path relative to the new root
             _, new_target = _relocate(ino_to_relpath[ino])
-            tgt = os.path.relpath(new_target, new_path)
+            tgt = os.path.relpath(new_target, os.path.dirname(new_path))
         else:
             tgt = os.path.realpath(old_path)
 
-        # no-op if the same, error if different
+        # no-op if the same, error if different. Compare files rather than link targets, since on
+        # Windows without symlink privileges the link may be a hard link.
         if os.path.lexists(new_path):
-            if not os.path.islink(new_path) or os.readlink(new_path) != tgt:
+            resolved_tgt = os.path.join(os.path.dirname(new_path), tgt)
+            if not (
+                os.path.exists(new_path)
+                and os.path.exists(resolved_tgt)
+                and os.path.samefile(new_path, resolved_tgt)
+            ):
                 print(
                     f"Cannot upgrade from v1 to v2, because the file '{new_path}' already exists",
                     file=err,
@@ -208,7 +215,7 @@ def migrate_v1_to_v2(
             continue
 
         if not patch_file:
-            os.symlink(tgt, new_path)
+            fs.symlink(tgt, new_path)
         else:
             patch_file.write(b"create symlink ")
             patch_file.write(new_path.encode("utf-8"))
