@@ -304,8 +304,8 @@ class _PackageAdapterMeta(BuilderMeta):
         def _adapter(self):
             def unwrap_pkg(fn):
                 @functools.wraps(fn)
-                def _wrapped(builder):
-                    return fn(builder.pkg_with_dispatcher)
+                def _wrapped(builder, *args):
+                    return fn(builder.pkg_with_dispatcher, *args)
 
                 return _wrapped
 
@@ -343,6 +343,12 @@ class _PackageAdapterMeta(BuilderMeta):
         attr_dict[spack.phase_callbacks._RUN_AFTER.attribute_name] = combine_callbacks(
             spack.phase_callbacks._RUN_AFTER.attribute_name
         )
+        attr_dict[spack.phase_callbacks._RUN_BEFORE_DEPENDENT.attribute_name] = combine_callbacks(
+            spack.phase_callbacks._RUN_BEFORE_DEPENDENT.attribute_name
+        )
+        attr_dict[spack.phase_callbacks._RUN_AFTER_DEPENDENT.attribute_name] = combine_callbacks(
+            spack.phase_callbacks._RUN_AFTER_DEPENDENT.attribute_name
+        )
 
         return super(_PackageAdapterMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
@@ -364,6 +370,12 @@ class InstallationPhase:
         self.phase_fn = self._select_phase_fn()
         self.run_before = self._make_callbacks(spack.phase_callbacks._RUN_BEFORE.attribute_name)
         self.run_after = self._make_callbacks(spack.phase_callbacks._RUN_AFTER.attribute_name)
+        self.run_before_dependent = self._make_dependent_callbacks(
+            spack.phase_callbacks._RUN_BEFORE_DEPENDENT.attribute_name
+        )
+        self.run_after_dependent = self._make_dependent_callbacks(
+            spack.phase_callbacks._RUN_AFTER_DEPENDENT.attribute_name
+        )
 
     def _make_callbacks(self, callbacks_attribute):
         result = []
@@ -378,6 +390,33 @@ class InstallationPhase:
                 result.append(fn)
         return result
 
+    def _make_dependent_callbacks(self, callbacks_attribute):
+        result = []
+        phases = self.builder.phases
+        seen_dependencies = set()
+        for edge in self.builder.pkg.spec.edges_to_dependencies():
+            if id(edge.spec) in seen_dependencies:
+                continue
+            seen_dependencies.add(id(edge.spec))
+            dependency_builder = create(edge.spec.package)
+            callbacks = getattr(dependency_builder, callbacks_attribute, [])
+            for (selector, condition), fn in callbacks:
+                if isinstance(selector, int):
+                    try:
+                        selected_phase = phases[selector]
+                    except IndexError as e:
+                        raise SpackError(
+                            f"phase index {selector} is invalid for dependent "
+                            f"{self.builder.pkg.name}; available phases are {tuple(phases)}"
+                        ) from e
+                else:
+                    selected_phase = selector
+                if selected_phase != self.name:
+                    continue
+                if condition is None or dependency_builder.pkg.spec.satisfies(condition):
+                    result.append(functools.partial(fn, dependency_builder, self.builder.pkg))
+        return result
+
     def __str__(self):
         msg = '{0}: executing "{1}" phase'
         return msg.format(self.builder, self.name)
@@ -386,10 +425,16 @@ class InstallationPhase:
         pkg = self.builder.pkg
         self._on_phase_start(pkg)
 
+        for callback in self.run_before_dependent:
+            callback()
+
         for callback in self.run_before:
             callback(self.builder)
 
         self.phase_fn(pkg, pkg.spec, pkg.prefix)
+
+        for callback in self.run_after_dependent:
+            callback()
 
         for callback in self.run_after:
             callback(self.builder)
