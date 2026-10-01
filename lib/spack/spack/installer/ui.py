@@ -12,7 +12,8 @@ import io
 import os
 import sys
 import time
-from typing import Callable, Dict, Generator, List, NamedTuple, Optional, TextIO, Union
+from collections import deque
+from typing import Callable, Deque, Dict, Generator, List, NamedTuple, Optional, TextIO, Union
 
 import spack.config
 import spack.util.tty.color as coloring
@@ -50,6 +51,9 @@ SPINNER_CHARS = "|/-\\"
 
 #: How long to display finished packages before graying them out
 CLEANUP_TIMEOUT = 2.0
+
+#: How many recent log chunks to keep per build for instant context when switching streams.
+LOG_HISTORY_SIZE = 15
 
 
 class BuildInfo:
@@ -206,9 +210,13 @@ class TerminalUI(InstallerUI):
         self.next_update = 0.0
         self.overview_mode = True  # Whether to draw the package overview
         self.tracked_build_id = ""  # identifier of the package whose logs we follow
+        #: Whether the selected build's log is streamed above the overview.
+        self.log_streaming = verbose
+        self.log_history: Dict[str, Deque[bytes]] = {}
         self.search_term = ""
         self.search_mode = False
         self.log_ends_with_newline = True
+        self.log_stream_buffer = b""
         self.actual_jobs: int = 0
         self.target_jobs: int = 0
         self.blocked: bool = False
@@ -224,9 +232,6 @@ class TerminalUI(InstallerUI):
         if color is None:
             color = coloring.get_color_when(stdout)
         self.color = coloring.get_colors(color)
-
-        #: Verbose mode only applies to non-TTY where we want to track a single build log.
-        self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
         #: When True, suppress all terminal output (process is in background).
         self.headless = False
@@ -247,33 +252,81 @@ class TerminalUI(InstallerUI):
         self.headless = headless
 
     def refresh_interval(self) -> Optional[float]:
-        # Only an interactive, foreground terminal animates the spinner; a suppressed (headless)
-        # or non-tty frontend needs no periodic redraw.
-        if self.headless or not self.is_tty:
-            return None
-        return SPINNER_INTERVAL
+        # Periodic redraws only advance a visible spinner; other modes have nothing to redraw.
+        if self.overview_mode and self.is_tty and not self.headless:
+            return SPINNER_INTERVAL
+        return None
 
     def on_build_added(self, info: BuildInfo) -> None:
-        """Add a new build to the display and mark the display as dirty."""
+        """Add a build, initialize its log history, and enable required log forwarding."""
         info.start_time = int(self.get_time())
         self.builds[info.id] = info
+        self.log_history[info.id] = deque(maxlen=LOG_HISTORY_SIZE)
         self.dirty = True
-        # Track the new build's logs when we're not already following another build. This applies
-        # only in non-TTY verbose mode.
-        if self.verbose and not self.tracked_build_id:
+        if self.log_streaming and not self.tracked_build_id:
+            self.log_stream_buffer = b""
+            self.log_ends_with_newline = True
             self.tracked_build_id = info.id
+            self.commands.append(SetEcho(info.id, True))
+        # TTY builds forward logs so the overview can parse progress after mode changes.
+        elif self.is_tty:
             self.commands.append(SetEcho(info.id, True))
 
     def on_build_removed(self, build_id: str) -> None:
-        """Remove a build from the display (e.g. after a binary cache miss before retry)."""
+        """Remove a build, its retained log history, and any tracking state."""
         self.builds.pop(build_id, None)
+        self.log_history.pop(build_id, None)
         if self.tracked_build_id == build_id:
+            self.log_stream_buffer = b""
+            self.log_ends_with_newline = True
             self.tracked_build_id = ""
             self.overview_mode = True
         self.dirty = True
 
     def toggle(self) -> None:
-        """Toggle between overview mode and following a specific build."""
+        """Toggle selected-log streaming, showing stored summaries for failed builds."""
+        if not self.log_streaming:
+            already_tracked = bool(self.tracked_build_id)
+            if not self.tracked_build_id:
+                self.next()
+            if not self.tracked_build_id:
+                return
+            tracked_build = self.builds.get(self.tracked_build_id)
+            if tracked_build is not None and tracked_build.state == "failed":
+                if already_tracked:
+                    summary = self._failed_log_summary(tracked_build)
+                    if self.is_tty and self.overview_mode:
+                        self._redraw_overview_with_log_history(
+                            self.tracked_build_id, summary.encode()
+                        )
+                    else:
+                        self.stdout.write(summary)
+                        self.stdout.flush()
+                return
+            self.log_streaming = True
+            self.dirty = True
+            if not self.is_tty:
+                self.commands.append(SetEcho(self.tracked_build_id, True))
+            else:
+                self._redraw_overview_with_log_history(self.tracked_build_id)
+        else:
+            if self.log_stream_buffer:
+                self.log_stream_buffer = b""
+                self.log_ends_with_newline = True
+            elif not self.log_ends_with_newline:
+                self.stdout.buffer.write(b"\n")
+                self.log_ends_with_newline = True
+            self.search_term = ""
+            self.search_mode = False
+            self.log_streaming = False
+            self.dirty = True
+            if self.tracked_build_id and not self.is_tty:
+                self.commands.append(SetEcho(self.tracked_build_id, False))
+            elif self.is_tty:
+                self._redraw_overview_with_log_history("")
+
+    def _toggle_overview(self) -> None:
+        """Return from the legacy full-screen log display to the overview."""
         if self.overview_mode:
             self.next()
         else:
@@ -285,7 +338,8 @@ class TerminalUI(InstallerUI):
             self.search_mode = False
             self.overview_mode = True
             self.dirty = True
-            self.commands.append(SetEcho(self.tracked_build_id, False))
+            if not self.is_tty:
+                self.commands.append(SetEcho(self.tracked_build_id, False))
             self.tracked_build_id = ""
 
     def search_input(self, char: str) -> None:
@@ -316,8 +370,12 @@ class TerminalUI(InstallerUI):
                 self.search_input(char)
             elif overview and char == "/":
                 self.enter_search()
-            elif char == "v" or char in ("q", "\x1b") and not overview:
+            elif char == "v":
                 self.toggle()
+            elif char == "q" and self.log_streaming:
+                self.toggle()
+            elif char in ("q", "\x1b") and not overview:
+                self._toggle_overview()
             elif char == "n":
                 self.next(1)
             elif char == "p" or char == "N":
@@ -351,44 +409,51 @@ class TerminalUI(InstallerUI):
         return matching[(idx + direction) % len(matching)]
 
     def next(self, direction: int = 1) -> None:
-        """Follow the logs of the next build in the list."""
+        """Select another unfinished or failed build and show its logs when streaming."""
         new_build_id = self._get_next(direction)
 
         if not new_build_id or self.tracked_build_id == new_build_id:
             return
 
+        self.log_stream_buffer = b""
+        self.log_ends_with_newline = True
+
         new_build = self.builds[new_build_id]
 
-        self.overview_mode = False
-
-        # Stop following the previous and start following the new build.
-        if self.tracked_build_id:
+        # Non-TTY output must stop forwarding the previous build before switching.
+        if self.tracked_build_id and self.log_streaming and not self.is_tty:
             self.commands.append(SetEcho(self.tracked_build_id, False))
 
         self.tracked_build_id = new_build_id
 
-        version_str = f"{self.color.CYAN}@{new_build.version}{self.color.RESET}"
         prefix = "" if self.log_ends_with_newline else "\n"
 
         if new_build.state == "failed":
-            # For failed builds, show the stored log summary instead of following live logs.
-            self.stdout.write(f"{prefix}==> Log summary of {new_build.name}{version_str}\n")
-            self.log_ends_with_newline = True
-            if new_build.log_summary:
-                self.stdout.write(new_build.log_summary)
-            if new_build.log_path:
-                if not new_build.log_summary:
-                    self.stdout.write("No errors parsed from log, see full log: ")
-                else:
-                    self.stdout.write("Full log: ")
-                self.stdout.write(f"{new_build.log_path}\n")
-            self.stdout.flush()
-        else:
-            # Tell the user we're following new logs, and instruct the child to start sending.
-            self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
-            self.log_ends_with_newline = True
-            self.stdout.flush()
+            summary = self._failed_log_summary(new_build, prefix=prefix)
+            if self.is_tty and self.overview_mode:
+                self._redraw_overview_with_log_history(new_build_id, summary.encode())
+            else:
+                self.stdout.write(summary)
+                self.stdout.flush()
+        elif self.log_streaming:
             self.commands.append(SetEcho(new_build_id, True))
+            if self.is_tty:
+                self._redraw_overview_with_log_history(new_build_id)
+
+    def _failed_log_summary(self, build: BuildInfo, prefix: str = "") -> str:
+        """Format a failed build's stored summary and mark output as newline-terminated."""
+        version = f"{self.color.CYAN}@{build.version}{self.color.RESET}"
+        output = io.StringIO()
+        output.write(f"{prefix}==> Log summary of {build.name}{version}\n")
+        if build.log_summary:
+            output.write(build.log_summary)
+        if build.log_path:
+            output.write(
+                "Full log: " if build.log_summary else "No errors parsed from log, see full log: "
+            )
+            output.write(f"{build.log_path}\n")
+        self.log_ends_with_newline = True
+        return output.getvalue()
 
     def on_blocked_changed(self, blocked: bool) -> None:
         """Set whether all pending builds are blocked by another Spack process."""
@@ -434,12 +499,15 @@ class TerminalUI(InstallerUI):
             build_info.duration = now - build_info.start_time
             build_info.finished_time = now + CLEANUP_TIMEOUT
 
-            # Stop tracking the finished build's logs.
+            # Continue streaming after success so output does not stop between builds.
             if build_id == self.tracked_build_id:
-                if not self.overview_mode:
-                    self.toggle()
-                if self.verbose:
-                    self.tracked_build_id = ""
+                self.log_stream_buffer = b""
+                self.log_ends_with_newline = True
+                self.tracked_build_id = ""
+                if state == "finished" and self.log_streaming:
+                    self.next()
+                else:
+                    self.log_streaming = False
 
         self.dirty = True
         self._update_terminal_title()
@@ -510,6 +578,12 @@ class TerminalUI(InstallerUI):
         if not self.dirty and not finalize:
             return
 
+        self._render_overview(now=now, has_unfinished=has_unfinished, finalize=finalize)
+
+    def _render_overview(
+        self, *, now: float, has_unfinished: bool, finalize: bool = False
+    ) -> None:
+        """Render persisted completed rows and the mutable active-build overview."""
         # Build the overview output in a buffer and print all at once to avoid flickering.
         buffer = io.StringIO()
 
@@ -545,7 +619,12 @@ class TerminalUI(InstallerUI):
                 jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
             else:
                 jobs_str = str(self.target_jobs)
-
+            tracked_build = self.builds.get(self.tracked_build_id)
+            tracked_str = (
+                f"  {self.color.BLACK_BRIGHT}({tracked_build.name}){self.color.RESET}"
+                if tracked_build
+                else ""
+            )
             long_header = (
                 f"{self.color.BOLD}Progress:{self.color.RESET} {self.completed}/{self.total}"
                 f"  {self.color.CYAN}+{self.color.RESET}/{self.color.CYAN}-{self.color.RESET}: "
@@ -554,6 +633,7 @@ class TerminalUI(InstallerUI):
                 f"  {self.color.CYAN}v{self.color.RESET}: logs"
                 f"  {self.color.CYAN}n{self.color.RESET}/{self.color.CYAN}p{self.color.RESET}:"
                 " next/prev"
+                f"{tracked_str}"
             )
             if coloring.clen(long_header) < max_width:
                 self._println(buffer, long_header)
@@ -615,18 +695,73 @@ class TerminalUI(InstallerUI):
             buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
 
     def on_log_output(self, build_id: str, data: bytes) -> None:
+        """Cache forwarded chunks, buffer partial lines, and stream selected TTY output."""
         if self.headless:
-            return
-        # Discard logs we are not following. Generally this should not happen as we tell the child
-        # to only send logs when we are following it. It could maybe happen while transitioning
-        # between builds.
-        if build_id != self.tracked_build_id:
             return
         if self.filter_padding:
             data = padding_filter_bytes(data)
+        self.log_history.setdefault(build_id, deque(maxlen=LOG_HISTORY_SIZE)).append(data)
+        if self.overview_mode and self.is_tty:
+            if not (self.log_streaming and build_id == self.tracked_build_id):
+                return
+        # Do not write output from an unselected build. TTY output has already been retained above
+        # for replay and progress processing.
+        if build_id != self.tracked_build_id:
+            return
+        if self.overview_mode and self.is_tty:
+            data = self.log_stream_buffer + data
+            last_newline = data.rfind(b"\n")
+            if last_newline < 0:
+                self.log_stream_buffer = data
+                self.log_ends_with_newline = False
+                return
+            self.log_stream_buffer = data[last_newline + 1 :]
+            data = data[: last_newline + 1]
+            self.log_ends_with_newline = not self.log_stream_buffer
+            now = self.get_time()
+            if self.active_area_rows > 0:
+                self.stdout.write(f"\033[{self.active_area_rows}A\r\033[0J")
+            self.stdout.flush()
         self.stdout.buffer.write(data)
+        if self.overview_mode and self.is_tty:
+            self.dirty = True
+            self.active_area_rows = 0
+            has_unfinished = any(pkg.finished_time is None for pkg in self.builds.values())
+            self._render_overview(now=now, has_unfinished=has_unfinished)
+        else:
+            self.log_ends_with_newline = data.endswith(b"\n")
         self.stdout.flush()
-        self.log_ends_with_newline = data.endswith(b"\n")
+
+    def _redraw_overview_with_log_history(
+        self, build_id: str, output: Optional[bytes] = None
+    ) -> None:
+        """Clear the TTY, replay cached output with a final newline, and redraw the overview."""
+        if self.headless or not self.is_tty:
+            return
+        self.log_stream_buffer = b""
+        history = (output,) if output is not None else self.log_history.get(build_id, ())
+        history_rows = sum(chunk.count(b"\n") for chunk in history)
+        history_needs_newline = bool(history and not history[-1].endswith(b"\n"))
+
+        # Wrapped log lines make relative clearing unreliable. Preserve the cursor below the
+        # overview, clear the full display, and restore that exact position before redrawing it.
+        self.stdout.write("\0337\033[2J")
+        if history:
+            rows_above = self.active_area_rows + history_rows + int(history_needs_newline)
+            if rows_above > 0:
+                self.stdout.write(f"\033[{rows_above}A\r")
+        self.stdout.flush()
+        for chunk in history:
+            self.stdout.buffer.write(chunk)
+        if history_needs_newline:
+            self.stdout.buffer.write(b"\n")
+        self.log_ends_with_newline = True
+        self.stdout.write("\0338")
+        now = self.get_time()
+        self.dirty = True
+        has_unfinished = any(pkg.finished_time is None for pkg in self.builds.values())
+        self._render_overview(now=now, has_unfinished=has_unfinished)
+        self.stdout.flush()
 
     def _render_build(
         self, build_info: BuildInfo, buffer: io.StringIO, max_width: int = 0, now: float = 0.0

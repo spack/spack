@@ -115,6 +115,9 @@ def add_mock_builds(tui: TerminalUI, count: int) -> List[str]:
     build_ids = [f"pkg{i}" for i in range(count)]
     for i, build_id in enumerate(build_ids):
         on_build_added(tui, build_id, version=f"{i}.0")
+    # The real installer event loop drains UI commands after handling each callback. Tests do
+    # not run that event loop, so emulate the drain to keep setup commands out of assertions.
+    tui.commands.clear()
     return build_ids
 
 
@@ -843,8 +846,107 @@ class TestLogFollowing:
         # Check that logs were echoed to stdout
         assert fake_stdout._buffer.getvalue() == log_data
 
-    def test_print_logs_discarded_when_in_overview_mode(self):
-        """Test that logs are discarded when in overview mode"""
+    def test_verbose_tty_streams_logs_above_overview(self):
+        """Verbose TTY mode streams tracked logs above the overview display."""
+        tui, time_values, fake_stdout = create_tui(total=1, verbose=True)
+        on_build_added(tui, "pkg0")
+        tui.on_jobs_changed(16, 16)
+
+        assert tui.overview_mode is True
+        assert tui.tracked_build_id == "pkg0"
+
+        tui.render()
+        fake_stdout.clear()
+        tui.on_log_output("pkg0", b"-- Configuring done\n")
+        time_values.append(1.0)
+        tui.on_log_output("pkg0", b"-- Generating done\n")
+
+        output = fake_stdout.getvalue()
+        assert "-- Configuring done\n" in output
+        assert "-- Generating done\n" in output
+        assert "Progress:" in output
+        assert "pkg0" in output
+        assert "@1.0" in output
+        assert "starting" in output
+        assert output.index("-- Configuring done") < output.rindex("Progress:")
+
+    def test_verbose_tty_continues_partial_log_line(self):
+        """A later log chunk completes a buffered fragment before display above the overview."""
+        tui, _, fake_stdout = create_tui(total=1, verbose=True)
+        on_build_added(tui, "pkg0")
+        tui.render()
+        fake_stdout.clear()
+
+        tui.on_log_output("pkg0", b"checking for boost...")
+        assert fake_stdout.getvalue() == ""
+
+        tui.on_log_output("pkg0", b"yes\n")
+
+        output = fake_stdout.getvalue()
+        assert "checking for boost...yes\n" in output
+        assert "Progress:" in output
+
+    def test_verbose_tty_toggle_off_clears_streamed_log(self):
+        """Turning streaming off clears the screen and restores the overview position."""
+        tui, _, fake_stdout = create_tui(total=1, verbose=True)
+        on_build_added(tui, "pkg0")
+        tui.render()
+        tui.on_log_output("pkg0", b"-- Configuring done\n")
+        fake_stdout.clear()
+
+        tui.toggle()
+
+        output = fake_stdout.getvalue()
+        assert output.startswith("\0337\033[2J\0338\033[2A\r")
+        assert "Progress:" in output
+        assert "-- Configuring done" not in output
+
+        fake_stdout.clear()
+        tui.toggle()
+
+        output = fake_stdout.getvalue()
+        assert output.startswith("\0337\033[2J\033[3A\r-- Configuring done\n\0338\033[2A\r")
+        assert "Progress:" in output
+
+    def test_verbose_tty_switching_builds_shows_cached_log_tail(self):
+        """Switching streamed builds shows the saved recent log tail for the new build."""
+        tui, _, fake_stdout = create_tui(total=2, verbose=True)
+        build_a, build_b = add_mock_builds(tui, 2)
+        tui.render()
+        tui.on_log_output(build_a, b"a: configure\n")
+        for index in range(inst.LOG_HISTORY_SIZE + 1):
+            tui.on_log_output(build_b, f"b: line {index}\n".encode())
+        fake_stdout.clear()
+
+        tui.next(1)
+
+        output = fake_stdout.getvalue()
+        assert "b: line 0\n" not in output
+        for index in range(1, inst.LOG_HISTORY_SIZE + 1):
+            assert f"b: line {index}\n" in output
+        assert "a: configure\n" not in output
+        assert "Progress:" in output
+
+    @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
+    def test_cached_log_tail_filters_padding(self):
+        """Switching builds does not replay path-padding placeholders."""
+        tui, _, fake_stdout = create_tui(total=2, verbose=True, filter_padding=True)
+        _, build_b = add_mock_builds(tui, 2)
+        tui.render()
+        tui.on_log_output(
+            build_b,
+            b"--with-foo=/base/__spack_path_placeholder__/__spack_path_placeholder__/bin\n",
+        )
+        fake_stdout.clear()
+
+        tui.next(1)
+
+        output = fake_stdout.getvalue()
+        assert "__spack_path_placeholder__" not in output
+        assert "--with-foo=/base/[padded-to-59-chars]/bin" in output
+
+    def test_unselected_overview_logs_are_cached_without_output(self):
+        """Unselected overview logs are cached without being written immediately."""
         tui, _, fake_stdout = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
@@ -858,8 +960,8 @@ class TestLogFollowing:
         # Nothing should be printed
         assert fake_stdout.getvalue() == ""
 
-    def test_print_logs_discarded_when_not_tracked(self):
-        """Test that logs from non-tracked builds are discarded"""
+    def test_unselected_streamed_logs_are_cached_without_output(self):
+        """Logs from an unselected build are cached without being written immediately."""
         tui, _, fake_stdout = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
 
@@ -914,6 +1016,26 @@ class TestLogFollowing:
             fake_stdout.getvalue()
         )
 
+    def test_toggle_to_failed_build_keeps_summary_after_redraw(self, tmp_path):
+        """Enabling log view redraws a failed build's summary above the overview."""
+        tui, _, fake_stdout = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+        log_file = tmp_path / "pkg0.log"
+        log_file.write_text("error: something went wrong\n")
+        tui.builds[build_id].log_path = str(log_file)
+        tui.on_state_changed(build_id, "failed")
+        tui.render()
+        fake_stdout.clear()
+
+        tui.toggle()
+
+        output = fake_stdout.getvalue()
+        after_clear = output.rsplit("\033[2J", 1)[-1]
+        assert "Log summary of pkg0" in after_clear
+        assert "> error: something went wrong" in after_clear
+        assert f"Full log: {log_file}" in after_clear
+        assert "Progress:" in after_clear
+
     def test_navigation_skips_finished_build(self):
         """Test that navigation skips successfully finished builds"""
         tui, _, _ = create_tui(total=3)
@@ -932,8 +1054,8 @@ class TestLogFollowing:
 class TestNavigationIntegration:
     """Test the next() method and navigation between builds"""
 
-    def test_next_switches_from_overview_to_logs(self):
-        """Test that next() switches from overview mode to log-following mode"""
+    def test_next_selects_tracked_build_in_overview(self):
+        """Test that next() selects a tracked build without leaving overview mode."""
         tui, _, fake_stdout = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
 
@@ -944,15 +1066,12 @@ class TestNavigationIntegration:
         # Call next() to start following first build
         tui.next()
 
-        # Should have switched to log-following mode
-        assert tui.overview_mode is False
+        # Should have selected the first build while staying in overview mode
+        assert tui.overview_mode is True
+        assert tui.log_streaming is False
         assert tui.tracked_build_id == build_ids[0]
-        assert tui.commands == [inst.SetEcho(build_ids[0], True)]
-
-        # Should have printed "Following logs" message
-        output = fake_stdout.getvalue()
-        assert "Following logs of" in output
-        assert "pkg0" in output
+        assert tui.commands == []
+        assert fake_stdout.getvalue() == ""
 
     def test_next_cycles_through_builds(self):
         """Test that next() cycles through multiple builds"""
@@ -968,26 +1087,23 @@ class TestNavigationIntegration:
         # Navigate to next
         tui.next(1)
         assert tui.tracked_build_id == build_ids[1]
-        assert "pkg1" in fake_stdout.getvalue()
-        # Echoing stopped for the previous build and started for the new one
-        assert tui.commands[-2:] == [
-            inst.SetEcho(build_ids[0], False),
-            inst.SetEcho(build_ids[1], True),
-        ]
+        assert fake_stdout.getvalue() == ""
+        # TTY overview mode already keeps build logs enabled so progress parsing still works.
+        assert tui.commands == []
 
         fake_stdout.clear()
 
         # Navigate to next (third build)
         tui.next(1)
         assert tui.tracked_build_id == build_ids[2]
-        assert "pkg2" in fake_stdout.getvalue()
+        assert fake_stdout.getvalue() == ""
 
         fake_stdout.clear()
 
         # Navigate to next (should wrap to first)
         tui.next(1)
         assert tui.tracked_build_id == build_ids[0]
-        assert "pkg0" in fake_stdout.getvalue()
+        assert fake_stdout.getvalue() == ""
 
     def test_next_backward_navigation(self):
         """Test that next(-1) navigates backward"""
@@ -1044,10 +1160,10 @@ class TestNavigationIntegration:
 
 
 class TestToggle:
-    """Test toggle() method for switching between overview and log-following modes"""
+    """Test toggling selected-build log streaming above the overview."""
 
-    def test_toggle_from_overview_calls_next(self):
-        """Test that toggle() from overview mode calls next()"""
+    def test_toggle_from_overview_starts_streaming(self):
+        """Test that toggle() from overview mode starts streaming the tracked build."""
         tui, _, fake_stdout = create_tui(total=2)
         add_mock_builds(tui, 2)
 
@@ -1057,19 +1173,21 @@ class TestToggle:
         # Toggle should call next()
         tui.toggle()
 
-        # Should now be following logs
-        assert tui.overview_mode is False
+        # Log streaming now keeps the overview visible.
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
         assert tui.tracked_build_id != ""
-        assert "Following logs of" in fake_stdout.getvalue()
+        assert "Progress:" in fake_stdout.getvalue()
 
-    def test_toggle_from_logs_returns_to_overview(self):
-        """Test that toggle() from log-following mode returns to overview"""
+    def test_toggle_from_streaming_stops_streaming(self):
+        """Test that toggle() stops log streaming but keeps the tracked build selected."""
         tui, _, _ = create_tui(total=2)
         add_mock_builds(tui, 2)
 
         # Switch to log-following mode first
-        tui.next()
-        assert tui.overview_mode is False
+        tui.toggle()
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
         tracked_id = tui.tracked_build_id
         assert tracked_id != ""
 
@@ -1083,42 +1201,69 @@ class TestToggle:
 
         # Should be back in overview mode with cleaned state
         assert tui.overview_mode is True
-        assert tui.tracked_build_id == ""
+        assert tui.log_streaming is False
+        assert tui.tracked_build_id == tracked_id
         assert tui.search_term == ""
         assert tui.search_mode is False
-        assert tui.active_area_rows == 0
-        assert tui.dirty is True
-        # Echoing was stopped for the previously tracked build
-        assert tui.commands[-1] == inst.SetEcho(tracked_id, False)
+        assert tui.dirty is False
+        # TTY overview mode keeps build logs enabled so progress parsing still works later.
+        assert inst.SetEcho(tracked_id, False) not in tui.commands
 
-    def test_on_state_changed_finished_triggers_toggle_when_tracking(self):
-        """Test that finishing a tracked build triggers toggle back to overview"""
+    def test_tty_logs_remain_enabled_after_returning_to_overview(self):
+        """Returning from full-screen log view keeps TTY log delivery enabled."""
+        tui, _, _ = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.toggle()
+        tui.toggle()
+
+        assert tui.overview_mode is True
+        assert inst.SetEcho(build_id, False) not in tui.commands
+
+    def test_on_state_changed_finished_continues_streaming_next_build(self):
+        """Finishing a streamed build follows the next unfinished build."""
         tui, _, _ = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
 
         # Start tracking first build
-        tui.next()
-        assert tui.overview_mode is False
+        tui.toggle()
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
         assert tui.tracked_build_id == build_ids[0]
 
         # Mark the tracked build as finished
         tui.on_state_changed(build_ids[0], "finished")
 
-        # Should have toggled back to overview mode
+        # Successful builds keep streaming active and advance the tracked build.
         assert tui.overview_mode is True
+        assert tui.log_streaming is True
+        assert tui.tracked_build_id == build_ids[1]
+
+    def test_streaming_resumes_when_next_build_is_added(self):
+        """A later build is tracked when streaming outlives the previous build wave."""
+        tui, _, _ = create_tui(total=2)
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.toggle()
+        tui.on_state_changed(build_id, "finished")
+
+        assert tui.log_streaming is True
         assert tui.tracked_build_id == ""
 
-    def test_partial_line_newline_on_toggle_and_next(self):
-        """Ensure newline is inserted before mode transitions when log doesn't end with newline."""
+        on_build_added(tui, "next")
+
+        assert tui.log_streaming is True
+        assert tui.tracked_build_id == "next"
+
+    def test_partial_line_handling_on_toggle_and_next(self):
+        """Mode transitions preserve complete lines and discard unselected fragments."""
         tui, _, fake_stdout = create_tui(total=2)
         build_a, build_b = add_mock_builds(tui, 2)
 
-        # Follow a build, toggle back and forth between logs and overview mode, and receive logs
-        # that may or may not end with newlines.
-        tui.next()
+        tui.toggle()
         tui.on_log_output(build_a, b"checking for foo...")
         tui.toggle()
-        tui.next()
+        tui.toggle()
         tui.on_log_output(build_a, b"checking for bar... yes\n")
         tui.next(1)
         tui.on_log_output(build_b, b"checking for baz...")
@@ -1129,10 +1274,10 @@ class TestToggle:
         # There shouldn't be any double newlines:
         assert "\n\n" not in written
 
-        # All partial and newline-terminated logs should be present with appropriate newlines:
+        # Switching builds must not join an incomplete fragment from another build.
         assert "checking for foo...\n" in written
         assert "checking for bar... yes\n" in written
-        assert "checking for baz...\n" in written
+        assert "checking for baz..." not in written
 
     @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
     @pytest.mark.parametrize("filter_padding", [True, False])
@@ -1243,7 +1388,7 @@ class TestSearchFilteringIntegration:
         tui.search_input("\r")
 
         # Should have started following first matching build
-        assert tui.overview_mode is False
+        assert tui.overview_mode is True
         assert tui.tracked_build_id == build_ids[0]
 
     def test_clearing_search_shows_all_builds(self):
@@ -1286,7 +1431,9 @@ class TestHandleInput:
         build_ids = add_mock_builds(tui, 3)
 
         tui.on_input("v")
-        assert tui.overview_mode is False
+        # Log streaming now keeps the overview visible.
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
         assert tui.tracked_build_id == build_ids[0]
 
         tui.on_input("n")
@@ -1296,7 +1443,10 @@ class TestHandleInput:
         assert tui.tracked_build_id == build_ids[0]
 
         tui.on_input("q")
+        # q unconditionally stops streaming without clearing the selection.
         assert tui.overview_mode is True
+        assert tui.log_streaming is False
+        assert tui.tracked_build_id == build_ids[0]
 
     def test_search_keys(self):
         """'/' enters search mode; subsequent characters build the search term."""
@@ -1350,12 +1500,13 @@ class TestEdgeCases:
         assert f"[+] {build_a[:7]} pkg0@0.0" in output
         assert f"[x] {build_b[:7]} pkg1@1.0" in output
 
-    def test_finalize_forces_overview_mode(self):
-        """update(finalize=True) leaves log-following mode for the final render."""
+    def test_finalize_keeps_overview_mode(self):
+        """render(finalize=True) keeps the overview mode even while logs are streaming."""
         tui, _, _ = create_tui(total=2)
         add_mock_builds(tui, 2)
-        tui.next()
-        assert tui.overview_mode is False
+        tui.toggle()
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
 
         tui.render(finalize=True)
         assert tui.overview_mode is True
@@ -1452,13 +1603,14 @@ class TestTerminalUIVerbose:
         stdout.flush()
         assert stdout.buffer.getvalue() == b""
 
-    def test_verbose_tty_no_effect(self):
-        """In TTY mode, on_build_added() does not set tracked_build_id automatically."""
+    def test_verbose_tty_tracks_first_build(self):
+        """Verbose mode selects the first TTY build while keeping the overview visible."""
         tui, _, _ = create_tui(is_tty=True, verbose=True, total=4)
 
         on_build_added(tui, "trivial-install-test-package")
-        assert tui.tracked_build_id == ""
-        assert tui.commands == []
+        assert tui.overview_mode is True
+        assert tui.tracked_build_id == "trivial-install-test-package"
+        assert tui.commands == [inst.SetEcho("trivial-install-test-package", True)]
 
 
 class TestTerminalUIColor:
@@ -1532,6 +1684,16 @@ class TestTargetJobs:
         output = fake_stdout.getvalue()
         assert "4=>2" in output
 
+    def test_header_shows_tracked_package_name(self):
+        """The overview header shows the currently tracked package in gray."""
+        tui, _, fake_stdout = create_tui(total=1, color=True)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.tracked_build_id = build_id
+        tui.render()
+        output = fake_stdout.getvalue()
+        assert "next/prev" in output
+        assert f"\033[0;90m({build_id})\033[0m" in output
+
 
 class TestHeadlessMode:
     """Test that headless mode suppresses terminal output."""
@@ -1592,10 +1754,13 @@ class TestHeadlessMode:
         assert "[/] pkg0 pkg0@0.0 starting" in stdout.getvalue()
 
     def test_refresh_interval_modes(self):
-        """Only an interactive, foreground terminal needs a periodic redraw tick."""
+        """Only a foreground TTY overview requests periodic redraws."""
         tui, _, _ = create_tui(is_tty=True)
         assert tui.refresh_interval() == inst.SPINNER_INTERVAL
         tui.headless = True
+        assert tui.refresh_interval() is None
+        tui.headless = False
+        tui.overview_mode = False
         assert tui.refresh_interval() is None
         non_tty, _, _ = create_tui(is_tty=False)
         assert non_tty.refresh_interval() is None
@@ -1669,6 +1834,19 @@ class TestLineRendering:
         assert "pkg@1.0" in output
         # The prefix would exceed the terminal width, so it is not rendered.
         assert "/quite/long/prefix/path" not in output
+
+    def test_persisted_finished_line_keeps_prefix_in_narrow_terminal(self):
+        """A persisted completed build always shows its install prefix."""
+        tui, fake_time, fake_stdout = create_tui(total=1, terminal_cols=30, color=False)
+        on_build_added(tui, "pkg", prefix="/quite/long/prefix/path")
+        tui.on_state_changed("pkg", "finished")
+        fake_time.append(inst.CLEANUP_TIMEOUT + 0.1)
+
+        tui.render()
+
+        lines = [line for line in fake_stdout.getvalue().splitlines() if "pkg@1.0" in line]
+        assert lines
+        assert "/quite/long/prefix/path" in fake_stdout.getvalue()
 
 
 class TestStdinReader:
