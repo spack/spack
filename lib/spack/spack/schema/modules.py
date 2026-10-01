@@ -61,6 +61,10 @@ module_file_configuration = {
             **array_of_strings,
             "description": "List of additional modules to load when this module is loaded",
         },
+        "alias": {
+            **array_of_strings,
+            "description": "List of module aliases to define onto this module",
+        },
         "suffixes": {
             "type": "object",
             "description": "Add custom suffixes to module names based on spec matching for better "

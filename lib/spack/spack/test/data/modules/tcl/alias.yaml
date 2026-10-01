@@ -1,0 +1,12 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+  mpileaks:
+    alias:
+      - '{name}-latest'
+      - 'mpi-app'
+  libdwarf:
+    alias:
+      - 'dwarf'
