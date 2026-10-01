@@ -16,7 +16,18 @@ cannot drift.
 """
 
 import warnings
-from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, List, NamedTuple, Optional, Set
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    FrozenSet,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+)
 
 import spack.config
 import spack.deptypes as dt
@@ -35,6 +46,15 @@ class Violation(NamedTuple):
     constraint: "spack.spec.Spec"
     #: The deprecation, with only the labels the policy does not allow
     deprecation: Deprecation
+
+
+class Evaluation(NamedTuple):
+    """Result of evaluating the deprecation policy on some specs"""
+
+    #: Nodes with disallowed deprecations, and their violations, keyed by DAG hash
+    violations: Dict[str, Tuple["spack.spec.Spec", List[Violation]]]
+    #: DAG hashes of the nodes whose checked closure, the node included, has a violation
+    affected: Set[str]
 
 
 class Selector(NamedTuple):
@@ -222,10 +242,10 @@ class Policy:
         if spec.external:
             return []
 
-        try:
-            pkg_cls = self.repo.get_pkg_class(spec.name)
-        except spack.repo.UnknownPackageError:
+        # Checking first avoids building an UnknownPackageError, which scans every package name
+        if not self.repo.exists(spec.name):
             return []
+        pkg_cls = self.repo.get_pkg_class(spec.name)
 
         violations = []
         for constraint, entries in pkg_cls.deprecations.items():
@@ -236,6 +256,39 @@ class Policy:
                 if refused is not None:
                     violations.append(Violation(constraint, refused))
         return violations
+
+    def evaluate(self, specs: Sequence["spack.spec.Spec"]) -> Evaluation:
+        """Evaluate the policy on the checked closure of each spec.
+
+        The checked closure of a node is the one reachable through the dependency types of the
+        policy scope: the link/run one under ``runtime``, and the whole DAG under ``all``.
+
+        Args:
+            specs: the specs to evaluate.
+        """
+        checked = self.deptypes
+        violations: Dict[str, Tuple["spack.spec.Spec", List[Violation]]] = {}
+        affected: Set[str] = set()
+
+        # One post-order pass over the union of the DAGs, keyed by hash so a node shared by
+        # many roots is evaluated once.
+        for node in spack.traverse.traverse_nodes(
+            specs, deptype=checked, order="post", key=spack.traverse.by_dag_hash
+        ):
+            node_hash = node.dag_hash()
+            found = self.disallowed(node)
+            if found:
+                violations[node_hash] = (node, found)
+            if found or (
+                affected
+                and any(
+                    edge.spec.dag_hash() in affected
+                    for edge in node.edges_to_dependencies(depflag=checked)
+                )
+            ):
+                affected.add(node_hash)
+
+        return Evaluation(violations, affected)
 
 
 def deprecated_spec_str(pkg_name: str, constraint: "spack.spec.Spec") -> str:
@@ -267,21 +320,8 @@ def reusable(
         policy: the policy to apply; defaults to the configured one.
     """
     resolved = policy or Policy.from_config(spack.config.CONFIG, repo=spack.repo.PATH)
-    deptypes = resolved.deptypes
     candidates = list(specs)
-
-    # One post-order pass over the union of the candidate DAGs, keyed by hash so a node shared
-    # by many candidates is evaluated once.
-    rejected: Set[str] = set()
-    for node in spack.traverse.traverse_nodes(
-        candidates, deptype=deptypes, order="post", key=spack.traverse.by_dag_hash
-    ):
-        if resolved.disallowed(node) or any(
-            edge.spec.dag_hash() in rejected
-            for edge in node.edges_to_dependencies(depflag=deptypes)
-        ):
-            rejected.add(node.dag_hash())
-
+    rejected = resolved.evaluate(candidates).affected
     return [s for s in candidates if s.dag_hash() not in rejected]
 
 
@@ -301,7 +341,7 @@ def check_deprecations(
     for node in spack.traverse.traverse_nodes(list(seeds), deptype=resolved.deptypes):
         found = resolved.disallowed(node)
         if found:
-            violations.append(_format_violations(node, found))
+            violations.append(format_violations(node, found))
 
     if violations:
         raise spack.error.InstallError(
@@ -312,17 +352,15 @@ def check_deprecations(
         )
 
 
-def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> str:
+def format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> str:
+    """Format the disallowed deprecations of a spec, one per line, indented under the spec."""
     lines = [f"    {spec.cshort_spec}"]
     for constraint, entry in violations:
         spec_str = deprecated_spec_str(spec.name, constraint)
         attributes = deprecation_attributes_str(
             entry.reason.value, entry.severity.name.lower(), entry.labels
         )
-        lines.append(
-            f"        {spec_str} is deprecated ({attributes}); not allowed by "
-            f"'packages:{spec.name}:deprecation:allow'"
-        )
+        lines.append(f"        {spec_str} is deprecated ({attributes})")
         if entry.msg:
             lines.append(f"            {entry.msg}")
     return "\n".join(lines)

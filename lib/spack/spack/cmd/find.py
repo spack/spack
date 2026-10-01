@@ -5,17 +5,21 @@
 import argparse
 import copy
 import sys
-from typing import List, Optional, Tuple
+import warnings
+from typing import Callable, List, Optional, Tuple
 
 import spack.binary_distribution
 import spack.config
 import spack.context
+import spack.deprecation
 import spack.environment as ev
 import spack.repo
 import spack.solver.reuse
 import spack.spec
 import spack.store
+import spack.traverse
 import spack.util.lang
+import spack.util.string
 from spack import cmd
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -253,6 +257,89 @@ def make_env_decorator(env):
     return decorator
 
 
+def displayed_nodes(specs: List[spack.spec.Spec], *, deps: bool) -> List[spack.spec.Spec]:
+    """Return the nodes shown for the specs, which include all their dependencies with
+    ``--deps``.
+    """
+    if not deps:
+        return specs
+    return list(spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash))
+
+
+def evaluate_deprecation_policy(specs: List[spack.spec.Spec]) -> spack.deprecation.Evaluation:
+    """Evaluate the deprecation policy on the nodes to be displayed."""
+    policy = spack.deprecation.Policy.from_config(spack.config.CONFIG, repo=spack.repo.PATH)
+    try:
+        return policy.evaluate(specs)
+    except spack.repo.RepoError as e:
+        warnings.warn(f"cannot check specs against the deprecation policy: {e}")
+        return spack.deprecation.Evaluation({}, set())
+
+
+def make_deprecation_decorator(
+    decorator: Callable[[spack.spec.Spec, str], str], evaluation: spack.deprecation.Evaluation
+) -> Callable[[spack.spec.Spec, str], str]:
+    """Wrap a decorator to mark specs whose checked closure has a disallowed deprecation."""
+
+    def _decorator(spec, fmt):
+        fmt = decorator(spec, fmt)
+        spec_hash = spec.dag_hash()
+        if spec_hash in evaluation.violations:
+            return fmt + color.colorize(" @y{(deprecated)}")
+        elif spec_hash in evaluation.affected:
+            return fmt + color.colorize(" @y{(depends on deprecated)}")
+        return fmt
+
+    return _decorator
+
+
+def report_deprecations(
+    specs: List[spack.spec.Spec], evaluation: spack.deprecation.Evaluation
+) -> None:
+    """Print a hint when displayed nodes are marked, or the details under ``spack -v``.
+
+    Args:
+        specs: the nodes that were displayed.
+        evaluation: the deprecation policy evaluated on them.
+    """
+    plural = spack.util.string.plural
+    marked = [x for x in specs if x.dag_hash() in evaluation.affected]
+    if not marked:
+        return
+
+    if not tty.is_verbose():
+        n = len(marked)
+        tty.msg(
+            f"{plural(n, 'spec')} shown {plural(n, 'is', 'are', show_n=False)} affected by the "
+            "deprecation policy, run `spack -v find` for details"
+        )
+        return
+
+    deprecated = sorted(evaluation.violations.values(), key=lambda x: x[0])
+    n = len(deprecated)
+    tty.msg(
+        f"{plural(n, 'spec')} {plural(n, 'is', 'are', show_n=False)} deprecated and not "
+        "allowed by the configuration:"
+    )
+    for spec, violations in deprecated:
+        print(spack.deprecation.format_violations(spec, violations))
+
+    dependents = sorted(x for x in marked if x.dag_hash() not in evaluation.violations)
+    if dependents:
+        m = len(dependents)
+        tty.msg(
+            f"{plural(m, 'spec')} shown {plural(m, 'depends', 'depend', show_n=False)} on "
+            f"{plural(n, 'it', 'them', show_n=False)}:"
+        )
+        for spec in dependents:
+            print(f"    {spec.cshort_spec}")
+
+    tty.msg(
+        "Install the affected specs again to replace them, or allow the deprecations in "
+        "'packages:<name>:deprecation:allow'"
+    )
+
+
 def display_env(env, args, decorator, results, status_fn=None):
     """Display extra find output when running in an environment.
 
@@ -427,10 +514,16 @@ def find(parser, args):
             if env:
                 display_env(env, args, decorator, results, status_fn=status_fn)
 
+        displayed: List[spack.spec.Spec] = []
+        deprecations = spack.deprecation.Evaluation({}, set())
         if not args.only_roots:
             display_results = list(results)
             if args.show_concretized:
                 display_results += concretized_but_not_installed
+            if display_results and not args.format:
+                displayed = displayed_nodes(display_results, deps=args.deps)
+                deprecations = evaluate_deprecation_policy(displayed)
+                decorator = make_deprecation_decorator(decorator, deprecations)
             cmd.display_specs(
                 display_results,
                 args,
@@ -459,3 +552,5 @@ def find(parser, args):
                 cmd.print_how_many_pkgs(
                     concretized_but_not_installed, "concretized", suffix=concretized_suffix
                 )
+
+        report_deprecations(displayed, deprecations)

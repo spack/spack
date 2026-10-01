@@ -472,7 +472,7 @@ Viewing more metadata
 """"""""""""""""""""""""""""""""
 
 ``spack find`` can filter the package list based on the package name, spec, or a number of properties of their installation status.
-For example, missing dependencies of a spec can be shown with ``--missing``, deprecated packages can be included with ``--deprecated``, packages that were explicitly installed with ``spack install <package>`` can be singled out with ``--explicit``, and those that have been pulled in only as dependencies with ``--implicit``.
+For example, missing dependencies of a spec can be shown with ``--missing``, installations replaced with ``spack deprecate`` can be included with ``--deprecated``, packages that were explicitly installed with ``spack install <package>`` can be singled out with ``--explicit``, and those that have been pulled in only as dependencies with ``--implicit``.
 
 In some cases, there may be different configurations of the *same* version of a package installed.
 For example, there are two installations of ``libdwarf@20130729`` above.
@@ -528,6 +528,39 @@ You can restrict your search to a particular package by supplying its name:
        libelf@0.8.11  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.11
        libelf@0.8.12  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.12
        libelf@0.8.13  ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.13
+
+.. _cmd-spack-find-deprecations:
+
+Deprecated installations
+""""""""""""""""""""""""""""""""
+
+A repository update can deprecate a version that is already installed.
+``spack find`` checks every spec it shows against the ``deprecated()`` directives in the current repositories and against the deprecation policy in your configuration (see :ref:`package-deprecations-config`).
+A spec the policy does not allow is marked ``(deprecated)``, and a spec that depends on one of them is marked ``(depends on deprecated)``:
+
+.. code-block:: spec
+
+   $ spack find
+   -- linux-ubuntu24.04-x86_64 / gcc@13.3.0 ---------------------------
+   bar@2.0 (depends on deprecated)  foo@1.0 (deprecated)  foo@1.1  qux@1.0
+   ==> 2 specs shown are affected by the deprecation policy, run `spack -v find` for details
+
+Dependencies are followed as the ``deprecation:scope`` setting says, so under the default ``runtime`` scope a spec built with a deprecated build tool is not marked.
+Deprecations that the configuration allows are not marked, so a store with nothing disallowed shows no markers.
+Output requested with ``--format``, ``--hashes`` or ``--json`` has no markers either.
+
+``spack -v find`` replaces the last line with the reason, severity and labels of each deprecation, and the list of specs that depend on it:
+
+.. code-block:: spec
+
+   $ spack -v find
+   ...
+   ==> 1 spec is deprecated and not allowed by the configuration:
+       foo@1.0 build_system=generic platform=linux os=ubuntu24.04 target=x86_64/oflknak
+           foo@1.0 is deprecated (reason: vuln, severity: high, labels: CVE-2026-1234)
+   ==> 1 spec shown depends on it:
+       bar@2.0 build_system=generic platform=linux os=ubuntu24.04 target=x86_64/gmsj5x2
+   ==> Install the affected specs again to replace them, or allow the deprecations in 'packages:<name>:deprecation:allow'
 
 Spec queries
 """"""""""""""""""""""""""""""""
