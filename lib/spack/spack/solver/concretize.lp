@@ -48,7 +48,9 @@ has_provider_weight_config(Virtual, Provider) :- provider_weight_from_config(Vir
 virtual_has_incoming_edges(Virtual) :- attr("virtual_on_incoming_edges", _, Virtual).
 virtual_is_a_root(Virtual) :- attr("virtual_root", node(_, Virtual)).
 has_virtual_on_edge_to(ParentNode, ChildPkg, Virtual) :- attr("virtual_on_edge", ParentNode, node(_, ChildPkg), Virtual).
+has_virtual_on_edge_to(ParentNode, ChildPkg, Virtual) :- attr("virtual_on_build_edge", ParentNode, node(_, ChildPkg), Virtual).
 pkg_has_virtual_on_any_edge(PackageNode, Virtual) :- attr("virtual_on_edge", PackageNode, _, Virtual).
+pkg_has_virtual_on_any_edge(PackageNode, Virtual) :- attr("virtual_on_build_edge", PackageNode, _, Virtual).
 
 node_has_namespace(PackageNode) :- attr("namespace", PackageNode, _).
 node_has_namespace_set(PackageNode) :- attr("namespace_set", PackageNode, _).
@@ -908,7 +910,7 @@ attr("hash", node(X, BuildDependency), BuildHash) :-
 error(10, "{0} cannot have a dependency on {1}", Package, Virtual)
   :- attr("direct_dependency", node(ID, Package), node_requirement("provider_set", BuildDependency, Virtual)),
      direct_dependency(node(ID, Package), node(X, BuildDependency)),
-     not attr("virtual_on_edge", node(ID, Package), node(X, BuildDependency), Virtual).
+     not has_virtual_on_edge_to(node(ID, Package), BuildDependency, Virtual).
 
 % For a spec like `hdf5 %cxx` we need to ensure that the virtual is needed on a direct edge
 error(10, "{0} cannot have a dependency on {1}", Package, Virtual)
