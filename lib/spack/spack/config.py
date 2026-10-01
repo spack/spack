@@ -2725,21 +2725,15 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
                 config_changes["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
 
-    def _handle_portable_resource(
+    def _migrate_merge_resource(
         resource_name: str,
         config_key: str,
         old_path: str,
         target_subdir: str,
         migrate_fn: Callable[[str, str], bool],
     ) -> None:
-        """Handle migration of a portable resource (licenses or environments).
-
-        Args:
-            resource_name: Display name (e.g., "licenses", "environments")
-            config_key: Config key (e.g., "license_dir", "environments_root")
-            old_path: Old location path
-            target_subdir: Subdirectory under $data_home for target
-            migrate_fn: Function to perform the migration (returns True on success)
+        """Handle migration of a resource that is allowed to merge into a shared
+        directory (licenses or environments).
         """
         # Compute data_home directly without config (CONFIG doesn't exist yet)
         expanded_home = os.path.expanduser("~")
@@ -2758,13 +2752,13 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
 
     # 3. Handle licenses
     if old_resources["licenses"]:
-        _handle_portable_resource(
+        _migrate_merge_resource(
             "licenses", "license_dir", spack.paths.old_licenses_path, "licenses", _migrate_licenses
         )
 
     # 4. Handle environments
     if old_resources["environments"]:
-        _handle_portable_resource(
+        _migrate_merge_resource(
             "environments",
             "environments_root",
             spack.paths.old_envs_path,
