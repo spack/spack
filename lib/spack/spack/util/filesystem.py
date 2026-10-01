@@ -47,7 +47,7 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 from spack.util import lang, tty
-from spack.util.executable import Executable
+from spack.util.executable import Executable, resolve_exe
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 
@@ -925,8 +925,11 @@ def install_tree(
 @system_path_filter
 def is_exe(path) -> bool:
     """Returns :obj:`True` iff the specified path exists, is a regular file, and has executable
-    permissions for the current process."""
-    return os.path.isfile(path) and os.access(path, os.X_OK)
+    permissions for the current process.
+
+    On Windows the extension may be omitted from ``path``, in which case the extensions in
+    ``PATHEXT`` are tried; see :func:`spack.util.executable.resolve_exe`."""
+    return resolve_exe(path) is not None
 
 
 def has_shebang(path) -> bool:

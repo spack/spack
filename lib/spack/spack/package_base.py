@@ -1573,8 +1573,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def command(self) -> spack.util.executable.Executable:
         """Returns the main executable for this package."""
         path = os.path.join(self.home.bin, self.spec.name)
-        if fsys.is_exe(path):
-            return spack.util.executable.Executable(path)
+        # On Windows the executable carries an extension (typically .exe) that the package name
+        # does not, and os.path.isfile does not resolve it for us (unlike subprocess.Popen), so
+        # let resolve_exe fill it in.
+        exe_path = spack.util.executable.resolve_exe(path)
+        if exe_path is not None:
+            return spack.util.executable.Executable(exe_path)
         raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
 
     def url_version(self, version):
