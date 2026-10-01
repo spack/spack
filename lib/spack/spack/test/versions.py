@@ -120,6 +120,11 @@ def check_intersection(expected, a, b):
     assert ver(expected) == ver(b).intersection(ver(a))
 
 
+def check_complement(expected, a):
+    """Asserts that the complement of 'a' == 'expected'."""
+    assert ver(expected) == ver(a).complement()
+
+
 def check_union(expected, a, b):
     """Asserts that 'a' union 'b' == 'expected'."""
     assert ver(expected) == ver(a).union(ver(b))
@@ -475,6 +480,18 @@ def test_intersect_with_containment():
 
     check_intersection("11.2", "11", "11.2")
     check_intersection("11.2", "11.2", "11")
+
+
+def test_complement():
+    check_complement(VersionList(), ":")
+    check_complement(":2", "3:")
+    check_complement("4:develop", ":3")
+    check_complement(":1,4:develop", "2:3")
+
+    # Test VersionLists
+    check_complement(":1,4,7:develop", "2:3,5:6")
+    check_complement(":0,2:develop", "=1")
+    check_complement(":2.4,2.6:develop", "=2.5")
 
 
 def test_union_with_containment():
