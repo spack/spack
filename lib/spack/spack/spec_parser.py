@@ -168,7 +168,11 @@ class SpecTokenizationError(spack.error.SpecSyntaxError):
 
 
 def parse_one_or_raise(
-    text: str, spec_cls: Type["spack.spec.Spec"], initial_spec: Optional["spack.spec.Spec"] = None
+    text: str,
+    spec_cls: Type["spack.spec.Spec"],
+    initial_spec: Optional["spack.spec.Spec"] = None,
+    *,
+    specfiles: bool = False,
 ) -> "spack.spec.Spec":
     """Parse exactly one spec from text and return it, or raise
 
@@ -176,8 +180,9 @@ def parse_one_or_raise(
         text: text to be parsed
         spec_cls: class used to construct the spec nodes
         initial_spec: buffer where to parse the spec. If None a new one will be created.
+        specfiles: whether spec files are read, or rejected
     """
-    parser = SpecParser(text, spec_cls)
+    parser = SpecParser(text, spec_cls, specfiles=specfiles)
     result = parser.next_spec(initial_spec)
 
     if parser.curr:
@@ -354,11 +359,15 @@ class SpecParser:
       where the token cannot appear at the current point in the grammar.
     """
 
-    __slots__ = "literal_str", "spec_cls", "scanner", "curr", "next"
+    __slots__ = "literal_str", "spec_cls", "scanner", "curr", "next", "specfiles"
 
-    def __init__(self, literal_str: str, spec_cls: Type["spack.spec.Spec"]):
+    def __init__(
+        self, literal_str: str, spec_cls: Type["spack.spec.Spec"], *, specfiles: bool = False
+    ) -> None:
         self.literal_str = literal_str.rstrip()
         self.spec_cls = spec_cls
+        #: whether spec files are read, or rejected
+        self.specfiles = specfiles
         self.scanner = FAST_SPEC_REGEX.scanner(self.literal_str)  # type: ignore[attr-defined]
         self.curr = self.scanner.match()
         self.next = self.scanner.match()
@@ -647,6 +656,9 @@ class SpecParser:
                 next = scanner.match() if curr is not None else None
             elif kind == _FILENAME:
                 # A spec file is a complete node: read it and return
+                if not self.specfiles:
+                    self.curr = curr
+                    self._raise_parsing_error("spec files are only accepted on the command line")
                 if not os.path.exists(value):
                     raise spack.error.NoSuchSpecFileError(f"No such spec file: '{value}'")
                 spec._dup(self.spec_cls.from_specfile(value))
