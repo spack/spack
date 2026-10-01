@@ -10,10 +10,7 @@ import pytest
 import spack.util.editor as ed
 from spack.util.filesystem import set_executable
 
-pytestmark = [
-    pytest.mark.usefixtures("working_env"),
-    pytest.mark.not_on_windows("editor not implemented on windows"),
-]
+pytestmark = pytest.mark.usefixtures("working_env")
 
 
 # env vars that control the editor
@@ -104,6 +101,7 @@ def test_editor_gvim_special_case(gvim_exe):
     assert ed.editor("/path/to/file", exec_fn=assert_exec)
 
 
+@pytest.mark.not_on_windows("test executables are shell scripts")
 def test_editor_precedence(good_exe, gvim_exe, vim_exe, bad_exe):
     """Ensure we prefer editor variables in order of precedence."""
     os.environ["SPACK_EDITOR"] = good_exe
@@ -213,6 +211,7 @@ def test_no_editor():
         ed.editor("/path/to/file", exec_fn=assert_exec)
 
 
+@pytest.mark.not_on_windows("test executables are shell scripts")
 def test_exec_fn_executable(editor_var, good_exe, bad_exe):
     """Make sure editor() works with ``ed.executable`` as well as execv"""
     os.environ[editor_var] = good_exe
@@ -221,3 +220,49 @@ def test_exec_fn_executable(editor_var, good_exe, bad_exe):
     os.environ[editor_var] = bad_exe
     with pytest.raises(OSError, match=r"No text editor found.*"):
         ed.editor(exec_fn=ed.executable)
+
+
+@pytest.mark.parametrize(
+    "cmdline,expected",
+    [
+        ("", []),
+        ("  a  b\tc ", ["a", "b", "c"]),
+        (r"C:\dir\file.txt", [r"C:\dir\file.txt"]),
+        (r'"C:\a dir\file.txt" -w', [r"C:\a dir\file.txt", "-w"]),
+        (r'--opt="a b" c', ["--opt=a b", "c"]),
+        (r'""', [""]),
+        (r"a\"b", ['a"b']),
+        (r'a\\"b c"', [r"a\b c"]),
+        (r'"trailing\\"', ["trailing\\"]),
+        (r"'single quotes' are literal", ["'single", "quotes'", "are", "literal"]),
+    ],
+)
+def test_split_windows_args(cmdline, expected):
+    assert ed._split_windows_args(cmdline) == expected
+
+
+@pytest.fixture(scope="session")
+def spaced_exe(tmp_path_factory: pytest.TempPathFactory):
+    exe_dir = tmp_path_factory.mktemp("editor dir with spaces")
+    path = exe_dir / "my editor.exe"
+    path.write_text("", encoding="utf-8")
+    return str(path)
+
+
+@pytest.mark.only_windows("Windows command line parsing")
+@pytest.mark.parametrize("quoted", [True, False])
+def test_find_exe_from_env_var_windows_path_with_spaces(spaced_exe, quoted):
+    value = f'"{spaced_exe}"' if quoted else spaced_exe
+    os.environ["EDITOR"] = value + r' --wait "C:\a dir\b.txt"'
+    assert ed._find_exe_from_env_var("EDITOR") == (
+        spaced_exe,
+        [spaced_exe, "--wait", r"C:\a dir\b.txt"],
+    )
+
+
+@pytest.mark.only_windows("Windows command line parsing")
+def test_execv_quotes_args_on_windows(spaced_exe, monkeypatch):
+    calls = []
+    monkeypatch.setattr(os, "execv", lambda exe, args: calls.append((exe, args)))
+    ed._execv(spaced_exe, [spaced_exe, "plain", r"C:\a dir\b.txt"])
+    assert calls == [(spaced_exe, [f'"{spaced_exe}"', "plain", r'"C:\a dir\b.txt"'])]
