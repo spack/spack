@@ -503,11 +503,17 @@ def push_fn(args):
                 f"Available groups are: {', '.join(sorted(available_groups))}"
             )
 
-        roots = [c for g in args.groups for _, c in env.concretized_specs_by(group=g)]
+        installable = {s.dag_hash() for s in env.installable_roots()}
+        roots = [
+            c
+            for g in args.groups
+            for _, c in env.concretized_specs_by(group=g)
+            if c.dag_hash() in installable
+        ]
     elif args.specs:
         roots = _matching_specs(spack.cmd.parse_specs(args.specs))
     else:
-        roots = spack.cmd.require_active_env(args.subparser).concrete_roots()
+        roots = spack.cmd.require_active_env(args.subparser).installable_roots()
 
     mirror = args.mirror
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
