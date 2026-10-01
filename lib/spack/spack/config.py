@@ -2301,18 +2301,6 @@ def _migration_source_hash() -> str:
     return spack.util.hash.b32_hash(prefix_str)[:8]
 
 
-def _has_old_prefix_resources() -> bool:
-    """Check if there are any old resources in $spack that might need migration."""
-    check = [
-        os.path.join(spack.paths.prefix, "opt", "spack"),
-        spack.paths.old_envs_path,
-        spack.paths.old_gpg_path,
-        spack.paths.old_gpg_keys_path,
-        spack.paths.old_licenses_path,
-    ]
-    return any(os.path.exists(x) for x in check)
-
-
 def _migrate_gpg(
     old_gpg_home: str, target_gpg_home: str, old_gpg_keys: str, target_gpg_keys: str
 ) -> bool:
@@ -2901,7 +2889,7 @@ def _perform_auto_migration_at_module_load():
         # the same migration marker as auto-migration)
         home_result = _do_migrate_home()
 
-    if _has_old_prefix_resources() and not os.path.exists(marker_path):
+    if any(_detect_old_resources().values()) and not os.path.exists(marker_path):
         lock_path = _migration_lock_path()
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
         try:
