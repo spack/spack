@@ -849,10 +849,11 @@ def test_buildcache_prune_orphaned_blobs(tmp_path, mutable_database, mock_gnupgh
     manifest_url = URLBuildcacheEntry.get_manifest_url(
         spec, mirror_url=f"file://{mirror_directory}"
     )
-    web_util.remove_url(manifest_url)
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+    web_util.remove_url(manifest_url, client=client)
 
     # Ensure the blobs are still there before pruning
-    assert all(web_util.url_exists(blob_url) for blob_url in blob_urls)
+    assert all(web_util.url_exists(blob_url, client=client) for blob_url in blob_urls)
 
     cmd_args = ["prune", "my-mirror"]
     if dry_run:
@@ -860,7 +861,7 @@ def test_buildcache_prune_orphaned_blobs(tmp_path, mutable_database, mock_gnupgh
     output = buildcache(*cmd_args)
 
     # Ensure the blobs are gone after pruning (or not if dry_run is True)
-    assert all(web_util.url_exists(blob_url) == dry_run for blob_url in blob_urls)
+    assert all(web_util.url_exists(blob_url, client=client) == dry_run for blob_url in blob_urls)
 
     assert "Found 2 blob(s) with no manifest" in output
 
@@ -886,9 +887,10 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
     manifest_url = f"file://{cache_entry.get_manifest_url(spec=spec, mirror_url=mirror_directory)}"
 
     # Remove the blobs from the cache, orphaning the manifest
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     for blob_file in manifest.data:
         blob_url = cache_entry.get_blob_url(mirror_url=mirror_directory, record=blob_file)
-        web_util.remove_url(url=f"file://{blob_url}")
+        web_util.remove_url(url=f"file://{blob_url}", client=client)
 
     cmd_args = ["prune", "my-mirror"]
     if dry_run:
@@ -896,7 +898,7 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
     output = buildcache(*cmd_args)
 
     # Ensure the manifest is gone after pruning (or not if dry_run is True)
-    assert web_util.url_exists(manifest_url) == dry_run
+    assert web_util.url_exists(manifest_url, client=client) == dry_run
 
     assert "Found 1 manifest(s) that are missing blobs" in output
 
@@ -934,7 +936,8 @@ def test_buildcache_prune_direct_with_keeplist(
     output = buildcache(*cmd_args)
 
     # Since all packages are in the keeplist, nothing should be pruned
-    assert web_util.url_exists(manifest_url)
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+    assert web_util.url_exists(manifest_url, client=client)
     assert "No specs to prune - all specs are in the keeplist" in output
 
 
@@ -960,7 +963,8 @@ def test_buildcache_prune_direct_removes_unlisted(
     )
     manifest_url = cache_entry.get_manifest_url(spec1, f"file://{mirror_directory}")
 
-    assert web_util.url_exists(manifest_url)
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+    assert web_util.url_exists(manifest_url, client=client)
 
     # Run direct pruning
     cmd_args = ["prune", "my-mirror", "--keeplist", str(keeplist_file)]
@@ -968,7 +972,7 @@ def test_buildcache_prune_direct_removes_unlisted(
         cmd_args.append("--dry-run")
     buildcache(*cmd_args)
 
-    assert web_util.url_exists(manifest_url) == dry_run
+    assert web_util.url_exists(manifest_url, client=client) == dry_run
 
 
 def test_buildcache_prune_direct_empty_keeplist_fails(
@@ -1022,7 +1026,7 @@ def test_buildcache_prune_new_specs_race_condition(
     )
     manifest_url = cache_entry.get_manifest_url(spec, f"file://{mirror_directory}")
 
-    def mock_stat_url(url: str):
+    def mock_stat_url(url: str, *, client):
         """
         Mock the stat_url function for testing.
 
@@ -1042,9 +1046,10 @@ def test_buildcache_prune_new_specs_race_condition(
 
     # Run end-to-end buildcache prune - this should not delete `libelf`, despite it
     # not being in the keeplist, because its mtime is after the pruning started
-    assert web_util.url_exists(manifest_url)
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+    assert web_util.url_exists(manifest_url, client=client)
     buildcache("prune", "my-mirror", "--keeplist", str(keeplist_file))
-    assert web_util.url_exists(manifest_url)
+    assert web_util.url_exists(manifest_url, client=client)
 
 
 def create_env_from_concrete_spec(spec: spack.spec.Spec):
@@ -1089,7 +1094,10 @@ def read_specs_in_index(mirror_directory, view):
     mirror_metadata = spack.binary_distribution.MirrorMetadata(
         f"file://{mirror_directory}", spack.mirrors.mirror.SUPPORTED_URL_LAYOUT_VERSIONS[0], view
     )
-    fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+    fetcher = spack.binary_distribution.DefaultIndexHandler(
+        mirror_metadata, None, urlopen=client.urlopen
+    )
     result = fetcher.conditional_fetch()
     db_dict = json.loads(result.data)
     return set([h for h in db_dict["database"]["installs"]])

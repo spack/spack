@@ -10,12 +10,14 @@ from urllib.error import HTTPError
 import pytest
 
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.paths
 import spack.reporters.cdash
 import spack.util.filesystem as fs
 import spack.util.git
+import spack.util.web
 from spack import ci, repo
 from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
@@ -265,9 +267,7 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
                 "200", "OK", {"Content-Type": "application/zip"}, io.BytesIO(f.read())
             )
 
-    monkeypatch.setattr(ci, "urlopen", _urlopen_OK)
-
-    ci.download_and_extract_artifacts(url, str(working_dir))
+    ci.download_and_extract_artifacts(url, str(working_dir), urlopen=_urlopen_OK)
 
     found_zip = fs.find(working_dir, "artifacts.zip")
     assert len(found_zip) == 0
@@ -278,10 +278,8 @@ def test_download_and_extract_artifacts(tmp_path: pathlib.Path, monkeypatch):
     def _urlopen_500(*args, **kwargs):
         raise HTTPError(url, 500, "Internal Server Error", {}, None)
 
-    monkeypatch.setattr(ci, "urlopen", _urlopen_500)
-
     with pytest.raises(spack.error.SpackError):
-        ci.download_and_extract_artifacts(url, str(working_dir))
+        ci.download_and_extract_artifacts(url, str(working_dir), urlopen=_urlopen_500)
 
 
 def test_ci_copy_stage_logs_to_artifacts_fail(tmp_path: pathlib.Path, config, capfd):
@@ -566,7 +564,8 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     os.environ["SPACK_CDASH_BUILD_NAME"] = "ci-test-build"
     os.environ["SPACK_CDASH_BUILD_STAMP"] = "ci-test-build-stamp"
     os.environ["CI_RUNNER_DESCRIPTION"] = "test-runner"
-    handler = ci.CDashHandler(ci_cdash)
+    client = spack.util.web.NetworkClient.from_config(spack.config.CONFIG)
+    handler = ci.CDashHandler(ci_cdash, urlopen=client.urlopen)
     ci.run_standalone_tests(
         log_file=str(log_file),
         job_spec=spack.concretize.concretize_one("printing-package"),
@@ -601,7 +600,8 @@ def test_ci_skipped_report(tmp_path: pathlib.Path, config, monkeypatch):
     os.environ["SPACK_CDASH_BUILD_NAME"] = "fake-test-build"
     os.environ["SPACK_CDASH_BUILD_STAMP"] = "ci-test-build-stamp"
     os.environ["CI_RUNNER_DESCRIPTION"] = "test-runner"
-    handler = ci.CDashHandler(ci_cdash)
+    client = spack.util.web.NetworkClient.from_config(spack.config.CONFIG)
+    handler = ci.CDashHandler(ci_cdash, urlopen=client.urlopen)
     reason = "Testing skip"
     handler.report_skipped(spec, str(tmp_path), reason=reason)
 

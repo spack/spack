@@ -337,7 +337,8 @@ def ci_rebuild(args):
     cdash_config = cfg.CONFIG.get("cdash")
     cdash_handler = None
     if "build-group" in cdash_config:
-        cdash_handler = spack_ci.CDashHandler(cdash_config)
+        client = web_util.NetworkClient.from_config(cfg.CONFIG)
+        cdash_handler = spack_ci.CDashHandler(cdash_config, urlopen=client.urlopen)
         tty.debug("cdash url = {0}".format(cdash_handler.url))
         tty.debug("cdash project = {0}".format(cdash_handler.project))
         tty.debug("cdash project_enc = {0}".format(cdash_handler.project_enc))
@@ -359,7 +360,7 @@ def ci_rebuild(args):
 
     full_rebuild = True if rebuild_everything and rebuild_everything.lower() == "true" else False
 
-    pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+    pipeline_mirrors = spack.mirrors.mirror.MirrorCollection.from_config(cfg.CONFIG, binary=True)
     buildcache_destination = None
     if "buildcache-destination" not in pipeline_mirrors:
         tty.die("spack ci rebuild requires a mirror named 'buildcache-destination")
@@ -612,10 +613,11 @@ def ci_rebuild(args):
             broken_specs_url = ci_config["broken-specs-url"]
             just_built_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, just_built_hash)
-            if web_util.url_exists(broken_spec_path):
+            client = web_util.NetworkClient.from_config(cfg.CONFIG)
+            if web_util.url_exists(broken_spec_path, client=client):
                 tty.msg("Removing {0} from the list of broken specs".format(broken_spec_path))
                 try:
-                    web_util.remove_url(broken_spec_path)
+                    web_util.remove_url(broken_spec_path, client=client)
                 except Exception as err:
                     # If there is an S3 error (e.g., access denied or connection
                     # error), the first non boto-specific class in the exception

@@ -15,6 +15,7 @@ import spack.mirrors.utils
 import spack.reporters
 import spack.spec
 import spack.store
+import spack.util.web
 from spack.active_environment import active_environment
 from spack.util.lang import stable_partition
 from spack.util.pattern import Args
@@ -206,7 +207,8 @@ def _cdash_reporter(namespace):
             track=namespace.cdash_track,
         )
 
-        return spack.reporters.CDash(configuration=configuration)
+        client = spack.util.web.NetworkClient.from_config(spack.config.CONFIG)
+        return spack.reporters.CDash(configuration=configuration, urlopen=client.urlopen)
 
     return _factory
 

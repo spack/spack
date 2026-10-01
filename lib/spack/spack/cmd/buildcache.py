@@ -751,6 +751,7 @@ def save_specfile_fn(args):
 
 def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str):
     """Download buildcache entry and copy it to the destination_url"""
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     try:
         spec_dict = cache_entry.fetch_metadata()
         cache_entry.fetch_archive()
@@ -775,7 +776,9 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
     tarball_dest_url = cache_entry.get_blob_url(destination_url, tarball_blob_record)
 
     try:
-        web_util.push_to_url(local_tarball_path, tarball_dest_url, keep_original=True)
+        web_util.push_to_url(
+            local_tarball_path, tarball_dest_url, keep_original=True, client=client
+        )
     except Exception as e:
         tty.warn(f"Failed to push {local_tarball_path} to {tarball_dest_url} due to {e}")
         cache_entry.destroy()
@@ -789,7 +792,7 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
     spec_dest_url = cache_entry.get_blob_url(destination_url, spec_blob_record)
 
     try:
-        web_util.push_to_url(local_spec_path, spec_dest_url, keep_original=True)
+        web_util.push_to_url(local_spec_path, spec_dest_url, keep_original=True, client=client)
     except Exception as e:
         tty.warn(f"Failed to push {local_spec_path} to {spec_dest_url} due to {e}")
         cache_entry.destroy()
@@ -815,7 +818,9 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
     local_manifest_path = manifest_stage.save_filename
 
     try:
-        web_util.push_to_url(local_manifest_path, manifest_dest_url, keep_original=True)
+        web_util.push_to_url(
+            local_manifest_path, manifest_dest_url, keep_original=True, client=client
+        )
     except Exception as e:
         tty.warn(f"Failed to push manifest to {manifest_dest_url} due to {e}")
 
@@ -994,7 +999,8 @@ def update_view(
     # local cache.
     index_exists = True
     try:
-        BINARY_INDEX._fetch_and_cache_index(mirror_metadata)
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+        BINARY_INDEX._fetch_and_cache_index(mirror_metadata, client=client)
     except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
 
@@ -1063,7 +1069,8 @@ def check_index_fn(args):
     index_exists = True
     missing_index_blob = False
     try:
-        BINARY_INDEX._fetch_and_cache_index(mirror_metadata)
+        client = web_util.NetworkClient.from_config(spack.config.CONFIG)
+        BINARY_INDEX._fetch_and_cache_index(mirror_metadata, client=client)
     except spack.binary_distribution.BuildcacheIndexNotExists:
         index_exists = False
     except spack.binary_distribution.FetchIndexError:
