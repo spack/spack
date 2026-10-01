@@ -181,7 +181,7 @@ Environment migration relocates the entire environment directory as a unit. Any 
 
 Spack migrates both the GPG keyring and the GPG keys directory together from their old default locations to the new default locations. Both must succeed for migration to be considered successful.
 
-- Old default locations: `$spack/opt/spack/gpg` (keyring) and `$spack/opt/spack/gpg-keys` (keys directory)
+- Old default locations: `$spack/opt/spack/gpg` (keyring) and `$spack/var/gpg` (keys directory)
 - New default locations: `$data_home/gpg` and `$data_home/gpg-keys`
 - Migration copies from old to new regardless of what `config:gpg_path` or `config:gpg_keys_path` are configured to.
 - Destinations must not already exist; keyrings are never merged.
