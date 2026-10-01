@@ -2768,3 +2768,19 @@ def mock_sleep(monkeypatch):
     _sleep = CallCounter()
     monkeypatch.setattr(spack.util.web.Retry, "sleep", lambda self: _sleep(self.backoff()))
     yield _sleep
+
+
+@pytest.fixture(scope="function")
+def set_version_def(monkeypatch):
+    """
+    Temporarily set versions and when_versions dictionaries
+    """
+
+    def _set(version, args, pkg):
+        monkeypatch.setitem(pkg.versions, version, args)
+        for defs in pkg.when_versions.values():
+            if version in defs:
+                vdef = defs[version]
+                monkeypatch.setattr(vdef, "kwargs", args)
+
+    return _set
