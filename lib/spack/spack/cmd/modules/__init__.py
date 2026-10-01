@@ -319,19 +319,29 @@ def refresh(module_type, specs, args):
     # Filter excluded packages early
     writers = [x for x in writers if not x.conf.excluded]
 
-    # Detect name clashes in module files
+    # Detect name clashes in module files: several writers may share a module file only
+    # when it folds all their installations
     file2writer = collections.defaultdict(list)
     for item in writers:
         file2writer[item.layout.filename].append(item)
 
-    if len(file2writer) != len(writers):
+    def is_folded(writer_list):
+        held_specs = writer_list[0].conf.installed_specs
+        return all(x.spec in held_specs for x in writer_list)
+
+    clashes = {f: w for f, w in file2writer.items() if len(w) > 1 and not is_folded(w)}
+    if clashes:
         spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
         message = "Name clashes detected in module files:\n"
-        for filename, writer_list in file2writer.items():
-            if len(writer_list) > 1:
-                message += "\nfile: {0}\n".format(filename)
-                for x in writer_list:
-                    message += "spec: {0}\n".format(x.spec.format(spec_fmt_str))
+        for filename, writer_list in clashes.items():
+            message += "\nfile: {0}\n".format(filename)
+            for x in writer_list:
+                message += "spec: {0}\n".format(x.spec.format(spec_fmt_str))
+            if len({x.spec.version for x in writer_list}) > 1:
+                message += (
+                    "installations of different versions cannot share a module file, "
+                    "add {version} to the projection\n"
+                )
         tty.error(message)
         tty.error("Operation aborted")
         raise SystemExit(1)
@@ -354,7 +364,13 @@ def refresh(module_type, specs, args):
         module_type_root, writers, overwrite=args.delete_tree
     )
     errors = []
+    written_filenames = set()
     for x in writers:
+        # Skip already written module files when one file handles multiple installations
+        if x.layout.filename in written_filenames:
+            continue
+        written_filenames.add(x.layout.filename)
+
         try:
             x.write(overwrite=True)
         except spack.error.SpackError as e:

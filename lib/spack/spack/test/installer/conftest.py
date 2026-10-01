@@ -8,6 +8,8 @@ import signal
 import socket
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 
+import pytest
+
 import spack.deptypes as dt
 import spack.spec
 from spack.installer.base import BuildChannels, ExitCode, JobServerBase, ProcessExitNotifier
@@ -15,6 +17,14 @@ from spack.installer.build import BuildRequest, ChildInfo, create_build_channels
 from spack.installer.core import PackageInstaller, write_connection
 from spack.installer.ui import InstallerUI
 from spack.spec import Spec
+
+
+@pytest.fixture(autouse=True)
+def _mock_config_unless_requested(request):
+    """Runs the tests that request no configuration fixture with the mock configuration, as
+    the installer process runs hooks that act on the configuration."""
+    if "config" not in request.fixturenames and "mutable_config" not in request.fixturenames:
+        request.getfixturevalue("config")
 
 
 def create_dag(
