@@ -30,12 +30,19 @@ The available directives are:
 * ``redistribute``
 * ``drop_all_conflicts``
 * ``drop_all_depends_on``
+* ``drop_all_provides``
 * ``drop_all_requires``
+* ``drop_all_resources``
+* ``drop_all_variants``
 * ``drop_all_versions``
 * ``drop_conflict``
 * ``drop_depends_on``
+* ``drop_extends``
 * ``drop_patch``
+* ``drop_provides``
 * ``drop_require``
+* ``drop_resource``
+* ``drop_variant``
 * ``drop_version``
 
 They're implemented as functions that return a NamedTuple holding the arguments, which is
@@ -102,14 +109,21 @@ __all__ = [
     "requires",
     "redistribute",
     "can_splice",
-    "drop_all_conflicts",
-    "drop_all_depends_on",
-    "drop_all_requires",
+    "drop_all_conflicts",                                                                                                                                                                                                            
+    "drop_all_depends_on",                                                                                                                                                                                                           
+    "drop_all_provides",                                                                                                                                                                                                             
+    "drop_all_requires",                                                                                                                                                                                                             
+    "drop_all_resources",                                                                                                                                                                                                            
+    "drop_all_variants",                                                                                                                                                                                                             
     "drop_all_versions",
-    "drop_conflict",
-    "drop_depends_on",
-    "drop_patch",
-    "drop_require",
+    "drop_conflict",                                                                                                                                                                                                                 
+    "drop_depends_on",                                                                                                                                                                                                               
+    "drop_extends",                                                                                                                                                                                                                  
+    "drop_patch",                                                                                                                                                                                                                    
+    "drop_provides",                                                                                                                                                                                                                 
+    "drop_require",                                                                                                                                                                                                                  
+    "drop_resource",                                                                                                                                                                                                                 
+    "drop_variant",                                                                                                                                                                                                                  
     "drop_version",
 ]
 
