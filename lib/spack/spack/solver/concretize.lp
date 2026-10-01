@@ -430,17 +430,51 @@ node_in_deprecation_scope(node(ID, Package)) :-
 node_in_deprecation_scope(node(ID, Package)) :-
     build(node(ID, Package)), deprecation_scope("runtime").
 
+% A label of a deprecation is fixed on a node when a patch declared to fix it is applied to the
+% node. On a node to be built, a patch in the node's recipe is applied when its condition holds,
+% and a patch declared by a dependent when the dependent's condition holds, the node is its
+% dependency, and the node satisfies the patch condition. A reused node has its applied patches
+% in the 'patches' variant, and the labels each of them fixes are given per sha256.
+deprecation_label_fixed(node(ID, Package), Label)
+  :- pkg_fact(Package, deprecation_fix(CondID, Label)),
+     condition_holds(CondID, node(ID, Package)),
+     build(node(ID, Package)).
+
+deprecation_label_fixed(node(ID, Package), Label)
+  :- pkg_fact(Parent, dependency_deprecation_fix(ParentCondID, Package, CondID, Label)),
+     condition_holds(ParentCondID, node(ParentID, Parent)),
+     depends_on(node(ParentID, Parent), node(ID, Package)),
+     condition_holds(CondID, node(ID, Package)),
+     build(node(ID, Package)).
+
+deprecation_label_fixed(node(ID, Package), Label)
+  :- attr("variant_value", node(ID, Package), "patches", Sha256),
+     pkg_fact(Package, patch_fix(Sha256, Label)),
+     concrete(node(ID, Package)).
+
 % Directives are emitted only when the deprecation policy does not allow them, so a directive
-% matching a selected non-external node in scope is a concretization error. Reason and severity
-% appear in the error term for the message, with severity as an integer:
-% 0=none, 1=low, 2=medium, 3=high, 4=critical.
-error(1, "deprecated_error", Package, CondID, Reason, Severity)
-  :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
+% matching a selected non-external node in scope is a concretization error. A directive with
+% labels is emitted once per label the policy does not allow, and is an error for each label
+% not fixed by a patch. The error term identifies the directive by an id, which the error
+% message is built from.
+error(1, "deprecated_error", Package, DeprecationID)
+  :- pkg_fact(Package, deprecation_directive(DeprecationID, CondID)),
      condition_holds(CondID, node(ID, Package)),
      not external(node(ID, Package)),
      node_in_deprecation_scope(node(ID, Package)).
 
-#defined deprecation_directive/3.
+error(1, "deprecated_error", Package, DeprecationID, Label)
+  :- pkg_fact(Package, deprecation_label(DeprecationID, CondID, Label)),
+     condition_holds(CondID, node(ID, Package)),
+     not deprecation_label_fixed(node(ID, Package), Label),
+     not external(node(ID, Package)),
+     node_in_deprecation_scope(node(ID, Package)).
+
+#defined deprecation_directive/2.
+#defined deprecation_label/3.
+#defined deprecation_fix/2.
+#defined dependency_deprecation_fix/4.
+#defined patch_fix/2.
 #defined deprecation_scope/1.
 
 %-----------------------------------------------------------------------------

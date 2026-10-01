@@ -92,3 +92,28 @@ def test_when_combined_with_phase_callbacks(mock_packages):
     assert any(
         "'callback_inside' is decorated with both @when and @run_after" in d for d in details
     )
+
+
+@pytest.mark.parametrize(
+    "package,expected",
+    [
+        (
+            "patch-fixes-unknown-label",
+            [
+                "patch-fixes-unknown-label: patch 'cve.patch' fixes 'CVE-2026-9999', which is not "
+                "a label of any deprecated() directive of 'patch-fixes-unknown-label'"
+            ],
+        ),
+        ("deprecated-patched", []),
+        ("patches-deprecated-dep", []),
+    ],
+)
+def test_audit_reports_patch_fixes_naming_no_deprecation_label(package, expected, mock_packages):
+    """Tests that a label in patch(fixes=...) must be a label of a deprecated() directive of the
+    patched package, including when the patch is applied to a dependency.
+    """
+    reports = spack.audit.run_group("packages", pkgs=[package])
+    summaries = [
+        e.summary for _, errors in reports for e in errors if "is not a label" in e.summary
+    ]
+    assert summaries == expected

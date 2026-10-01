@@ -68,7 +68,6 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector, FileCompilerCache
-from spack.enums import DeprecationSeverity
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
 from spack.util.lang import elide_list
@@ -494,22 +493,16 @@ def _spec_with_default_name(spec_str, name):
     return spec
 
 
-class DeprecationKey(NamedTuple):
-    """Identifies one deprecated() directive, the way the error term reports it."""
-
-    pkg: str
-    condition_id: int
-    reason: str
-    severity: int
-
-
 class DeprecationDetails(NamedTuple):
-    """Additional information that the directives behind one error term add to it: the spec
-    they deprecate, the labels the policy does not allow, and the guidance their recipe attached
-    with msg=.
+    """What the error message reports about the deprecated() directives that share one
+    constraint, reason and severity: the spec they deprecate, the labels the policy does not
+    allow, and the guidance their recipe attached with msg=. The error term refers to it by its
+    index in ``SpackSolverSetup.deprecation_details``.
     """
 
     spec_str: str
+    reason: str
+    severity: str
     labels: List[str]
     messages: List[str]
 
@@ -519,12 +512,12 @@ class ErrorHandler:
         self,
         model,
         input_specs: List[spack.spec.Spec],
-        deprecation_details: Optional[Dict[DeprecationKey, DeprecationDetails]] = None,
+        deprecation_details: Optional[List[DeprecationDetails]] = None,
     ):
         self.model = model
         self.input_specs = input_specs
         self.full_model = None
-        self.deprecation_details = deprecation_details or {}
+        self.deprecation_details = deprecation_details or []
 
     def multiple_values_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
@@ -532,18 +525,16 @@ class ErrorHandler:
     def no_value_error(self, attribute, pkg):
         return f'Cannot select a single "{attribute}" for package "{pkg}"'
 
-    def deprecated_error(self, pkg, cond_id, reason: str, severity: str) -> str:
-        key = DeprecationKey(str(pkg), int(cond_id), str(reason), int(severity))
-        details = self.deprecation_details.get(key)
-        spec_str = details.spec_str if details is not None else str(pkg)
+    def deprecated_error(self, pkg, deprecation_id, labels: Tuple[str, ...]) -> str:
+        details = self.deprecation_details[int(deprecation_id)]
         attributes = spack.deprecation.deprecation_attributes_str(
-            reason, _severity_to_str(severity), details.labels if details is not None else ()
+            details.reason, details.severity, [x for x in details.labels if x in labels]
         )
         text = (
-            f"'{spec_str}': deprecated spec ({attributes}) is not allowed by "
+            f"'{details.spec_str}': deprecated spec ({attributes}) is not allowed by "
             f"'packages:{pkg}:deprecation:allow'"
         )
-        return "; ".join([text, *(details.messages if details is not None else [])])
+        return "; ".join([text, *details.messages])
 
     def _get_cause_tree(
         self,
@@ -628,7 +619,11 @@ class ErrorHandler:
     def error_messages(self, error_args) -> List[str]:
         """Convert ``error()`` args from a solver model into error message strings."""
         errors = sorted(
-            [(int(priority), msg, args) for priority, msg, *args in error_args], reverse=True
+            [
+                (int(priority), msg, args)
+                for priority, msg, *args in _merge_deprecated_errors(error_args)
+            ],
+            reverse=True,
         )
         try:
             return [self.handle_error(msg, *args) for (_, msg, args) in errors]
@@ -695,6 +690,20 @@ class ErrorHandler:
         error = UnsatisfiableSpecError(f"{header}\n{self._numbered(final_messages)}")
         error.printed = True
         raise error
+
+
+def _merge_deprecated_errors(error_args):
+    """Merge the ``deprecated_error`` terms that refer to the same directives into one term."""
+    result = []
+    labels_by_key: Dict[tuple, List[str]] = {}
+    for priority, msg, *args in error_args:
+        if msg != "deprecated_error":
+            result.append((priority, msg, *args))
+            continue
+        labels = labels_by_key.setdefault((priority, msg, *args[:2]), [])
+        labels.extend(args[2:])
+    result.extend((*key, tuple(labels)) for key, labels in labels_by_key.items())
+    return result
 
 
 def _raise_if_no_compiler_is_available(setup: "SpackSolverSetup") -> None:
@@ -1208,9 +1217,9 @@ class SpackSolverSetup:
         # Set during the call to setup
         self.pkgs: Set[str] = set()
 
-        # The error term identifies a directive by condition, reason and severity; the rest
-        # is recovered from here so the message never enters the logic program
-        self.deprecation_details: Dict[DeprecationKey, DeprecationDetails] = {}
+        # The error term identifies directives by an index into this list, so the message never
+        # enters the logic program
+        self.deprecation_details: List[DeprecationDetails] = []
 
         # deprecation policy resolved once per solve and reused for every package
         self.deprecation_policy = deprecation_policy or spack.deprecation.Policy.from_config(
@@ -1286,26 +1295,116 @@ class SpackSolverSetup:
             msg = f"deprecated constraint {constraint_str or pkg.name}"
             condition_id = self.condition(constraint_spec, required_name=pkg.name, msg=msg)
             spec_str = spack.deprecation.deprecated_spec_str(pkg.name, constraint_spec)
+            # Maps (Reason, Severity) -> ID so we can reduce the arity of the underlying rule
+            ids: Dict[Tuple[str, int], int] = {}
             for entry in entries:
-                # Directives that agree on reason and severity share one error term, so their
-                # labels and messages accumulate under a single key
-                key = DeprecationKey(
-                    pkg.name, condition_id, entry.reason.value, entry.severity.value
-                )
-                details = self.deprecation_details.get(key)
-                if details is None:
-                    details = DeprecationDetails(spec_str, [], [])
-                    self.deprecation_details[key] = details
-                    self.gen.pkg_fact(
-                        pkg.name,
-                        fn.deprecation_directive(
-                            condition_id, entry.reason.value, entry.severity.value
-                        ),
+                group = (entry.reason.value, entry.severity.value)
+                if group not in ids:
+                    # The new item ID is the list length
+                    ids[group] = len(self.deprecation_details)
+                    self.deprecation_details.append(
+                        DeprecationDetails(
+                            spec_str, entry.reason.value, entry.severity.name.lower(), [], []
+                        )
                     )
-                details.labels.extend(x for x in entry.labels if x not in details.labels)
+                deprecation_id = ids[group]
+                details = self.deprecation_details[deprecation_id]
+
+                # A deprecation directive with no label emits a "deprecation_directive" fact
+                if not entry.labels:
+                    self.gen.pkg_fact(
+                        pkg.name, fn.deprecation_directive(deprecation_id, condition_id)
+                    )
+
+                # A deprecation directive with labels emits a "deprecation_label" fact. The
+                # distinction is necessary because labels can be fixed by patches, so we must be
+                # able to handle them one-by-one
+                for label in entry.labels:
+                    if label in details.labels:
+                        continue
+                    details.labels.append(label)
+                    self.gen.pkg_fact(
+                        pkg.name, fn.deprecation_label(deprecation_id, condition_id, label)
+                    )
                 if entry.msg:
                     details.messages.append(entry.msg)
             self.gen.newline()
+
+    def deprecation_fix_rules(self, pkg):
+        """Emit facts for the patches declared by pkg that fix deprecation labels, on pkg itself
+        or on its dependencies.
+        """
+        for when_spec, patch_list in pkg.patches.items():
+            labels = sorted({x for patch in patch_list for x in patch.fixes})
+            if not labels:
+                continue
+            msg = f"{pkg.name} is patched{'' if when_spec == EMPTY_SPEC else f' when {when_spec}'}"
+            condition_id = self.condition(when_spec, required_name=pkg.name, msg=msg)
+            for label in labels:
+                self.gen.pkg_fact(pkg.name, fn.deprecation_fix(condition_id, label))
+            self.gen.newline()
+
+        for when_spec, deps_by_name in pkg.dependencies.items():
+            for dep_name, dependency in deps_by_name.items():
+                # Patches on a virtual dependency are never applied to its providers
+                if not dependency.patches or dep_name in self.possible_virtuals:
+                    continue
+
+                parent_id = None
+                for patch_when, patch_list in dependency.patches.items():
+                    labels = sorted({x for patch in patch_list for x in patch.fixes})
+                    if not labels:
+                        continue
+
+                    # First condition is the parent condition, computed lazily
+                    if parent_id is None:
+                        msg = f"{pkg.name} patches {dep_name}"
+                        parent_id = self.condition(when_spec, required_name=pkg.name, msg=msg)
+
+                    # Then we have patch() directives condition applied to the child
+                    msg = f"{dep_name} is patched by {pkg.name}"
+                    child_id = self.condition(patch_when, required_name=dep_name, msg=msg)
+                    for label in labels:
+                        self.gen.pkg_fact(
+                            pkg.name,
+                            fn.dependency_deprecation_fix(parent_id, dep_name, child_id, label),
+                        )
+                    self.gen.newline()
+
+    def patch_fix_facts(self, specs: Iterable[spack.spec.Spec]) -> None:
+        """Emit the deprecation labels fixed by the patches applied to reusable specs, keyed by
+        package and patch sha256.
+
+        A patch is looked up once per package and sha256, and only for packages that declare a
+        label a patch can fix.
+        """
+        fixable: Dict[str, bool] = {}
+        seen: Set[Tuple[str, str]] = set()
+        for spec in specs:
+            if "patches" not in spec.variants:
+                continue
+
+            pkg_cls = self.context.repo.get_pkg_class(spec.fullname)
+            if spec.name not in fixable:
+                fixable[spec.name] = any(
+                    spack.deprecation.can_be_fixed(entry.labels)
+                    for entries in pkg_cls.deprecations.values()
+                    for entry in entries
+                )
+            if not fixable[spec.name]:
+                continue
+
+            sha256s = [x for x in spec.variants["patches"].values if isinstance(x, str)]
+            for sha256 in sha256s:
+                if (spec.fullname, sha256) in seen:
+                    continue
+                seen.add((spec.fullname, sha256))
+                try:
+                    (patch,) = self.context.repo.get_patches_for_package([sha256], pkg_cls)
+                except spack.error.PatchLookupError:
+                    continue
+                for label in patch.fixes:
+                    self.gen.pkg_fact(spec.name, fn.patch_fix(sha256, label))
 
     def config_compatible_os(self):
         """Facts about compatible os's specified in configs"""
@@ -1335,8 +1434,9 @@ class SpackSolverSetup:
         # conflicts
         self.conflict_rules(pkg)
 
-        # deprecated() directives
+        # deprecated() directives, and the patches that fix them
         self.deprecation_rules(pkg)
+        self.deprecation_fix_rules(pkg)
 
         # virtuals
         self.package_provider_rules(pkg)
@@ -2321,6 +2421,9 @@ class SpackSolverSetup:
                 self.possible_versions[dep.name][dep.version].append(provenance)
                 self.possible_oses.add(dep.os)
 
+        self.patch_fix_facts(self.reusable_and_possible.values())
+        self.gen.newline()
+
     def define_concrete_input_specs(self, specs: tuple, possible: set):
         # any concrete specs in the input spec list
         for input_spec in specs:
@@ -3007,10 +3110,6 @@ def possible_compilers(
 
 
 FunctionTupleT = Tuple[str, Tuple[Union[str, NodeId], ...]]
-
-
-def _severity_to_str(severity: Union[int, str]) -> str:
-    return DeprecationSeverity(int(severity)).name.lower()
 
 
 class SpecBuilder:

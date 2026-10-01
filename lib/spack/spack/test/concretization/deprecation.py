@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pytest
 
+import spack.deprecation
 import spack.enums
+import spack.error
 import spack.repo
 import spack.spec
 import spack.util.spack_yaml as syaml
@@ -630,3 +632,89 @@ packages:
     message = str(exc_info.value)
     assert "GHSA-aaaa-bbbb-cccc" in message
     assert "CVE-2026-0002" not in message
+
+
+def test_patch_fixing_every_label_allows_a_deprecated_spec(mock_packages, mutable_config):
+    """Tests that a spec deprecated with labels concretizes when a patch applied to it fixes all
+    of them.
+    """
+    spec = concretize_one("deprecated-patched@1.0")
+
+    assert [x.fixes for x in spec.patches] == [("CVE-2026-1234",)]
+
+
+def test_refusal_reports_only_the_labels_no_patch_fixes(mock_packages, mutable_config):
+    """Tests that a deprecation with a label no patch fixes is refused, and that the error omits
+    the labels fixed by the applied patches.
+    """
+    with pytest.raises(UnsatisfiableSpecError) as exc_info:
+        concretize_one("deprecated-patched@0.9")
+
+    message = str(exc_info.value)
+    assert "CVE-2026-5678" in message
+    assert "CVE-2026-1234" not in message
+
+
+def test_dependency_patch_fixes_labels_only_under_the_patching_parent(
+    mock_packages, mutable_config
+):
+    """Tests that a patch applied through depends_on(patches=) fixes the labels of the dependency
+    under that parent, and nowhere else.
+    """
+    spec = concretize_one("patches-deprecated-dep")
+    assert [x.fixes for x in spec["deprecated-patched-dep"].patches] == [("CVE-2026-4321",)]
+
+    with pytest.raises(UnsatisfiableSpecError, match="CVE-2026-4321"):
+        concretize_one("deprecated-patched-dep@1.0")
+
+
+def test_install_gate_and_reuse_filter_honor_labels_fixed_by_applied_patches(
+    mock_packages, mutable_config
+):
+    """Tests that the install-time gate and the reuse filter let through a spec whose applied
+    patches fix every label of its deprecation, and refuse the same version built without them.
+    """
+    patched = concretize_one("patches-deprecated-dep")
+    with mutable_config.override("packages:all:deprecation:allow", [{"severity": "critical"}]):
+        unpatched = concretize_one("deprecated-patched-dep@1.0")
+
+    spack.deprecation.check_deprecations([patched])
+    with pytest.raises(spack.error.InstallError, match="CVE-2026-4321"):
+        spack.deprecation.check_deprecations([unpatched])
+
+    assert spack.deprecation.reusable([patched, unpatched]) == [patched]
+
+
+def test_installed_spec_without_the_fixing_patch_is_not_reused(
+    mock_packages, mutable_config, temporary_store
+):
+    """Tests that an installed spec lacking the patch that fixes its deprecation is not reused,
+    and the dependency is built with the patch instead.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", [{"severity": "critical"}]):
+        unpatched = concretize_one("deprecated-patched-dep@1.0")
+    temporary_store.layout.create_install_directory(unpatched)
+    temporary_store.db.add(unpatched, explicit=True)
+    mutable_config.set("concretizer:reuse", True)
+
+    spec = concretize_one("patches-deprecated-dep")
+
+    assert spec["deprecated-patched-dep"].dag_hash() != unpatched.dag_hash()
+    assert [x.fixes for x in spec["deprecated-patched-dep"].patches] == [("CVE-2026-4321",)]
+
+
+def test_installed_spec_with_the_fixing_patch_is_reused_on_its_own(
+    mock_packages, mutable_config, temporary_store
+):
+    """Tests that an installed spec whose applied patches fix its deprecation can be reused,
+    also where the package that applied the patch is not part of the solve.
+    """
+    parent = concretize_one("patches-deprecated-dep")
+    for node in parent.traverse():
+        temporary_store.layout.create_install_directory(node)
+        temporary_store.db.add(node, explicit=node.name == parent.name)
+    mutable_config.set("concretizer:reuse", True)
+
+    spec = concretize_one("deprecated-patched-dep@1.0")
+
+    assert spec.dag_hash() == parent["deprecated-patched-dep"].dag_hash()
