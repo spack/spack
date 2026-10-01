@@ -1359,14 +1359,20 @@ class Database:
             return spack.spec.InstallStatus.external
 
         upstream, record = self.query_by_spec_hash(spec.dag_hash())
+        if record and record.installed:
+            if upstream:
+                return spack.spec.InstallStatus.upstream
+            return spack.spec.InstallStatus.installed
+
+        if spec.spliced:
+            _, build_record = self.query_by_spec_hash(spec.build_spec.dag_hash())
+            if build_record and build_record.installed:
+                return spack.spec.InstallStatus.spliced
+            return spack.spec.InstallStatus.spliced_from_source
+
         if not record:
             return spack.spec.InstallStatus.absent
-        elif upstream and record.installed:
-            return spack.spec.InstallStatus.upstream
-        elif record.installed:
-            return spack.spec.InstallStatus.installed
-        else:
-            return spack.spec.InstallStatus.missing
+        return spack.spec.InstallStatus.missing
 
     def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
         key = spec.dag_hash()
