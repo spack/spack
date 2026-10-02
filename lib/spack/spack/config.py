@@ -193,13 +193,12 @@ def substitute_include_path(path, context):
 
 
 class ConfigScope:
-    def __init__(self, name: str, included: bool = False, when: str = "") -> None:
+    def __init__(self, name: str, included: bool = False) -> None:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
         self.included = included
-        self.when = when
 
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -278,9 +277,8 @@ class DirectoryConfigScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
-        when: str = "",
     ) -> None:
-        super().__init__(name, included, when)
+        super().__init__(name, included)
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
@@ -342,7 +340,6 @@ class SingleFileScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
-        when: str = "",
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -361,7 +358,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super().__init__(name, included, when)
+        super().__init__(name, included)
         self._raw_data: Optional[YamlConfigDict] = None
         self.schema = schema
         self.path = path
@@ -1389,11 +1386,7 @@ class OptionalInclude:
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(
-                config_name,
-                config_path,
-                prefer_modify=self.prefer_modify,
-                included=True,
-                when=self.when,
+                config_name, config_path, prefer_modify=self.prefer_modify, included=True
             )
         elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
@@ -1403,7 +1396,6 @@ class OptionalInclude:
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
                 included=True,
-                when=self.when,
             )
         elif exists:
             raise ValueError(
