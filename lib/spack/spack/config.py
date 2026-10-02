@@ -2103,7 +2103,7 @@ def _migrate_with_staging(
     old_path: str,
     new_path: str,
     prepare_staging_callback,
-    lock_name: str,
+    lock_name: Optional[str],
     staging_name: str,
     description: str,
     verify_destination_callback=None,
@@ -2113,13 +2113,16 @@ def _migrate_with_staging(
     Common pattern for atomic migrations:
     1. Check source exists and has content
     2. Check destination doesn't exist or is empty
-    3. Acquire lock
+    3. Acquire lock (unless lock_name is None, meaning caller handles locking)
     4. Optional: verify destination with callback (this is for resources
        that used to be in the spack prefix and were not shared between
        instances)
     5. Create staging directory
     6. Call callback to populate staging (copy/process files)
     7. Atomically rename staging to destination
+
+    Args:
+        lock_name: Name of lock file. If None, caller is responsible for locking.
     """
     if not _is_nonempty_directory(old_path):
         return False
@@ -2129,15 +2132,20 @@ def _migrate_with_staging(
     if not _can_migrate_to_location(new_path):
         return False
 
-    # Prepare parent directory, staging path, and lock
+    # Prepare parent directory and staging path
     parent = os.path.dirname(new_path)
     staging_path = os.path.join(parent, staging_name)
-    lock_path = os.path.join(parent, lock_name)
     filesystem.mkdirp(parent)
-    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+
+    # Acquire lock only if caller didn't take responsibility for it
+    lock = None
+    if lock_name is not None:
+        lock_path = os.path.join(parent, lock_name)
+        lock = spack.util.lock.Lock(lock_path, default_timeout=120)
 
     try:
-        lock.acquire_write()
+        if lock is not None:
+            lock.acquire_write()
 
         if verify_destination_callback:
             action = verify_destination_callback(new_path)
@@ -2189,7 +2197,8 @@ def _migrate_with_staging(
             shutil.rmtree(staging_path, ignore_errors=True)
         return False
     finally:
-        lock.release_write()
+        if lock is not None:
+            lock.release_write()
 
 
 def _prepare_config_staging(old_location, staging_path, new_location):
@@ -2370,86 +2379,77 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         # Cannot create destination directory - migration not possible
         return False
 
+    # Define marker-checking callback
+    def verify_with_marker(dest_path):
+        """Check destination for migration marker."""
+        if not os.path.exists(dest_path):
+            return DestinationCheck.PROCEED
+        marker_path = os.path.join(dest_path, marker_name)
+        if os.path.exists(marker_path):
+            tty.debug(f"Already migrated from this spack instance (found marker {marker_name})")
+            return DestinationCheck.SKIP
+        tty.warn(
+            f"Environment migration stopped: destination exists from different source: {dest_path}"
+        )
+        return DestinationCheck.FAIL
+
+    # Define view exclusion callback
+    # Use hardcoded marker instead of importing from environment module to avoid
+    # circular imports during module load time
+    VIEW_MARKER_FILE = ".spack-view"
+
+    def ignore_views(directory, names):
+        """Exclude view directories (identified by .spack-view marker) during environment copy."""
+        ignored = []
+        for name in names:
+            path = os.path.join(directory, name)
+            if os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
+                ignored.append(name)
+                tty.debug(f"Excluding view directory: {path}")
+        return ignored
+
+    # Define staging callback for environment migration
+    def prepare_env_staging(old_path, staging_path, new_path):
+        """Copy environment and rewrite paths."""
+        shutil.copytree(old_path, staging_path, ignore=ignore_views)
+
+        # Rewrite paths in environment config files
+        yaml_files = filesystem.find(staging_path, ["*.yaml", "*.yml"], recursive=True)
+        for yaml_file in yaml_files:
+            processed = process_env_file_paths(yaml_file, old_path, new_path, src_dir, dst_dir)
+            if processed:
+                with open(yaml_file, "w", encoding="utf-8") as f:
+                    syaml.dump(processed, f)
+                tty.debug(f"Rewrote paths in {yaml_file}")
+
+        # Add migration marker to identify this source
+        with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
+            f.write(f"Migrated from {spack.paths.prefix}\n")
+
+    # Acquire lock for all environments
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
     try:
         lock.acquire_write()
-        # Check for conflicts up front before copying anything
-        entries_to_copy = []
+
+        # Migrate each environment under the shared lock
         for entry in sorted(os.listdir(src_dir)):
             src_path = os.path.join(src_dir, entry)
             if not os.path.isdir(src_path):
                 continue
+
             dst_path = os.path.join(dst_dir, entry)
-            if os.path.exists(dst_path):
-                # Check if this env was already migrated from our spack instance
-                marker_path = os.path.join(dst_path, marker_name)
-                if os.path.exists(marker_path):
-                    tty.debug(
-                        f"Environment {entry} already migrated from this spack instance "
-                        f"(found marker {marker_name})"
-                    )
-                    continue  # Skip this env, it's already migrated
-                else:
-                    tty.warn(
-                        f"Environment migration stopped: destination exists from different "
-                        f"source: {dst_path}. Old environments directory will remain configured."
-                    )
-                    return False
-            entries_to_copy.append(entry)
-
-        # Define view exclusion callback for environment copies
-        # Use hardcoded marker instead of importing from environment module to avoid
-        # circular imports during module load time
-        VIEW_MARKER_FILE = ".spack-view"
-
-        def ignore_views(directory, names):
-            """Exclude view directories (identified by .spack-view marker) during environment
-            copy."""
-            ignored = []
-            for name in names:
-                path = os.path.join(directory, name)
-                if os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
-                    ignored.append(name)
-                    tty.debug(f"Excluding view directory: {path}")
-            return ignored
-
-        # All checks passed, now copy each env via staging
-        for entry in entries_to_copy:
-            src_path = os.path.join(src_dir, entry)
-            dst_path = os.path.join(dst_dir, entry)
-            staging_path = os.path.join(dst_dir, f".spack-env-{entry}-staging")
-            try:
-                # Clean up any stale staging directory from a previous failed attempt
-                if os.path.exists(staging_path):
-                    shutil.rmtree(staging_path, ignore_errors=True)
-
-                shutil.copytree(src_path, staging_path, ignore=ignore_views)
-
-                # Rewrite paths in environment config files
-                yaml_files = filesystem.find(staging_path, ["*.yaml", "*.yml"], recursive=True)
-                for yaml_file in yaml_files:
-                    processed = process_env_file_paths(
-                        yaml_file, src_path, dst_path, src_dir, dst_dir
-                    )
-                    if processed:
-                        with open(yaml_file, "w", encoding="utf-8") as f:
-                            syaml.dump(processed, f)
-                        tty.debug(f"Rewrote paths in {yaml_file}")
-
-                # Add migration marker to identify this source
-                with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
-                    f.write(f"Migrated from {spack.paths.prefix}\n")
-
-                # Atomic rename to final destination
-                os.replace(staging_path, dst_path)
-            except (OSError, shutil.Error) as e:
-                tty.warn(f"Failed to copy environment {entry}: {e}")
-                if os.path.exists(staging_path):
-                    shutil.rmtree(staging_path, ignore_errors=True)
-                # Copy failed despite holding lock and passing upfront checks.
-                # Something is fundamentally wrong (lock not respected, filesystem issue, etc.).
-                # Leave everything as-is for investigation rather than potentially making it worse.
+            success = _migrate_with_staging(
+                old_path=src_path,
+                new_path=dst_path,
+                prepare_staging_callback=prepare_env_staging,
+                lock_name=None,  # Parent holds the lock
+                staging_name=f".spack-env-{entry}-staging",
+                description=f"environment {entry}",
+                verify_destination_callback=verify_with_marker,
+            )
+            if not success:
                 return False
+
         # All environments copied successfully - old environments remain in place
         return True
     finally:
