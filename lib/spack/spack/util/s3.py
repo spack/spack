@@ -36,9 +36,9 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
     from botocore.exceptions import ClientError
 
     # translate method to fetch/push
-    method = method.lower()
-    if method not in ("fetch", "push"):
-        method = "fetch" if method in ("get", "head") else "push"
+    direction = method.lower()
+    if direction not in ("fetch", "push"):
+        direction = "fetch" if direction in ("get", "head") else "push"
 
     # Circular dependency
     from spack.mirrors.mirror import MirrorCollection
@@ -51,7 +51,7 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
     url_str = url.geturl()
 
     def get_mirror_url(mirror):
-        return mirror.fetch_url if method == "fetch" else mirror.push_url
+        return mirror.fetch_url if direction == "fetch" else mirror.push_url
 
     # Get all configured mirrors that could match.
     all_mirrors = MirrorCollection()
@@ -71,14 +71,14 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
             mirrors, key=lambda name_and_mirror: len(get_mirror_url(name_and_mirror[1]))
         )
 
-    key = (name, method)
+    key = (name, direction)
 
     # Did we already create a client for this? Then return it.
     if key in s3_client_cache:
         return s3_client_cache[key], url
 
     # Otherwise, create it.
-    s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, method)
+    s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, direction)
 
     session = Session(**s3_connection)
     # if no access credentials provided above, then access anonymously
@@ -153,10 +153,11 @@ class WrapStream(BufferedReader):
         super().__init__(raw)
 
     def detach(self):
-        self.raw = None
+        # FIXME: BufferedReader.raw is read-only, so this raises AttributeError if ever called
+        self.raw = None  # ty: ignore[invalid-assignment]
 
     def read(self, *args, **kwargs):
-        return self.raw.read(*args, **kwargs)
+        return self.raw.read(*args, **kwargs)  # ty: ignore[unresolved-attribute]
 
     def __getattr__(self, key):
         return getattr(self.raw, key)

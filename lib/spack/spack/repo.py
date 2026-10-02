@@ -27,6 +27,7 @@ from typing import (
     Callable,
     Dict,
     Generator,
+    Generic,
     Iterable,
     Iterator,
     List,
@@ -36,6 +37,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     cast,
 )
@@ -485,34 +487,32 @@ class FastPackageChecker(Mapping[str, float]):
         return len(self._packages_to_mtime)
 
 
-class Indexer(metaclass=abc.ABCMeta):
+IndexT = TypeVar("IndexT")
+
+
+class Indexer(Generic[IndexT], metaclass=abc.ABCMeta):
     """Adaptor for indexes that need to be generated when repos are updated."""
 
     def __init__(self, repository):
         self.repository = repository
-        self.index = None
+        self._index: Optional[IndexT] = None
+
+    @property
+    def index(self) -> IndexT:
+        """The index, available after ``create()`` or ``read()``."""
+        assert self._index is not None, "index must be created or read before use"
+        return self._index
+
+    @index.setter
+    def index(self, value: IndexT) -> None:
+        self._index = value
 
     def create(self):
         self.index = self._create()
 
     @abc.abstractmethod
-    def _create(self):
+    def _create(self) -> IndexT:
         """Create an empty index and return it."""
-
-    def needs_update(self, pkg) -> bool:
-        """Whether an update is needed when the package file hasn't changed.
-
-        Returns:
-            ``True`` iff this package needs its index updated.
-
-        We already automatically update indexes when package files
-        change, but other files (like patches) may change underneath the
-        package file. This method can be used to check additional
-        package-specific files whenever they're loaded, to tell the
-        RepoIndex to update the index *just* for that package.
-
-        """
-        return False
 
     @abc.abstractmethod
     def read(self, stream):
@@ -527,7 +527,7 @@ class Indexer(metaclass=abc.ABCMeta):
         """Write the index to a file object."""
 
 
-class TagIndexer(Indexer):
+class TagIndexer(Indexer[spack.tag.TagIndex]):
     """Lifecycle methods for a TagIndex on a Repo."""
 
     def _create(self) -> spack.tag.TagIndex:
@@ -543,7 +543,7 @@ class TagIndexer(Indexer):
         self.index.to_json(stream)
 
 
-class ProviderIndexer(Indexer):
+class ProviderIndexer(Indexer[spack.provider_index.ProviderIndex]):
     """Lifecycle methods for virtual package providers."""
 
     def _create(self) -> "spack.provider_index.ProviderIndex":
@@ -565,18 +565,11 @@ class ProviderIndexer(Indexer):
         self.index.to_json(stream)
 
 
-class PatchIndexer(Indexer):
+class PatchIndexer(Indexer[spack.patch.PatchCache]):
     """Lifecycle methods for patch cache."""
 
     def _create(self) -> spack.patch.PatchCache:
         return spack.patch.PatchCache(repository=self.repository)
-
-    def needs_update(self):
-        # TODO: patches can change under a package and we should handle
-        # TODO: it, but we currently punt. This should be refactored to
-        # TODO: check whether patches changed each time a package loads,
-        # TODO: tell the RepoIndex to reindex them.
-        return False
 
     def read(self, stream):
         self.index = spack.patch.PatchCache.from_json(stream, repository=self.repository)

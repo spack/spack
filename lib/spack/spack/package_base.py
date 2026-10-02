@@ -19,7 +19,21 @@ import sys
 import textwrap
 import time
 import traceback
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from spack.vendor.typing_extensions import Literal
 
@@ -154,6 +168,10 @@ class DetectablePackageMeta(type):
     """
 
     TAG = "detectable"
+
+    #: The classes built by this metaclass define these as ``classproperty`` (see ``PackageBase``)
+    name: ClassProperty[str]
+    namespace: ClassProperty[str]
 
     def __init__(cls, name, bases, attr_dict):
         if hasattr(cls, "executables") and hasattr(cls, "libraries"):
@@ -551,6 +569,36 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     compiler = DeprecatedCompiler()
 
+    #: Cached package name, reset to None for each class by ``PackageMeta``
+    _name: ClassVar[Optional[str]]
+
+    # The following are declared but not defined: packages may provide them, and code checks
+    # for their presence with ``hasattr``.
+    #: Package-level download URL
+    url: Optional[str]
+    #: Package-level list of download URLs
+    urls: List[str]
+    #: Custom patch function run after applying patch files
+    patch: Callable[[], None]
+    #: Hook run after the package is installed from a build cache
+    _post_buildcache_install_hook: Callable[[], None]
+
+    #: Tags used to categorize packages (e.g. for ``spack list --tag``)
+    tags: ClassVar[List[str]]
+
+    # Detection protocol: packages opt in to ``spack external find`` by defining ``executables``
+    # or ``libraries``, and ``DetectablePackageMeta`` then provides the two methods below.
+    executables: ClassVar[List[str]]
+    libraries: ClassVar[List[str]]
+
+    if TYPE_CHECKING:
+
+        @classmethod
+        def platform_executables(cls) -> List[str]: ...
+
+        @classmethod
+        def determine_spec_details(cls, prefix: str, objs_in_prefix: Set[str]) -> Any: ...
+
     #: Class level dictionary populated by :func:`~spack.directives.version` directives
     versions: Dict[StandardVersion, Dict[str, Any]]
     #: Class level dictionary populated by :func:`~spack.directives.resource` directives
@@ -606,6 +654,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     #: By default do not run tests within package's install()
     run_tests: bool = False
+
+    #: Set by the installer to stop installation before/at a specific phase
+    stop_before_phase: Optional[str] = None
+    last_phase: Optional[str] = None
 
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable: bool = False
@@ -830,17 +882,18 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return "%s.%s" % (cls.namespace, cls.name)
 
     @classproperty
-    def fullnames(cls):
+    def fullnames(cls: Type["PackageBase"]):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
         for base in cls.__mro__:
             if not spack.repo.is_package_module(base.__module__):
                 break
-            fullnames.append(base.fullname)
+            # classes from package modules are package classes, but __mro__ is typed as type
+            fullnames.append(base.fullname)  # ty: ignore[unresolved-attribute]
         return fullnames
 
     @classproperty
-    def name(cls):
+    def name(cls: Type["PackageBase"]):
         """The name of this package."""
         if cls._name is None:
             # We cannot know the exact package API version, but we can distinguish between v1
@@ -2746,7 +2799,9 @@ def _for_package_version(pkg, version=None):
     raise fs.InvalidArgsError(pkg, version, **args)
 
 
-def deprecated_version(pkg: PackageBase, version: Union[str, StandardVersion]) -> bool:
+def deprecated_version(
+    pkg: Union[PackageBase, Type[PackageBase]], version: Union[str, StandardVersion]
+) -> bool:
     """Return True iff the version is deprecated.
 
     Arguments:

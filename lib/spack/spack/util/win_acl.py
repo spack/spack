@@ -42,9 +42,9 @@ import itertools
 import os
 import re
 from contextlib import contextmanager
-from ctypes import wintypes  # type: ignore[attr-defined]
+from ctypes import wintypes
 from enum import Enum, IntEnum
-from typing import Any, Dict, Generator, List, Optional, Union
+from typing import Any, Dict, Generator, List, Optional, Type, Union
 
 
 class AccessRightsEnum(IntEnum):
@@ -275,7 +275,7 @@ class AccessControlEntry:
     def __init__(
         self,
         ace_type: Union[AceType, str],
-        flags: Optional[Union[AceFlags, List[AceFlags]]] = None,
+        flags: Optional[Union[AceFlags, List[Union[AceFlags, str]]]] = None,
         rights: Optional[int] = None,
         obj_guid: Optional[str] = None,
         inh_obj_guid: Optional[str] = None,
@@ -311,11 +311,11 @@ class AccessControlEntry:
         return self._flags
 
     @flags.setter
-    def flags(self, val: Optional[Union[AceFlags, List[AceFlags]]]) -> None:
+    def flags(self, val: Optional[Union[AceFlags, List[Union[AceFlags, str]]]]) -> None:
         if val is None:
             self._flags = []
         elif isinstance(val, list):
-            self._flags = val  # type: ignore[assignment]  # List[AceFlags] widens safely
+            self._flags = val
         else:
             self._flags = [val]
 
@@ -390,13 +390,14 @@ class TOKEN_USER(ctypes.Structure):
 TOKEN_QUERY = 0x0008
 
 
-_advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)  # type: ignore[attr-defined]
-_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
-_WinError = ctypes.WinError  # type: ignore[attr-defined]
-_get_last_error = ctypes.get_last_error  # type: ignore[attr-defined]
+# The Windows-only ctypes APIs below are not in typeshed when checking on other platforms
+_advapi32 = ctypes.WinDLL("advapi32", use_last_error=True)  # ty: ignore[unresolved-attribute]
+_kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # ty: ignore[unresolved-attribute]
+_WinError = ctypes.WinError  # ty: ignore[unresolved-attribute]
+_get_last_error = ctypes.get_last_error  # ty: ignore[unresolved-attribute]
 
 
-def _bind(dll: ctypes.WinDLL, name: str, argtypes: list, restype: type) -> Any:  # type: ignore[name-defined]
+def _bind(dll: ctypes.CDLL, name: str, argtypes: list, restype: type) -> Any:
     """Set argtypes/restype on a DLL function and return it."""
     fn = getattr(dll, name)
     fn.argtypes = argtypes
@@ -573,7 +574,7 @@ class _SddlHelper:
         # Spack never generates such ACEs and write-back preserves the OS SACL intact.
         return AccessControlEntry(
             ace_type=AceType.from_sddl(parts[0]),
-            flags=_SddlHelper._map_flags(parts[1], AceFlags),  # type: ignore[arg-type]
+            flags=_SddlHelper._map_flags(parts[1], AceFlags),
             rights=_SddlHelper._map_rights(parts[2]) if parts[2] else None,
             obj_guid=parts[3] if parts[3] else None,
             inh_obj_guid=parts[4] if parts[4] else None,
@@ -581,12 +582,12 @@ class _SddlHelper:
         )
 
     @staticmethod
-    def _map_flags(flag_str: str, enum_cls: type) -> List[Union[AceFlags, str]]:
+    def _map_flags(flag_str: str, enum_cls: Type[AceFlags]) -> List[Union[AceFlags, str]]:
         flags: List[Union[AceFlags, str]] = []
         if not flag_str:
             return flags
         for chunk in (flag_str[i : i + 2] for i in range(0, len(flag_str), 2)):
-            for member in enum_cls:  # type: ignore[attr-defined]
+            for member in enum_cls:
                 if member.value == chunk:
                     flags.append(member)
                     break
@@ -888,7 +889,7 @@ class SecurityDescriptor:
         index: int,
         sid: Optional[str] = None,
         rights: Optional[int] = None,
-        flags: Optional[Union[AceFlags, List[AceFlags]]] = None,
+        flags: Optional[Union[AceFlags, List[Union[AceFlags, str]]]] = None,
         ace_type: Optional[Union[AceType, str]] = None,
     ) -> None:
         """Modify an existing ACE in-place by index."""

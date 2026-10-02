@@ -170,6 +170,24 @@ def decorator_with_or_without_args(decorator):
     return new_dec
 
 
+class Ordered:
+    """Mixin declaring the rich comparison operators that ``key_ordering`` and
+    ``lazy_lexicographic_ordering`` add to a class at runtime, so that static type checkers
+    know instances of the decorated class can be compared."""
+
+    __slots__ = ()
+
+    if typing.TYPE_CHECKING:
+
+        def __lt__(self, other: Any) -> bool: ...
+
+        def __le__(self, other: Any) -> bool: ...
+
+        def __gt__(self, other: Any) -> bool: ...
+
+        def __ge__(self, other: Any) -> bool: ...
+
+
 def key_ordering(cls):
     """Decorates a class with extra methods that implement rich comparison
     operations and ``__hash__``.  The decorator assumes that the class
@@ -205,7 +223,7 @@ def key_ordering(cls):
 
 
 #: sentinel for testing that iterators are done in lazy_lexicographic_ordering
-done = object()
+done: Any = object()
 
 
 def tuplify(seq):
@@ -582,7 +600,9 @@ def pretty_string_to_date(date_str: str, now: Optional[datetime] = None) -> date
     pretty_regex = re.compile(r"(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago")
 
     def _n_xxx_ago(x):
-        how_many, time_period = pretty_regex.search(x).groups()
+        match = pretty_regex.search(x)
+        assert match is not None  # only called on strings that matched pretty_regex
+        how_many, time_period = match.groups()
 
         how_many = 1 if how_many == "a" else int(how_many)
 
@@ -768,7 +788,7 @@ def get_entry_points(*, group: str):
     """
 
     try:
-        import importlib.metadata  # type: ignore  # novermin
+        import importlib.metadata  # novermin
     except ImportError:
         return []
 
@@ -807,6 +827,8 @@ def load_module_from_file(module_name, module_path):
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
 
     spec = importlib.util.spec_from_file_location(module_name, module_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load module '{module_name}' from '{module_path}'")
     module = importlib.util.module_from_spec(spec)
     # The module object needs to exist in sys.modules before the
     # loader executes the module code.

@@ -16,6 +16,7 @@ from spack.util import tty
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
 #: Different Linux distributions have different limits, but 127 is the
 #: smallest among all modern versions.
+system_shebang_limit: int
 if sys.platform == "darwin":
     system_shebang_limit = 511
 else:
@@ -34,7 +35,7 @@ else:
         pass
 
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
-spack_shebang_limit = 4096
+spack_shebang_limit: int = 4096
 
 interpreter_regex = re.compile(b"#![ \t]*?([^ \t\0\n]+)")
 

@@ -167,7 +167,7 @@ def test_exe_disallows_str_split_as_input(mock_executable):
     path = mock_executable("hello", output="echo hi\n")
     hello = ex.Executable(path)
     with pytest.raises(ValueError):
-        hello(input=str.split)
+        hello(input=str.split)  # ty: ignore[invalid-argument-type]
 
 
 def test_exe_disallows_callable_as_output(mock_executable):

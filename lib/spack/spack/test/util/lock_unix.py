@@ -72,8 +72,8 @@ comm = None
 try:
     from mpi4py import MPI
 
-    comm = MPI.COMM_WORLD
-    if comm.size > 1:
+    if MPI.COMM_WORLD.size > 1:
+        comm = MPI.COMM_WORLD
         mpi = True
 except ImportError:
     pass
@@ -114,6 +114,19 @@ def make_readable(*paths):
         else:
             mode = stat.S_IREAD
         os.chmod(path, mode)
+
+
+def _posix_backend(lock: lk.Lock) -> lk.PosixBackend:
+    """The tests in this module exercise the POSIX (fcntl) backend directly."""
+    assert isinstance(lock.backend, lk.PosixBackend)
+    return lock.backend
+
+
+def _lock_fh(lock: lk.Lock):
+    """File handle held by the POSIX backend of ``lock``."""
+    file_ref = _posix_backend(lock)._file_ref
+    assert file_ref is not None
+    return file_ref.fh
 
 
 def make_writable(*paths):
@@ -159,21 +172,22 @@ def lock_dir(lock_test_directory):
         pytest.skip("skipping local tmp directory for MPI test.")
 
     tempdir = None
-    if not mpi or comm.rank == 0:
+    if comm is None or comm.rank == 0:
         tempdir = tempfile.mkdtemp(dir=parent)
-    if mpi:
+    if comm is not None:
         tempdir = comm.bcast(tempdir)
+    assert tempdir is not None
 
     yield tempdir
 
-    if mpi:
+    if comm is not None:
         # rank 0 may get here before others, in which case it'll try to
         # remove the directory while other processes try to re-create the
         # lock.  This will give errno 39: directory not empty.  Use a
         # barrier to ensure everyone is done first.
         comm.barrier()
 
-    if not mpi or comm.rank == 0:
+    if comm is None or comm.rank == 0:
         make_writable(tempdir)
         shutil.rmtree(tempdir)
 
@@ -185,7 +199,7 @@ def private_lock_path(lock_dir):
     For other modes, it is the same as a shared lock.
     """
     lock_file = os.path.join(lock_dir, "lockfile")
-    if mpi:
+    if comm is not None:
         lock_file += ".%s" % comm.rank
 
     yield lock_file
@@ -208,7 +222,7 @@ def lock_path(lock_dir):
 
 
 def test_poll_interval_generator():
-    interval_iter = iter(lk.Lock._poll_interval_generator(_wait_times=[1, 2, 3]))
+    interval_iter = iter(lk.Lock._poll_interval_generator(_wait_times=(1, 2, 3)))
     intervals = [next(interval_iter) for i in range(100)]
     assert intervals == [1] * 20 + [2] * 40 + [3] * 40
 
@@ -240,6 +254,7 @@ def mpi_multiproc_test(*functions):
     from ``multiproc_test`` above, which spawns the processes. This will
     skip tests if there are too few processes to run them.
     """
+    assert comm is not None, "mpi_multiproc_test requires MPI"
     procs = len(functions)
     if procs > comm.size:
         pytest.skip("requires at least %d MPI processes" % procs)
@@ -658,22 +673,22 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.acquire_read()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock.backend._file_ref.fh.mode == "rb+"
+    assert _lock_fh(lock).mode == "rb+"
 
     lock.acquire_write()
     assert lock._reads == 1
     assert lock._writes == 1
-    assert lock.backend._file_ref.fh.mode == "rb+"
+    assert _lock_fh(lock).mode == "rb+"
 
     lock.release_write()
     assert lock._reads == 1
     assert lock._writes == 0
-    assert lock.backend._file_ref.fh.mode == "rb+"
+    assert _lock_fh(lock).mode == "rb+"
 
     lock.release_read()
     assert lock._reads == 0
     assert lock._writes == 0
-    assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
+    assert not _lock_fh(lock).closed  # recycle the file handle for next lock
 
 
 def test_release_write_downgrades_to_shared(private_lock_path):
@@ -721,7 +736,7 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         lock.acquire_read()
         assert lock._reads == 1
         assert lock._writes == 0
-        assert lock.backend._file_ref.fh.mode == "rb"
+        assert _lock_fh(lock).mode == "rb"
 
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
@@ -1268,8 +1283,8 @@ class LockDebugOutput:
             # p1 takes write lock and writes pid/host to file
             barrier.wait()  # ------------------------------------ 1
 
-        assert lock.backend.pid == p1_pid
-        assert lock.backend.host == self.host
+        assert _posix_backend(lock).pid == p1_pid
+        assert _posix_backend(lock).host == self.host
 
         # wait for p2 to verify contents of file
         barrier.wait()  # ---------------------------------------- 2
@@ -1279,11 +1294,11 @@ class LockDebugOutput:
 
         # verify pid/host info again
         with lk.ReadTransaction(lock):
-            assert lock.backend.old_pid == p1_pid
-            assert lock.backend.old_host == self.host
+            assert _posix_backend(lock).old_pid == p1_pid
+            assert _posix_backend(lock).old_host == self.host
 
-            assert lock.backend.pid == p2_pid
-            assert lock.backend.host == self.host
+            assert _posix_backend(lock).pid == p2_pid
+            assert _posix_backend(lock).host == self.host
 
         barrier.wait()  # ---------------------------------------- 4
 
@@ -1301,18 +1316,18 @@ class LockDebugOutput:
 
         # verify that p1 wrote information to lock file
         with lk.ReadTransaction(lock):
-            assert lock.backend.pid == p1_pid
-            assert lock.backend.host == self.host
+            assert _posix_backend(lock).pid == p1_pid
+            assert _posix_backend(lock).host == self.host
 
         barrier.wait()  # ---------------------------------------- 2
 
         # take a write lock on the file and verify pid/host info
         with lk.WriteTransaction(lock):
-            assert lock.backend.old_pid == p1_pid
-            assert lock.backend.old_host == self.host
+            assert _posix_backend(lock).old_pid == p1_pid
+            assert _posix_backend(lock).old_host == self.host
 
-            assert lock.backend.pid == p2_pid
-            assert lock.backend.host == self.host
+            assert _posix_backend(lock).pid == p2_pid
+            assert _posix_backend(lock).host == self.host
 
             barrier.wait()  # ------------------------------------ 3
 

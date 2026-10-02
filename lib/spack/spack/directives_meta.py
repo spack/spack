@@ -13,7 +13,7 @@ import spack.repo
 import spack.spec
 
 P = ParamSpec("P")
-R = TypeVar("R")
+R = TypeVar("R", bound=Callable)
 
 #: Names of possible directives. This list is mostly populated using the @directive decorator.
 #: Some directives leverage others and in that case are not automatically added.
@@ -177,7 +177,7 @@ class DirectiveDictDescriptor:
         self.private_name = f"_{name}"
         self.dicts_to_init, self.directives_to_run = DirectiveMeta._get_execution_plan(name)
 
-    def __get__(self, obj, objtype=None):
+    def __get__(self, obj, objtype: "DirectiveMeta"):
         val = getattr(objtype, self.private_name)
         if val is not None:
             return val
@@ -249,8 +249,10 @@ class directive:
         self.dicts = tuple(dicts)
 
     def __call__(self, decorated_function: Callable[P, R]) -> Callable[P, R]:
-        directive_names.append(decorated_function.__name__)
-        DirectiveMeta.register_directive(decorated_function.__name__, self.dicts)
+        # directives are plain functions, but ``Callable`` does not declare ``__name__``
+        name: str = decorated_function.__name__  # ty: ignore[unresolved-attribute]
+        directive_names.append(name)
+        DirectiveMeta.register_directive(name, self.dicts)
 
         @functools.wraps(decorated_function)
         def _wrapper(*args, **_kwargs):
@@ -267,7 +269,7 @@ class directive:
             if DirectiveMeta._when_constraints_stack:
                 if not self.supports_when:
                     raise DirectiveError(
-                        f'directive "{decorated_function.__name__}" cannot be used within a '
+                        f'directive "{name}" cannot be used within a '
                         '"when" context since it does not support a "when=" argument'
                     )
                 if "when" in kwargs:
@@ -283,7 +285,7 @@ class directive:
 
             result = decorated_function(*args, **kwargs)
 
-            DirectiveMeta._directives_to_be_executed[decorated_function.__name__].append(result)
+            DirectiveMeta._directives_to_be_executed[name].append(result)
 
             # wrapped function returns same result as original so that we can nest directives
             return result

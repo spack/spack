@@ -583,7 +583,7 @@ Developer commands
 ``spack style``
 ^^^^^^^^^^^^^^^
 
-``spack style`` exists to help the developer check imports and style with mypy and Ruff (for formatting and linting).
+``spack style`` exists to help the developer check imports, style with Ruff (for formatting and linting), and types with ty.
 To run all style checks, simply do:
 
 .. code-block:: console

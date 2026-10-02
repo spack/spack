@@ -593,8 +593,8 @@ def test_formatted_strings():
 
 
 def test_dotted_numeric_string():
-    assert Version("1a2b3").dotted_numeric_string == "1.0.2.0.3"
-    assert Version("1a2b3alpha4").dotted_numeric_string == "1.0.2.0.3.0.4"
+    assert StandardVersion.from_string("1a2b3").dotted_numeric_string == "1.0.2.0.3"
+    assert StandardVersion.from_string("1a2b3alpha4").dotted_numeric_string == "1.0.2.0.3.0.4"
 
 
 def test_up_to():
@@ -658,16 +658,16 @@ def test_str_and_hash_version_range():
     "version_str", ["1.2string3", "1.2-3xyz_4-alpha.5", "1.2beta", "1_x_rc-4"]
 )
 def test_stringify_version(version_str):
-    v = Version(version_str)
-    v.string = None
+    v = StandardVersion.from_string(version_str)
+    v.string = ""  # "" means the original string is not available
     assert str(v) == version_str
 
-    v.string = None
+    v.string = ""
     assert v.string == version_str
 
 
 def test_len():
-    a = Version("1.2.3.4")
+    a = StandardVersion.from_string("1.2.3.4")
     assert len(a) == len(a.version[0])
     assert len(a) == 4
     b = Version("2018.0")
@@ -798,15 +798,18 @@ def test_git_ref_constraint_round_trips_through_str():
     for vstring in ("git.foo", "git.foo=1.2", "git.foo=1.0:", "git.foo=1.2:1.2"):
         assert str(ver(vstring)) == vstring
     assert ver("git.foo=1.2:1.2") != ver("git.foo=1.2")
+    constrained = ver("git.foo=1.0:")
+    assert isinstance(constrained, GitVersion)
     with pytest.raises(VersionLookupError, match="use 'git.foo=<version>'"):
-        ver("git.foo=1.0:").ref_version
+        constrained.ref_version
 
 
 def test_git_ref_assignment_must_be_within_the_constraint():
     """Assigning a git ref a version outside the range raises `VersionLookupError`."""
-    assert str(GitVersion("git.main=1:1.3").assigned(Version("1.2"))) == "git.main=1.2"
+    v1_2 = StandardVersion.from_string("1.2")
+    assert str(GitVersion("git.main=1:1.3").assigned(v1_2)) == "git.main=1.2"
     with pytest.raises(VersionLookupError, match="outside the range 1.3:"):
-        GitVersion("git.main=1.3:").assigned(Version("1.2"))
+        GitVersion("git.main=1.3:").assigned(v1_2)
 
 
 def test_git_branch_with_slash(monkeypatch):
@@ -878,7 +881,7 @@ def test_version_wrong_idx_type():
     """Ensure exception raised if attempt to use non-integer index."""
     v = Version("1.1")
     with pytest.raises(TypeError):
-        v["0:"]
+        v["0:"]  # ty: ignore[invalid-argument-type]  # deliberately wrong index type
 
 
 @pytest.mark.regression("29170")
@@ -890,7 +893,7 @@ def test_version_range_satisfies_means_nonempty_intersection():
 
 
 def test_version_list_with_range_and_concrete_version_is_not_concrete():
-    v = VersionList([Version("3.1"), VersionRange(Version("3.1.1"), Version("3.1.2"))])
+    v = VersionList([Version("3.1"), VersionRange("3.1.1", "3.1.2")])
     assert not v.concrete
 
 
@@ -934,6 +937,7 @@ def test_git_versions_store_ref_requests(git_ref, std_version):
 def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
     v = Version(vstring)
     v_equivalent = Version(eq_vstring)
+    assert isinstance(v, GitVersion)
     assert v.is_commit == is_commit
     assert v_equivalent == v.ref_version
 
@@ -1215,4 +1219,4 @@ def test_semver_regex(tag, expected):
     if expected is None:
         assert result is None
     else:
-        assert result.group() == expected
+        assert result is not None and result.group() == expected

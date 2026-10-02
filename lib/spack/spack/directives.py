@@ -906,10 +906,14 @@ class _Variant(NamedTuple):
         if not re.match(spack.spec.IDENTIFIER_RE, name):
             raise DirectiveError("variant", f"Invalid variant name in {pkg.name}: '{name}'")
 
+        # when=False: the variant is never defined
+        if when_spec is None:
+            return
+
         # variants are stored by condition then by name (so only the last variant of a
         # given name takes precedence *per condition*).
         # NOTE: variant defaults and values can conflict if when conditions overlap.
-        variants_by_name = pkg.variants.setdefault(when_spec, {})  # type: ignore[arg-type]
+        variants_by_name = pkg.variants.setdefault(when_spec, {})
         variants_by_name[name] = spack.variant.Variant(
             name=name,
             default=default,

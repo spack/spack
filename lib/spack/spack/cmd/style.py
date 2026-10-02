@@ -32,14 +32,7 @@ exclude_paths = [os.path.relpath(spack.paths.vendor_path, spack.paths.prefix)]
 #: Order in which tools should be run.
 #: The list maps an executable name to a method to ensure the tool is
 #: bootstrapped or present in the environment.
-tool_names = ["import", "ruff-format", "ruff-check", "mypy"]
-
-#: warnings to ignore in mypy
-mypy_ignores = [
-    # same as `disable_error_code = "annotation-unchecked"` in pyproject.toml, which
-    # doesn't exist in mypy 0.971 for Python 3.6
-    "[annotation-unchecked]"
-]
+tool_names = ["import", "ruff-format", "ruff-check", "ty"]
 
 
 #: decorator for adding tools to the list
@@ -225,10 +218,6 @@ def rewrite_and_print_output(
     for line in output.split("\n"):
         if not line:
             continue
-        if any(ignore in line for ignore in mypy_ignores):
-            # some mypy annotations can't be disabled in older mypys (e.g. .971, which
-            # is the only mypy that supports python 3.6), so we filter them here.
-            continue
         if not root_relative and re_obj:
             line = re_obj.sub(translate, line)
         print(line)
@@ -294,32 +283,30 @@ def run_ruff(
     return returncode
 
 
-@tool("mypy")
-def run_mypy(file_list, args):
-    mypy_cmd = tools["mypy"].executable
-    if not mypy_cmd:
-        tty.warn("Cannot execute requested tool: mypy\nCannot find tool")
+@tool("ty")
+def run_ty(file_list: List[Path], args):
+    """Run the ty type checker.
+
+    Like mypy before it, ty checks the whole project rather than only the changed files: a change
+    in one file can introduce type errors in another, and checking all of Spack takes seconds.
+    Configuration is read from the ``[tool.ty]`` section of ``pyproject.toml`` under the root being
+    checked.
+    """
+    ty_cmd = tools["ty"].executable
+    if not ty_cmd:
+        tty.warn("Cannot execute requested tool: ty\nCannot find tool")
         return -1
-    # always run with config from running spack prefix
-    common_mypy_args = [
-        "--config-file",
-        os.path.join(spack.paths.prefix, "pyproject.toml"),
-        "--show-error-codes",
-    ]
-    mypy_arg_sets = [common_mypy_args + ["--package", "spack"]]
-    if "SPACK_MYPY_CHECK_PACKAGES" in os.environ:
-        mypy_arg_sets.append(
-            common_mypy_args + ["--package", "packages", "--disable-error-code", "no-redef"]
-        )
 
-    returncode = 0
-    for mypy_args in mypy_arg_sets:
-        output = mypy_cmd(*mypy_args, fail_on_error=False, output=str)
-        returncode |= mypy_cmd.returncode
+    # concise output is one ``path:line:col: ...`` line per diagnostic, which lets us rewrite paths
+    ty_args = ["check", "--project", str(args.root), "--output-format", "concise", "--no-progress"]
+    if color.get_color_when():
+        ty_args += ["--color", "auto"]
 
-        rewrite_and_print_output(output, args.root, args.initial_working_dir, args.root_relative)
+    output = ty_cmd(*ty_args, fail_on_error=False, output=str, error=str)
+    returncode = ty_cmd.returncode
+    rewrite_and_print_output(output, args.root, args.initial_working_dir, args.root_relative)
 
-    print_tool_result("mypy", returncode)
+    print_tool_result("ty", returncode)
     return returncode
 
 
@@ -486,7 +473,7 @@ def print_style_header(file_list: List[Path], args, tools_to_run):
 
 def validate_toolset(arg_value):
     """Validate ``--tool`` and ``--skip`` arguments (sets of optionally comma-separated tools)."""
-    tools = set(",".join(arg_value).split(","))  # allow args like 'ruff-check,mypy'
+    tools = set(",".join(arg_value).split(","))  # allow args like 'ruff-check,ty'
     for tool in tools:
         if tool not in tool_names:
             tty.die("Invalid tool: '%s'" % tool, "Choose from: %s" % ", ".join(tool_names))

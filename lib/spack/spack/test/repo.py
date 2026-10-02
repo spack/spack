@@ -184,7 +184,7 @@ spack:
 
 
 def test_absolute_import_spack_packages_as_python_modules(mock_packages):
-    import spack_repo.builtin_mock.packages.mpileaks.package  # type: ignore[import]
+    import spack_repo.builtin_mock.packages.mpileaks.package
 
     assert hasattr(spack_repo.builtin_mock.packages.mpileaks.package, "Mpileaks")
     assert isinstance(
@@ -282,10 +282,10 @@ def test_use_repositories_and_import():
 
     repo_dir = pathlib.Path(spack.paths.test_repos_path)
     with spack.repo.use_repositories(str(repo_dir / "spack_repo" / "compiler_runtime_test")):
-        import spack_repo.compiler_runtime_test.packages.gcc_runtime.package  # type: ignore[import]  # noqa: E501
+        import spack_repo.compiler_runtime_test.packages.gcc_runtime.package  # noqa: E501
 
     with spack.repo.use_repositories(str(repo_dir / "spack_repo" / "builtin_mock")):
-        import spack_repo.builtin_mock.packages.cmake.package  # type: ignore[import]  # noqa: F401
+        import spack_repo.builtin_mock.packages.cmake.package  # noqa: F401
 
 
 @pytest.mark.usefixtures("nullify_globals")
