@@ -10,7 +10,7 @@ import pickle
 import platform
 import re
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import pytest
 
@@ -6542,3 +6542,65 @@ def test_rounds_select_reusable_specs_once(mutable_config, mock_packages):
     assert ui.phases[0] is ConcretizationPhase.REUSE
     assert ui.phases.count(ConcretizationPhase.REUSE) == 1
     assert ui.phases.count(ConcretizationPhase.SETUP) == len(ui.solves) == 2
+
+
+def check_task_phases(ui: RecordingUI, specs: List[Spec]) -> None:
+    """Check that ``ui`` recorded the phases of ``specs`` only as tasks, that each phase names the
+    spec of its task, that the phases of each task are in the order a solve goes through them, and
+    that each spec is reported done by the task that solved it.
+    """
+    assert not ui.phases
+    order = list(ConcretizationPhase)
+
+    for task, spec, _ in ui.task_phases:
+        assert spec is specs[task]
+
+    # Phases are in order a solve goes through them
+    for task in range(len(specs)):
+        phases = [order.index(phase) for i, _, phase in ui.task_phases if i == task]
+        assert phases == sorted(phases)
+
+    assert len(ui.concretized_tasks) == len(specs)
+    assert set(ui.concretized_tasks) == set(range(len(specs)))
+    for (abstract, _, _, _), task in zip(ui.concretized, ui.concretized_tasks):
+        assert task is not None and abstract is specs[task]
+
+
+def test_serial_tasks_report_every_phase(mutable_config, mock_packages):
+    """Tests that concretizing separately without a pool reports the phases of each spec as a
+    task, all of them, and that each spec is reported done by the task that solved it.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    mutable_config.set("concretizer:unify", False)
+    assert not spack.util.parallel.ENABLE_PARALLELISM, "this test wants the serial fallback"
+    ui = RecordingUI()
+    specs = [Spec("pkg-a"), Spec("pkg-b")]
+
+    spack.concretize.concretize_spec_pairs([(x, None) for x in specs], ui=ui)
+
+    check_task_phases(ui, specs)
+    for task in range(len(specs)):
+        phases = [phase for i, _, phase in ui.task_phases if i == task]
+        assert phases == [
+            ConcretizationPhase.REUSE,
+            ConcretizationPhase.SETUP,
+            ConcretizationPhase.GROUND,
+            ConcretizationPhase.SOLVE,
+            ConcretizationPhase.BUILD,
+        ]
+
+
+@pytest.mark.enable_parallelism
+def test_tasks_in_workers_report_their_phases(mutable_config, mock_packages):
+    """Tests that the phases of solves running in a worker process reach the frontend of the
+    owning process as tasks, and that each spec is reported done by the task that solved it. A
+    task may finish before the owning process reads its phase, so a task may report no phase.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", False)
+    mutable_config.set("concretizer:unify", False)
+    ui = RecordingUI()
+    specs = [Spec("pkg-a"), Spec("pkg-b")]
+
+    spack.concretize.concretize_spec_pairs([(x, None) for x in specs], ui=ui)
+
+    check_task_phases(ui, specs)
