@@ -2683,43 +2683,31 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
                 config_changes["gpg_keys_path"] = old_gpg_keys
                 retained_resources.append("GPG data (kept in its old location)")
 
-    def _migrate_merge_resource(
-        resource_name: str,
-        config_key: str,
-        old_path: str,
-        target_subdir: str,
-        migrate_fn: Callable[[str, str], bool],
-    ) -> None:
-        """Handle migration of a resource that is allowed to merge into a shared
-        directory (licenses or environments).
-        """
-        target_path = os.path.join(data_home, target_subdir)
-
-        # Always migrate to default location (no config checks since CONFIG doesn't exist yet)
-        if migrate_fn(old_path, target_path):
-            migrated_resources.append(resource_name)
-            tty.debug(f"Copied {resource_name} from {old_path} to {target_path}")
-        else:
-            # Migration failed - keep in old location
-            config_changes[config_key] = old_path
-            retained_resources.append(f"{resource_name} (kept in the old location)")
-            tty.debug(f"{resource_name.capitalize()} kept in old location: {old_path}")
-
     # 3. Handle licenses
     if old_resources["licenses"]:
-        _migrate_merge_resource(
-            "licenses", "license_dir", spack.paths.old_licenses_path, "licenses", _migrate_licenses
-        )
+        old_licenses = spack.paths.old_licenses_path
+        target_licenses = os.path.join(data_home, "licenses")
+        if _migrate_licenses(old_licenses, target_licenses):
+            migrated_resources.append("licenses")
+            tty.debug(f"Copied licenses from {old_licenses} to {target_licenses}")
+        else:
+            # Migration failed - keep in old location
+            config_changes["license_dir"] = old_licenses
+            retained_resources.append("licenses (kept in the old location)")
+            tty.debug(f"Licenses kept in old location: {old_licenses}")
 
     # 4. Handle environments
     if old_resources["environments"]:
-        _migrate_merge_resource(
-            "environments",
-            "environments_root",
-            spack.paths.old_envs_path,
-            "environments",
-            _migrate_environments,
-        )
+        old_envs = spack.paths.old_envs_path
+        target_envs = os.path.join(data_home, "environments")
+        if _migrate_environments(old_envs, target_envs):
+            migrated_resources.append("environments")
+            tty.debug(f"Copied environments from {old_envs} to {target_envs}")
+        else:
+            # Migration failed - keep in old location
+            config_changes["environments_root"] = old_envs
+            retained_resources.append("environments (kept in the old location)")
+            tty.debug(f"Environments kept in old location: {old_envs}")
 
     # Write config scope files to the layout scope only if we have config changes
     if config_changes:
