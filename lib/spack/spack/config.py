@@ -2213,7 +2213,7 @@ def _migrate_with_staging(
             shutil.rmtree(staging_path, ignore_errors=True)
         return False
     finally:
-        if lock_acquired:
+        if lock_acquired and lock is not None:
             lock.release_write()
 
 
