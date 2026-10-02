@@ -933,6 +933,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
     if pipeline_yaml:
         tty.debug(f"\n{yf} is likely your pipeline file")
 
+    assert pipeline_yaml is not None
     relative_concrete_env_dir = pipeline_yaml["variables"]["SPACK_CONCRETE_ENV_DIR"]
     tty.debug(f"Relative environment path used by cloud job: {relative_concrete_env_dir}")
 
@@ -987,6 +988,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
 
     job_image = None
     setup_result = False
+    assert job_yaml is not None
     if "image" in job_yaml:
         job_image_elt = job_yaml["image"]
         if "name" in job_image_elt:

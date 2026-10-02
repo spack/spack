@@ -186,10 +186,8 @@ def test_failing_overwrite_install_should_keep_previous_installation(
     PackageInstaller([s.package], explicit=True).install()
     s.package.succeed = False
     spack.builder._BUILDERS.clear()  # the builder is cached with a copy of the pkg's __dict__.
-    kwargs = {"overwrite": [s.dag_hash()]}
-
     with pytest.raises(Exception):
-        PackageInstaller([s.package], explicit=True, **kwargs).install()
+        PackageInstaller([s.package], explicit=True, overwrite=[s.dag_hash()]).install()
 
     assert temporary_store.db.installed(s.package.spec)
     assert os.path.exists(s.prefix)
@@ -570,7 +568,7 @@ def test_install_error():
         msg = "test install error"
         long_msg = "this is the long version of test install error"
         raise InstallError(msg, long_msg=long_msg)
-    except Exception as exc:
+    except InstallError as exc:
         assert exc.__class__.__name__ == "InstallError"
         assert exc.message == msg
         assert exc.long_message == long_msg

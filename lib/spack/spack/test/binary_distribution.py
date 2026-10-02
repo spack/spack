@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import email.message
 import filecmp
 import glob
 import gzip
@@ -66,6 +67,14 @@ mirror_cmd = spack.main.SpackCommand("mirror")
 install_cmd = spack.main.SpackCommand("install")
 uninstall_cmd = spack.main.SpackCommand("uninstall")
 buildcache_cmd = spack.main.SpackCommand("buildcache")
+
+
+def _http_headers(headers: Optional[Dict[str, str]] = None) -> email.message.Message:
+    """HTTP headers as urllib represents them in responses and errors."""
+    message = email.message.Message()
+    for key, value in (headers or {}).items():
+        message[key] = value
+    return message
 
 
 @pytest.fixture
@@ -750,13 +759,7 @@ def test_v2_etag_fetching_304():
         url = request.get_full_url()
         if url == f"https://www.example.com/build_cache/{INDEX_JSON_FILE}":
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
-            raise urllib.error.HTTPError(
-                url,
-                304,
-                "Not Modified",
-                hdrs={},  # type: ignore[arg-type]
-                fp=None,  # type: ignore[arg-type]
-            )
+            raise urllib.error.HTTPError(url, 304, "Not Modified", hdrs=_http_headers(), fp=None)
         assert False, "Should not fetch {}".format(url)
 
     fetcher = spack.binary_distribution.EtagIndexHandlerV2(
@@ -778,7 +781,7 @@ def test_v2_etag_fetching_200():
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
             return urllib.response.addinfourl(
                 io.BytesIO(b"Result"),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+                headers=_http_headers({"Etag": '"59bcc3ad6775562f845953cf01624225"'}),
                 url=url,
                 code=200,
             )
@@ -805,7 +808,7 @@ def test_v2_etag_fetching_404():
             request.get_full_url(),
             404,
             "Not found",
-            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+            hdrs=_http_headers({"Etag": '"59bcc3ad6775562f845953cf01624225"'}),
             fp=None,
         )
 
@@ -827,17 +830,14 @@ def test_v2_default_index_fetch_200(url_scheme):
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
         if url.endswith("index.json.hash"):
-            return urllib.response.addinfourl(  # type: ignore[arg-type]
-                io.BytesIO(index_json_hash.encode()),
-                headers={},  # type: ignore[arg-type]
-                url=url,
-                code=200,
+            return urllib.response.addinfourl(
+                io.BytesIO(index_json_hash.encode()), headers=_http_headers(), url=url, code=200
             )
 
         elif url.endswith(INDEX_JSON_FILE):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json.encode()),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+                headers=_http_headers({"Etag": '"59bcc3ad6775562f845953cf01624225"'}),
                 url=url,
                 code=200,
             )
@@ -873,7 +873,7 @@ def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
         if url.endswith(INDEX_JSON_FILE):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json.encode()),
-                headers={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+                headers=_http_headers({"Etag": '"59bcc3ad6775562f845953cf01624225"'}),
                 url=url,
                 code=200,
             )
@@ -901,10 +901,7 @@ def test_v2_default_index_not_modified():
         url = request.get_full_url()
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
-                io.BytesIO(index_json_hash.encode()),
-                headers={},  # type: ignore[arg-type]
-                url=url,
-                code=200,
+                io.BytesIO(index_json_hash.encode()), headers=_http_headers(), url=url, code=200
             )
 
         # No request to index.json should be made.
@@ -924,10 +921,7 @@ def test_v2_default_index_invalid_hash_file(index_json):
 
     def urlopen(request: urllib.request.Request):
         return urllib.response.addinfourl(
-            io.BytesIO(),
-            headers={},  # type: ignore[arg-type]
-            url=request.get_full_url(),
-            code=200,
+            io.BytesIO(), headers=_http_headers(), url=request.get_full_url(), code=200
         )
 
     fetcher = spack.binary_distribution.DefaultIndexHandlerV2(
@@ -946,10 +940,7 @@ def test_v2_default_index_json_404():
         url = request.get_full_url()
         if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
-                io.BytesIO(index_json_hash.encode()),
-                headers={},  # type: ignore[arg-type]
-                url=url,
-                code=200,
+                io.BytesIO(index_json_hash.encode()), headers=_http_headers(), url=url, code=200
             )
 
         elif url.endswith(INDEX_JSON_FILE):
@@ -957,7 +948,7 @@ def test_v2_default_index_json_404():
                 url,
                 code=404,
                 msg="Not Found",
-                hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+                hdrs=_http_headers({"Etag": '"59bcc3ad6775562f845953cf01624225"'}),
                 fp=None,
             )
 
@@ -1413,7 +1404,7 @@ def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
         nonlocal fetched
         fetched = True
 
-    @property  # type: ignore
+    @property
     def save_filename_patch(stage):
         return str(index_blob_path)
 
@@ -1443,13 +1434,7 @@ def test_etag_fetching_304():
         url = request.get_full_url()
         if url.endswith(INDEX_MANIFEST_FILE):
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
-            raise urllib.error.HTTPError(
-                url,
-                304,
-                "Not Modified",
-                hdrs={},  # type: ignore[arg-type]
-                fp=None,  # type: ignore[arg-type]
-            )
+            raise urllib.error.HTTPError(url, 304, "Not Modified", hdrs=_http_headers(), fp=None)
         assert False, "Unexpected request {}".format(url)
 
     fetcher = spack.binary_distribution.EtagIndexHandler(
@@ -1473,7 +1458,7 @@ def test_etag_fetching_200(mock_index):
             assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
             return urllib.response.addinfourl(
                 io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
-                headers={"Etag": f'"{mock_index.manifest_etag}"'},  # type: ignore[arg-type]
+                headers=_http_headers({"Etag": f'"{mock_index.manifest_etag}"'}),
                 url=url,
                 code=200,
             )
@@ -1503,7 +1488,7 @@ def test_etag_fetching_404():
             request.get_full_url(),
             404,
             "Not found",
-            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+            hdrs=_http_headers({"Etag": '"59bcc3ad6775562f845953cf01624225"'}),
             fp=None,
         )
 
@@ -1525,9 +1510,9 @@ def test_default_index_fetch_200(url_scheme, mock_index):
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
         if url.endswith(INDEX_MANIFEST_FILE):
-            return urllib.response.addinfourl(  # type: ignore[arg-type]
+            return urllib.response.addinfourl(
                 io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
-                headers={"Etag": f'"{mock_index.manifest_etag}"'},  # type: ignore[arg-type]
+                headers=_http_headers({"Etag": f'"{mock_index.manifest_etag}"'}),
                 url=url,
                 code=200,
             )
@@ -1563,7 +1548,7 @@ def test_default_index_404():
             request.get_full_url(),
             404,
             "Not found",
-            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+            hdrs=_http_headers({"Etag": '"59bcc3ad6775562f845953cf01624225"'}),
             fp=None,
         )
 
@@ -1586,7 +1571,7 @@ def test_default_index_not_modified(mock_index):
         if url.endswith(INDEX_MANIFEST_FILE):
             return urllib.response.addinfourl(
                 io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
-                headers={},  # type: ignore[arg-type]
+                headers=_http_headers(),
                 url=url,
                 code=200,
             )

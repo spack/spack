@@ -83,6 +83,9 @@ class SpecMultiMethod:
     See the docs for decorators below for more details.
     """
 
+    #: Set by ``functools.update_wrapper`` from the first registered method
+    __name__: str
+
     def __init__(self, default=None):
         self.method_list = []
         self.default = default

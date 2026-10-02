@@ -205,6 +205,7 @@ def test_compiler_from_entry(mock_executable):
         manifest_path="/example/file",
     )
 
+    assert compiler is not None
     assert compiler.satisfies("gcc@7.5.0 target=x86_64 os=centos8")
     assert compiler.extra_attributes["compilers"]["c"] == str(cc)
     assert compiler.extra_attributes["compilers"]["cxx"] == str(cxx)

@@ -2046,7 +2046,7 @@ def test_ci_validate_standard_versions_valid(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = mock_packages.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list)
 
@@ -2061,7 +2061,7 @@ def test_ci_validate_standard_versions_invalid(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = mock_packages.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
 
@@ -2076,7 +2076,7 @@ def test_ci_validate_standard_versions_invalid_url(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
 
@@ -2093,7 +2093,7 @@ def test_ci_validate_standard_versions_invalid_both(
     spec = spack.spec.Spec("diff-test")
     pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
     versions = ["2.1.4", "2.1.5"]
-    version_list = [spack.version.Version(v) for v in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
 
@@ -2109,7 +2109,7 @@ def test_ci_validate_git_versions_valid(
     spec = spack.spec.Spec("diff-test")
     pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
-    version_list = [spack.version.Version(v) for v, _ in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
@@ -2133,7 +2133,7 @@ def test_ci_validate_git_versions_bad_tag(
     spec = spack.spec.Spec("diff-test")
     pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
-    version_list = [spack.version.Version(v) for v, _ in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
@@ -2157,7 +2157,7 @@ def test_ci_validate_git_versions_invalid(
     spec = spack.spec.Spec("diff-test")
     pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
-    version_list = [spack.version.Version(v) for v, _ in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {

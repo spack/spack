@@ -1453,6 +1453,7 @@ def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config
     parser = SpecParser(spec_str, Spec)
     for expected in expected_roundtrip:
         result = parser.next_spec()
+        assert result is not None
         expand_toolchains(result, toolchain)
         assert expected == str(result)
 
@@ -1543,21 +1544,21 @@ def test_dep_spec_by_hash(database, config):
     assert "fake" in mpileaks_zmpi
     assert "zmpi" in mpileaks_zmpi
 
-    mpileaks_hash_fake = SpecParser(f"mpileaks ^/{fake.dag_hash()} ^zmpi", Spec).next_spec()
+    mpileaks_hash_fake = parse_one_or_raise(f"mpileaks ^/{fake.dag_hash()} ^zmpi", Spec)
     spack.hash_lookup.replace_hash(mpileaks_hash_fake)
     assert "fake" in mpileaks_hash_fake
     assert mpileaks_hash_fake["fake"] == fake
     assert "zmpi" in mpileaks_hash_fake
     assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")
 
-    mpileaks_hash_zmpi = SpecParser(f"mpileaks ^ /{zmpi.dag_hash()}", Spec).next_spec()
+    mpileaks_hash_zmpi = parse_one_or_raise(f"mpileaks ^ /{zmpi.dag_hash()}", Spec)
     spack.hash_lookup.replace_hash(mpileaks_hash_zmpi)
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
 
-    mpileaks_hash_fake_and_zmpi = SpecParser(
+    mpileaks_hash_fake_and_zmpi = parse_one_or_raise(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}", Spec
-    ).next_spec()
+    )
     spack.hash_lookup.replace_hash(mpileaks_hash_fake_and_zmpi)
     assert "zmpi" in mpileaks_hash_fake_and_zmpi
     assert mpileaks_hash_fake_and_zmpi["zmpi"] == zmpi
@@ -2000,7 +2001,7 @@ def test_compare_abstract_specs():
         "foo.foo@foo+foo arch=foo-foo-foo %foo",
         "foo.foo@foo+foo arch=foo-foo-foo cflags=foo %foo",
     ]
-    specs = [SpecParser(s, Spec).next_spec() for s in constraints]
+    specs = [parse_one_or_raise(s, Spec) for s in constraints]
 
     for a, b in itertools.product(specs, repeat=2):
         # Check that we can compare without raising an error
@@ -2037,8 +2038,8 @@ def test_compare_abstract_specs():
     ],
 )
 def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
-    lhs = SpecParser(lhs_str, Spec).next_spec()
-    rhs = SpecParser(rhs_str, Spec).next_spec()
+    lhs = parse_one_or_raise(lhs_str, Spec)
+    rhs = parse_one_or_raise(rhs_str, Spec)
     intersect, lhs_sat_rhs, rhs_sat_lhs = expected
 
     assert lhs.intersects(rhs) is intersect
@@ -2061,7 +2062,8 @@ def test_uppercase_hash_is_not_a_git_version():
 @pytest.mark.regression("32471")
 @pytest.mark.parametrize("spec_str", ["target=x86_64", "os=redhat6", "target=x86_64:"])
 def test_platform_is_none_if_not_present(spec_str):
-    s = SpecParser(spec_str, Spec).next_spec()
+    s = parse_one_or_raise(spec_str, Spec)
+    assert s.architecture is not None
     assert s.architecture.platform is None, s
 
 
@@ -2221,6 +2223,7 @@ def test_parser_constructs_nodes_of_given_class():
         pass
 
     spec = SpecParser("a ^b %[when=+x] c %[when='@1'] d", SpecSubclass).next_spec()
+    assert spec is not None
     edges = list(spec.traverse_edges(root=False))
     assert [type(e.spec) for e in edges] == [SpecSubclass] * 3
     assert [type(e.when) for e in edges if e.when is not EMPTY_SPEC] == [SpecSubclass] * 2

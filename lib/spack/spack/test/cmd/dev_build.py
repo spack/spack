@@ -33,8 +33,8 @@ def test_dev_build_basics(tmp_path: pathlib.Path, install_mockery):
     assert "dev_path" in spec.variants
 
     with fs.working_dir(str(tmp_path)):
-        with open(spec.package.filename, "w", encoding="utf-8") as f:  # type: ignore
-            f.write(spec.package.original_string)  # type: ignore
+        with open(spec.package.filename, "w", encoding="utf-8") as f:
+            f.write(spec.package.original_string)
 
         dev_build("dev-build-test-install@0.0.0")
 
@@ -51,14 +51,14 @@ def test_dev_build_before(tmp_path: pathlib.Path, install_mockery, installer_var
     )
 
     with fs.working_dir(str(tmp_path)):
-        with open(spec.package.filename, "w", encoding="utf-8") as f:  # type: ignore
-            f.write(spec.package.original_string)  # type: ignore
+        with open(spec.package.filename, "w", encoding="utf-8") as f:
+            f.write(spec.package.original_string)
 
         dev_build("-b", "edit", "dev-build-test-install@0.0.0")
 
-        assert spec.package.filename in os.listdir(os.getcwd())  # type: ignore
-        with open(spec.package.filename, "r", encoding="utf-8") as f:  # type: ignore
-            assert f.read() == spec.package.original_string  # type: ignore
+        assert spec.package.filename in os.listdir(os.getcwd())
+        with open(spec.package.filename, "r", encoding="utf-8") as f:
+            assert f.read() == spec.package.original_string
 
     assert not os.path.exists(spec.prefix)
 
@@ -72,14 +72,14 @@ def test_dev_build_until(
     )
 
     with fs.working_dir(str(tmp_path)):
-        with open(spec.package.filename, "w", encoding="utf-8") as f:  # type: ignore
-            f.write(spec.package.original_string)  # type: ignore
+        with open(spec.package.filename, "w", encoding="utf-8") as f:
+            f.write(spec.package.original_string)
 
         dev_build("--until", last_phase, "dev-build-test-install@0.0.0")
 
-        assert spec.package.filename in os.listdir(os.getcwd())  # type: ignore
-        with open(spec.package.filename, "r", encoding="utf-8") as f:  # type: ignore
-            assert f.read() == spec.package.replacement_string  # type: ignore
+        assert spec.package.filename in os.listdir(os.getcwd())
+        with open(spec.package.filename, "r", encoding="utf-8") as f:
+            assert f.read() == spec.package.replacement_string
 
     assert not os.path.exists(spec.prefix)
     assert not temporary_store.db.query(spec, installed=True)
@@ -372,7 +372,7 @@ spack:
             install()
 
     for spec in (leaf_spec, root_spec):
-        filename = spec.package.filename  # type: ignore
+        filename = spec.package.filename
         assert filename in os.listdir(spec.prefix)
         with open(os.path.join(spec.prefix, filename), "r", encoding="utf-8") as f:
             assert f.read() == spec.package.replacement_string
@@ -453,8 +453,8 @@ def test_dev_build_rebuild_on_source_changes(
 
     def reset_string():
         with fs.working_dir(str(build_dir)):
-            with open(spec.package.filename, "w", encoding="utf-8") as f:  # type: ignore
-                f.write(spec.package.original_string)  # type: ignore
+            with open(spec.package.filename, "w", encoding="utf-8") as f:
+                f.write(spec.package.original_string)
 
     reset_string()
 

@@ -136,11 +136,12 @@ def test_create_template(mock_test_repo, args, name, expected):
         for entry in expected:
             assert entry in content
 
-    black = which("black", required=False)
-    if not black:
-        pytest.skip("checking blackness of `spack create` output requires black")
+    ruff = which("ruff", required=False)
+    if not ruff:
+        pytest.skip("checking formatting of `spack create` output requires ruff")
 
-    black("--check", "--diff", filename)
+    assert ruff is not None
+    ruff("format", "--check", "--diff", filename)
 
 
 @pytest.mark.parametrize(
@@ -159,7 +160,7 @@ def test_build_system_guesser_no_stage():
 
     # Ensure get the expected build system
     with pytest.raises(AttributeError, match="'NoneType' object has no attribute"):
-        guesser(None, "/the/url/does/not/matter")
+        guesser(None, "/the/url/does/not/matter")  # ty: ignore[invalid-argument-type]
 
 
 def test_build_system_guesser_octave(tmp_path: pathlib.Path):

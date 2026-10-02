@@ -7,6 +7,7 @@ import pathlib
 import shlex
 import shutil
 import urllib
+import urllib.parse
 from typing import List, Optional
 
 import spack.vendor.ruamel.yaml

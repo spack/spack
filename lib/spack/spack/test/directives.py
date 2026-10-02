@@ -130,8 +130,8 @@ def test_license_directive(config, mock_packages: RepoPath, package_name, expect
 
 def test_duplicate_exact_range_license():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
-    package.name = "test_package"
+    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}  # ty: ignore[invalid-assignment]
+    package.name = "test_package"  # ty: ignore[invalid-assignment]
 
     msg = (
         r"test_package is specified as being licensed as MIT when \+foo, but it is also "
@@ -139,13 +139,13 @@ def test_duplicate_exact_range_license():
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        spack.directives._License("MIT", "+foo")(package)
+        spack.directives._License("MIT", "+foo")(package)  # ty: ignore[invalid-argument-type]
 
 
 def test_overlapping_duplicate_licenses():
     package = namedtuple("package", ["licenses", "name"])
-    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}
-    package.name = "test_package"
+    package.licenses = {spack.spec.Spec("+foo"): "Apache-2.0"}  # ty: ignore[invalid-assignment]
+    package.name = "test_package"  # ty: ignore[invalid-assignment]
 
     msg = (
         r"test_package is specified as being licensed as MIT when \+bar, but it is also "
@@ -153,7 +153,7 @@ def test_overlapping_duplicate_licenses():
     )
 
     with pytest.raises(spack.directives.OverlappingLicenseError, match=msg):
-        spack.directives._License("MIT", "+bar")(package)
+        spack.directives._License("MIT", "+bar")(package)  # ty: ignore[invalid-argument-type]
 
 
 def test_version_type_validation():
@@ -166,11 +166,11 @@ def test_version_type_validation():
 
     # Pass a float
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives._Version(ver=3.10, kwargs={})(package(name="python"))
+        spack.directives._Version(ver=3.10, kwargs={})(package(name="python"))  # ty: ignore[invalid-argument-type]
 
     # Try passing a bogus type; it's just that we want a nice error message
     with pytest.raises(spack.version.VersionError, match=msg):
-        spack.directives._Version(ver={}, kwargs={})(package(name="python"))
+        spack.directives._Version(ver={}, kwargs={})(package(name="python"))  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.parametrize(
@@ -206,11 +206,11 @@ def test_redistribute_override_when():
         disable_redistribute = {}
 
     cls = MockPackage
-    spack.directives._Redistribute(source=False, binary=None, when="@1.0")(cls)
+    spack.directives._Redistribute(source=False, binary=None, when="@1.0")(cls)  # ty: ignore[invalid-argument-type]
     spec_key = spack.directives._make_when_spec("@1.0")
     assert not cls.disable_redistribute[spec_key].binary
     assert cls.disable_redistribute[spec_key].source
-    spack.directives._Redistribute(source=None, binary=False, when="@1.0")(cls)
+    spack.directives._Redistribute(source=None, binary=False, when="@1.0")(cls)  # ty: ignore[invalid-argument-type]
     assert cls.disable_redistribute[spec_key].binary
     assert cls.disable_redistribute[spec_key].source
 
@@ -435,7 +435,7 @@ def test_deprecated_keyword_records_the_reserved_label():
         name = "mypkg"
         version("1.0", deprecated=True)
 
-    entries = Pkg.deprecations[Spec("@=1.0")]
+    entries = Pkg.deprecations[Spec("@=1.0")]  # ty: ignore[unresolved-attribute]
     assert len(entries) == 1
     assert entries[0].reason == DeprecationReason.UNSPECIFIED
     assert entries[0].severity == DeprecationSeverity.CRITICAL
@@ -458,7 +458,7 @@ def test_deprecated_keyword_records_no_message():
         name = "mypkg"
         version("1.0", deprecated=True)
 
-    assert Pkg.deprecations[Spec("@=1.0")][0].msg is None
+    assert Pkg.deprecations[Spec("@=1.0")][0].msg is None  # ty: ignore[unresolved-attribute]
 
 
 def test_deprecated_directive_accepts_an_unspecified_reason():
@@ -468,7 +468,7 @@ def test_deprecated_directive_accepts_an_unspecified_reason():
         name = "mypkg"
         deprecated("@=1.0", reason="unspecified", severity="low", msg="use @=2.0")
 
-    (entry,) = Pkg.deprecations[Spec("@=1.0")]
+    (entry,) = Pkg.deprecations[Spec("@=1.0")]  # ty: ignore[unresolved-attribute]
     assert entry.reason == DeprecationReason.UNSPECIFIED
     assert entry.labels == ()
 

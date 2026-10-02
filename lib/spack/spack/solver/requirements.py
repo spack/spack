@@ -313,11 +313,13 @@ class RequirementParser:
             requirements = [requirements]
 
         rules = []
-        requirement: Dict[str, Any]
-        for requirement in requirements:
+        for raw_requirement in requirements:
             # A string is equivalent to a one_of group with a single element
-            if isinstance(requirement, str):
-                requirement = {"one_of": [requirement]}
+            requirement: Dict[str, Any] = (
+                {"one_of": [raw_requirement]}
+                if isinstance(raw_requirement, str)
+                else raw_requirement
+            )
 
             for policy in ("spec", "one_of", "any_of"):
                 if policy not in requirement:

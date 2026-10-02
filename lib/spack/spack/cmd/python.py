@@ -91,7 +91,7 @@ def ipython_interpreter(args):
     support running a script or arguments
     """
     try:
-        import IPython  # type: ignore[import]
+        import IPython
     except ImportError:
         tty.die("ipython is not installed, install and try again.")
 

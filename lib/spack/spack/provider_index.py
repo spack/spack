@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
 
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Union
+from typing import IO, TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Union
 
 import spack.error
 import spack.util.spack_json as sjson
@@ -35,7 +35,7 @@ class ProviderIndex:
     def __init__(
         self,
         repository: "spack.repo.RepoType",
-        specs: Optional[Iterable["spack.spec.Spec"]] = None,
+        specs: Optional[Iterable[Union[str, "spack.spec.Spec"]]] = None,
     ):
         """Provider index based on a single mapping of providers.
 
@@ -141,7 +141,7 @@ class ProviderIndex:
                         constrained.constrain(provider_spec)
                         provider_map[provided_spec].add(constrained)
 
-    def to_json(self, stream=None):
+    def to_json(self, stream: IO[str]) -> None:
         """Dump a JSON representation of this object.
 
         Args:

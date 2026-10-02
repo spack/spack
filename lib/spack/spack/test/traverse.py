@@ -105,10 +105,11 @@ def test_all_orders_traverse_the_same_nodes(direction, deptype, abstract_specs_d
     # vertices without in-edges", since this is not how it's used; it's typically used
     # as "skip the input specs".)
     specs = [abstract_specs_dtuse["dtuse"], abstract_specs_dtuse["dtlink5"]]
-    kwargs = {"root": True, "direction": direction, "deptype": deptype, "cover": "nodes"}
 
     def nodes(order):
-        s = traverse.traverse_nodes(specs, order=order, **kwargs)
+        s = traverse.traverse_nodes(
+            specs, order=order, root=True, direction=direction, deptype=deptype, cover="nodes"
+        )
         return sorted(list(s))
 
     assert nodes("pre") == nodes("post") == nodes("breadth") == nodes("topo")
@@ -122,10 +123,11 @@ def test_all_orders_traverse_the_same_edges(direction, root, deptype, abstract_s
     # All edges should be returned, including the artificial edges to the input
     # specs when root=True.
     specs = [abstract_specs_dtuse["dtuse"], abstract_specs_dtuse["dtlink5"]]
-    kwargs = {"root": root, "direction": direction, "deptype": deptype, "cover": "edges"}
 
     def edges(order):
-        s = traverse.traverse_edges(specs, order=order, **kwargs)
+        s = traverse.traverse_edges(
+            specs, order=order, root=root, direction=direction, deptype=deptype, cover="edges"
+        )
         return sorted(list(s))
 
     assert edges("pre") == edges("post") == edges("breadth") == edges("topo")
