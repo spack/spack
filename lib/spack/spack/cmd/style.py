@@ -321,12 +321,6 @@ def print_tool_result(tool, returncode):
 def setup_baseline_ruff_config(args, repo: Optional[spack.repo.Repo] = None):
     """Common ruff args, the directory to run in, and the one to report paths relative to."""
     if repo:
-        # Let ruff locate a package repo's config itself, by searching up from the files it
-        # checks, as it would for any other project. Passing --config would override that, and
-        # picking the file ourselves would mean reimplementing ruff's rules for which files
-        # count -- a pyproject.toml only configures ruff if it has a [tool.ruff] section.
-        # A repo inside a spack prefix finds spack's config this way; one outside with no
-        # config of its own gets ruff's defaults, same as running ruff there by hand.
         return ["--quiet"], repo_root(repo), repo_root(repo)
     config = os.path.join(spack.paths.prefix, "pyproject.toml")
     return ["--config", config, "--quiet"], args.root, args.initial_working_dir
@@ -647,7 +641,6 @@ def style(parser, args):
     # argparse.REMAINDER keeps a "--" separating options from files, so drop it
     files = args.files[1:] if args.files[:1] == ["--"] else args.files
 
-    # core files are checked from the spack root; repo files are checked where they live
     if repo:
         file_list = [Path(os.path.realpath(f)) for f in files]
         outside = [str(f) for f in file_list if repo_root(repo) not in f.parents]
@@ -663,7 +656,6 @@ def style(parser, args):
     if args.skip is not None:
         selected -= validate_toolset(args.skip)
     if repo:
-        # mypy type checks an importable spack, not a tree of package recipes
         selected.discard("mypy")
 
     if not selected:
