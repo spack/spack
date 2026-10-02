@@ -1981,7 +1981,7 @@ def process_env_file_paths(
         abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
 
         if os.path.isabs(original_value):
-            # Rule 1: Absolute path inside old env → rewrite to new env
+            # Rule 1: Absolute path inside old env: rewrite to new env
             try:
                 rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
                 if not rel_to_old_env.startswith(".."):
@@ -1995,23 +1995,23 @@ def process_env_file_paths(
                     if rewritten != abs_path:
                         absolutize_path_in_yaml(data, key_path, rewritten)
                         modified = True
-                    # else: Rule 4: Absolute path outside envs root → unchanged
+                    # else: Rule 4: Absolute path outside envs root: unchanged
             except ValueError:
-                # Different drives on Windows → outside env, unchanged
+                # Different drives on Windows: outside env, unchanged
                 pass
         else:
             # Relative path - check if it points inside or outside the env
             try:
                 rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
                 if rel_to_old_env.startswith(".."):
-                    # Rule 2: Relative path pointing outside env → make absolute
+                    # Rule 2: Relative path pointing outside env: make absolute
                     # But: if pointing to sibling env, rewrite to new location (Rule 2a)
                     target_path = _rewrite_sibling_env_path(abs_path, old_envs_root, new_envs_root)
                     absolutize_path_in_yaml(data, key_path, target_path)
                     modified = True
-                # else: Rule 3: Relative path inside env → keep relative (no change)
+                # else: Rule 3: Relative path inside env: keep relative (no change)
             except ValueError:
-                # Different drives on Windows → outside env, make absolute
+                # Different drives on Windows: outside env, make absolute
                 absolutize_path_in_yaml(data, key_path, abs_path)
                 modified = True
 
@@ -2423,7 +2423,6 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                 if os.path.exists(staging_path):
                     shutil.rmtree(staging_path, ignore_errors=True)
 
-                # Copy to staging
                 shutil.copytree(src_path, staging_path, ignore=ignore_views)
 
                 # Rewrite paths in environment config files
@@ -2445,7 +2444,6 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                 os.replace(staging_path, dst_path)
             except (OSError, shutil.Error) as e:
                 tty.warn(f"Failed to copy environment {entry}: {e}")
-                # Clean up staging on failure
                 if os.path.exists(staging_path):
                     shutil.rmtree(staging_path, ignore_errors=True)
                 # Copy failed despite holding lock and passing upfront checks.
@@ -2464,15 +2462,12 @@ def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
 
     cmp = filecmp.dircmp(src_dir, dst_dir)
 
-    # Check for differences in files only in one directory
     if cmp.left_only or cmp.right_only:
         return False
 
-    # Check for different files
     if cmp.diff_files:
         return False
 
-    # Recursively check subdirectories
     for subdir in cmp.common_dirs:
         if not _dirs_identical(os.path.join(src_dir, subdir), os.path.join(dst_dir, subdir)):
             return False
@@ -2570,9 +2565,6 @@ def _do_migrate_home() -> Dict[str, bool]:
     This allows users who git pull a new Spack to get their ~/.spack migrated
     regardless of what's in the $spack prefix.
 
-    Note: The caller (_perform_auto_migration_at_module_load) skips all migration
-    when the command is 'spack isolate', so we don't need to check that here.
-
     Returns:
         Dict with keys 'user_config' and 'package_repos', values True if migrated
     """
@@ -2640,24 +2632,17 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     locations under $spack to new XDG-style shared locations. Existing installs
     are retained in place. Configuration is written to the layout scope.
 
-    This does NOT migrate ~/.spack user config or package repos - that is
-    handled by _do_migrate_home() which has different conditions.
-
     Returns:
         Dict with keys 'migrated' and 'retained' (lists of resource names)
     """
     tty.debug("Spack prefix auto-migration called")
 
-    # Detect what old resources exist
     old_resources = _detect_old_resources()
 
-    # Write configuration to layout scope
     layout_scope_path = _layout_scope_path()
     config_path = os.path.join(layout_scope_path, "config.yaml")
-    # Inherit permissions from parent ($spack/etc/spack) for shared installations
     filesystem.mkdirp(layout_scope_path, default_perms="parents")
 
-    # Accumulate config changes here
     config_changes: Dict[str, Any] = {}
     migrated_resources: List[str] = []
     retained_resources: List[str] = []
