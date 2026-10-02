@@ -5,6 +5,7 @@
 
 import contextlib
 import importlib
+import multiprocessing
 import pickle
 import sys
 import time
@@ -32,6 +33,7 @@ import spack.error
 import spack.hash_lookup
 import spack.repo
 import spack.solver.core
+import spack.subprocess_context
 import spack.traverse
 import spack.util.parallel
 from spack.concretize_ui import (
@@ -65,6 +67,8 @@ class SolveOutcome(NamedTuple):
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
 TestsType = Union[bool, Iterable[str]]
+#: Position of the spec in the input, spec string, tests, reuse factory, and events buffer
+TaskArguments = Tuple[int, str, TestsType, Optional["SpecFiltersFactory"], BufferedUI]
 
 if TYPE_CHECKING:
     from spack.solver.asp import Solver
@@ -265,14 +269,7 @@ def _concretize_separately(
 
     ensure_compilers_in_configuration()
 
-    # Solve the environment in parallel on Linux. imap_unordered falls back to a serial map when
-    # parallelism is disabled (e.g. Windows), and when there is at most one spec to solve
-    for j, outcome in enumerate(
-        spack.util.parallel.imap_unordered(
-            _concretize_task, args, processes=processes, maxtaskperchild=1, serialize_env=True
-        ),
-        start=1,
-    ):
+    for j, outcome in enumerate(_run_tasks(args, processes=processes), start=1):
         # Replay before raising, so a solve that failed still reports what it had to say
         outcome.buffered.replay(ui)
         if outcome.error is not None:
@@ -299,9 +296,26 @@ def _concretize_separately(
     ]
 
 
-def _concretize_task(
-    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"], BufferedUI],
-) -> SolveOutcome:
+def _run_tasks(args: List[TaskArguments], *, processes: int) -> Iterator[SolveOutcome]:
+    """Run a concretization task per item of ``args``, and yield their outcomes in the order
+    they finish.
+
+    The tasks run in a pool of ``processes`` workers, or in this process when parallelism is
+    disabled (e.g. on Windows) or there is at most one task.
+    """
+    if not spack.util.parallel.ENABLE_PARALLELISM or len(args) <= 1:
+        yield from map(_concretize_task, args)
+        return
+
+    marshaler = spack.subprocess_context.GlobalStateMarshaler(serialize_env=True)
+    # clingo does not release memory until the process exits, so each task gets a new worker
+    with multiprocessing.Pool(
+        processes, initializer=marshaler.restore, maxtasksperchild=1
+    ) as pool:
+        yield from pool.imap_unordered(_concretize_task, args)
+
+
+def _concretize_task(packed_arguments: TaskArguments) -> SolveOutcome:
     index, spec_str, tests, factory, buffered = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
