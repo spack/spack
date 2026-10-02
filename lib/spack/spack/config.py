@@ -2099,6 +2099,20 @@ def _is_nonempty_directory(path: str) -> bool:
         return False
 
 
+def _make_marker_verifier(marker_name: str):
+    def verify_with_marker(dest_path):
+        if not os.path.exists(dest_path):
+            return DestinationCheck.PROCEED
+        marker_path = os.path.join(dest_path, marker_name)
+        if os.path.exists(marker_path):
+            tty.debug(f"Already migrated from this spack instance (found marker {marker_name})")
+            return DestinationCheck.SKIP
+        tty.warn(f"Destination exists from different source: {dest_path}")
+        return DestinationCheck.FAIL
+
+    return verify_with_marker
+
+
 def _migrate_with_staging(
     old_path: str,
     new_path: str,
@@ -2321,17 +2335,7 @@ def _migrate_gpg(
     # Compute marker name for this spack instance
     source_hash = _migration_source_hash()
     marker_name = f".migration-{source_hash}"
-
-    def verify_with_marker(dest_path):
-        """Check destination for migration marker."""
-        if not os.path.exists(dest_path):
-            return DestinationCheck.PROCEED
-        marker_path = os.path.join(dest_path, marker_name)
-        if os.path.exists(marker_path):
-            tty.debug(f"Already migrated from this spack instance (found marker {marker_name})")
-            return DestinationCheck.SKIP
-        tty.debug(f"Cannot migrate: destination exists from different source: {dest_path}")
-        return DestinationCheck.FAIL
+    verify_with_marker = _make_marker_verifier(marker_name)
 
     if gpg_home_exists:
         success = _migrate_with_staging(
@@ -2372,26 +2376,13 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
 
     source_hash = _migration_source_hash()
     marker_name = f".migration-{source_hash}"
+    verify_with_marker = _make_marker_verifier(marker_name)
 
     try:
         filesystem.mkdirp(dst_dir)
     except (OSError, PermissionError):
         # Cannot create destination directory - migration not possible
         return False
-
-    # Define marker-checking callback
-    def verify_with_marker(dest_path):
-        """Check destination for migration marker."""
-        if not os.path.exists(dest_path):
-            return DestinationCheck.PROCEED
-        marker_path = os.path.join(dest_path, marker_name)
-        if os.path.exists(marker_path):
-            tty.debug(f"Already migrated from this spack instance (found marker {marker_name})")
-            return DestinationCheck.SKIP
-        tty.warn(
-            f"Environment migration stopped: destination exists from different source: {dest_path}"
-        )
-        return DestinationCheck.FAIL
 
     # Define view exclusion callback
     # Use hardcoded marker instead of importing from environment module to avoid
