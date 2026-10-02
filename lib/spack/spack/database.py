@@ -81,7 +81,7 @@ _DB_DIRNAME = ".spack-db"
 #: DB version.  This is stuck in the DB file to track changes in format.
 #: Increment by one when the database format changes.
 #: Versions before 5 were not integers.
-_DB_VERSION = vn.Version("9")
+_DB_VERSION = vn.StandardVersion.from_string("9")
 
 #: For any version combinations here, skip reindex when upgrading.
 #: Reindexing can take considerable time and is not always necessary.
@@ -635,16 +635,16 @@ class Database:
 
         self._write_transaction_impl = lk.WriteTransaction
         self._read_transaction_impl = lk.ReadTransaction
-        self._db_version: Optional[vn.ConcreteVersion] = None
+        self._db_version: Optional[vn.StandardVersion] = None
 
     @property
-    def db_version(self) -> vn.ConcreteVersion:
+    def db_version(self) -> vn.StandardVersion:
         if self._db_version is None:
             raise AttributeError("version not set -- DB has not been read yet")
         return self._db_version
 
     @db_version.setter
-    def db_version(self, value: vn.ConcreteVersion):
+    def db_version(self, value: vn.StandardVersion):
         self._db_version = value
 
     def _ensure_parent_directories(self):
@@ -1280,7 +1280,7 @@ class Database:
                 ref_count=0,
                 explicit=explicit,
                 installation_time=installation_time,
-                origin=None if not hasattr(spec, "origin") else spec.origin,
+                origin=getattr(spec, "origin", None),
             )
 
             # Connect dependencies from the DB to the new copy.

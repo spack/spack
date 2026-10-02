@@ -373,7 +373,7 @@ def repo_list(args):
         return
 
     # Collect all repository information
-    repo_info = []
+    repo_info: List[Dict[str, Any]] = []
 
     for name, path, maybe_repo in _iter_repos_from_descriptors(descriptors):
         if isinstance(maybe_repo, spack.repo.Repo):

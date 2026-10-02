@@ -13,7 +13,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import spack.error
 import spack.repo
@@ -38,6 +38,9 @@ from .common import (
     library_prefix,
     path_to_dict,
 )
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 #: Timeout used for package detection (seconds)
 DETECTION_TIMEOUT = 60
@@ -149,6 +152,7 @@ def libraries_in_ld_and_system_library_path(
         path_hints (list): list of paths to be searched. If ``None``, the default
             system paths are used.
     """
+    search_paths: List[str]
     if path_hints:
         search_paths = spack.util.filesystem.search_paths_for_libraries(*path_hints)
     else:
@@ -165,7 +169,7 @@ def libraries_in_ld_and_system_library_path(
         search_paths.extend(spack.util.ld_so_conf.host_dynamic_linker_search_paths())
 
         # Drop redundant paths
-        search_paths = list(filter(os.path.isdir, search_paths))
+        search_paths = [p for p in search_paths if os.path.isdir(p)]
 
     # Make use we don't doubly list /usr/lib and /lib etc
     search_paths = dedupe_paths(search_paths)
@@ -403,9 +407,8 @@ class LibrariesFinder(Finder):
             if sys.platform != "win32"
             else libraries_in_windows_paths(path_hints=paths)
         )
-        patterns = [re.compile(x) for x in patterns]
         result = []
-        for compiled_re in patterns:
+        for compiled_re in (re.compile(x) for x in patterns):
             for path, exe in libraries_by_path.items():
                 if compiled_re.search(exe):
                     result.append(path)

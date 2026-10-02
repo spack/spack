@@ -184,14 +184,15 @@ class FilePatch(Patch):
         abs_path: Optional[str] = None
         # At different times we call FilePatch on instances and classes
         pkg_cls = pkg if isinstance(pkg, type) else pkg.__class__
-        for cls in pkg_cls.__mro__:  # type: ignore
-            if not hasattr(cls, "module"):
+        for cls in pkg_cls.__mro__:
+            module = getattr(cls, "module", None)
+            if module is None:
                 # We've gone too far up the MRO
                 break
 
             # Cannot use pkg.package_dir because it's a property and we have
             # classes, not instances.
-            pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
+            pkg_dir = os.path.abspath(os.path.dirname(module.__file__))
             path = os.path.join(pkg_dir, self.relative_path)
             if os.path.exists(path):
                 abs_path = path

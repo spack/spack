@@ -46,14 +46,16 @@ jobs:
               coreutils cvs gfortran graphviz gnupg2 mercurial ninja-build \
               cmake bison libbison-dev subversion
     # This job tests older Python versions, which the pins in the requirements file do
-    # not support, so it installs unpinned. mypy and ruff are needed by the tests
-    # covering "spack style". See coveragepy issue 2082 for the coverage bound.
+    # not support, so it installs unpinned. ty and ruff are needed by the tests
+    # covering "spack style" (ty requires Python 3.8+). See coveragepy issue 2082 for the
+    # coverage bound.
     - name: Setup Spack
       uses: ./.github/actions/setup-spack
       with:
         python-version: ${{ matrix.python-version }}
         pip-install: >-
-          pytest pytest-xdist pytest-cov "coverage<=7.11.0" "mypy>=0.900" ruff
+          pytest pytest-xdist pytest-cov "coverage<=7.11.0" "ty==0.0.72; python_version >= '3.8'"
+          ruff
     - name: Run unit tests
       env:
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}

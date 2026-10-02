@@ -181,15 +181,15 @@ def _get_scope_and_section(args):
     section = getattr(args, "section", None)
     path = getattr(args, "path", None)
 
-    # w/no args and an active environment, point to env manifest
-    if not section and not scope:
-        env = active_environment()
-        if env:
-            scope = env.scope_name
-
-    # set scope defaults
-    elif not scope:
-        scope = spack.config.CONFIG.default_modify_scope(section)
+    if not scope:
+        if section:
+            # set scope defaults
+            scope = spack.config.CONFIG.default_modify_scope(section)
+        else:
+            # w/no args and an active environment, point to env manifest
+            env = active_environment()
+            if env:
+                scope = env.scope_name
 
     # special handling for commands that take value instead of section
     if path:
@@ -272,10 +272,10 @@ def config_edit(args):
     spack_env = os.environ.get(ev.spack_env_var)
     env_error = ev.environment._active_environment_error
 
-    if env_error and args.scope:
+    if env_error:
         # Cannot use scopes beyond the environment itself with a failed environment
-        raise env_error
-    elif env_error:
+        if args.scope or env_error.filename is None:
+            raise env_error
         # The rest of the config system wasn't set up fully, but spack.main was allowed
         # to progress so the user can open the malformed environment file
         config_file = env_error.filename
@@ -386,7 +386,7 @@ def config_add(args):
     This is a stateful operation that edits the config files."""
     if not (args.file or args.path):
         tty.error("No changes requested. Specify a file or value.")
-        setup_parser.add_parser.print_help()
+        args.subparser.print_help()
         exit(1)
 
     scope, section = _get_scope_and_section(args)

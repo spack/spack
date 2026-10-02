@@ -1301,7 +1301,7 @@ else:
 
     def _get_str_literal_value(node: ast.AST) -> Optional[str]:
         """Get the string value of a literal str node."""
-        return node.s if isinstance(node, ast.Str) else None
+        return node.s if isinstance(node, ast.Str) and isinstance(node.s, str) else None
 
 
 if sys.version_info >= (3, 14):
