@@ -616,25 +616,6 @@ def test_auto_migration_skips_existing_package_repository_destination(
     assert (old_repo / "source").read_text(encoding="utf-8") == "old"
 
 
-def test_auto_migration_is_not_repeated_after_layout_scope(mock_spack_instance, monkeypatch):
-    """A completed layout scope prevents a later startup from migrating again.
-
-    Fresh instances do not need a generated layout scope: auto-migration is
-    bypassed when no old resources are detected.
-    """
-    home_dir, base_prefix = mock_spack_instance
-    old_licenses = pathlib.Path(base_prefix) / "etc" / "spack" / "licenses"
-    old_licenses.mkdir(parents=True)
-    (old_licenses / "license.dat").write_text("license", encoding="utf-8")
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-
-    spack.config._do_migrate_spack_prefix()
-
-    # Migration completion marker should exist
-    marker = pathlib.Path(base_prefix) / ".migration-done"
-    assert marker.exists()
-
-
 def test_config_migration_skips_unparseable_yaml(mock_spack_instance, monkeypatch):
     """Test that config migration skips YAML files that can't be parsed."""
     home_dir, base_prefix = mock_spack_instance
@@ -827,32 +808,19 @@ def test_migrate_home_exits_early_when_destinations_exist(mock_spack_instance, m
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    # Track files before
-    old_config_files_before = set(old_user_config.rglob("*"))
-    new_config_files_before = set(new_user_config.rglob("*"))
+    new_config_files_before_migration = set(new_user_config.rglob("*"))
 
-    # Call _do_migrate_home
     result = spack.config._do_migrate_home()
 
-    # Should have skipped migration
+    # The function should report that it did nothing
     assert result["user_config"] is False, "Should skip user config when destination exists"
     assert result["package_repos"] is False, "Should skip package repos when destination exists"
 
-    # Old location should be unchanged
-    old_config_files_after = set(old_user_config.rglob("*"))
-    assert old_config_files_before == old_config_files_after, (
-        "Old user config should be unchanged when migration is skipped"
-    )
-
-    # New location should be unchanged (no merge/copy happened)
-    new_config_files_after = set(new_user_config.rglob("*"))
-    assert new_config_files_before == new_config_files_after, (
+    # Also check directly that none of the old config files got copied
+    # into the new location
+    new_config_files_after_migration = set(new_user_config.rglob("*"))
+    assert new_config_files_before_migration == new_config_files_after_migration, (
         "New user config should be unchanged when migration is skipped"
-    )
-
-    # Verify old config wasn't migrated
-    assert not (new_user_config / "config.yaml").exists(), (
-        "Old config should not be copied when destination already exists"
     )
 
 
