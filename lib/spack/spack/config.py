@@ -2153,6 +2153,7 @@ def _migrate_with_staging(
 
     # Acquire lock only if caller didn't take responsibility for it
     lock = None
+    lock_acquired = False
     if lock_name is not None:
         lock_path = os.path.join(parent, lock_name)
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
@@ -2160,6 +2161,7 @@ def _migrate_with_staging(
     try:
         if lock is not None:
             lock.acquire_write()
+            lock_acquired = True
 
         if verify_destination_callback:
             action = verify_destination_callback(new_path)
@@ -2211,7 +2213,7 @@ def _migrate_with_staging(
             shutil.rmtree(staging_path, ignore_errors=True)
         return False
     finally:
-        if lock is not None:
+        if lock_acquired:
             lock.release_write()
 
 
