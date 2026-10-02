@@ -539,7 +539,11 @@ def migration_resources(mock_spack_instance, mutable_config, monkeypatch):
 def test_auto_migration_old_spack_internal_resources(
     migration_resources, conflicts, expected_migrations, mutable_config
 ):
-    """Migration handles GPG, environments, licenses, conflicts, and views."""
+    """Migration handles GPG, environments, licenses, conflicts, and views.
+
+    Since no old installs are created in these tests, install_tree:root should
+    point to the new default location ($data_home/installs).
+    """
     resources = migration_resources
     resources.add_conflicts(conflicts)
 
@@ -550,6 +554,16 @@ def test_auto_migration_old_spack_internal_resources(
     mutable_config.clear_caches()
 
     resources.assert_migrations(expected_migrations, conflicts)
+
+    # Verify that install_tree:root points to new location (no old installs exist)
+    install_tree_root = spack.config.CONFIG.get("config:install_tree:root")
+    resolved = spack.config.canonicalize_path(install_tree_root)
+    expected_new = spack.config.canonicalize_path("$data_home/installs")
+    assert resolved == expected_new, (
+        f"install_tree:root should point to new location when no old installs exist.\n"
+        f"Expected: {expected_new}\n"
+        f"Got: {resolved}"
+    )
 
 
 def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
@@ -709,3 +723,216 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     expected_include = str(new_envs / "test-env-1" / "common.yaml")
     assert env2_data["spack"]["include"][0] == expected_include  # was relative
     assert env2_data["spack"]["include"][1] == expected_include  # was absolute
+
+
+def test_auto_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
+    """When no old resources exist in $spack, migration doesn't touch the spack prefix.
+
+    Verifies that:
+    - No files are written to $spack when no old resources exist
+    - No locks are attempted in $spack (not even temporarily)
+    - .migration-done marker is NOT created
+    - _do_migrate_home is still called to check $HOME
+    - No layout scope is created
+    """
+    import spack.util.lock
+
+    home_dir, base_prefix = mock_spack_instance
+
+    # Don't create any old resources - this is a fresh instance
+    # No old licenses, no old envs, no old gpg, no old installs
+
+    # Track what files exist in spack prefix before migration
+    spack_prefix = pathlib.Path(base_prefix)
+    files_before = set()
+    for item in spack_prefix.rglob("*"):
+        if item.is_file():
+            files_before.add(item)
+
+    # Track if locks were attempted
+    lock_attempts = []
+    original_lock = spack.util.lock.Lock
+
+    class TrackingLock:
+        def __init__(self, path, *args, **kwargs):
+            lock_attempts.append(path)
+            self._inner = original_lock(path, *args, **kwargs)
+
+        def acquire_write(self):
+            return self._inner.acquire_write()
+
+        def release_write(self):
+            return self._inner.release_write()
+
+    monkeypatch.setattr(spack.util.lock, "Lock", TrackingLock)
+
+    home_migrate_called = []
+    original_migrate_home = spack.config._do_migrate_home
+
+    def track_home_migrate():
+        home_migrate_called.append(True)
+        return original_migrate_home()
+
+    monkeypatch.setattr(spack.config, "_do_migrate_home", track_home_migrate)
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    spack.config._perform_auto_migration_at_module_load()
+
+    assert home_migrate_called, "_do_migrate_home should be called even with no old resources"
+
+    files_after = set()
+    for item in spack_prefix.rglob("*"):
+        if item.is_file():
+            files_after.add(item)
+
+    # Verify no new files were written to spack prefix (this includes the layout
+    # scope, as well as .migration-done).
+    new_files = files_after - files_before
+    assert not new_files, (
+        f"No files should be written to spack prefix when no old resources exist.\n"
+        f"New files: {[str(f.relative_to(spack_prefix)) for f in new_files]}"
+    )
+
+    # Verify no locks were attempted in spack prefix
+    spack_lock_attempts = [p for p in lock_attempts if str(spack_prefix) in str(p)]
+    assert not spack_lock_attempts, (
+        f"No locks should be attempted in spack prefix when no old resources exist.\n"
+        f"Lock attempts: {spack_lock_attempts}"
+    )
+
+
+def test_migrate_home_exits_early_when_destinations_exist(mock_spack_instance, monkeypatch):
+    """_do_migrate_home exits early when destination directories already exist.
+
+    If ~/.config/spack and the package repos location already exist, _do_migrate_home
+    should not attempt any migration, even if ~/.spack exists.
+    """
+    home_dir, base_prefix = mock_spack_instance
+
+    # Create old user config with content
+    old_user_config = pathlib.Path(home_dir) / ".spack"
+    old_user_config.mkdir(parents=True, exist_ok=True)
+    (old_user_config / "config.yaml").write_text("config:\n  build_jobs: 5\n", encoding="utf-8")
+
+    # Create destination directories (simulating they already exist from prior migration)
+    new_user_config = pathlib.Path(home_dir) / ".config" / "spack"
+    new_user_config.mkdir(parents=True, exist_ok=True)
+    (new_user_config / "packages.yaml").write_text("packages: {}\n", encoding="utf-8")
+
+    # Create package repos destination
+    new_repos = pathlib.Path(spack.paths.package_repos_path)
+    new_repos.mkdir(parents=True, exist_ok=True)
+    (new_repos / "existing-repo").mkdir()
+    (new_repos / "existing-repo" / "file.txt").write_text("existing", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    # Track files before
+    old_config_files_before = set(old_user_config.rglob("*"))
+    new_config_files_before = set(new_user_config.rglob("*"))
+
+    # Call _do_migrate_home
+    result = spack.config._do_migrate_home()
+
+    # Should have skipped migration
+    assert result["user_config"] is False, "Should skip user config when destination exists"
+    assert result["package_repos"] is False, "Should skip package repos when destination exists"
+
+    # Old location should be unchanged
+    old_config_files_after = set(old_user_config.rglob("*"))
+    assert old_config_files_before == old_config_files_after, (
+        "Old user config should be unchanged when migration is skipped"
+    )
+
+    # New location should be unchanged (no merge/copy happened)
+    new_config_files_after = set(new_user_config.rglob("*"))
+    assert new_config_files_before == new_config_files_after, (
+        "New user config should be unchanged when migration is skipped"
+    )
+
+    # Verify old config wasn't migrated
+    assert not (new_user_config / "config.yaml").exists(), (
+        "Old config should not be copied when destination already exists"
+    )
+
+
+def test_layout_scope_fallback_for_old_installs(mock_spack_instance, monkeypatch):
+    """When old installs exist, layout scope retains install_tree at old location.
+
+    Verifies that auto-migration creates a layout scope pointing install_tree:root
+    to the old location when installs are detected.
+    """
+    home_dir, base_prefix = mock_spack_instance
+
+    # Create old install directory with content
+    old_installs = pathlib.Path(base_prefix) / "opt" / "spack"
+    old_installs.mkdir(parents=True, exist_ok=True)
+    (old_installs / "dummy-package").mkdir()
+    (old_installs / "dummy-package" / ".spack").mkdir()
+    (old_installs / "dummy-package" / ".spack" / "spec.json").write_text(
+        '{"name": "dummy"}', encoding="utf-8"
+    )
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    # Trigger migration
+    spack.config._perform_auto_migration_at_module_load()
+
+    # Reload config to pick up layout scope
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    # Verify install_tree:root points to old location via config.get
+    install_tree_root = spack.config.CONFIG.get("config:install_tree:root")
+    resolved = spack.config.canonicalize_path(install_tree_root)
+    expected = str(old_installs)
+    assert resolved == expected, (
+        f"install_tree:root should point to old installs location.\n"
+        f"Expected: {expected}\n"
+        f"Got: {resolved}"
+    )
+
+
+def test_migrate_with_staging_handles_lock_permission_error(tmp_path, monkeypatch):
+    """Test that _migrate_with_staging handles lock acquisition failures gracefully
+    (reports a failed migration).
+    """
+    import spack.util.lock
+
+    old_path = tmp_path / "old"
+    old_path.mkdir()
+    (old_path / "file.txt").write_text("content", encoding="utf-8")
+
+    new_path = tmp_path / "new"
+
+    # Mock Lock to raise PermissionError on acquire_write
+    class MockLock:
+        def __init__(self, *args, **kwargs):
+            self.write_acquired = False
+
+        def acquire_write(self):
+            raise PermissionError("Cannot create lock file")
+
+        def release_write(self):
+            # This should not be called if acquire failed
+            raise AssertionError("release_write should not be called when acquire failed")
+
+    monkeypatch.setattr(spack.util.lock, "Lock", MockLock)
+
+    def prepare_staging(old, staging, new):
+        shutil.copytree(old, staging)
+
+    # This should return False due to permission error, but not crash
+    result = spack.config._migrate_with_staging(
+        old_path=str(old_path),
+        new_path=str(new_path),
+        prepare_staging_callback=prepare_staging,
+        lock_name=".test-lock",
+        staging_name=".test-staging",
+        description="test resource",
+    )
+
+    # Migration should fail gracefully
+    assert result is False, "Migration should return False when lock acquisition fails"
+
+    # New path should not have been created
+    assert not new_path.exists(), "New path should not exist after failed migration"
