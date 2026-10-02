@@ -2646,14 +2646,15 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
         config_changes["install_tree"] = {"root": os.path.join(spack.paths.prefix, "opt", "spack")}
         tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
+    # Compute data_home directly without config (CONFIG doesn't exist yet)
+    expanded_home = os.path.expanduser("~")
+    data_home = os.path.join(expanded_home, ".local", "share", "spack")
+
     # 2. Handle GPG (both keyring and keys directory)
     old_gpg_home = spack.paths.old_gpg_path
     old_gpg_keys = spack.paths.old_gpg_keys_path
     if old_resources["gpg_keys"]:
         old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_home))
-        # Compute data_home directly without config (CONFIG doesn't exist yet)
-        expanded_home = os.path.expanduser("~")
-        data_home = os.path.join(expanded_home, ".local", "share", "spack")
         target_gpg_home = os.path.join(data_home, "gpg")
         target_gpg_keys = os.path.join(data_home, "gpg-keys")
         gnupghome = os.getenv("SPACK_GNUPGHOME")
@@ -2692,9 +2693,6 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
         """Handle migration of a resource that is allowed to merge into a shared
         directory (licenses or environments).
         """
-        # Compute data_home directly without config (CONFIG doesn't exist yet)
-        expanded_home = os.path.expanduser("~")
-        data_home = os.path.join(expanded_home, ".local", "share", "spack")
         target_path = os.path.join(data_home, target_subdir)
 
         # Always migrate to default location (no config checks since CONFIG doesn't exist yet)
