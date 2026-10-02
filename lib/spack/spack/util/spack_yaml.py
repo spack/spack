@@ -28,21 +28,31 @@ from spack.util.tty.color import cextra, clen, colorize
 __all__ = ["load", "dump", "SpackYAMLError"]
 
 
-# Make new classes so we can add custom attributes.
+# Make new classes so we can add custom attributes. The source location marks are set when the
+# object is loaded from, or marked as coming from, a YAML document.
 class syaml_dict(dict):
-    pass
+    _start_mark: error.StreamMark
+    _end_mark: error.StreamMark
 
 
 class syaml_list(list):
-    pass
+    _start_mark: error.StreamMark
+    _end_mark: error.StreamMark
 
 
 class syaml_str(str):
-    pass
+    _start_mark: error.StreamMark
+    _end_mark: error.StreamMark
+
+    # These attributes are set dynamically to mark YAML override/merge directives
+    override: bool
+    prepend: bool
+    append: bool
 
 
 class syaml_int(int):
-    pass
+    _start_mark: error.StreamMark
+    _end_mark: error.StreamMark
 
 
 #: mapping from syaml type -> primitive type
@@ -215,7 +225,7 @@ class OrderedLineRepresenter(representer.RoundTripRepresenter):
     regular Python equivalents, instead of ugly YAML pyobjects.
     """
 
-    def ignore_aliases(self, _data):
+    def ignore_aliases(self, data):
         """Make the dumper NEVER print YAML aliases."""
         return True
 
@@ -232,7 +242,7 @@ class OrderedLineRepresenter(representer.RoundTripRepresenter):
 
 
 class SafeRepresenter(representer.RoundTripRepresenter):
-    def ignore_aliases(self, _data):
+    def ignore_aliases(self, data):
         """Make the dumper NEVER print YAML aliases."""
         return True
 
@@ -334,8 +344,10 @@ class LineAnnotationEmitter(emitter.Emitter):
 
     def process_scalar(self):
         super().process_scalar()
-        if marked(self.event.value):
-            self.saved = self.event.value
+        event = self.event
+        assert event is not None, "process_scalar is only called while emitting an event"
+        if marked(event.value):
+            self.saved = event.value
 
     def write_line_break(self, data=None):
         super().write_line_break(data)

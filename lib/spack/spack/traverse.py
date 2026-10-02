@@ -7,6 +7,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Deque,
     Iterable,
     List,
     NamedTuple,
@@ -418,7 +419,7 @@ def traverse_topo_edges_generator(edges, visitor, key=id, root=True, all_edges=F
         parent_id = key(edge.parent) if edge.parent is not None else None
         node_to_edges[parent_id].append(edge)
 
-    queue = deque((None,))
+    queue: Deque[Any] = deque((None,))
 
     while queue:
         for edge in node_to_edges[queue.popleft()]:
@@ -445,7 +446,7 @@ DirectionType = Literal["children", "parents"]
 
 @overload
 def traverse_edges(
-    specs: Sequence["spack.spec.Spec"],
+    specs: Iterable["spack.spec.Spec"],
     *,
     root: bool = ...,
     order: OrderType = ...,
@@ -460,7 +461,7 @@ def traverse_edges(
 
 @overload
 def traverse_edges(
-    specs: Sequence["spack.spec.Spec"],
+    specs: Iterable["spack.spec.Spec"],
     *,
     root: bool = ...,
     order: OrderType = ...,
@@ -475,7 +476,7 @@ def traverse_edges(
 
 @overload
 def traverse_edges(
-    specs: Sequence["spack.spec.Spec"],
+    specs: Iterable["spack.spec.Spec"],
     *,
     root: bool = ...,
     order: OrderType = ...,
@@ -489,7 +490,7 @@ def traverse_edges(
 
 
 def traverse_edges(
-    specs: Sequence["spack.spec.Spec"],
+    specs: Iterable["spack.spec.Spec"],
     root: bool = True,
     order: OrderType = "pre",
     cover: CoverType = "nodes",
@@ -558,7 +559,7 @@ def traverse_edges(
 
 @overload
 def traverse_nodes(
-    specs: Sequence["spack.spec.Spec"],
+    specs: Iterable["spack.spec.Spec"],
     *,
     root: bool = ...,
     order: OrderType = ...,
@@ -573,7 +574,7 @@ def traverse_nodes(
 
 @overload
 def traverse_nodes(
-    specs: Sequence["spack.spec.Spec"],
+    specs: Iterable["spack.spec.Spec"],
     *,
     root: bool = ...,
     order: OrderType = ...,
@@ -588,7 +589,7 @@ def traverse_nodes(
 
 @overload
 def traverse_nodes(
-    specs: Sequence["spack.spec.Spec"],
+    specs: Iterable["spack.spec.Spec"],
     *,
     root: bool = ...,
     order: OrderType = ...,
@@ -602,7 +603,7 @@ def traverse_nodes(
 
 
 def traverse_nodes(
-    specs: Sequence["spack.spec.Spec"],
+    specs: Iterable["spack.spec.Spec"],
     *,
     root: bool = True,
     order: OrderType = "pre",

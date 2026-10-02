@@ -85,7 +85,9 @@ spack_env_view_var = "SPACK_ENV_VIEW"
 # This is used in spack.main to bypass env failures if the command is `spack config edit`
 # It is used in spack.cmd.config to get the path to a failed env for `spack config edit`
 #: Validation error for a currently activate environment that failed to parse
-_active_environment_error: Optional[spack.config.ConfigFormatError] = None
+_active_environment_error: Optional[
+    Union[spack.config.ConfigFormatError, "SpackEnvironmentConfigError"]
+] = None
 
 #: default path where environments are stored in the spack tree
 default_env_path = os.path.join(spack.paths.var_path, "environments")
@@ -1144,7 +1146,7 @@ class Environment:
         #: Environment root dirs for concrete (lockfile) included environments
         self.included_concrete_env_root_dirs: List[str] = []
         #: First-level included concretized spec data from/to the lockfile.
-        self.included_concrete_spec_data: Dict[str, Dict[str, List[str]]] = {}
+        self.included_concrete_spec_data: Dict[str, Dict[str, Any]] = {}
         #: Roots from included environments from the last concretization, keyed by env path
         self.included_concretized_roots: Dict[str, List[ConcretizedRootInfo]] = {}
         #: Concretized specs by hash from the included environments
@@ -3743,6 +3745,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
 
     def __init__(self, msg, filename):
         super().__init__(f"{msg} in {filename}")
+        self.filename = filename
 
 
 class SpackEnvironmentDevelopError(SpackEnvironmentError):

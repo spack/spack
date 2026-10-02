@@ -10,7 +10,7 @@ import io
 import os
 import shutil
 import sys
-from typing import IO, Any, List, Optional
+from typing import IO, Any, Iterable, List, Optional
 
 from spack.util.tty.color import _cached_isatty, cextra, clen
 
@@ -113,7 +113,7 @@ def config_uniform_cols(
 
 
 def colify(
-    elts: List[Any],
+    elts: Iterable[Any],
     *,
     cols: int = 0,
     output: Optional[IO] = None,

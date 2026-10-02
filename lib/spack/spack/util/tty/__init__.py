@@ -17,7 +17,7 @@ from .color import cescape, clen, cprint, cwrite
 from .color import clear_isatty_cache as clear_isatty_cache
 
 # Globals
-_debug = 0
+_debug: int = 0
 _verbose = False
 _stacktrace = False
 _timestamp = False
