@@ -10,6 +10,7 @@ import spack.config
 import spack.main
 
 sp_migrate = spack.main.SpackCommand("migrate")
+sp_config = spack.main.SpackCommand("config")
 
 
 def _write_layout_config(path: Path, **config):
@@ -63,6 +64,16 @@ def test_migrate_undo_restores_backup_and_configuration(mock_spack_instance, mon
         Path(base_prefix) / "etc" / "spack" / "standard_scopes" / "include.yaml"
     ).read_text(encoding="utf-8")
     assert "~/.spack" in standard_scopes
+
+    # Verify ~/.spack is actually the active write scope
+    old_user = Path(home_dir) / ".spack"
+    old_user.mkdir(exist_ok=True)
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    sp_config("add", "config:build_jobs:99")
+
+    old_user_config = old_user / "config.yaml"
+    assert old_user_config.exists()
+    assert "build_jobs: 99" in old_user_config.read_text(encoding="utf-8")
 
 
 def test_migrate_undo_requires_migration_marker(mock_spack_instance, monkeypatch):
