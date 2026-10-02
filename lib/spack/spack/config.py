@@ -1941,12 +1941,12 @@ def process_env_file_paths(
 
     Applies environment-specific path rewriting rules:
 
-    1. Absolute path inside old env → rewrite to new env location
+    1. Absolute path inside old env -> rewrite to new env location
        (1a. If outside this env but inside envs root (sibling env), rewrite to new root)
-    2. Relative path pointing outside env → make absolute (preserve target)
+    2. Relative path pointing outside env -> make absolute (preserve target)
        (2a. If pointing to sibling env (under same envs root), rewrite to new root)
-    3. Relative path staying inside env → keep relative (works in new location)
-    4. Absolute path outside env (and outside envs root) → unchanged
+    3. Relative path staying inside env -> keep relative (works in new location)
+    4. Absolute path outside env (and outside envs root) -> unchanged
 
     Args:
         file_path: Path to the yaml file to process
