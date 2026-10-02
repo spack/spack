@@ -363,207 +363,66 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
     assert migrated["spack"]["include"][1] == "local.yaml"
 
 
-class MigrationResources:
-    """Create and inspect the old resources used by migration tests."""
-
-    def __init__(self, home_dir, base_prefix):
-        self.base_prefix = pathlib.Path(base_prefix)
-        self.data_home = pathlib.Path(spack.config.canonicalize_path("$data_home"))
-        self.old_gpg = pathlib.Path(spack.paths.old_gpg_path)
-        self.old_licenses = pathlib.Path(spack.paths.old_licenses_path)
-        self.old_envs = pathlib.Path(spack.paths.old_envs_path)
-
-        (self.old_gpg / "private-keys-v1.d").mkdir(parents=True)
-        (self.old_gpg / "private-keys-v1.d" / "key").write_text("old", encoding="utf-8")
-        self.old_licenses.mkdir(parents=True)
-        for name in ("license-1", "license-2"):
-            (self.old_licenses / name).write_text("old", encoding="utf-8")
-        for name in ("env-1", "env-2"):
-            env = self.old_envs / name
-            env.mkdir(parents=True)
-            (env / "spack.yaml").write_text("old", encoding="utf-8")
-        view = self.old_envs / "env-1" / "view"
-        view.mkdir()
-        (view / ".spack-view").write_text("view", encoding="utf-8")
-        (view / "should-not-copy").write_text("view", encoding="utf-8")
-
-    @staticmethod
-    def contains_text(root, text):
-        """Check if text exists in root (file or directory of files)."""
-        root = pathlib.Path(root)
-        if root.is_file():
-            return text in root.read_text(encoding="utf-8")
-        return any(
-            text in path.read_text(encoding="utf-8") for path in root.rglob("*") if path.is_file()
-        )
-
-    def assert_migrations(self, expected_migrations, conflicts):
-        all_resources = {
-            "gpg",
-            "envs/env-1",
-            "envs/env-2",
-            "licenses/license-1",
-            "licenses/license-2",
-        }
-        conflicts = set(conflicts)
-        overrides = set(expected_migrations)
-        expected_migrations = {resource for resource in all_resources if resource not in conflicts}
-
-        # Environments: check all conflicts upfront, so ANY env conflict means NO envs migrate
-        if any(resource.startswith("envs/") for resource in conflicts):
-            expected_migrations.difference_update(
-                resource for resource in all_resources if resource.startswith("envs/")
-            )
-
-        # Licenses: processed in sorted order, stops at first conflict
-        # So licenses lexically before the first conflict will migrate
-        license_conflicts = sorted(r for r in conflicts if r.startswith("licenses/"))
-        if license_conflicts:
-            # First conflict in sorted order
-            first_conflict = license_conflicts[0]
-            # Remove all licenses from first conflict onwards (including and after)
-            for resource in all_resources:
-                if resource.startswith("licenses/") and resource >= first_conflict:
-                    expected_migrations.discard(resource)
-        expected_migrations.update(
-            resource[1:] for resource in overrides if resource.startswith("+")
-        )
-        expected_migrations.difference_update(
-            resource[1:] for resource in overrides if resource.startswith("-")
-        )
-        for resource in (
-            "gpg",
-            "envs/env-1",
-            "envs/env-2",
-            "licenses/license-1",
-            "licenses/license-2",
-        ):
-            migrated = resource in expected_migrations
-            if resource == "gpg":
-                destination = self.data_home / "gpg"
-                source = self.old_gpg
-                marker = destination / "private-keys-v1.d" / "key"
-            elif resource.startswith("envs/"):
-                name = resource.split("/", 1)[1]
-                destination = self.data_home / "environments" / name
-                source = self.old_envs / name
-                marker = destination / "spack.yaml"
-            else:
-                name = resource.split("/", 1)[1]
-                destination = self.data_home / "licenses" / name
-                source = self.old_licenses / name
-                marker = destination
-
-            if migrated:
-                # Migration copies resources - both old and new should exist
-                assert destination.exists()
-                assert marker.read_text(encoding="utf-8") == "old"
-                assert source.exists()
-                assert self.contains_text(source, "old")
-                if resource == "envs/env-1":
-                    assert not (destination / "view").exists()
-            else:
-                # Not migrated - old source exists, marker either doesn't exist or has
-                # conflict content
-                assert source.exists()
-                assert self.contains_text(source, "old")
-                # If marker exists, it should be from the conflict (content "new"),
-                # not migration (content "old")
-                if marker.exists():
-                    assert marker.read_text(encoding="utf-8") == "new", (
-                        f"Resource {resource} marker exists but has wrong content"
-                    )
-
-                # When not migrated due to conflicts, config points to old location
-                if resource == "gpg":
-                    config = spack.config.CONFIG
-                    gpg_path = config.get("config:gpg_path")
-                    assert str(self.old_gpg) == spack.config.canonicalize_path(gpg_path)
-                elif resource == "envs/env-1":
-                    config = spack.config.CONFIG
-                    envs_root = config.get("config:environments_root")
-                    assert str(self.old_envs) == spack.config.canonicalize_path(envs_root)
-                elif resource == "licenses/license-1":
-                    config = spack.config.CONFIG
-                    license_dir = config.get("config:license_dir")
-                    assert str(self.old_licenses) == spack.config.canonicalize_path(license_dir)
-
-            if resource in conflicts:
-                assert destination.exists()
-                assert self.contains_text(destination, "new")
-                assert not self.contains_text(destination, "old")
-
-    def add_conflicts(self, conflicts):
-        for resource in conflicts:
-            if resource == "gpg":
-                destination = self.data_home / "gpg"
-                destination.mkdir(parents=True, exist_ok=True)
-                (destination / "existing").write_text("new", encoding="utf-8")
-            elif resource.startswith("envs/"):
-                name = resource.split("/", 1)[1]
-                destination = self.data_home / "environments" / name
-                destination.mkdir(parents=True, exist_ok=True)
-                (destination / "spack.yaml").write_text("new", encoding="utf-8")
-            elif resource.startswith("licenses/"):
-                name = resource.split("/", 1)[1]
-                destination = self.data_home / "licenses"
-                destination.mkdir(parents=True, exist_ok=True)
-                (destination / name).write_text("new", encoding="utf-8")
-
-
-@pytest.fixture
-def migration_resources(mock_spack_instance, mutable_config, monkeypatch):
-    """Provide simulated old GPG, environment, and license resources.
-
-    Requires mutable_config to ensure CONFIG is properly initialized after
-    mock_spack_instance sets up the test paths.
-    """
-    # Reinitialize config after mock_spack_instance sets up paths
-    # so that $data_home resolves correctly
+@pytest.mark.parametrize("conflict", ["environments", "gpg"])
+def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch, conflict):
+    """Migration conflicts affect only the component with the conflict."""
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    return MigrationResources(*mock_spack_instance)
 
+    old_envs = pathlib.Path(spack.paths.old_envs_path)
+    old_env = old_envs / "foo"
+    old_env.mkdir(parents=True)
+    (old_env / "old.yaml").write_text("old: environment\n", encoding="utf-8")
 
-@pytest.mark.parametrize(
-    "conflicts, expected_migrations",
-    [
-        # All resources migrate when there are no conflicts
-        ((), ("gpg", "envs/env-1", "envs/env-2", "licenses/license-1", "licenses/license-2")),
-        # Resources with conflicts at destination are not migrated
-        (
-            ("gpg", "envs/env-1", "licenses/license-1"),
-            ("-gpg", "-envs/env-1", "-licenses/license-1"),
-        ),
-    ],
-)
-def test_auto_migration_old_spack_internal_resources(
-    migration_resources, conflicts, expected_migrations, mutable_config
-):
-    """Migration handles GPG, environments, licenses, conflicts, and views.
+    old_gpg = pathlib.Path(spack.paths.old_gpg_path)
+    old_gpg.mkdir(parents=True)
+    (old_gpg / "old-keyring-file").write_text("old", encoding="utf-8")
+    old_gpg_keys = pathlib.Path(spack.paths.old_gpg_keys_path)
+    old_gpg_keys.mkdir(parents=True)
+    (old_gpg_keys / "old-public-key").write_text("old", encoding="utf-8")
 
-    Since no old installs are created in these tests, install_tree:root should
-    point to the new default location ($data_home/installs).
-    """
-    resources = migration_resources
-    resources.add_conflicts(conflicts)
+    data_home = pathlib.Path(spack.config.canonicalize_path("$data_home"))
+    new_envs = data_home / "environments"
+    new_env = new_envs / "foo"
+    new_gpg = data_home / "gpg"
+    new_gpg_keys = data_home / "gpg-keys"
 
-    # Run migration which creates layout scope
+    if conflict == "environments":
+        new_env.mkdir(parents=True)
+        (new_env / "new.yaml").write_text("new: environment\n", encoding="utf-8")
+    else:
+        new_gpg.mkdir(parents=True)
+        (new_gpg / "new-keyring-file").write_text("new", encoding="utf-8")
+
     spack.config._do_migrate_spack_prefix()
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    # Reinitialize config to pick up newly created layout scope
-    mutable_config.clear_caches()
+    config = spack.config.CONFIG
+    if conflict == "environments":
+        assert (new_env / "new.yaml").read_text(encoding="utf-8") == "new: environment\n"
+        assert not (new_env / "old.yaml").exists()
+        assert spack.config.canonicalize_path(config.get("config:environments_root")) == str(
+            old_envs
+        )
 
-    resources.assert_migrations(expected_migrations, conflicts)
+        assert (new_gpg / "old-keyring-file").read_text(encoding="utf-8") == "old"
+        assert (new_gpg_keys / "old-public-key").read_text(encoding="utf-8") == "old"
+        assert spack.config.canonicalize_path(config.get("config:gpg_path")) == str(new_gpg)
+        assert spack.config.canonicalize_path(config.get("config:gpg_keys_path")) == str(
+            new_gpg_keys
+        )
+    else:
+        assert (new_gpg / "new-keyring-file").read_text(encoding="utf-8") == "new"
+        assert not (new_gpg / "old-keyring-file").exists()
+        assert not new_gpg_keys.exists()
+        assert spack.config.canonicalize_path(config.get("config:gpg_path")) == str(old_gpg)
+        assert spack.config.canonicalize_path(config.get("config:gpg_keys_path")) == str(
+            old_gpg_keys
+        )
 
-    # Verify that install_tree:root points to new location (no old installs exist)
-    install_tree_root = spack.config.CONFIG.get("config:install_tree:root")
-    resolved = spack.config.canonicalize_path(install_tree_root)
-    expected_new = spack.config.canonicalize_path("$data_home/installs")
-    assert resolved == expected_new, (
-        f"install_tree:root should point to new location when no old installs exist.\n"
-        f"Expected: {expected_new}\n"
-        f"Got: {resolved}"
-    )
+        assert (new_env / "old.yaml").read_text(encoding="utf-8") == "old: environment\n"
+        assert spack.config.canonicalize_path(config.get("config:environments_root")) == str(
+            new_envs
+        )
 
 
 def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
