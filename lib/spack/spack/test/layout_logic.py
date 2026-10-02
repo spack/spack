@@ -365,7 +365,12 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
 
 @pytest.mark.parametrize("conflict", ["environments", "gpg"])
 def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch, conflict):
-    """Migration conflicts affect only the component with the conflict."""
+    """Test migration of resources previously stored in ``$spack``.
+
+    Migration is component-wise: configuration points to old locations for
+    components that fail to migrate and to new locations for successful
+    migrations.
+    """
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     old_envs = pathlib.Path(spack.paths.old_envs_path)
