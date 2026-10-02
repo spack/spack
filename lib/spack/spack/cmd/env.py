@@ -1035,9 +1035,7 @@ def env_depfile(args):
     )
 
     # Currently only make is supported.
-    spack.cmd.require_active_env(args.subparser)
-
-    env = active_environment()
+    env = spack.cmd.require_active_env(args.subparser)
 
     # What things do we build when running make? By default, we build the
     # root specs. If specific specs are provided as input, we build those.

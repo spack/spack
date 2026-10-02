@@ -67,9 +67,9 @@ check_dependencies() {
                     spack_package=py-flake8
                     pip_package=flake8
                     ;;
-                mypy)
-                    spack_package=py-mypy
-                    pip_package=mypy
+                ty)
+                    spack_package=py-ty
+                    pip_package=ty
                     ;;
                 dot)
                     spack_package=graphviz

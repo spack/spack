@@ -75,6 +75,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     overload,
 )
@@ -1889,7 +1890,7 @@ def _edge_is_redundant(edge: DependencySpec, given: DependencySpec) -> bool:
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
-class Spec:
+class Spec(lang.Ordered):
     compiler = DeprecatedCompilerSpec()
 
     if TYPE_CHECKING:
@@ -1984,6 +1985,8 @@ class Spec:
 
     @property
     def external_path(self):
+        if self._external_path is None:
+            return None
         return spack.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
@@ -2742,9 +2745,12 @@ class Spec:
             d["build_spec"] = {"name": self.build_spec.name, "hash": self.build_spec.dag_hash()}
 
         # Annotations
-        d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
+        annotations: Dict[str, Any] = {
+            "original_specfile_version": self.annotations.original_spec_format
+        }
         if self.annotations.original_spec_format < 5:
-            d["annotations"]["compiler"] = str(self.annotations.compiler_node_attribute)
+            annotations["compiler"] = str(self.annotations.compiler_node_attribute)
+        d["annotations"] = annotations
 
         return d
 
@@ -3607,7 +3613,7 @@ class Spec:
         changed |= self.propagated_variants.constrain(other.propagated_variants)
         return changed
 
-    @property  # type: ignore[misc] # decorated prop not supported in mypy
+    @property
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
 
@@ -3970,14 +3976,12 @@ class Spec:
         # need for the complexity here. It was not clear at the time of writing that how
         # much optimization was possible in `spack.traverse`.
 
-        sorted_l1_edges = None
+        sorted_l1_edges: List[DependencySpec] = []
         edge_list = None
-        node_ids = None
 
         def nodes():
             nonlocal sorted_l1_edges
             nonlocal edge_list
-            nonlocal node_ids
 
             # Level 0: root node
             yield self._cmp_node  # always yield the root (this node)
@@ -4003,7 +4007,7 @@ class Spec:
 
             # the node_ids dict generates consistent ids based on BFS traversal order
             # these are used to identify edges later
-            node_ids = collections.defaultdict(lambda: len(node_ids))
+            node_ids: Dict[int, int] = collections.defaultdict(lambda: len(node_ids))
             node_ids[id(self)]  # self is 0
             for spec in l1_specs:
                 node_ids[id(spec)]  # l1 starts at 1
@@ -4653,15 +4657,21 @@ class Spec:
 
     @property
     def platform(self):
-        return self.architecture.platform
+        arch = self.architecture
+        assert arch is not None
+        return arch.platform
 
     @property
     def os(self):
-        return self.architecture.os
+        arch = self.architecture
+        assert arch is not None
+        return arch.os
 
     @property
     def target(self):
-        return self.architecture.target
+        arch = self.architecture
+        assert arch is not None
+        return arch.target
 
     @property
     def build_spec(self):
@@ -5390,7 +5400,10 @@ class DepSpecComponents(NamedTuple):
 _SPECFILE_READERS: Dict[int, Type["SpecfileReaderBase"]] = {}
 
 
-def register_reader(cls: Type["SpecfileReaderBase"]) -> Type["SpecfileReaderBase"]:
+SpecfileReaderT = TypeVar("SpecfileReaderT", bound=Type["SpecfileReaderBase"])
+
+
+def register_reader(cls: SpecfileReaderT) -> SpecfileReaderT:
     """Register a SpecfileReaderBase subclass under its SPEC_VERSION."""
     if "SPEC_VERSION" not in cls.__dict__:
         raise TypeError(f"{cls.__name__} must define SPEC_VERSION to be registered")
@@ -5414,6 +5427,10 @@ class SpecfileReaderBase(abc.ABC):
     def extract_build_spec_info_from_node_dict(
         cls, node, hash_type="hash"
     ) -> Tuple[str, str, str]: ...
+
+    @classmethod
+    @abc.abstractmethod
+    def name_and_data(cls, node) -> Tuple[Any, Dict[str, Any]]: ...
 
     @classmethod
     def from_node_dict(cls, node):
@@ -5831,7 +5848,7 @@ class LazySpecCache(collections.defaultdict):
         super().__init__(Spec)
 
     def __missing__(self, key):
-        value = self.default_factory(key)
+        value = Spec(key)
         self[key] = value
         return value
 

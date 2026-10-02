@@ -39,7 +39,7 @@ def _show_patch(sha256):
             tty.die("%s: ambiguous hash prefix. Options are:", *candidates)
 
         sha256 = candidates[0]
-        data = patches.get(sha256)
+        data = patches[sha256]
 
     color.cprint("@c{%s}" % sha256)
     for package, rec in data.items():

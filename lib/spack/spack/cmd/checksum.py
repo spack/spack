@@ -106,9 +106,13 @@ def checksum(parser, args):
         if len(remote_versions) > 0:
             versions.append(max(remote_versions.keys()))
 
-    # Add preferred version if requested (todo: exclude git versions)
+    # Add preferred version if requested (git versions have no checksum to compute)
     if args.preferred:
-        versions.append(preferred_version(pkg))
+        preferred = preferred_version(pkg)
+        if isinstance(preferred, StandardVersion):
+            versions.append(preferred)
+        else:
+            tty.warn(f"Not checksumming the preferred version {preferred}: it is a git version")
 
     # Store a dict of the form version -> URL
     url_dict: Dict[StandardVersion, str] = {}

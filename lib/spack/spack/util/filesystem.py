@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import collections.abc
+import contextlib
 import ctypes
 import errno
 import fnmatch
@@ -28,7 +29,6 @@ from typing import (
     Any,
     BinaryIO,
     Callable,
-    ContextManager,
     Deque,
     Dict,
     Generator,
@@ -296,8 +296,7 @@ def paths_containing_libs(paths, library_names):
     required_lib_fnames = possible_library_filenames(library_names)
 
     rpaths_to_include = []
-    paths = path_to_os_path(*paths)
-    for path in paths:
+    for path in path_to_os_path(*paths):
         fnames = set(os.listdir(path))
         if fnames & required_lib_fnames:
             rpaths_to_include.append(path)
@@ -485,8 +484,7 @@ def change_sed_delimiter(old_delim: str, new_delim: str, *filenames: str) -> Non
 
     repl = r"s@\1@\2@g"
     repl = repl.replace("@", new_delim)
-    filenames = path_to_os_path(*filenames)
-    for f in filenames:
+    for f in path_to_os_path(*filenames):
         filter_file(whole_lines, repl, f)
         filter_file(single_quoted, "'%s'" % repl, f)
         filter_file(double_quoted, '"%s"' % repl, f)
@@ -681,7 +679,7 @@ def win_copy_exe_mode(src, dest):
     )
 
     def _grants_execute(ace) -> bool:
-        if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or not ace.rights:  # type: ignore[name-defined]
+        if ace.ace_type != AceType.SDDL_ACCESS_ALLOWED or not ace.rights:
             return False
         # FILE_GENERIC_READ and FILE_GENERIC_EXECUTE share bits (READ_CONTROL,
         # FILE_READ_ATTRIBUTES, SYNCHRONIZE), so `rights & FX != 0` is True for
@@ -694,7 +692,7 @@ def win_copy_exe_mode(src, dest):
     if any(_grants_execute(ace) for ace in src_sd.dacl):
         dst_sd = SecurityDescriptor.from_file(dest)
         for ace in dst_sd.dacl:
-            if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED and not _grants_execute(ace):  # type: ignore[name-defined]
+            if ace.ace_type == AceType.SDDL_ACCESS_ALLOWED and not _grants_execute(ace):
                 ace.add_right(_FX)
         dst_sd.apply(dest)
 
@@ -987,8 +985,7 @@ def mkdirp(
             mkdirp -- default value is ``"args"``
     """
     default_perms = default_perms or "args"
-    paths = path_to_os_path(*paths)
-    for path in paths:
+    for path in path_to_os_path(*paths):
         if not os.path.exists(path):
             try:
                 last_parent, intermediate_folders = longest_existing_parent(path)
@@ -1182,13 +1179,13 @@ def hash_directory(directory, ignore=[]):
 @overload
 def write_tmp_and_move(
     filename: str, *, mode: Literal["w"] = ..., encoding: Optional[str] = ...
-) -> ContextManager[TextIO]: ...
+) -> "contextlib._GeneratorContextManager[TextIO]": ...
 
 
 @overload
 def write_tmp_and_move(
     filename: str, *, mode: Literal["wb"], encoding: None = ...
-) -> ContextManager[BinaryIO]: ...
+) -> "contextlib._GeneratorContextManager[BinaryIO]": ...
 
 
 @contextmanager
@@ -1337,11 +1334,12 @@ def temp_cwd(ignore_cleanup_errors=False):
         with working_dir(tmp_dir):
             yield tmp_dir
     finally:
-        kwargs = {"ignore_errors": ignore_cleanup_errors}
         if sys.platform == "win32":
-            kwargs["ignore_errors"] = False
-            kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
-        shutil.rmtree(tmp_dir, **kwargs)
+            shutil.rmtree(
+                tmp_dir, ignore_errors=False, onerror=readonly_file_handler(ignore_errors=True)
+            )
+        else:
+            shutil.rmtree(tmp_dir, ignore_errors=ignore_cleanup_errors)
 
 
 @system_path_filter
@@ -1758,7 +1756,9 @@ def safe_remove(*files_or_dirs):
     # Sort them so that shorter paths like "/foo/bar" come before
     # nested paths like "/foo/bar/baz.yaml". This simplifies the
     # handling of temporary copies below
-    sorted_matches = sorted([os.path.abspath(x) for x in itertools.chain(*glob_matches)], key=len)
+    sorted_matches = sorted(
+        [os.path.abspath(x) for x in itertools.chain(*glob_matches)], key=lambda p: len(p)
+    )
 
     # Copy files and directories in a temporary location
     removed, dst_root = {}, tempfile.mkdtemp()
@@ -3099,7 +3099,7 @@ def _windows_is_junction(path: str) -> bool:
         if os.path.islink(path) or os.path.isfile(path):
             return False
 
-        get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW  # type: ignore[attr-defined]
+        get_file_attributes = ctypes.windll.kernel32.GetFileAttributesW
         get_file_attributes.argtypes = (wintypes.LPWSTR,)
         get_file_attributes.restype = wintypes.DWORD
 

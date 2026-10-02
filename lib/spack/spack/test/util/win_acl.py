@@ -68,7 +68,7 @@ def test_security_descriptor_sacl_property(tmp_path):
     # Standard processes cannot read SACL; from_file does not request it
     assert sd.sacl == []
     # sacl returns a copy; mutations do not feed back into the descriptor
-    sd.sacl.append("mutation")
+    sd.sacl.append(AccessControlEntry(AceType.SDDL_ACCESS_ALLOWED))
     assert sd.sacl == []
 
 

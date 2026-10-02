@@ -61,8 +61,8 @@ def test_user_input_combination(config, target_str, os_str):
     the operating system match.
     """
     spec = Spec(f"libelf os={os_str} target={target_str}")
-    assert spec.architecture.os == str(TEST_PLATFORM.operating_system(os_str))
-    assert spec.architecture.target == TEST_PLATFORM.target(target_str)
+    assert spec.os == str(TEST_PLATFORM.operating_system(os_str))
+    assert spec.target == TEST_PLATFORM.target(target_str)
 
 
 def test_default_os_and_target(config, mock_packages):
@@ -70,8 +70,8 @@ def test_default_os_and_target(config, mock_packages):
     after concretization.
     """
     spec = spack.concretize.concretize_one("libelf")
-    assert spec.architecture.os == str(TEST_PLATFORM.default_operating_system())
-    assert spec.architecture.target == TEST_PLATFORM.default_target()
+    assert spec.os == str(TEST_PLATFORM.default_operating_system())
+    assert spec.target == TEST_PLATFORM.default_target()
 
 
 def test_operating_system_conversion_to_dict():

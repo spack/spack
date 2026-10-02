@@ -121,7 +121,7 @@ def test_pretty_string_to_date_delta(now, delta, pretty_string):
 )
 def test_pretty_string_to_date(format, pretty_string):
     t1 = datetime.strptime(pretty_string, format)
-    t2 = spack.util.lang.pretty_string_to_date(pretty_string, now)
+    t2 = spack.util.lang.pretty_string_to_date(pretty_string)
     assert t1 == t2
 
 
@@ -199,7 +199,7 @@ def test_key_ordering():
             pass
 
     @spack.util.lang.key_ordering
-    class KeyComparable:
+    class KeyComparable(spack.util.lang.Ordered):
         def __init__(self, t):
             self.t = t
 

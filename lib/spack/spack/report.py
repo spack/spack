@@ -214,9 +214,9 @@ class TestRecord(SpecRecord):
         except Exception:
             return f"Cannot open log for {self._spec.cshort_spec}"
 
-    def succeed(self, externals):
+    def succeed(self, log_path: Optional[str] = None, *, externals: bool = False):
         """Test reports skip externals by default."""
         if self._spec.external and not externals:
             return self.skip(msg="Skipping test of external package")
 
-        super().succeed()
+        super().succeed(log_path)
