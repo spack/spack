@@ -286,10 +286,10 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
 def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
     """Environment migration applies the four path-handling scenarios.
 
-    1. Absolute path inside old env → rewrite to new env location
-    2. Relative path pointing outside env → make absolute (preserve target)
-    3. Relative path staying inside env → keep relative (works in new location)
-    4. Absolute path outside env → unchanged
+    1. Absolute path inside old env: rewrite to new env location
+    2. Relative path pointing outside env: make absolute (preserve target)
+    3. Relative path staying inside env: keep relative (works in new location)
+    4. Absolute path outside env: unchanged
     """
     old_envs = tmp_path / "old_envs"
     new_envs = tmp_path / "new_envs"
