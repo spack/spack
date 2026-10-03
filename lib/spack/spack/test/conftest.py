@@ -99,6 +99,87 @@ def _recursive_chmod(path: Path, mode: int):
             os.chmod(os.path.join(root, dir), mode)
 
 
+@pytest.fixture
+def clear_env_vars(working_env, monkeypatch):
+    """Clear XDG and SPACK location env vars, and config path overrides."""
+    # Clear config path overrides
+    monkeypatch.delenv("SPACK_DISABLE_LOCAL_CONFIG", raising=False)
+    monkeypatch.delenv("SPACK_USER_CONFIG_PATH", raising=False)
+    monkeypatch.delenv("SPACK_SYSTEM_CONFIG_PATH", raising=False)
+
+    # Clear XDG and SPACK location overrides
+    for location in ["DATA", "STATE", "CACHE"]:
+        monkeypatch.delenv(f"XDG_{location}_HOME", raising=False)
+        monkeypatch.delenv(f"SPACK_{location}_HOME", raising=False)
+
+
+@pytest.fixture
+def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths):
+    """Create a mock Spack instance with simulated home and base prefix.
+
+    Returns:
+        tuple: (home_dir, base_prefix)
+    """
+    home_dir = tmp_path / "home"
+    base_prefix = tmp_path / "spack-root"
+    home_dir.mkdir()
+    base_prefix.mkdir()
+
+    real_etc_spack = Path(spack.paths.prefix) / "etc" / "spack"
+    simulated_etc = base_prefix / "etc" / "spack"
+    simulated_etc.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(
+        real_etc_spack, simulated_etc, ignore=shutil.ignore_patterns("isolate", "layout")
+    )
+
+    set_home(str(home_dir))
+
+    from spack.paths import SpackPaths
+
+    monkeypatch.setattr(spack.paths, "locations", SpackPaths(_prefix=str(base_prefix)))
+    return str(home_dir), str(base_prefix)
+
+
+@pytest.fixture
+def modifies_spackpaths():
+    """Clear _frozen_home before and after tests that modify spack.paths.locations.
+
+    This fixture is strictly necessary only for tests that BOTH:
+    - Modify spack.paths.locations (change the spack prefix/paths)
+    - Create subprocesses that might freeze path values
+
+    However, it's applied to all tests that modify spack.paths.locations to avoid
+    fragility - if a test starts creating subprocesses later, frozen values from
+    prior tests won't leak in.
+
+    Used in:
+    - lib/spack/spack/test/layout_logic.py (modifies paths + creates subprocs)
+    - lib/spack/spack/test/cmd/migrate.py (modifies paths, no subprocs currently)
+    - lib/spack/spack/test/cmd/ci.py (modifies paths, no subprocs currently)
+    """
+    import spack.config
+
+    spack.config._frozen_home = {}
+    yield
+    spack.config._frozen_home = {}
+
+
+@pytest.fixture
+def set_home(working_env):
+    """Fixture to set HOME environment variable for both Windows and Linux."""
+
+    def _set_home(val):
+        # Clear some env vars that can interfere w/ expanduser(~) on Windows
+        os.environ.pop("USERPROFILE", None)
+        os.environ.pop("HOMEDRIVE", None)
+        os.environ["HOMEPATH"] = val
+
+        # For expanduser on Linux
+        os.environ["HOME"] = val
+
+    yield _set_home
+
+
 @pytest.fixture(autouse=True)
 def check_config_fixture(request):
     if "config" in request.fixturenames and "mutable_config" in request.fixturenames:

@@ -38,7 +38,6 @@ import spack.error
 import spack.filesystem_view as fsv
 import spack.installer_dispatch
 import spack.package_base
-import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.schema.spec_list
@@ -87,8 +86,10 @@ spack_env_view_var = "SPACK_ENV_VIEW"
 #: Validation error for a currently activate environment that failed to parse
 _active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
-#: default path where environments are stored in the spack tree
-default_env_path = os.path.join(spack.paths.var_path, "environments")
+#: default path where environments are stored (XDG-compliant location)
+default_env_path = os.path.join(
+    os.path.expanduser("~"), ".local", "share", "spack", "environments"
+)
 
 
 #: Name of the input yaml file for an environment
@@ -107,10 +108,9 @@ MARKER_FILE = ".spack-view"
 
 
 def env_root_path() -> str:
-    """Override default root path if the user specified it"""
-    return spack.config.canonicalize_path(
-        spack.config.CONFIG.get("config:environments_root", default=default_env_path)
-    )
+    """Override default root path if the user specified it."""
+    config_value = spack.config.CONFIG.get("config:environments_root", default=default_env_path)
+    return spack.config.canonicalize_path(config_value)
 
 
 def environment_name(path: Union[str, pathlib.Path]) -> str:
@@ -381,13 +381,20 @@ def create(
         include_concrete: concrete environment names/paths to be included
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
-    return create_in_dir(
-        environment_dir,
-        init_file=init_file,
-        with_view=with_view,
-        keep_relative=keep_relative,
-        include_concrete=include_concrete,
-    )
+    env_root = env_root_path()
+    fs.mkdirp(env_root)
+    lock = lk.Lock(os.path.join(env_root, ".lock"), default_timeout=120)
+    try:
+        lock.acquire_write()
+        return create_in_dir(
+            environment_dir,
+            init_file=init_file,
+            with_view=with_view,
+            keep_relative=keep_relative,
+            include_concrete=include_concrete,
+        )
+    finally:
+        lock.release_write()
 
 
 def create_in_dir(

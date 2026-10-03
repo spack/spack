@@ -71,7 +71,7 @@ end
 
 # Set variables needed by this script
 _spack_pathadd PATH "$SPACK_ROOT/bin"
-eval `spack --print-shell-vars csh`
+eval `spack --print-shell-vars csh,skip_missing_modules`
 
 # Set up module search paths in the user environment
 set tcl_roots = `echo $_sp_tcl_roots:q | \sed 's/:/ /g'`

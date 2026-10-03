@@ -28,15 +28,27 @@ Quick start
 
 Spack can generate both Tcl and Lua module files, either with a post-install hook or at user's request through a command.
 
-If you're using the default configuration values, you can start by generating Tcl module files for all currently installed packages:
+.. note::
+
+   Before generating module files, you must configure a module root directory.
+   For example, add to your ``~/.config/spack/modules.yaml``:
+
+   .. code-block:: yaml
+
+      modules:
+        default:
+          roots:
+            tcl: $spack/share/spack/modules
+
+Once configured, you can start by generating Tcl module files for all currently installed packages:
 
 .. code-block:: console
 
    $ spack module tcl refresh
 
-To generate Lua module files simply use the ``spack module lmod`` command instead of ``spack module tcl``.
+To generate Lua module files simply use the ``spack module lmod`` command instead of ``spack module tcl``, and configure a ``lmod`` root alongside or instead of ``tcl`` in your modules configuration.
 
-Once module files are in place, add the Tcl module directory generated above to your module path:
+Once module files are in place, add the Tcl module directory to your module path:
 
 .. code-block:: console
 
@@ -71,11 +83,16 @@ The table below summarizes the essential information associated with the differe
 | Language | Default           | Default root directory  | Default template file                            | Compatible tools |
 |          | hierarchical mode |                         |                                                  |                  |
 +==========+===================+=========================+==================================================+==================+
-| ``Tcl``  | non-hierarchical  | ``share/spack/modules`` | ``share/spack/templates/modules/modulefile.tcl`` | Environment      |
+| ``Tcl``  | non-hierarchical  | *not configured*        | ``share/spack/templates/modules/modulefile.tcl`` | Environment      |
 |          |                   |                         |                                                  | Modules, Lmod    |
 +----------+-------------------+-------------------------+--------------------------------------------------+------------------+
-| ``Lua``  | hierarchical      | ``share/spack/lmod``    | ``share/spack/templates/modules/modulefile.lua`` | Lmod             |
+| ``Lua``  | hierarchical      | *not configured*        | ``share/spack/templates/modules/modulefile.lua`` | Lmod             |
 +----------+-------------------+-------------------------+--------------------------------------------------+------------------+
+
+.. note::
+
+   Module root directories must be explicitly configured before generating module files.
+   Spack no longer provides default module root locations.
 
 .. _flat-vs-hierarchical:
 
