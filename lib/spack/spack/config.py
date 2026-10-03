@@ -2424,12 +2424,18 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
     try:
         lock.acquire_write()
 
-        # Migrate each environment under the shared lock
-        for entry in sorted(os.listdir(src_dir)):
-            src_path = os.path.join(src_dir, entry)
-            if not os.path.isdir(src_path):
-                continue
+        # Check occupied destinations before copying any new environments. This
+        # lets _migrate_with_staging reject conflicts without leaving a partial
+        # migration behind.
+        source_entries = {
+            entry for entry in os.listdir(src_dir) if os.path.isdir(os.path.join(src_dir, entry))
+        }
+        destination_entries = set(os.listdir(dst_dir))
+        intersection = sorted(source_entries & destination_entries)
+        remainder = sorted(source_entries - destination_entries)
 
+        for entry in intersection + remainder:
+            src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
             success = _migrate_with_staging(
                 old_path=src_path,

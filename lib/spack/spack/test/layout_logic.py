@@ -374,9 +374,10 @@ def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkey
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     old_envs = pathlib.Path(spack.paths.old_envs_path)
-    old_env = old_envs / "foo"
-    old_env.mkdir(parents=True)
-    (old_env / "old.yaml").write_text("old: environment\n", encoding="utf-8")
+    for name in ("bar", "foo"):
+        old_env = old_envs / name
+        old_env.mkdir(parents=True)
+        (old_env / "old.yaml").write_text("old: environment\n", encoding="utf-8")
 
     old_gpg = pathlib.Path(spack.paths.old_gpg_path)
     old_gpg.mkdir(parents=True)
@@ -387,13 +388,14 @@ def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkey
 
     data_home = pathlib.Path(spack.config.canonicalize_path("$data_home"))
     new_envs = data_home / "environments"
-    new_env = new_envs / "foo"
+    conflicting_env = new_envs / "foo"
+    free_env = new_envs / "bar"
     new_gpg = data_home / "gpg"
     new_gpg_keys = data_home / "gpg-keys"
 
     if conflict == "environments":
-        new_env.mkdir(parents=True)
-        (new_env / "new.yaml").write_text("new: environment\n", encoding="utf-8")
+        conflicting_env.mkdir(parents=True)
+        (conflicting_env / "new.yaml").write_text("new: environment\n", encoding="utf-8")
     else:
         new_gpg.mkdir(parents=True)
         (new_gpg / "new-keyring-file").write_text("new", encoding="utf-8")
@@ -403,8 +405,9 @@ def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkey
 
     config = spack.config.CONFIG
     if conflict == "environments":
-        assert (new_env / "new.yaml").read_text(encoding="utf-8") == "new: environment\n"
-        assert not (new_env / "old.yaml").exists()
+        assert (conflicting_env / "new.yaml").read_text(encoding="utf-8") == "new: environment\n"
+        assert not (conflicting_env / "old.yaml").exists()
+        assert not free_env.exists()
         assert spack.config.canonicalize_path(config.get("config:environments_root")) == str(
             old_envs
         )
@@ -424,7 +427,8 @@ def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkey
             old_gpg_keys
         )
 
-        assert (new_env / "old.yaml").read_text(encoding="utf-8") == "old: environment\n"
+        assert (conflicting_env / "old.yaml").read_text(encoding="utf-8") == "old: environment\n"
+        assert (free_env / "old.yaml").read_text(encoding="utf-8") == "old: environment\n"
         assert spack.config.canonicalize_path(config.get("config:environments_root")) == str(
             new_envs
         )
