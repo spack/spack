@@ -28,7 +28,19 @@ if TYPE_CHECKING:
     import spack.spec
 
 #: What schemes do we support
-supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
+supported_url_schemes = (
+    "file",
+    "http",
+    "https",
+    "sftp",
+    "ftp",
+    "s3",
+    "gs",
+    "oci",
+    "oci+http",
+    "ssh",
+    "scp",
+)
 
 #: The layout version spack can current install
 SUPPORTED_URL_LAYOUT_VERSIONS = (3, 2)
