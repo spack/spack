@@ -10,29 +10,45 @@ dependencies.
 """
 
 import os
+import sys
 from pathlib import PurePath
 
 import spack.util.filesystem
 from spack.util import hash
 
-#: This file lives in $prefix/lib/spack/spack/__file__
-prefix = str(PurePath(spack.util.filesystem.ancestor(__file__, 4)))
+#: Directory holding this file.
+module_path = os.path.dirname(os.path.abspath(__file__))
+
+#: True for an installed wheel with data bundled under the package, False for a checkout.
+is_bundled = os.path.isdir(os.path.join(module_path, "share", "spack"))
+
+if is_bundled:
+    # The package is the prefix, data is bundled beneath it.
+    prefix = module_path
+    bin_path = os.path.join(module_path, "bin")
+    lib_path = os.path.dirname(module_path)
+    etc_path = os.path.join(module_path, "etc", "spack")
+    share_path = os.path.join(module_path, "share", "spack")
+    var_path = os.path.join(module_path, "var", "spack")
+    # pip puts the console script next to the interpreter.
+    spack_script = os.path.join(os.path.dirname(sys.executable), "spack")
+else:
+    # This file lives in $prefix/lib/spack/spack.
+    prefix = str(PurePath(spack.util.filesystem.ancestor(module_path, 3)))
+    bin_path = os.path.join(prefix, "bin")
+    lib_path = os.path.join(prefix, "lib", "spack")
+    etc_path = os.path.join(prefix, "etc", "spack")
+    share_path = os.path.join(prefix, "share", "spack")
+    var_path = os.path.join(prefix, "var", "spack")
+    spack_script = os.path.join(bin_path, "spack")
 
 #: synonym for prefix
 spack_root = prefix
-
-#: bin directory in the spack prefix
-bin_path = os.path.join(prefix, "bin")
-
-#: The spack script itself
-spack_script = os.path.join(bin_path, "spack")
 
 #: The sbang script in the spack installation
 sbang_script = os.path.join(bin_path, "sbang")
 
 # spack directory hierarchy
-lib_path = os.path.join(prefix, "lib", "spack")
-module_path = os.path.join(lib_path, "spack")
 vendor_path = os.path.join(module_path, "vendor")
 command_path = os.path.join(module_path, "cmd")
 analyzers_path = os.path.join(module_path, "analyzers")
@@ -41,38 +57,20 @@ compilers_path = os.path.join(module_path, "compilers")
 operating_system_path = os.path.join(module_path, "operating_systems")
 test_path = os.path.join(module_path, "test")
 hooks_path = os.path.join(module_path, "hooks")
-opt_path = os.path.join(prefix, "opt")
-share_path = os.path.join(prefix, "share", "spack")
-etc_path = os.path.join(prefix, "etc", "spack")
 
 #
 # Things in $spack/etc/spack
 #
 default_license_dir = os.path.join(etc_path, "licenses")
 
-#
-# Things in $spack/var/spack
-#
-var_path = os.path.join(prefix, "var", "spack")
-
 # read-only things in $spack/var/spack
 repos_path = os.path.join(var_path, "repos")
 test_repos_path = os.path.join(var_path, "test_repos")
 mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
 
-#
-# Writable things in $spack/var/spack
-# TODO: Deprecate these, as we want a read-only spack prefix by default.
-# TODO: These should probably move to user cache, or some other location.
-#
-# fetch cache for downloaded files
-default_fetch_cache_path = os.path.join(var_path, "cache")
-
 # GPG paths.
-gpg_keys_path = os.path.join(var_path, "gpg")
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
-gpg_path = os.path.join(opt_path, "spack", "gpg")
 
 
 #: Not a location itself, but used for when Spack instances
@@ -95,6 +93,19 @@ def _get_user_cache_path():
 
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
+
+# Writable defaults live in the prefix for a checkout, but in the user cache for a wheel
+# where the prefix is read-only.
+if is_bundled:
+    opt_path = os.path.join(user_cache_path, "opt")
+    default_fetch_cache_path = os.path.join(user_cache_path, "cache")
+    gpg_keys_path = os.path.join(user_cache_path, "gpg")
+else:
+    opt_path = os.path.join(prefix, "opt")
+    default_fetch_cache_path = os.path.join(var_path, "cache")
+    gpg_keys_path = os.path.join(var_path, "gpg")
+
+gpg_path = os.path.join(opt_path, "spack", "gpg")
 
 #: junit, cdash, etc. reports about builds
 reports_path = os.path.join(user_cache_path, "reports")
