@@ -572,7 +572,7 @@ class Database:
     ) -> None:
         """Database for Spack installations.
 
-        A Database is a cache of Specs data from ``$prefix/spec.yaml`` files
+        A Database is a cache of Specs data from ``$prefix/.spack/spec.json`` files
         in Spack installation directories.
 
         Database files (data and lock files) are stored under ``root/.spack-db``, which is

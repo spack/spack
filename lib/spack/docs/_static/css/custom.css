@@ -55,3 +55,19 @@ div.version-switch select:hover {
 .highlight .go {
   color: #333;
 }
+
+/* Version history of the file formats: each version is a cell that spans the releases
+   that write it. A rule separates the releases before v1.0, which are the first six rows. */
+table.format-history td:not(:first-child),
+table.format-history th:not(:first-child) {
+  text-align: center;
+  vertical-align: middle;
+}
+
+table.format-history tbody tr:nth-child(7) td {
+  border-top: 2px solid var(--color-foreground-muted);
+}
+
+table.format-history tbody tr:last-child td:first-child {
+  font-style: italic;
+}
