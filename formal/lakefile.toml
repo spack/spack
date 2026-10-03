@@ -1,0 +1,11 @@
+name = "SpecSemantics"
+version = "0.1.0"
+defaultTargets = ["SpecSemantics"]
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.33.0"
+
+[[lean_lib]]
+name = "SpecSemantics"
