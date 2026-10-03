@@ -122,6 +122,13 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
 
 .. toctree::
    :maxdepth: 2
+   :caption: Testimonials
+
+   in_the_news
+   user_reports
+
+.. toctree::
+   :maxdepth: 2
    :caption: API Docs
 
    Spack Package API <package_api>
