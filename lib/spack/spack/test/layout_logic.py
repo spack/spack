@@ -646,46 +646,39 @@ def test_auto_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     )
 
 
-def test_migrate_home_exits_early_when_destinations_exist(mock_spack_instance, monkeypatch):
-    """_do_migrate_home exits early when destination directories already exist.
+def test_migrate_with_staging_skips_occupied_destination(tmp_path, monkeypatch):
+    """An occupied destination is not modified or locked."""
+    import spack.util.lock
 
-    If ~/.config/spack and the package repos location already exist, _do_migrate_home
-    should not attempt any migration, even if ~/.spack exists.
-    """
-    home_dir, base_prefix = mock_spack_instance
+    old_path = tmp_path / "old"
+    old_path.mkdir()
+    (old_path / "old-file").write_text("old", encoding="utf-8")
 
-    # Create old user config with content
-    old_user_config = pathlib.Path(home_dir) / ".spack"
-    old_user_config.mkdir(parents=True, exist_ok=True)
-    (old_user_config / "config.yaml").write_text("config:\n  build_jobs: 5\n", encoding="utf-8")
+    new_path = tmp_path / "new"
+    new_path.mkdir()
+    existing = new_path / "existing-file"
+    existing.write_text("new", encoding="utf-8")
 
-    # Create destination directories (simulating they already exist from prior migration)
-    new_user_config = pathlib.Path(home_dir) / ".config" / "spack"
-    new_user_config.mkdir(parents=True, exist_ok=True)
-    (new_user_config / "packages.yaml").write_text("packages: {}\n", encoding="utf-8")
+    def unexpected_lock(*args, **kwargs):
+        raise AssertionError("migration should not create a lock for an occupied destination")
 
-    # Create package repos destination
-    new_repos = pathlib.Path(spack.paths.package_repos_path)
-    new_repos.mkdir(parents=True, exist_ok=True)
-    (new_repos / "existing-repo").mkdir()
-    (new_repos / "existing-repo" / "file.txt").write_text("existing", encoding="utf-8")
+    def unexpected_staging(*args, **kwargs):
+        raise AssertionError("migration should not stage files for an occupied destination")
 
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    monkeypatch.setattr(spack.util.lock, "Lock", unexpected_lock)
 
-    new_config_files_before_migration = set(new_user_config.rglob("*"))
-
-    result = spack.config._do_migrate_home()
-
-    # The function should report that it did nothing
-    assert result["user_config"] is False, "Should skip user config when destination exists"
-    assert result["package_repos"] is False, "Should skip package repos when destination exists"
-
-    # Also check directly that none of the old config files got copied
-    # into the new location
-    new_config_files_after_migration = set(new_user_config.rglob("*"))
-    assert new_config_files_before_migration == new_config_files_after_migration, (
-        "New user config should be unchanged when migration is skipped"
+    result = spack.config._migrate_with_staging(
+        old_path=str(old_path),
+        new_path=str(new_path),
+        prepare_staging_callback=unexpected_staging,
+        lock_name=".test-lock",
+        staging_name=".test-staging",
+        description="test resource",
     )
+
+    assert not result
+    assert existing.read_text(encoding="utf-8") == "new"
+    assert set(new_path.iterdir()) == {existing}
 
 
 def test_layout_scope_fallback_for_old_installs(mock_spack_instance, monkeypatch):
