@@ -23,6 +23,7 @@ Each format is documented in detail on a dedicated page:
    file_formats/specfile
    file_formats/database
    file_formats/lockfile
+   file_formats/buildcache
 
 The figure below shows how the formats depend on each other:
 
@@ -54,7 +55,7 @@ The following table lists the formats, the files in which they are stored, and t
      - ``<environment>/spack.lock``
      - :data:`spack.environment.environment.CURRENT_LOCKFILE_VERSION`
      - |lockfile_version|
-   * - Build cache layout
+   * - :doc:`Build cache layout <file_formats/buildcache>`
      - ``<mirror>/v3/``, ``<mirror>/blobs/``
      - ``spack.url_buildcache.CURRENT_BUILD_CACHE_LAYOUT_VERSION``
      - |buildcache_layout_version|
