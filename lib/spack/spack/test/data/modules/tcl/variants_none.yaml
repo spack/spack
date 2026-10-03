@@ -1,0 +1,6 @@
+enable:
+  - tcl
+tcl:
+  variants: none
+  all:
+    autoload: direct
