@@ -1808,24 +1808,26 @@ complete -c spack -n '__fish_spack_using_command external' -s h -l help -f -a he
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -d 'show this help message and exit'
 
 # spack external find
-set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= p/path= scope= all t/tag= j/jobs=
+set -g __fish_spack_optspecs_spack_external_find h/help not-buildable exclude= p/path= scope= cray-manifest= j/jobs= all t/tag=
 
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external find' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command external find' -l not-buildable -f -a not_buildable
 complete -c spack -n '__fish_spack_using_command external find' -l not-buildable -d 'packages with detected externals won'"'"'t be built with Spack'
 complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -f -a exclude
-complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -d 'packages to exclude from search'
+complete -c spack -n '__fish_spack_using_command external find' -l exclude -r -d 'do not search for this package (multiple use allowed)'
 complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -f -a path
-complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -d 'one or more alternative search paths for finding externals'
+complete -c spack -n '__fish_spack_using_command external find' -s p -l path -r -d 'search this prefix, bin, or lib path instead of PATH and LD_LIBRARY_PATH (multiple use allowed)'
 complete -c spack -n '__fish_spack_using_command external find' -l scope -r -f -a '_builtin defaults:base defaults system site user spack command_line'
 complete -c spack -n '__fish_spack_using_command external find' -l scope -r -d 'configuration scope to modify'
+complete -c spack -n '__fish_spack_using_command external find' -l cray-manifest -r -f -a cray_manifest
+complete -c spack -n '__fish_spack_using_command external find' -l cray-manifest -r -d 'Cray manifest to search for packages, or '"'"'auto'"'"', or '"'"'none'"'"''
+complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -f -a jobs
+complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 complete -c spack -n '__fish_spack_using_command external find' -l all -f -a all
 complete -c spack -n '__fish_spack_using_command external find' -l all -d 'search for all packages that Spack knows about'
 complete -c spack -n '__fish_spack_using_command external find' -s t -l tag -r -f -a tags
 complete -c spack -n '__fish_spack_using_command external find' -s t -l tag -r -d 'filter a package query by tag (multiple use allowed)'
-complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -f -a jobs
-complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack external list
 set -g __fish_spack_optspecs_spack_external_list h/help
