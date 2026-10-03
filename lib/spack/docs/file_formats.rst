@@ -60,6 +60,8 @@ The following table lists the formats, the files in which they are stored, and t
      - ``spack.url_buildcache.CURRENT_BUILD_CACHE_LAYOUT_VERSION``
      - |buildcache_layout_version|
 
+.. _file-formats-coupling:
+
 How Format Versions Are Coupled
 -------------------------------
 
@@ -176,14 +178,37 @@ To determine whether two releases of Spack can share a file, compare the version
    | v1.3 (in development) | 6         | 9        | 8        |                    |
    +-----------------------+-----------+----------+----------+--------------------+
 
-When a New Version Is Required
-------------------------------
+Changing a Format
+-----------------
 
-A new version of a format is required whenever an older reader would misinterpret the file:
+A change to what Spack writes in one of these formats may require a new version of that format, and of the formats that depend on it.
 
-* the meaning of an existing key changes,
-* a new key affects the identity of a spec, for instance because it is part of the DAG hash, or
-* an older reader would reconstruct a different spec from the same data.
+**When a new version is required**
+   A new version of a format is required whenever an older version of Spack would misinterpret the file:
 
-An optional key that older versions of Spack can safely ignore does not require a new version.
-For example, the ``spack`` and ``include_concrete`` sections of lockfiles were added in this way (`#32801 <https://github.com/spack/spack/pull/32801>`_, `#33768 <https://github.com/spack/spack/pull/33768>`_).
+   * the meaning of an existing key changes,
+   * a new key affects the identity of a spec, for instance because it is part of the DAG hash, or
+   * an older version of Spack would reconstruct a different spec from the same data.
+
+   An optional key that older versions of Spack can safely ignore does not require a new version.
+   For example, the ``spack`` and ``include_concrete`` sections of lockfiles were added in this way (`#32801 <https://github.com/spack/spack/pull/32801>`_, `#33768 <https://github.com/spack/spack/pull/33768>`_).
+
+**Which formats are incremented with it**
+   * A new version of the spec file requires a new version of the Database and of the lockfile in the same change, as explained in :ref:`file-formats-coupling`.
+     The build cache media types of spec files and indexes include these versions, so they change with them.
+   * A new version of the Database does not affect the other formats.
+     It requires a decision on whether an index in the previous version can still be read in place, which also applies to upstreams and to the indexes of build caches.
+   * A new version of the lockfile does not affect the other formats.
+     A key added by the new version needs a default value for lockfiles in older versions.
+   * A new version of the build cache layout does not affect the other formats.
+     The previous version of the layout remains readable, and Spack provides a command to convert a build cache to the new one.
+
+**What to update in these documents**
+   * The Version History section on the page of the format.
+   * The table of the format versions written by each release, in the section above.
+   * For the lockfile, the table of the versions read by each release.
+   * For the Database, the versions that are read in place.
+
+**What to test**
+   * A file written by a released version of Spack is read, and gives the same specs.
+   * A file in a version newer than the current one is refused.
