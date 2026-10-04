@@ -475,8 +475,7 @@ def _specs_to_be_packaged(
     else:
         deptype = dt.RUN | dt.LINK | dt.TEST
     if "package" not in things_to_install:
-        # Traverse from the dependencies instead, so that requested specs that other requested
-        # specs depend on are still pushed
+        # `--only dependencies` means that the requested specs are the root's direct dependencies
         requested = [d for s in requested for d in s.dependencies(deptype=deptype)]
     specs = [
         s
