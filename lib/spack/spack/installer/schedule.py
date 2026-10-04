@@ -96,7 +96,8 @@ class BuildGraph:
         database = store.db
         self.roots = {s.dag_hash() for s in specs}
         if not install_package:
-            # Roots are pruned below, so a requested spec that another one depends on is not a root            
+            # Roots are pruned below, so a requested spec that another one depends on is not a
+            # root
             self.roots.difference_update(_dependency_hashes(specs))
         self.nodes = {s.dag_hash(): s for s in specs if s.dag_hash() in self.roots}
         self.parent_to_child: Dict[str, Set[str]] = {}
