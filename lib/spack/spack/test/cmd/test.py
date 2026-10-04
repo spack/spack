@@ -303,12 +303,29 @@ def test_report_filename_for_cdash(install_mockery, mock_fetch):
 def test_test_output_multiple_specs(
     mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery
 ):
-    """Ensure proper reporting for suite with skipped, failing, and passed tests."""
+    """Ensure proper reporting for suite with skipped, failed, and passed tests."""
     install("test-error", "simple-standalone-test@0.9", "simple-standalone-test@1.0")
     out = spack_test("run", "test-error", "simple-standalone-test", fail_on_error=False)
 
     # Note that a spec with passing *and* skipped tests is still considered
-    # to have passed at this level. If you want to see the spec-specific
-    # part result summaries, you'll have to look at the "test-out.txt" files
-    # for each spec.
+    # to have passed at this level.
     assert "1 failed, 2 passed of 3 specs" in out
+
+    # We have to look at the spec-specific "test-out.txt" files to see part
+    # result summaries. At this point we only care about the "unusual" case
+    # of the skipped test.
+
+    # Grab test stage directory contents.
+    stage_files = os.listdir(mock_test_stage)
+    testdir = os.path.join(mock_test_stage, stage_files[0])
+    testdir_files = os.listdir(testdir)
+    testlogs = [name for name in testdir_files if str(name).endswith("test-out.txt")]
+    assert len(testlogs) == 3
+
+    # Grab the output from the test log of the spec with a skipped test.
+    skiplog = next((name for name in testlogs if "simple-standalone-test-1" in name), None)
+    assert skiplog is not None, "No log file found for simple-standalone-test@1.0"
+    outfile = os.path.join(testdir, skiplog)
+    with open(outfile, "r", encoding="utf-8") as f:
+        test_log = f.read()
+    assert "1 passed, 1 skipped of 2 parts" in test_log
