@@ -143,6 +143,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="for a private mirror, include non-redistributable packages",
     )
     push.add_argument(
+        "--only-noncached",
+        action="store_true",
+        help="only push packages not present in an existing binary cache",
+    )
+    push.add_argument(
         "--group",
         action="append",
         default=None,
@@ -541,6 +546,10 @@ def push_fn(args):
 
     if not args.private:
         specs = _skip_no_redistribute_for_public(specs)
+
+    if args.only_noncached:
+        existing_specs = spack.binary_distribution.update_cache_and_get_specs()
+        specs = [s for s in specs if s not in existing_specs]
 
     specs = _filter_specs_for_push(specs, mirror)
 
