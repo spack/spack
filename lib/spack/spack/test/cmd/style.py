@@ -497,33 +497,37 @@ def test_changed_files_repo_no_base(git, repo_builder: RepoBuilder, capfd):
 
 @pytest.mark.skipif(not RUFF, reason="ruff is not installed.")
 def test_repo_style_config_is_left_to_ruff(repo_builder: RepoBuilder, ruff_package_with_errors):
-    """Spack passes no --config for a package repo, so ruff resolves it as it would anywhere.
-
-    The fixture package has both an unused import (F401, which ruff selects by default) and
-    unsorted imports (I001, which only a config that selects "I" enables, as spack's does), so
-    the rules that fire say which configuration was in effect.
+    """Ensure Spack is not assuming/providing a config for a repo based style run and instead leaving
+    Ruff's default config resolution inimpinged to resolve a repo config or fallback to ruff defaults
     """
+    configs = {"bad-a": "F401", "bad-b": "I001"}
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
         repo = repo_path.get_repo(repo_builder.namespace)
-        repo_root = pathlib.Path(repo.root)
 
-        bad_file = pathlib.Path(repo_builder._recipe_filename("bad-package"))
-        bad_file.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(ruff_package_with_errors, bad_file)
+        copies = {}
+        for name, rule in configs.items():
+            copy = pathlib.Path(repo_builder._recipe_filename(name))
+            copy.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(ruff_package_with_errors, copy)
+            (copy.parent / "ruff.toml").write_text(f'[lint]\nselect = ["{rule}"]\n')
+            copies[name] = copy
 
-        no_config = style("--repo", repo.namespace, "-t", "ruff-check", fail_on_error=False)
+        whole_repo = style("--repo", repo.namespace, "-t", "ruff-check", fail_on_error=False)
+        per_file = {
+            name: style(
+                "--repo", repo.namespace, "-t", "ruff-check", str(copy), fail_on_error=False
+            )
+            for name, copy in copies.items()
+        }
 
-        # a config above the repo root is found by searching upward
-        (repo_root.parent / "ruff.toml").write_text('[lint]\nselect = ["I"]\n')
-        from_above = style("--repo", repo.namespace, "-t", "ruff-check", fail_on_error=False)
+    # one run over the repo applies both configs, so no single config was imposed on it
+    assert all(rule in whole_repo for rule in configs.values())
 
-    # with no config to find, ruff falls back to its own defaults rather than spack's
-    assert "F401" in no_config
-    assert "I001" not in no_config
-
-    # and spack does not override what ruff resolved
-    assert "I001" in from_above
-    assert "F401" not in from_above
+    # and each copy gets only the rule its own config selects
+    for name, rule in configs.items():
+        other_rules = [r for n, r in configs.items() if n != name]
+        assert rule in per_file[name]
+        assert not any(r in per_file[name] for r in other_rules)
 
 
 def test_repo_and_root_are_mutually_exclusive(tmp_path: pathlib.Path):
