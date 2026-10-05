@@ -12,6 +12,7 @@ import spack.config
 import spack.package_prefs
 import spack.paths
 import spack.repo
+import spack.solver.asp
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
 from spack.config import Configuration
@@ -319,6 +320,217 @@ mpi:
         # ensure that once config is in place, external is used
         spec = spack.concretize.concretize_one("mpi")
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
+
+    def test_buildable_false(self):
+        conf = syaml.load_config(
+            """\
+libelf:
+  buildable: false
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("libelf")
+
+        spec = concretize("mpich")
+        assert spec["mpich"].name == "mpich"
+
+    def test_buildable_false_virtual(self):
+        conf = syaml.load_config(
+            """\
+mpi:
+  buildable: false
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        spec = concretize("libelf")
+        assert spec["libelf"].name == "libelf"
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
+
+    def test_buildable_false_all(self):
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
+            spack.concretize.concretize_one("libelf")
+
+        assert "buildable:false" in str(exc_info.value)
+
+    def test_buildable_false_all_true_package(self):
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+libelf:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        spec = concretize("libelf")
+        assert spec["libelf"].name == "libelf"
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("mpich")
+
+    def test_buildable_false_all_true_virtual(self):
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+mpi:
+  buildable: true
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("libelf")
+
+        spec = concretize("mpich")
+        assert spec["mpich"].name == "mpich"
+
+    def test_buildable_false_virtual_true_package(self):
+        conf = syaml.load_config(
+            """\
+mpi:
+  buildable: false
+mpich:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("zmpi")
+
+        spec = concretize("mpich")
+        assert spec["mpich"].name == "mpich"
+
+    @pytest.mark.parametrize(
+        "conf_str",
+        [
+            # 'mpi' is listed before 'lapack'
+            """\
+mpi:
+  buildable: true
+lapack:
+  buildable: true
+""",
+            # same settings, opposite order: the outcome must not depend on it
+            """\
+lapack:
+  buildable: true
+mpi:
+  buildable: true
+""",
+        ],
+    )
+    def test_buildable_true_for_provider_of_multiple_virtuals(self, conf_str):
+        """A package providing several virtuals ("low-priority-provider", which
+        provides both "mpi" and "lapack") is buildable only if *all* of those virtuals
+        allow it, and the result must not depend on the order the virtuals are listed
+        in the configuration.
+        """
+        conf = syaml.load_config(conf_str)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        spec = concretize("many-virtual-consumer ^low-priority-provider")
+        assert spec["mpi"].name == "low-priority-provider"
+        assert spec["lapack"].name == "low-priority-provider"
+
+    @pytest.mark.parametrize(
+        "conf_str",
+        [
+            # 'mpi' (non-buildable) is listed before 'lapack' (buildable)
+            """\
+mpi:
+  buildable: false
+lapack:
+  buildable: true
+""",
+            # same settings, opposite order: the outcome must not depend on it
+            """\
+lapack:
+  buildable: true
+mpi:
+  buildable: false
+""",
+        ],
+    )
+    def test_buildable_false_if_any_virtual_not_buildable(self, conf_str):
+        """A package providing several virtuals is not buildable if *any* of those
+        virtuals disallows it, regardless of the order the virtuals are listed in
+        the configuration.
+        """
+        conf = syaml.load_config(conf_str)
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("many-virtual-consumer ^low-priority-provider")
+
+    def test_buildable_false_all_requires_every_virtual_explicitly_true(self):
+        """When 'packages:all:buildable' is false, a virtual without an explicit
+        setting inherits that default. So a package providing multiple virtuals
+        needs every one of them explicitly set to 'buildable: true' before it is
+        itself considered buildable.
+        """
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+many-virtual-consumer:
+  buildable: true
+mpi:
+  buildable: true
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        # 'lapack' has no explicit setting, so it inherits 'all: buildable: false'
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            concretize("many-virtual-consumer ^low-priority-provider")
+
+        conf = syaml.load_config(
+            """\
+all:
+  buildable: false
+many-virtual-consumer:
+  buildable: true
+mpi:
+  buildable: true
+lapack:
+  buildable: true
+gcc-runtime:
+  buildable: true
+compiler-wrapper:
+  buildable: true
+"""
+        )
+        spack.config.CONFIG.set("packages", conf, scope="concretize")
+
+        spec = concretize("many-virtual-consumer ^low-priority-provider")
+        assert spec["mpi"].name == "low-priority-provider"
+        assert spec["lapack"].name == "low-priority-provider"
 
     def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are

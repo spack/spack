@@ -326,9 +326,23 @@ class StaticAnalysis(NoStaticAnalysis):
         return self._installable[pkg_name]
 
     def _compute_can_be_installed(self, pkg_name: str) -> bool:
-        if self.configuration.get(f"packages:{pkg_name}:buildable", True):
-            return True
+        # Package-specific config has highest priority
+        is_buildable = self.configuration.get(f"packages:{pkg_name}:buildable")
 
+        if is_buildable:
+            return True
+        elif is_buildable is None:
+            # Package itself not configured: consult any virtuals it provides
+            if any(
+                self.configuration.get(f"packages:{virtual}:buildable") is True
+                for virtual in self._provided_virtuals(pkg_name)
+            ):
+                return True
+            # Still unconfigured: fall back to the "all" default
+            if self.configuration.get("packages:all:buildable", True):
+                return True
+
+        # Package is not buildable, check if it can be satisfied through other means
         if self.configuration.get(f"packages:{pkg_name}:externals", []):
             return True
 
@@ -341,6 +355,10 @@ class StaticAnalysis(NoStaticAnalysis):
 
         tty.debug(f"[{__name__}] {pkg_name} cannot be installed")
         return False
+
+    def _provided_virtuals(self, pkg_name: str) -> list:
+        pkg_cls = self.repo.get_pkg_class(pkg_name)
+        return pkg_cls.provided_virtual_names()
 
     def _is_provider_candidate(self, *, pkg_name: str, virtual: str) -> bool:
         key = (pkg_name, virtual)
