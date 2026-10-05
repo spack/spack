@@ -497,8 +497,9 @@ def test_changed_files_repo_no_base(git, repo_builder: RepoBuilder, capfd):
 
 @pytest.mark.skipif(not RUFF, reason="ruff is not installed.")
 def test_repo_style_config_is_left_to_ruff(repo_builder: RepoBuilder, ruff_package_with_errors):
-    """Ensure Spack is not assuming/providing a config for a repo based style run and instead leaving
-    Ruff's default config resolution inimpinged to resolve a repo config or fallback to ruff defaults
+    """Ensure Spack is not assuming/providing a config for a repo based style run and
+    instead leaving Ruff's default config resolution inimpinged to resolve a repo config
+    or fallback to ruff defaults
     """
     configs = {"bad-a": "F401", "bad-b": "I001"}
     with spack.repo.use_repositories(repo_builder.root) as repo_path:
