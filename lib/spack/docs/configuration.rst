@@ -102,6 +102,14 @@ From lowest to highest precedence:
 
 #. **command line**: Build settings specified on the command line take precedence over all other scopes.
 
+.. note::
+
+   Spack may create a ``layout`` scope in ``$(prefix)/etc/spack/layout/``
+   for generated settings associated with migration or isolation.
+   It sits just above ``defaults``, but below ``system``, ``site``, ``plugin``,
+   ``user``, and ``spack``.
+   A fresh Spack instance has no layout scope; it is created only when needed.
+
 Each configuration directory may contain several configuration files, such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``.
 When configurations conflict, settings from higher-precedence scopes override lower-precedence settings.
 
@@ -113,7 +121,7 @@ If you forget, you can always see the available configuration scopes in order of
     Scope            Path
     command_line
     spack            /home/username/spack/etc/spack
-    user             /home/username/.spack/
+    user             /home/username/.config/spack/
     site             /home/username/spack/etc/spack/site/
     defaults         /home/username/spack/etc/spack/defaults/
     defaults:darwin  /home/username/spack/etc/spack/defaults/darwin/
@@ -534,6 +542,10 @@ These are:
 
 * ``$env``: name of the currently active :ref:`environment <environments>`
 * ``$spack``: path to the prefix of this Spack installation
+* ``$spack_instance_id``: hash distinguishing co-installed Spack instances
+* ``$data_home``: the selected ``config:locations:data`` path
+* ``$state_home``: the selected ``config:locations:state`` path
+* ``$cache_home``: the selected ``config:locations:cache`` path
 * ``$tempdir``: default system temporary directory (as specified in Python's `tempfile.tempdir <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_ variable.
 * ``$user``: name of the current user
 * ``$user_cache_path``: legacy alias for ``$state_home``
@@ -626,7 +638,6 @@ For example, to see the fully merged ``config.yaml``, you can type:
      build_stage:
      - $tempdir/$user/spack-stage
      - $cache_home/stage
-     - $spack/var/spack/stage
      source_cache: $data_home/downloads
      misc_cache: $state_home/$spack_instance_id/cache
      locks: true
@@ -669,7 +680,6 @@ If you do not know why Spack is behaving a certain way, this command can help yo
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $cache_home/stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $data_home/downloads
    /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $state_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
@@ -702,31 +712,50 @@ Spack provides three environment variables that allow you to override or opt out
 .. envvar:: SPACK_DISABLE_LOCAL_CONFIG
 
    Set this environment variable to completely disable **both** the system and user configuration directories.
-   Spack will then only consider its own defaults and ``site`` configuration locations.
+   Spack will then only consider its own defaults and ``site`` configuration locations
+   (including the ``spack``, ``layout``, and ``isolate`` scopes).
 
-And one that allows you to move the default cache location:
+Isolating Spack instances
+-------------------------
 
-.. envvar:: SPACK_USER_CACHE_PATH
+If you want your spack instance to be completely independent of any others on the system (avoiding sharing of config or caches), then you can use ``spack isolate`` (described later) - which handles all components - or by modifying environment variables and editing config.
 
-   Override the default path to use for user data (misc_cache, tests, reports, etc.)
+Using ``spack isolate``
+^^^^^^^^^^^^^^^^^^^^^^^
 
-With these settings, if you want to isolate Spack in a CI environment, you can do this:
-
-.. code-block:: console
-
-  $ export SPACK_DISABLE_LOCAL_CONFIG=true
-  $ export SPACK_USER_CACHE_PATH=/tmp/spack
-
-
-``spack isolate``
-^^^^^^^^^^^^^^^^^^
-
-``spack isolate --path ISO_PATH`` provides a mechanism for isolating a single spack instance from ``~/.spack``.
-It modifies the current Spack instance by setting the ``user`` scope to use ``ISO_PATH`` and creating an ``isolate`` scope below the ``site`` scope that moves caches and stages that usually default to ``~/.spack`` to ``ISO_PATH`` instead.
+``spack isolate --path ISO_PATH`` provides a mechanism for isolating a single Spack instance from the user's home directory (configs in ``~/.config/spack`` and resources in ``~/.local/share/spack``, ``~/.local/state/spack``, and ``~/.cache/spack``).
+It modifies the current Spack instance by redirecting the ``user`` scope and resources into ``ISO_PATH``.
+This is implemented through configuration scopes, so higher-precedence scopes can override the generated settings for individual resources.
 This facilitates working with many independent Spack instances without worrying about overlapping configuration.
 ``spack isolate --undo`` reverts the changes to Spack made by ``spack isolate``.
 
 ``spack isolate --self`` is a shortcut that isolates Spack to its own prefix.
+
+With default config and environment variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: console
+
+  $ export SPACK_DISABLE_LOCAL_CONFIG=true
+  $ export SPACK_STATE_HOME=/path1
+  $ export SPACK_DATA_HOME=/path2
+
+With config
+^^^^^^^^^^^
+
+.. code-block:: console
+
+   $ spack config get config
+   config:
+     locations:
+       data: ...
+       state: ...
+
+   $ cat etc/spack/include.yaml
+   # Override this list to remove the isolate scope
+   include: []
+
+This is effectively what ``spack isolate`` does, but you can exert more control over specifics (e.g. by only isolating specific components, or isolating them to different directories).
 
 .. _other-environment-variables:
 
@@ -770,7 +799,8 @@ A handful of additional environment variables influence Spack's runtime behavior
 
    Override the GnuPG home directory used by ``spack gpg`` and buildcache
    signing.
-   Defaults to ``$spack/opt/spack/gpg``.
+   When unset, Spack uses ``config:gpg_path``, which defaults to
+   ``$data_home/gpg``.
 
 .. envvar:: SPACK_GREP
 

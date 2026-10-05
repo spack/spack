@@ -12,8 +12,10 @@
 Controlling where Spack writes data
 ===================================
 
-A fresh checkout of Spack writes nothing into the ``$spack`` prefix; all data goes under the user's home directory in XDG-compliant locations (based on categorizations described in :ref:`the location table <location-table>`).
-A Spack instance that was installed before this layout — where data lived under ``$spack/opt``, ``$spack/var``, etc. — keeps using the legacy install location but attempts to move environments, gpg keys, and licenses (in ``$HOME``).
+A fresh checkout of Spack writes nothing into the ``$spack`` prefix.
+Persistent user data, state, and caches use XDG-compliant locations under the user's home directory by default, as described in :ref:`the location table <location-table>`; build stages prefer the system temporary directory, and module roots must be configured explicitly.
+A Spack instance that was installed before this layout — where data lived under ``$spack/opt``, ``$spack/var``, etc. — keeps using the legacy install location but attempts to copy environments, GPG data, and licenses to the new default locations under ``$HOME``.
+The original resources remain in place.
 
 How to override
 ---------------
@@ -46,7 +48,16 @@ Auto-migration of ``$spack``-internal data for older instances
 --------------------------------------------------------------
 
 If a user ``git pull``s into a pre-1.3 Spack instance, Spack will attempt to update where some artifacts are stored to match the new default layout.
-This can be reversed with ``spack migrate undo``.
+``spack migrate undo`` restores use of the legacy locations by updating configuration; it does not remove files copied to the new locations.
+The original resources are still available because automatic migration leaves them in place.
+
+Spack also independently copies user configuration from ``~/.spack`` to
+``~/.config/spack`` and package repositories from ``~/.spack/package_repos``
+to ``~/.local/state/spack/package_repos`` when the old locations contain data
+and the new destinations are available.
+This home-directory migration can occur for a fresh checkout and does not create
+migration state in the Spack prefix.
+The old files remain in place for use by older Spack instances.
 
 Redoing ``spack isolate`` (and avoiding auto-migration)
 -------------------------------------------------------
@@ -71,7 +82,7 @@ The location table
 +----------------+-----------+--------------------+------------+--------------------+
 | gpg keys       | x         |                    |            |                    |
 +----------------+-----------+--------------------+------------+--------------------+
-| modules        | x         |                    |            |                    |
+| modules        |           |                    |            | x [#wheretable-4]_ |
 +----------------+-----------+--------------------+------------+--------------------+
 | environments   | x         |                    |            |                    |
 +----------------+-----------+--------------------+------------+--------------------+
@@ -88,6 +99,7 @@ The location table
 .. [#wheretable-2] ``cache_home`` is modeled after ``$XDG_CACHE_HOME``.
                    Spack assumes that ``$XDG_CACHE_HOME`` can be removed on user log-out; misc cache is intended to be longer-lived, so it lives in ``state_home`` instead.
 .. [#wheretable-3] User-scope config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>` to avoid recursion issues with configurable locations.
+.. [#wheretable-4] Spack does not provide a default module root; module roots must be configured explicitly in ``modules.yaml``.
 
 References
 ----------

@@ -15,7 +15,7 @@ Spack Settings (config.yaml)
 ============================
 
 Spack's basic configuration options are set in ``config.yaml``.
-You can see the default settings by looking at ``etc/spack/defaults/config.yaml``:
+You can see the default settings by looking at ``etc/spack/defaults/base/config.yaml``:
 
 .. literalinclude:: _spack_root/etc/spack/defaults/base/config.yaml
    :language: yaml
@@ -91,7 +91,7 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
    - $tempdir/$user/spack-stage
-   - ~/.spack/stage
+   - $cache_home/stage
 
 This can be an ordered list of paths that Spack should search when trying to find a temporary directory for the build stage.
 The list is searched in order, and Spack will use the first directory to which it has write access.
@@ -112,7 +112,7 @@ Unsuccessful builds are not deleted, but you can manually purge them with ``spac
 --------------------
 
 Location to cache downloaded tarballs and repositories.
-By default, these are stored in ``$spack/var/spack/cache``.
+By default, these are stored in ``$data_home/downloads``.
 These are stored indefinitely by default and can be purged with ``spack clean --downloads``.
 
 .. _Misc Cache:
@@ -121,7 +121,7 @@ These are stored indefinitely by default and can be purged with ``spack clean --
 --------------------
 
 Temporary directory to store long-lived cache files, such as indices of packages available in repositories.
-Defaults to ``~/.spack/cache``.
+Defaults to ``$state_home/$spack_instance_id/cache``.
 Can be purged with ``spack clean --misc-cache``.
 
 In some cases, e.g., if you work with many Spack instances or many different versions of Spack, it makes sense to have a cache per instance or per version.
