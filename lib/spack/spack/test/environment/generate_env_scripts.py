@@ -79,11 +79,9 @@ def test_write_env_activate_script(
         var_name = f'"{var_name}"'
     assert os.path.exists(script_path)
 
-    # Verify content
     with open(script_path, "r", encoding="utf-8") as f:
         activation_content = f.read()
-    print(activation_content)
-    assert len(activation_content) > 0
+
     assert f"{cmd_name} {var_name} {test_env_path}" in activation_content
 
 
@@ -117,7 +115,6 @@ def test_write_env_deactivate_script(
     with open(script_path, "r", encoding="utf-8") as f:
         deactivation_content = f.read()
 
-    assert len(deactivation_content) > 0
     assert f"{cmd_name} {var_name}" in deactivation_content
 
 

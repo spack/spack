@@ -9,6 +9,7 @@ import pytest
 
 import spack.concretize
 import spack.hooks.generate_spec_scripts as spec_script
+import spack.installer
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 
@@ -201,8 +202,8 @@ def test_load_external_spec(
     }
     mutable_config.update_config("packages", external_conf)
 
-    install("--fake", "trivial-install-test-package")
     spec = spack.concretize.concretize_one("trivial-install-test-package")
+    spack.installer.PackageInstaller([spec.package], fake=True)
 
     # External specs should not generate scripts
     assert spec.external

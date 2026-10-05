@@ -9,6 +9,7 @@ import pytest
 
 import spack.concretize
 import spack.hooks.generate_spec_scripts as spec_script
+import spack.installer
 import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec
@@ -30,7 +31,7 @@ def test_paths_to_spec_scripts(install_mockery, mock_fetch, mock_archive, mock_p
 
     spec = spack.concretize.concretize_one("mpileaks")
 
-    install("--fake", spec.name)
+    spack.installer.PackageInstaller([spec.package], fake=True)
 
     shell_extensions = {"sh": ""}  # csh and fish have the same scripts as sh
     if sys.platform == "win32":
@@ -63,7 +64,7 @@ def test_shell_scripts_modify_loaded_hashes(
 
     spec = spack.concretize.concretize_one("mpileaks")
 
-    install("--fake", spec.name)
+    spack.installer.PackageInstaller([spec.package], fake=True)
 
     for pkg in spec.traverse():
         if pkg.external:
@@ -113,10 +114,10 @@ def test_install_multiple_specs_shell_scripts(
 
     # Install multiple specs
     if install_together:
-        install("--fake", dyninst_spec.name, hypre_spec.name)
+        spack.installer.PackageInstaller([dyninst_spec.package, hypre_spec.package], fake=True)
     else:
-        install("--fake", dyninst_spec.name)
-        install("--fake", hypre_spec.name)
+        spack.installer.PackageInstaller([dyninst_spec.package], fake=True)
+        spack.installer.PackageInstaller([hypre_spec.package], fake=True)
 
     # No overlap in load shell script
     path_to_dyninst = spec_script.path_to_load_shell_script(dyninst_spec, shell)
@@ -161,7 +162,7 @@ def test_no_scripts_for_external_spec_with_deps(
 
     spec = spack.concretize.concretize_one("externaltool")
 
-    install("externaltool")
+    spack.installer.PackageInstaller([spec.package], fake=True)
 
     for pkg in spec.traverse():
         path_to_load_script = spec_script.path_to_load_shell_script(pkg, shell)
@@ -178,7 +179,7 @@ def test_generate_script_creates_directory(
 
     spec = spack.concretize.concretize_one("mpileaks")
 
-    install("--fake", spec.name)
+    spack.installer.PackageInstaller([spec.package], fake=True)
 
     # Provide a path to a non-existent directory
     nonexistent_dir = os.path.join(spec.prefix, "nonexistent_dir")

@@ -366,6 +366,7 @@ def env_activate(args):
             active_env, shell=args.shell, script_type="deactivate", view=current_view
         )
 
+        # Will only write the deactivation scripts if they don't exist
         env_script.write_env_deactivate_script(active_env, current_view)
 
         sys.stdout.write(env_script.source_env_script(env_deactivate_script, args.shell))
@@ -468,6 +469,7 @@ def env_deactivate(args):
         active_environment(), shell=args.shell, script_type="deactivate", view=view
     )
 
+    # Will only write the deactivation scripts if they don't exist
     env_script.write_env_deactivate_script(active_environment(), view)
 
     ev.deactivate()
