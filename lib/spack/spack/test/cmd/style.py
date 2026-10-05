@@ -612,6 +612,7 @@ def test_repo_rejects_files_outside_repo(repo_builder: RepoBuilder, tmp_path: pa
     assert str(outside.resolve()) in output
 
 
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="requires Python 3.9+")
 def test_repo_paths_through_symlinked_root(repo_builder: RepoBuilder, tmp_path: pathlib.Path):
     """Paths in a repo configured through a symlink are still reported relative to the repo."""
     repo_root = pathlib.Path(repo_builder.root)
