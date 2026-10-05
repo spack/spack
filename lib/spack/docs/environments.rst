@@ -198,103 +198,28 @@ If the environment was activated with its view, deactivating the environment wil
 
 .. _environment_scripts:
 
-Environment Activation/Deactivation Scripts
--------------------------------------------
+Cached Activation Scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When you create and activate an environment, Spack automatically generates shell scripts to handle the activation and deactivation process.
-These scripts are stored in the ``.spack-env`` directory within your environment directory and handle tasks like:
+``spack env activate`` does not print environment modifications directly.
+Instead, it prints a command that sources a cached script from the ``.spack-env`` directory inside the environment, e.g.:
 
-- Setting environment variables (including ``SPACK_ENV``)
-- Setting up environment variables for views
+.. code-block:: none
 
-The activation and deactivation scripts are generated for different shells (sh, csh, fish, bat, and pwsh on Windows).
-Script names follow the pattern ``{view_name}-activate.{ext}`` and ``{view_name}-deactivate.{ext}`` where ``{view_name}`` is the name of the environment view (typically ``default``) and ``{ext}`` is the shell-specific extension (e.g., ``.sh``, ``.csh``, ``.fish``, ``.bat``, ``.ps1``).
+   my_env/.spack-env/default_activate
+   my_env/.spack-env/default_deactivate
 
-Internally, Spack uses these scripts when you run commands like:
+The scripts are named ``<view>_activate`` and ``<view>_deactivate``, where ``<view>`` is the name of the view being activated -- usually ``default``.
+Activating without a view, e.g. with ``-V, --without-view``, uses ``noview_activate`` and ``noview_deactivate``.
+The scripts set ``SPACK_ENV``, the :ref:`prefix inspection <customize-env-modifications>` variables for the view, and any run environment variables set by the environment's packages.
 
-.. code-block:: console
+Generated scripts do not contain shell-specific syntax.
+They call helper functions like ``_spack_env_set`` and ``_spack_env_prepend``, which ``setup-env.sh`` and its siblings define for each shell from ``share/spack/environment-mods.*``.
+``sh``, ``csh``, and ``fish`` therefore share a single activation script, while deactivation needs one script per shell: ``default_deactivate``, ``default_deactivate.csh``, and ``default_deactivate.fish``.
+On Windows, scripts are generated for ``cmd.exe`` and PowerShell with ``.bat`` and ``.ps1`` extensions.
 
-   $ spack env activate myenv
-   $ spack env deactivate
-
-You can also use these scripts directly by sourcing them:
-
-.. code-block:: console
-
-   $ source /path/to/environment/.spack-env/default-activate.sh
-   $ source /path/to/environment/.spack-env/default-deactivate.sh
-
-If your environment has multiple views, each view will have its own pair of activation/deactivation scripts named after that view.
-
-The activation scripts are automatically regenerated when:
-
-1. A new environment is created
-2. An environment view is regenerated
-3. The environment's lockfile is written or modified
-
-This ensures that the environment variables and setup always reflect the current state of your environment and its views.
-
-If the cached activation/deactivation scripts are deleted, Spack will automatically regenerate them the next time you activate the environment.
-This regeneration happens transparently without any user intervention.
-Similarly, if scripts for your specific shell are missing, Spack will generate them on-demand when you run ``spack env activate``.
-
-You can also manually force regeneration of all environment scripts by regenerating the environment's views:
-
-.. code-block:: console
-
-   $ spack env view regenerate
-
-This will recreate all activation and deactivation scripts for all views in the environment.
-
-Shell Compatibility
--------------------
-
-Spack supports environment activation in multiple shells:
-
-* **Bash/dash/zsh/sh**: The default shell with full support for all features
-* **csh/tcsh**: Command-line support with environment variables and aliases
-* **fish**: Complete support with functions instead of aliases
-* **Windows batch (bat)**: Basic support for Windows command prompt
-* **PowerShell (pwsh)**: Support for Windows PowerShell environments
-
-When activating an environment with ``spack env activate``, Spack detects your current shell and uses the appropriate script.
-You can also specify which shell script to generate:
-
-.. code-block:: console
-
-   $ spack env activate --sh myenv    # For bash/dash/zsh/sh
-   $ spack env activate --csh myenv   # For csh/tcsh
-   $ spack env activate --fish myenv  # For fish
-   $ spack env activate --bat myenv   # For Windows cmd.exe
-   $ spack env activate --pwsh myenv  # For PowerShell
-
-The generated script adds several features to your shell:
-
-1. Sets ``SPACK_ENV`` to point to your environment's location
-2. Updates your prompt to show the active environment name (only when activated with the ``-p`` or ``--prompt`` flag)
-3. Adds a ``despacktivate`` alias/function to easily deactivate the environment
-4. Sets up view-related environment variables if a view is enabled
-
-Temporary and Default Environments
-----------------------------------
-
-Spack also supports creating and activating temporary environments with the ``--temp`` flag:
-
-.. code-block:: console
-
-   $ spack env activate --temp
-   ==> Created and activated temporary environment in /tmp/spack-12345
-
-This creates an environment in a temporary directory that will be automatically cleaned up when your session ends.
-
-If you activate without specifying an environment name, Spack will activate a default environment (creating it if needed):
-
-.. code-block:: console
-
-   $ spack env activate
-   ==> Created and activated default environment in /path/to/spack/var/spack/environments/default
-
-This provides a convenient way to have a persistent environment without needing to specify a name each time.
+Spack writes the scripts when an environment is created, and rewrites them whenever the environment's views are regenerated, e.g. by ``spack env view regenerate`` or by concretizing or installing in the environment.
+``spack env activate`` regenerates any script that is missing or older than ``spack.lock``, so deleting the cached scripts is harmless.
 
 .. _independent_environments:
 

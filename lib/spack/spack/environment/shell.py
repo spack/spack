@@ -212,9 +212,9 @@ def deactivate(active_env, view) -> EnvironmentModifications:
         loaded in, meaning that specs that were removed from the spack environment
         after activation are not unloaded.
 
-    Args:
-        active_env (Environment): the current active environment to deactivate
-        view (str): the view to deactivate
+    Arguments:
+        active_env: the current active environment to deactivate
+        view: the name of the view to deactivate
 
     Returns:
         Environment variables modifications to activate environment.
