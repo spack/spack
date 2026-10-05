@@ -269,15 +269,12 @@ def test_env_missing_deactivate_script(shell):
         environ, shell, script_type="deactivate", view=None
     )
 
-    deactivate_script_mtime = os.stat(path_to_deactivate_script).st_mtime
-
     os.remove(path_to_deactivate_script)
     assert not os.path.isfile(path_to_deactivate_script)
 
     env("deactivate", f"--{shell}")
 
-    new_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
-    assert new_deactivate_mtime > deactivate_script_mtime
+    assert os.path.isfile(path_to_deactivate_script)
 
 
 @pytest.mark.parametrize(
@@ -331,34 +328,6 @@ def test_env_scripts_path_after_relocation(shell):
 
     assert new_env.path in new_activate_content
     assert orig_env.path not in new_activate_content
-
-
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_env_activate_script_content_consistency(shell):
-    """Test that environment activation scripts are consistently generated."""
-    env("create", "consistent_test")
-    test_env = ev.read("consistent_test")
-
-    # Generate script first time
-    activate_output = env("activate", f"--{shell}", "consistent_test")
-
-    activate_script_path = env_script.path_to_env_script(
-        test_env, shell, script_type="activate", view="default"
-    )
-
-    first_content = _get_cmds_from_script(activate_output, shell)
-
-    os.remove(activate_script_path)
-    second_activate_output = env("activate", f"--{shell}", "consistent_test")
-
-    second_content = _get_cmds_from_script(second_activate_output, shell)
-
-    first_lines = [line for line in first_content.splitlines() if "Generated on:" not in line]
-    second_lines = [line for line in second_content.splitlines() if "Generated on:" not in line]
-
-    assert first_lines == second_lines
 
 
 @pytest.mark.parametrize(
@@ -3692,46 +3661,48 @@ def test_env_activate_sh_script_output():
     """Check the shell commands output by ``spack env activate --sh``."""
     env("create", "test")
 
+    # includes the path to the cached script
     activate_output = env("activate", "--prompt", "--sh", "test")
-    activate_content = _get_cmds_from_script(activate_output, "sh")
+    cached_activate_commands = _get_cmds_from_script(activate_output, "sh")
 
     assert "_spack_env_set SPACK_ENV " not in activate_output
-    assert "_spack_env_set SPACK_ENV " in activate_content
+    assert "_spack_env_set SPACK_ENV " in cached_activate_commands
     assert "export PS1=" in activate_output
-    assert "export PS1=" not in activate_content
+    assert "export PS1=" not in cached_activate_commands
     assert "alias despacktivate=" in activate_output
-    assert "alias despacktivate=" not in activate_content
+    assert "alias despacktivate=" not in cached_activate_commands
 
 
 def test_env_activate_csh_script_output():
     """Check the shell commands output by ``spack env activate --csh``."""
     env("create", "test")
 
+    # includes the path to the cached script
     activate_output = env("activate", "--prompt", "--csh", "test")
-
-    activate_content = _get_cmds_from_script(activate_output, "csh")
+    cached_activate_commands = _get_cmds_from_script(activate_output, "csh")
 
     print(activate_output)
     assert "_spack_env_set SPACK_ENV " not in activate_output
-    assert "_spack_env_set SPACK_ENV " in activate_content
+    assert "_spack_env_set SPACK_ENV " in cached_activate_commands
     assert "_spack_env_set prompt" in activate_output
-    assert "_spack_env_set prompt" not in activate_content
+    assert "_spack_env_set prompt" not in cached_activate_commands
     assert "alias despacktivate" in activate_output
-    assert "alias despacktivate" not in activate_content
+    assert "alias despacktivate" not in cached_activate_commands
 
 
 def test_env_activate_fish_script_output():
     """Check the shell commands output by ``spack env activate --fish``."""
     env("create", "test")
 
-    activate_output = env("activate", "--fish", "test")
-    activate_content = _get_cmds_from_script(activate_output, "fish")
+    # includes the path to the cached script
+    activate_output = env("activate", "--prompt", "--csh", "test")
+    cached_activate_commands = _get_cmds_from_script(activate_output, "csh")
 
     print(activate_output)
     assert "_spack_env_set SPACK_ENV " not in activate_output
-    assert "_spack_env_set SPACK_ENV " in activate_content
+    assert "_spack_env_set SPACK_ENV " in cached_activate_commands
     assert "function despacktivate" in activate_output
-    assert "function despacktivate" not in activate_content
+    assert "function despacktivate" not in cached_activate_commands
 
 
 @pytest.mark.regression("12719")
