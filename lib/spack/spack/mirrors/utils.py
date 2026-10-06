@@ -52,6 +52,8 @@ def get_matching_versions(specs, num_versions=1):
     of the package.
     """
     matching = []
+    host = spack.spec.ArchSpec.default_arch()
+    host_spec = spack.spec.Spec(f"arch={host}")
     for spec in specs:
         pkg = spec.package
         versions = pkg.all_versions()
@@ -62,7 +64,6 @@ def get_matching_versions(specs, num_versions=1):
             continue
 
         pkg_versions = num_versions
-        host = spack.spec.ArchSpec.default_arch()
 
         version_order = list(reversed(sorted(versions)))
         matching_spec = []
@@ -80,8 +81,7 @@ def get_matching_versions(specs, num_versions=1):
             # Generate only versions that satisfy the spec.
             if spec.concrete or v.intersects(spec.versions):
                 satisfies_host = any(
-                    spack.spec.Spec(architecture=host).satisfies(when)
-                    for when, _ in pkg.version_definitions(v)
+                    host_spec.satisfies(when) for when, _ in pkg.version_definitions(v)
                 )
                 if not satisfies_host:
                     continue
