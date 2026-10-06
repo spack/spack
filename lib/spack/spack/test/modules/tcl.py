@@ -16,6 +16,7 @@ import spack.vendor.archspec.cpu
 import spack.concretize
 import spack.config
 import spack.error
+import spack.hooks
 import spack.main
 import spack.modules.common
 import spack.modules.error
@@ -1709,3 +1710,23 @@ class TestTcl:
             content = f.read()
         assert concrete_a.dag_hash(7) in content
         assert concrete_b.dag_hash(7) in content
+
+    def test_fold_variants_hook_writes_shared_file_once(
+        self, install_mockery, module_configuration, monkeypatch
+    ):
+        """Test the hook run once installations are recorded writes a module file folding
+        several of them once, and writes every other module file of the batch."""
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", spec_a, spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        concrete_dep = concrete_a["callpath"]
+
+        written = []
+        monkeypatch.setattr(
+            writer_cls, "write", lambda self, overwrite=False: written.append(self.spec)
+        )
+        spack.hooks.post_database_add([concrete_a, concrete_dep, concrete_b])
+        assert written == [concrete_a, concrete_dep]

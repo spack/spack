@@ -214,11 +214,9 @@ class TclConfiguration(BaseConfiguration):
             spack.store.STORE.db.query(name_version_spec, installed=True, install_tree="local")
         )
 
-        # The installations being added may not be recorded yet, the ones being removed are
-        # still recorded until uninstalled
+        # A module file may be requested for an installation not recorded yet, the ones being
+        # removed are still recorded until uninstalled
         spec_list.add(self.spec)
-        if self.extra_spec_sharing:
-            spec_list.add(self.extra_spec_sharing)
         spec_list.difference_update(self.removed_specs)
 
         # Keep only specs that share the same module filename and are not excluded from module

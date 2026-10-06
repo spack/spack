@@ -43,6 +43,7 @@ def rewire_node(spec, explicit):
     # run post install hooks and add to db
     spack.hooks.post_install(spec, explicit)
     spack.store.STORE.db.add(spec, explicit=explicit)
+    spack.hooks.post_database_add([spec])
 
 
 class RewireError(spack.error.SpackError):
