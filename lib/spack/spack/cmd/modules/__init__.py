@@ -22,7 +22,7 @@ import spack.store
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
 from spack.util import filesystem, tty
-from spack.util.lang import dedupe
+from spack.util.lang import dedupe, stable_partition
 from spack.util.tty import color
 
 description = "manipulate module files"
@@ -187,7 +187,7 @@ def loads(module_type, specs, args, out=None):
         if not mod:
             continue
         writer = module_cls.from_spec(spec, args.module_set_name, cache=cache)
-        if not writer.layout.hold_other_installations:
+        if not writer.has_other_installations:
             continue
         first = first_in_file.setdefault(writer.layout.filename, spec)
         if first != spec:
@@ -234,13 +234,14 @@ def shared_module_name(module_type, specs, args, cache):
     writers = [module_cls.from_spec(spec, args.module_set_name, cache=cache) for spec in specs]
     # The module file of the first installation lists the ones folded with it, excluded
     # installations left out
-    installed_specs = writers[0].conf.installed_specs
-    held = [x for x in writers if x.spec in installed_specs]
-    if any(x.spec not in installed_specs and not x.conf.excluded for x in writers):
+    specs_in_file = writers[0].conf.specs_in_file
+    writers_in_file = [x for x in writers if x.spec in specs_in_file]
+    if any(x.spec not in specs_in_file and not x.conf.excluded for x in writers):
         return None
-    if not held or not held[0].holds_installation:
+    if not writers_in_file or not writers_in_file[0].has_installation:
         return None
-    return held[0].layout.filename if args.full_path else held[0].layout.name
+    first = writers_in_file[0]
+    return first.layout.filename if args.full_path else first.layout.name
 
 
 def find(module_type, specs, args):
@@ -311,7 +312,7 @@ def rm(module_type, specs, args):
     file2specs: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
     for spec in specs:
         writer = module_cls.from_spec(spec, args.module_set_name, cache=cache)
-        if writer.holds_installation:
+        if writer.has_installation:
             file2specs[writer.layout.filename].append(spec)
 
     if not file2specs:
@@ -323,8 +324,7 @@ def rm(module_type, specs, args):
         )
         for group in file2specs.values()
     ]
-    deleted = [x for x in writers if not x.layout.hold_other_installations]
-    rewritten = [x for x in writers if x.layout.hold_other_installations]
+    rewritten, deleted = stable_partition(writers, lambda x: x.has_other_installations)
 
     # Ask for confirmation
     if not args.yes_to_all:
@@ -343,7 +343,7 @@ def rm(module_type, specs, args):
             print("")
             tty.msg("These module files are written again for the installations they keep:\n")
             spack.cmd.display_specs(
-                [s for x in rewritten for s in x.conf.installed_specs], long=True
+                [s for x in rewritten for s in x.conf.specs_in_file], long=True
             )
             print("")
         answer = tty.get_yes_or_no("Do you want to proceed?")
@@ -389,10 +389,7 @@ def refresh(module_type, specs, args):
         # A module file folding several installations is written for all of them
         selected = {s.dag_hash() for s in specs}
         folded = [
-            s
-            for x in writers
-            for s in x.conf.other_installed_specs
-            if s.dag_hash() not in selected
+            s for x in writers for s in x.conf.other_specs_in_file if s.dag_hash() not in selected
         ]
         folded = list(dedupe(folded))
         if folded:
@@ -414,8 +411,8 @@ def refresh(module_type, specs, args):
         file2writer[item.layout.filename].append(item)
 
     def is_folded(writer_list):
-        held_specs = writer_list[0].conf.installed_specs
-        return all(x.spec in held_specs for x in writer_list)
+        specs_in_file = writer_list[0].conf.specs_in_file
+        return all(x.spec in specs_in_file for x in writer_list)
 
     clashes = {f: w for f, w in file2writer.items() if len(w) > 1 and not is_folded(w)}
     if clashes:

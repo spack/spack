@@ -13,9 +13,10 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 import spack.config
 import spack.spec
 import spack.store
+from spack import tengine
 from spack.variant import RESERVED_NAMES, VariantType, VariantValue
 
-from .common import BaseConfiguration, BaseModuleFileWriter, FileLayout
+from .common import BaseConfiguration, BaseModuleFileWriter, FileLayout, ModuleContext
 
 #: Words the module command reads as booleans, any prefix of them included
 _MODULE_BOOLEAN_WORDS = ("true", "false", "yes", "no", "on", "off")
@@ -72,8 +73,8 @@ class TclConfiguration(BaseConfiguration):
 
     @property
     def hash(self) -> Optional[str]:
-        """Hash tag for the module, or None when variants are defined, as the hash variant then
-        replaces the hash in module names."""
+        """Hash appended to the module file name, or None when variants are defined, as the
+        hash variant then replaces the hash in module names."""
         if self.variants_mode != "none":
             return None
         return super().hash
@@ -189,17 +190,17 @@ class TclConfiguration(BaseConfiguration):
         return "0" if aggregated_variant["type"] == "bool" else "none"
 
     @property
-    def installed_specs(self) -> List[spack.spec.Spec]:
+    def specs_in_file(self) -> List[spack.spec.Spec]:
         """All installed specs of same name@version that map to the same module filename."""
-        if "specs_sharing_modulefile" not in self._cache:
-            self._cache["specs_sharing_modulefile"] = self._compute_specs_sharing_modulefile()
-        return self._cache["specs_sharing_modulefile"]
+        if "specs_in_file" not in self._cache:
+            self._cache["specs_in_file"] = self._compute_specs_in_file()
+        return self._cache["specs_in_file"]
 
-    def _compute_specs_sharing_modulefile(self) -> List[spack.spec.Spec]:
+    def _compute_specs_in_file(self) -> List[spack.spec.Spec]:
         # A module file that cannot be shared holds this installation only, skip the database
         # query in this case
         if not self.folds_installations:
-            return super().installed_specs
+            return super().specs_in_file
 
         # Upstream installations are left out: their module files belong to the upstream
         name_version_spec = self.spec.format("{name} {@version}")
@@ -218,21 +219,21 @@ class TclConfiguration(BaseConfiguration):
         # file generation, this installation included, in the order a plain load request
         # selects them, as the module file selects the first installation matching a request
         my_filename = FileLayout(self).filename
-        sharing_confs = []
+        confs_in_file = []
         for spec in spec_list:
-            conf = self if spec == self.spec else self.make_folded_configuration(spec)
+            conf = self if spec == self.spec else self.sibling_configuration(spec)
             if not conf.excluded and FileLayout(conf).filename == my_filename:
-                sharing_confs.append(conf)
-        sharing_confs.sort(key=self._installation_order_key)
-        sharing_specs = [conf.spec for conf in sharing_confs]
+                confs_in_file.append(conf)
+        confs_in_file.sort(key=self._installation_order_key)
+        specs_in_file = [conf.spec for conf in confs_in_file]
 
         # The other installations compute the same list, hand it over to spare them the
         # database query
-        for conf in sharing_confs:
+        for conf in confs_in_file:
             if conf is not self:
-                conf._cache.setdefault("specs_sharing_modulefile", sharing_specs)
+                conf._cache.setdefault("specs_in_file", specs_in_file)
 
-        return sharing_specs
+        return specs_in_file
 
     @staticmethod
     def _installation_order_key(conf: BaseConfiguration) -> Tuple[bool, bool, float, str]:
@@ -270,7 +271,7 @@ class TclConfiguration(BaseConfiguration):
 
         aggregated = {}
         seen_in = {}
-        install_specs = self.installed_specs
+        install_specs = self.specs_in_file
         total_installs = len(install_specs)
 
         for spec in install_specs:
@@ -294,10 +295,81 @@ class TclConfiguration(BaseConfiguration):
         return dict(sorted(aggregated.items(), key=lambda item: (item[0] == "hash", item[0])))
 
 
+class TclFileLayout(FileLayout):
+    """Layout of tcl module files, whose names may be followed by variants."""
+
+    @property
+    def use_name(self) -> str:
+        """Returns the name used to load the module, followed by its variants if defined."""
+        if self.conf.variants:
+            return f"{self.name} {self.conf.variants_spec}"
+        return self.name
+
+    @property
+    def unique_use_name(self) -> str:
+        """Returns the name that selects this installation from a dependent module file.
+        The "hash" variant is the only one stated when the module file folds installations,
+        so the name stays valid whatever variants the module file defines later on. The bare
+        module name is enough when it includes the hash."""
+        hash_variant = self.conf.variants.get("hash")
+        if hash_variant:
+            return f"{self.name} {hash_variant['spec']}"
+        return self.name
+
+
+class TclModuleContext(ModuleContext):
+    """Template context of tcl module files, which may hold several installations."""
+
+    def __init__(self, configuration, layout: FileLayout) -> None:
+        super().__init__(configuration, layout)
+        self._installations: Optional[List["TclModuleContext"]] = None
+
+    @tengine.context_property
+    def hash(self) -> str:
+        """Returns hash of this installation"""
+        return self.spec.dag_hash(7)
+
+    @tengine.context_property
+    def variants_mode(self) -> str:
+        """Returns the module file variants definition mode, "none" when variants are not
+        defined in module files."""
+        return self.conf.variants_mode
+
+    @tengine.context_property
+    def installations(self) -> List["TclModuleContext"]:
+        """Returns context for all installations of this package version, in the order the
+        module file selects them."""
+        if self._installations is None:
+            self._installations = [
+                self if conf is self.conf else TclModuleContext(conf, TclFileLayout(conf))
+                for conf in self.conf.configurations_in_file
+            ]
+        return self._installations
+
+    @tengine.context_property
+    def any_installation_has_autoload(self) -> bool:
+        """Is there any installation of this package version having dependency to auto load."""
+        return any(install.autoload for install in self.installations)
+
+    @tengine.context_property
+    def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
+        """Expose aggregated variant metadata to templates."""
+        return self.conf.aggregated_variants
+
+    @tengine.context_property
+    def variant_values(self) -> str:
+        """Returns the values of the variants of this installation."""
+        return self.conf.variant_values
+
+
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
 
     configuration_class = TclConfiguration
+
+    layout_class = TclFileLayout
+
+    context_class = TclModuleContext
 
     default_template = "modules/modulefile.tcl"
 
@@ -308,26 +380,26 @@ class TclModulefileWriter(BaseModuleFileWriter):
     def remove_installation(self):
         """Removes this installation from module file. Module file is deleted if it
         does not reference any other package installation."""
-        remaining = self.conf.other_installed_specs
+        remaining = self.conf.other_specs_in_file
         if not remaining or not os.path.exists(self.layout.filename):
-            self.remove()
+            self._delete_module_file()
             return
 
         # Written for an installation the file keeps, as the prefix of this one may be gone
-        writer = type(self)(self.conf.make_folded_configuration(remaining[0]))
+        writer = type(self)(self.conf.sibling_configuration(remaining[0]))
         writer.write(overwrite=True)
         # The removed installation may have been the one making this module the default
-        if not writer._holds_default():
+        if not writer._has_default():
             self.remove_module_defaults()
 
-    def _holds_default(self) -> bool:
+    def _has_default(self) -> bool:
         """Whether an installation held by the module file matches a configured default."""
-        return any(conf.matches_default for conf in self.conf.folded_configurations)
+        return any(conf.matches_default for conf in self.conf.configurations_in_file)
 
     def update_module_defaults(self) -> None:
         """Points the ``default`` symlink to this module file if it holds an installation
         matching a configured default, whichever installation is being written."""
-        if self._holds_default():
+        if self._has_default():
             self.link_default()
 
     def update_module_hiddenness(self, remove=False):
@@ -339,5 +411,5 @@ class TclModulefileWriter(BaseModuleFileWriter):
                 removed from modulerc.
         """
         # A module file holding an installation that is not hidden is not hidden
-        remove = remove or any(not conf.hidden for conf in self.conf.folded_configurations)
+        remove = remove or any(not conf.hidden for conf in self.conf.configurations_in_file)
         super().update_module_hiddenness(remove)
