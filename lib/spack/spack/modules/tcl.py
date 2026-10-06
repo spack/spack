@@ -326,13 +326,17 @@ class TclModulefileWriter(BaseModuleFileWriter):
     def remove_installation(self):
         """Removes this installation from module file. Module file is deleted if it
         does not reference any other package installation."""
-        if self.layout.hold_other_installations and os.path.exists(self.layout.filename):
-            self.write()
-            # The removed installation may have been the one making this module the default
-            if not self._holds_default():
-                self.remove_module_defaults()
-        else:
+        remaining = self.conf.other_installed_specs
+        if not remaining or not os.path.exists(self.layout.filename):
             self.remove()
+            return
+
+        # Written for an installation the file keeps, as the prefix of this one may be gone
+        writer = type(self)(self.conf.make_folded_configuration(remaining[0]))
+        writer.write(overwrite=True)
+        # The removed installation may have been the one making this module the default
+        if not writer._holds_default():
+            self.remove_module_defaults()
 
     def _holds_default(self) -> bool:
         """Whether an installation held by the module file matches a configured default."""

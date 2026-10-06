@@ -272,3 +272,29 @@ def test_uninstall_does_not_recreate_module(
 
     uninstall("-y", spec_b)
     assert not os.path.exists(module_file)
+
+
+def _folded_hashes(module_file, *specs):
+    """Returns which of the specs are listed in the module file, as a list of booleans."""
+    with open(module_file, encoding="utf-8") as f:
+        content = f.read()
+    return [spec.dag_hash(7) in content for spec in specs]
+
+
+def test_uninstall_folded_installation_with_exclude_implicits(
+    install_mockery, module_configuration, mutable_config
+):
+    """Tests that uninstalling one of two explicit installations folded in a module file
+    removes it from the module file when implicit installations are excluded.
+    """
+    module_configuration("fold_variants_all")
+    mutable_config.set("modules:default:tcl:exclude_implicits", True)
+    install("--fake", "--add", "mpileaks@2.3 ~debug ^zmpi")
+    install("--fake", "--add", "mpileaks@2.3 +debug ^zmpi")
+    kept = spack.store.STORE.db.query_one("mpileaks@2.3 ~debug ^zmpi")
+    removed = spack.store.STORE.db.query_one("mpileaks@2.3 +debug ^zmpi")
+    module_file = writer_cls.from_spec(kept, "default").layout.filename
+    assert _folded_hashes(module_file, kept, removed) == [True, True]
+
+    uninstall("-y", "mpileaks@2.3 +debug ^zmpi")
+    assert _folded_hashes(module_file, kept, removed) == [True, False]
