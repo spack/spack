@@ -387,14 +387,15 @@ Users select an installation by stating its variants on the ``module load`` comm
 
 The stated variants form a mask, and the first installation matching it is selected.
 The variants left unset take the values of the selected installation.
-Installations are listed sorted by their variant values, so a plain ``module load zlib`` loads the first of them, ``zlib ~shared`` here:
+Installations are listed in installation order, with the explicit ones before the implicit ones and the ones matching a ``defaults`` entry first, so a plain ``module load zlib`` loads the first of them, ``zlib ~shared`` here as it was installed first:
 
 .. code-block:: console
 
    $ module load -v zlib
    Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:hash=ickxcoy:+optimize:+pic:-shared}
 
-Installing a new build may change what such a partial specification selects, so state the variants that identify the installation you need.
+A new installation is listed after the existing ones, so it does not change what such a partial specification selects, unless it is explicit while the existing ones are implicit, or it matches a ``defaults`` entry.
+State the variants that identify the installation you need all the same.
 
 A conditional variant that only some of the installations define is disabled on the others, so they match ``~name``, or ``name=none`` for a non-boolean variant.
 For example, with ``python +tkinter +tix`` and ``python ~tkinter`` in the same module file, ``module load python ~tix`` selects the latter.
@@ -477,6 +478,7 @@ To pin a specific version as the default, add a ``defaults`` key to your modules
 
 The spec can be as specific as needed.
 If multiple packages in the same directory match, the last one generated wins.
+In a module file :ref:`holding several installations<module-variants-folding>`, the installation matching a default is listed first, so a plain ``module load`` selects it.
 
 Module content
 ^^^^^^^^^^^^^^
