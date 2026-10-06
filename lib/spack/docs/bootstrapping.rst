@@ -50,7 +50,7 @@ Running a command that concretizes a spec, like:
 
 .. code-block:: console
 
-   % spack spec zlib
+   % spack solve zlib
    ==> Installing "clingo-bootstrap@spack%apple-clang@12.0.0~docs~ipo+python build_type=Release arch=darwin-catalina-x86_64" from a buildcache
    [ ... ]
 

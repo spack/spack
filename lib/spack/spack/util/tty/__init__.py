@@ -14,6 +14,7 @@ from types import TracebackType
 from typing import IO, Callable, Iterator, NoReturn, Optional, Type, Union
 
 from .color import cescape, clen, cprint, cwrite
+from .color import clear_isatty_cache as clear_isatty_cache
 
 # Globals
 _debug = 0

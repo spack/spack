@@ -27,11 +27,11 @@ class CMakePackage(PackageBase):
     """
 
     build_system_class = "CMakePackage"
-    default_buildsystem = "cmake"
+    default_buildsystem = "mock_cmake"
 
-    build_system("cmake")
+    build_system("mock_cmake")
 
-    depends_on("cmake", type="build", when="build_system=cmake")
+    depends_on("cmake", type="build", when="build_system=mock_cmake")
 
     def flags_to_build_system_args(self, flags):
         """Translate compiler flags to CMake arguments."""
@@ -57,7 +57,7 @@ class CMakePackage(PackageBase):
         setattr(self, "cmake_flag_args", cmake_flag_args)
 
 
-@register_builder("cmake")
+@register_builder("mock_cmake")
 class CMakeBuilder(BuilderWithDefaults):
     """Builder for CMake packages"""
 

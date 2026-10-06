@@ -65,7 +65,7 @@ import re
 import sys
 import textwrap
 from contextlib import contextmanager
-from typing import IO, Iterator, List, NamedTuple, Optional, Tuple, Union
+from typing import IO, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 
 class ColorParseError(Exception):
@@ -97,6 +97,44 @@ colors = {
     "w": 37,
     "W": 97,
 }  # white
+
+
+def get_colors(color: Optional[bool] = None):
+    active = get_color_when() if color is None else color
+    return ColorsActive if active else ColorsInactive
+
+
+class ColorsActive:
+    BLACK = "\033[0;30m"
+    RED = "\033[0;31m"
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[0;33m"
+    BLUE = "\033[0;34m"
+    MAGENTA = "\033[0;35m"
+    CYAN = "\033[0;36m"
+    WHITE = "\033[0;37m"
+
+    BLACK_BRIGHT = "\033[0;90m"
+    RED_BRIGHT = "\033[0;91m"
+    GREEN_BRIGHT = "\033[0;92m"
+    YELLOW_BRIGHT = "\033[0;93m"
+    BLUE_BRIGHT = "\033[0;94m"
+    MAGENTA_BRIGHT = "\033[0;95m"
+    CYAN_BRIGHT = "\033[0;96m"
+    WHITE_BRIGHT = "\033[0;97m"
+
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
+    RESET = "\033[0m"
+
+
+class ColorsInactive:
+    BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = ""
+    BLACK_BRIGHT = RED_BRIGHT = GREEN_BRIGHT = YELLOW_BRIGHT = ""
+    BLUE_BRIGHT = MAGENTA_BRIGHT = CYAN_BRIGHT = WHITE_BRIGHT = ""
+    BOLD = UNDERLINE = RESET = ""
+
 
 # Regex to be used for color formatting
 COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
@@ -145,7 +183,6 @@ def try_enable_terminal_color_on_windows() -> None:
 
         try:
             ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
-            DISABLE_NEWLINE_AUTO_RETURN = 0x0008
             kernel32 = ctypes.WinDLL("kernel32")
 
             def _err_check(result, func, args):
@@ -173,9 +210,7 @@ def try_enable_terminal_color_on_windows() -> None:
                 con_handle = msvcrt.get_osfhandle(conout.fileno())
                 dw_orig_mode = wintypes.DWORD()
                 kernel32.GetConsoleMode(con_handle, ctypes.byref(dw_orig_mode))
-                dw_new_mode_request = (
-                    ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN
-                )
+                dw_new_mode_request = ENABLE_VIRTUAL_TERMINAL_PROCESSING
                 dw_new_mode = dw_new_mode_request | dw_orig_mode.value
                 kernel32.SetConsoleMode(con_handle, wintypes.DWORD(dw_new_mode))
         except OSError:
@@ -186,13 +221,40 @@ def try_enable_terminal_color_on_windows() -> None:
             _force_color = False
 
 
-def get_color_when(stdout=None) -> bool:
-    """Return whether commands should print color or not."""
+#: isatty cache for fd 0-2. Must be cleared when a std fd is redirected with dup2.
+_isatty_cache: Dict[int, bool] = {}
+
+
+def _cached_isatty(stream) -> bool:
+    """``stream.isatty()``, cached by file descriptor for the std fds 0-2."""
+    try:
+        fd = stream.fileno()
+    except (AttributeError, ValueError, OSError):
+        return stream.isatty()  # in-memory streams like StringIO: no syscall involved
+    if fd > 2:
+        return stream.isatty()  # short-lived fds: fd number reuse would leave stale entries
+    result = _isatty_cache.get(fd)
+    if result is None:
+        result = _isatty_cache[fd] = bool(stream.isatty())
+    return result
+
+
+def clear_isatty_cache() -> None:
+    """Forget cached isatty() results, after a std fd was redirected with dup2."""
+    _isatty_cache.clear()
+
+
+def get_color_when(stream=None) -> bool:
+    """Return whether output written to ``stream`` should be colored or not.
+
+    ``--color`` and ``SPACK_COLOR`` take precedence over the stream being a tty. When no stream is
+    given, the decision is made for ``sys.stdout``.
+    """
     if _force_color is not None:
         return _force_color
-    if stdout is None:
-        stdout = sys.stdout
-    return stdout.isatty()
+    if stream is None:
+        stream = sys.stdout
+    return _cached_isatty(stream)
 
 
 def set_color_when(when: Union[str, bool, None]) -> None:
@@ -384,7 +446,7 @@ def cwrite(string: str, stream: Optional[IO[str]] = None, color: Optional[bool] 
     """
     stream = sys.stdout if stream is None else stream
     if color is None:
-        color = get_color_when()
+        color = get_color_when(stream)
     stream.write(colorize(string, color=color))
 
 
@@ -418,12 +480,10 @@ class ColorStream:
         self._color = color
 
     def write(self, string: str, *, raw: bool = False) -> None:
-        raw_write = getattr(self._stream, "write")
-
         color = self._color
         if self._color is None:
             if raw:
                 color = True
             else:
-                color = get_color_when()
-        raw_write(colorize(string, color=color))
+                color = get_color_when(self._stream)
+        self._stream.write(colorize(string, color=color))

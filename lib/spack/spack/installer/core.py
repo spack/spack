@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
 
 import spack.binary_distribution
 import spack.config
+import spack.deprecation
 import spack.error
 import spack.mirrors.mirror
 import spack.report
@@ -191,6 +192,7 @@ class PackageInstaller:
         tests: Union[bool, List[str], Set[str]] = False,
         unsigned: Optional[bool] = None,
         verbose: bool = False,
+        show_log_on_error: bool = False,
         concurrent_packages: Optional[int] = None,
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
@@ -210,6 +212,7 @@ class PackageInstaller:
 
         specs = [pkg.spec for pkg in packages]
 
+        self.roots = specs
         self.has_mirrors = bool(spack.mirrors.mirror.MirrorCollection(binary=True))
         self.root_policy: InstallPolicy = root_policy
         self.dependencies_policy: InstallPolicy = dependencies_policy
@@ -258,6 +261,10 @@ class PackageInstaller:
             parent for parent, children in self.build_graph.parent_to_child.items() if not children
         ]
 
+        # Fail before building anything if the database cannot be modified.
+        if self.pending_builds:
+            self.store.db.ensure_latest_db_version()
+
         #: specs awaiting build-dep expansion (deferred until DB read lock is available)
         self.pending_expansions: List[str] = []
 
@@ -265,7 +272,10 @@ class PackageInstaller:
         self.running_builds: Dict[str, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
         self.ui = ui or TerminalUI(
-            total=0, verbose=verbose, filter_padding=self.store.has_padding()
+            total=0,
+            verbose=verbose,
+            filter_padding=self.store.has_padding(),
+            show_log_on_error=show_log_on_error,
         )
         self.ui.on_total_increased(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
@@ -291,9 +301,13 @@ class PackageInstaller:
         self.next_database_write = 0.0
 
     def install(self) -> None:
+        # Refuse disallowed deprecations before updating any index, so an install that cannot
+        # succeed does no work first
+        spack.deprecation.check_deprecations(self.roots)
+
         # check what specs we could fetch from binaries (checks against cache, not remotely)
         try:
-            spack.binary_distribution.BINARY_INDEX.update()
+            spack.binary_distribution.BINARY_INDEX.update(config=spack.config.CONFIG)
         except spack.binary_distribution.FetchCacheError:
             pass
 
@@ -746,7 +760,7 @@ class PackageInstaller:
                     f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-"
                 )
                 log_fd, log_path = tempfile.mkstemp(
-                    prefix=prefix, suffix=".log", dir=spack.stage.get_stage_root()
+                    prefix=prefix, suffix=".log", dir=spack.stage.stage_root(spack.config.CONFIG)
                 )
                 os.close(log_fd)
                 self.log_paths[dag_hash] = log_path

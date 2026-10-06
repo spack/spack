@@ -6,6 +6,7 @@ import os
 import pathlib
 import shutil
 import sys
+from typing import Dict, List
 
 import pytest
 
@@ -14,18 +15,23 @@ import spack.builder
 import spack.concretize
 import spack.config
 import spack.database
+import spack.deprecation
 import spack.error
+import spack.installer
 import spack.installer_dispatch
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.old_installer
 import spack.package_base
 import spack.patch
+import spack.relocate
 import spack.repo
 import spack.store
+import spack.util.elf
 import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack import binary_distribution
+from spack.build_environment import dso_suffix
 from spack.config import Configuration
 from spack.error import InstallError
 from spack.main import SpackCommand
@@ -41,6 +47,9 @@ from spack.package_base import (
 from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.store import Store
+
+#: Deprecation policy that allows anything, used to concretize a deprecated spec on purpose
+ALLOW_ANY_DEPRECATION = [{"severity": "critical"}]
 
 
 def find_nothing(*args):
@@ -212,10 +221,10 @@ def test_installed_dependency_request_conflicts(install_mockery, mock_fetch, mut
         spack.concretize.concretize_one(dependent)
 
 
-def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
+def test_install_times(install_mockery, mock_fetch, mutable_mock_repo, installer_variant):
     """Test install times added."""
     spec = spack.concretize.concretize_one("dev-build-test-install-phases")
-    PackageInstaller([spec.package], explicit=True).install()
+    spack.installer_dispatch.create_installer([spec.package], explicit=True).install()
 
     # Ensure dependency directory exists after the installation.
     install_times = os.path.join(spec.package.prefix, ".spack", spack_times_log)
@@ -718,3 +727,455 @@ def test_log_files_preserved_on_error(install_mockery, mock_fetch, installer_var
     with pytest.raises(spack.error.InstallError):
         installer.install()
     assert os.path.exists(pkg.log_path)
+
+
+def test_ensure_allowed_blocks_disallowed_deprecation(
+    install_mockery, mutable_config: Configuration
+):
+    """Tests that the deprecation gate flags a deprecated spec not allowed by configuration."""
+    # Concretize while deprecations are allowed, so the deprecated @2.0 is selected.
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+
+    # Under the default (strict) policy the pre-concretized spec is refused.
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.deprecation.check_deprecations([spec])
+
+
+def test_ensure_allowed_permits_configured_deprecation(
+    install_mockery, mutable_config: Configuration
+):
+    """Tests that the deprecation gate lets go a deprecated spec allowed by configuration."""
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+        spack.deprecation.check_deprecations([spec])  # must not raise
+
+
+def test_ensure_allowed_exempts_externals(install_mockery, mutable_config: Configuration):
+    """External specs are exempt from the deprecation gate, mirroring the concretizer."""
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+
+    # The spec is blocked by the strict default policy...
+    policy = spack.deprecation.Policy({}, [], repo=spack.repo.PATH)
+    assert policy.disallowed(spec)
+    # ...unless it is external, in which case the gate does not raise.
+    spec.external_path = "/opt/example"
+    spack.deprecation.check_deprecations([spec])
+
+
+def test_installer_blocks_disallowed_deprecation(
+    install_mockery, installer_variant, mutable_config: Configuration
+):
+    """Tests that both the old and new installer refuse a pre-concretized deprecated spec
+    before building.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.installer_dispatch.create_installer([spec.package]).install()
+
+
+def test_installer_blocks_already_installed_deprecated_dependency(
+    install_mockery, mock_fetch, installer_variant, mutable_config: Configuration
+):
+    """Tests that we refuse to install a new DAG with a deprecated dependency in its runtime
+    graph, even when that dependency is already installed (and thus pruned from the build set).
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        dep = spack.concretize.concretize_one("deprecated-versions@1.1.0")
+        spack.installer_dispatch.create_installer([dep.package]).install()
+        spec = spack.concretize.concretize_one("deprecated-client ^deprecated-versions@1.1.0")
+
+    # The deprecated dependency is already installed, so it is not part of the build set
+    assert spec["deprecated-versions"].installed
+
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.installer_dispatch.create_installer([spec.package]).install()
+
+
+def test_deprecated_build_only_dependency_is_not_blocked(
+    install_mockery, mock_fetch, installer_variant, mutable_config: Configuration
+):
+    """Under the default 'runtime' scope, a deprecated spec reachable only through a build edge is
+    outside the checked closure of the root, so the install must not be rejected, regardless of
+    local install status.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-buildtool-client")
+
+    # The deprecated spec is in the DAG, but only reachable through a build edge (so spec[...],
+    # which follows the runtime closure, cannot see it).
+    deprecated = [s for s in spec.traverse() if s.name == "deprecated-versions"]
+    assert deprecated and deprecated[0].satisfies("@1.1.0")
+    with pytest.raises(KeyError):
+        spec["deprecated-versions"]
+
+    # This must not raise: the deprecated node is build-transitive, outside the runtime closure of
+    # the requested root.
+    spack.installer_dispatch.create_installer([spec.package]).install()
+    assert spec.installed
+
+
+def test_installer_scope_all_gates_build_transitive_deprecation(
+    install_mockery, mock_fetch, installer_variant, mutable_config: Configuration
+):
+    """Tests that the install gate refuses a deprecated node reachable only through a build edge,
+    when the 'all' deprecation scope is used.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-buildtool-client")
+
+    # The deprecated node is build-transitive: outside the runtime closure of the root.
+    with pytest.raises(KeyError):
+        spec["deprecated-versions"]
+
+    with mutable_config.override("packages:all:deprecation:scope", "all"):
+        with pytest.raises(spack.error.InstallError, match="deprecated"):
+            spack.installer_dispatch.create_installer([spec.package]).install()
+
+
+def test_deprecation_gate_checks_each_node_once(install_mockery, monkeypatch):
+    """Tests that a single check walks the DAG with node-level dedup, so a dependency shared
+    through a diamond is inspected exactly once.
+    """
+    spec = spack.concretize.concretize_one("mpileaks")
+
+    seen: Dict[str, int] = {}
+
+    def counting_disallowed(self, node):
+        seen[node.dag_hash()] = seen.get(node.dag_hash(), 0) + 1
+        return []
+
+    monkeypatch.setattr(spack.deprecation.Policy, "disallowed", counting_disallowed)
+    spack.deprecation.check_deprecations([spec])
+
+    assert seen, "expected the DAG to be walked"
+    assert all(count == 1 for count in seen.values())
+
+
+def test_new_installer_static_gate_sees_deferred_build_deps(
+    install_mockery, tmp_path, mutable_config: Configuration
+):
+    """When a binary mirror is configured the new installer defers build deps out of the initial
+    build graph. Under 'deprecation:scope: all' the static, upfront gate must still reject a
+    deprecated build-transitive node, without relying on lazy build-dependency expansion.
+    """
+    # A configured binary mirror makes has_mirrors True, which is what defers build deps.
+    with mutable_config.override("mirrors", {"test-mirror": f"file://{tmp_path}"}):
+        with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+            spec = spack.concretize.concretize_one("deprecated-buildtool-client")
+
+        with mutable_config.override("packages:all:deprecation:scope", "all"):
+            installer = spack.installer.PackageInstaller(
+                [spec.package], dependencies_policy="auto"
+            )
+            # The build tool (which has the deprecated runtime dep) is deferred out of the
+            # initial build graph.
+            assert installer.has_mirrors
+            node_names = {s.name for s in installer.build_graph.nodes.values()}
+            assert "deprecated-buildtool" not in node_names
+            assert "deprecated-versions" not in node_names
+
+            # Yet the static gate, seeded from the requested root and walking the concrete spec,
+            # still rejects the build-transitive deprecated node before any expansion happens.
+            with pytest.raises(spack.error.InstallError, match="deprecated"):
+                spack.deprecation.check_deprecations(installer.roots)
+
+
+def test_install_gate_honors_label_selectors(install_mockery, mutable_config: Configuration):
+    """Tests that the install-time gate skips the same labelled deprecations as the concretizer,
+    so a lockfile concretized under a label selector still installs.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-labels@2.0")
+
+    # Under the default (strict) policy the pre-concretized spec is refused.
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.deprecation.check_deprecations([spec])
+
+    # Listing only one of the two labels is not enough.
+    with mutable_config.override(
+        "packages:all:deprecation:allow", [{"labels": ["CVE-2026-0002"]}]
+    ), pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.deprecation.check_deprecations([spec])
+
+    # Listing both skips the deprecation.
+    with mutable_config.override(
+        "packages:all:deprecation:allow", [{"labels": ["CVE-2026-0002", "GHSA-aaaa-bbbb-cccc"]}]
+    ):
+        spack.deprecation.check_deprecations([spec])  # must not raise
+
+
+def test_install_gate_honors_per_reason_selectors(install_mockery, mutable_config: Configuration):
+    """Tests that the install-time gate applies the same per-reason selectors as the
+    concretizer, so a lockfile is judged by the reason of each deprecation.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        vuln = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+        rename = spack.concretize.concretize_one("deprecated-with-reason@1.0")
+
+    with mutable_config.override(
+        "packages:all:deprecation:allow",
+        [{"reason": ["rename", "retired", "unspecified"], "severity": "critical"}],
+    ):
+        # reason=rename is one of the reasons the selector names
+        spack.deprecation.check_deprecations([rename])  # must not raise
+
+        # reason=vuln is forbidden at any severity
+        with pytest.raises(spack.error.InstallError, match="deprecated"):
+            spack.deprecation.check_deprecations([vuln])
+
+
+def test_deprecation_gate_runs_before_any_setup_work(
+    install_mockery, installer_variant, mutable_config: Configuration, monkeypatch
+):
+    """Tests that the gate refuses before the installer updates binary indices or builds its
+    queue, so an install that cannot succeed does no work first.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-reason@2.0")
+
+    work_done = []
+    monkeypatch.setattr(
+        binary_distribution.BinaryIndexCache,
+        "update",
+        lambda *args, **kwargs: work_done.append("binary index"),
+    )
+    monkeypatch.setattr(
+        spack.old_installer.PackageInstaller,
+        "_init_queue",
+        lambda *args, **kwargs: work_done.append("install queue"),
+    )
+
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.installer_dispatch.create_installer([spec.package]).install()
+
+    assert not work_done
+
+
+def test_reused_artifact_with_deprecated_build_dep_stays_reusable(
+    install_mockery, mock_fetch, mutable_config: Configuration
+):
+    """Under the 'runtime' scope the gate checks nodes that would be built; reused nodes are
+    exempt, so an artifact built with a tool since deprecated is still reused as is.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        lib = spack.concretize.concretize_one("deprecated-tool-lib ^deprecated-tool@1.0")
+        spack.installer_dispatch.create_installer([lib.package]).install()
+
+    assert any(s.satisfies("deprecated-tool@1.0") for s in lib.traverse())
+
+    with mutable_config.override(
+        "packages:all:deprecation:scope", "runtime"
+    ), mutable_config.override("concretizer:reuse", True):
+        reused = spack.concretize.concretize_one("deprecated-tool-lib")
+
+    assert reused.dag_hash() == lib.dag_hash()
+    assert any(s.satisfies("deprecated-tool@1.0") for s in reused.traverse())
+
+
+def test_install_gate_reports_the_directive_message(
+    install_mockery, mutable_config: Configuration
+):
+    """Tests that the guidance a recipe attaches with msg= reaches the install-time gate too,
+    so a spec concretized under a laxer policy is refused with the same advice.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-message@1.0")
+
+    with pytest.raises(spack.error.InstallError, match="use @2.0, which is maintained"):
+        spack.deprecation.check_deprecations([spec])
+
+
+def test_install_gate_allows_labels_from_different_selectors(
+    install_mockery, mutable_config: Configuration
+):
+    """Tests that the install-time gate skips a deprecation citing two labels when each label is
+    allowed by a different selector, like the concretizer does.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-labels@2.0")
+
+    with mutable_config.override(
+        "packages:all:deprecation:allow",
+        [{"labels": ["CVE-2026-0002"]}, {"labels": ["GHSA-aaaa-bbbb-cccc"]}],
+    ):
+        spack.deprecation.check_deprecations([spec])  # must not raise
+
+
+def test_install_gate_reports_only_the_labels_not_allowed(
+    install_mockery, mutable_config: Configuration
+):
+    """Tests that the install-time error lists the labels that are still refused, and omits the
+    ones the configuration allows.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", ALLOW_ANY_DEPRECATION):
+        spec = spack.concretize.concretize_one("deprecated-with-labels@2.0")
+
+    with mutable_config.override(
+        "packages:all:deprecation:allow", [{"labels": ["CVE-2026-0002"]}]
+    ), pytest.raises(spack.error.InstallError) as exc_info:
+        spack.deprecation.check_deprecations([spec])
+
+    message = str(exc_info.value)
+    assert "GHSA-aaaa-bbbb-cccc" in message
+    assert "CVE-2026-0002" not in message
+
+
+def _install_spliced_from_binary(original: Spec, replacement: Spec, mirror: str) -> Spec:
+    """Pushes the installed ``original`` to ``mirror``, uninstalls everything, and installs
+    ``original`` spliced with ``replacement`` from the binary cache. Returns the spliced spec."""
+    SpackCommand("buildcache")("push", "--unsigned", "--update-index", mirror, str(original))
+    for installed in spack.store.STORE.db.query():
+        PackageBase.uninstall_by_spec(installed, force=True)
+    spliced = original.splice(replacement, transitive=True)
+    spack.installer_dispatch.create_installer([spliced.package], unsigned=True).install()
+    return spliced
+
+
+@pytest.mark.not_on_windows("lacking windows support for binary installs")
+@pytest.mark.regression("50560")
+def test_install_spliced_from_binary_relocates_to_external_replacement(
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    mutable_config: Configuration,
+    tmp_path: pathlib.Path,
+    installer_variant,
+):
+    """Tests that installing a spliced spec from a binary cache rewrites text files to the prefix
+    of an external replacement.
+
+    This models a binary of axom built against a Spack-installed mpich, installed with a splice of
+    a system mpich. splice-t writes the prefix of splice-h to a text file.
+    """
+    external_prefix = tmp_path / "external-splice-h"
+    external_prefix.mkdir()
+    original_spec = spack.concretize.concretize_one("splice-t")
+    with mutable_config.override(
+        "packages:splice-h",
+        {
+            "buildable": False,
+            "externals": [{"spec": "splice-h@1.0.2+foo", "prefix": str(external_prefix)}],
+        },
+    ):
+        replacement = spack.concretize.concretize_one("splice-h+foo")
+
+    spack.installer_dispatch.create_installer([original_spec.package]).install()
+    spliced = _install_spliced_from_binary(original_spec, replacement, temporary_mirror)
+
+    with open(os.path.join(spliced.prefix, "splice-t"), encoding="utf-8") as f:
+        content = f.read()
+    assert f"splice-h: {external_prefix}splice-z" in content
+    assert str(original_spec["splice-h"].prefix) not in content
+
+
+requires_elf_or_macho = pytest.mark.skipif(
+    sys.platform not in ("linux", "darwin"), reason="RPATH relocation is tested on ELF and Mach-O"
+)
+
+
+def _get_rpaths(path: str) -> List[str]:
+    """Returns the RPATH entries of an ELF or Mach-O binary, in order"""
+    if sys.platform == "darwin":
+        return spack.relocate._macholib_get_paths(path)[0]
+    return spack.util.elf.get_rpaths(path) or []
+
+
+@requires_elf_or_macho
+@pytest.mark.requires_executables("gcc")
+def test_install_spliced_from_binary_drops_rpaths_of_removed_nodes(
+    install_mockery, mock_fetch, temporary_mirror, installer_variant
+):
+    """Tests that installing a spliced spec from a binary cache drops the RPATH entries of nodes
+    that are not in the spliced DAG.
+
+    rpath-mid+leaf depends on rpath-leaf, and the replacement rpath-mid~leaf does not, so the
+    RPATH of the spliced root must have no entry for rpath-leaf.
+    """
+    original_spec = spack.concretize.concretize_one("rpath-root ^rpath-mid+leaf")
+    replacement = spack.concretize.concretize_one("rpath-mid~leaf")
+
+    spack.installer_dispatch.create_installer([original_spec.package]).install()
+    spliced = _install_spliced_from_binary(original_spec, replacement, temporary_mirror)
+
+    rpaths = _get_rpaths(os.path.join(spliced.prefix.bin, "app"))
+    assert sorted(rpaths) == sorted(
+        [spliced.prefix.lib, spliced["rpath-mid"].prefix.lib, spliced["rpath-other"].prefix.lib]
+    )
+
+
+def _install_root_spliced_with_external_mid(
+    external_prefix: str, config: Configuration, mirror: str
+) -> Spec:
+    """Installs rpath-root from a binary cache, with rpath-mid spliced for an external at the
+    given prefix, and returns the spliced spec.
+
+    The RPATH of the original binary lists rpath-mid before rpath-other.
+    """
+    original_spec = spack.concretize.concretize_one("rpath-root")
+    with config.override(
+        "packages:rpath-mid",
+        {
+            "buildable": False,
+            "externals": [{"spec": "rpath-mid@1.0~leaf", "prefix": external_prefix}],
+        },
+    ):
+        replacement = spack.concretize.concretize_one("rpath-mid")
+
+    spack.installer_dispatch.create_installer([original_spec.package]).install()
+    rpaths = _get_rpaths(os.path.join(original_spec.prefix.bin, "app"))
+    assert rpaths.index(original_spec["rpath-mid"].prefix.lib) < rpaths.index(
+        original_spec["rpath-other"].prefix.lib
+    )
+    return _install_spliced_from_binary(original_spec, replacement, mirror)
+
+
+@requires_elf_or_macho
+@pytest.mark.requires_executables("gcc")
+def test_install_spliced_from_binary_puts_external_rpaths_last(
+    install_mockery,
+    mock_fetch,
+    temporary_mirror,
+    mutable_config: Configuration,
+    tmp_path: pathlib.Path,
+    installer_variant,
+):
+    """Tests that installing a spliced spec from a binary cache gives a spliced-in external the
+    RPATH entries a build would give it: its library directories, after those of Spack-built
+    dependencies.
+
+    The external has its library in lib/x86_64-linux-gnu, which does not follow from the layout
+    of the Spack-built node it replaces.
+    """
+    external_libdir = tmp_path / "external-mid" / "lib" / "x86_64-linux-gnu"
+    external_libdir.mkdir(parents=True)
+    (external_libdir / f"librpath-mid.{dso_suffix}").touch()
+
+    spliced = _install_root_spliced_with_external_mid(
+        str(tmp_path / "external-mid"), mutable_config, temporary_mirror
+    )
+
+    rpaths = _get_rpaths(os.path.join(spliced.prefix.bin, "app"))
+    assert rpaths == [
+        spliced.prefix.lib,
+        spliced["rpath-other"].prefix.lib,
+        str(external_libdir),
+        str(tmp_path / "external-mid" / "lib"),
+    ]
+
+
+@requires_elf_or_macho
+@pytest.mark.requires_executables("gcc")
+def test_install_spliced_from_binary_has_no_rpaths_for_system_externals(
+    install_mockery, mock_fetch, temporary_mirror, mutable_config: Configuration, installer_variant
+):
+    """Tests that installing a spliced spec from a binary cache adds no RPATH entry for a
+    spliced-in external in a system prefix, as a build would not.
+    """
+    spliced = _install_root_spliced_with_external_mid("/usr", mutable_config, temporary_mirror)
+
+    rpaths = _get_rpaths(os.path.join(spliced.prefix.bin, "app"))
+    assert rpaths == [spliced.prefix.lib, spliced["rpath-other"].prefix.lib]

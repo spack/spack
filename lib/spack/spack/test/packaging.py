@@ -63,7 +63,9 @@ def test_buildcache(
     mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_path)}
     mutable_config.set("mirrors", mirrors)
 
-    with spack.stage.Stage(mirrors["spack-mirror-test"], name="build_cache", keep=True):
+    with spack.stage.stage_from_config(
+        mirrors["spack-mirror-test"], name="build_cache", keep=True, config=mutable_config
+    ):
         parser = argparse.ArgumentParser()
         buildcache.setup_parser(parser)
 

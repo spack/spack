@@ -18,7 +18,6 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
-import spack.hash_types as ht
 import spack.mirrors.mirror
 import spack.package_base
 import spack.repo
@@ -420,7 +419,7 @@ def ci_rebuild(args):
     # also be used in the generated "spack install" command to install the spec
     tty.debug("job concrete spec path: {0}".format(job_spec_json_path))
     with open(job_spec_json_path, "w", encoding="utf-8") as fd:
-        fd.write(job_spec.to_json(hash=ht.dag_hash))
+        fd.write(job_spec.to_json())
 
     # Write some other details to aid in reproduction into an artifact
     repro_file = os.path.join(repro_dir, "repro.json")
@@ -523,14 +522,14 @@ def ci_rebuild(args):
                 spack_ci_stack_name,
                 os.environ.get("CI_JOB_URL"),
                 os.environ.get("CI_PIPELINE_URL"),
-                job_spec.to_dict(hash=ht.dag_hash),
+                job_spec.to_dict(),
             )
 
     # Copy logs and archived files from the install metadata (.spack) directory to artifacts now
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
     # Clear the stage directory
-    spack.stage.purge()
+    spack.stage.purge(config=cfg.CONFIG)
 
     # If the installation succeeded and we're running stand-alone tests for
     # the package, run them and copy the output. Failures of any kind should
@@ -737,18 +736,23 @@ def validate_standard_versions(
     """
     url_dict: Dict[StandardVersion, str] = {}
 
+    valid_checksums = True
+
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
-        assert url is not None, (
-            f"Package {pkg.name} does not have a valid URL for version {version}"
-        )
-        url_dict[version] = url
+        if url is None:
+            tty.error(f"No valid URLs found for {pkg.name}@{version}")
+            all_urls = pkg.all_urls_for_version(version)
+            for url in all_urls:
+                tty.error(f"    [Failed] {url}")
+            valid_checksums = False
+        else:
+            url_dict[version] = url
 
     version_hashes = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, fetch_options=pkg.fetch_options
+        url_dict, pkg.name, fetch_options=pkg.fetch_options, config=cfg.CONFIG
     )
 
-    valid_checksums = True
     for version, sha in version_hashes.items():
         if sha != pkg.versions[version]["sha256"]:
             tty.error(
@@ -757,9 +761,8 @@ def validate_standard_versions(
                 f"    [Downloaded] {sha}"
             )
             valid_checksums = False
-            continue
-
-        tty.info(f"Validated {pkg.name}@{version} --> {sha}")
+        else:
+            tty.info(f"Validated {pkg.name}@{version} --> {sha}")
 
     return valid_checksums
 
@@ -777,7 +780,7 @@ def validate_git_versions(
     for version in versions:
         fetcher = spack.package_base.for_package_version(pkg, version)
         assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-        with spack.stage.Stage(fetcher) as stage:
+        with spack.stage.stage_from_config(fetcher, config=cfg.CONFIG) as stage:
             known_commit = pkg.versions[version]["commit"]
             try:
                 stage.fetch()

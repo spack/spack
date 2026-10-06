@@ -474,14 +474,13 @@ def _specs_to_be_packaged(
         deptype = dt.ALL
     else:
         deptype = dt.RUN | dt.LINK | dt.TEST
+    if "package" not in things_to_install:
+        # `--only dependencies` means that the requested specs are the root's direct dependencies
+        requested = [d for s in requested for d in s.dependencies(deptype=deptype)]
     specs = [
         s
         for s in traverse.traverse_nodes(
-            requested,
-            root="package" in things_to_install,
-            deptype=deptype,
-            order="breadth",
-            key=traverse.by_dag_hash,
+            requested, deptype=deptype, order="breadth", key=traverse.by_dag_hash
         )
         if not s.external
     ]
@@ -625,8 +624,13 @@ def install_fn(args):
     if not args.specs:
         args.subparser.error("a spec argument is required to install from a buildcache")
 
-    query = spack.binary_distribution.BinaryCacheQuery(all_architectures=args.otherarch)
+    query = spack.binary_distribution.BinaryCacheQuery(
+        all_architectures=args.otherarch, config=spack.config.CONFIG
+    )
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
+    if matches:
+        # Fail before extracting anything if the database cannot be modified.
+        spack.store.STORE.db.ensure_latest_db_version()
     for match in matches:
         spack.binary_distribution.install_single_spec(
             match, unsigned=args.unsigned, force=args.force
@@ -636,7 +640,7 @@ def install_fn(args):
 def list_fn(args):
     """list binary packages available from mirrors"""
     try:
-        specs = spack.binary_distribution.update_cache_and_get_specs()
+        specs = spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
     except spack.binary_distribution.FetchCacheError as e:
         tty.die(e)
 
@@ -796,7 +800,7 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
     manifest_src_url = cache_entry.remote_manifest_url
     manifest_dest_url = cache_entry.get_manifest_url(target_spec, destination_url)
 
-    manifest_stage = spack.stage.Stage(manifest_src_url)
+    manifest_stage = spack.stage.stage_from_config(manifest_src_url, config=spack.config.CONFIG)
 
     try:
         manifest_stage.create()
@@ -911,15 +915,15 @@ def update_index(
 
     if image_ref:
         with tempfile.TemporaryDirectory(
-            dir=spack.stage.get_stage_root()
+            dir=spack.stage.stage_root(spack.config.CONFIG)
         ) as tmpdir, spack.util.parallel.make_concurrent_executor() as executor:
-            spack.binary_distribution._oci_update_index(image_ref, tmpdir, executor)
+            spack.binary_distribution._oci_update_index(image_ref, tmpdir, executor, timer=timer)
         return
 
     # Otherwise, assume a normal mirror.
     url = mirror.push_url
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
         spack.binary_distribution._url_generate_package_index(url, tmpdir, timer=timer)
 
     if update_keys:
@@ -929,7 +933,9 @@ def update_index(
 def mirror_update_keys(mirror: spack.mirrors.mirror.Mirror):
     url = mirror.push_url
     try:
-        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        with tempfile.TemporaryDirectory(
+            dir=spack.stage.stage_root(spack.config.CONFIG)
+        ) as tmpdir:
             spack.binary_distribution.generate_key_index(url, tmpdir)
     except spack.binary_distribution.CannotListKeys as e:
         # Do not error out if listing keys went wrong. This usually means that the _gpg path
@@ -1011,7 +1017,7 @@ def update_view(
 
     filter_fn = lambda x: x in hashes
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
         # Initialize a database
         db = spack.binary_distribution.BuildCacheDatabase(tmpdir)
         db._write()
@@ -1071,12 +1077,12 @@ def check_index_fn(args):
     cache_hash_list = []
     index_hash_list = []
     # List the manifests and verify
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
         # Get listing of spec manifests in mirror
         manifest_files = []
         if "manifests" in verify or "blobs" in verify:
             manifest_files, read_fn = get_entries_from_cache(
-                mirror.fetch_url, tmpdir, BuildcacheComponent.SPEC
+                mirror.fetch_url, BuildcacheComponent.SPEC
             )
         if "manifests" in verify and index_exists:
             # Read the index file

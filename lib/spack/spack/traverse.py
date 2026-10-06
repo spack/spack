@@ -25,9 +25,6 @@ import spack.deptypes as dt
 if TYPE_CHECKING:
     import spack.spec
 
-# Export only the high-level API.
-__all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
-
 
 #: Data class that stores a directed edge together with depth at
 #: which the target vertex was found. It is passed to ``accept``

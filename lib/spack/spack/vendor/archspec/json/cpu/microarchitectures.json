@@ -1238,7 +1238,8 @@
     },
     "cannonlake": {
       "from": [
-        "skylake"
+        "skylake",
+        "x86_64_v4"
       ],
       "vendor": "GenuineIntel",
       "features": [
@@ -1628,6 +1629,197 @@
         "dpcpp": [
           {
             "versions": "2021.2:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "alderlake": {
+      "from": [
+        "skylake"
+      ],
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "abm",
+        "lahf_lm",
+        "xsave",
+        "cx16",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx_vnni",
+        "sha_ni",
+        "clwb",
+        "rdpid",
+        "gfni",
+        "vaes",
+        "vpclmulqdq",
+        "movdiri",
+        "movdir64b",
+        "serialize",
+        "waitpkg"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "11.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "arrowlake": {
+      "from": [
+        "alderlake"
+      ],
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "abm",
+        "lahf_lm",
+        "xsave",
+        "cx16",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx_vnni",
+        "sha_ni",
+        "clwb",
+        "rdpid",
+        "gfni",
+        "vaes",
+        "vpclmulqdq",
+        "movdiri",
+        "movdir64b",
+        "serialize",
+        "waitpkg",
+        "avx_ifma",
+        "avx_ne_convert",
+        "avx_vnni_int8",
+        "cmpccxadd"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "14.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "arrowlake_s": {
+      "from": [
+        "arrowlake"
+      ],
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "abm",
+        "lahf_lm",
+        "xsave",
+        "cx16",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt",
+        "avx_vnni",
+        "sha_ni",
+        "clwb",
+        "rdpid",
+        "gfni",
+        "vaes",
+        "vpclmulqdq",
+        "movdiri",
+        "movdir64b",
+        "serialize",
+        "waitpkg",
+        "avx_ifma",
+        "avx_ne_convert",
+        "avx_vnni_int8",
+        "cmpccxadd",
+        "avx_vnni_int16",
+        "sha512",
+        "sm3",
+        "sm4"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "14.0:",
+            "name": "arrowlake-s",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "18.0:",
+            "name": "arrowlake-s",
             "flags": "-march={name} -mtune={name}"
           }
         ]
@@ -2957,6 +3149,40 @@
         ]
       }
     },
+    "armv9.2a": {
+      "from": [
+        "armv9.0a",
+        "armv8.6a"
+      ],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "13:",
+            "flags": "-march=armv9.2-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "14:",
+            "flags": "-march=armv9.2-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv9.2-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv9.2-a -mtune=generic"
+          }
+        ]
+      }
+    },
     "thunderx2": {
       "from": [
         "armv8.1a"
@@ -3659,8 +3885,7 @@
     },
     "ampere1a": {
       "from": [
-        "neoverse_n1",
-        "armv8.6a"
+        "ampere1"
       ],
       "vendor": "Ampere",
       "features": [
@@ -3760,6 +3985,79 @@
         ]
       },
       "cpupart": "0xac4"
+    },
+    "neoverse_v3ae": {
+      "from": [
+        "neoverse_v2",
+        "armv9.2a"
+      ],
+      "vendor": "ARM",
+      "features": [
+        "aes",
+        "afp",
+        "asimd",
+        "asimddp",
+        "asimdfhm",
+        "asimdhp",
+        "asimdrdm",
+        "atomics",
+        "bf16",
+        "bti",
+        "cpuid",
+        "crc32",
+        "dcpodp",
+        "dcpop",
+        "dgh",
+        "dit",
+        "ecv",
+        "evtstrm",
+        "fcma",
+        "flagm",
+        "flagm2",
+        "fp",
+        "fphp",
+        "frint",
+        "i8mm",
+        "ilrcpc",
+        "jscvt",
+        "lrcpc",
+        "paca",
+        "pacg",
+        "pmull",
+        "sb",
+        "sha1",
+        "sha2",
+        "sha3",
+        "sha512",
+        "sm3",
+        "sm4",
+        "sve",
+        "sve2",
+        "sveaes",
+        "svebf16",
+        "svebitperm",
+        "svei8mm",
+        "svepmull",
+        "svesha3",
+        "svesm4",
+        "uscat",
+        "wfxt"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "15.0:",
+            "flags": "-mcpu=neoverse-v3ae"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "19.0:",
+            "flags": "-mcpu=neoverse-v3ae"
+          }
+        ]
+      },
+      "cpupart": "0xd83"
     },
     "m1": {
       "from": [

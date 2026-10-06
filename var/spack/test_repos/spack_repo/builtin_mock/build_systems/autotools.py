@@ -22,10 +22,10 @@ class AutotoolsPackage(PackageBase):
     """Specialized class for packages built using GNU Autotools."""
 
     build_system_class = "AutotoolsPackage"
-    default_buildsystem = "autotools"
+    default_buildsystem = "mock_autotools"
 
-    build_system("autotools")
-    depends_on("gmake", type="build", when="build_system=autotools")
+    build_system("mock_autotools")
+    depends_on("gmake", type="build", when="build_system=mock_autotools")
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass compiler flags to configure."""
@@ -42,7 +42,7 @@ class AutotoolsPackage(PackageBase):
         setattr(self, "configure_flag_args", configure_flag_args)
 
 
-@register_builder("autotools")
+@register_builder("mock_autotools")
 class AutotoolsBuilder(BuilderWithDefaults):
     #: Phases of a GNU Autotools package
     phases = ("autoreconf", "configure", "build", "install")

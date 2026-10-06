@@ -125,6 +125,13 @@ def filter_shebang(path):
         patched = tempfile.NamedTemporaryFile("wb", delete=False)
         patched.write(new_sbang_line)
 
+        # If the second line is an encoding, we need to keep it second and swap
+        # the old shebang line to third
+        line_two = original.readline()
+        using_encoding = re.match(rb"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)", line_two)
+        if using_encoding:
+            patched.write(line_two)
+
         # Note that in Python this does not go out of bounds even if interpreter is a
         # short byte array.
         # Note: if the interpreter string was encoded with UTF-16, there would have
@@ -142,6 +149,10 @@ def filter_shebang(path):
             patched.write(b"<?php " + old_shebang_line + b" ?>")
         else:
             patched.write(old_shebang_line)
+
+        # Line two goes after the original shebang if it's not an encoding
+        if not using_encoding:
+            patched.write(line_two)
 
         # After copying the remainder of the file, we can close the original
         shutil.copyfileobj(original, patched)

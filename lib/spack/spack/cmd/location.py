@@ -7,6 +7,7 @@ import os
 
 import spack.builder
 import spack.cmd
+import spack.config
 import spack.environment as ev
 import spack.paths
 import spack.repo
@@ -152,7 +153,7 @@ def location(parser, args):
         return
 
     if args.stages:
-        print(spack.stage.get_stage_root())
+        print(spack.stage.stage_root(spack.config.CONFIG))
         return
 
     specs = spack.cmd.parse_specs(args.spec)

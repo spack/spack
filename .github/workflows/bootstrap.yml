@@ -44,10 +44,9 @@ jobs:
       - name: Bootstrap clingo
         run: |
           . share/spack/setup-env.sh
-          spack config add config:installer:new
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack spec --show opt,solutions zlib
+          spack solve zlib
           tree ~/.spack/bootstrap/store/
 
   clingo-sources:
@@ -70,11 +69,10 @@ jobs:
       - name: Bootstrap clingo
         run: |
           . share/spack/setup-env.sh
-          spack config add config:installer:new
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           export PATH="$(brew --prefix bison)/bin:$(brew --prefix cmake)/bin:$PATH"
-          spack spec --show opt,solutions zlib
+          spack solve zlib
           tree ~/.spack/bootstrap/store/
 
   gnupg-sources:
@@ -99,8 +97,7 @@ jobs:
       - name: Bootstrap GnuPG
         run: |
           . share/spack/setup-env.sh
-          spack config add config:installer:new
-          spack spec --show opt,solutions zlib
+          spack solve zlib
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
           spack gpg list
@@ -150,13 +147,12 @@ jobs:
               echo "Python $ver not found"
               exit 1
             fi
-            spack spec --show opt,solutions zlib
+            spack solve zlib
           done
           tree ~/.spack/bootstrap/store
       - name: Bootstrap GnuPG
         run: |
           . share/spack/setup-env.sh
-          spack config add config:installer:new
           spack gpg list
           tree ~/.spack/bootstrap/store/
 
@@ -180,7 +176,7 @@ jobs:
           ./share/spack/setup-env.ps1
           spack bootstrap disable github-actions-v2
           spack bootstrap disable github-actions-v0.6
-          spack -d spec --show "opt,solutions" zlib
+          spack -d solve zlib
           ./share/spack/qa/validate_last_exit.ps1
           tree $env:userprofile/.spack/bootstrap/store/
       - name: Bootstrap GnuPG

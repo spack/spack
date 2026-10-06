@@ -14,6 +14,7 @@ concretizer:
       fortran: 1
       # Regular packages
       cmake: 2
+      dupe-tool: 2
       gmake: 2
       python: 2
       python-venv: 2

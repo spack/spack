@@ -19,6 +19,7 @@ import spack.store
 import spack.util.filesystem as fs
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.concretize_ui import TerminalUI
 from spack.error import InstallError, SpackError
 from spack.old_installer import InstallPolicy
 from spack.util import tty
@@ -56,6 +57,7 @@ def install_kwargs_from_args(args):
         "restage": not args.dont_restage,
         "install_source": args.install_source,
         "verbose": args.verbose or args.install_verbose,
+        "show_log_on_error": args.show_log_on_error,
         "fake": args.fake,
         "dirty": args.dirty,
         "root_policy": cache_opt(pkg_use_bc, default),
@@ -336,7 +338,8 @@ def install(parser, args):
         else:
             install_without_active_env(args, install_kwargs, reporter)
     except InstallError as e:
-        if args.show_log_on_error:
+        # The new installer dumps the logs itself; its error has no package attached.
+        if args.show_log_on_error and e.pkg is not None:
             _dump_log_on_error(e)
         raise
 
@@ -358,7 +361,7 @@ def _maybe_add_and_concretize(args, env, specs):
 
         # `spack concretize`
         tests = compute_tests_install_kwargs(env.user_specs, args.test)
-        concretized_specs = env.concretize(tests=tests)
+        concretized_specs = env.concretize(tests=tests, ui=TerminalUI())
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
             spack.binary_distribution.load_buildcache_index()

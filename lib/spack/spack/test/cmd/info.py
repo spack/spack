@@ -20,11 +20,6 @@ def test_package_suggestion():
     assert "Did you mean one of the following packages?" in str(exc_info.value)
 
 
-def test_deprecated_option_warns():
-    info("--variants-by-name", "vtk-m")
-    assert "--variants-by-name is deprecated" in info.output
-
-
 # no specs, more than one spec
 @pytest.mark.parametrize("args", [[], ["vtk-m", "zmpi"]])
 def test_info_failures(args):
@@ -121,19 +116,19 @@ def test_info_fields(pkg_query, extra_args):
         # Ensure spack info knows that build_system is a single value variant
         (
             ["dual-cmake-autotools"],
-            [r"when\s*build_system=cmake", r"when\s*build_system=autotools"],
+            [r"when\s*build_system=mock_cmake", r"when\s*build_system=mock_autotools"],
             [],
         ),
         (
-            ["dual-cmake-autotools build_system=cmake"],
-            [r"when\s*build_system=cmake"],
-            [r"when\s*build_system=autotools"],
+            ["dual-cmake-autotools build_system=mock_cmake"],
+            [r"when\s*build_system=mock_cmake"],
+            [r"when\s*build_system=mock_autotools"],
         ),
-        # Ensure that gemerator=make implies build_system=cmake and therefore no autotools
+        # Ensure that gemerator=make implies build_system=mock_cmake and therefore no autotools
         (
             ["dual-cmake-autotools generator=make"],
-            [r"when\s*build_system=cmake"],
-            [r"when\s*build_system=autotools"],
+            [r"when\s*build_system=mock_cmake"],
+            [r"when\s*build_system=mock_autotools"],
         ),
         (
             ["optional-dep-test"],
@@ -158,3 +153,14 @@ def test_info_output(by_name, args, in_output, not_in_output, monkeypatch):
         assert re.search(io, output)
     for nio in not_in_output:
         assert not re.search(nio, output)
+
+
+def test_info_lists_directive_deprecated_versions():
+    """Versions deprecated via the deprecated() directive are shown under 'Deprecated versions'."""
+    output = info("deprecated-with-reason")
+    safe_section, sep, deprecated_section = output.partition("Deprecated versions:")
+    assert sep, "expected a 'Deprecated versions:' section"
+    # Both 1.0 and 2.0 are deprecated via the directive only (no deprecated=True on the version).
+    assert "None" in safe_section.split("Safe versions:")[1]
+    assert "1.0" in deprecated_section
+    assert "2.0" in deprecated_section

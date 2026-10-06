@@ -106,6 +106,22 @@ def test_all_package_names_is_cached_correctly(mock_packages: RepoPath):
     assert "mpi" not in mock_packages.all_package_names(include_virtuals=False)
 
 
+def test_all_package_names_is_updated_on_repo_changes(
+    mock_packages: RepoPath, repo_builder: RepoBuilder
+):
+    """Package names are cached, but changing the search path drops the cache."""
+    repo_builder.add_package("pkg-in-extra-repo")
+    extra_repo = spack.repo.from_path(repo_builder.root)
+    repos = RepoPath(*mock_packages.repos)
+    assert "pkg-in-extra-repo" not in repos.all_package_names()
+
+    repos.put_first(extra_repo)
+    assert "pkg-in-extra-repo" in repos.all_package_names()
+
+    repos.remove(extra_repo)
+    assert "pkg-in-extra-repo" not in repos.all_package_names()
+
+
 @pytest.mark.regression("29203")
 def test_use_repositories_doesnt_change_class(mock_packages):
     """Test that we don't create the same package module and class multiple times
@@ -1012,7 +1028,7 @@ def test_repo_use_bad_syntax(config, repo_builder: RepoBuilder):
             spack.repo.PATH.get_pkg_class("erroneous")
 
 
-def test_unknownpkgerror_match_fails():
+def test_unknownpkgerror_match_fails(mock_packages):
     """Ensure fails with basic message when get_close_matches fails."""
 
     def _get_close_matches(*args, **kwargs):
@@ -1026,3 +1042,21 @@ def test_unknownpkgerror_match_fails():
 def test_unknownpkgerror_str_repo():
     """Ensure reasonable error message when repo is a string."""
     assert "not found in repository" in str(spack.repo.UnknownPackageError("pkg_a", "my_repo"))
+
+
+def test_provided_specs_intersects_matching_clauses():
+    """Clauses for one virtual are intersected; disjoint ones provide nothing."""
+    spec = spack.spec.Spec("pkg@1.5")
+    when = spack.spec.Spec("@1:")
+    clauses = [
+        (when, spack.spec.Spec("mpi@:3")),
+        (when, spack.spec.Spec("mpi@2:")),
+        (spack.spec.Spec("@2:"), spack.spec.Spec("mpi@4:")),  # does not match
+        (when, spack.spec.Spec("lapack@:1")),
+        (when, spack.spec.Spec("lapack@2:")),  # disjoint with the previous one
+        (when, spack.spec.Spec("blas")),
+    ]
+    assert spack.repo._provided_specs(spec, clauses) == (
+        spack.spec.Spec("blas"),
+        spack.spec.Spec("mpi@2:3"),
+    )
