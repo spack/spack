@@ -9,8 +9,8 @@ import pytest
 
 import spack.concretize
 import spack.hooks.generate_spec_scripts as spec_script
-import spack.installer
 import spack.user_environment as uenv
+from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 
 load = SpackCommand("load")
@@ -47,12 +47,12 @@ def test_manpath_trailing_colon(
     Also test that Spack correctly preserves the default/existing manpath search path
     via a trailing colon"""
 
-    install("--fake", "mpileaks")
-    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
 
     os.environ["MANPATH"] = "/usr/share/man" + os.pathsep + "/usr/local/share/man"
 
-    load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
+    load_cmds = _get_load_cmds_from_script(spec, shell)
     var = "MANPATH"
     if shell == "--bat":
         var = f'"{var}"'
@@ -149,10 +149,11 @@ def test_load_includes_run_env(shell, install_mockery, mock_fetch, mock_archive,
     """Tests that environment changes from the package's
     `setup_run_environment` method are added to the user environment in
     addition to the prefix inspections"""
-    install("--fake", "mpileaks")
-    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
-    load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    load_cmds = _get_load_cmds_from_script(spec, shell)
 
     if "bat" in shell:
         set_cmd = f'{_get_shell_cmd_invocation("_spack_env_set", shell)} "FOOBAR" "mpileaks"'
@@ -203,7 +204,7 @@ def test_load_external_spec(
     mutable_config.update_config("packages", external_conf)
 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
-    spack.installer.PackageInstaller([spec.package], fake=True).install()
+    PackageInstaller([spec.package], fake=True).install()
 
     # External specs should not generate scripts
     assert spec.external
@@ -265,18 +266,18 @@ def test_load_regenerates_deleted_script(
     """Test that spack load regenerates the load script if it was deleted.
     Uses the cached repo for regeneration.
     """
-    install("--fake", "mpileaks")
-    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
 
     load(shell, "mpileaks")
 
-    load_script_file = spec_script.path_to_load_shell_script(mpileaks_spec, shell[2:])
+    load_script_file = spec_script.path_to_load_shell_script(spec, shell[2:])
     assert os.path.exists(load_script_file)
 
     os.remove(load_script_file)
     assert not os.path.exists(load_script_file)
 
-    cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
+    cache_dir = os.path.join(spec.prefix, ".spack")
     repo_yaml_files = glob.glob(os.path.join(cache_dir, "**", "repo.yaml"), recursive=True)
     assert len(repo_yaml_files) > 0
 
@@ -293,20 +294,20 @@ def test_unload_regenerates_deleted_script(
     """Test that spack unload regenerates the unload script if it was deleted.
     Uses the cached repo for regeneration.
     """
-    install("--fake", "mpileaks")
-    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
 
-    os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
+    os.environ[uenv.spack_loaded_hashes_var] = spec.dag_hash()
 
     unload(shell, "mpileaks")
 
-    unload_script_file = spec_script.path_to_unload_shell_script(mpileaks_spec, shell[2:])
+    unload_script_file = spec_script.path_to_unload_shell_script(spec, shell[2:])
     assert os.path.exists(unload_script_file)
 
     os.remove(unload_script_file)
     assert not os.path.exists(unload_script_file)
 
-    cache_dir = os.path.join(mpileaks_spec.prefix, ".spack")
+    cache_dir = os.path.join(spec.prefix, ".spack")
     repo_yaml_files = glob.glob(os.path.join(cache_dir, "**", "repo.yaml"), recursive=True)
     assert len(repo_yaml_files) > 0
 
@@ -321,11 +322,11 @@ def test_load_unload_multiple_specs(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
     """Test loading and unloading multiple specs in sequence."""
-    install("--fake", "mpileaks")
-    install("--fake", "libelf")
-
     mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([mpileaks_spec.package], fake=True).install()
+
     libelf_spec = spack.concretize.concretize_one("libelf")
+    PackageInstaller([libelf_spec.package], fake=True).install()
 
     load(shell, mpileaks_spec.name, libelf_spec.name)
 
@@ -359,14 +360,14 @@ def test_unload_script_reverses_load(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
     """Test that unload scripts properly reverse load scripts."""
-    install("--fake", "mpileaks")
-    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
 
-    load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
+    load_cmds = _get_load_cmds_from_script(spec, shell)
 
-    os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
+    os.environ[uenv.spack_loaded_hashes_var] = spec.dag_hash()
 
-    unload_cmds = _get_unload_cmds_from_script(mpileaks_spec, shell)
+    unload_cmds = _get_unload_cmds_from_script(spec, shell)
 
     load_prepends = load_sets = 0
     for line in load_cmds.splitlines():
