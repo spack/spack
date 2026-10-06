@@ -295,3 +295,28 @@ def test_uninstall_folded_installation_with_exclude_implicits(
 
     uninstall("-y", "mpileaks@2.3 +debug ^zmpi")
     assert _folded_hashes(module_file, kept, removed) == [True, False]
+
+
+@pytest.mark.parametrize("excluded,included", [("~debug", "+debug"), ("+debug", "~debug")])
+@pytest.mark.parametrize("cli_args", [[], ["-r"]])
+def test_find_ignores_excluded_installations(
+    install_mockery, module_configuration, mutable_config, excluded, included, cli_args
+):
+    """Tests that find prints the module of the only installation matching the constraint
+    that is not excluded from module files, whichever of the installations is excluded."""
+    module_configuration("variants_none")
+    mutable_config.set("modules:default:tcl:exclude", [f"mpileaks {excluded}"])
+    install("--fake", "--add", "mpileaks@2.3 ~debug ^zmpi")
+    install("--fake", "--add", "mpileaks@2.3 +debug ^zmpi")
+    module("tcl", "refresh", "-y", "--delete-tree")
+
+    expected = module("tcl", "find", f"mpileaks@2.3 {included} ^zmpi").strip()
+    out = module("tcl", "find", *cli_args, "mpileaks@2.3 ^zmpi")
+    assert out.split()[-1] == expected
+
+    # two installations that have a module file still make the constraint ambiguous
+    mutable_config.set("modules:default:tcl:exclude", [])
+    module("tcl", "refresh", "-y", "--delete-tree")
+    out = module("tcl", "find", *cli_args, "mpileaks@2.3 ^zmpi", fail_on_error=False)
+    assert module.returncode == 1
+    assert "matches multiple packages" in out

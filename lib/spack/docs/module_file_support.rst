@@ -776,6 +776,9 @@ The ``find`` subcommand translates a spec into its module name, which is useful 
    $ spack module tcl find openmpi
    openmpi/5.0.6-gcc-13.3.0-fjv7c7n
 
+The spec must match exactly one installation that has a module file.
+Installations excluded from module files, with ``exclude`` or ``exclude_implicits``, are not counted.
+
 .. _cmd-spack-module-setdefault:
 
 The ``setdefault`` subcommand marks a specific module version as the default, creating a ``default`` symlink:

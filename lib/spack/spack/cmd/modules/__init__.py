@@ -229,18 +229,13 @@ def loads(module_type, specs, args, out=None):
 
 def shared_module_name(module_type, specs, args, cache):
     """Returns the name, or path with ``--full-path``, of the module file folding every
-    installation of ``specs`` that has a module, or None when they do not all share one."""
+    installation of ``specs``, or None when they do not all share one."""
     module_cls = spack.modules.module_types[module_type]
     writers = [module_cls.from_spec(spec, args.module_set_name, cache=cache) for spec in specs]
-    # The module file of the first installation lists the ones folded with it, excluded
-    # installations left out
-    specs_in_file = writers[0].conf.specs_in_file
-    writers_in_file = [x for x in writers if x.spec in specs_in_file]
-    if any(x.spec not in specs_in_file and not x.conf.excluded for x in writers):
+    first = writers[0]
+    specs_in_file = first.conf.specs_in_file
+    if any(x.spec not in specs_in_file for x in writers) or not first.has_installation:
         return None
-    if not writers_in_file or not writers_in_file[0].has_installation:
-        return None
-    first = writers_in_file[0]
     return first.layout.filename if args.full_path else first.layout.name
 
 
@@ -249,6 +244,17 @@ def find(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     cache: spack.modules.common.ModuleConfigurationCache = {}
+    if len(specs) > 1:
+        # An installation excluded from module files has no module to find, so it does not
+        # make the constraint ambiguous
+        module_cls = spack.modules.module_types[module_type]
+        included = [
+            spec
+            for spec in specs
+            if not module_cls.from_spec(spec, args.module_set_name, cache=cache).conf.excluded
+        ]
+        specs = included or specs
+
     if len(specs) > 1 and not args.recurse_dependencies:
         # Installations folded into one module file are found by the name of the file, which
         # selects none of them in particular
