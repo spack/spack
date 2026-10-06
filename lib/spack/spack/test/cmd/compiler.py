@@ -182,7 +182,9 @@ def test_compiler_find_skips_installed_packages(mutable_config, monkeypatch, tmp
         spack.detection.common, "_installed_spec_prefixes", lambda: {str(install_root)}
     )
 
-    compilers_before_find = set(spack.compilers.config.all_compilers())
+    compilers_before_find = set(
+        spack.compilers.config.all_compilers(mutable_config, repo=spack.repo.PATH)
+    )
     args = spack.util.pattern.Bunch(
         all=None,
         compiler_spec=None,
@@ -192,7 +194,9 @@ def test_compiler_find_skips_installed_packages(mutable_config, monkeypatch, tmp
         jobs=1,
     )
     spack.cmd.compiler.compiler_find(args)
-    compilers_after_find = set(spack.compilers.config.all_compilers())
+    compilers_after_find = set(
+        spack.compilers.config.all_compilers(mutable_config, repo=spack.repo.PATH)
+    )
 
     compilers_added_by_find = compilers_after_find - compilers_before_find
     assert len(compilers_added_by_find) == 0
