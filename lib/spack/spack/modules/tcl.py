@@ -173,7 +173,7 @@ class TclConfiguration(BaseConfiguration):
         # A module file that cannot be shared holds this installation only, skip the database
         # query in this case
         if not self.folds_installations:
-            return [self.spec] if self.add_op else []
+            return [] if self.spec in self.removed_specs else [self.spec]
 
         # Upstream installations are left out: their module files belong to the upstream
         name_version_spec = self.spec.format("{name} {@version}")
@@ -181,35 +181,30 @@ class TclConfiguration(BaseConfiguration):
             spack.store.STORE.db.query(name_version_spec, installed=True, install_tree="local")
         )
 
-        if self.add_op:
-            spec_list.add(self.spec)
-        # remove this spec if it is currently being uninstalled
-        elif self.spec in spec_list:
-            spec_list.remove(self.spec)
+        # The installations being added may not be recorded yet, the ones being removed are
+        # still recorded until uninstalled
+        spec_list.add(self.spec)
         if self.extra_spec_sharing:
             spec_list.add(self.extra_spec_sharing)
+        spec_list.difference_update(self.removed_specs)
 
         # Keep only specs that share the same module filename and are not excluded from module
-        # file generation, sorted by their variant values as the module file selects the first
-        # installation matching a load request
+        # file generation, this installation included, sorted by their variant values as the
+        # module file selects the first installation matching a load request
         my_filename = FileLayout(self).filename
         sharing_specs = []
         for spec in spec_list:
-            if spec == self.spec:
-                sharing_specs.append(spec)
-                continue
-            other_conf = self.make_folded_configuration(spec)
-            if not other_conf.excluded and FileLayout(other_conf).filename == my_filename:
+            conf = self if spec == self.spec else self.make_folded_configuration(spec)
+            if not conf.excluded and FileLayout(conf).filename == my_filename:
                 sharing_specs.append(spec)
         sharing_specs.sort(key=self._variant_values_key)
 
         # The other installations compute the same list, hand it over to spare them the
-        # database query. An excluded installation is not part of their list though.
-        if not self.excluded:
-            for spec in sharing_specs:
-                if spec != self.spec:
-                    other_conf = self.make_folded_configuration(spec)
-                    other_conf._cache.setdefault("specs_sharing_modulefile", sharing_specs)
+        # database query
+        for spec in sharing_specs:
+            if spec != self.spec:
+                other_conf = self.make_folded_configuration(spec)
+                other_conf._cache.setdefault("specs_sharing_modulefile", sharing_specs)
 
         return sharing_specs
 

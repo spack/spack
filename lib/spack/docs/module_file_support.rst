@@ -414,12 +414,19 @@ Spack maintains folded module files automatically:
 
 * if a new installation matches an existing module file, the module file is regenerated to include the new installation
 * on :ref:`refresh<cmd-spack-module-refresh>`, a module file is rewritten only once with content relative to the multiple installations folded into it
-* on uninstall, a folded module file is regenerated instead of being removed if other installations remain
+* on uninstall or ``spack module tcl rm``, a folded module file is regenerated without the removed installations instead of being deleted if other installations remain
 
 .. note::
 
-   Unlike uninstall, ``spack module tcl rm`` deletes a folded module file as a whole, so the other installations folded into it lose their module too.
-   Run ``spack module tcl refresh`` to write the file again.
+   A module file lists the installations recorded in the database, so an installation removed with ``spack module tcl rm`` is listed again the next time its module file is written.
+   Use the ``exclude`` option to leave an installation out of module files durably.
+
+The ``spack module tcl`` subcommands account for the installations sharing a module file:
+
+* ``find`` prints the bare module name when the constraint matches several installations folded in one module file, as a ``module load`` of this name selects the first installation listed
+* ``loads`` comments out the load line of all but the first installation folded in one module file, as a module file can only be loaded once
+* ``rm`` and ``refresh`` list the installations that share a module file with the given ones, as the module file is written again for all of them
+* ``setdefault`` refuses an installation folded with others, as the ``default`` symlink points to the whole module file
 
 Two installations folded in the same module file may have the same variants, when they differ only by their dependencies:
 
