@@ -5,6 +5,7 @@
 from typing import Optional, Set, Tuple
 
 import spack.config
+import spack.error
 import spack.modules
 import spack.spec
 from spack.util import tty
@@ -30,7 +31,7 @@ def _for_each_enabled(
             )
             try:
                 getattr(generator, method_name)()
-            except RuntimeError as e:
+            except (RuntimeError, spack.error.SpackError) as e:
                 msg = "cannot perform the requested {0} operation on module files"
                 msg += " [{1}]"
                 tty.warn(msg.format(method_name, str(e)))

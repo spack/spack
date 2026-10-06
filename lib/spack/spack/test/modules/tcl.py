@@ -1191,6 +1191,26 @@ class TestTcl:
             assert writer.conf.other_installed_specs == []
             assert not writer.layout.hold_other_installations
 
+    def test_fold_variants_with_different_templates(
+        self, install_mockery, module_configuration, factory
+    ):
+        """Test a template set for some of the installations folded in a module file is
+        reported, as the module file is rendered from one template."""
+        module_configuration("fold_variants_template")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+
+        writer, _ = factory(spec_b)
+        with pytest.raises(spack.error.ConfigError, match="different templates") as excinfo:
+            writer.write(overwrite=True)
+        assert writer.layout.filename in str(excinfo.value)
+        assert "mpileaks@2.3+debug" in str(excinfo.value)
+        assert "mpileaks@2.3~debug" in str(excinfo.value)
+        assert "uses template 'override_from_modules.txt'" in str(excinfo.value)
+        assert "uses the default template" in str(excinfo.value)
+
     def test_fold_variants(self, install_mockery, module_configuration, modulefile_filenames):
         """Test generating and removing installations folded in same module file."""
         module_configuration("fold_variants_all")
