@@ -215,7 +215,7 @@ The scripts set ``SPACK_ENV``, the :ref:`prefix inspection <customize-env-modifi
 
 Generated scripts do not contain shell-specific syntax.
 They call helper functions like ``_spack_env_set`` and ``_spack_env_prepend``, which ``setup-env.sh`` and its siblings define for each shell from ``share/spack/environment-mods.*``.
-``sh``, ``csh``, and ``fish`` therefore share a single activation script, while deactivation needs one script per shell: ``default_deactivate``, ``default_deactivate.csh``, and ``default_deactivate.fish``.
+``sh``, ``csh``, and ``fish`` therefore share a single activation and deactivation script.
 On Windows, scripts are generated for ``cmd.exe`` and PowerShell with ``.bat`` and ``.ps1`` extensions.
 
 Spack writes the scripts when an environment is created, and rewrites them whenever the environment's views are regenerated, e.g. by ``spack env view regenerate`` or by concretizing or installing in the environment.
