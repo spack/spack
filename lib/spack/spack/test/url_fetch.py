@@ -185,9 +185,7 @@ def test_fetch(
     s = spack.concretize.concretize_one("url-test")
     s.package.url = mock_archive.url
     set_version_def(
-        spack.version.Version("test"),
-        {checksum_type: checksum, "url": s.package.url},
-        s.package,
+        spack.version.Version("test"), {checksum_type: checksum, "url": s.package.url}, s.package
     )
 
     # Enter the stage directory and check some properties
