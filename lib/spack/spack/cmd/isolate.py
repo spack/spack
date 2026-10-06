@@ -179,26 +179,7 @@ def _do_isolate(args):
     # Add old resource pointers if they exist
     old_resources = spack.config._detect_old_resources()
 
-    if old_resources["installs"]:
-        scope_config["config"]["install_tree"] = {
-            "root": os.path.join(spack.paths.prefix, "opt", "spack")
-        }
-        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
-
-    if old_resources["gpg_keys"]:
-        old_gpg_home = spack.paths.old_gpg_path
-        old_gpg_keys = spack.paths.old_gpg_keys_path
-        scope_config["config"]["gpg_path"] = old_gpg_home
-        scope_config["config"]["gpg_keys_path"] = old_gpg_keys
-        tty.debug(f"Keeping GPG data in {old_gpg_home} and {old_gpg_keys}")
-
-    if old_resources["licenses"]:
-        scope_config["config"]["license_dir"] = spack.paths.old_licenses_path
-        tty.debug(f"Keeping licenses in {spack.paths.old_licenses_path}")
-
-    if old_resources["environments"]:
-        scope_config["config"]["environments_root"] = spack.paths.old_envs_path
-        tty.debug(f"Keeping environments in {spack.paths.old_envs_path}")
+    spack.config.generate_old_layout_config(old_resources, scope_config)
 
     # Write the config file
     os.makedirs(os.path.dirname(config_path), exist_ok=True)

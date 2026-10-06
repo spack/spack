@@ -38,6 +38,7 @@ import re
 import shutil
 import sys
 import tempfile
+import time
 import warnings
 from collections import defaultdict
 from enum import Enum
@@ -2576,8 +2577,109 @@ def _do_migrate_home() -> Dict[str, bool]:
     return {"user_config": user_config_migrated, "package_repos": package_repos_migrated}
 
 
+def _readline_with_timeout(timeout: float) -> Optional[str]:
+    """Read a line from stdin, returning ``None`` when the timeout expires."""
+    if sys.platform == "win32":
+        import msvcrt
+
+        deadline = time.monotonic() + timeout
+        characters = []
+        while time.monotonic() < deadline:
+            if not msvcrt.kbhit():
+                time.sleep(0.05)
+                continue
+            character = msvcrt.getwch()
+            if character in ("\r", "\n"):
+                sys.stderr.write("\n")
+                sys.stderr.flush()
+                return "".join(characters)
+            if character == "\003":
+                raise KeyboardInterrupt
+            if character in ("\b", "\x7f"):
+                if characters:
+                    characters.pop()
+                continue
+            characters.append(character)
+        return None
+
+    import select
+
+    ready, _, _ = select.select([sys.stdin], [], [], timeout)
+    return sys.stdin.readline() if ready else None
+
+
+def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float = 60) -> bool:
+    """Ask whether portable resources under the Spack prefix may be copied
+    A return value of ``True`` means the user saw the prompt and responded "yes";
+    a return value of ``False`` means either the user responded "no", or the user
+    never saw the prompt (e.g. because Spack is being run as part of a script).
+    """
+    data_home = os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
+    resources = []
+    if old_resources["gpg_keys"] and not os.getenv("SPACK_GNUPGHOME"):
+        resources.append(
+            (
+                "GPG data",
+                f"{spack.paths.old_gpg_path} and {spack.paths.old_gpg_keys_path}",
+                f"{data_home}/gpg and {data_home}/gpg-keys",
+            )
+        )
+    if old_resources["licenses"]:
+        resources.append(
+            ("licenses", spack.paths.old_licenses_path, os.path.join(data_home, "licenses"))
+        )
+    if old_resources["environments"]:
+        resources.append(
+            ("environments", spack.paths.old_envs_path, os.path.join(data_home, "environments"))
+        )
+
+    if not resources:
+        raise AssertionError(
+            "This should only ever be called if there are old resources to migrate."
+        )
+    if not sys.stdin.isatty():
+        return False
+
+    tty.info(
+        "Spack found resources in its legacy internal layout.",
+        "Spack can copy the following resources to the new user data location:",
+        *[f"{name}: {old} -> {new}" for name, old, new in resources],
+        stream=sys.stderr,
+    )
+
+    deadline = time.monotonic() + timeout
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            tty.info(
+                "No response received; keeping resources in their old locations.",
+                stream=sys.stderr,
+            )
+            return False
+
+        sys.stderr.write("Proceed with copying these resources? [y/N] ")
+        sys.stderr.flush()
+        answer = _readline_with_timeout(remaining)
+        if answer is None:
+            sys.stderr.write("\n")
+            sys.stderr.flush()
+            tty.info(
+                "No response received; keeping resources in their old locations.",
+                stream=sys.stderr,
+            )
+            return False
+
+        answer = answer.strip().lower()
+        if answer in ("y", "yes", "Y"):
+            return True
+        elif answer in ("n", "no", "N"):
+            return False
+        else:
+            sys.stderr.write(f'Must enter (y)es or (n)o, got: "{answer}"')
+
+
 def _compose_migration_message(
-    prefix_result: Dict[str, List[str]], home_result: Dict[str, bool]
+    prefix_result: Dict[str, Any], home_result: Dict[str, bool]
 ) -> Optional[str]:
     """Compose migration message from both migration results.
 
@@ -2830,6 +2932,80 @@ def _detect_invoked_command():
     _invoked_command = _extract_command_from_argv()
 
 
+def _force_old_layout() -> Dict[str, List[str]]:
+    old_resources = _detect_old_resources()
+    layout_scope_path = _layout_scope_path()
+    config_path = os.path.join(layout_scope_path, "config.yaml")
+    filesystem.mkdirp(layout_scope_path, default_perms="parents")
+
+    config_changes: Dict[str, Any] = {}
+    retained_resources: List[str] = []
+
+    if old_resources["installs"]:
+        retained_resources.append("existing installs")
+        config_changes["install_tree"] = {"root": os.path.join(spack.paths.prefix, "opt", "spack")}
+        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
+
+    old_gpg_home = spack.paths.old_gpg_path
+    old_gpg_keys = spack.paths.old_gpg_keys_path
+    if old_resources["gpg_keys"]:
+        config_changes["gpg_path"] = old_gpg_home
+        config_changes["gpg_keys_path"] = old_gpg_keys
+        retained_resources.append("GPG data (kept in its old location)")
+
+    if old_resources["licenses"]:
+        old_licenses = spack.paths.old_licenses_path
+        config_changes["license_dir"] = old_licenses
+        retained_resources.append("licenses (kept in the old location)")
+        tty.debug(f"Licenses kept in old location: {old_licenses}")
+
+    if old_resources["environments"]:
+        old_envs = spack.paths.old_envs_path
+        config_changes["environments_root"] = old_envs
+        retained_resources.append("environments (kept in the old location)")
+        tty.debug(f"Environments kept in old location: {old_envs}")
+
+    # Write config scope files to the layout scope only if we have config changes
+    if config_changes:
+        with open(config_path, "w", encoding="utf-8") as f:
+            syaml.dump({"config": config_changes}, f)
+        tty.debug(f"Wrote config.yaml to {config_path}")
+    else:
+        tty.debug("No config changes needed, skipping config.yaml")
+
+    tty.debug(f"Created layout scope pointing to old locations {layout_scope_path}")
+
+    marker_path = _migration_done_marker_path()
+    with open(marker_path, "w", encoding="utf-8") as f:
+        f.write("Migration completed\n")
+    tty.debug(f"Wrote migration completion marker: {marker_path}")
+
+    return {"migrated": [], "retained": retained_resources}
+
+
+def generate_old_layout_config(old_resources, scope_config):
+    if old_resources["installs"]:
+        scope_config["config"]["install_tree"] = {
+            "root": os.path.join(spack.paths.prefix, "opt", "spack")
+        }
+        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
+
+    if old_resources["gpg_keys"]:
+        old_gpg_home = spack.paths.old_gpg_path
+        old_gpg_keys = spack.paths.old_gpg_keys_path
+        scope_config["config"]["gpg_path"] = old_gpg_home
+        scope_config["config"]["gpg_keys_path"] = old_gpg_keys
+        tty.debug(f"Keeping GPG data in {old_gpg_home} and {old_gpg_keys}")
+
+    if old_resources["licenses"]:
+        scope_config["config"]["license_dir"] = spack.paths.old_licenses_path
+        tty.debug(f"Keeping licenses in {spack.paths.old_licenses_path}")
+
+    if old_resources["environments"]:
+        scope_config["config"]["environments_root"] = spack.paths.old_envs_path
+        tty.debug(f"Keeping environments in {spack.paths.old_envs_path}")
+
+
 def _perform_auto_migration_at_module_load():
     """Perform auto-migration at module load time if appropriate.
 
@@ -2852,13 +3028,22 @@ def _perform_auto_migration_at_module_load():
         # the same migration marker as auto-migration)
         home_result = _do_migrate_home()
 
-    if any(_detect_old_resources().values()) and not os.path.exists(marker_path):
+    old_resources = _detect_old_resources()
+    if any(old_resources.values()) and not os.path.exists(marker_path):
         lock_path = _migration_lock_path()
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
         try:
             with spack.util.lock.WriteTransaction(lock):
                 if not os.path.exists(marker_path):
-                    prefix_result = _do_migrate_spack_prefix()
+                    # Waiting for user input inside the lock prevents other
+                    # instances from progressing, but prevents a scenario where
+                    # user says "Y" and then a separate non-tty process subverts
+                    # that
+                    user_allows_it = _prompt_for_prefix_migration(old_resources)
+                    if user_allows_it:
+                        prefix_result = _do_migrate_spack_prefix()
+                    else:
+                        prefix_result = _force_old_layout()
         except spack.util.lock.LockPermissionError:
             # Read-only prefix: skip migration
             pass
