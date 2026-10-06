@@ -2614,6 +2614,8 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
     a return value of ``False`` means either the user responded "no", or the user
     never saw the prompt (e.g. because Spack is being run as part of a script).
     """
+    if os.getenv("SPACK_AUTOMIGRATE_YES"):
+        return True
     data_home = os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
     resources = []
     if old_resources["gpg_keys"] and not os.getenv("SPACK_GNUPGHOME"):
@@ -2894,25 +2896,25 @@ def _force_old_layout(to_move) -> Dict[str, List[str]]:
     config_changes: Dict[str, Any] = {}
     retained_resources: List[str] = []
 
-    if to_move["installs"]:
+    if to_move.get("installs"):
         retained_resources.append("existing installs")
         config_changes["install_tree"] = {"root": os.path.join(spack.paths.prefix, "opt", "spack")}
         tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
     old_gpg_home = spack.paths.old_gpg_path
     old_gpg_keys = spack.paths.old_gpg_keys_path
-    if to_move["gpg_keys"]:
+    if to_move.get("gpg_keys"):
         config_changes["gpg_path"] = old_gpg_home
         config_changes["gpg_keys_path"] = old_gpg_keys
         retained_resources.append("GPG data (kept in its old location)")
 
-    if to_move["licenses"]:
+    if to_move.get("licenses"):
         old_licenses = spack.paths.old_licenses_path
         config_changes["license_dir"] = old_licenses
         retained_resources.append("licenses (kept in the old location)")
         tty.debug(f"Licenses kept in old location: {old_licenses}")
 
-    if to_move["environments"]:
+    if to_move.get("environments"):
         old_envs = spack.paths.old_envs_path
         config_changes["environments_root"] = old_envs
         retained_resources.append("environments (kept in the old location)")
