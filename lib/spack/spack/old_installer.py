@@ -2731,6 +2731,7 @@ def deprecate(spec: "spack.spec.Spec", deprecator: "spack.spec.Spec", link_fn) -
 
     # Now that we've handled metadata, uninstall and replace with link
     spack.package_base.PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+    spack.hooks.post_database_remove([spec])
     link_fn(deprecator.prefix, spec.prefix)
 
 

@@ -354,6 +354,13 @@ A command may call it once with every spec it recorded, or several times with ba
 An implementation must give the same result however the specs are split into calls, and must not assume that a call holds every spec the command records.
 The hook must not raise: an error for one spec is reported as a warning, and the other specs are still processed.
 
+``post_database_remove(specs)``
+"""""""""""""""""""""""""""""""
+
+A ``post_database_remove`` hook runs in the process that uninstalls or deprecates specs, once their prefix is removed and the database is updated.
+It receives the list of specs that were removed.
+As for ``post_database_add``, a command may call it once or several times with batches of any size, and the hook must not raise.
+
 ``pre_uninstall(spec)``
 """""""""""""""""""""""
 
@@ -364,7 +371,7 @@ It receives the spec as its only argument.
 """"""""""""""""""""""""
 
 A ``post_uninstall`` hook runs after package uninstallation finishes.
-It receives the spec as its only argument and is primarily used for cleaning up module files during uninstall operations.
+It receives the spec as its only argument.
 
 
 Adding a New Hook Module
