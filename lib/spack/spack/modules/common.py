@@ -1323,6 +1323,12 @@ class ModuleContext(tengine.Context):
         return self.conf.dag_hash()
 
     @tengine.context_property
+    def variants_mode(self) -> str:
+        """Returns the module file variants definition mode, "none" when variants are not
+        defined in module files."""
+        return self.conf.variants_mode
+
+    @tengine.context_property
     def installations(self) -> List["ModuleContext"]:
         """Returns context for all installations of this package version, in the order the
         module file selects them."""
