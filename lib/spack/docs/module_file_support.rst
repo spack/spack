@@ -291,7 +291,6 @@ For example, with a single ``git`` installation and the following configuration:
      default:
        tcl:
          variants: all
-         hash_length: 0
 
 ``spack module tcl find`` prints the variants of the installed ``git`` after its module name:
 
@@ -321,7 +320,7 @@ and fails with an error listing the installed configurations otherwise:
 A plain ``module load git`` still works, since the default value of each module variant is the value of the variant in the installed spec.
 
 The ``hash`` variant is not a Spack variant: it holds the hash of the installation, and replaces the hash in module names.
-``variants: all`` thus requires ``hash_length: 0``, and Spack reports a configuration error otherwise.
+``variants: all`` thus leaves the hash out of module names: ``hash_length`` is ignored, and Spack warns when it is set to a non-zero value.
 Spack defines the ``hash`` variant when the module name does not include the hash, which is the case with projections that do not include it.
 It keeps the ``depends-on`` lines of dependent module files bound to the exact installation they were built against, see :ref:`module-variants-folding`.
 
@@ -367,7 +366,6 @@ For example, with two installations of ``zlib@1.3.2`` that differ only in the ``
      default:
        tcl:
          variants: all
-         hash_length: 0
 
 Spack writes a single ``zlib/1.3.2-gcc-13.3.0`` module file holding both installations:
 
