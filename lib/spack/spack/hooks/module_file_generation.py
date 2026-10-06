@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from typing import Optional, Set
+from typing import Optional, Set, Tuple
 
 import spack.config
 import spack.modules
@@ -11,7 +11,10 @@ from spack.util import tty
 
 
 def _for_each_enabled(
-    spec: spack.spec.Spec, method_name: str, explicit: Optional[bool] = None, add_op: bool = True
+    spec: spack.spec.Spec,
+    method_name: str,
+    explicit: Optional[bool] = None,
+    removed_specs: Tuple[spack.spec.Spec, ...] = (),
 ) -> None:
     """Calls a method for each enabled module"""
     set_names: Set[str] = set(spack.config.CONFIG.get("modules", {}).keys())
@@ -23,7 +26,7 @@ def _for_each_enabled(
 
         for module_type in enabled:
             generator = spack.modules.module_types[module_type].from_spec(
-                spec, name, explicit, add_op=add_op
+                spec, name, explicit, removed_specs=removed_specs
             )
             try:
                 getattr(generator, method_name)()
@@ -42,4 +45,4 @@ def post_register(spec, explicit: bool):
 
 
 def post_uninstall(spec):
-    _for_each_enabled(spec, "remove_installation", add_op=False)
+    _for_each_enabled(spec, "remove_installation", removed_specs=(spec,))
