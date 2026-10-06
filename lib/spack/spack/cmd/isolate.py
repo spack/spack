@@ -9,7 +9,6 @@ from typing import Dict, List, Tuple
 
 import spack.config
 import spack.paths
-import spack.util.lock
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 

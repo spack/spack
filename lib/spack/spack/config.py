@@ -2613,6 +2613,9 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
     A return value of ``True`` means the user saw the prompt and responded "yes";
     a return value of ``False`` means either the user responded "no", or the user
     never saw the prompt (e.g. because Spack is being run as part of a script).
+
+    This can also return False if it detects that no resources are eligible for
+    moving (in which case there would be no point in prompting the user for that).
     """
     if os.getenv("SPACK_AUTOMIGRATE_YES"):
         return True
