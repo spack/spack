@@ -139,8 +139,7 @@ class TestTcl:
         content = modulefile_content(mpileaks_spec_string)
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
         assert len([x for x in content if "        module load {*}$args" in x]) == 1
@@ -155,8 +154,7 @@ class TestTcl:
         content = modulefile_content("dtbuild1")
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
         assert len([x for x in content if "        module load {*}$args" in x]) == 1
@@ -174,8 +172,7 @@ class TestTcl:
         content = modulefile_content(mpileaks_spec_string)
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
         assert len([x for x in content if "        module load {*}$args" in x]) == 1
@@ -190,8 +187,7 @@ class TestTcl:
         content = modulefile_content("dtbuild1")
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
         assert len([x for x in content if "        module load {*}$args" in x]) == 1
@@ -224,7 +220,7 @@ class TestTcl:
         module_configuration("alter_environment")
         content = modulefile_content("mpileaks platform=test target=x86_64")
 
-        assert len([x for x in content if x.startswith("    prepend-path CMAKE_PREFIX_PATH")]) == 0
+        assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if "setenv FOO {foo}" in x]) == 1
         assert len([x for x in content if "setenv OMPI_MCA_mpi_leave_pinned {1}" in x]) == 1
         assert len([x for x in content if "setenv OMPI_MCA_MPI_LEAVE_PINNED {1}" in x]) == 0
@@ -233,7 +229,7 @@ class TestTcl:
 
         content = modulefile_content("libdwarf platform=test target=core2")
 
-        assert len([x for x in content if x.startswith("    prepend-path CMAKE_PREFIX_PATH")]) == 0
+        assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if "setenv FOO {foo}" in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
         assert len([x for x in content if "depends-on foo/bar" in x]) == 1
@@ -425,9 +421,9 @@ class TestTcl:
         module_configuration("conflicts")
         content = modulefile_content("mpileaks")
 
-        assert len([x for x in content if x.startswith("    conflict")]) == 2
-        assert len([x for x in content if x == "    conflict mpileaks"]) == 1
-        assert len([x for x in content if x == "    conflict intel/14.0.1"]) == 1
+        assert len([x for x in content if x.startswith("conflict")]) == 2
+        assert len([x for x in content if x == "conflict mpileaks"]) == 1
+        assert len([x for x in content if x == "conflict intel/14.0.1"]) == 1
 
     def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
         """Tests inconsistent conflict definition in `modules.yaml`."""
@@ -599,8 +595,7 @@ class TestTcl:
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 0
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 0
         )
         assert len([x for x in content if "    proc depends-on {args} {" in x]) == 0
         assert len([x for x in content if "        module load {*}$args" in x]) == 0
@@ -1049,7 +1044,17 @@ class TestTcl:
             == 1
         )
 
-        # test dependent module designation: the hash variant pins the dependency installation
+        # test dependent module designation: the hash variant pins the dependency installation,
+        # and depends-on is redefined to handle this multi-word specification on Environment
+        # Modules < 5.7
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert (
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 0
+        )
         # depends-on command defined once and used 3 times
         assert len([x for x in content if "depends-on " in x]) == 4
         depends_on_lines = [x for x in content if x.startswith("    depends-on ")]
