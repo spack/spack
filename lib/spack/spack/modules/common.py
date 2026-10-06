@@ -363,10 +363,8 @@ class BaseConfiguration:
             cache = {}
 
         if explicit is None:
-            try:
-                explicit = bool(spack.store.STORE.db.get_record(spec).explicit)
-            except KeyError:
-                explicit = False
+            _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+            explicit = bool(record and record.explicit)
 
         removed_hashes = tuple(sorted(x.dag_hash() for x in removed_specs))
         key = (spec.dag_hash(), module_set_name, explicit, removed_hashes)
@@ -481,26 +479,10 @@ class BaseConfiguration:
             if self.spec.satisfies(constraint):
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
-        if self.hash:
-            suffixes.append(self.hash)
+        hash_suffix = self.hash
+        if hash_suffix:
+            suffixes.append(hash_suffix)
         return suffixes
-
-    def sibling_configuration(self, spec: spack.spec.Spec) -> "BaseConfiguration":
-        """Returns the configuration of another installation held by the same module file.
-        Its explicitness is read from the database, as it may differ from this one's, and the
-        installations being removed are handed over."""
-        return self.make_configuration(
-            spec, self.name, removed_specs=self.removed_specs, cache=self._configuration_cache
-        )
-
-    @property
-    def configurations_in_file(self) -> List["BaseConfiguration"]:
-        """Returns the configuration of each installation held by the module file, in the
-        order it lists them."""
-        return [
-            self if spec == self.spec else self.sibling_configuration(spec)
-            for spec in self.specs_in_file
-        ]
 
     @property
     def matches_default(self) -> bool:
@@ -782,6 +764,8 @@ class FileLayout:
         self._unlocked_paths: Optional[Dict[Optional[Tuple[str, ...]], List[Tuple[str, ...]]]] = (
             None
         )
+        self._name: Optional[str] = None
+        self._filename: Optional[str] = None
 
     @property
     def modulerc(self) -> str:
@@ -803,6 +787,11 @@ class FileLayout:
     @property
     def name(self) -> str:
         """Returns the name of the module file in the modulepath directory."""
+        if self._name is None:
+            self._name = self._compute_name()
+        return self._name
+
+    def _compute_name(self) -> str:
         name = self.spec.format_path(self.conf.projection)
         # Not everybody is working on linux...
         parts = name.split("/")
@@ -838,6 +827,11 @@ class FileLayout:
     @property
     def filename(self) -> str:
         """Absolute path to the module file for the current spec."""
+        if self._filename is None:
+            self._filename = self._compute_filename()
+        return self._filename
+
+    def _compute_filename(self) -> str:
         # Just the name of the file
         filename = self.name
         if self.conf.file_extension:
@@ -996,6 +990,7 @@ class ModuleContext(tengine.Context):
         self.layout = layout
         self._environment_modifications: Optional[List[EnvironmentModification]] = None
         self._autoload: Optional[List[str]] = None
+        self._prerequisites: Optional[List[str]] = None
 
     @tengine.context_property
     def spec(self) -> spack.spec.Spec:
@@ -1057,7 +1052,9 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def prerequisites(self) -> List[str]:
         """List of modules that must be loaded before this one."""
-        return self._create_module_list_of("specs_to_prereq")
+        if self._prerequisites is None:
+            self._prerequisites = self._create_module_list_of("specs_to_prereq")
+        return self._prerequisites
 
     def modification_needs_formatting(
         self,
@@ -1240,7 +1237,8 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def version_part(self) -> str:
         """Version of this provider."""
-        return f"{self.spec.version}-{self.spec.dag_hash(7)}"
+        s = self.spec
+        return f"{s.version}-{s.dag_hash(length=7)}"
 
     @tengine.context_property
     def provides(self) -> Dict[str, spack.spec.Spec]:
@@ -1334,32 +1332,9 @@ class BaseModuleFileWriter:
                 return candidate
         return self.default_template
 
-    def _ensure_folded_installations_share_template(self) -> None:
-        """Raises a configuration error when the installations folded in this module file are
-        configured with different templates, as the module file is rendered from one of them."""
-        if not self.has_other_installations:
-            return
-
-        templates = {conf.spec: conf.template for conf in self.conf.configurations_in_file}
-        if len(set(templates.values())) < 2:
-            return
-
-        # A template rule matching only some of the folded installations wins or loses with the
-        # order the installations are written, name them all so the rule can be reworked
-        details = ", ".join(
-            spec.format("{name}{@version}{variants}{/hash:7}")
-            + (f" uses template '{template}'" if template else " uses the default template")
-            for spec, template in templates.items()
-        )
-        raise spack.error.ConfigError(
-            f"the installations folded in the module file '{self.layout.filename}' are "
-            "configured with different templates, which cannot apply to one module file: "
-            f"{details}. Set 'template' for the whole package version instead."
-        )
-
     @property
     def has_other_installations(self) -> bool:
-        """Returns whether or not module file holds multiple package installations"""
+        """Whether the module file holds an installation other than this one."""
         return bool(self.conf.other_specs_in_file)
 
     @property
@@ -1374,8 +1349,7 @@ class BaseModuleFileWriter:
         Args:
             overwrite (bool): if True it is fine to overwrite an already
                 existing file. If False the operation is skipped an we print
-                a warning to the user unless if module file holds multiple
-                package installations.
+                a warning to the user.
         """
         # Return immediately if the module is excluded
         if self.conf.excluded:
@@ -1383,18 +1357,12 @@ class BaseModuleFileWriter:
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 
-        # Print a warning in case I am accidentally overwriting a module file that is
-        # already there (name clash) unless if it holds multiple package installations
-        if (
-            not overwrite
-            and os.path.exists(self.layout.filename)
-            and not self.has_other_installations
-        ):
+        # Print a warning in case I am accidentally overwriting
+        # a module file that is already there (name clash)
+        if not overwrite and os.path.exists(self.layout.filename):
             message = "Module file {0.filename} exists and will not be overwritten"
             warnings.warn(message.format(self.layout))
             return
-
-        self._ensure_folded_installations_share_template()
 
         # If we are here it means it's ok to write the module file
         msg = "\tWRITE: {0} [{1}]"
@@ -1516,8 +1484,8 @@ class BaseModuleFileWriter:
                 ) as f:
                     f.write("\n".join(content))
 
-    def _delete_module_file(self) -> None:
-        """Deletes the module file."""
+    def remove_installation(self) -> None:
+        """Removes this installation from its module file, which is deleted."""
         mod_file = self.layout.filename
         if os.path.exists(mod_file):
             try:
@@ -1530,11 +1498,6 @@ class BaseModuleFileWriter:
             except OSError:
                 # removedirs throws OSError on first non-empty directory found
                 pass
-
-    def remove_installation(self):
-        """Removes this installation from module file. Module file is deleted if it
-        does not reference any other package installation."""
-        self._delete_module_file()
 
     def remove_module_defaults(self) -> None:
         if not self.conf.matches_default:

@@ -92,10 +92,7 @@ def test_rm_fold_variants(install_mockery, module_configuration, modulefile_file
     concrete_b = spack.store.STORE.db.query_one(spec_b)
     module("tcl", "rm", "-y", spec_b)
     assert os.path.exists(module_file)
-    with open(module_file, encoding="utf-8") as f:
-        content = f.read()
-    assert concrete_a.dag_hash(7) in content
-    assert concrete_b.dag_hash(7) not in content
+    assert _folded_hashes(module_file, concrete_a, concrete_b) == [True, False]
 
     # remove all the installations of the module file at once
     module("tcl", "rm", "-y", "mpileaks@2.3 ^zmpi")
