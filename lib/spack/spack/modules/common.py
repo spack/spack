@@ -80,10 +80,8 @@ EnvironmentModification = Tuple[
 ]
 
 #: Cache of configuration objects, keyed by (dag_hash, module_set_name, explicit,
-#: removed_hashes, extra_spec_sharing_hash)
-ModuleConfigurationCache = Dict[
-    Tuple[str, str, bool, Tuple[str, ...], Optional[str]], "BaseConfiguration"
-]
+#: removed_hashes)
+ModuleConfigurationCache = Dict[Tuple[str, str, bool, Tuple[str, ...]], "BaseConfiguration"]
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -350,7 +348,6 @@ class BaseConfiguration:
         explicit: Optional[bool] = None,
         *,
         removed_specs: Tuple[spack.spec.Spec, ...] = (),
-        extra_spec_sharing: Optional[spack.spec.Spec] = None,
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseConfiguration":
         """Returns the configuration object for spec, reusing ``cache`` if it already holds one.
@@ -371,18 +368,12 @@ class BaseConfiguration:
             except KeyError:
                 explicit = False
 
-        extra_spec_sharing_hash = extra_spec_sharing.dag_hash() if extra_spec_sharing else None
         removed_hashes = tuple(sorted(x.dag_hash() for x in removed_specs))
-        key = (spec.dag_hash(), module_set_name, explicit, removed_hashes, extra_spec_sharing_hash)
+        key = (spec.dag_hash(), module_set_name, explicit, removed_hashes)
         configuration = cache.get(key)
         if configuration is None:
             configuration = cls(
-                spec,
-                module_set_name,
-                explicit,
-                removed_specs=removed_specs,
-                extra_spec_sharing=extra_spec_sharing,
-                cache=cache,
+                spec, module_set_name, explicit, removed_specs=removed_specs, cache=cache
             )
             cache[key] = configuration
         return configuration
@@ -395,17 +386,11 @@ class BaseConfiguration:
         explicit: Optional[bool] = None,
         *,
         removed_specs: Tuple[spack.spec.Spec, ...] = (),
-        extra_spec_sharing: Optional[spack.spec.Spec] = None,
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> "FileLayout":
         return FileLayout(
             cls.make_configuration(
-                spec,
-                module_set_name,
-                explicit,
-                removed_specs=removed_specs,
-                extra_spec_sharing=extra_spec_sharing,
-                cache=cache,
+                spec, module_set_name, explicit, removed_specs=removed_specs, cache=cache
             )
         )
 
@@ -416,14 +401,12 @@ class BaseConfiguration:
         explicit: bool,
         *,
         removed_specs: Tuple[spack.spec.Spec, ...] = (),
-        extra_spec_sharing: Optional[spack.spec.Spec] = None,
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> None:
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
         self.removed_specs = removed_specs
-        self.extra_spec_sharing = extra_spec_sharing
         self._configuration_cache = {} if cache is None else cache
         self._cache: Dict[str, Any] = {}
         _modules_cfg = spack.config.CONFIG.get_config("modules")
@@ -530,18 +513,10 @@ class BaseConfiguration:
 
     def make_folded_configuration(self, spec: spack.spec.Spec) -> "BaseConfiguration":
         """Returns the configuration of another installation held by the same module file.
-        Its explicitness is read from the database, as it may differ from this one's. This
-        installation is shared with it when being added, as it may not be recorded yet, and the
-        installations being removed are handed over as well."""
-        extra_spec_sharing = self.extra_spec_sharing or (
-            None if self.spec in self.removed_specs else self.spec
-        )
+        Its explicitness is read from the database, as it may differ from this one's, and the
+        installations being removed are handed over."""
         return self.make_configuration(
-            spec,
-            self.name,
-            removed_specs=self.removed_specs,
-            extra_spec_sharing=extra_spec_sharing,
-            cache=self._configuration_cache,
+            spec, self.name, removed_specs=self.removed_specs, cache=self._configuration_cache
         )
 
     @property
@@ -1415,16 +1390,10 @@ class BaseModuleFileWriter:
         explicit: Optional[bool] = None,
         *,
         removed_specs: Tuple[spack.spec.Spec, ...] = (),
-        extra_spec_sharing: Optional[spack.spec.Spec] = None,
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseModuleFileWriter":
         conf = cls.configuration_class.make_configuration(
-            spec,
-            module_set_name,
-            explicit,
-            removed_specs=removed_specs,
-            extra_spec_sharing=extra_spec_sharing,
-            cache=cache,
+            spec, module_set_name, explicit, removed_specs=removed_specs, cache=cache
         )
         return cls(conf)
 
@@ -1475,12 +1444,6 @@ class BaseModuleFileWriter:
         """Whether the module file exists and lists this installation. A module file folding
         several installations exists without listing this one when it is excluded."""
         return os.path.isfile(self.layout.filename) and self.spec in self.conf.installed_specs
-
-    def write_folded(self) -> None:
-        """Writes the module file again if it folds this installation with others, so that it
-        lists the installations the database holds now."""
-        if self.layout.hold_other_installations:
-            self.write()
 
     def write(self, overwrite: bool = False) -> None:
         """Writes the module file.

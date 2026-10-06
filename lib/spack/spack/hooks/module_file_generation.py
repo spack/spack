@@ -2,22 +2,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from typing import Optional, Set, Tuple
+from typing import Iterator, Sequence, Set, Tuple
 
 import spack.config
 import spack.error
 import spack.modules
+import spack.modules.common
 import spack.spec
 from spack.util import tty
 
 
-def _for_each_enabled(
-    spec: spack.spec.Spec,
-    method_name: str,
-    explicit: Optional[bool] = None,
-    removed_specs: Tuple[spack.spec.Spec, ...] = (),
-) -> None:
-    """Calls a method for each enabled module"""
+def _enabled_module_types() -> Iterator[Tuple[str, str]]:
+    """Yields the (module set name, module type) pairs enabled by the configuration."""
     set_names: Set[str] = set(spack.config.CONFIG.get("modules", {}).keys())
     for name in set_names:
         enabled = spack.config.CONFIG.get(f"modules:{name}:enable")
@@ -26,26 +22,40 @@ def _for_each_enabled(
             continue
 
         for module_type in enabled:
-            # A modules misconfiguration is reported when the writer is created, it must not
-            # fail the build the hook runs in
+            yield name, module_type
+
+
+def _warn_operation_failed(method_name: str, error: Exception) -> None:
+    """A modules misconfiguration is reported when the writer is created or the module file
+    written, it must not fail the installation the hook runs in."""
+    msg = "cannot perform the requested {0} operation on module files [{1}]"
+    tty.warn(msg.format(method_name, str(error)))
+
+
+def post_database_add(specs: Sequence[spack.spec.Spec]) -> None:
+    """Writes the module files of the installations just recorded in the database. A module
+    file folding several of them is written once, as it lists them all whichever is written."""
+    for name, module_type in _enabled_module_types():
+        cache: spack.modules.common.ModuleConfigurationCache = {}
+        written_filenames: Set[str] = set()
+        for spec in specs:
             try:
-                generator = spack.modules.module_types[module_type].from_spec(
-                    spec, name, explicit, removed_specs=removed_specs
-                )
-                getattr(generator, method_name)()
+                writer = spack.modules.module_types[module_type].from_spec(spec, name, cache=cache)
+                filename = writer.layout.filename
+                if filename in written_filenames and writer.layout.hold_other_installations:
+                    continue
+                writer.write()
+                written_filenames.add(filename)
             except (RuntimeError, spack.error.SpackError) as e:
-                msg = "cannot perform the requested {0} operation on module files"
-                msg += " [{1}]"
-                tty.warn(msg.format(method_name, str(e)))
+                _warn_operation_failed("write", e)
 
 
-def post_install(spec, explicit: bool):
-    _for_each_enabled(spec, "write", explicit)
-
-
-def post_register(spec, explicit: bool):
-    _for_each_enabled(spec, "write_folded", explicit)
-
-
-def post_uninstall(spec):
-    _for_each_enabled(spec, "remove_installation", removed_specs=(spec,))
+def post_uninstall(spec: spack.spec.Spec) -> None:
+    for name, module_type in _enabled_module_types():
+        try:
+            writer = spack.modules.module_types[module_type].from_spec(
+                spec, name, removed_specs=(spec,)
+            )
+            writer.remove_installation()
+        except (RuntimeError, spack.error.SpackError) as e:
+            _warn_operation_failed("remove_installation", e)

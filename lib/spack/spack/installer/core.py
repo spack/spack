@@ -649,11 +649,9 @@ class PackageInstaller:
             )
             and self._save_to_db(database_actions, retained_read_locks)
         ):
-            # The post_install hooks ran in build processes that could not see these specs in
-            # the database, nor the ones registered by this write
-            for action in database_actions:
-                if isinstance(action, AddSpecAction):
-                    spack.hooks.post_register(action.spec, action.explicit)
+            added = [a.spec for a in database_actions if isinstance(a, AddSpecAction)]
+            if added:
+                spack.hooks.post_database_add(added)
             database_actions.clear()
 
     def _save_to_db(
