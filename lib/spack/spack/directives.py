@@ -260,16 +260,16 @@ def version(
         )
         if value is not None
     }
-    return _Version(ver, when, kwargs)
+    return _Version(ver=ver, kwargs=kwargs, when=when)
 
 
 class _Version(NamedTuple):
     ver: Union[str, int]
-    when: WhenType
     kwargs: dict
+    when: Optional[WhenType] = None
 
     def __call__(self, pkg: PackageType) -> None:
-        ver, when, kwargs = self
+        ver, kwargs, when = self
 
         when_spec = _make_when_spec(when)
         if not when_spec:
