@@ -161,10 +161,10 @@ You can configure the behavior of either module system separately, under a key c
 
    modules:
      default:
-       tcl:
-         # contains environment modules specific customizations
-       lmod:
-         # contains lmod specific customizations
+       # Environment Modules-specific customizations
+       tcl: {}
+       # Lmod-specific customizations
+       lmod: {}
 
 In general, the configuration options that you can use in ``modules.yaml`` will either change the layout of the module files on the filesystem, or they will affect their content.
 For the latter point it is possible to use :ref:`spec patterns <sec-specs>` to fine-tune the set of packages on which the modifications should be applied.

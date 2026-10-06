@@ -104,10 +104,8 @@ From lowest to highest precedence:
 
 .. note::
 
-   Spack may create a ``layout`` scope in ``$(prefix)/etc/spack/layout/``
-   for generated settings associated with migration or isolation.
-   It sits just above ``defaults``, but below ``system``, ``site``, ``plugin``,
-   ``user``, and ``spack``.
+   Spack may create a ``layout`` scope in ``$(prefix)/etc/spack/layout/`` for generated settings associated with migration or isolation.
+   It sits just above ``defaults``, but below ``system``, ``site``, ``plugin``, ``user``, and ``spack``.
    A fresh Spack instance has no layout scope; it is created only when needed.
 
 Each configuration directory may contain several configuration files, such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``.

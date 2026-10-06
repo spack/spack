@@ -51,12 +51,8 @@ If a user ``git pull``s into a pre-1.3 Spack instance, Spack will attempt to upd
 ``spack migrate undo`` restores use of the legacy locations by updating configuration; it does not remove files copied to the new locations.
 The original resources are still available because automatic migration leaves them in place.
 
-Spack also independently copies user configuration from ``~/.spack`` to
-``~/.config/spack`` and package repositories from ``~/.spack/package_repos``
-to ``~/.local/state/spack/package_repos`` when the old locations contain data
-and the new destinations are available.
-This home-directory migration can occur for a fresh checkout and does not create
-migration state in the Spack prefix.
+Spack also independently copies user configuration from ``~/.spack`` to ``~/.config/spack`` and package repositories from ``~/.spack/package_repos`` to ``~/.local/state/spack/package_repos`` when the old locations contain data and the new destinations are available.
+This home-directory migration can occur for a fresh checkout and does not create migration state in the Spack prefix.
 The old files remain in place for use by older Spack instances.
 
 Redoing ``spack isolate`` (and avoiding auto-migration)
