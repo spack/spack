@@ -1404,8 +1404,7 @@ class TestTcl:
         writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_a), "default", False)
         writer.write(overwrite=True)
         assert os.path.exists(writer.layout.modulerc)
-        with open(writer.layout.modulerc, encoding="utf-8") as f:
-            content = [line.strip() for line in f.readlines()]
+        content = _module_lines(writer.layout.modulerc)
         hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
         assert len([x for x in content if hide_implicit_rule == x]) == 1
 
@@ -1413,8 +1412,7 @@ class TestTcl:
         writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_b), "default", False)
         writer.write()
         assert os.path.exists(writer.layout.modulerc)
-        with open(writer.layout.modulerc, encoding="utf-8") as f:
-            content = [line.strip() for line in f.readlines()]
+        content = _module_lines(writer.layout.modulerc)
         hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
         assert len([x for x in content if hide_implicit_rule == x]) == 1
 
@@ -1426,8 +1424,7 @@ class TestTcl:
         install("--fake", "--add", spec_c)
         uninstall("-y", spec_c)
         assert os.path.exists(writer.layout.modulerc)
-        with open(writer.layout.modulerc, encoding="utf-8") as f:
-            content = [line.strip() for line in f.readlines()]
+        content = _module_lines(writer.layout.modulerc)
         hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
         assert len([x for x in content if hide_implicit_rule == x]) == 1
 
@@ -1660,8 +1657,7 @@ class TestTcl:
 
         def listed_hashes():
             """Hashes of the installations held by the module file, in listing order."""
-            with open(module_file, encoding="utf-8") as f:
-                content = [line.strip() for line in f.readlines()]
+            content = _module_lines(module_file)
             return [m.group(1) for x in content for m in [re.match(r"{.*} (\w{7})\\$", x)] if m]
 
         # installed in this order, whatever their hashes

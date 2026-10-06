@@ -8,9 +8,10 @@ import math
 import os
 import re
 import warnings
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
 import spack.config
+import spack.error
 import spack.spec
 import spack.store
 from spack import tengine
@@ -131,31 +132,11 @@ class TclConfiguration(BaseConfiguration):
             return False
         return re.search(r"{[^}]*hash", self.projection) is None
 
-    def _variant_dict_for_spec(self, spec: spack.spec.Spec) -> Dict[str, Dict[str, Any]]:
-        """Returns a dictionary of defined variants for given spec keyed by variant name.
-        Any multi-valued variant is transformed into a single-valued one, joining values
-        The dictionary is sorted by its keys, with the "hash" variant last if used.
-        """
-        # Variants reserved by Spack (like patches or dev_path) describe how the
-        # package was built rather than what it provides, they are not defined
-        variant_dict = {
-            v.name: self._variant_to_str_dict(v)
-            for v in sorted(spec.variants.values(), key=lambda x: x.name)
-            if v.name not in RESERVED_NAMES
-        }
-
-        if self.folds_installations:
-            variant_dict["hash"] = {
-                "value": spec.dag_hash(7),
-                "type": "single",
-                "spec": f"hash={spec.dag_hash(7)}",
-            }
-
-        return variant_dict
-
     @property
     def variants(self) -> Dict[str, Dict[str, Any]]:
         """Returns a dictionary of defined variants keyed by variant name.
+        Any multi-valued variant is transformed into a single-valued one, joining values.
+        The dictionary is sorted by its keys, with the "hash" variant last if used.
         Returns an empty dictionary if variant mode is disabled.
         """
         if "variants" not in self._cache:
@@ -166,11 +147,26 @@ class TclConfiguration(BaseConfiguration):
         if self.variants_mode == "none":
             return {}
 
-        return self._variant_dict_for_spec(self.spec)
+        # Variants reserved by Spack (like patches or dev_path) describe how the
+        # package was built rather than what it provides, they are not defined
+        variant_dict = {
+            v.name: self._variant_to_str_dict(v)
+            for v in sorted(self.spec.variants.values(), key=lambda x: x.name)
+            if v.name not in RESERVED_NAMES
+        }
+
+        if self.folds_installations:
+            variant_dict["hash"] = {
+                "value": self.spec.dag_hash(7),
+                "type": "single",
+                "spec": f"hash={self.spec.dag_hash(7)}",
+            }
+
+        return variant_dict
 
     @property
     def variants_spec(self) -> str:
-        """Returns aggregated spec string of variants."""
+        """Returns the variants of this installation as arguments of the module command."""
         return " ".join(v["spec"] for v in self.variants.values())
 
     @property
@@ -218,11 +214,13 @@ class TclConfiguration(BaseConfiguration):
         # Keep only specs that share the same module filename and are not excluded from module
         # file generation, this installation included, in the order a plain load request
         # selects them, as the module file selects the first installation matching a request
-        my_filename = FileLayout(self).filename
+        my_filename = TclFileLayout(self).filename
         confs_in_file = []
         for spec in spec_list:
-            conf = self if spec == self.spec else self.sibling_configuration(spec)
-            if not conf.excluded and FileLayout(conf).filename == my_filename:
+            conf = self.sibling_configuration(spec)
+            if conf.excluded:
+                continue
+            if conf is self or TclFileLayout(conf).filename == my_filename:
                 confs_in_file.append(conf)
         confs_in_file.sort(key=self._installation_order_key)
         specs_in_file = [conf.spec for conf in confs_in_file]
@@ -235,6 +233,28 @@ class TclConfiguration(BaseConfiguration):
 
         return specs_in_file
 
+    def sibling_configuration(self, spec: spack.spec.Spec) -> "TclConfiguration":
+        """Returns the configuration of an installation held by the same module file, which is
+        this one for its own spec. For another spec, explicitness is read from the database,
+        as it may differ from this one's, and the installations being removed are handed over.
+        """
+        if spec == self.spec:
+            return self
+        conf = self.make_configuration(
+            spec, self.name, removed_specs=self.removed_specs, cache=self._configuration_cache
+        )
+        return cast(TclConfiguration, conf)
+
+    @property
+    def configurations_in_file(self) -> List["TclConfiguration"]:
+        """Returns the configuration of each installation held by the module file, in the
+        order it lists them."""
+        if "configurations_in_file" not in self._cache:
+            self._cache["configurations_in_file"] = [
+                self.sibling_configuration(spec) for spec in self.specs_in_file
+            ]
+        return self._cache["configurations_in_file"]
+
     @staticmethod
     def _installation_order_key(conf: BaseConfiguration) -> Tuple[bool, bool, float, str]:
         """Sort key listing the installations matching a configured default first, then the
@@ -245,10 +265,7 @@ class TclConfiguration(BaseConfiguration):
         """
         spec = conf.spec
         # An installation not recorded yet is being added, it comes after the recorded ones
-        try:
-            record = spack.store.STORE.db.get_record(spec)
-        except KeyError:
-            record = None
+        _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
         installation_time = record.installation_time if record else math.inf
         return (not conf.matches_default, not conf.explicit, installation_time, spec.dag_hash())
 
@@ -271,12 +288,11 @@ class TclConfiguration(BaseConfiguration):
 
         aggregated = {}
         seen_in = {}
-        install_specs = self.specs_in_file
-        total_installs = len(install_specs)
+        confs_in_file = self.configurations_in_file
+        total_installs = len(confs_in_file)
 
-        for spec in install_specs:
-            variant_dict = self._variant_dict_for_spec(spec)
-            for name, v in variant_dict.items():
+        for conf in confs_in_file:
+            for name, v in conf.variants.items():
                 if name not in aggregated:
                     aggregated[name] = {"type": v["type"], "values": set()}
                     seen_in[name] = 0
@@ -292,7 +308,14 @@ class TclConfiguration(BaseConfiguration):
             v["values"] = sorted(v["values"])
 
         # Keep the "hash" variant last, as it ends the depends-on lines of dependent modules
-        return dict(sorted(aggregated.items(), key=lambda item: (item[0] == "hash", item[0])))
+        result = dict(sorted(aggregated.items(), key=lambda item: (item[0] == "hash", item[0])))
+
+        # The other installations compute the same dictionary, hand it over
+        for conf in confs_in_file:
+            if conf is not self:
+                conf._cache.setdefault("aggregated_variants", result)
+
+        return result
 
 
 class TclFileLayout(FileLayout):
@@ -311,9 +334,8 @@ class TclFileLayout(FileLayout):
         The "hash" variant is the only one stated when the module file folds installations,
         so the name stays valid whatever variants the module file defines later on. The bare
         module name is enough when it includes the hash."""
-        hash_variant = self.conf.variants.get("hash")
-        if hash_variant:
-            return f"{self.name} {hash_variant['spec']}"
+        if self.conf.folds_installations:
+            return f"{self.name} {self.conf.variants['hash']['spec']}"
         return self.name
 
 
@@ -337,18 +359,18 @@ class TclModuleContext(ModuleContext):
 
     @tengine.context_property
     def installations(self) -> List["TclModuleContext"]:
-        """Returns context for all installations of this package version, in the order the
-        module file selects them."""
+        """Returns the context of each installation held by the module file, in the order
+        the module file selects them."""
         if self._installations is None:
             self._installations = [
-                self if conf is self.conf else TclModuleContext(conf, TclFileLayout(conf))
+                self if conf is self.conf else type(self)(conf, type(self.layout)(conf))
                 for conf in self.conf.configurations_in_file
             ]
         return self._installations
 
     @tengine.context_property
     def any_installation_has_autoload(self) -> bool:
-        """Is there any installation of this package version having dependency to auto load."""
+        """Whether an installation held by the module file has a dependency to auto load."""
         return any(install.autoload for install in self.installations)
 
     @tengine.context_property
@@ -377,12 +399,41 @@ class TclModulefileWriter(BaseModuleFileWriter):
 
     hide_cmd_format = "module-hide --soft --hidden-loaded %s"
 
-    def remove_installation(self):
-        """Removes this installation from module file. Module file is deleted if it
-        does not reference any other package installation."""
+    conf: TclConfiguration
+
+    def write(self, overwrite: bool = False) -> None:
+        # A module file shared with other installations is written again for all of them
+        if not self.conf.excluded and self.has_other_installations:
+            self._ensure_folded_installations_share_template()
+            overwrite = True
+        super().write(overwrite)
+
+    def _ensure_folded_installations_share_template(self) -> None:
+        """Raises a configuration error when the installations folded in this module file are
+        configured with different templates, as the module file is rendered from one of them."""
+        templates = {conf.spec: conf.template for conf in self.conf.configurations_in_file}
+        if len(set(templates.values())) < 2:
+            return
+
+        # A template rule matching only some of the folded installations wins or loses with the
+        # order the installations are written, name them all so the rule can be reworked
+        details = ", ".join(
+            spec.format("{name}{@version}{variants}{/hash:7}")
+            + (f" uses template '{template}'" if template else " uses the default template")
+            for spec, template in templates.items()
+        )
+        raise spack.error.ConfigError(
+            f"the installations folded in the module file '{self.layout.filename}' are "
+            "configured with different templates, which cannot apply to one module file: "
+            f"{details}. Set 'template' for the whole package version instead."
+        )
+
+    def remove_installation(self) -> None:
+        """Removes this installation from its module file, which is deleted if it holds no
+        other installation."""
         remaining = self.conf.other_specs_in_file
         if not remaining or not os.path.exists(self.layout.filename):
-            self._delete_module_file()
+            super().remove_installation()
             return
 
         # Written for an installation the file keeps, as the prefix of this one may be gone
@@ -402,14 +453,7 @@ class TclModulefileWriter(BaseModuleFileWriter):
         if self._has_default():
             self.link_default()
 
-    def update_module_hiddenness(self, remove=False):
-        """Update modulerc file corresponding to module to add or remove
-        command that hides module depending on its hidden state.
-
-        Args:
-            remove (bool): if True, hiddenness information for module is
-                removed from modulerc.
-        """
+    def update_module_hiddenness(self, remove: bool = False) -> None:
         # A module file holding an installation that is not hidden is not hidden
         remove = remove or any(not conf.hidden for conf in self.conf.configurations_in_file)
         super().update_module_hiddenness(remove)

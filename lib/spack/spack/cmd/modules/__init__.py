@@ -402,8 +402,6 @@ def refresh(module_type, specs, args):
         if not answer:
             tty.die("Module file regeneration aborted.")
 
-    # Cycle over the module types and regenerate module files
-
     # Detect name clashes in module files: several writers may share a module file only
     # when it folds all their installations
     file2writer = collections.defaultdict(list)
