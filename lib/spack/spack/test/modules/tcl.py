@@ -648,8 +648,8 @@ class TestTcl:
 
         # after removing both the implicit and explicit module, the modulerc file would be empty
         # and should be removed.
-        writer_cls.from_spec(spec, "default", False).remove()
-        writer_cls.from_spec(spec, "default", True).remove()
+        writer_cls.from_spec(spec, "default", False).remove_installation()
+        writer_cls.from_spec(spec, "default", True).remove_installation()
         assert not os.path.exists(writer.layout.modulerc)
         assert not os.path.exists(writer.layout.filename)
 
@@ -658,7 +658,7 @@ class TestTcl:
         writer.write()
         assert os.path.exists(writer.layout.filename)
         assert os.path.exists(writer.layout.modulerc)
-        writer.remove()
+        writer.remove_installation()
         assert not os.path.exists(writer.layout.modulerc)
         assert not os.path.exists(writer.layout.filename)
 
@@ -682,7 +682,7 @@ class TestTcl:
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
 
         # one version is removed
-        writer_alt1.remove()
+        writer_alt1.remove_installation()
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
             content = [line.strip() for line in f.readlines()]
@@ -1189,8 +1189,8 @@ class TestTcl:
         writer, _ = factory(spec_b)
         with monkeypatch.context() as m:
             m.setattr(spack.store.STORE.db, "query", fail_query)
-            assert writer.conf.other_installed_specs == []
-            assert not writer.layout.hold_other_installations
+            assert writer.conf.other_specs_in_file == []
+            assert not writer.has_other_installations
 
         # uninstall removes the module file as no installation is folded into it
         uninstall("-y", spec_a)
@@ -1212,8 +1212,8 @@ class TestTcl:
         with monkeypatch.context() as m:
             m.setattr(spack.store.STORE.db, "query", fail_query)
             assert not writer.conf.folds_installations
-            assert writer.conf.other_installed_specs == []
-            assert not writer.layout.hold_other_installations
+            assert writer.conf.other_specs_in_file == []
+            assert not writer.has_other_installations
 
     def test_fold_variants_with_different_templates(
         self, install_mockery, module_configuration, factory
@@ -1612,8 +1612,8 @@ class TestTcl:
         concrete_b = spack.store.STORE.db.query_one(spec_b)
 
         writer = writer_cls.from_spec(concrete_b, "default")
-        assert writer.conf.installed_specs == [concrete_b]
-        assert not writer.layout.hold_other_installations
+        assert writer.conf.specs_in_file == [concrete_b]
+        assert not writer.has_other_installations
         writer.write()
         with open(writer.layout.filename, encoding="utf-8") as f:
             content = f.read()

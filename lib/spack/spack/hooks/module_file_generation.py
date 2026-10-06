@@ -38,7 +38,7 @@ def post_database_add(specs: Sequence[spack.spec.Spec]) -> None:
             try:
                 writer = spack.modules.module_types[module_type].from_spec(spec, name, cache=cache)
                 filename = writer.layout.filename
-                if filename in written_filenames and writer.layout.hold_other_installations:
+                if filename in written_filenames and writer.has_other_installations:
                     continue
                 writer.write()
                 written_filenames.add(filename)

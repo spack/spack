@@ -38,7 +38,7 @@ def setdefault(module_type, specs, args):
     with spack.config.CONFIG.override(scope):
         writer = spack.modules.module_types["tcl"].from_spec(spec, args.module_set_name)
         # The default symlink points to the module file, which holds the other installations too
-        if writer.layout.hold_other_installations:
+        if writer.has_other_installations:
             tty.die(
                 f"Cannot set {spec.cshort_spec} as default: its module file holds other "
                 "installations and 'module load' selects the first one it lists by default"

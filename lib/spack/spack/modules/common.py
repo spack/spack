@@ -378,17 +378,6 @@ class BaseConfiguration:
             cache[key] = configuration
         return configuration
 
-    @classmethod
-    def make_layout(
-        cls,
-        spec: spack.spec.Spec,
-        module_set_name: str,
-        explicit: Optional[bool] = None,
-        *,
-        cache: Optional[ModuleConfigurationCache] = None,
-    ) -> "FileLayout":
-        return FileLayout(cls.make_configuration(spec, module_set_name, explicit, cache=cache))
-
     def __init__(
         self,
         spec: spack.spec.Spec,
@@ -492,17 +481,11 @@ class BaseConfiguration:
             if self.spec.satisfies(constraint):
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
-        # For hidden modules we can always add a fixed length hash as suffix, since it guards
-        # against file name clashes, and the module is not exposed to the user anyways. Skip
-        # this when variants mode is enabled: several installations are folded into a single
-        # module file there, and forcing a per-spec hash would defeat that folding.
-        if self.hidden and self.variants_mode == "none":
-            suffixes.append(self.spec.dag_hash(7))
-        elif self.hash:
+        if self.hash:
             suffixes.append(self.hash)
         return suffixes
 
-    def make_folded_configuration(self, spec: spack.spec.Spec) -> "BaseConfiguration":
+    def sibling_configuration(self, spec: spack.spec.Spec) -> "BaseConfiguration":
         """Returns the configuration of another installation held by the same module file.
         Its explicitness is read from the database, as it may differ from this one's, and the
         installations being removed are handed over."""
@@ -511,12 +494,12 @@ class BaseConfiguration:
         )
 
     @property
-    def folded_configurations(self) -> List["BaseConfiguration"]:
+    def configurations_in_file(self) -> List["BaseConfiguration"]:
         """Returns the configuration of each installation held by the module file, in the
         order it lists them."""
         return [
-            self if spec == self.spec else self.make_folded_configuration(spec)
-            for spec in self.installed_specs
+            self if spec == self.spec else self.sibling_configuration(spec)
+            for spec in self.specs_in_file
         ]
 
     @property
@@ -531,7 +514,11 @@ class BaseConfiguration:
 
     @property
     def hash(self) -> Optional[str]:
-        """Hash tag for the module or None"""
+        """Hash appended to the module file name, or None"""
+        # For hidden modules we can always add a fixed length hash as suffix, since it guards
+        # against file name clashes, and the module is not exposed to the user anyways
+        if self.hidden:
+            return self.spec.dag_hash(7)
         hash_length = self.conf.get("hash_length", 7)
         if hash_length != 0:
             return self.spec.dag_hash(length=hash_length)
@@ -776,44 +763,15 @@ class BaseConfiguration:
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
     @property
-    def variants_mode(self) -> str:
-        """Returns module file variants definition mode."""
-        return "none"
-
-    @property
-    def variants(self) -> Dict[str, Dict[str, Any]]:
-        """Returns an empty dictionary if variant mode is not supported."""
-        return {}
-
-    @property
-    def variants_spec(self) -> str:
-        """Returns aggregated spec string of variants."""
-        return ""
-
-    @property
-    def installed_specs(self) -> List[spack.spec.Spec]:
-        """Returns the installed specs held by the module file, in the order it lists them.
+    def specs_in_file(self) -> List[spack.spec.Spec]:
+        """Returns the specs the module file holds, in the order it lists them.
         This spec is the only one, unless it is being removed from the module file."""
         return [] if self.spec in self.removed_specs else [self.spec]
 
     @property
-    def other_installed_specs(self) -> List[spack.spec.Spec]:
-        """Returns the other installed specs held by the module file."""
-        return [spec for spec in self.installed_specs if spec != self.spec]
-
-    @property
-    def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
-        """Returns a consolidated dictionary of defined variants across installations.
-        This dictionary is sorted by its keys, which are variant names.
-        Returns an empty dictionary if variant mode is disabled.
-        """
-        return {}
-
-    @property
-    def variant_values(self) -> str:
-        """Returns the values of the variants of this installation, in the order of the
-        aggregated variants. Returns an empty string if variant mode is not supported."""
-        return ""
+    def other_specs_in_file(self) -> List[spack.spec.Spec]:
+        """Returns the other specs the module file holds."""
+        return [spec for spec in self.specs_in_file if spec != self.spec]
 
 
 class FileLayout:
@@ -857,19 +815,11 @@ class FileLayout:
     @property
     def use_name(self) -> str:
         """Returns the name used to load the module (e.g. with ``module load``)."""
-        if self.conf.variants:
-            return f"{self.name} {self.conf.variants_spec}"
         return self.name
 
     @property
-    def pin_name(self) -> str:
-        """Returns the name that selects this installation from a dependent module file.
-        The "hash" variant is the only one stated when the module file folds installations,
-        so the name stays valid whatever variants the module file defines later on. The bare
-        module name is enough when it includes the hash."""
-        hash_variant = self.conf.variants.get("hash")
-        if hash_variant:
-            return f"{self.name} {hash_variant['spec']}"
+    def unique_use_name(self) -> str:
+        """Returns the name that selects this installation from a dependent module file."""
         return self.name
 
     @property
@@ -1037,11 +987,6 @@ class FileLayout:
             unlocked[m] = list(dedupe(unlocked[m]))
         return unlocked
 
-    @property
-    def hold_other_installations(self) -> bool:
-        """Returns whether or not module file holds multiple package installations"""
-        return bool(self.conf.other_installed_specs)
-
 
 class ModuleContext(tengine.Context):
     """Provides the context dictionary used by the template engine to render a module file."""
@@ -1051,7 +996,6 @@ class ModuleContext(tengine.Context):
         self.layout = layout
         self._environment_modifications: Optional[List[EnvironmentModification]] = None
         self._autoload: Optional[List[str]] = None
-        self._installations: Optional[List["ModuleContext"]] = None
 
     @tengine.context_property
     def spec(self) -> spack.spec.Spec:
@@ -1262,7 +1206,8 @@ class ModuleContext(tengine.Context):
         name = self.conf.name
         cache = self.conf._configuration_cache
         return [
-            self.conf.make_layout(x, name, cache=cache).pin_name for x in getattr(self.conf, what)
+            type(self.layout)(self.conf.make_configuration(x, name, cache=cache)).unique_use_name
+            for x in getattr(self.conf, what)
         ]
 
     @tengine.context_property
@@ -1326,43 +1271,6 @@ class ModuleContext(tengine.Context):
                 value.append((condition, self.conf.join_path(parts)))
         return value
 
-    @tengine.context_property
-    def hash(self) -> str:
-        """Returns hash of this installation"""
-        return self.spec.dag_hash(7)
-
-    @tengine.context_property
-    def variants_mode(self) -> str:
-        """Returns the module file variants definition mode, "none" when variants are not
-        defined in module files."""
-        return self.conf.variants_mode
-
-    @tengine.context_property
-    def installations(self) -> List["ModuleContext"]:
-        """Returns context for all installations of this package version, in the order the
-        module file selects them."""
-        if self._installations is None:
-            self._installations = [
-                self if conf is self.conf else ModuleContext(conf, FileLayout(conf))
-                for conf in self.conf.folded_configurations
-            ]
-        return self._installations
-
-    @tengine.context_property
-    def any_installation_has_autoload(self) -> bool:
-        """Is there any installation of this package version having dependency to auto load."""
-        return any(install.autoload for install in self.installations)
-
-    @tengine.context_property
-    def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
-        """Expose aggregated variant metadata to templates."""
-        return self.conf.aggregated_variants
-
-    @tengine.context_property
-    def variant_values(self) -> str:
-        """Returns the values of the variants of this installation."""
-        return self.conf.variant_values
-
 
 class BaseModuleFileWriter:
     default_template: str
@@ -1370,6 +1278,10 @@ class BaseModuleFileWriter:
     modulerc_header: List[str]
 
     configuration_class: ClassVar[Type["BaseConfiguration"]]
+
+    #: Classes of the layout and of the template context, subclasses may override them
+    layout_class: ClassVar[Type[FileLayout]] = FileLayout
+    context_class: ClassVar[Type[ModuleContext]] = ModuleContext
 
     _required_attrs = (
         ("default_template", DefaultTemplateNotDefined),
@@ -1388,8 +1300,8 @@ class BaseModuleFileWriter:
 
     def __init__(self, conf: "BaseConfiguration") -> None:
         self.conf = conf
-        self.layout = FileLayout(conf)
-        self.context = ModuleContext(conf, self.layout)
+        self.layout = self.layout_class(conf)
+        self.context = self.context_class(conf, self.layout)
 
     @classmethod
     def from_spec(
@@ -1425,10 +1337,10 @@ class BaseModuleFileWriter:
     def _ensure_folded_installations_share_template(self) -> None:
         """Raises a configuration error when the installations folded in this module file are
         configured with different templates, as the module file is rendered from one of them."""
-        if not self.layout.hold_other_installations:
+        if not self.has_other_installations:
             return
 
-        templates = {conf.spec: conf.template for conf in self.conf.folded_configurations}
+        templates = {conf.spec: conf.template for conf in self.conf.configurations_in_file}
         if len(set(templates.values())) < 2:
             return
 
@@ -1446,10 +1358,15 @@ class BaseModuleFileWriter:
         )
 
     @property
-    def holds_installation(self) -> bool:
+    def has_other_installations(self) -> bool:
+        """Returns whether or not module file holds multiple package installations"""
+        return bool(self.conf.other_specs_in_file)
+
+    @property
+    def has_installation(self) -> bool:
         """Whether the module file exists and lists this installation. A module file folding
         several installations exists without listing this one when it is excluded."""
-        return os.path.isfile(self.layout.filename) and self.spec in self.conf.installed_specs
+        return os.path.isfile(self.layout.filename) and self.spec in self.conf.specs_in_file
 
     def write(self, overwrite: bool = False) -> None:
         """Writes the module file.
@@ -1471,7 +1388,7 @@ class BaseModuleFileWriter:
         if (
             not overwrite
             and os.path.exists(self.layout.filename)
-            and not self.layout.hold_other_installations
+            and not self.has_other_installations
         ):
             message = "Module file {0.filename} exists and will not be overwritten"
             warnings.warn(message.format(self.layout))
@@ -1599,7 +1516,7 @@ class BaseModuleFileWriter:
                 ) as f:
                     f.write("\n".join(content))
 
-    def remove(self) -> None:
+    def _delete_module_file(self) -> None:
         """Deletes the module file."""
         mod_file = self.layout.filename
         if os.path.exists(mod_file):
@@ -1617,7 +1534,7 @@ class BaseModuleFileWriter:
     def remove_installation(self):
         """Removes this installation from module file. Module file is deleted if it
         does not reference any other package installation."""
-        self.remove()
+        self._delete_module_file()
 
     def remove_module_defaults(self) -> None:
         if not self.conf.matches_default:
