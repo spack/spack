@@ -818,7 +818,40 @@ When you no longer want to use a package, you can type ``spack unload``:
    $ spack unload mpich %gcc@4.4.7
 
 
+Cached Load Scripts
+"""""""""""""""""""
+
+``spack load`` and ``spack unload`` do not print environment modifications directly.
+Instead, they print a command that sources a cached script from the ``.spack`` metadata directory in the package's installation prefix:
+
+.. code-block:: none
+
+   <prefix>/.spack/load
+   <prefix>/.spack/unload
+
+On Windows, the scripts are generated for ``cmd.exe`` and PowerShell instead, with ``.bat`` and ``.ps1`` extensions:
+
+.. code-block:: none
+
+   <prefix>/.spack/load.bat
+   <prefix>/.spack/load.ps1
+   <prefix>/.spack/unload.bat
+   <prefix>/.spack/unload.ps1
+
+Spack writes these scripts at the end of each installation.
+If they are missing, e.g. for a package installed by an older Spack, ``spack load`` generates them on first use.
+A script contains all the environment modifications for its package:
+
+#. The :ref:`prefix inspections <customize-env-modifications>` that add paths to variables like ``PATH`` and ``MANPATH``
+#. Variables set by the package's ``setup_run_environment`` method
+#. Variables set by the ``setup_dependent_run_environment`` methods of the package's link and run dependencies
+#. The package's hash, prepended to ``SPACK_LOADED_HASHES`` so that ``spack load --list`` can report it
+
+Generated scripts do not contain shell-specific syntax.
+They call helper functions like ``_spack_env_set`` and ``_spack_env_prepend``, which ``setup-env.sh`` and its siblings define for each shell, so ``sh``, ``csh``, and ``fish`` all source the same script.
+
 .. index:: ambiguous spec
+
 
 Ambiguous specs
 """""""""""""""
