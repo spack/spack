@@ -3712,7 +3712,7 @@ def test_env_deactivate_sh_script_output():
 
     assert "unalias despacktivate" in deactivate_output
     assert "SPACK_OLD_PS1" in deactivate_output
-    assert "noview_deactivate.sh" in deactivate_output
+    assert "noview_deactivate" in deactivate_output
 
 
 def test_env_deactivate_csh_script_output():
@@ -3724,7 +3724,7 @@ def test_env_deactivate_csh_script_output():
 
     assert "unalias despacktivate" in deactivate_output
     assert "SPACK_OLD_PROMPT" in deactivate_output
-    assert "noview_deactivate.sh" in deactivate_output
+    assert "noview_deactivate" in deactivate_output
 
 
 def test_env_deactivate_fish_script_output():
@@ -3735,7 +3735,7 @@ def test_env_deactivate_fish_script_output():
     deactivate_output = env("deactivate", "--fish")
 
     assert "functions -e despacktivate" in deactivate_output
-    assert "noview_deactivate.sh" in deactivate_output
+    assert "noview_deactivate" in deactivate_output
 
 
 @pytest.mark.regression("12719")

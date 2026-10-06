@@ -110,7 +110,7 @@ def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = 
     elif shell == "pwsh":
         extension = ".ps1"
     else:
-        extension = ".sh"
+        extension = ""
 
     script_name = (
         f"{view}_{script_type}{extension}" if view else f"noview_{script_type}{extension}"

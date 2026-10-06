@@ -28,16 +28,14 @@ def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_pa
         shells_avail = ["bat", "pwsh"]
 
     for shell in shells_avail:
-        activate_extension = ""
+        extensions = ""
         if shell == "bat":
-            activate_extension = ".bat"
+            extensions = ".bat"
         elif shell == "pwsh":
-            activate_extension = ".ps1"
-
-        deactivate_extension = ".ps1" if shell == "pwsh" else f".{shell}"
+            extensions = ".ps1"
 
         expected_activate_path = os.path.join(
-            test_env.path, ".spack-env", f"default_activate{activate_extension}"
+            test_env.path, ".spack-env", f"default_activate{extensions}"
         )
         actual_activate_path = env_script.path_to_env_script(
             test_env, shell, script_type="activate", view="default"
@@ -45,7 +43,7 @@ def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_pa
         assert actual_activate_path == expected_activate_path
 
         expected_deactivate_path = os.path.join(
-            test_env.path, ".spack-env", f"default_deactivate{deactivate_extension}"
+            test_env.path, ".spack-env", f"default_deactivate{extensions}"
         )
         actual_deactivate_path = env_script.path_to_env_script(
             test_env, shell, script_type="deactivate", view="default"
