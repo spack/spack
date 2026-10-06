@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import warnings
 from typing import Iterator, Sequence, Set, Tuple
 
 import spack.config
@@ -34,7 +35,10 @@ def _warn_operation_failed(method_name: str, error: Exception) -> None:
 
 def post_database_add(specs: Sequence[spack.spec.Spec]) -> None:
     """Writes the module files of the installations just recorded in the database. A module
-    file folding several of them is written once, as it lists them all whichever is written."""
+    file folding several of them is written once, as it lists them all whichever is written.
+
+    Every spec is attempted: an error raised for one of them is reported as a warning.
+    """
     for name, module_type in _enabled_module_types():
         cache: spack.modules.common.ModuleConfigurationCache = {}
         written_filenames: Set[str] = set()
@@ -46,8 +50,12 @@ def post_database_add(specs: Sequence[spack.spec.Spec]) -> None:
                     continue
                 writer.write()
                 written_filenames.add(filename)
-            except (RuntimeError, spack.error.SpackError) as e:
-                _warn_operation_failed("write", e)
+            except Exception as e:
+                warnings.warn(
+                    f"cannot write the {module_type} module file of "
+                    f"{spec.format('{name}{@version}{/hash:7}')} in module set '{name}' "
+                    f"[{type(e).__name__}: {e}]"
+                )
 
 
 def post_uninstall(spec: spack.spec.Spec) -> None:

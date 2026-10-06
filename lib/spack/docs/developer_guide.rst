@@ -349,8 +349,10 @@ It receives the spec and an optional boolean indicating whether this spec is an 
 """"""""""""""""""""""""""""
 
 A ``post_database_add`` hook runs in the process that records specs in the database, once they are recorded, after their ``post_install`` hooks ran.
-It receives the list of specs recorded together: the installer registers the specs it built in batches, while a buildcache install or a rewiring records one spec at a time.
-Module files are written by this hook, as their content may depend on the other specs recorded in the database.
+It receives the list of specs that were recorded.
+A command may call it once with every spec it recorded, or several times with batches of any size, down to one spec per call.
+An implementation must give the same result however the specs are split into calls, and must not assume that a call holds every spec the command records.
+The hook must not raise: an error for one spec is reported as a warning, and the other specs are still processed.
 
 ``pre_uninstall(spec)``
 """""""""""""""""""""""
