@@ -2692,18 +2692,19 @@ def _compose_migration_message(
     """
     parts = []
 
-    if prefix_result["migrated"] or prefix_result["retained"]:
+    if prefix_result["migrated"]:
         parts.append("Spack automatically migrated old resources.")
-        if prefix_result["migrated"]:
-            parts.append("  - Migrated: " + ", ".join(prefix_result["migrated"]) + ".")
-            if "environments" in prefix_result["migrated"]:
-                parts.append(
-                    "  - Environment views were not copied. Activate each environment and run "
-                    "`spack env view regenerate` to recreate them."
-                )
-        if prefix_result["retained"]:
-            parts.append("  - Retained: " + ", ".join(prefix_result["retained"]) + ".")
-        parts.append("  - Existing installs and shared artifacts were not removed.")
+        parts.append("  - Migrated: " + ", ".join(prefix_result["migrated"]) + ".")
+        if "environments" in prefix_result["migrated"]:
+            parts.append(
+                "  - Environment views were not copied. Activate each environment and run "
+                "`spack env view regenerate` to recreate them."
+            )
+    else:
+        parts.append("No Spack-internal resources were migrated")
+    if prefix_result["retained"]:
+        parts.append("  - Retained: " + ", ".join(prefix_result["retained"]) + ".")
+    parts.append("  - Existing installs and shared artifacts were not removed.")
 
     if home_result["user_config"] or home_result["package_repos"]:
         if not parts:
@@ -2726,7 +2727,7 @@ def _compose_migration_message(
     return None
 
 
-def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
+def _do_migrate_spack_prefix(old_resources) -> Dict[str, List[str]]:
     """Perform auto-migration of Spack prefix data from old to new locations.
 
     Migrates portable resources (licenses, environments, GPG data) from old
@@ -2738,96 +2739,49 @@ def _do_migrate_spack_prefix() -> Dict[str, List[str]]:
     """
     tty.debug("Spack prefix auto-migration called")
 
-    old_resources = _detect_old_resources()
-
-    layout_scope_path = _layout_scope_path()
-    config_path = os.path.join(layout_scope_path, "config.yaml")
-    filesystem.mkdirp(layout_scope_path, default_perms="parents")
-
-    config_changes: Dict[str, Any] = {}
     migrated_resources: List[str] = []
-    retained_resources: List[str] = []
-
-    # 1. Handle installs.  Existing installs are always retained in their old
-    # location, including during isolation.  Module trees are not migrated or
-    # carried into the new configuration.
-    if old_resources["installs"]:
-        retained_resources.append("existing installs")
-        config_changes["install_tree"] = {"root": os.path.join(spack.paths.prefix, "opt", "spack")}
-        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
     # Compute data_home directly without config (CONFIG doesn't exist yet)
     expanded_home = os.path.expanduser("~")
     data_home = os.path.join(expanded_home, ".local", "share", "spack")
 
-    # 2. Handle GPG (both keyring and keys directory)
+    # 1. Handle GPG (both keyring and keys directory)
     old_gpg_home = spack.paths.old_gpg_path
     old_gpg_keys = spack.paths.old_gpg_keys_path
     if old_resources["gpg_keys"]:
-        old_gpg_norm = os.path.normpath(os.path.expanduser(old_gpg_home))
         target_gpg_home = os.path.join(data_home, "gpg")
         target_gpg_keys = os.path.join(data_home, "gpg-keys")
         gnupghome = os.getenv("SPACK_GNUPGHOME")
 
-        # If SPACK_GNUPGHOME is set, record it in layout scope
-        if gnupghome:
-            gnupghome_norm = os.path.normpath(os.path.expanduser(gnupghome))
-            if gnupghome_norm == old_gpg_norm:
-                # User explicitly points to old location - keep it there
-                config_changes["gpg_path"] = old_gpg_home
-                config_changes["gpg_keys_path"] = old_gpg_keys
-                retained_resources.append("GPG data (kept in its old location)")
-            else:
-                config_changes["gpg_path"] = gnupghome
-                # There is no analog of SPACK_GNUPGHOME for import keys: if we
-                # aren't moving the GPG db we don't move the keys either
-                config_changes["gpg_keys_path"] = old_gpg_keys
-                retained_resources.append(f"GPG data (using SPACK_GNUPGHOME: {gnupghome})")
-        else:
-            # No env var - migrate to new location
+        if not gnupghome:
             if _migrate_gpg(old_gpg_home, target_gpg_home, old_gpg_keys, target_gpg_keys):
                 migrated_resources.append("GPG data")
-            else:
-                # Migration failed - keep in old location
-                config_changes["gpg_path"] = old_gpg_home
-                config_changes["gpg_keys_path"] = old_gpg_keys
-                retained_resources.append("GPG data (kept in its old location)")
+                del old_resources["gpg_keys"]
 
-    # 3. Handle licenses
+    # 2. Handle licenses
     if old_resources["licenses"]:
         old_licenses = spack.paths.old_licenses_path
         target_licenses = os.path.join(data_home, "licenses")
         if _migrate_licenses(old_licenses, target_licenses):
             migrated_resources.append("licenses")
             tty.debug(f"Copied licenses from {old_licenses} to {target_licenses}")
-        else:
-            # Migration failed - keep in old location
-            config_changes["license_dir"] = old_licenses
-            retained_resources.append("licenses (kept in the old location)")
-            tty.debug(f"Licenses kept in old location: {old_licenses}")
+            del old_resources["licenses"]
 
-    # 4. Handle environments
+    # 3. Handle environments
     if old_resources["environments"]:
         old_envs = spack.paths.old_envs_path
         target_envs = os.path.join(data_home, "environments")
         if _migrate_environments(old_envs, target_envs):
             migrated_resources.append("environments")
             tty.debug(f"Copied environments from {old_envs} to {target_envs}")
-        else:
-            # Migration failed - keep in old location
-            config_changes["environments_root"] = old_envs
-            retained_resources.append("environments (kept in the old location)")
-            tty.debug(f"Environments kept in old location: {old_envs}")
+            del old_resources["environments"]
 
-    # Write config scope files to the layout scope only if we have config changes
-    if config_changes:
-        with open(config_path, "w", encoding="utf-8") as f:
-            syaml.dump({"config": config_changes}, f)
-        tty.debug(f"Wrote config.yaml to {config_path}")
-    else:
-        tty.debug("No config changes needed, skipping config.yaml")
+    # 4. Installs: these are always pointed to the old locations if they exist.
+    # This method deletes items that are migrated from old_resources, so we
+    # retain them simply by never deleting that entry
 
-    tty.debug(f"Created layout scope for auto-migration: {layout_scope_path}")
+    # Write layout scope for resources that didn't migrate
+    retained_resources = _force_old_layout(old_resources)["retained"]
 
     # Write migration completion marker as the last step
     # This allows other processes to detect that migration finished
@@ -2932,8 +2886,7 @@ def _detect_invoked_command():
     _invoked_command = _extract_command_from_argv()
 
 
-def _force_old_layout() -> Dict[str, List[str]]:
-    old_resources = _detect_old_resources()
+def _force_old_layout(to_move) -> Dict[str, List[str]]:
     layout_scope_path = _layout_scope_path()
     config_path = os.path.join(layout_scope_path, "config.yaml")
     filesystem.mkdirp(layout_scope_path, default_perms="parents")
@@ -2941,25 +2894,25 @@ def _force_old_layout() -> Dict[str, List[str]]:
     config_changes: Dict[str, Any] = {}
     retained_resources: List[str] = []
 
-    if old_resources["installs"]:
+    if to_move["installs"]:
         retained_resources.append("existing installs")
         config_changes["install_tree"] = {"root": os.path.join(spack.paths.prefix, "opt", "spack")}
         tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
     old_gpg_home = spack.paths.old_gpg_path
     old_gpg_keys = spack.paths.old_gpg_keys_path
-    if old_resources["gpg_keys"]:
+    if to_move["gpg_keys"]:
         config_changes["gpg_path"] = old_gpg_home
         config_changes["gpg_keys_path"] = old_gpg_keys
         retained_resources.append("GPG data (kept in its old location)")
 
-    if old_resources["licenses"]:
+    if to_move["licenses"]:
         old_licenses = spack.paths.old_licenses_path
         config_changes["license_dir"] = old_licenses
         retained_resources.append("licenses (kept in the old location)")
         tty.debug(f"Licenses kept in old location: {old_licenses}")
 
-    if old_resources["environments"]:
+    if to_move["environments"]:
         old_envs = spack.paths.old_envs_path
         config_changes["environments_root"] = old_envs
         retained_resources.append("environments (kept in the old location)")
@@ -3041,9 +2994,9 @@ def _perform_auto_migration_at_module_load():
                     # that
                     user_allows_it = _prompt_for_prefix_migration(old_resources)
                     if user_allows_it:
-                        prefix_result = _do_migrate_spack_prefix()
+                        prefix_result = _do_migrate_spack_prefix(old_resources)
                     else:
-                        prefix_result = _force_old_layout()
+                        prefix_result = _force_old_layout(old_resources)
         except spack.util.lock.LockPermissionError:
             # Read-only prefix: skip migration
             pass
