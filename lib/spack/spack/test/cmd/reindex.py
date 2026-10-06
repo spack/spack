@@ -95,7 +95,8 @@ def test_reindex_migrates_db_from_padded_to_unpadded_root(
 ):
     """Test that reindex migrates database from padded root to unpadded root."""
     unpadded = str(tmp_path / "opt" / "spack")
-    padded = spack.util.path.add_padding(unpadded, 128)
+    padded = spack.util.path.add_padding(unpadded, len(unpadded) + 64)
+    assert padded != unpadded
 
     store = Store(root=padded, unpadded_root=unpadded, projections={"all": "{name}/{version}"})
 
@@ -127,7 +128,8 @@ def test_reindex_no_migration_when_already_migrated(
 ):
     """Test that reindex doesn't migrate when DB already in new location."""
     unpadded = str(tmp_path / "opt" / "spack")
-    padded = spack.util.path.add_padding(unpadded, 128)
+    padded = spack.util.path.add_padding(unpadded, len(unpadded) + 64)
+    assert padded != unpadded
 
     store = Store(root=padded, unpadded_root=unpadded, projections={"all": "{name}/{version}"})
 
