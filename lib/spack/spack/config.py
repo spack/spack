@@ -2675,7 +2675,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
         elif answer in ("n", "no", "N"):
             return False
         else:
-            sys.stderr.write(f'Must enter (y)es or (n)o, got: "{answer}"')
+            sys.stderr.write(f'Must enter (y)es or (n)o, got: "{answer}"\n')
 
 
 def _compose_migration_message(
