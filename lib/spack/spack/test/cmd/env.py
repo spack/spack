@@ -119,7 +119,6 @@ def _get_cmds_from_script(env_output, shell):
             path_to_script = line.split(quote)[1]
 
     if not path_to_script:
-        print(env_output)
         assert False, "No source command found"
 
     with open(path_to_script, "r", encoding="utf-8") as f:
