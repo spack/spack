@@ -1274,7 +1274,8 @@ class TestTcl:
         uninstall("-y", spec_a)
         assert not os.path.exists(module_file_a) and os.path.exists(module_file_o)
 
-        # test variant values are aggregated across installations, sorted by their values
+        # test variant values are aggregated across installations, sorted by their values,
+        # and installations are listed in installation order
         spec_a = "manyvariants@1.0.1"
         spec_b = "manyvariants@1.0.1 ~a c=v2"
         install("--fake", "--add", spec_a)
@@ -1292,7 +1293,7 @@ class TestTcl:
         install_a = [x for x in content_a if x.startswith("{1 0 generic v1 v1 ")]
         install_b = [x for x in content_a if x.startswith("{0 0 generic v2 v1 ")]
         assert len(install_a) == 1 and len(install_b) == 1
-        assert content_a.index(install_b[0]) < content_a.index(install_a[0])
+        assert content_a.index(install_a[0]) < content_a.index(install_b[0])
 
         # test valued conditional variant
         spec_a = "forward-multi-value@1.0"
@@ -1402,7 +1403,7 @@ class TestTcl:
         assert len([x for x in content if hide_implicit_rule == x]) == 1
 
         # check hash variant is defined last for the 3 folded installations, 2 of them
-        # having the same other variants, and installations are listed sorted by their values
+        # having the same other variants, and installations are listed in installation order
         spec_a = "mpileaks@2.3 +debug +opt ^mpich"
         spec_b = "mpileaks@2.3 +opt +debug ^zmpi"
         spec_c = "mpileaks@2.3 ~opt +debug ^zmpi"
@@ -1430,15 +1431,14 @@ class TestTcl:
         install_a = f"{{generic 1 0 1 1 1 {hash_a}}} {hash_a}\\"
         install_b = f"{{generic 1 0 1 1 1 {hash_b}}} {hash_b}\\"
         install_c = f"{{generic 1 0 0 1 1 {hash_c}}} {hash_c}\\"
-        first, second = sorted([install_a, install_b])
-        assert content.index(install_c) < content.index(first) < content.index(second)
+        assert content.index(install_a) < content.index(install_b) < content.index(install_c)
 
     def test_fold_variants_pinned_dependency(
         self, install_mockery, module_configuration, modulefile_filenames
     ):
         """Test module file of a dependent does not change when a second installation of its
         dependency is folded in the same module file, and this dependency module file lists
-        both installations sorted by their hash variant."""
+        the explicit installation before the implicit one."""
         module_configuration("fold_variants_all")
         spec_a = "mpileaks@2.3 ~debug ^mpich"
         install("--fake", "--add", spec_a)
@@ -1465,8 +1465,7 @@ class TestTcl:
         assert f"hash {{{' '.join(sorted([hash_a, hash_b]))}}}\\" in content_dep
         install_a = f"{{generic {hash_a}}} {hash_a}\\"
         install_b = f"{{generic {hash_b}}} {hash_b}\\"
-        first, second = sorted([install_a, install_b])
-        assert content_dep.index(first) < content_dep.index(second)
+        assert content_dep.index(install_b) < content_dep.index(install_a)
 
         # dependent module file is unchanged when regenerated
         writer = writer_cls.from_spec(spack.store.STORE.db.query_one(spec_a), "default", True)
@@ -1520,7 +1519,7 @@ class TestTcl:
         assert status
         assert module_command.env == initial_env
 
-        # a plain load selects the first installation listed, which has ~debug
+        # a plain load selects the first installation listed, the one installed first
         status, _ = module_command("load", "mpileaks")
         assert status
         assert f"hash|{concrete_a.dag_hash(7)}|" in module_command.env["__MODULES_LMVARIANT"]
@@ -1619,6 +1618,43 @@ class TestTcl:
         uninstall("-y", spec_b)
         assert os.path.exists(module_file)
         assert not os.path.lexists(default_link)
+
+    def test_fold_variants_installation_order(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Test the installations folded in a module file are listed in installation order,
+        with the explicit ones before the implicit ones and the ones matching a configured
+        default first, so a plain load keeps selecting the same installation as new ones are
+        installed."""
+        module_configuration("fold_variants_defaults")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 ~debug ^mpich"
+        spec_c = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+
+        def listed_hashes():
+            """Hashes of the installations held by the module file, in listing order."""
+            with open(module_file, encoding="utf-8") as f:
+                content = [line.strip() for line in f.readlines()]
+            return [m.group(1) for x in content for m in [re.match(r"{.*} (\w{7})\\$", x)] if m]
+
+        # installed in this order, whatever their hashes
+        hash_a, hash_b = concrete_a.dag_hash(7), concrete_b.dag_hash(7)
+        assert listed_hashes() == [hash_a, hash_b]
+
+        # an explicit installation comes before an implicit one, however older
+        mark("--implicit", spec_a)
+        writer_cls.from_spec(concrete_a, "default").write(overwrite=True)
+        assert listed_hashes() == [hash_b, hash_a]
+
+        # the installation matching a configured default comes first, however recent
+        install("--fake", "--add", spec_c)
+        hash_c = spack.store.STORE.db.query_one(spec_c).dag_hash(7)
+        assert listed_hashes() == [hash_c, hash_b, hash_a]
 
     def test_fold_variants_single_install_command(
         self, install_mockery, module_configuration, installer_variant

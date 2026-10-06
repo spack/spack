@@ -4,6 +4,7 @@
 
 """This module implements the classes necessary to generate Tcl modules."""
 
+import math
 import os
 import re
 from typing import Any, Dict, List, Tuple
@@ -189,15 +190,16 @@ class TclConfiguration(BaseConfiguration):
         spec_list.difference_update(self.removed_specs)
 
         # Keep only specs that share the same module filename and are not excluded from module
-        # file generation, this installation included, sorted by their variant values as the
-        # module file selects the first installation matching a load request
+        # file generation, this installation included, in the order a plain load request
+        # selects them, as the module file selects the first installation matching a request
         my_filename = FileLayout(self).filename
-        sharing_specs = []
+        sharing_confs = []
         for spec in spec_list:
             conf = self if spec == self.spec else self.make_folded_configuration(spec)
             if not conf.excluded and FileLayout(conf).filename == my_filename:
-                sharing_specs.append(spec)
-        sharing_specs.sort(key=self._variant_values_key)
+                sharing_confs.append(conf)
+        sharing_confs.sort(key=self._installation_order_key)
+        sharing_specs = [conf.spec for conf in sharing_confs]
 
         # The other installations compute the same list, hand it over to spare them the
         # database query
@@ -208,10 +210,23 @@ class TclConfiguration(BaseConfiguration):
 
         return sharing_specs
 
-    def _variant_values_key(self, spec: spack.spec.Spec) -> Tuple[Tuple[str, ...], str]:
-        """Sort key listing installations by their variant values, then by their hash."""
-        values = tuple(v["value"] for v in self._variant_dict_for_spec(spec).values())
-        return (values, spec.dag_hash())
+    @staticmethod
+    def _installation_order_key(conf: BaseConfiguration) -> Tuple[bool, bool, float, str]:
+        """Sort key listing the installations matching a configured default first, then the
+        explicit ones before the implicit ones, in installation order, then by hash.
+
+        This order holds as installations are added: a new installation is listed after the
+        existing ones, unless it is explicit and they are implicit, or it matches a default.
+        """
+        spec = conf.spec
+        matches_default = any(spec.satisfies(default) for default in conf.defaults)
+        # An installation not recorded yet is being added, it comes after the recorded ones
+        try:
+            record = spack.store.STORE.db.get_record(spec)
+        except KeyError:
+            record = None
+        installation_time = record.installation_time if record else math.inf
+        return (not matches_default, not conf.explicit, installation_time, spec.dag_hash())
 
     @property
     def other_installed_specs(self) -> List[spack.spec.Spec]:
