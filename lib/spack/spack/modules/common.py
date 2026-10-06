@@ -1444,6 +1444,32 @@ class BaseModuleFileWriter:
                 return candidate
         return self.default_template
 
+    def _ensure_folded_installations_share_template(self) -> None:
+        """Raises a configuration error when the installations folded in this module file are
+        configured with different templates, as the module file is rendered from one of them."""
+        if not self.layout.hold_other_installations:
+            return
+
+        templates = {}
+        for spec in self.conf.installed_specs:
+            conf = self.conf if spec == self.spec else self.conf.make_folded_configuration(spec)
+            templates[spec] = conf.template
+        if len(set(templates.values())) < 2:
+            return
+
+        # A template rule matching only some of the folded installations wins or loses with the
+        # order the installations are written, name them all so the rule can be reworked
+        details = ", ".join(
+            spec.format("{name}{@version}{variants}{/hash:7}")
+            + (f" uses template '{template}'" if template else " uses the default template")
+            for spec, template in templates.items()
+        )
+        raise spack.error.ConfigError(
+            f"the installations folded in the module file '{self.layout.filename}' are "
+            "configured with different templates, which cannot apply to one module file: "
+            f"{details}. Set 'template' for the whole package version instead."
+        )
+
     @property
     def holds_installation(self) -> bool:
         """Whether the module file exists and lists this installation. A module file folding
@@ -1481,6 +1507,8 @@ class BaseModuleFileWriter:
             message = "Module file {0.filename} exists and will not be overwritten"
             warnings.warn(message.format(self.layout))
             return
+
+        self._ensure_folded_installations_share_template()
 
         # If we are here it means it's ok to write the module file
         msg = "\tWRITE: {0} [{1}]"

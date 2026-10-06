@@ -422,6 +422,9 @@ Spack maintains folded module files automatically:
    A module file lists the installations recorded in the database, so an installation removed with ``spack module tcl rm`` is listed again the next time its module file is written.
    Use the ``exclude`` option to leave an installation out of module files durably.
 
+A folded module file is rendered from one template, so the ``template`` option must apply to all the installations it holds: set it for the whole package, or for a package version, as installations of different versions never share a module file.
+Spack reports a configuration error instead of writing a module file whose installations are configured with different templates, and ``spack audit configs`` flags a template set under a more specific constraint.
+
 The ``spack module tcl`` subcommands account for the installations sharing a module file:
 
 * ``find`` prints the bare module name when the constraint matches several installations folded in one module file, as a ``module load`` of this name selects the first installation listed
