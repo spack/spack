@@ -300,10 +300,9 @@ class _Version(NamedTuple):
             )(pkg)
 
         # Store a version definition for this directive invocation
+        precedence = sum(len(defs) for defs in pkg.when_versions.values())
         when_versions = pkg.when_versions.setdefault(when_spec, {})
-        when_versions[version] = VersionDefinition(
-            version, precedence=pkg.num_version_definitions(), kwargs=kwargs
-        )
+        when_versions[version] = VersionDefinition(version, precedence=precedence, kwargs=kwargs)
 
 
 @directive("conflicts")
