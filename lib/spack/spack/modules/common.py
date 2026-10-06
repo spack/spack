@@ -1522,7 +1522,7 @@ class BaseModuleFileWriter:
         # Render the template
         text = template.render(context)
         # Write it to file
-        with open(self.layout.filename, "w", encoding="utf-8") as f:
+        with spack.util.filesystem.write_tmp_and_move(self.layout.filename, encoding="utf-8") as f:
             f.write(text)
 
         # Set the file permissions of the module to match that of the package
@@ -1599,7 +1599,9 @@ class BaseModuleFileWriter:
             elif not is_empty:
                 # ensure file ends with a newline character
                 content.append("")
-                with open(modulerc_path, "w", encoding="utf-8") as f:
+                with spack.util.filesystem.write_tmp_and_move(
+                    modulerc_path, encoding="utf-8"
+                ) as f:
                     f.write("\n".join(content))
 
     def remove(self) -> None:
