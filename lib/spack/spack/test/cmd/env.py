@@ -3681,7 +3681,6 @@ def test_env_activate_csh_script_output():
     activate_output = env("activate", "--prompt", "--csh", "test")
     cached_activate_commands = _get_cmds_from_script(activate_output, "csh")
 
-    print(activate_output)
     assert "_spack_env_set SPACK_ENV " not in activate_output
     assert "_spack_env_set SPACK_ENV " in cached_activate_commands
     assert "_spack_env_set prompt" in activate_output
@@ -3695,14 +3694,48 @@ def test_env_activate_fish_script_output():
     env("create", "test")
 
     # includes the path to the cached script
-    activate_output = env("activate", "--prompt", "--csh", "test")
-    cached_activate_commands = _get_cmds_from_script(activate_output, "csh")
+    activate_output = env("activate", "--prompt", "--fish", "test")
+    cached_activate_commands = _get_cmds_from_script(activate_output, "fish")
 
-    print(activate_output)
     assert "_spack_env_set SPACK_ENV " not in activate_output
     assert "_spack_env_set SPACK_ENV " in cached_activate_commands
     assert "function despacktivate" in activate_output
     assert "function despacktivate" not in cached_activate_commands
+
+
+def test_env_deactivate_sh_script_output():
+    """Check the shell commands output by ``spack env deactivate --sh``."""
+    env("create", "test")
+    env("activate", "--sh", "test")
+
+    deactivate_output = env("deactivate", "--sh")
+
+    assert "unalias despacktivate" in deactivate_output
+    assert "SPACK_OLD_PS1" in deactivate_output
+    assert "noview_deactivate.sh" in deactivate_output
+
+
+def test_env_deactivate_csh_script_output():
+    """Check the shell commands output by ``spack env deactivate --csh``."""
+    env("create", "test")
+    env("activate", "--csh", "test")
+
+    deactivate_output = env("deactivate", "--csh")
+
+    assert "unalias despacktivate" in deactivate_output
+    assert "SPACK_OLD_PROMPT" in deactivate_output
+    assert "noview_deactivate.sh" in deactivate_output
+
+
+def test_env_deactivate_fish_script_output():
+    """Check the shell commands output by ``spack env deactivate --fish``."""
+    env("create", "test")
+    env("activate", "--fish", "test")
+
+    deactivate_output = env("deactivate", "--fish")
+
+    assert "functions -e despacktivate" in deactivate_output
+    assert "noview_deactivate.sh" in deactivate_output
 
 
 @pytest.mark.regression("12719")

@@ -368,7 +368,9 @@ def env_activate(args):
 
         # Will only write the deactivation scripts if they don't exist
         env_script.write_env_deactivate_script(active_env, current_view)
+        cmds = env_script.remove_despacktivate_and_prompt_cmds(args.shell).strip("\n")
 
+        sys.stdout.write(f"{cmds}\n")
         sys.stdout.write(env_script.source_env_script(env_deactivate_script, args.shell))
 
     # Activate new environment
@@ -398,8 +400,7 @@ def env_activate(args):
 
     ev.activate(active_env, use_env_repo=True)
 
-    # strip to avoid duplicate newlines
-    cmds = env_script.get_despacktivate_and_prompt_cmds(
+    cmds = env_script.set_despacktivate_and_prompt_cmds(
         active_env, args.shell, prompt=args.prompt
     ).strip("\n")
     sys.stdout.write(f"{cmds}\n")
@@ -474,7 +475,10 @@ def env_deactivate(args):
 
     ev.deactivate()
 
-    print(env_script.source_env_script(env_deactivate_script_path, args.shell))
+    cmds = env_script.remove_despacktivate_and_prompt_cmds(args.shell).strip("\n")
+    sys.stdout.write(f"{cmds}\n")
+
+    sys.stdout.write(env_script.source_env_script(env_deactivate_script_path, args.shell))
 
 
 #

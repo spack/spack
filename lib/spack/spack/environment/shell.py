@@ -97,18 +97,23 @@ def deactivate_commands(shell):
     cmds += shell_cmd.unset("SPACK_ENV_VIEW")
     cmds += shell_cmd.unset("VIRTUAL_ENV_PROMPT")
 
+    return cmds
+
+
+def deactivate_prompt_cmds(shell):
+    shell_cmd = ShellCmdString(shell)
+    cmds = ""
     if shell == "csh":
         cmds += (
             "if ( $?SPACK_OLD_PROMPT ) \n"
             '    eval \'set prompt="$SPACK_OLD_PROMPT" &&\n'
             "          unsetenv SPACK_OLD_PROMPT'\n"
         )
-        cmds += "unalias despacktivate"
     elif shell == "fish":
-        cmds += "functions -e despacktivate"
         #
         # NOTE: Not changing fish_prompt (above) => no need to restore it here.
         #
+        return ""
     elif shell == "bat":
         # TODO: despacktivate
         old_prompt = os.environ.get("SPACK_OLD_PROMPT")
@@ -126,7 +131,6 @@ def deactivate_commands(shell):
         cmds += (
             textwrap.dedent(
                 """
-                alias despacktivate > /dev/null 2>&1 && unalias despacktivate;
                 if [ ! -z ${SPACK_OLD_PS1+x} ]; then
                     if [ "$SPACK_OLD_PS1" = '$$$$' ]; then
                         unset PS1;
@@ -143,7 +147,12 @@ def deactivate_commands(shell):
     return cmds
 
 
-def despacktivate_cmds(shell):
+def unalias_despacktivate_cmds(shell):
+    shell_cmd = ShellCmdString(shell)
+    return shell_cmd.unalias("despacktivate")
+
+
+def alias_despacktivate_cmds(shell):
     shell_cmd = ShellCmdString(shell)
     return shell_cmd.alias("despacktivate", "spack env deactivate")
 

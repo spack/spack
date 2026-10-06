@@ -191,6 +191,18 @@ class ShellCmdString:
             # posix shell
             return f"alias {name}='{code}'\n"
 
+    def unalias(self, name: str) -> str:
+        if self.shell == "csh":
+            return f"unalias {name}\n"
+        elif self.shell == "fish":
+            return f"functions -e {name}\n"
+        elif self.shell in ("bat", "pwsh"):
+            # Not implemented in Windows shells
+            return ""
+        else:
+            # posix shell
+            return f"alias {name} > /dev/null 2>&1 && unalias {name};\n"
+
 
 TRACING_ENABLED = False
 

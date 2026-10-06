@@ -112,7 +112,9 @@ def test_install_multiple_specs_shell_scripts(
 
     # Install multiple specs
     if install_together:
-        spack.installer.PackageInstaller([dyninst_spec.package, hypre_spec.package], fake=True).install()
+        spack.installer.PackageInstaller(
+            [dyninst_spec.package, hypre_spec.package], fake=True
+        ).install()
     else:
         spack.installer.PackageInstaller([dyninst_spec.package], fake=True).install()
         spack.installer.PackageInstaller([hypre_spec.package], fake=True).install()

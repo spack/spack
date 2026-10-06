@@ -8,10 +8,6 @@ from typing import Optional
 import spack.environment.shell
 import spack.user_environment as uenv
 
-# Shell configuration
-UNIX_SHELLS = ["sh", "csh", "fish"]
-WINDOWS_SHELLS = ["bat", "pwsh"]
-
 
 def _get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
     """Get the commands to activate an environment.
@@ -85,11 +81,10 @@ def _write_env_script(
 
     if activate:
         script_type = "activate"
-        shells = WINDOWS_SHELLS if sys.platform == "win32" else ["sh"]
-
     else:
         script_type = "deactivate"
-        shells = WINDOWS_SHELLS if sys.platform == "win32" else ["sh", "csh", "fish"]
+
+    shells = ["bat", "pwsh"] if sys.platform == "win32" else ["sh"]
 
     for shell in shells:
         script_path = path_to_env_script(env, shell, script_type, view)
@@ -110,19 +105,18 @@ def path_to_env_script(env, shell: str, script_type: str, view: Optional[str] = 
         script_type: Either 'activate' or 'deactivate'
         view: the name of the environment's view
     """
-    if script_type == "activate":
-        activate_extensions = {"sh": "", "csh": "", "fish": "", "bat": ".bat", "pwsh": ".ps1"}
-        extension = activate_extensions.get(shell, "")
+    if shell == "bat":
+        extension = ".bat"
+    elif shell == "pwsh":
+        extension = ".ps1"
     else:
-        extension = ".ps1" if shell == "pwsh" else f".{shell}"
+        extension = ".sh"
 
     script_name = (
         f"{view}_{script_type}{extension}" if view else f"noview_{script_type}{extension}"
     )
 
-    script_path = os.path.join(env.path, ".spack-env", script_name)
-
-    return script_path
+    return os.path.join(env.path, ".spack-env", script_name)
 
 
 def regenerate_env_scripts(env):
@@ -171,15 +165,27 @@ def write_env_deactivate_script(env, view: Optional[str] = None):
     _write_env_script(env, view, activate=False)
 
 
-def get_despacktivate_and_prompt_cmds(env, shell, prompt: Optional[str] = None) -> str:
-    """Returns the prompt and despacktivate commands which are unique to each shell.
+def set_despacktivate_and_prompt_cmds(env, shell, prompt: Optional[str] = None) -> str:
+    """Returns the set prompt and alias despacktivate commands which are unique to each shell.
 
     Args:
         shell: the shell that the user is running
         prompt: name of user's prompt
     """
-    despactivate_cmd = spack.environment.shell.despacktivate_cmds(shell)
+    despactivate_cmd = spack.environment.shell.alias_despacktivate_cmds(shell)
     prompt_cmds = spack.environment.shell.activate_prompt_cmds(env, shell, prompt)
+
+    return despactivate_cmd + prompt_cmds
+
+
+def remove_despacktivate_and_prompt_cmds(shell) -> str:
+    """Returns the unset prompt and unalias despacktivate commands which are unique to each shell.
+
+    Args:
+        shell: the shell that the user is running
+    """
+    despactivate_cmd = spack.environment.shell.unalias_despacktivate_cmds(shell)
+    prompt_cmds = spack.environment.shell.deactivate_prompt_cmds(shell)
 
     return despactivate_cmd + prompt_cmds
 
