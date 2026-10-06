@@ -28,6 +28,7 @@ from spack.util import tty
 from spack.util.tty import color
 from spack.util.tty.colify import colify
 from spack.util.typing import SupportsRichComparison
+from spack.version_def import VersionDefinition
 
 description = "get detailed information on a particular package"
 section = "query"
@@ -562,7 +563,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
     color.cprint("")
     color.cprint(section_title("Preferred version:  "))
 
-    versions = [v for v in pkg.versions if pkg.spec.versions.intersects(v)]
+    versions = [v for v in pkg.all_versions() if pkg.spec.versions.intersects(v)]
 
     if not versions:
         color.cprint(version("    None"))
@@ -577,12 +578,17 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
 
         preferred = spack.package_base.preferred_version(pkg)
 
-        def get_url(version: spack.version.ConcreteVersion) -> str:
+        def get_url(
+            version: spack.version.ConcreteVersion, version_def: Optional[VersionDefinition] = None
+        ) -> str:
             try:
-                for when, version_def in pkg.version_definitions(version):
-                    if pkg.spec.satisfies(when):
-                        return str(fs._fetcher_for_version_def(pkg, version, version_def))
-                return "No URL"
+                if version_def is None:
+                    for when, version_def in pkg.version_definitions(version):
+                        if pkg.spec.intersects(when):
+                            break
+                    else:
+                        return "No URL"
+                return str(fs._fetcher_for_version_def(pkg, version, version_def))
             except fs.InvalidArgsError:
                 return "No URL"
 
@@ -597,14 +603,13 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
         url = ""
         for v in reversed(sorted(versions)):
             for when, version_def in pkg.version_definitions(v):
-                if pkg.spec.satisfies(when):
+                if pkg.spec.intersects(when):
                     if pkg.has_code:
-                        url = get_url(v)
+                        url = get_url(v, version_def)
                     if spack.package_base.deprecated_version(pkg, v):
-                        deprecated.append((v, url))
+                        deprecated.append((v, url, when))
                     else:
-                        safe.append((v, url))
-                    break
+                        safe.append((v, url, when))
 
         for title, vers in [("Safe", safe), ("Deprecated", deprecated)]:
             color.cprint("")
@@ -613,8 +618,9 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
                 color.cprint(version("    None"))
                 continue
 
-            for v, url in vers:
-                line = version("    {0}".format(pad(v))) + color.cescape(str(url))
+            for v, url, when in vers:
+                cond = f"  when {when}" if str(when) else ""
+                line = version("    {0}".format(pad(v))) + color.cescape(f"{url}{cond}")
                 color.cprint(line)
 
 
