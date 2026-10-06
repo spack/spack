@@ -385,14 +385,9 @@ class BaseConfiguration:
         module_set_name: str,
         explicit: Optional[bool] = None,
         *,
-        removed_specs: Tuple[spack.spec.Spec, ...] = (),
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> "FileLayout":
-        return FileLayout(
-            cls.make_configuration(
-                spec, module_set_name, explicit, removed_specs=removed_specs, cache=cache
-            )
-        )
+        return FileLayout(cls.make_configuration(spec, module_set_name, explicit, cache=cache))
 
     def __init__(
         self,
@@ -502,14 +497,10 @@ class BaseConfiguration:
         # this when variants mode is enabled: several installations are folded into a single
         # module file there, and forcing a per-spec hash would defeat that folding.
         if self.hidden and self.variants_mode == "none":
-            suffixes.append(self.dag_hash())
+            suffixes.append(self.spec.dag_hash(7))
         elif self.hash:
             suffixes.append(self.hash)
         return suffixes
-
-    def dag_hash(self, length: int = 7) -> str:
-        """Return spec dag hash of specified length (7 characters by default)."""
-        return self.spec.dag_hash(length)
 
     def make_folded_configuration(self, spec: spack.spec.Spec) -> "BaseConfiguration":
         """Returns the configuration of another installation held by the same module file.
@@ -520,11 +511,30 @@ class BaseConfiguration:
         )
 
     @property
+    def folded_configurations(self) -> List["BaseConfiguration"]:
+        """Returns the configuration of each installation held by the module file, in the
+        order it lists them."""
+        return [
+            self if spec == self.spec else self.make_folded_configuration(spec)
+            for spec in self.installed_specs
+        ]
+
+    @property
+    def matches_default(self) -> bool:
+        """Whether this spec matches a configured default."""
+        return any(self.spec.satisfies(default) for default in self.defaults)
+
+    @property
+    def projection(self) -> str:
+        """Returns the projection the module file name of this spec is formatted with."""
+        return proj.get_projection(self.projections, self.spec) or self.default_projections["all"]
+
+    @property
     def hash(self) -> Optional[str]:
         """Hash tag for the module or None"""
         hash_length = self.conf.get("hash_length", 7)
         if hash_length != 0:
-            return self.dag_hash(length=hash_length)
+            return self.spec.dag_hash(length=hash_length)
         return None
 
     @property
@@ -788,8 +798,8 @@ class BaseConfiguration:
 
     @property
     def other_installed_specs(self) -> List[spack.spec.Spec]:
-        """Returns a list of all the other installed spec for this package version"""
-        return []
+        """Returns the other installed specs held by the module file."""
+        return [spec for spec in self.installed_specs if spec != self.spec]
 
     @property
     def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
@@ -835,11 +845,7 @@ class FileLayout:
     @property
     def name(self) -> str:
         """Returns the name of the module file in the modulepath directory."""
-        projection = proj.get_projection(self.conf.projections, self.spec)
-        if not projection:
-            projection = self.conf.default_projections["all"]
-
-        name = self.spec.format_path(projection)
+        name = self.spec.format_path(self.conf.projection)
         # Not everybody is working on linux...
         parts = name.split("/")
         name = os.path.join(*parts)
@@ -1034,7 +1040,7 @@ class FileLayout:
     @property
     def hold_other_installations(self) -> bool:
         """Returns whether or not module file holds multiple package installations"""
-        return len(self.conf.other_installed_specs) > 0
+        return bool(self.conf.other_installed_specs)
 
 
 class ModuleContext(tengine.Context):
@@ -1044,6 +1050,8 @@ class ModuleContext(tengine.Context):
         self.conf = configuration
         self.layout = layout
         self._environment_modifications: Optional[List[EnvironmentModification]] = None
+        self._autoload: Optional[List[str]] = None
+        self._installations: Optional[List["ModuleContext"]] = None
 
     @tengine.context_property
     def spec(self) -> spack.spec.Spec:
@@ -1243,11 +1251,12 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def autoload(self) -> List[str]:
         """List of modules that need to be loaded automatically."""
-        # From 'autoload' configuration option
-        specs = self._create_module_list_of("specs_to_load")
-        # From 'load' configuration option
-        literals = self.conf.literals_to_load
-        return specs + literals
+        if self._autoload is None:
+            # From the 'autoload' configuration option, then from the 'load' one
+            self._autoload = (
+                self._create_module_list_of("specs_to_load") + self.conf.literals_to_load
+            )
+        return self._autoload
 
     def _create_module_list_of(self, what: str) -> List[str]:
         name = self.conf.name
@@ -1286,7 +1295,7 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def version_part(self) -> str:
         """Version of this provider."""
-        return f"{self.spec.version}-{self.conf.dag_hash()}"
+        return f"{self.spec.version}-{self.spec.dag_hash(7)}"
 
     @tengine.context_property
     def provides(self) -> Dict[str, spack.spec.Spec]:
@@ -1320,7 +1329,7 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def hash(self) -> str:
         """Returns hash of this installation"""
-        return self.conf.dag_hash()
+        return self.spec.dag_hash(7)
 
     @tengine.context_property
     def variants_mode(self) -> str:
@@ -1332,23 +1341,17 @@ class ModuleContext(tengine.Context):
     def installations(self) -> List["ModuleContext"]:
         """Returns context for all installations of this package version, in the order the
         module file selects them."""
-        context_list = []
-        for spec in self.conf.installed_specs:
-            if spec == self.conf.spec:
-                context_list.append(self)
-                continue
-            other_conf = self.conf.make_folded_configuration(spec)
-            context_list.append(ModuleContext(other_conf, FileLayout(other_conf)))
-
-        return context_list
+        if self._installations is None:
+            self._installations = [
+                self if conf is self.conf else ModuleContext(conf, FileLayout(conf))
+                for conf in self.conf.folded_configurations
+            ]
+        return self._installations
 
     @tengine.context_property
     def any_installation_has_autoload(self) -> bool:
         """Is there any installation of this package version having dependency to auto load."""
-        for install in self.installations:
-            if install.autoload:
-                return True
-        return False
+        return any(install.autoload for install in self.installations)
 
     @tengine.context_property
     def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
@@ -1425,10 +1428,7 @@ class BaseModuleFileWriter:
         if not self.layout.hold_other_installations:
             return
 
-        templates = {}
-        for spec in self.conf.installed_specs:
-            conf = self.conf if spec == self.spec else self.conf.make_folded_configuration(spec)
-            templates[spec] = conf.template
+        templates = {conf.spec: conf.template for conf in self.conf.folded_configurations}
         if len(set(templates.values())) < 2:
             return
 
@@ -1535,11 +1535,6 @@ class BaseModuleFileWriter:
         # record module hiddenness if implicit
         self.update_module_hiddenness()
 
-    def matches_default(self, spec: Optional[spack.spec.Spec] = None) -> bool:
-        """Whether ``spec`` (this module's spec by default) matches a configured default."""
-        spec = self.spec if spec is None else spec
-        return any(spec.satisfies(default) for default in self.conf.defaults)
-
     def link_default(self) -> None:
         """Points the ``default`` symlink to this module file."""
         # Symlink to a tmp location first and move, so that existing
@@ -1550,7 +1545,7 @@ class BaseModuleFileWriter:
         os.rename(default_tmp, default_path)
 
     def update_module_defaults(self) -> None:
-        if self.matches_default():
+        if self.conf.matches_default:
             self.link_default()
 
     def update_module_hiddenness(self, remove: bool = False) -> None:
@@ -1625,7 +1620,7 @@ class BaseModuleFileWriter:
         self.remove()
 
     def remove_module_defaults(self) -> None:
-        if not self.matches_default():
+        if not self.conf.matches_default:
             return
 
         # This spec matches a default, symlink needs to be removed as we remove the module

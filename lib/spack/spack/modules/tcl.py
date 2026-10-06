@@ -11,7 +11,6 @@ import warnings
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import spack.config
-import spack.projections as proj
 import spack.spec
 import spack.store
 from spack.variant import RESERVED_NAMES, VariantType, VariantValue
@@ -129,10 +128,7 @@ class TclConfiguration(BaseConfiguration):
     def _compute_folds_installations(self) -> bool:
         if self.variants_mode == "none":
             return False
-        projection = proj.get_projection(self.projections, self.spec)
-        if not projection:
-            projection = self.default_projections["all"]
-        return re.search(r"{[^}]*hash", projection) is None
+        return re.search(r"{[^}]*hash", self.projection) is None
 
     def _variant_dict_for_spec(self, spec: spack.spec.Spec) -> Dict[str, Dict[str, Any]]:
         """Returns a dictionary of defined variants for given spec keyed by variant name.
@@ -194,9 +190,6 @@ class TclConfiguration(BaseConfiguration):
 
     @property
     def installed_specs(self) -> List[spack.spec.Spec]:
-        return self._specs_sharing_modulefile()
-
-    def _specs_sharing_modulefile(self) -> List[spack.spec.Spec]:
         """All installed specs of same name@version that map to the same module filename."""
         if "specs_sharing_modulefile" not in self._cache:
             self._cache["specs_sharing_modulefile"] = self._compute_specs_sharing_modulefile()
@@ -206,12 +199,14 @@ class TclConfiguration(BaseConfiguration):
         # A module file that cannot be shared holds this installation only, skip the database
         # query in this case
         if not self.folds_installations:
-            return [] if self.spec in self.removed_specs else [self.spec]
+            return super().installed_specs
 
         # Upstream installations are left out: their module files belong to the upstream
         name_version_spec = self.spec.format("{name} {@version}")
         spec_list = set(
-            spack.store.STORE.db.query(name_version_spec, installed=True, install_tree="local")
+            spack.store.STORE.db.query(
+                name_version_spec, installed=True, install_tree="local", sort=False
+            )
         )
 
         # A module file may be requested for an installation not recorded yet, the ones being
@@ -233,10 +228,9 @@ class TclConfiguration(BaseConfiguration):
 
         # The other installations compute the same list, hand it over to spare them the
         # database query
-        for spec in sharing_specs:
-            if spec != self.spec:
-                other_conf = self.make_folded_configuration(spec)
-                other_conf._cache.setdefault("specs_sharing_modulefile", sharing_specs)
+        for conf in sharing_confs:
+            if conf is not self:
+                conf._cache.setdefault("specs_sharing_modulefile", sharing_specs)
 
         return sharing_specs
 
@@ -249,25 +243,13 @@ class TclConfiguration(BaseConfiguration):
         existing ones, unless it is explicit and they are implicit, or it matches a default.
         """
         spec = conf.spec
-        matches_default = any(spec.satisfies(default) for default in conf.defaults)
         # An installation not recorded yet is being added, it comes after the recorded ones
         try:
             record = spack.store.STORE.db.get_record(spec)
         except KeyError:
             record = None
         installation_time = record.installation_time if record else math.inf
-        return (not matches_default, not conf.explicit, installation_time, spec.dag_hash())
-
-    @property
-    def other_installed_specs(self) -> List[spack.spec.Spec]:
-        """Returns a list of all the other installed spec for this package version"""
-        # Copy the list: _specs_sharing_modulefile() is cached and shared with other
-        # consumers, so it must not be mutated in place.
-        spec_list = list(self._specs_sharing_modulefile())
-        if self.spec in spec_list:
-            spec_list.remove(self.spec)
-
-        return spec_list
+        return (not conf.matches_default, not conf.explicit, installation_time, spec.dag_hash())
 
     @property
     def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
@@ -288,7 +270,7 @@ class TclConfiguration(BaseConfiguration):
 
         aggregated = {}
         seen_in = {}
-        install_specs = self._specs_sharing_modulefile()
+        install_specs = self.installed_specs
         total_installs = len(install_specs)
 
         for spec in install_specs:
@@ -340,7 +322,7 @@ class TclModulefileWriter(BaseModuleFileWriter):
 
     def _holds_default(self) -> bool:
         """Whether an installation held by the module file matches a configured default."""
-        return any(self.matches_default(install.spec) for install in self.context.installations)
+        return any(conf.matches_default for conf in self.conf.folded_configurations)
 
     def update_module_defaults(self) -> None:
         """Points the ``default`` symlink to this module file if it holds an installation
@@ -356,12 +338,6 @@ class TclModulefileWriter(BaseModuleFileWriter):
             remove (bool): if True, hiddenness information for module is
                 removed from modulerc.
         """
-        remove_hiddenness = remove
-
-        # do not hide this module if another installation stored same module file is not hidden
-        if not remove_hiddenness and self.layout.hold_other_installations:
-            remove_hiddenness = any(
-                not install.conf.hidden for install in self.context.installations
-            )
-
-        super().update_module_hiddenness(remove_hiddenness)
+        # A module file holding an installation that is not hidden is not hidden
+        remove = remove or any(not conf.hidden for conf in self.conf.folded_configurations)
+        super().update_module_hiddenness(remove)

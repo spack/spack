@@ -7,7 +7,7 @@ import os
 import re
 import subprocess
 import warnings
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import pytest
 
@@ -43,6 +43,12 @@ pytestmark = [
     pytest.mark.not_on_windows("does not run on windows"),
     pytest.mark.usefixtures("mock_modules_root"),
 ]
+
+
+def _module_lines(filename: str) -> List[str]:
+    """Returns the stripped lines of a module file, without its header comments."""
+    with open(filename, encoding="utf-8") as f:
+        return [line.strip() for line in f.readlines() if not line.startswith("## ")]
 
 
 @pytest.fixture(params=["clang@=15.0.0", "gcc@=10.2.1"])
@@ -1168,14 +1174,12 @@ class TestTcl:
 
         install("--fake", "--add", spec_a)
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
-        with open(module_file_a, encoding="utf-8") as f:
-            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_a = _module_lines(module_file_a)
 
         # second installation maps to same module file, which is not overwritten
         with pytest.warns(UserWarning, match="exists and will not be overwritten"):
             install("--fake", "--add", spec_b)
-        with open(module_file_a, encoding="utf-8") as f:
-            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_b = _module_lines(module_file_a)
         assert content_a == content_b
 
         # other installations are not looked up in the database
@@ -1240,8 +1244,7 @@ class TestTcl:
 
         install("--fake", "--add", spec_o)
         module_file_o = modulefile_filenames("tcl", spec_o)[0]
-        with open(module_file_o, encoding="utf-8") as f:
-            content_o = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_o = _module_lines(module_file_o)
         # dependency is pinned by its hash variant even if it has a single installation
         assert (
             len(
@@ -1257,12 +1260,10 @@ class TestTcl:
         # install 2 packages folded in same module file
         install("--fake", "--add", spec_a)
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
-        with open(module_file_a, encoding="utf-8") as f:
-            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_a = _module_lines(module_file_a)
         install("--fake", "--add", spec_b)
         module_file_b = modulefile_filenames("tcl", spec_b)[0]
-        with open(module_file_b, encoding="utf-8") as f:
-            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_b = _module_lines(module_file_b)
         assert module_file_a == module_file_b and content_a != content_b
 
         # check module file content is coherent with folded installations
@@ -1297,16 +1298,12 @@ class TestTcl:
         assert len([x for x in content_b if "setenv FOOBAR " in x]) == 2
 
         # check other installed package is not affected by the new dependency installations
-        with open(module_file_o, encoding="utf-8") as f:
-            content_o_after = [
-                line.strip() for line in f.readlines() if not line.startswith("## ")
-            ]
+        content_o_after = _module_lines(module_file_o)
         assert content_o == content_o_after
 
         # uninstall one package, module file should persist with remaining installation
         uninstall("-y", spec_b)
-        with open(module_file_a, encoding="utf-8") as f:
-            content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_c = _module_lines(module_file_a)
         assert content_a == content_c
 
         # uninstall second package, module file should be removed
@@ -1321,8 +1318,7 @@ class TestTcl:
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
-        with open(module_file_a, encoding="utf-8") as f:
-            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_a = _module_lines(module_file_a)
         variant_names = "set variant_names [list a b build_system c d hash]"
         assert len([x for x in content_a if variant_names in x]) == 1
         assert len([x for x in content_a if "set boolean_variants [list a b]" in x]) == 1
@@ -1339,14 +1335,12 @@ class TestTcl:
         spec_a = "forward-multi-value@1.0"
         install("--fake", "--add", spec_a)
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
-        with open(module_file_a, encoding="utf-8") as f:
-            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_a = _module_lines(module_file_a)
         assert len([x for x in content_a if x == "cuda {0}\\"]) == 1
         assert len([x for x in content_a if "cuda_arch" in x]) == 0
         spec_b = "forward-multi-value@1.0 +cuda"
         install("--fake", "--add", spec_b)
-        with open(module_file_a, encoding="utf-8") as f:
-            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_b = _module_lines(module_file_a)
         assert len([x for x in content_b if x == "cuda {0 1}\\"]) == 1
         # neutral value stands for the conditional variant on installations not defining it
         assert len([x for x in content_b if x == "cuda_arch {none}\\"]) == 1
@@ -1354,8 +1348,7 @@ class TestTcl:
         assert len([x for x in content_b if x.startswith("{generic 1 none ")]) == 1
         spec_c = "forward-multi-value@1.0 +cuda cuda_arch=11"
         install("--fake", "--add", spec_c)
-        with open(module_file_a, encoding="utf-8") as f:
-            content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_c = _module_lines(module_file_a)
         assert len([x for x in content_c if x == "cuda {0 1}\\"]) == 1
         assert len([x for x in content_c if x == "cuda_arch {11 none}\\"]) == 1
         assert len([x for x in content_c if x.startswith("{generic 1 11 ")]) == 1
@@ -1364,22 +1357,19 @@ class TestTcl:
         spec_a = "conditional-variant-pkg@2.0"
         install("--fake", "--add", spec_a)
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
-        with open(module_file_a, encoding="utf-8") as f:
-            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_a = _module_lines(module_file_a)
         assert len([x for x in content_a if x == "version_based {1}\\"]) == 1
         assert len([x for x in content_a if x == "variant_based {0}\\"]) == 1
         assert len([x for x in content_a if "two_whens" in x]) == 0
         spec_b = "conditional-variant-pkg@2.0 ~version_based"
         install("--fake", "--add", spec_b)
-        with open(module_file_a, encoding="utf-8") as f:
-            content_b = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_b = _module_lines(module_file_a)
         assert len([x for x in content_b if x == "version_based {0 1}\\"]) == 1
         assert len([x for x in content_b if x == "variant_based {0}\\"]) == 1
         assert len([x for x in content_b if "two_whens" in x]) == 0
         spec_c = "conditional-variant-pkg@2.0 +version_based +variant_based"
         install("--fake", "--add", spec_c)
-        with open(module_file_a, encoding="utf-8") as f:
-            content_c = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_c = _module_lines(module_file_a)
         assert len([x for x in content_c if x == "version_based {0 1}\\"]) == 1
         assert len([x for x in content_c if x == "variant_based {0 1}\\"]) == 1
         assert len([x for x in content_c if x == "two_whens {0}\\"]) == 1
@@ -1392,8 +1382,7 @@ class TestTcl:
         install("--fake", "--add", spec_b)
         install("--fake", "--add", spec_c)
         module_file = modulefile_filenames("tcl", spec_a)[0]
-        with open(module_file, encoding="utf-8") as f:
-            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content = _module_lines(module_file)
         # each installation pins its own dependency installation by its hash variant only,
         # whatever conditional variants the dependency installations define
         pin_pattern = "depends-on conditional-variant-pkg/2.0-none-none hash=(\\w{7})$"
@@ -1451,8 +1440,7 @@ class TestTcl:
         install("--fake", "--add", spec_b)
         install("--fake", "--add", spec_c)
         module_file = modulefile_filenames("tcl", spec_a)[0]
-        with open(module_file, encoding="utf-8") as f:
-            content = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content = _module_lines(module_file)
         assert (
             len(
                 [
@@ -1483,14 +1471,12 @@ class TestTcl:
         spec_a = "mpileaks@2.3 ~debug ^mpich"
         install("--fake", "--add", spec_a)
         module_file_a = modulefile_filenames("tcl", spec_a)[0]
-        with open(module_file_a, encoding="utf-8") as f:
-            content_a = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_a = _module_lines(module_file_a)
 
         # single installation of dependency: hash variant is defined with a single value
         dep_a = spack.store.STORE.db.query_one("callpath ^mpich")
         module_file_dep = modulefile_filenames("tcl", "callpath ^mpich")[0]
-        with open(module_file_dep, encoding="utf-8") as f:
-            content_dep = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_dep = _module_lines(module_file_dep)
         hash_a = dep_a.dag_hash(7)
         assert f"hash {{{hash_a}}}\\" in content_dep
         depends_on_a = f"depends-on callpath/1.0-gcc-10.2.1 hash={hash_a}"
@@ -1500,8 +1486,7 @@ class TestTcl:
         install("--fake", "--add", "callpath@1.0 ^zmpi")
         dep_b = spack.store.STORE.db.query_one("callpath ^zmpi")
         hash_b = dep_b.dag_hash(7)
-        with open(module_file_dep, encoding="utf-8") as f:
-            content_dep = [line.strip() for line in f.readlines() if not line.startswith("## ")]
+        content_dep = _module_lines(module_file_dep)
         assert f"hash {{{' '.join(sorted([hash_a, hash_b]))}}}\\" in content_dep
         install_a = f"{{generic {hash_a}}} {hash_a}\\"
         install_b = f"{{generic {hash_b}}} {hash_b}\\"
@@ -1510,10 +1495,7 @@ class TestTcl:
         # dependent module file is unchanged when regenerated
         writer = writer_cls.from_spec(spack.store.STORE.db.query_one(spec_a), "default", True)
         writer.write(overwrite=True)
-        with open(module_file_a, encoding="utf-8") as f:
-            content_a_after = [
-                line.strip() for line in f.readlines() if not line.startswith("## ")
-            ]
+        content_a_after = _module_lines(module_file_a)
         assert content_a == content_a_after
 
     def test_no_hash_variant_with_hash_in_projection(self, factory, module_configuration):
