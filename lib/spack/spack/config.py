@@ -2636,9 +2636,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
         )
 
     if not resources:
-        raise AssertionError(
-            "This should only ever be called if there are old resources to migrate."
-        )
+        return False
     if not sys.stdin.isatty():
         return False
 

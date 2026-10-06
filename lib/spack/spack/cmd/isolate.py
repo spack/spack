@@ -230,17 +230,7 @@ def _undo_isolate():
         os.remove(marker_path)
         tty.debug("Removed migration marker")
 
-    tty.msg("Running auto-migration...")
-    lock_path = spack.config._migration_lock_path()
-    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-    with spack.util.lock.WriteTransaction(lock):
-        prefix_result = spack.config._do_migrate_spack_prefix()
-        home_result = spack.config._do_migrate_home()
-
-    # Show migration summary
-    msg = spack.config._compose_migration_message(prefix_result, home_result)
-    if msg:
-        tty.msg(msg)
+    spack.config._perform_auto_migration_at_module_load()
 
 
 def isolate(parser, args):

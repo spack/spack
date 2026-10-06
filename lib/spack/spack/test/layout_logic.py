@@ -400,7 +400,7 @@ def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkey
         new_gpg.mkdir(parents=True)
         (new_gpg / "new-keyring-file").write_text("new", encoding="utf-8")
 
-    spack.config._do_migrate_spack_prefix()
+    spack.config._do_migrate_spack_prefix(spack.config._detect_old_resources())
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     config = spack.config.CONFIG
@@ -543,7 +543,7 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
 
     # Create fresh config and run migration
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate_spack_prefix()
+    spack.config._do_migrate_spack_prefix(spack.config._detect_old_resources())
 
     # Reload config to pick up layout scope (which may point to old environments_root if conflict)
     # or the default new location
