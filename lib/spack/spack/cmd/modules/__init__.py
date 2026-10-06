@@ -387,7 +387,13 @@ def refresh(module_type, specs, args):
         spack.cmd.display_specs(specs, long=True)
         print("")
         # A module file folding several installations is written for all of them
-        folded = [s for x in writers for s in x.conf.other_installed_specs if s not in specs]
+        selected = {s.dag_hash() for s in specs}
+        folded = [
+            s
+            for x in writers
+            for s in x.conf.other_installed_specs
+            if s.dag_hash() not in selected
+        ]
         folded = list(dedupe(folded))
         if folded:
             msg = "The following installations share a module file with them and are written"
@@ -446,13 +452,8 @@ def refresh(module_type, specs, args):
         module_type_root, writers, overwrite=args.delete_tree
     )
     errors = []
-    written_filenames = set()
-    for x in writers:
-        # Skip already written module files when one file handles multiple installations
-        if x.layout.filename in written_filenames:
-            continue
-        written_filenames.add(x.layout.filename)
-
+    # A module file folding several installations is written once, from the first of them
+    for x in (writer_list[0] for writer_list in file2writer.values()):
         try:
             x.write(overwrite=True)
         except spack.error.SpackError as e:
