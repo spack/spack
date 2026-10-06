@@ -203,7 +203,7 @@ def test_load_external_spec(
     mutable_config.update_config("packages", external_conf)
 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
-    spack.installer.PackageInstaller([spec.package], fake=True)
+    spack.installer.PackageInstaller([spec.package], fake=True).install()
 
     # External specs should not generate scripts
     assert spec.external
