@@ -6,6 +6,7 @@ import ast
 import os
 import re
 import subprocess
+import warnings
 from typing import Dict, Tuple
 
 import pytest
@@ -1108,13 +1109,26 @@ class TestTcl:
             len([x for x in content if re.match("    {generic 0 0 0 1 1 \\w{7}} \\w{7}", x)]) == 1
         )
 
-    def test_variants_all_require_hash_length_zero(self, modulefile_content, module_configuration):
-        """Tests variants cannot be defined in module files whose name includes the hash."""
+    def test_variants_all_ignores_hash_length(self, factory, module_configuration, monkeypatch):
+        """Tests a non-zero hash_length is ignored, and reported once, when variants are
+        defined, as the hash variant replaces the hash in module names."""
 
         module_configuration("variants_all_hashed_names")
+        monkeypatch.setattr(spack.modules.tcl, "_hash_length_warned", set())
 
-        with pytest.raises(spack.error.ConfigError, match="requires 'hash_length: 0'"):
-            modulefile_content("mpileaks")
+        with pytest.warns(UserWarning, match="'hash_length: 7' set .* is ignored") as record:
+            writer, spec = factory("mpileaks")
+        assert len(record) == 1
+        assert writer.conf.hash is None
+        assert writer.conf.folds_installations
+        assert writer.layout.use_name.startswith("mpileaks/2.3-gcc-10.2.1 ")
+        assert "hash" in writer.conf.variants
+
+        # the warning is given once per process
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            writer, _ = factory("mpileaks")
+        assert writer.conf.hash is None
 
     def test_variants_all_translated_values(self, modulefile_content, module_configuration):
         """Tests variant values are written in the form the module command reads back once

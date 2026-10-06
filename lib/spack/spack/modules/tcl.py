@@ -7,9 +7,10 @@
 import math
 import os
 import re
-from typing import Any, Dict, List, Tuple
+import warnings
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-import spack.error
+import spack.config
 import spack.projections as proj
 import spack.spec
 import spack.store
@@ -40,6 +41,10 @@ def module_variant_value(value: str) -> str:
     return value
 
 
+#: Module sets already warned about a hash_length ignored with variants defined
+_hash_length_warned: Set[str] = set()
+
+
 class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
@@ -58,19 +63,46 @@ class TclConfiguration(BaseConfiguration):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        # The hash variant tells installations apart once module names drop the hash, a
-        # hashed name with variants defined would tell them apart twice
-        if self.variants_mode != "none" and self._config.get("hash_length", 7) != 0:
-            raise spack.error.ConfigError(
-                f"'variants: {self.variants_mode}' in the tcl configuration of the "
-                f"'{self.name}' module set requires 'hash_length: 0', as module variants "
-                "replace the hash in module names"
-            )
+        if self.variants_mode != "none":
+            self._warn_hash_length_ignored()
 
     @property
     def variants_mode(self) -> str:
         """Returns module file variants definition mode."""
         return self._config.get("variants", "none")
+
+    @property
+    def hash(self) -> Optional[str]:
+        """Hash tag for the module, or None when variants are defined, as the hash variant then
+        replaces the hash in module names."""
+        if self.variants_mode != "none":
+            return None
+        return super().hash
+
+    def _warn_hash_length_ignored(self) -> None:
+        """Warns, once per process and module set, that a non-zero hash_length set in some
+        configuration scope has no effect with variants defined."""
+        hash_length = self._config.get("hash_length", 0)
+        if hash_length == 0 or self.name in _hash_length_warned:
+            return
+        _hash_length_warned.add(self.name)
+        scope = self._hash_length_scope()
+        where = f" in the '{scope}' configuration scope" if scope else ""
+        warnings.warn(
+            f"'hash_length: {hash_length}' set{where} is ignored, as 'variants: "
+            f"{self.variants_mode}' in the tcl configuration of the '{self.name}' module set "
+            "replaces the hash in module names with the hash variant"
+        )
+
+    def _hash_length_scope(self) -> Optional[str]:
+        """Returns the name of the highest precedence scope setting hash_length in the tcl
+        configuration of this module set, or None if no scope is found."""
+        for scope in spack.config.CONFIG.scopes.reversed_values():
+            section = scope.get_section("modules") or {}
+            tcl_cfg = section.get("modules", {}).get(self.name, {}).get("tcl", {})
+            if "hash_length" in tcl_cfg:
+                return scope.name
+        return None
 
     def _variant_to_str_dict(self, v: VariantValue) -> Dict[str, str]:
         """Returns a dictionary entry representing variant object passed as argument.
@@ -95,7 +127,7 @@ class TclConfiguration(BaseConfiguration):
         return self._cache["folds_installations"]
 
     def _compute_folds_installations(self) -> bool:
-        if self.variants_mode == "none" or self.conf.get("hash_length", 7) != 0:
+        if self.variants_mode == "none":
             return False
         projection = proj.get_projection(self.projections, self.spec)
         if not projection:

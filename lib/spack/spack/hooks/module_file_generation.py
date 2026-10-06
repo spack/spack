@@ -26,10 +26,12 @@ def _for_each_enabled(
             continue
 
         for module_type in enabled:
-            generator = spack.modules.module_types[module_type].from_spec(
-                spec, name, explicit, removed_specs=removed_specs
-            )
+            # A modules misconfiguration is reported when the writer is created, it must not
+            # fail the build the hook runs in
             try:
+                generator = spack.modules.module_types[module_type].from_spec(
+                    spec, name, explicit, removed_specs=removed_specs
+                )
                 getattr(generator, method_name)()
             except (RuntimeError, spack.error.SpackError) as e:
                 msg = "cannot perform the requested {0} operation on module files"
