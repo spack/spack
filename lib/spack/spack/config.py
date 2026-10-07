@@ -2076,21 +2076,21 @@ def process_config_file_paths(
     return data if modified else None
 
 
-def _can_migrate_to_location(location: str) -> bool:
-    """True if location doesn't exist or is an empty directory."""
+def _can_migrate_to_location(location: str):
+    """Verify destination is empty or doesn't exist (for use as verify_destination_callback)."""
     if not os.path.lexists(location):
-        return True
+        return DestinationCheck.PROCEED
 
     if not os.path.isdir(location):
         tty.warn(f"{location} exists as a file or dangling symlink, cannot migrate")
-        return False
+        return DestinationCheck.FAIL
 
     if os.listdir(location):
         tty.debug(f"{location} already has files, skipping migration")
-        return False
+        return DestinationCheck.FAIL
 
     # Empty directory - safe to migrate
-    return True
+    return DestinationCheck.PROCEED
 
 
 def _is_nonempty_directory(path: str) -> bool:
@@ -2121,42 +2121,39 @@ def _migrate_with_staging(
     lock_name: Optional[str],
     staging_name: str,
     description: str,
-    verify_destination_callback=None,
+    verify_destination_callback,
 ) -> bool:
     """Generic migration function for resources.
 
     Common pattern for atomic migrations:
     1. Check source exists and has content
-    2. Check destination doesn't exist or is empty
+    2. Verify destination (via callback) - can skip, fail, or proceed
     3. Acquire lock (unless lock_name is None, meaning caller handles locking)
-    4. Optional: verify destination with callback (this is for resources
-       that used to be in the spack prefix and were not shared between
-       instances)
+    4. Re-verify destination inside lock (state may have changed)
     5. Create staging directory
     6. Call callback to populate staging (copy/process files)
     7. Atomically rename staging to destination
 
     Args:
         lock_name: Name of lock file. If None, caller is responsible for locking.
+        verify_destination_callback: Function that checks destination and returns
+            DestinationCheck.SKIP (already migrated), FAIL (can't migrate), or
+            PROCEED (safe to migrate). Use _can_migrate_to_location for simple
+            empty-directory checks, or _make_marker_verifier for marker-based checks.
     """
     if not _is_nonempty_directory(old_path):
         return False
 
-    # Check marker-based verification first to handle already-migrated destinations
-    # This must happen before _can_migrate_to_location because an already-migrated
-    # destination will not be empty (it has the marker file)
-    if verify_destination_callback:
-        action = verify_destination_callback(new_path)
-        if action == DestinationCheck.SKIP:
-            return True
-        elif action == DestinationCheck.FAIL:
-            return False
-        # PROCEED continues to normal checks
-
-    # These checks have to be repeated inside the lock, but they will
-    # almost always trigger an early return (skip locking).
-    if not _can_migrate_to_location(new_path):
+    # Verify destination before locking. This will almost always trigger an early
+    # return (skip locking). Marker-based verifiers check for already-migrated
+    # destinations first (which won't be empty due to marker file), then fall back
+    # to the empty-directory check.
+    action = verify_destination_callback(new_path)
+    if action == DestinationCheck.SKIP:
+        return True
+    elif action == DestinationCheck.FAIL:
         return False
+    # PROCEED continues to acquire lock and migrate
 
     # Prepare parent directory and staging path
     parent = os.path.dirname(new_path)
@@ -2175,13 +2172,13 @@ def _migrate_with_staging(
             lock.acquire_write()
             lock_acquired = True
 
-        if verify_destination_callback:
-            action = verify_destination_callback(new_path)
-            if action == DestinationCheck.SKIP:
-                return True
-            elif action == DestinationCheck.FAIL:
-                return False
-            # PROCEED continues normal flow
+        # Verify destination again inside lock (state may have changed)
+        action = verify_destination_callback(new_path)
+        if action == DestinationCheck.SKIP:
+            return True
+        elif action == DestinationCheck.FAIL:
+            return False
+        # PROCEED continues normal flow
 
         if not _is_nonempty_directory(old_path):
             return False
@@ -2194,6 +2191,8 @@ def _migrate_with_staging(
                     tty.debug(f"Removed empty {new_path} to proceed with migration")
                 else:
                     # Not empty or not a directory - can't migrate
+                    # This should have been caught by verify_destination_callback, but
+                    # kept as a safety check
                     return False
 
             # Verify we have permissions to create new_path by testing with makedirs
@@ -2289,6 +2288,7 @@ def _migrate_user_config() -> bool:
         lock_name=".spack-user-config-migration.lock",
         staging_name=".spack-config-staging",
         description="user config",
+        verify_destination_callback=_can_migrate_to_location,
     )
 
 
@@ -2305,6 +2305,7 @@ def _migrate_package_repositories() -> bool:
         lock_name=".spack-package-repos-migration-lock",
         staging_name=".package-repos-migration",
         description="package repositories",
+        verify_destination_callback=_can_migrate_to_location,
     )
 
 
