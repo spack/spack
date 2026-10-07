@@ -8,7 +8,6 @@ import shutil
 
 import spack.config
 import spack.paths
-import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 
@@ -42,6 +41,21 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     subparser.add_argument(
         "--dry-run", action="store_true", help="show what would be done without actually doing it"
+    )
+    subparser.add_argument(
+        "--restore-old-user-scope",
+        action="store_true",
+        help=(
+            "restore the user scope to ~/.spack (changes git-managed config in the"
+            "Spack repository)"
+        ),
+    )
+
+    subparser.epilog = (
+        "WARNING:\n"
+        "  Do not run this command in parallel with other spack commands for the same\n"
+        "  Spack instance. This command modifies configuration files that other processes\n"
+        "  may be reading, and does not use locking to coordinate with them."
     )
 
 
@@ -91,84 +105,43 @@ def _cleanup_old() -> None:
 
 
 def _undo(args):
-    # Check if migration marker exists
-    marker_path = spack.config._migration_done_marker_path()
-    if not os.path.exists(marker_path):
-        tty.msg("No migration has been performed.")
-        tty.msg("Nothing to undo.")
-        return
+    """Undo migration by pointing all resources back to their old locations."""
 
-    # Get old resource paths
-    old_licenses_dir = spack.paths.old_licenses_path
-    old_envs_dir = spack.paths.old_envs_path
-    old_gpg_dir = spack.paths.old_gpg_path
-    old_gpg_keys_dir = spack.paths.old_gpg_keys_path
+    old_resources = spack.config._detect_old_resources()
 
-    # Check what old resources exist
-    has_licenses = os.path.exists(old_licenses_dir)
-    has_envs = os.path.exists(old_envs_dir)
-    has_gpg = os.path.exists(old_gpg_dir)
+    if not any(old_resources.values()):
+        tty.die(
+            "Nothing to do: this spack instance has no old resources, and would not have "
+            "been migrated."
+        )
 
-    if not has_licenses and not has_envs and not has_gpg:
-        tty.msg("No old resources found to point back to.")
-        tty.msg("Nothing to undo.")
-        return
-
-    # Show what will be done
     if args.dry_run:
         tty.msg("Would perform the following operations:")
-        if has_licenses:
-            tty.msg(f"  - Point license_dir back to {old_licenses_dir}")
-        if has_envs:
-            tty.msg(f"  - Point environments_root back to {old_envs_dir}")
-        if has_gpg:
-            tty.msg(f"  - Point gpg_path back to {old_gpg_dir}")
-            tty.msg(f"  - Point gpg_keys_path back to {old_gpg_keys_dir}")
+        if old_resources.get("licenses"):
+            tty.msg(f"  - Point license_dir back to {spack.paths.old_licenses_path}")
+        if old_resources.get("environments"):
+            tty.msg(f"  - Point environments_root back to {spack.paths.old_envs_path}")
+        if old_resources.get("gpg_keys"):
+            tty.msg(f"  - Point gpg_path back to {spack.paths.old_gpg_path}")
+            tty.msg(f"  - Point gpg_keys_path back to {spack.paths.old_gpg_keys_path}")
+        # Installs are never migrated, so don't need to mention that
         tty.msg("  - Update layout scope to use old locations")
-        tty.msg("  - Update standard scopes to use ~/.spack for the user scope")
+        if args.restore_old_user_scope:
+            tty.msg("  - Update standard scopes to use ~/.spack for the user scope")
         return
 
-    # Perform the undo
-    tty.msg("Undoing auto-migration...")
+    tty.msg("Undoing migration...")
 
-    # Update layout scope to point to old locations
-    layout_scope_path = spack.config._layout_scope_path()
-    config_yaml_path = os.path.join(layout_scope_path, "config.yaml")
+    # In the context of prompted migration, this is locked, but this command
+    # does not hold .migration-lock because all other spack commands would
+    # have to hold it for their entire duration to safely interact (which
+    # seems expensive for something that would be used rarely).
+    spack.config._force_old_layout(old_resources, print_message=False)
 
-    if os.path.exists(config_yaml_path):
-        with open(config_yaml_path, "r", encoding="utf-8") as f:
-            layout_config = syaml.load(f) or {}
-    else:
-        layout_config = {}
+    tty.msg("  Updated layout scope to point to old locations")
 
-    if "config" not in layout_config:
-        layout_config["config"] = {}
-
-    # Point to old locations
-    if has_licenses:
-        layout_config["config"]["license_dir"] = old_licenses_dir
-        tty.msg(f"  Pointing license_dir to {old_licenses_dir}")
-    if has_envs:
-        layout_config["config"]["environments_root"] = old_envs_dir
-        tty.msg(f"  Pointing environments_root to {old_envs_dir}")
-    if has_gpg:
-        layout_config["config"]["gpg_path"] = old_gpg_dir
-        layout_config["config"]["gpg_keys_path"] = old_gpg_keys_dir
-        tty.msg(f"  Pointing gpg_path to {old_gpg_dir}")
-        tty.msg(f"  Pointing gpg_keys_path to {old_gpg_keys_dir}")
-
-    layout_config["config"].setdefault("locations", {})["state"] = [os.path.expanduser("~/.spack")]
-
-    # Write updated layout scope
-    fs.mkdirp(layout_scope_path)
-    with open(config_yaml_path, "w", encoding="utf-8") as f:
-        syaml.dump(layout_config, f)
-    tty.msg(f"  Updated layout scope: {config_yaml_path}")
-
-    # Restore the legacy user-scope default at the scope that defines it. This
-    # must be above layout in precedence and therefore cannot be represented in
-    # the layout scope itself.
-    _restore_user_scope_path()
+    if args.restore_old_user_scope:
+        _restore_user_scope_path()
 
     tty.msg("\nUndo complete!")
     tty.msg(

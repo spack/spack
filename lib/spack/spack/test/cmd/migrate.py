@@ -47,7 +47,7 @@ def test_migrate_undo_restores_backup_and_configuration(mock_spack_instance, mon
     _write_layout_config(layout)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    sp_migrate("undo")
+    sp_migrate("undo", "--restore-old-user-scope")
 
     # Old resources should still exist at their original locations
     assert (old_licenses / "license.dat").read_text(encoding="utf-8") == "license"
@@ -76,19 +76,19 @@ def test_migrate_undo_restores_backup_and_configuration(mock_spack_instance, mon
     assert "build_jobs: 99" in old_user_config.read_text(encoding="utf-8")
 
 
-def test_migrate_undo_requires_migration_marker(mock_spack_instance, monkeypatch):
-    """Undo requires migration marker to exist."""
+def test_undo_nothing_to_undo(mock_spack_instance, monkeypatch):
+    """Undo requires old resources to exist."""
     home_dir, base_prefix = mock_spack_instance
 
-    # No migration marker
+    # No old resources
     layout = Path(base_prefix) / "etc" / "spack" / "layout"
     _write_layout_config(layout)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    sp_migrate("undo")
+    sp_migrate("undo", fail_on_error=False)
 
-    assert "No migration has been performed" in sp_migrate.output
-    assert "Nothing to undo" in sp_migrate.output
+    assert "Nothing to do" in sp_migrate.output
+    assert "no old resources" in sp_migrate.output
 
 
 def test_migrate_cleanup_old_removes_unreferenced_legacy_directory(
