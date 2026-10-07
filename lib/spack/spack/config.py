@@ -2435,6 +2435,34 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         intersection = sorted(source_entries & destination_entries)
         remainder = sorted(source_entries - destination_entries)
 
+        # Check if any environments in remainder are non-relocatable
+        # (i.e., have install_tree:root pointing to $env)
+        for entry in remainder:
+            env_path = os.path.join(src_dir, entry)
+            spack_yaml = os.path.join(env_path, "spack.yaml")
+            if os.path.isfile(spack_yaml):
+                try:
+                    with open(spack_yaml, "r", encoding="utf-8") as f:
+                        env_config = syaml.load(f)
+
+                    # Check if install_tree:root contains $env
+                    install_tree_root = (
+                        env_config.get("spack", {})
+                        .get("config", {})
+                        .get("install_tree", {})
+                        .get("root", "")
+                    )
+                    if "$env" in install_tree_root:
+                        tty.debug(
+                            f"Environment {entry} has install_tree:root={install_tree_root} "
+                            f"which uses $env; skipping migration of all environments"
+                        )
+                        return False
+                except (OSError, syaml.SpackYAMLError) as e:
+                    # If we can't read/parse the file, be conservative and skip migration
+                    tty.debug(f"Failed to read {spack_yaml}: {e}; skipping environment migration")
+                    return False
+
         for entry in intersection + remainder:
             src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
