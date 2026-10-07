@@ -109,22 +109,27 @@ def _cleanup_old() -> None:
 def _use_new_layout(args):
     """Remove layout scope and trigger auto-migration to new XDG locations."""
     layout_scope_path = os.path.join(spack.paths.etc_path, "layout")
-    old_resources = spack.config._detect_old_resources()
+    marker_path = spack.config._migration_done_marker_path()
 
-    if not os.path.exists(layout_scope_path):
-        tty.msg("No layout scope exists; nothing to remove")
-    elif not any(old_resources.values()):
-        tty.msg("No old resources: nothing to migrate")
-    else:
-        if args.dry_run:
+    # Remove layout scope and marker first
+    if args.dry_run:
+        if os.path.exists(layout_scope_path) or os.path.exists(marker_path):
             tty.msg(f"Would remove layout scope: {layout_scope_path}")
-        else:
+        tty.msg("Would trigger auto-migration to new XDG layout")
+        return
+    else:
+        if os.path.exists(layout_scope_path):
             tty.msg(f"Removing layout scope: {layout_scope_path}")
             shutil.rmtree(layout_scope_path)
             tty.msg("  Layout scope removed")
+        if os.path.exists(marker_path):
+            os.remove(marker_path)
 
-    if args.dry_run:
-        tty.msg("Would trigger auto-migration to new XDG layout")
+    # Now detect old resources after removing layout scope
+    old_resources = spack.config._detect_old_resources()
+
+    if not any(old_resources.values()):
+        tty.msg("No old resources: nothing to migrate")
         return
 
     spack.config._do_migrate_spack_prefix(old_resources)

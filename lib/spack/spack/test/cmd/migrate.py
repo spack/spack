@@ -129,3 +129,85 @@ def test_migrate_cleanup_old_rejects_referenced_legacy_directory(mock_spack_inst
     assert "still refers" in sp_migrate.output
 
     assert old_user.exists()
+
+
+def test_migrate_can_alternate_between_old_and_new_layout(mock_spack_instance, monkeypatch):
+    """Can alternate between undo and use-new-layout to switch layouts."""
+    home_dir, base_prefix = mock_spack_instance
+
+    # Create old resources at their original locations
+    old_licenses = Path(base_prefix) / "etc" / "spack" / "licenses"
+    old_envs = Path(base_prefix) / "var" / "spack" / "environments"
+    old_gpg = Path(base_prefix) / "opt" / "spack" / "gpg"
+
+    old_licenses.mkdir(parents=True)
+    (old_licenses / "license.dat").write_text("license", encoding="utf-8")
+
+    (old_envs / "demo").mkdir(parents=True)
+    (old_envs / "demo" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+
+    (old_gpg / "private-keys-v1.d").mkdir(parents=True)
+    (old_gpg / "private-keys-v1.d" / "key").write_text("key", encoding="utf-8")
+
+    layout = Path(base_prefix) / "etc" / "spack" / "layout"
+    new_data = Path(home_dir) / ".local" / "share" / "spack"
+
+    # Start with no layout scope
+    if layout.exists():
+        import shutil
+
+        shutil.rmtree(layout)
+
+    # Round 1: use-new-layout should migrate to XDG locations
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    sp_migrate("use-new-layout")
+
+    # Check that config points to new XDG locations (may be $data_home variable)
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    license_dir = spack.config.CONFIG.get("config:license_dir")
+    envs_root = spack.config.CONFIG.get("config:environments_root")
+    gpg_path = spack.config.CONFIG.get("config:gpg_path")
+    # Should contain either the full path or $data_home/... which indicates XDG layout
+    assert "$data_home" in license_dir or str(new_data / "licenses") in license_dir
+    assert "$data_home" in envs_root or str(new_data / "environments") in envs_root
+    assert "$data_home" in gpg_path or str(new_data / "gpg") in gpg_path
+
+    # New locations should exist
+    assert (new_data / "licenses" / "license.dat").exists()
+    assert (new_data / "environments" / "demo" / "spack.yaml").exists()
+    assert (new_data / "gpg" / "private-keys-v1.d" / "key").exists()
+
+    # Round 2: undo should point back to old locations
+    # First, put resources back in old locations for undo to work with
+    if not (old_licenses / "license.dat").exists():
+        old_licenses.mkdir(parents=True, exist_ok=True)
+        (old_licenses / "license.dat").write_text("license", encoding="utf-8")
+    if not (old_envs / "demo" / "spack.yaml").exists():
+        (old_envs / "demo").mkdir(parents=True, exist_ok=True)
+        (old_envs / "demo" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    if not (old_gpg / "private-keys-v1.d" / "key").exists():
+        (old_gpg / "private-keys-v1.d").mkdir(parents=True, exist_ok=True)
+        (old_gpg / "private-keys-v1.d" / "key").write_text("key", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    sp_migrate("undo")
+
+    # Check that config now points to old locations
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    assert str(old_licenses) in spack.config.CONFIG.get("config:license_dir")
+    assert str(old_envs) in spack.config.CONFIG.get("config:environments_root")
+    assert str(old_gpg) in spack.config.CONFIG.get("config:gpg_path")
+
+    # Round 3: use-new-layout again should work
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    sp_migrate("use-new-layout")
+
+    # Check that config points to new XDG locations again
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    license_dir = spack.config.CONFIG.get("config:license_dir")
+    envs_root = spack.config.CONFIG.get("config:environments_root")
+    gpg_path = spack.config.CONFIG.get("config:gpg_path")
+    # Should contain either the full path or $data_home/... which indicates XDG layout
+    assert "$data_home" in license_dir or str(new_data / "licenses") in license_dir
+    assert "$data_home" in envs_root or str(new_data / "environments") in envs_root
+    assert "$data_home" in gpg_path or str(new_data / "gpg") in gpg_path

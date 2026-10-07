@@ -2142,6 +2142,17 @@ def _migrate_with_staging(
     if not _is_nonempty_directory(old_path):
         return False
 
+    # Check marker-based verification first to handle already-migrated destinations
+    # This must happen before _can_migrate_to_location because an already-migrated
+    # destination will not be empty (it has the marker file)
+    if verify_destination_callback:
+        action = verify_destination_callback(new_path)
+        if action == DestinationCheck.SKIP:
+            return True
+        elif action == DestinationCheck.FAIL:
+            return False
+        # PROCEED continues to normal checks
+
     # These checks have to be repeated inside the lock, but they will
     # almost always trigger an early return (skip locking).
     if not _can_migrate_to_location(new_path):
