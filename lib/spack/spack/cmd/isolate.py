@@ -229,7 +229,7 @@ def _undo_isolate():
         os.remove(marker_path)
         tty.debug("Removed migration marker")
 
-    spack.config._perform_auto_migration_at_module_load()
+    spack.config._perform_auto_migration()
 
 
 def isolate(parser, args):

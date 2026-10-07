@@ -2992,13 +2992,16 @@ def _perform_auto_migration_at_module_load():
 
     This runs before the CONFIG singleton is created, so migration functions
     cannot rely on CONFIG being available.
-
-    Each migration function prints its own message, so this function doesn't
-    compose a combined message.
     """
     if _invoked_command == "isolate":
         return
 
+    _perform_auto_migration()
+
+
+def _perform_auto_migration():
+    # Because this rewrites config, it should either run first thing (before config
+    # is loaded) or last (right before termination of the process)
     marker_path = _migration_done_marker_path()
 
     if not os.path.exists(marker_path):
