@@ -596,23 +596,19 @@ To automatically fix formatting and linting issues, you can do:
 
     $ spack style --fix
 
-Packages live in repositories separate from Spack itself.
-To check one, pass its namespace to ``--repo``:
+To perform linting tasks on a Spack Package Repo, pass its namespace to ``--repo``:
 
 .. code-block:: console
 
     $ spack style --repo builtin
 
-Spack does not choose a Ruff configuration for a package repository; Ruff finds its own, the same way it would if you ran it in that directory yourself.
-Put a ``ruff.toml`` or a ``pyproject.toml`` with a ``[tool.ruff]`` section in the repository to control how its packages are checked.
-A repository with no configuration of its own gets Ruff's defaults.
+Any linter configuration specified in a package repo will be respected by Spack's linter command.
+If there is no configuration specified, each linter tool will fall back to its default behavior.
 
-In a git checkout, only files changed relative to ``--base`` are checked by the import check.
-If the repository is not a git checkout, or has no ``--base`` revision (as with the shallow clones Spack makes of package repositories), Spack warns and checks every file in it instead.
-Files given explicitly must be inside the repository.
+Type checking is skipped for repositories.
 
-Type checking is skipped for package repositories, since mypy checks an importable Spack rather than a tree of package recipes.
-``--repo`` cannot be combined with ``--root``, because the repository is looked up in the running Spack's configuration.
+Specifying both a specific spack root and a repository are mutually exclusive options.
+If you must lint another Spack instance and a repo, either lint the repo from that Spack instance, or add the repo to the active Spack instance.
 
 You do not need any of these Python packages installed on your system for the checks to work!
 Spack will bootstrap install them from packages for your use.

@@ -378,8 +378,7 @@ def run_ruff(
 
 @tool("mypy")
 def run_mypy(file_list, args, repo: Optional[spack.repo.Repo] = None):
-    # ``repo`` is accepted for a uniform tool signature but unused: mypy type checks an
-    # importable spack, so ``style()`` drops it when checking a package repo.
+    # ``repo`` is accepted for a uniform tool signature but unused
     mypy_cmd = tools["mypy"].executable
     if not mypy_cmd:
         tty.warn("Cannot execute requested tool: mypy\nCannot find tool")
@@ -623,8 +622,7 @@ def style(parser, args):
     assert (Path(spack.paths.prefix) / "pyproject.toml").is_file()
 
     # a package repo is looked up by namespace in the running spack's configuration, so it
-    # can't be combined with a --root pointing at a different spack instance. Everything
-    # about the repo -- where its files, config, and git checkout live -- comes from spack.
+    # can't be combined with a root pointing at a different spack instance.
     if args.repo and args.root:
         tty.die("--repo and --root are mutually exclusive.")
     repo = spack.repo.PATH.get_repo(args.repo) if args.repo else None
