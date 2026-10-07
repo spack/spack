@@ -38,7 +38,7 @@ def _restore_user_scope_path() -> None:
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
-        "action", nargs="?", choices=["undo", "cleanup-old"], help="migration action to perform"
+        "action", choices=["undo", "cleanup-old"], help="migration action to perform"
     )
     subparser.add_argument(
         "--dry-run", action="store_true", help="show what would be done without actually doing it"
@@ -90,30 +90,7 @@ def _cleanup_old() -> None:
     tty.msg(f"Removed old user directory: {old_path}")
 
 
-def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
-    """Undo auto-migration of licenses and environments.
-
-    The `spack migrate undo` command updates the layout scope to point all
-    resources back to their old locations. Old resources remain at their
-    original locations (migration copies them, leaving originals in place).
-    New locations may be left in place for other Spack instances to use,
-    or manually removed if desired.
-    """
-    if args.action == "cleanup-old":
-        _cleanup_old()
-        return
-
-    if args.action != "undo":
-        tty.die(
-            "The manual `spack migrate` command has been deprecated.\n"
-            "\n"
-            "Auto-migration now happens automatically when you run Spack.\n"
-            "If you need to undo auto-migration, use:\n"
-            "  spack migrate undo\n"
-            "\n"
-            "For more information, see the Spack documentation."
-        )
-
+def _undo(args):
     # Check if migration marker exists
     marker_path = spack.config._migration_done_marker_path()
     if not os.path.exists(marker_path):
@@ -198,3 +175,12 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         "\nNOTE: Old resources remain at their original locations. New locations may be\n"
         "left in place for other Spack instances to use, or manually removed if desired."
     )
+
+
+def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    if args.action == "cleanup-old":
+        _cleanup_old()
+    elif args.action == "undo":
+        _undo(args)
+    else:
+        raise AssertionError("Unexpected: should be one of: [cleanup-old, undo]")
