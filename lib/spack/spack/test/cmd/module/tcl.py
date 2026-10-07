@@ -6,6 +6,7 @@ import os
 
 import pytest
 
+import spack.hooks
 import spack.main
 import spack.modules.tcl
 import spack.store
@@ -27,7 +28,7 @@ def test_find_variants(mutable_database, module_configuration):
 
     module("tcl", "refresh", "-y", "--delete-tree")
     out = module("tcl", "find", "mpileaks ^zmpi")
-    assert " build_system=generic ~debug ~fortran ~opt +shared +static" in out
+    assert "~debug~fortran~opt+shared+static build_system=generic hash=" in out
 
 
 @pytest.mark.db
@@ -37,7 +38,7 @@ def test_loads_variants(mutable_database, module_configuration):
 
     module("tcl", "refresh", "-y", "--delete-tree")
     out = module("tcl", "loads", "mpileaks ^zmpi")
-    assert " build_system=generic ~debug ~fortran ~opt +shared +static" in out
+    assert "~debug~fortran~opt+shared+static build_system=generic hash=" in out
 
 
 def test_refresh_fold_variants(install_mockery, module_configuration, modulefile_filenames):
@@ -320,3 +321,60 @@ def test_find_ignores_excluded_installations(
     out = module("tcl", "find", *cli_args, "mpileaks@2.3 ^zmpi", fail_on_error=False)
     assert module.returncode == 1
     assert "matches multiple packages" in out
+
+
+def test_module_file_written_when_first_installation_of_batch_is_excluded(
+    install_mockery, module_configuration
+):
+    """Tests that a module file shared by two installations is written when the batch of
+    recorded specs starts with an installation excluded from that file.
+    """
+    module_configuration("fold_variants_exclude")
+    abstract_specs = (
+        "mpileaks@2.3 ~debug ^zmpi",
+        "mpileaks@2.3 +debug ~opt ^zmpi",
+        "mpileaks@2.3 +debug +opt ^zmpi",
+    )
+    for abstract_spec in abstract_specs:
+        install("--fake", "--add", abstract_spec)
+    excluded, first, second = [spack.store.STORE.db.query_one(x) for x in abstract_specs]
+    module_file = writer_cls.from_spec(first, "default").layout.filename
+    os.remove(module_file)
+
+    spack.hooks.post_database_add([excluded, first, second])
+    assert _folded_hashes(module_file, excluded, first, second) == [False, True, True]
+
+
+def test_refresh_name_clash_when_a_version_is_a_prefix_of_another(
+    install_mockery, module_configuration
+):
+    """Tests that refresh reports a name clash for two versions projected to the same module
+    file name, when one version is a prefix of the other.
+    """
+    install("--fake", "--add", "mixedversions@=2.0")
+    install("--fake", "--add", "mixedversions@=2.0.1")
+
+    module_configuration("fold_variants_name_projection")
+    out = module("tcl", "refresh", "-y", "--delete-tree", fail_on_error=False)
+    assert module.returncode == 1
+    assert "Name clashes detected in module files" in out
+    assert "installations of different versions cannot share a module file" in out
+
+
+@pytest.mark.parametrize(
+    "installation_order", [("~debug", "+debug"), ("+debug", "~debug")], ids=["plain", "debug"]
+)
+def test_loads_keeps_active_the_first_installation_of_the_file(
+    install_mockery, module_configuration, installation_order
+):
+    """Tests that the load line left active by loads is the one of the installation the shared
+    module file lists first, whichever installation was installed first.
+    """
+    module_configuration("fold_variants_all")
+    for variant in installation_order:
+        install("--fake", "--add", f"mpileaks@2.3 {variant} ^zmpi")
+    listed_first = spack.store.STORE.db.query_one(f"mpileaks@2.3 {installation_order[0]} ^zmpi")
+
+    out = module("tcl", "loads", "mpileaks@2.3 ^zmpi")
+    (active_line,) = [line for line in out.splitlines() if line.startswith("module load")]
+    assert f"hash={listed_first.dag_hash(7)}" in active_line

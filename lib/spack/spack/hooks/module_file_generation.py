@@ -37,6 +37,9 @@ def post_database_add(specs: Sequence[spack.spec.Spec]) -> None:
         for spec in specs:
             try:
                 writer = spack.modules.module_types[module_type].from_spec(spec, name, cache=cache)
+                # An excluded installation does not write the module file of its siblings
+                if writer.conf.excluded:
+                    continue
                 filename = writer.layout.filename
                 if filename in written_filenames and writer.has_other_installations:
                     continue

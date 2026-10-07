@@ -178,20 +178,28 @@ def loads(module_type, specs, args, out=None):
         for spec in specs
     ]
 
-    # Installations folded into one module file cannot be loaded together: only the first one
-    # listed gets a live load line
+    # Installations folded into one module file cannot be loaded together: only the one the
+    # module file lists first gets a live load line
     module_cls = spack.modules.module_types[module_type]
+    file_of: Dict[spack.spec.Spec, str] = {}
     first_in_file: Dict[str, spack.spec.Spec] = {}
-    shares_file_with: Dict[spack.spec.Spec, spack.spec.Spec] = {}
     for spec, mod in modules:
         if not mod:
             continue
         writer = module_cls.from_spec(spec, args.module_set_name, cache=cache)
         if not writer.has_other_installations:
             continue
-        first = first_in_file.setdefault(writer.layout.filename, spec)
-        if first != spec:
-            shares_file_with[spec] = first
+        filename = writer.layout.filename
+        file_of[spec] = filename
+        listed = writer.conf.specs_in_file
+        first = first_in_file.setdefault(filename, spec)
+        if listed.index(spec) < listed.index(first):
+            first_in_file[filename] = spec
+    shares_file_with = {
+        spec: first_in_file[filename]
+        for spec, filename in file_of.items()
+        if spec != first_in_file[filename]
+    }
 
     module_commands = {"tcl": "module load ", "lmod": "module load "}
 

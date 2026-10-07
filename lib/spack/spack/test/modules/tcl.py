@@ -1133,7 +1133,7 @@ class TestTcl:
         assert len(record) == 1
         assert writer.conf.hash is None
         assert writer.conf.folds_installations
-        assert writer.layout.use_name.startswith("mpileaks/2.3-gcc-10.2.1 ")
+        assert writer.layout.use_name.startswith("mpileaks/2.3-gcc-10.2.1~")
         assert "hash" in writer.conf.variants
 
         # the warning is given once per process

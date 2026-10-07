@@ -297,7 +297,7 @@ For example, with a single ``git`` installation and the following configuration:
 .. code-block:: console
 
    $ spack module tcl find git
-   git/2.53.0-gcc-15.2.1 build_system=autotools +man +nls +perl +subtree ~tcltk hash=q5s4xwn
+   git/2.53.0-gcc-15.2.1+man+nls+perl+subtree~tcltk build_system=autotools hash=q5s4xwn
 
 Users can state on the ``module load`` command line the variant configuration they expect.
 The module loads if it matches what is installed:
@@ -330,6 +330,7 @@ The ``variants`` key under the ``tcl`` module configuration accepts the values:
 * ``all``: define all variants from the installed spec in the module file, except those reserved by Spack such as ``patches`` or ``dev_path``
 
 Like ``spack module tcl find``, the ``spack module tcl loads`` command prints the module names with their variants.
+Both append the boolean variants to the module name, as a shell expands a word starting with ``~`` to a home directory, and print the other variants after them.
 The ``depends-on`` lines of module files do not state them: the module name pins the dependency installation when it includes the hash, and the ``hash`` variant pins it otherwise, see :ref:`module-variants-folding`.
 
 .. warning::
