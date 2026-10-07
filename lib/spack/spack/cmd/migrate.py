@@ -111,7 +111,12 @@ def _use_new_layout(args):
     layout_scope_path = os.path.join(spack.paths.etc_path, "layout")
     marker_path = spack.config._migration_done_marker_path()
 
-    # Remove layout scope and marker first
+    old_resources = spack.config._detect_old_resources()
+
+    if not any(old_resources.values()):
+        tty.msg("No old resources: nothing to migrate")
+        return
+
     if args.dry_run:
         if os.path.exists(layout_scope_path) or os.path.exists(marker_path):
             tty.msg(f"Would remove layout scope: {layout_scope_path}")
@@ -124,13 +129,6 @@ def _use_new_layout(args):
             tty.msg("  Layout scope removed")
         if os.path.exists(marker_path):
             os.remove(marker_path)
-
-    # Now detect old resources after removing layout scope
-    old_resources = spack.config._detect_old_resources()
-
-    if not any(old_resources.values()):
-        tty.msg("No old resources: nothing to migrate")
-        return
 
     spack.config._do_migrate_spack_prefix(old_resources)
 
