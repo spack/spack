@@ -2768,12 +2768,16 @@ def _do_migrate_spack_prefix(old_resources) -> Dict[str, List[str]]:
                 "  - Environment views were not copied. Activate each environment and run "
                 "`spack env view regenerate` to recreate them."
             )
+        if retained_resources:
+            parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
+        parts.append(
+            "  - Spack-internal resources were copied into the new locations and not "
+            "removed from their old locations."
+        )
     else:
         parts.append("No Spack-internal resources were migrated")
-
-    if retained_resources:
-        parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
-    parts.append("  - Existing installs and shared artifacts were not removed.")
+        if retained_resources:
+            parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
 
     parts.extend(["", "To undo this migration, run `spack migrate undo`."])
     tty.msg("\n".join(parts))
@@ -2926,7 +2930,6 @@ def _force_old_layout(to_move, print_message=True) -> Dict[str, List[str]]:
         parts = ["No Spack-internal resources were migrated"]
         if retained_resources:
             parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
-        parts.append("  - Existing installs and shared artifacts were not removed.")
         parts.extend(["", "To undo this migration, run `spack migrate undo`."])
         tty.msg("\n".join(parts))
 
