@@ -76,6 +76,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="show loaded packages: same as ``spack find --loaded``",
     )
 
+    subparser.add_argument(
+        "--dev",
+        action="store_true",
+        default=False,
+        help="bypass the cached script and repo and generate environment modifications",
+    )
+
 
 def load(parser, args):
     if args.list:
@@ -103,7 +110,7 @@ def load(parser, args):
     for spec in specs:
         commands = ""
 
-        if spec.external:
+        if args.dev or spec.external:
             commands, _ = spec_script.get_environment_modifications(spec, shell)
         else:
             load_script_path = spec_script.path_to_load_shell_script(spec, shell)

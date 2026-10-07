@@ -9,6 +9,7 @@ import pytest
 
 import spack.concretize
 import spack.hooks.generate_spec_scripts as spec_script
+import spack.store
 import spack.user_environment as uenv
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
@@ -260,6 +261,44 @@ def test_unload_fails_no_shell(
 @pytest.mark.parametrize(
     "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
+def test_load_sources_cached_script(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test that load sources cached scripts."""
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    load_script_path = spec_script.path_to_load_shell_script(spec, shell[2:])
+    assert os.path.exists(load_script_path)
+
+    output = load(shell, "mpileaks")
+
+    assert spec_script.source_script(load_script_path, shell[2:]) in output
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_unload_sources_cached_script(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test unload sources cached scripts."""
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    os.environ[uenv.spack_loaded_hashes_var] = spec.dag_hash()
+
+    unload_script_path = spec_script.path_to_unload_shell_script(spec, shell[2:])
+    assert os.path.exists(unload_script_path)
+
+    output = unload(shell, "mpileaks")
+
+    assert spec_script.source_script(unload_script_path, shell[2:]) in output
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
 def test_load_regenerates_deleted_script(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
@@ -385,3 +424,96 @@ def test_unload_script_reverses_load(
 
     assert load_prepends == unload_removes
     assert load_sets == unload_unsets
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_dev_bypasses_cached_script(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test that --dev flag bypasses cached scripts and generates fresh environment
+    modifications."""
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    load_script_path = spec_script.path_to_load_shell_script(spec, shell[2:])
+    assert os.path.exists(load_script_path)
+
+    os.remove(load_script_path)
+
+    output = load(shell, "--dev", "mpileaks")
+
+    assert not os.path.exists(load_script_path)
+    assert spec.prefix in output
+    assert _get_shell_cmd_invocation("_spack_env_prepend", shell) in output
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_dev_bypasses_cached_repo(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test that --dev flag bypasses cached repo and uses builtin package repo."""
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    spack_dir = spack.store.STORE.layout.metadata_path(spec)
+    cached_repo_paths = glob.glob(os.path.join(spack_dir, "**", "repo.yaml"), recursive=True)
+    for repo_path in cached_repo_paths:
+        os.remove(repo_path)
+
+    output = load(shell, "--dev", "mpileaks")
+
+    assert spec.prefix in output
+    assert _get_shell_cmd_invocation("_spack_env_prepend", shell) in output
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_unload_dev_bypasses_cached_script(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test that --dev flag bypasses cached scripts for unload and generates fresh
+    environment modifications."""
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    os.environ[uenv.spack_loaded_hashes_var] = spec.dag_hash()
+
+    unload_script_path = spec_script.path_to_unload_shell_script(spec, shell[2:])
+    assert os.path.exists(unload_script_path)
+
+    os.remove(unload_script_path)
+
+    output = unload(shell, "--dev", "mpileaks")
+
+    assert not os.path.exists(unload_script_path)
+    assert _get_shell_cmd_invocation("_spack_env_remove", shell) in output
+    assert spec.dag_hash() in output
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_unload_dev_bypasses_cached_repo(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test that --dev flag bypasses cached repo for unload and uses builtin package
+    repo."""
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    os.environ[uenv.spack_loaded_hashes_var] = spec.dag_hash()
+
+    spack_dir = spack.store.STORE.layout.metadata_path(spec)
+    cached_repo_paths = glob.glob(os.path.join(spack_dir, "**", "repo.yaml"), recursive=True)
+    for repo_path in cached_repo_paths:
+        os.remove(repo_path)
+
+    output = unload(shell, "--dev", "mpileaks")
+
+    assert _get_shell_cmd_invocation("_spack_env_remove", shell) in output
+    assert spec.dag_hash() in output

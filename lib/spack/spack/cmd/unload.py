@@ -65,6 +65,13 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "-a", "--all", action="store_true", help="unload all loaded Spack packages"
     )
 
+    subparser.add_argument(
+        "--dev",
+        action="store_true",
+        default=False,
+        help="bypass the cached script and repo and generate environment modifications",
+    )
+
 
 def unload(parser, args):
     """unload spack packages from the user environment"""
@@ -95,7 +102,7 @@ def unload(parser, args):
     for spec in specs:
         commands = ""
 
-        if spec.external:
+        if args.dev or spec.external:
             _, commands = spec_script.get_environment_modifications(spec, shell)
         else:
             unload_script_path = spec_script.path_to_unload_shell_script(spec, shell)
