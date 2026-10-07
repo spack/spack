@@ -32,6 +32,7 @@ from typing import (
     List,
     NamedTuple,
     Optional,
+    Sequence,
     Tuple,
     Type,
     Union,
@@ -745,10 +746,25 @@ class BaseConfiguration:
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
     @property
+    def layout(self) -> "FileLayout":
+        """Returns the layout of the module file of this spec."""
+        if "layout" not in self._cache:
+            self._cache["layout"] = self._make_layout()
+        return self._cache["layout"]
+
+    def _make_layout(self) -> "FileLayout":
+        return FileLayout(self)
+
+    @property
+    def configurations_in_file(self) -> Sequence["BaseConfiguration"]:
+        """Returns the configuration of each spec the module file holds, in the order it lists
+        them. This one is the only one, unless its spec is being removed from the module file."""
+        return [] if self.spec in self.removed_specs else [self]
+
+    @property
     def specs_in_file(self) -> List[spack.spec.Spec]:
-        """Returns the specs the module file holds, in the order it lists them.
-        This spec is the only one, unless it is being removed from the module file."""
-        return [] if self.spec in self.removed_specs else [self.spec]
+        """Returns the specs the module file holds, in the order it lists them."""
+        return [conf.spec for conf in self.configurations_in_file]
 
     @property
     def other_specs_in_file(self) -> List[spack.spec.Spec]:
@@ -1203,7 +1219,7 @@ class ModuleContext(tengine.Context):
         name = self.conf.name
         cache = self.conf._configuration_cache
         return [
-            type(self.layout)(self.conf.make_configuration(x, name, cache=cache)).unique_use_name
+            self.conf.make_configuration(x, name, cache=cache).layout.unique_use_name
             for x in getattr(self.conf, what)
         ]
 
@@ -1277,8 +1293,7 @@ class BaseModuleFileWriter:
 
     configuration_class: ClassVar[Type["BaseConfiguration"]]
 
-    #: Classes of the layout and of the template context, subclasses may override them
-    layout_class: ClassVar[Type[FileLayout]] = FileLayout
+    #: Class of the template context, subclasses may override it
     context_class: ClassVar[Type[ModuleContext]] = ModuleContext
 
     _required_attrs = (
@@ -1298,7 +1313,7 @@ class BaseModuleFileWriter:
 
     def __init__(self, conf: "BaseConfiguration") -> None:
         self.conf = conf
-        self.layout = self.layout_class(conf)
+        self.layout = conf.layout
         self.context = self.context_class(conf, self.layout)
 
     @classmethod
@@ -1420,18 +1435,15 @@ class BaseModuleFileWriter:
         # record module hiddenness if implicit
         self.update_module_hiddenness()
 
-    def link_default(self) -> None:
-        """Points the ``default`` symlink to this module file."""
-        # Symlink to a tmp location first and move, so that existing
-        # symlinks do not cause an error.
-        default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
-        default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
-        os.symlink(self.layout.filename, default_tmp)
-        os.rename(default_tmp, default_path)
-
     def update_module_defaults(self) -> None:
-        if self.conf.matches_default:
-            self.link_default()
+        if any(conf.matches_default for conf in self.conf.configurations_in_file):
+            # A spec held by the module file matches a default, symlink it to default
+            # Symlink to a tmp location first and move, so that existing
+            # symlinks do not cause an error.
+            default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
+            default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
+            os.symlink(self.layout.filename, default_tmp)
+            os.rename(default_tmp, default_path)
 
     def update_module_hiddenness(self, remove: bool = False) -> None:
         """Update modulerc file corresponding to module to add or remove
@@ -1443,7 +1455,9 @@ class BaseModuleFileWriter:
         """
         modulerc_path = self.layout.modulerc
         hide_module_cmd = self.hide_cmd_format % self.layout.name
-        hidden = self.conf.hidden and not remove
+        # A module file is hidden when every spec it holds is hidden
+        confs_in_file = self.conf.configurations_in_file
+        hidden = not remove and all(conf.hidden for conf in confs_in_file)
         modulerc_exists = os.path.exists(modulerc_path)
         updated = False
 

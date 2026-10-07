@@ -235,14 +235,19 @@ def loads(module_type, specs, args, out=None):
         )
 
 
+def fold_into_one_file(writers) -> bool:
+    """Whether the module file of the first writer folds the installations of all of them."""
+    specs_in_file = writers[0].conf.specs_in_file
+    return all(x.spec in specs_in_file for x in writers)
+
+
 def shared_module_name(module_type, specs, args, cache):
     """Returns the name, or path with ``--full-path``, of the module file folding every
     installation of ``specs``, or None when they do not all share one."""
     module_cls = spack.modules.module_types[module_type]
     writers = [module_cls.from_spec(spec, args.module_set_name, cache=cache) for spec in specs]
     first = writers[0]
-    specs_in_file = first.conf.specs_in_file
-    if any(x.spec not in specs_in_file for x in writers) or not first.has_installation:
+    if not fold_into_one_file(writers) or not first.has_installation:
         return None
     return first.layout.filename if args.full_path else first.layout.name
 
@@ -422,11 +427,7 @@ def refresh(module_type, specs, args):
     for item in writers:
         file2writer[item.layout.filename].append(item)
 
-    def is_folded(writer_list):
-        specs_in_file = writer_list[0].conf.specs_in_file
-        return all(x.spec in specs_in_file for x in writer_list)
-
-    clashes = {f: w for f, w in file2writer.items() if len(w) > 1 and not is_folded(w)}
+    clashes = {f: w for f, w in file2writer.items() if len(w) > 1 and not fold_into_one_file(w)}
     if clashes:
         spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
         message = "Name clashes detected in module files:\n"

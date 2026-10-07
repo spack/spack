@@ -123,14 +123,13 @@ class TclConfiguration(BaseConfiguration):
         the hash, as different installations of the same package version then map to the same
         file name.
         """
-        if "folds_installations" not in self._cache:
-            self._cache["folds_installations"] = self._compute_folds_installations()
-        return self._cache["folds_installations"]
-
-    def _compute_folds_installations(self) -> bool:
         if self.variants_mode == "none":
             return False
-        return re.search(r"{[^}]*hash", self.projection) is None
+        tokens = spack.spec.SPEC_FORMAT_RE.finditer(self.projection)
+        return not any(token.group(4) for token in tokens)
+
+    def _make_layout(self) -> FileLayout:
+        return TclFileLayout(self)
 
     @property
     def variants(self) -> Dict[str, Dict[str, Any]]:
@@ -156,10 +155,11 @@ class TclConfiguration(BaseConfiguration):
             if v.name not in RESERVED_NAMES
         }
 
+        short_hash = self.spec.dag_hash(7)
         variant_dict["hash"] = {
-            "value": self.spec.dag_hash(7),
+            "value": short_hash,
             "type": "single",
-            "spec": f"hash={self.spec.dag_hash(7)}",
+            "spec": f"hash={short_hash}",
         }
         return variant_dict
 
@@ -180,52 +180,54 @@ class TclConfiguration(BaseConfiguration):
         return "0" if aggregated_variant["type"] == "bool" else "none"
 
     @property
-    def specs_in_file(self) -> List[spack.spec.Spec]:
-        """All installed specs of same name@version that map to the same module filename."""
-        if "specs_in_file" not in self._cache:
-            self._cache["specs_in_file"] = self._compute_specs_in_file()
-        return self._cache["specs_in_file"]
+    def configurations_in_file(self) -> List["TclConfiguration"]:
+        """Returns the configuration of each installed spec of same name@version that maps to
+        the same module filename, in the order the module file lists them."""
+        if "configurations_in_file" not in self._cache:
+            self._cache["configurations_in_file"] = self._compute_configurations_in_file()
+        return self._cache["configurations_in_file"]
 
-    def _compute_specs_in_file(self) -> List[spack.spec.Spec]:
+    def _compute_configurations_in_file(self) -> List["TclConfiguration"]:
         # A module file that cannot be shared holds this installation only, skip the database
         # query in this case
         if not self.folds_installations:
-            return super().specs_in_file
+            return cast(List[TclConfiguration], super().configurations_in_file)
 
-        # Upstream installations are left out: their module files belong to the upstream
-        name_version_spec = f"{self.spec.name}@={self.spec.version}"
-        spec_list = set(
-            spack.store.STORE.db.query(
-                name_version_spec, installed=True, install_tree="local", sort=False
+        # One read transaction for the query and the records read for each installation
+        with spack.store.STORE.db.read_transaction():
+            # Upstream installations are left out: their module files belong to the upstream
+            name_version_spec = f"{self.spec.name}@={self.spec.version}"
+            spec_list = set(
+                spack.store.STORE.db.query(
+                    name_version_spec, installed=True, install_tree="local", sort=False
+                )
             )
-        )
 
-        # A module file may be requested for an installation not recorded yet, the ones being
-        # removed are still recorded until uninstalled
-        spec_list.add(self.spec)
-        spec_list.difference_update(self.removed_specs)
+            # A module file may be requested for an installation not recorded yet, the ones
+            # being removed are still recorded until uninstalled
+            spec_list.add(self.spec)
+            spec_list.difference_update(self.removed_specs)
 
-        # Keep only specs that share the same module filename and are not excluded from module
-        # file generation, this installation included, in the order a plain load request
-        # selects them, as the module file selects the first installation matching a request
-        my_filename = TclFileLayout(self).filename
-        confs_in_file = []
-        for spec in spec_list:
-            conf = self.sibling_configuration(spec)
-            if conf.excluded:
-                continue
-            if conf is self or TclFileLayout(conf).filename == my_filename:
-                confs_in_file.append(conf)
-        confs_in_file.sort(key=self._installation_order_key)
-        specs_in_file = [conf.spec for conf in confs_in_file]
+            # Keep only specs that share the same module filename and are not excluded from
+            # module file generation, this installation included, in the order a plain load
+            # request selects them, as the module file selects the first installation matching
+            # a request
+            confs_in_file = []
+            for spec in spec_list:
+                conf = self.sibling_configuration(spec)
+                if conf.excluded:
+                    continue
+                if conf is self or conf.layout.filename == self.layout.filename:
+                    confs_in_file.append(conf)
+            confs_in_file.sort(key=self._installation_order_key)
 
         # The other installations compute the same list, hand it over to spare them the
         # database query
         for conf in confs_in_file:
             if conf is not self:
-                conf._cache.setdefault("specs_in_file", specs_in_file)
+                conf._cache.setdefault("configurations_in_file", confs_in_file)
 
-        return specs_in_file
+        return confs_in_file
 
     def sibling_configuration(self, spec: spack.spec.Spec) -> "TclConfiguration":
         """Returns the configuration of an installation held by the same module file, which is
@@ -238,16 +240,6 @@ class TclConfiguration(BaseConfiguration):
             spec, self.name, removed_specs=self.removed_specs, cache=self._configuration_cache
         )
         return cast(TclConfiguration, conf)
-
-    @property
-    def configurations_in_file(self) -> List["TclConfiguration"]:
-        """Returns the configuration of each installation held by the module file, in the
-        order it lists them."""
-        if "configurations_in_file" not in self._cache:
-            self._cache["configurations_in_file"] = [
-                self.sibling_configuration(spec) for spec in self.specs_in_file
-            ]
-        return self._cache["configurations_in_file"]
 
     @staticmethod
     def _installation_order_key(conf: BaseConfiguration) -> Tuple[bool, float, str]:
@@ -276,9 +268,6 @@ class TclConfiguration(BaseConfiguration):
         return self._cache["aggregated_variants"]
 
     def _compute_aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
-        if self.variants_mode == "none":
-            return {}
-
         aggregated = {}
         seen_in = {}
         confs_in_file = self.configurations_in_file
@@ -359,7 +348,7 @@ class TclModuleContext(ModuleContext):
         the module file selects them."""
         if self._installations is None:
             self._installations = [
-                self if conf is self.conf else type(self)(conf, type(self.layout)(conf))
+                self if conf is self.conf else type(self)(conf, conf.layout)
                 for conf in self.conf.configurations_in_file
             ]
         return self._installations
@@ -384,8 +373,6 @@ class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
 
     configuration_class = TclConfiguration
-
-    layout_class = TclFileLayout
 
     context_class = TclModuleContext
 
@@ -436,20 +423,5 @@ class TclModulefileWriter(BaseModuleFileWriter):
         writer = type(self)(self.conf.sibling_configuration(remaining[0]))
         writer.write(overwrite=True)
         # The removed installation may have been the one making this module the default
-        if not writer._has_default():
+        if not any(conf.matches_default for conf in writer.conf.configurations_in_file):
             self.remove_module_defaults()
-
-    def _has_default(self) -> bool:
-        """Whether an installation held by the module file matches a configured default."""
-        return any(conf.matches_default for conf in self.conf.configurations_in_file)
-
-    def update_module_defaults(self) -> None:
-        """Points the ``default`` symlink to this module file if it holds an installation
-        matching a configured default, whichever installation is being written."""
-        if self._has_default():
-            self.link_default()
-
-    def update_module_hiddenness(self, remove: bool = False) -> None:
-        # A module file holding an installation that is not hidden is not hidden
-        remove = remove or any(not conf.hidden for conf in self.conf.configurations_in_file)
-        super().update_module_hiddenness(remove)
