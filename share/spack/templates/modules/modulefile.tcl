@@ -33,7 +33,6 @@ proc ModulesHelp { } {
 
 {% block variants %}
 {% if variants_enabled %}
-{% if aggregated_variants|length > 0 %}
 # Variants defined across the installations held by this module file, with their possible
 # values, then the values of each installation in the order of variant_names, and its hash
 set variant_names [list {{ ' '.join(aggregated_variants.keys()) }}]
@@ -101,9 +100,6 @@ foreach name $variant_names value $selected_values {
         variant --default $value $name {*}$variant_values($name)
     }
 }
-{% else %}
-set selected_installation {{ hash }}
-{% endif %}
 
 {% if any_installation_has_autoload %}
 # define missing command if using Environment Modules <5.1 or fix it to
