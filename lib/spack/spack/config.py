@@ -2723,7 +2723,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
             sys.stderr.write(f'Must enter (y)es or (n)o, got: "{answer}"\n')
 
 
-def _do_migrate_spack_prefix(old_resources) -> Dict[str, List[str]]:
+def _do_migrate_spack_prefix(old_resources):
     """Perform auto-migration of Spack prefix data from old to new locations.
 
     Migrates portable resources (licenses, environments, GPG data) from old
@@ -2776,8 +2776,8 @@ def _do_migrate_spack_prefix(old_resources) -> Dict[str, List[str]]:
     # This method deletes items that are migrated from old_resources, so we
     # retain them simply by never deleting that entry
 
-    # Write layout scope for resources that didn't migrate (but don't print message)
-    retained_resources = _force_old_layout(old_resources, print_message=False)["retained"]
+    # Write layout scope for resources that didn't migrate
+    retained_resources = _force_old_layout(old_resources, print_message=False)
 
     # Write migration completion marker as the last step
     # This allows other processes to detect that migration finished
@@ -2789,28 +2789,21 @@ def _do_migrate_spack_prefix(old_resources) -> Dict[str, List[str]]:
     # Print migration summary
     parts = []
     if migrated_resources:
-        parts.append("Spack automatically migrated old resources.")
+        parts.append("Spack migrated old resources.")
         parts.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
         if "environments" in migrated_resources:
             parts.append(
                 "  - Environment views were not copied. Activate each environment and run "
                 "`spack env view regenerate` to recreate them."
             )
-        if retained_resources:
-            parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
-        parts.append(
-            "  - Spack-internal resources were copied into the new locations and not "
-            "removed from their old locations."
-        )
     else:
         parts.append("No Spack-internal resources were migrated")
-        if retained_resources:
-            parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
+
+    if retained_resources:
+        parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
 
     parts.extend(["", "To undo this migration, run `spack migrate undo`."])
     tty.msg("\n".join(parts))
-
-    return {"migrated": migrated_resources, "retained": retained_resources}
 
 
 def create_incremental() -> Generator[Configuration, None, None]:
@@ -2906,7 +2899,7 @@ def _detect_invoked_command():
     _invoked_command = _extract_command_from_argv()
 
 
-def _force_old_layout(to_move, print_message=True) -> Dict[str, List[str]]:
+def _force_old_layout(to_move, print_message=True) -> List[str]:
     layout_scope_path = _layout_scope_path()
     config_path = os.path.join(layout_scope_path, "config.yaml")
     filesystem.mkdirp(layout_scope_path, default_perms="parents")
@@ -2917,26 +2910,23 @@ def _force_old_layout(to_move, print_message=True) -> Dict[str, List[str]]:
     if to_move.get("installs"):
         retained_resources.append("existing installs")
         config_changes["install_tree"] = {"root": os.path.join(spack.paths.prefix, "opt", "spack")}
-        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
     old_gpg_home = spack.paths.old_gpg_path
     old_gpg_keys = spack.paths.old_gpg_keys_path
     if to_move.get("gpg_keys"):
         config_changes["gpg_path"] = old_gpg_home
         config_changes["gpg_keys_path"] = old_gpg_keys
-        retained_resources.append("GPG data (kept in its old location)")
+        retained_resources.append(f"GPG data ({old_gpg_home})")
 
     if to_move.get("licenses"):
         old_licenses = spack.paths.old_licenses_path
         config_changes["license_dir"] = old_licenses
-        retained_resources.append("licenses (kept in the old location)")
-        tty.debug(f"Licenses kept in old location: {old_licenses}")
+        retained_resources.append(f"licenses ({old_licenses})")
 
     if to_move.get("environments"):
         old_envs = spack.paths.old_envs_path
         config_changes["environments_root"] = old_envs
-        retained_resources.append("environments (kept in the old location)")
-        tty.debug(f"Environments kept in old location: {old_envs}")
+        retained_resources.append(f"environments ({old_envs})")
 
     # Write config scope files to the layout scope only if we have config changes
     if config_changes:
@@ -2958,10 +2948,9 @@ def _force_old_layout(to_move, print_message=True) -> Dict[str, List[str]]:
         parts = ["No Spack-internal resources were migrated"]
         if retained_resources:
             parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
-        parts.extend(["", "To undo this migration, run `spack migrate undo`."])
         tty.msg("\n".join(parts))
 
-    return {"migrated": [], "retained": retained_resources}
+    return retained_resources
 
 
 def generate_old_layout_config(old_resources, scope_config):
