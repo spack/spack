@@ -11,7 +11,7 @@ import spack.paths
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 
-description = "undo auto-migration of licenses and environments"
+description = "manage migration of Spack resources"
 section = "config"
 level = "long"
 
@@ -37,7 +37,9 @@ def _restore_user_scope_path() -> None:
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
-        "action", choices=["undo", "cleanup-old"], help="migration action to perform"
+        "action",
+        choices=["undo", "cleanup-old", "use-new-layout"],
+        help="migration action to perform",
     )
     subparser.add_argument(
         "--dry-run", action="store_true", help="show what would be done without actually doing it"
@@ -104,6 +106,30 @@ def _cleanup_old() -> None:
     tty.msg(f"Removed old user directory: {old_path}")
 
 
+def _use_new_layout(args):
+    """Remove layout scope and trigger auto-migration to new XDG locations."""
+    layout_scope_path = os.path.join(spack.paths.etc_path, "layout")
+    old_resources = spack.config._detect_old_resources()
+
+    if not os.path.exists(layout_scope_path):
+        tty.msg("No layout scope exists; nothing to remove")
+    elif not any(old_resources.values()):
+        tty.msg("No old resources: nothing to migrate")
+    else:
+        if args.dry_run:
+            tty.msg(f"Would remove layout scope: {layout_scope_path}")
+        else:
+            tty.msg(f"Removing layout scope: {layout_scope_path}")
+            shutil.rmtree(layout_scope_path)
+            tty.msg("  Layout scope removed")
+
+    if args.dry_run:
+        tty.msg("Would trigger auto-migration to new XDG layout")
+        return
+
+    spack.config._do_migrate_spack_prefix(old_resources)
+
+
 def _undo(args):
     """Undo migration by pointing all resources back to their old locations."""
 
@@ -155,5 +181,7 @@ def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         _cleanup_old()
     elif args.action == "undo":
         _undo(args)
+    elif args.action == "use-new-layout":
+        _use_new_layout(args)
     else:
-        raise AssertionError("Unexpected: should be one of: [cleanup-old, undo]")
+        raise AssertionError("Unexpected: should be one of: [cleanup-old, undo, use-new-layout]")
