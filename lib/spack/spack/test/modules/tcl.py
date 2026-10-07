@@ -999,7 +999,7 @@ class TestTcl:
         assert len([x for x in content if "set boolean_variants [list ]" in x]) == 1
         assert len([x for x in content if "    build_system {generic}" in x]) == 1
         assert len([x for x in content if re.match("    hash {\\w{7}}", x)]) == 1
-        assert len([x for x in content if re.match("    {generic \\w{7}} \\w{7}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic \\w{7}}", x)]) == 1
 
         # test module file of package with boolean variants
         content = modulefile_content("mpileaks +debug -shared")
@@ -1030,9 +1030,7 @@ class TestTcl:
         assert len([x for x in content if "    opt {0}" in x]) == 1
         assert len([x for x in content if "    shared {0}" in x]) == 1
         assert len([x for x in content if "    static {1}" in x]) == 1
-        assert (
-            len([x for x in content if re.match("    {generic 1 0 0 0 1 \\w{7}} \\w{7}", x)]) == 1
-        )
+        assert len([x for x in content if re.match("    {generic 1 0 0 0 1 \\w{7}}", x)]) == 1
 
         # test installation selection and variant definition code
         assert len([x for x in content if "getvariant --return-value $name __unset__" in x]) == 1
@@ -1083,12 +1081,12 @@ class TestTcl:
         assert len([x for x in content if "set boolean_variants [list ]" in x]) == 1
         assert len([x for x in content if "    build_system {generic}" in x]) == 1
         assert len([x for x in content if "    myvariant {bar}" in x]) == 1
-        assert len([x for x in content if re.match("    {generic bar \\w{7}} \\w{7}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic bar \\w{7}}", x)]) == 1
 
         # test module file of package with multi-valued variants
         content = modulefile_content("multivalue-variant-multi-defaults")
         assert len([x for x in content if "    myvariant {bar_baz}" in x]) == 1
-        assert len([x for x in content if re.match("    {generic bar_baz \\w{7}} \\w{7}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic bar_baz \\w{7}}", x)]) == 1
         content = modulefile_content("multivalue-variant-multi-defaults myvariant=baz,bar")
         assert len([x for x in content if "    myvariant {bar_baz}" in x]) == 1
 
@@ -1101,7 +1099,7 @@ class TestTcl:
         content = modulefile_content("patch@2.0")
         assert len([x for x in content if "set variant_names [list build_system hash]" in x]) == 1
         assert len([x for x in content if "variant" in x and "patches" in x]) == 0
-        assert len([x for x in content if re.match("    {generic \\w{7}} \\w{7}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic \\w{7}}", x)]) == 1
 
         # dev_path variant set on spec
         content = modulefile_content("mpileaks dev_path=/some/path")
@@ -1117,9 +1115,7 @@ class TestTcl:
             == 1
         )
         assert len([x for x in content if "variant" in x and "dev_path" in x]) == 0
-        assert (
-            len([x for x in content if re.match("    {generic 0 0 0 1 1 \\w{7}} \\w{7}", x)]) == 1
-        )
+        assert len([x for x in content if re.match("    {generic 0 0 0 1 1 \\w{7}}", x)]) == 1
 
     def test_variants_all_ignores_hash_length(self, factory, module_configuration, monkeypatch):
         """Tests a non-zero hash_length is ignored, and reported once, when variants are
@@ -1155,9 +1151,7 @@ class TestTcl:
         assert len([x for x in content if "    fum {charmxx}" in x]) == 1
         content = modulefile_content("singlevalue-variant fum=ch3:sock")
         assert len([x for x in content if "    fum {ch3_sock}" in x]) == 1
-        assert (
-            len([x for x in content if re.match("    {generic ch3_sock \\w{7}} \\w{7}", x)]) == 1
-        )
+        assert len([x for x in content if re.match("    {generic ch3_sock \\w{7}}", x)]) == 1
 
         # a value the module command reads as a boolean gets a trailing "_"
         content = modulefile_content("singlevalue-variant fum=on")
@@ -1453,9 +1447,9 @@ class TestTcl:
         hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
         hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
         hash_c = spack.store.STORE.db.query_one(spec_c).dag_hash(7)
-        install_a = f"{{generic 1 0 1 1 1 {hash_a}}} {hash_a}\\"
-        install_b = f"{{generic 1 0 1 1 1 {hash_b}}} {hash_b}\\"
-        install_c = f"{{generic 1 0 0 1 1 {hash_c}}} {hash_c}\\"
+        install_a = f"{{generic 1 0 1 1 1 {hash_a}}}\\"
+        install_b = f"{{generic 1 0 1 1 1 {hash_b}}}\\"
+        install_c = f"{{generic 1 0 0 1 1 {hash_c}}}\\"
         assert content.index(install_a) < content.index(install_b) < content.index(install_c)
 
     def test_fold_variants_pinned_dependency(
@@ -1639,7 +1633,7 @@ class TestTcl:
         hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
         hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
         content = _module_lines(modulefile_filenames("tcl", spec_a)[0])
-        listed = [m.group(1) for x in content for m in [re.match(r"{.*} (\w{7})\\$", x)] if m]
+        listed = [m.group(1) for x in content for m in [re.match(r"{.* (\w{7})}\\$", x)] if m]
         assert listed == [hash_b, hash_a]
 
     def test_fold_variants_single_install_command(

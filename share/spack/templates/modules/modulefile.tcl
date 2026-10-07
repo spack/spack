@@ -34,7 +34,7 @@ proc ModulesHelp { } {
 {% block variants %}
 {% if variants_enabled %}
 # Variants defined across the installations held by this module file, with their possible
-# values, then the values of each installation in the order of variant_names, and its hash
+# values, then the values of each installation in the order of variant_names, hash last
 set variant_names [list {{ ' '.join(aggregated_variants.keys()) }}]
 set boolean_variants [list {% for name, v in aggregated_variants.items() if v['type'] == 'bool' %}{{ name }}{{ ' ' if not loop.last }}{% endfor %}]
 array set variant_values [list\
@@ -44,7 +44,7 @@ array set variant_values [list\
 ]
 set installations [list\
 {% for install in installations %}
-    {{ '{' }}{{ install.variant_values }}{{ '}' }} {{ install.hash }}\
+    {{ '{' }}{{ install.variant_values }}{{ '}' }}\
 {% endfor %}
 ]
 
@@ -67,8 +67,9 @@ proc select_installation {} {
     foreach name $::variant_names {
         lappend mask [getvariant --return-value $name __unset__]
     }
-    foreach {values hash} $::installations {
+    foreach values $::installations {
         set match 1
+        # "module whatis" evaluates the file with an empty value for every variant
         foreach value $values requested $mask {
             if {$requested ni [list __unset__ {}] && $requested ne $value} {
                 set match 0
@@ -76,12 +77,12 @@ proc select_installation {} {
             }
         }
         if {$match} {
-            return [list $values $hash]
+            return $values
         }
     }
     # raise error if stated variants do not correspond to an installed package
     set err_msg "Specified package is not installed, available packages for this version are:\n"
-    foreach {values hash} $::installations {
+    foreach values $::installations {
         append err_msg "* \"[variants_spec $values]\"\n"
     }
     reportError $err_msg
@@ -92,7 +93,8 @@ proc select_installation {} {
 foreach name $variant_names {
     variant --default __unset__ $name
 }
-lassign [select_installation] selected_values selected_installation
+set selected_values [select_installation]
+set selected_installation [lindex $selected_values end]
 foreach name $variant_names value $selected_values {
     if {$name in $boolean_variants} {
         variant --boolean --default $value $name
