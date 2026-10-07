@@ -1462,8 +1462,7 @@ class TestTcl:
         self, install_mockery, module_configuration, modulefile_filenames
     ):
         """Test module file of a dependent does not change when a second installation of its
-        dependency is folded in the same module file, and this dependency module file lists
-        the explicit installation before the implicit one."""
+        dependency is folded in the same module file."""
         module_configuration("fold_variants_all")
         spec_a = "mpileaks@2.3 ~debug ^mpich"
         install("--fake", "--add", spec_a)
@@ -1485,9 +1484,6 @@ class TestTcl:
         hash_b = dep_b.dag_hash(7)
         content_dep = _module_lines(module_file_dep)
         assert f"hash {{{' '.join(sorted([hash_a, hash_b]))}}}\\" in content_dep
-        install_a = f"{{generic {hash_a}}} {hash_a}\\"
-        install_b = f"{{generic {hash_b}}} {hash_b}\\"
-        assert content_dep.index(install_b) < content_dep.index(install_a)
 
         # dependent module file is unchanged when regenerated
         writer = writer_cls.from_spec(spack.store.STORE.db.query_one(spec_a), "default", True)
@@ -1630,41 +1626,21 @@ class TestTcl:
         assert os.path.exists(module_file)
         assert not os.path.lexists(default_link)
 
-    def test_fold_variants_installation_order(
+    def test_fold_variants_default_listed_first(
         self, install_mockery, module_configuration, modulefile_filenames
     ):
-        """Test the installations folded in a module file are listed in installation order,
-        with the explicit ones before the implicit ones and the ones matching a configured
-        default first, so a plain load keeps selecting the same installation as new ones are
-        installed."""
+        """Test the installation matching a configured default is listed first in a folded
+        module file, though it was installed last."""
         module_configuration("fold_variants_defaults")
         spec_a = "mpileaks@2.3 ~debug ^zmpi"
-        spec_b = "mpileaks@2.3 ~debug ^mpich"
-        spec_c = "mpileaks@2.3 +debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
-        concrete_a = spack.store.STORE.db.query_one(spec_a)
-        concrete_b = spack.store.STORE.db.query_one(spec_b)
-        module_file = modulefile_filenames("tcl", spec_a)[0]
-
-        def listed_hashes():
-            """Hashes of the installations held by the module file, in listing order."""
-            content = _module_lines(module_file)
-            return [m.group(1) for x in content for m in [re.match(r"{.*} (\w{7})\\$", x)] if m]
-
-        # installed in this order, whatever their hashes
-        hash_a, hash_b = concrete_a.dag_hash(7), concrete_b.dag_hash(7)
-        assert listed_hashes() == [hash_a, hash_b]
-
-        # an explicit installation comes before an implicit one, however older
-        mark("--implicit", spec_a)
-        writer_cls.from_spec(concrete_a, "default").write(overwrite=True)
-        assert listed_hashes() == [hash_b, hash_a]
-
-        # the installation matching a configured default comes first, however recent
-        install("--fake", "--add", spec_c)
-        hash_c = spack.store.STORE.db.query_one(spec_c).dag_hash(7)
-        assert listed_hashes() == [hash_c, hash_b, hash_a]
+        hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
+        hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
+        content = _module_lines(modulefile_filenames("tcl", spec_a)[0])
+        listed = [m.group(1) for x in content for m in [re.match(r"{.*} (\w{7})\\$", x)] if m]
+        assert listed == [hash_b, hash_a]
 
     def test_fold_variants_single_install_command(
         self, install_mockery, module_configuration, installer_variant

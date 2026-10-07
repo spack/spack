@@ -250,18 +250,17 @@ class TclConfiguration(BaseConfiguration):
         return self._cache["configurations_in_file"]
 
     @staticmethod
-    def _installation_order_key(conf: BaseConfiguration) -> Tuple[bool, bool, float, str]:
+    def _installation_order_key(conf: BaseConfiguration) -> Tuple[bool, float, str]:
         """Sort key listing the installations matching a configured default first, then the
-        explicit ones before the implicit ones, in installation order, then by hash.
+        others in installation order, then by hash.
 
-        This order holds as installations are added: a new installation is listed after the
-        existing ones, unless it is explicit and they are implicit, or it matches a default.
+        A new installation is listed after the existing ones, unless it matches a default.
         """
         spec = conf.spec
         # An installation not recorded yet is being added, it comes after the recorded ones
         _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
         installation_time = record.installation_time if record else math.inf
-        return (not conf.matches_default, not conf.explicit, installation_time, spec.dag_hash())
+        return (not conf.matches_default, installation_time, spec.dag_hash())
 
     @property
     def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
