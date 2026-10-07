@@ -2802,7 +2802,8 @@ def _do_migrate_spack_prefix(old_resources):
     if retained_resources:
         parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
 
-    parts.extend(["", "To undo this migration, run `spack migrate undo`."])
+    if migrated_resources:
+        parts.extend(["", "To undo this migration, run `spack migrate undo`."])
     tty.msg("\n".join(parts))
 
 
