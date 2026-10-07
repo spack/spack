@@ -1495,14 +1495,6 @@ class TestTcl:
         content_a_after = _module_lines(module_file_a)
         assert content_a == content_a_after
 
-    def test_no_hash_variant_with_hash_in_projection(self, factory, module_configuration):
-        """Test hash variant is not defined when the module file name includes the hash."""
-        module_configuration("fold_variants_hash_projection")
-        writer, spec = factory("mpileaks")
-        assert spec.dag_hash(7) in writer.layout.use_name
-        assert "hash" not in writer.conf.variants
-        assert writer.conf.variant_values == "generic 0 0 0 1 1"
-
     def test_fold_variants_load_unload(
         self, install_mockery, module_configuration, module_command
     ):

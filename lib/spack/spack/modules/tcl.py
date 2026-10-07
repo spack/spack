@@ -121,7 +121,7 @@ class TclConfiguration(BaseConfiguration):
         """Whether several installations may share this module file, which then folds them.
         This is the case when variants are enabled and the module file name does not include
         the hash, as different installations of the same package version then map to the same
-        file name. A "hash" variant then identifies each installation in the module file.
+        file name.
         """
         if "folds_installations" not in self._cache:
             self._cache["folds_installations"] = self._compute_folds_installations()
@@ -136,7 +136,8 @@ class TclConfiguration(BaseConfiguration):
     def variants(self) -> Dict[str, Dict[str, Any]]:
         """Returns a dictionary of defined variants keyed by variant name.
         Any multi-valued variant is transformed into a single-valued one, joining values.
-        The dictionary is sorted by its keys, with the "hash" variant last if used.
+        The dictionary is sorted by its keys, followed by the "hash" variant, which identifies
+        the installation.
         Returns an empty dictionary if variant mode is disabled.
         """
         if "variants" not in self._cache:
@@ -155,13 +156,11 @@ class TclConfiguration(BaseConfiguration):
             if v.name not in RESERVED_NAMES
         }
 
-        if self.folds_installations:
-            variant_dict["hash"] = {
-                "value": self.spec.dag_hash(7),
-                "type": "single",
-                "spec": f"hash={self.spec.dag_hash(7)}",
-            }
-
+        variant_dict["hash"] = {
+            "value": self.spec.dag_hash(7),
+            "type": "single",
+            "spec": f"hash={self.spec.dag_hash(7)}",
+        }
         return variant_dict
 
     @property
@@ -269,8 +268,8 @@ class TclConfiguration(BaseConfiguration):
         """Returns a consolidated dictionary of defined variants across installations, with
         their type and sorted values. A variant that only some installations define also
         takes the neutral value standing for it on the others.
-        This dictionary is sorted by its keys, which are variant names, with the "hash"
-        variant last if used.
+        This dictionary is sorted by its keys, which are variant names, followed by the "hash"
+        variant.
         Returns an empty dictionary if variant mode is disabled.
         """
         if "aggregated_variants" not in self._cache:
@@ -329,11 +328,11 @@ class TclFileLayout(FileLayout):
     @property
     def unique_use_name(self) -> str:
         """Returns the name that selects this installation from a dependent module file.
-        The "hash" variant is the only one stated when the module file folds installations,
-        so the name stays valid whatever variants the module file defines later on. The bare
-        module name is enough when it includes the hash."""
-        if self.conf.folds_installations:
-            return f"{self.name} {self.conf.variants['hash']['spec']}"
+        The "hash" variant is the only one stated when variants are defined, so the name stays
+        valid whatever variants the module file defines later on."""
+        variants = self.conf.variants
+        if variants:
+            return f"{self.name} {variants['hash']['spec']}"
         return self.name
 
 
