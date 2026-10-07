@@ -16,6 +16,6 @@ class Builderdependentcallback(Package):
 
 
 class GenericBuilder(GenericBuilder):
-    @run_after_dependent("install")
+    @run_after_dependent("callbacks")
     def builder_dependent_callback(self, dependent_pkg):
         os.environ["BUILDER_DEPENDENT_CALLBACK"] = dependent_pkg.name

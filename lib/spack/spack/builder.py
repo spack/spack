@@ -18,6 +18,7 @@ import spack.repo
 import spack.spec
 import spack.util.environment
 from spack.error import SpackError
+from spack.util import tty
 from spack.util.prefix import Prefix
 
 #: Builder classes, as registered by the ``builder`` decorator
@@ -392,7 +393,13 @@ class InstallationPhase:
 
     def _make_dependent_callbacks(self, callbacks_attribute):
         result = []
-        phases = self.builder.phases
+        is_before = (
+            callbacks_attribute == spack.phase_callbacks._RUN_BEFORE_DEPENDENT.attribute_name
+        )
+        callback_phase = self.builder.phases[0] if is_before else self.builder.phases[-1]
+        if self.name != callback_phase:
+            return result
+
         seen_dependencies = set()
         for edge in self.builder.pkg.spec.edges_to_dependencies():
             if id(edge.spec) in seen_dependencies:
@@ -400,21 +407,13 @@ class InstallationPhase:
             seen_dependencies.add(id(edge.spec))
             dependency_builder = create(edge.spec.package)
             callbacks = getattr(dependency_builder, callbacks_attribute, [])
-            for (selector, condition), fn in callbacks:
-                if isinstance(selector, int):
-                    try:
-                        selected_phase = phases[selector]
-                    except IndexError as e:
-                        raise SpackError(
-                            f"phase index {selector} is invalid for dependent "
-                            f"{self.builder.pkg.name}; available phases are {tuple(phases)}"
-                        ) from e
-                else:
-                    selected_phase = selector
-                if selected_phase != self.name:
+            for (dependent_spec, condition), fn in callbacks:
+                if not self.builder.pkg.spec.satisfies(dependent_spec):
                     continue
                 if condition is None or dependency_builder.pkg.spec.satisfies(condition):
-                    result.append(functools.partial(fn, dependency_builder, self.builder.pkg))
+                    callback = functools.partial(fn, dependency_builder, self.builder.pkg)
+                    functools.update_wrapper(callback, fn)
+                    result.append(callback)
         return result
 
     def __str__(self):
@@ -426,17 +425,21 @@ class InstallationPhase:
         self._on_phase_start(pkg)
 
         for callback in self.run_before_dependent:
+            tty.debug(f"Executing phase callback: {callback.__qualname__}")
             callback()
 
         for callback in self.run_before:
+            tty.debug(f"Executing phase callback: {callback.__qualname__}")
             callback(self.builder)
 
         self.phase_fn(pkg, pkg.spec, pkg.prefix)
 
         for callback in self.run_after_dependent:
+            tty.debug(f"Executing phase callback: {callback.__qualname__}")
             callback()
 
         for callback in self.run_after:
+            tty.debug(f"Executing phase callback: {callback.__qualname__}")
             callback(self.builder)
 
         self._on_phase_exit(pkg)

@@ -526,39 +526,31 @@ The function body should contain the actual instructions you want to run before 
 Callbacks on dependent phases
 -----------------------------
 
-A dependency can also register code to run before or after a phase of each package that directly depends on it.
-Use ``@run_before_dependent`` and ``@run_after_dependent`` on a method of the dependency package or builder.
-The callback receives the dependent package instance:
+A dependency can also register code to run before the first phase or after the last phase of
+packages that directly depend on it. Use ``@run_before_dependent`` and
+``@run_after_dependent`` on a method of the dependency package or builder. The required argument
+is a spec constraint selecting dependents, and the callback receives the dependent package
+instance:
 
 .. code-block:: python
 
    class MyCompiler(CompilerPackage):
        ...
 
-       @run_before_dependent("build")
+       @run_before_dependent("my-package")
        def prepare_dependent_build(self, dependent_pkg):
-           # prepare files owned by the dependent before its build phase
+           # prepare files owned by the dependent before its first phase
            ...
 
-       @run_after_dependent(-1, when="@2:")
+       @run_after_dependent("my-package@2:", when="@2:")
        def collect_dependent_artifacts(self, dependent_pkg):
            # run after the dependent's final phase
            ...
 
-The phase argument is required.
-A string names a phase of the dependent's builder.
-An integer uses normal Python indexing into the dependent builder's ordered phase list, so ``-1`` selects its last phase.
-An invalid integer index is an error; a named phase that the dependent does not have simply does not select a callback.
 The optional ``when`` argument applies to the dependency package, not the dependent.
-
-For a given dependent phase, dependency callbacks run before callbacks defined by the dependent, both before and after the phase.
-The complete order is:
-
-#. dependency ``run_before_dependent`` callbacks;
-#. dependent ``run_before`` callbacks;
-#. the dependent phase;
-#. dependency ``run_after_dependent`` callbacks;
-#. dependent ``run_after`` callbacks.
+Dependency ``run_before_dependent`` callbacks run before the dependent's ``run_before`` callbacks
+on its first phase. Dependency ``run_after_dependent`` callbacks run before the dependent's
+``run_after`` callbacks on its final phase.
 
 Dependency callbacks are considered only for direct dependency nodes and run once per dependency node, even if parallel edges connect the same two nodes.
 Their order follows the direct dependency edge iteration order; there is no guarantee of any ordering relative to dependency relationships among the direct dependencies.

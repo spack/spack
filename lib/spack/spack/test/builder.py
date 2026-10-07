@@ -10,7 +10,6 @@ import spack.builder
 import spack.concretize
 import spack.error
 import spack.paths
-import spack.phase_callbacks
 import spack.repo
 from spack.util.filesystem import touch
 
@@ -34,6 +33,7 @@ def builder_test_repository(config):
                 ("AFTER_INSTALL_1_CALLED", "1"),
                 ("BEFORE_DEPENDENT_INSTALL_CALLED", "callbacks"),
                 ("BEFORE_DEPENDENT_INSTALL_VALUE", "unset"),
+                ("DEPENDENT_CALLBACK_RAN_BEFORE_FIRST_PHASE", "callbacks"),
                 ("AFTER_DEPENDENT_LAST_PHASE_CALLED", "callbacks"),
                 ("AFTER_DEPENDENT_LAST_PHASE_VALUE", "2"),
                 ("MATCHING_DEPENDENT_CALLBACK", "callbacks"),
@@ -53,6 +53,7 @@ def builder_test_repository(config):
                 ("AFTER_INSTALL_2_CALLED", "1"),
                 ("BEFORE_DEPENDENT_INSTALL_CALLED", "callbacks"),
                 ("BEFORE_DEPENDENT_INSTALL_VALUE", "unset"),
+                ("DEPENDENT_CALLBACK_RAN_BEFORE_FIRST_PHASE", "callbacks"),
                 ("AFTER_DEPENDENT_LAST_PHASE_CALLED", "callbacks"),
                 ("AFTER_DEPENDENT_LAST_PHASE_VALUE", "2"),
                 ("MATCHING_DEPENDENT_CALLBACK", "callbacks"),
@@ -104,6 +105,7 @@ def test_callbacks_and_installation_procedure(
         assert os.environ[var_name] == expected, os.environ
     if spec_str.startswith("callbacks"):
         assert "NONMATCHING_DEPENDENT_CALLBACK" not in os.environ
+        assert "NONMATCHING_DEPENDENT_SPEC_CALLBACK" not in os.environ
 
 
 @pytest.mark.usefixtures("builder_test_repository", "config")
@@ -205,31 +207,6 @@ def test_mixins_with_builders(working_env):
     assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder._run_after_callbacks)
 
 
-@pytest.mark.parametrize(
-    "decorator",
-    [spack.phase_callbacks.run_before_dependent, spack.phase_callbacks.run_after_dependent],
-)
-def test_dependent_callback_rejects_invalid_phase_selector(decorator):
-    with pytest.raises(TypeError, match="phase name or integer index"):
-        decorator(False)
-    with pytest.raises(ValueError, match="phase name cannot be empty"):
-        decorator("")
-
-
-def test_dependent_callback_rejects_out_of_range_phase(builder_test_repository, monkeypatch):
-    spec = spack.concretize.concretize_one("callbacks")
-    dependency = spec["dependentcallback"].package
-
-    def invalid_callback(self, dependent_pkg):
-        pass
-
-    monkeypatch.setattr(
-        dependency, "_run_before_dependent_callbacks", [((1, None), invalid_callback)]
-    )
-    with pytest.raises(spack.error.SpackError, match="phase index 1 is invalid"):
-        spack.builder.create(spec.package)
-
-
 def test_parallel_edges_run_dependent_callback_once(builder_test_repository, monkeypatch):
     spec = spack.concretize.concretize_one("callbacks")
     edge = spec.edges_to_dependencies("dependentcallback")[0]
@@ -239,6 +216,20 @@ def test_parallel_edges_run_dependent_callback_once(builder_test_repository, mon
 
     # one from each dependency, no duplicate from the duplicated edge
     assert len(builder.callbacks["install"].run_after_dependent) == 2
+
+
+def test_callback_debug_messages(builder_test_repository, working_env, ensure_debug, capfd):
+    spec = spack.concretize.concretize_one("callbacks")
+    builder = spack.builder.create(spec.package)
+
+    for phase in builder:
+        phase.execute()
+
+    output = capfd.readouterr().err
+    assert "Executing phase callback: Dependentcallback.before_dependent_install" in output
+    assert "Executing phase callback: GenericBuilder.before_install_1" in output
+    assert "Executing phase callback: Dependentcallback.after_dependent_last_phase" in output
+    assert "Executing phase callback: GenericBuilder.after_install_1" in output
 
 
 def test_reading_api_v20_attributes():

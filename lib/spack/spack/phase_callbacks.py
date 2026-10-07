@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-from typing import Optional, Union
+from typing import Optional
 
 from spack.util import lang
 
@@ -30,15 +30,6 @@ _RUN_BEFORE_DEPENDENT = CallbackTemporaryStage(
 _RUN_AFTER_DEPENDENT = CallbackTemporaryStage(
     attribute_name="_run_after_dependent_callbacks", callbacks=[]
 )
-
-PhaseSelector = Union[str, int]
-
-
-def _validate_phase_selector(phase: PhaseSelector) -> None:
-    if isinstance(phase, bool) or not isinstance(phase, (str, int)):
-        raise TypeError("phase must be a phase name or integer index")
-    if isinstance(phase, str) and not phase:
-        raise ValueError("phase name cannot be empty")
 
 
 class PhaseCallbacksMeta(type):
@@ -136,20 +127,16 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
     @staticmethod
-    def run_after_dependent(phase: PhaseSelector, when: Optional[str] = None):
-        """Decorator to register a function to run after a phase of a dependent package.
-
-        String selectors name a phase. Integer selectors index the dependent builder's ordered
-        phase list using normal Python indexing.
+    def run_after_dependent(dependent_spec: str, when: Optional[str] = None):
+        """Decorator to register a function to run after a dependent package's final phase.
 
         Args:
-            phase: dependent phase name or index after which the function must run.
+            dependent_spec: constraint selecting the dependents for which the function is run.
             when: condition on this dependency under which the function is run.
         """
-        _validate_phase_selector(phase)
 
         def _decorator(fn):
-            key = (phase, when)
+            key = (dependent_spec, when)
             item = (key, fn)
             _RUN_AFTER_DEPENDENT.callbacks.append(item)
             return fn
@@ -157,20 +144,16 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
     @staticmethod
-    def run_before_dependent(phase: PhaseSelector, when: Optional[str] = None):
-        """Decorator to register a function to run before a phase of a dependent package.
-
-        String selectors name a phase. Integer selectors index the dependent builder's ordered
-        phase list using normal Python indexing.
+    def run_before_dependent(dependent_spec: str, when: Optional[str] = None):
+        """Decorator to register a function to run before a dependent package's first phase.
 
         Args:
-            phase: dependent phase name or index before which the function must run.
+            dependent_spec: constraint selecting the dependents for which the function is run.
             when: condition on this dependency under which the function is run.
         """
-        _validate_phase_selector(phase)
 
         def _decorator(fn):
-            key = (phase, when)
+            key = (dependent_spec, when)
             item = (key, fn)
             _RUN_BEFORE_DEPENDENT.callbacks.append(item)
             return fn
