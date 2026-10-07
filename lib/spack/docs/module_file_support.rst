@@ -268,96 +268,26 @@ Note that ``core_specs`` bypasses the hierarchy that allows the module tool to s
 
 .. _module-variants:
 
-Package variants in module files
-""""""""""""""""""""""""""""""""
+Package variants and module files for several installations
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 .. note::
 
-   This feature requires `Environment Modules`_ version 5.1 or newer, with the `advanced module version specifiers`_ configuration option enabled.
+   Module files define variants with the `variant`_ command of `Environment Modules`_.
+   This requires version 5.1 or newer, with the `advanced module version specifiers`_ configuration option enabled.
+
+Several installations of the same package version can be written to one Tcl module file, and ``module load`` selects one of them by its :ref:`variants<basic-variants>`.
+This is enabled by the ``variants`` key under the ``tcl`` module configuration, which accepts the values:
+
+* ``none`` (default): do not define variants in module files
+* ``all``: define all variants from the installed spec in the module file, except those reserved by Spack such as ``patches`` or ``dev_path``
 
 .. _Environment Modules: https://modules.readthedocs.io/en/stable/
 .. _variant: https://modules.readthedocs.io/en/stable/modulefile.html#mfcmd-variant
 .. _advanced module version specifiers: https://modules.readthedocs.io/en/stable/module.html#advanced-module-version-specifiers
 .. _collection_pin_version: https://modules.readthedocs.io/en/stable/module.html#mconfig-collection_pin_version
 
-Spack packages can be built with many different :ref:`variants<basic-variants>`, and it is not always obvious which variant configuration is associated with a module file.
-Tcl module files can define the package variants with the `variant`_ module file command of Environment Modules, so that users can check the variant configuration they load.
-
-For example, with a single ``git`` installation and the following configuration:
-
-.. code-block:: yaml
-
-   modules:
-     default:
-       tcl:
-         variants: all
-
-``spack module tcl find`` prints the variants of the installed ``git`` after its module name:
-
-.. code-block:: console
-
-   $ spack module tcl find git
-   git/2.53.0-gcc-15.2.1+man+nls+perl+subtree~tcltk build_system=autotools hash=q5s4xwn
-
-Users can state on the ``module load`` command line the variant configuration they expect.
-The module loads if it matches what is installed:
-
-.. code-block:: console
-
-   $ module load -v git +perl ~tcltk
-   Loading git/2.53.0-gcc-15.2.1{build_system=autotools:hash=q5s4xwn:+man:+nls:+perl:+subtree:-tcltk}
-
-and fails with an error listing the installed configurations otherwise:
-
-.. code-block:: console
-
-   $ module load git ~perl
-   Loading git/2.53.0-gcc-15.2.1{-perl}
-     ERROR: Specified package is not installed, available packages for this version are:
-       * "build_system=autotools +man +nls +perl +subtree ~tcltk hash=q5s4xwn"
-     ERROR: Module evaluation aborted
-
-A plain ``module load git`` still works, since the default value of each module variant is the value of the variant in the installed spec.
-
-The ``hash`` variant is not a Spack variant: it holds the hash of the installation, and replaces the hash in module names.
-``variants: all`` thus leaves the hash out of module names: ``hash_length`` is ignored, and Spack warns when it is set to a non-zero value.
-Spack defines the ``hash`` variant when the module name does not include the hash, which is the case with projections that do not include it.
-It keeps the ``depends-on`` lines of dependent module files bound to the exact installation they were built against, see :ref:`module-variants-folding`.
-
-The ``variants`` key under the ``tcl`` module configuration accepts the values:
-
-* ``none`` (default): do not define variants in module files
-* ``all``: define all variants from the installed spec in the module file, except those reserved by Spack such as ``patches`` or ``dev_path``
-
-Like ``spack module tcl find``, the ``spack module tcl loads`` command prints the module names with their variants.
-Both append the boolean variants to the module name, as a shell expands a word starting with ``~`` to a home directory, and print the other variants after them.
-The ``depends-on`` lines of module files do not state them: the module name pins the dependency installation when it includes the hash, and the ``hash`` variant pins it otherwise, see :ref:`module-variants-folding`.
-
-.. warning::
-
-   Module variants are not Spack specs.
-   The ``module`` command only understands the variants of the package itself, with the syntax of Environment Modules: ``+name`` and ``~name`` (or ``-name``) for boolean variants, and ``name=value`` for the others.
-   Compiler (``%compiler``) and dependency (``^dep``) constraints are not understood: the module tool takes them for additional module names to load and fails to find them.
-   ``@`` refers to the version part of the module name, such as ``git@2.53.0-gcc-15.2.1``, not to the Spack version.
-   Multi-valued variants are written with their values joined by underscores: ``libs=shared,static`` in a Spack spec is ``libs=shared_static`` on the ``module`` command line.
-   Values are also translated when the ``module`` command could not read them back once loaded: ``++`` is spelled ``xx`` as in ``cxx``, any other character than letters, digits, ``_``, ``-``, ``.`` and ``/`` becomes ``_``, and a value the ``module`` command reads as a boolean, such as ``on``, ``off``, ``yes``, ``no``, ``true`` or ``false``, gets a trailing ``_``.
-   So ``languages=c,c++,fortran`` is ``languages=c_cxx_fortran``, ``device=ch3:sock`` is ``device=ch3_sock`` and ``use_vtkm=on`` is ``use_vtkm=on_`` on the ``module`` command line.
-   ``spack module tcl find`` prints the values as the ``module`` command expects them.
-
 .. _module-variants-folding:
-
-Several installations in one module file
-""""""""""""""""""""""""""""""""""""""""
-
-With :ref:`module variants<module-variants>`, several installations of the same package version can share one Tcl module file, and ``module load`` selects one of them by its variants.
-Spack folds installations into one module file when all of these hold:
-
-* ``variants`` is set to ``all`` in the ``tcl`` configuration
-* the installations are of the same package version
-* the installations are :ref:`projected<modules-projections>` to the same module file name, which is the case with projections that do not include the hash
-
-Installations projected to the same module file name are otherwise a name clash, and ``spack module tcl refresh`` reports an error.
-Installations of different versions never share a module file, so a projection that leaves the version out, such as ``{name}``, clashes as soon as several versions of a package are installed: the projection should include ``{version}``.
 
 For example, with two installations of ``zlib@1.3.2`` that differ only in the ``shared`` variant, and the following configuration:
 
@@ -368,14 +298,14 @@ For example, with two installations of ``zlib@1.3.2`` that differ only in the ``
        tcl:
          variants: all
 
-Spack writes a single ``zlib/1.3.2-gcc-13.3.0`` module file holding both installations:
+Spack writes a single ``zlib/1.3.2-gcc-13.3.0`` module file, and ``spack module tcl find`` prints the variants of each installation after the module name:
 
 .. code-block:: console
 
-   $ spack module tcl find --full-path zlib~shared
-   /home/user/spack/share/spack/modules/linux-ubuntu24.04-alderlake/zlib/1.3.2-gcc-13.3.0
-   $ spack module tcl find --full-path zlib+shared
-   /home/user/spack/share/spack/modules/linux-ubuntu24.04-alderlake/zlib/1.3.2-gcc-13.3.0
+   $ spack module tcl find zlib~shared
+   zlib/1.3.2-gcc-13.3.0+optimize+pic~shared build_system=makefile hash=ickxcoy
+   $ spack module tcl find zlib+shared
+   zlib/1.3.2-gcc-13.3.0+optimize+pic+shared build_system=makefile hash=vzg6net
 
 Users select an installation by stating its variants on the ``module load`` command line:
 
@@ -384,76 +314,88 @@ Users select an installation by stating its variants on the ``module load`` comm
    $ module load -v zlib +shared
    Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:hash=vzg6net:+optimize:+pic:+shared}
 
-The stated variants form a mask, and the first installation matching it is selected.
-The variants left unset take the values of the selected installation.
-Installations are listed in installation order, with the explicit ones before the implicit ones and the ones matching a ``defaults`` entry first, so a plain ``module load zlib`` loads the first of them, ``zlib ~shared`` here as it was installed first:
+Stating all the variants is not needed, and several installations may match the ones stated.
+``module load`` then selects the one that was installed first.
+A plain ``module load zlib`` thus loads ``zlib ~shared`` here:
 
 .. code-block:: console
 
    $ module load -v zlib
    Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:hash=ickxcoy:+optimize:+pic:-shared}
 
-A new installation is listed after the existing ones, so it does not change what such a partial specification selects, unless it is explicit while the existing ones are implicit, or it matches a ``defaults`` entry.
-State the variants that identify the installation you need all the same.
-
-A conditional variant that only some of the installations define is disabled on the others, so they match ``~name``, or ``name=none`` for a non-boolean variant.
-For example, with ``python +tkinter +tix`` and ``python ~tkinter`` in the same module file, ``module load python ~tix`` selects the latter.
+Installing another ``zlib@1.3.2`` later does not change what these commands load.
+To have an installation selected before the older ones, list it under ``defaults``, see `Default module versions`_.
 
 If the stated variants do not match any installation, the error lists the installed configurations:
 
 .. code-block:: console
 
-   $ module load zlib ~pic +shared
+   $ module load zlib -pic +shared
    Loading zlib/1.3.2-gcc-13.3.0{-pic:+shared}
      ERROR: Specified package is not installed, available packages for this version are:
        * "build_system=makefile +optimize +pic ~shared hash=ickxcoy"
        * "build_system=makefile +optimize +pic +shared hash=vzg6net"
      ERROR: Module evaluation aborted
 
-Spack maintains folded module files automatically:
+.. rubric:: Hashes and dependencies
 
-* if a new installation matches an existing module file, the module file is regenerated to include the new installation
-* on :ref:`refresh<cmd-spack-module-refresh>`, a module file is rewritten only once with content relative to the multiple installations folded into it
-* on uninstall or ``spack module tcl rm``, a folded module file is regenerated without the removed installations instead of being deleted if other installations remain
-
-.. note::
-
-   A module file lists the installations recorded in the database, so an installation removed with ``spack module tcl rm`` is listed again the next time its module file is written.
-   Use the ``exclude`` option to leave an installation out of module files durably.
-
-A folded module file is rendered from one template, so the ``template`` option must apply to all the installations it holds: set it for the whole package, or for a package version, as installations of different versions never share a module file.
-Spack reports a configuration error instead of writing a module file whose installations are configured with different templates, and ``spack audit configs`` flags a template set under a more specific constraint.
-
-The ``spack module tcl`` subcommands account for the installations sharing a module file:
-
-* ``find`` prints the bare module name when the constraint matches several installations folded in one module file, as a ``module load`` of this name selects the first installation listed
-* ``loads`` comments out the load line of all but the first installation folded in one module file, as a module file can only be loaded once
-* ``rm`` and ``refresh`` list the installations that share a module file with the given ones, as the module file is written again for all of them
-* ``setdefault`` refuses an installation folded with others, as the ``default`` symlink points to the whole module file
-
-Two installations folded in the same module file may have the same variants, when they differ only by their dependencies:
+With ``variants: all``, the hash moves from the module name to a ``hash`` variant.
+The ``hash_length`` option is then ignored, and Spack warns if it is set to a non-zero value.
+Two installations in the same module file may have the same variants, when they differ only by their dependencies:
 
 .. code-block:: console
 
    $ spack install hdf5@1.14 ^openmpi
    $ spack install hdf5@1.14 ^mpich
 
-The ``hash`` variant tells them apart in the ``hdf5/1.14.6-gcc-15.2.1`` module file:
+The ``hash`` variant tells them apart: ``spack module tcl find`` prints it for an installation, and ``module load`` selects by it:
 
-.. code-block:: text
+.. code-block:: console
 
-   ... ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools hash=6dj7iyw
-   ... ~hl ~ipo ~java ~map +mpi +shared ~subfiling ~szip ~threadsafe +tools hash=hyob6r5
+   $ spack module tcl find hdf5 ^mpich
+   $ module load hdf5 hash=hyob6r5
 
-The ``depends-on`` lines of dependent module files state the ``hash`` variant only, so a dependent keeps loading the installation it was built against whatever installations are later folded into, or removed from, the module file of its dependency, and whatever variants that module file then defines.
+The ``depends-on`` lines of dependent module files state the ``hash`` variant only.
+A dependent thus keeps loading the installation it was built against, whatever is later added to or removed from the module file of its dependency.
 
-Like any other variant, ``hash`` left unset takes the value of the selected installation.
+.. rubric:: Differences between Spack and Environment Modules
 
-.. note::
+The ``module`` command reads variants with the syntax of Environment Modules, which differs from the Spack spec syntax:
 
-   ``module save`` records a variant in a collection only when its value differs from the default the module file declares, and a folded module file declares the values of the selected installation as its defaults.
-   A collection thus records a plain ``module load zlib``, and ``module restore`` loads the first installation listed rather than the one saved.
-   Enable the `collection_pin_version`_ configuration option of Environment Modules to record every variant along with the module version, so that ``module restore`` brings back the installation that was loaded:
+.. list-table::
+   :header-rows: 1
+
+   * - Spack spec
+     - ``module`` command line
+   * - ``+man``, ``~man``
+     - ``+man``, ``~man`` or ``-man``
+   * - ``libs=shared,static``
+     - ``libs=shared_static``
+   * - ``languages=c,c++``
+     - ``languages=c_cxx``
+   * - ``device=ch3:sock``
+     - ``device=ch3_sock``
+   * - ``use_vtkm=on``
+     - ``use_vtkm=on_``
+   * - ``@2.53.0``
+     - ``@2.53.0-gcc-15.2.1``, the version part of the module name
+   * - ``%gcc``, ``^zlib``
+     - not supported, read as names of other modules to load
+
+A shell expands a word starting with ``~`` to a home directory, so write ``-shared``, or append the boolean variants to the module name as in ``zlib/1.3.2-gcc-13.3.0~shared``.
+``spack module tcl find`` and ``spack module tcl loads`` print module names in the latter form.
+
+Some variants exist only under a condition: ``python`` has a ``tix`` variant only when built with ``+tkinter``.
+An installation that does not have the variant is selected as if the variant were disabled.
+For example, with ``python +tkinter +tix`` and ``python ~tkinter`` in the same module file, ``module load python ~tix`` loads ``python ~tkinter``.
+For a variant that takes a value, the value to state is ``none``.
+
+Only one installation of a module file can be loaded at a time.
+
+.. tip::
+
+   ``module save`` does not record the variants of the installations loaded, so ``module restore`` loads the ones a plain ``module load`` selects.
+   To record them, enable the `collection_pin_version`_ configuration option of Environment Modules:
 
    .. code-block:: console
 
@@ -463,6 +405,38 @@ Like any other variant, ``hash`` left unset takes the value of the selected inst
       $ module saveshow mywork
       module use --append /home/user/spack/share/spack/modules/linux-ubuntu24.04-alderlake
       module load zlib/1.3.2-gcc-13.3.0 build_system=makefile hash=vzg6net +optimize +pic +shared
+
+.. rubric:: Maintaining the module files
+
+Spack writes a module file again whenever an installation is added to it or removed from it, and deletes it when none remain.
+
+To leave an installation out of a module file, use the ``exclude`` option.
+``spack module tcl rm`` does not last: the installation is still in the database, and is written back the next time the module file is.
+
+The ``spack module tcl`` subcommands account for the installations in the same module file:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Command
+     - With several installations in one module file
+   * - ``find``
+     - prints the module name without variants when the spec matches several of them
+   * - ``loads``
+     - prints one load line per module file, and comments out the others
+   * - ``rm``, ``refresh``
+     - also list the other installations in the module files they write
+   * - ``setdefault``
+     - refuses, as the ``default`` symlink would point to all of them
+
+.. rubric:: Projections and templates
+
+Installations are in the same module file when they have the same version and the same :ref:`projected<modules-projections>` name.
+Add a token to the projection, such as ``{^mpi.name}``, to keep them in separate module files.
+A projection without ``{version}`` gives different versions the same name, and ``spack module tcl refresh`` reports a name clash.
+
+With ``variants: all``, a module file is rendered from a single template, so set the ``template`` option for a whole package or for a package version.
+Spack reports a configuration error if the installations of a module file are configured with different templates, and ``spack audit configs`` flags a ``template`` set under any other constraint.
 
 Default module versions
 """""""""""""""""""""""
