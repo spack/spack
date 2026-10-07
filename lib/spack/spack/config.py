@@ -2565,6 +2565,8 @@ def _do_migrate_home() -> Dict[str, bool]:
     This allows users who git pull a new Spack to get their ~/.spack migrated
     regardless of what's in the $spack prefix.
 
+    Prints a message only if anything was actually migrated.
+
     Returns:
         Dict with keys 'user_config' and 'package_repos', values True if migrated
     """
@@ -2573,6 +2575,18 @@ def _do_migrate_home() -> Dict[str, bool]:
 
     user_config_migrated = _migrate_user_config()
     package_repos_migrated = _migrate_package_repositories()
+
+    # Print message only if something was actually migrated
+    if user_config_migrated or package_repos_migrated:
+        parts = ["Spack migrated home directory resources:"]
+        if user_config_migrated:
+            parts.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
+        if package_repos_migrated:
+            parts.append(
+                "  - Copied package repositories from ~/.spack to the shared state location."
+            )
+        parts.append("  - ~/.spack was retained because older Spack instances may still use it.")
+        tty.msg("\n".join(parts))
 
     return {"user_config": user_config_migrated, "package_repos": package_repos_migrated}
 
@@ -2681,55 +2695,6 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
             sys.stderr.write(f'Must enter (y)es or (n)o, got: "{answer}"\n')
 
 
-def _compose_migration_message(
-    prefix_result: Dict[str, Any], home_result: Dict[str, bool]
-) -> Optional[str]:
-    """Compose migration message from both migration results.
-
-    Args:
-        prefix_result: Dict with 'migrated' and 'retained' keys (lists of resource names)
-        home_result: Dict with 'user_config' and 'package_repos' keys (bool values)
-
-    Returns:
-        Message string if anything was migrated, None otherwise
-    """
-    parts = []
-
-    if prefix_result["migrated"]:
-        parts.append("Spack automatically migrated old resources.")
-        parts.append("  - Migrated: " + ", ".join(prefix_result["migrated"]) + ".")
-        if "environments" in prefix_result["migrated"]:
-            parts.append(
-                "  - Environment views were not copied. Activate each environment and run "
-                "`spack env view regenerate` to recreate them."
-            )
-    else:
-        parts.append("No Spack-internal resources were migrated")
-    if prefix_result["retained"]:
-        parts.append("  - Retained: " + ", ".join(prefix_result["retained"]) + ".")
-    parts.append("  - Existing installs and shared artifacts were not removed.")
-
-    if home_result["user_config"] or home_result["package_repos"]:
-        if not parts:
-            parts.append("Spack migrated home directory resources:")
-        else:
-            parts.append("")
-            parts.append("Home directory:")
-        if home_result["user_config"]:
-            parts.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
-        if home_result["package_repos"]:
-            parts.append(
-                "  - Copied package repositories from ~/.spack to the shared state location."
-            )
-        parts.append("  - ~/.spack was retained because older Spack instances may still use it.")
-
-    if parts:
-        parts.extend(["", "To undo this migration, run `spack migrate undo`."])
-        return "\n".join(parts)
-
-    return None
-
-
 def _do_migrate_spack_prefix(old_resources) -> Dict[str, List[str]]:
     """Perform auto-migration of Spack prefix data from old to new locations.
 
@@ -2783,8 +2748,8 @@ def _do_migrate_spack_prefix(old_resources) -> Dict[str, List[str]]:
     # This method deletes items that are migrated from old_resources, so we
     # retain them simply by never deleting that entry
 
-    # Write layout scope for resources that didn't migrate
-    retained_resources = _force_old_layout(old_resources)["retained"]
+    # Write layout scope for resources that didn't migrate (but don't print message)
+    retained_resources = _force_old_layout(old_resources, print_message=False)["retained"]
 
     # Write migration completion marker as the last step
     # This allows other processes to detect that migration finished
@@ -2792,6 +2757,26 @@ def _do_migrate_spack_prefix(old_resources) -> Dict[str, List[str]]:
     with open(marker_path, "w", encoding="utf-8") as f:
         f.write("Migration completed\n")
     tty.debug(f"Wrote migration completion marker: {marker_path}")
+
+    # Print migration summary
+    parts = []
+    if migrated_resources:
+        parts.append("Spack automatically migrated old resources.")
+        parts.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
+        if "environments" in migrated_resources:
+            parts.append(
+                "  - Environment views were not copied. Activate each environment and run "
+                "`spack env view regenerate` to recreate them."
+            )
+    else:
+        parts.append("No Spack-internal resources were migrated")
+
+    if retained_resources:
+        parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
+    parts.append("  - Existing installs and shared artifacts were not removed.")
+
+    parts.extend(["", "To undo this migration, run `spack migrate undo`."])
+    tty.msg("\n".join(parts))
 
     return {"migrated": migrated_resources, "retained": retained_resources}
 
@@ -2889,7 +2874,7 @@ def _detect_invoked_command():
     _invoked_command = _extract_command_from_argv()
 
 
-def _force_old_layout(to_move) -> Dict[str, List[str]]:
+def _force_old_layout(to_move, print_message=True) -> Dict[str, List[str]]:
     layout_scope_path = _layout_scope_path()
     config_path = os.path.join(layout_scope_path, "config.yaml")
     filesystem.mkdirp(layout_scope_path, default_perms="parents")
@@ -2936,6 +2921,15 @@ def _force_old_layout(to_move) -> Dict[str, List[str]]:
         f.write("Migration completed\n")
     tty.debug(f"Wrote migration completion marker: {marker_path}")
 
+    # Print message about retained resources only if requested
+    if print_message:
+        parts = ["No Spack-internal resources were migrated"]
+        if retained_resources:
+            parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
+        parts.append("  - Existing installs and shared artifacts were not removed.")
+        parts.extend(["", "To undo this migration, run `spack migrate undo`."])
+        tty.msg("\n".join(parts))
+
     return {"migrated": [], "retained": retained_resources}
 
 
@@ -2967,13 +2961,14 @@ def _perform_auto_migration_at_module_load():
 
     This runs before the CONFIG singleton is created, so migration functions
     cannot rely on CONFIG being available.
+
+    Each migration function prints its own message, so this function doesn't
+    compose a combined message.
     """
     if _invoked_command == "isolate":
         return
 
     marker_path = _migration_done_marker_path()
-    home_result = {"user_config": False, "package_repos": False}
-    prefix_result = {"migrated": [], "retained": []}
 
     if not os.path.exists(marker_path):
         # Migrate user config scope and package repos. An entirely-new spack
@@ -2982,7 +2977,7 @@ def _perform_auto_migration_at_module_load():
         # the spack prefix that need to be migrated, but not if the
         # `spack isolate` command has been run (in which case it will write
         # the same migration marker as auto-migration)
-        home_result = _do_migrate_home()
+        _do_migrate_home()
 
     old_resources = _detect_old_resources()
     if any(old_resources.values()) and not os.path.exists(marker_path):
@@ -2997,20 +2992,15 @@ def _perform_auto_migration_at_module_load():
                     # that
                     user_allows_it = _prompt_for_prefix_migration(old_resources)
                     if user_allows_it:
-                        prefix_result = _do_migrate_spack_prefix(old_resources)
+                        _do_migrate_spack_prefix(old_resources)
                     else:
-                        prefix_result = _force_old_layout(old_resources)
+                        _force_old_layout(old_resources)
         except spack.util.lock.LockPermissionError:
-            # Read-only prefix: skip migration
+            # Read-only prefix: skip migration entirely, print nothing
             pass
         except spack.util.lock.LockTimeoutError as e:
             # Some other auto-migration process is taking too long, bail vs. hang
             tty.die(f"Timed out waiting for migration lock: {e}")
-
-    # Show migration summary
-    msg = _compose_migration_message(prefix_result, home_result)
-    if msg:
-        tty.msg(msg)
 
 
 # Detect command and perform auto-migration at module load time (before CONFIG is created)
