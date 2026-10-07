@@ -4,6 +4,7 @@
 """Tests for environment script generation."""
 
 import os
+import shutil
 import sys
 
 import pytest
@@ -200,3 +201,99 @@ def test_create_individual_env_scripts(
     assert env_name_1 not in activate_content_2
     assert env_name_2 not in deactivate_content_1
     assert env_name_1 not in deactivate_content_2
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_copied_env_uses_correct_path(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, tmp_path
+):
+    """Test that when an environment is copied and the copy is activated,
+    the environment commands use the copied environment's path, not the original."""
+
+    env_name = f"test_original_{shell}"
+    env("create", env_name)
+    original_env = ev.read(env_name)
+
+    copy_name = f"test_copy_{shell}"
+    managed_env_dir = os.path.dirname(original_env.path)
+    shutil.copytree(original_env.path, os.path.join(managed_env_dir, copy_name))
+
+    copied_env = ev.read(copy_name)
+
+    env("activate", f"--{shell}", copy_name)
+
+    activate_path = env_script.path_to_env_script(
+        copied_env, shell, script_type="activate", view="default"
+    )
+    with open(activate_path, "r", encoding="utf-8") as f:
+        activate_content = f.read()
+
+    copied_env_path = copied_env.path
+    set_cmd_name = "_spack_env_set"
+    var_name = "SPACK_ENV"
+    if shell == "bat":
+        copied_env_path = f'"{copied_env_path}"'
+        set_cmd_name = f"%{set_cmd_name}%"
+        var_name = f'"{var_name}"'
+
+    assert f"{set_cmd_name} {var_name} {copied_env_path}" in activate_content
+    assert original_env.path not in activate_content
+
+    deactivate_path = env_script.path_to_env_script(
+        copied_env, shell, script_type="deactivate", view="default"
+    )
+    with open(deactivate_path, "r", encoding="utf-8") as f:
+        deactivate_content = f.read()
+
+    assert original_env.path not in deactivate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_moved_env_uses_correct_path(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, tmp_path
+):
+    """Test that when an environment is moved and then activated,
+    the environment commands use the new moved path, not the original."""
+
+    env_name = f"test_original_{shell}"
+    env("create", env_name)
+    original_env = ev.read(env_name)
+    original_path = original_env.path
+
+    moved_name = f"test_moved_{shell}"
+    managed_env_dir = os.path.dirname(original_path)
+    moved_path = os.path.join(managed_env_dir, moved_name)
+    shutil.move(original_path, moved_path)
+
+    moved_env = ev.read(moved_name)
+
+    env("activate", f"--{shell}", moved_name)
+
+    activate_path = env_script.path_to_env_script(
+        moved_env, shell, script_type="activate", view="default"
+    )
+    with open(activate_path, "r", encoding="utf-8") as f:
+        activate_content = f.read()
+
+    moved_env_path = moved_env.path
+    set_cmd_name = "_spack_env_set"
+    var_name = "SPACK_ENV"
+    if shell == "bat":
+        moved_env_path = f'"{moved_env_path}"'
+        set_cmd_name = f"%{set_cmd_name}%"
+        var_name = f'"{var_name}"'
+
+    assert f"{set_cmd_name} {var_name} {moved_env_path}" in activate_content
+    assert original_path not in activate_content
+
+    deactivate_path = env_script.path_to_env_script(
+        moved_env, shell, script_type="deactivate", view="default"
+    )
+    with open(deactivate_path, "r", encoding="utf-8") as f:
+        deactivate_content = f.read()
+
+    assert original_path not in deactivate_content

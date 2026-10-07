@@ -47,13 +47,33 @@ def _get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh")
     return cmds
 
 
+def _script_matches_env(env, script_path: str) -> bool:
+    """Check if a script matches the environment.
+
+    Args:
+        env: the environment to check against
+        view: the name of the environment's view
+        script_path: path to the cached activation/deactivation script
+    Returns:
+        True if the script matches the environment, False otherwise
+    """
+    if not os.path.isfile(script_path):
+        return False
+
+    with open(script_path, "r", encoding="utf-8") as f:
+        script_content = f.read()
+    if env.path not in script_content:
+        return False
+
+    return True
+
+
 def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
     """Check if a script needs to be regenerated.
 
     Args:
         lockfile_mtime: The modification time of the environment's lockfile
         script_path: Path to the cached activation/deactivation script
-
     Returns:
         True if the script doesn't exist or is older than the lockfile
     """
@@ -88,7 +108,10 @@ def _write_env_script(
 
     for shell in shells:
         script_path = path_to_env_script(env, shell, script_type, view)
-        if _script_needs_update(lockfile_mtime, script_path):
+
+        if _script_needs_update(lockfile_mtime, script_path) or not _script_matches_env(
+            env, script_path
+        ):
             if activate:
                 cmds = _get_activate_commands(env, view=view, shell=shell)
             else:
