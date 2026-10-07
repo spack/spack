@@ -8,10 +8,8 @@ import sys
 
 import spack.cmd
 import spack.cmd.common
-import spack.hooks.generate_spec_scripts as spec_script
 import spack.store
 import spack.user_environment as uenv
-import spack.util.tty as tty
 from spack.cmd.common import arguments
 
 description = "remove package from the user environment"
@@ -82,9 +80,7 @@ def unload(parser, args):
     else:
         specs = spack.store.STORE.db.query(hashes=hashes)
 
-    shell = args.shell if args.shell else os.environ.get("SPACK_SHELL")
-
-    if not shell:
+    if not args.shell:
         specs_str = " ".join(args.specs) or "SPECS"
 
         spack.cmd.common.shell_init_instructions(
@@ -92,30 +88,9 @@ def unload(parser, args):
         )
         return 1
 
+    env_mod = uenv.environment_modifications_for_specs(*specs).reversed()
     for spec in specs:
-        commands = ""
+        env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+    cmds = env_mod.shell_modifications(args.shell)
 
-        if spec.external:
-            _, commands = spec_script.get_environment_modifications(spec, shell)
-        else:
-            unload_script_path = spec_script.path_to_unload_shell_script(spec, shell)
-
-            if not os.path.isfile(unload_script_path):
-                spack_dir = spack.store.STORE.layout.metadata_path(spec)
-
-                try:
-                    # Try to get cached repo if it exists
-                    cached_repo = spec_script.make_repo_path(spack_dir)
-                    _, mods = spec_script.get_environment_modifications(spec, shell, cached_repo)
-                except Exception as err:
-                    tty.die(f"Error generating environment modifications for {spec}:\n{err}")
-                try:
-                    spec_script.write_script(unload_script_path, mods, shell)
-                except Exception as err:
-                    tty.debug(f"Error writing to {unload_script_path}\n{err}")
-                    sys.stdout.write(mods)
-                    return 1
-
-            commands = spec_script.source_script(unload_script_path, shell)
-
-        sys.stdout.write(commands)
+    sys.stdout.write(cmds)
