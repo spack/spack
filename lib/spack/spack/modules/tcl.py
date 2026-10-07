@@ -165,11 +165,6 @@ class TclConfiguration(BaseConfiguration):
         return variant_dict
 
     @property
-    def variants_spec(self) -> str:
-        """Returns the variants of this installation as arguments of the module command."""
-        return " ".join(v["spec"] for v in self.variants.values())
-
-    @property
     def variant_values(self) -> str:
         """Returns the values of the variants of this installation, in the order of the
         aggregated variants. A variant this installation does not define takes the neutral
@@ -199,7 +194,7 @@ class TclConfiguration(BaseConfiguration):
             return super().specs_in_file
 
         # Upstream installations are left out: their module files belong to the upstream
-        name_version_spec = self.spec.format("{name} {@version}")
+        name_version_spec = f"{self.spec.name}@={self.spec.version}"
         spec_list = set(
             spack.store.STORE.db.query(
                 name_version_spec, installed=True, install_tree="local", sort=False
@@ -324,9 +319,12 @@ class TclFileLayout(FileLayout):
     @property
     def use_name(self) -> str:
         """Returns the name used to load the module, followed by its variants if defined."""
-        if self.conf.variants:
-            return f"{self.name} {self.conf.variants_spec}"
-        return self.name
+        # Boolean variants are appended to the name, as a shell expands a word starting with
+        # ``~`` to a home directory, and the other variants follow as separate words.
+        variants = self.conf.variants.values()
+        booleans = "".join(v["spec"] for v in variants if v["type"] == "bool")
+        valued = "".join(f" {v['spec']}" for v in variants if v["type"] != "bool")
+        return f"{self.name}{booleans}{valued}"
 
     @property
     def unique_use_name(self) -> str:
