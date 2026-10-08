@@ -60,18 +60,40 @@ def external_config_with_implicit_externals(
         context: resources to read the ``packages`` section, the package repositories and the
             cached compiler output from.
     """
-    configuration, repo = context.config, context.repo
-    packages_yaml = configuration.deepcopy_as_builtin("packages", line_info=True)
-    _normalize_packages_yaml(packages_yaml, repo=repo)
+    packages_yaml = normalized_external_config(context)
+    add_implicit_libc_externals(packages_yaml, context=context)
+    return packages_yaml
 
-    # Add externals for libc from compilers on Linux
+
+def normalized_external_config(context: "spack.context.SpackContext") -> Dict[str, Any]:
+    """Return a copy of packages.yaml, with line information, where virtual-package keys are
+    replaced by their concrete providers.
+
+    Args:
+        context: resources to read the ``packages`` section and the package repositories from.
+    """
+    packages_yaml = context.config.deepcopy_as_builtin("packages", line_info=True)
+    _normalize_packages_yaml(packages_yaml, repo=context.repo)
+    return packages_yaml
+
+
+def add_implicit_libc_externals(
+    packages_yaml: Dict[str, Any], *, context: "spack.context.SpackContext"
+) -> None:
+    """Add to packages_yaml the libcs returned by :func:`all_libcs`, on platforms using libc
+    compatibility.
+
+    Args:
+        packages_yaml: normalized packages.yaml to be modified.
+        context: resources to read the compilers, the package repositories and the cached
+            compiler output from.
+    """
     if not spack.platforms.using_libc_compatibility():
-        return packages_yaml
+        return
 
     for libc in sorted(all_libcs(context)):
         entry = {"spec": f"{libc}", "prefix": libc.external_path}
         packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
-    return packages_yaml
 
 
 def all_libcs(context: "spack.context.SpackContext") -> Set[spack.spec.Spec]:

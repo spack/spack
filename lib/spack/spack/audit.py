@@ -1439,7 +1439,9 @@ def _test_detection_by_executable(pkgs, debug_log, error_cls):
             spack.detection.detection_tests(pkg_name, spack.repo.PATH)
         ):
             debug_log(f"[{__file__}]: running test {idx} for package {pkg_name}")
-            specs = test_runner.execute()
+            test_id = idx
+            outcome = test_runner.run()
+            specs = outcome.specs
             expected_specs = test_runner.expected_specs
 
             not_detected = set(expected_specs) - set(specs)
@@ -1523,5 +1525,27 @@ def _test_detection_by_executable(pkgs, debug_log, error_cls):
                             _spec=expected,
                         )
                     )
+
+            for result, expected in zip(test_runner.test.results, expected_specs):
+                if result.dependencies is None or expected not in specs:
+                    continue
+                children = [child for parent, child in outcome.dependencies if parent == expected]
+                not_detected = [
+                    x for x in result.dependencies if not any(c.satisfies(x) for c in children)
+                ]
+                not_expected = [
+                    c for c in children if not any(c.satisfies(x) for x in result.dependencies)
+                ]
+                if not_detected or not_expected:
+                    summary = f"{pkg_name}: wrong dependencies detected for {expected}"
+                    details = [
+                        f'a dependency satisfying "{x}" was not detected [test_id={test_id}]'
+                        for x in not_detected
+                    ] + [
+                        f'"{c}" was detected as a dependency, but was not expected '
+                        f"[test_id={test_id}]"
+                        for c in not_expected
+                    ]
+                    errors.append(error_cls(summary=summary, details=details))
 
     return errors

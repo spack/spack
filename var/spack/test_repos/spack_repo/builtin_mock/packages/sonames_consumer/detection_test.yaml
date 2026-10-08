@@ -1,0 +1,26 @@
+paths:
+# The executable loads a library of sonames-owner, found through its RUNPATH
+- layout:
+  - executables:
+    - "bin/sonames-consumer"
+    script: "echo 1.0"
+    needed: ["libsonames-owner.so.1"]
+    runpath: "$ORIGIN/../lib"
+  - executables:
+    - "bin/sonames-owner"
+    script: "echo 1.0"
+  - libraries:
+    - path: "lib/libsonames-owner.so.1"
+      soname: "libsonames-owner.so.1"
+  results:
+  - spec: "sonames-consumer@1.0"
+    dependencies: ["sonames-owner@1.0"]
+# The library is not found, so there is no dependency
+- layout:
+  - executables:
+    - "bin/sonames-consumer"
+    script: "echo 1.0"
+    needed: ["libsonames-owner.so.1"]
+  results:
+  - spec: "sonames-consumer@1.0"
+    dependencies: []

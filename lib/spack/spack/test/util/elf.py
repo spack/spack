@@ -214,3 +214,79 @@ def test_elf_invalid_e_shnum(tmp_path: pathlib.Path):
         )
     with open(path, "rb") as file, pytest.raises(elf.ElfParsingError):
         elf.parse_elf(file)
+
+
+@pytest.mark.parametrize("is_64_bit", [True, False])
+@pytest.mark.parametrize("is_little_endian", [True, False])
+def test_minimal_elf_round_trip(is_64_bit, is_little_endian):
+    """Tests that the parser reads back what minimal_elf writes, for each class and byte order."""
+    data = elf.minimal_elf(
+        needed=["libhwloc.so.15", "libc.so.6"],
+        soname="libmpi.so.40",
+        runpath="$ORIGIN/../lib",
+        interpreter="/lib64/ld-linux-x86-64.so.2",
+        is_64_bit=is_64_bit,
+        is_little_endian=is_little_endian,
+    )
+    parsed = elf.parse_elf(io.BytesIO(data), interpreter=True, dynamic_section=True)
+
+    assert parsed.is_64_bit is is_64_bit
+    assert parsed.is_little_endian is is_little_endian
+    assert parsed.elf_hdr.e_type == elf.ELF_CONSTANTS.ET_DYN
+    assert parsed.pt_interp_str == b"/lib64/ld-linux-x86-64.so.2"
+    assert parsed.dt_needed_strs == [b"libhwloc.so.15", b"libc.so.6"]
+    assert parsed.dt_soname_str == b"libmpi.so.40"
+    assert parsed.dt_rpath_str == b"$ORIGIN/../lib"
+
+
+@pytest.mark.parametrize(
+    "rpath,runpath,is_runpath", [("/first:/second", None, False), (None, "/first:/second", True)]
+)
+def test_minimal_elf_rpath_or_runpath(rpath, runpath, is_runpath):
+    """Tests that minimal_elf writes DT_RPATH or DT_RUNPATH, depending on the argument."""
+    data = elf.minimal_elf(rpath=rpath, runpath=runpath)
+    parsed = elf.parse_elf(io.BytesIO(data), dynamic_section=True)
+
+    assert parsed.has_rpath
+    assert parsed.is_runpath is is_runpath
+    assert parsed.dt_rpath_str == b"/first:/second"
+
+
+def test_minimal_elf_without_dynamic_strings(tmp_path: pathlib.Path):
+    """Tests that a file with an empty dynamic section has no interpreter, needed libraries,
+    soname or rpath, and that get_elf_compat reads its class, byte order and machine.
+    """
+    path = tmp_path / "libempty.so"
+    path.write_bytes(elf.minimal_elf(is_64_bit=False, e_machine=183))
+
+    with open(path, "rb") as f:
+        parsed = elf.parse_elf(f, interpreter=True, dynamic_section=True)
+    assert parsed.has_pt_dynamic
+    assert not parsed.has_pt_interp
+    assert not parsed.has_needed
+    assert not parsed.has_soname
+    assert not parsed.has_rpath
+    assert elf.get_rpaths(str(path)) is None
+    assert elf.get_elf_compat(str(path)) == (False, True, 183)
+
+
+@pytest.mark.requires_executables("readelf")
+def test_minimal_elf_with_readelf(tmp_path: pathlib.Path):
+    """Tests that readelf reads a file written by minimal_elf without errors or warnings."""
+    path = tmp_path / "libmpi.so.40"
+    path.write_bytes(
+        elf.minimal_elf(
+            needed=["libhwloc.so.15"],
+            soname="libmpi.so.40",
+            runpath="/opt/lib",
+            interpreter="/lib64/ld-linux-x86-64.so.2",
+        )
+    )
+    readelf = spack.util.executable.which("readelf", required=True)
+    output = readelf("-a", "-W", str(path), output=str, error=str)
+
+    assert "Shared library: [libhwloc.so.15]" in output
+    assert "Library soname: [libmpi.so.40]" in output
+    assert "Library runpath: [/opt/lib]" in output
+    assert "Requesting program interpreter: /lib64/ld-linux-x86-64.so.2" in output
+    assert "Error" not in output and "Warning" not in output
