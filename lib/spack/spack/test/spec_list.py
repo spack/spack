@@ -165,6 +165,24 @@ class TestSpecList:
         assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
         assert result.specs == DEFAULT_SPECS
 
+    def test_spec_list_matrix_with_spec_entries(self):
+        """spec: entries from definitions can be used in matrices, with or without a sigil"""
+        parser = SpecListParser()
+        parser.parse_definitions(
+            data=[
+                {"pkgs": [{"spec": "mpileaks", "install": False}]},
+                {"gccs": [{"spec": "gcc@4.5.0", "install": False}]},
+            ]
+        )
+        result = parser.parse_user_specs(
+            name="specs", yaml_list=[{"matrix": [["$pkgs"], ["$%gccs"]]}]
+        )
+
+        assert result.specs == [Spec("mpileaks %gcc@4.5.0")]
+        assert parser.definitions["gccs"].specs_as_yaml_list == [
+            {"spec": "gcc@4.5.0", "install": False}
+        ]
+
     @pytest.mark.regression("16841")
     def test_spec_list_matrix_exclude(self):
         parser = SpecListParser()

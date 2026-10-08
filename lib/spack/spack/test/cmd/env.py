@@ -300,6 +300,47 @@ def test_change_multiple_matches():
     assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
 
 
+INSTALL_FALSE_ENV = """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+
+
+def test_add_existing_spec_with_options(environment_from_manifest):
+    """Adding a spec that is already listed as a spec: entry does not duplicate it."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        add("cmake")
+
+    e = ev.read("test")
+    assert [s.name for s in e.user_specs] == ["mpileaks", "cmake"]
+    assert e.user_specs.install_flags == [True, False]
+
+
+def test_remove_spec_with_options(environment_from_manifest):
+    """A spec: entry can be removed like a plain spec."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        remove("cmake")
+
+    e = ev.read("test")
+    assert [s.name for s in e.user_specs] == ["mpileaks"]
+
+
+def test_change_spec_with_options(environment_from_manifest):
+    """Changing a spec: entry keeps its options."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        change("cmake@3.30")
+
+    e = ev.read("test")
+    assert e.user_specs[1] == Spec("cmake@3.30")
+    assert e.user_specs.install_flags == [True, False]
+
+
 def test_env_add_virtual():
     env("create", "test")
     e = ev.read("test")
@@ -610,6 +651,136 @@ def test_env_roots_marked_explicit(
 
     explicit = temporary_store.db.query(explicit=True)
     assert len(explicit) == 2
+
+
+def test_env_root_marked_install_false(
+    installed_environment, temporary_store: Store, tmp_path: pathlib.Path
+):
+    """A root spec with install: false is a root for unification, but can't be installed."""
+    with installed_environment(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+    ) as test:
+        # still a concrete root of the environment, just not an installable one
+        assert {s.name for s in test.concrete_roots()} == {"mpileaks", "cmake"}
+        assert {s.name for s in test.installable_roots()} == {"mpileaks"}
+
+        assert temporary_store.db.query("mpileaks")
+        assert not temporary_store.db.query("cmake")
+
+
+def test_env_install_false_on_duplicate(environment_from_manifest):
+    """A flag inside a definition skips the spec in every group using it, and a group can't undo
+    it. A group can skip a spec from a definition or a matrix by listing it again with
+    install: false."""
+    e = environment_from_manifest(
+        """\
+spack:
+  definitions:
+  - tools:
+    - libelf
+    - spec: libdwarf
+      install: false
+  specs:
+  - group: apps
+    specs:
+    - matrix:
+      - [mpileaks]
+      - [+debug, ~debug]
+    - spec: mpileaks+debug
+      install: false
+    - $tools
+    - spec: libelf
+      install: false
+  - group: extra
+    specs:
+    - $tools
+    - libdwarf
+"""
+    )
+    with e:
+        e.concretize()
+
+    installable = e.installable_roots()
+    assert sorted(s.name for s in installable) == ["libelf", "mpileaks"]
+    assert not any(s.satisfies("+debug") for s in installable if s.name == "mpileaks")
+
+
+def test_env_install_false_in_group(environment_from_manifest):
+    """install: false works with spec groups."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - group: apps
+    specs:
+    - mpileaks
+    - spec: libelf
+      install: false
+"""
+    )
+    with e:
+        e.concretize()
+
+    assert {s.name for s in e.concrete_roots()} == {"mpileaks", "libelf"}
+    assert {s.name for s in e.installable_roots()} == {"mpileaks"}
+
+
+def test_env_install_false_warns_when_needed_as_dependency(
+    installed_environment, temporary_store: Store, capfd
+):
+    """A root with install: false that another root depends on is installed, with a warning."""
+    with installed_environment(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - spec: callpath
+    install: false
+"""
+    ) as test:
+        assert temporary_store.db.query("callpath")
+        warning = "callpath is marked install: false, but other specs depend on it"
+        assert warning in capfd.readouterr()[1]
+
+        # No warning once it is installed
+        test.install_all(fake=True)
+        assert warning not in capfd.readouterr()[1]
+
+
+def test_env_install_false_needs_no_concretization(environment_from_manifest):
+    """install: false is read from spack.yaml at install time, so it needs no concretization."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - cmake
+"""
+    )
+    with e:
+        e.concretize()
+        e.write()
+
+    with open(e.manifest_path, "w", encoding="utf-8") as f:
+        f.write(
+            """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+        )
+
+    e = ev.read("test")
+    assert {s.name for s in e.concrete_roots()} == {"mpileaks", "cmake"}
+    assert {s.name for s in e.installable_roots()} == {"mpileaks"}
 
 
 def test_env_modifications_error_on_activate(
@@ -1734,6 +1905,16 @@ spack:
     - libdwarf
 """,
         ),
+        (
+            spack.config.ConfigFormatError,
+            "is not valid under any of the given schemas",
+            """\
+spack:
+  specs:
+  - spec: mpileaks
+    bad: true
+""",
+        ),
     ],
 )
 def test_bad_env_yaml_create_fails(
@@ -1805,6 +1986,24 @@ def test_env_loads(install_mockery, mock_fetch, mock_modules_root):
     with open(loads_file, encoding="utf-8") as f:
         contents = f.read()
         assert "module load mpileaks" in contents
+
+
+@pytest.mark.parametrize("args", [[], ["-r"]])
+def test_env_loads_skips_install_false(
+    args, environment_from_manifest, install_mockery, mock_fetch, mock_modules_root
+):
+    """Roots marked install: false have no module, and are skipped by spack env loads."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        concretize()
+        install("--fake")
+        module("tcl", "refresh", "-y")
+        env("loads", *args)
+
+    with open(os.path.join(e.path, "loads"), encoding="utf-8") as f:
+        contents = f.read()
+    assert "module load mpileaks" in contents
+    assert "cmake" not in contents
 
 
 @pytest.mark.disable_clean_stage_check
