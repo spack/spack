@@ -1,0 +1,8 @@
+enable:
+  - tcl
+tcl:
+  update_cache: true
+  exclude:
+    - callpath
+  all:
+    autoload: direct

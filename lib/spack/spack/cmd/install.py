@@ -13,6 +13,7 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
+import spack.modules.cache
 import spack.paths
 import spack.spec
 import spack.store
@@ -342,6 +343,9 @@ def install(parser, args):
         if args.show_log_on_error and e.pkg is not None:
             _dump_log_on_error(e)
         raise
+    finally:
+        # Update module cache once, after all module file changes
+        spack.modules.cache.flush()
 
 
 def _maybe_add_and_concretize(args, env, specs):
