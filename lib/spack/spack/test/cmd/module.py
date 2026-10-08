@@ -222,3 +222,76 @@ def test_setdefault_command(mutable_database, mutable_config: Configuration):
         assert os.path.exists(writers[k].layout.filename)
     assert os.path.exists(link_name) and os.path.islink(link_name)
     assert os.path.realpath(link_name) == os.path.realpath(writers[preferred].layout.filename)
+
+
+@pytest.mark.db
+def test_setdefault_command_modulerc(mutable_database, mutable_config: Configuration, module_type):
+    """Tests setdefault with the modulerc format, including defaults_format changes."""
+    module_conf: dict = {"defaults_format": "modulerc"}
+    if module_type == "lmod":
+        module_conf.update({"core_compilers": ["clang@3.3"], "hierarchy": ["mpi"]})
+    data = {"default": {"enable": [module_type], module_type: module_conf}}
+    mutable_config.set("modules", data)
+
+    # Install two different versions of pkg-a
+    other_spec, preferred = "pkg-a@1.0", "pkg-a@2.0"
+
+    specs = [
+        spack.concretize.concretize_one(other_spec),
+        spack.concretize.concretize_one(preferred),
+    ]
+    PackageInstaller([s.package for s in specs], explicit=True, fake=True).install()
+
+    writer_cls = spack.modules.module_types[module_type]
+    writers = {
+        preferred: writer_cls.from_spec(specs[1], "default"),
+        other_spec: writer_cls.from_spec(specs[0], "default"),
+    }
+
+    # Create two module files for the same software
+    module(module_type, "refresh", "-y", "--delete-tree", preferred, other_spec)
+
+    modulerc = writers[preferred].layout.modulerc
+    link_name = os.path.join(os.path.dirname(writers[preferred].layout.filename), "default")
+    default_version_cmds = {
+        k: writers[k].default_version_cmd_format % writers[k].layout.use_name
+        for k in (preferred, other_spec)
+    }
+
+    def modulerc_content():
+        with open(modulerc, encoding="utf-8") as f:
+            return f.read().splitlines()
+
+    # Assert initial directory state: no default version definition
+    assert not os.path.exists(modulerc)
+    assert not os.path.lexists(link_name)
+
+    # Set the default to be the other spec: defined in modulerc, no symlink
+    module(module_type, "setdefault", other_spec)
+    content = modulerc_content()
+    assert content.count(default_version_cmds[other_spec]) == 1
+    assert default_version_cmds[preferred] not in content
+    assert not os.path.lexists(link_name)
+
+    # Reset the default to be the preferred spec: the other spec statement is replaced
+    module(module_type, "setdefault", preferred)
+    content = modulerc_content()
+    assert content.count(default_version_cmds[preferred]) == 1
+    assert default_version_cmds[other_spec] not in content
+    assert not os.path.lexists(link_name)
+
+    # Switch to symlink format and set the default to the other spec: the preferred spec
+    # statement is dropped from modulerc and the symlink is created
+    mutable_config.set(f"modules:default:{module_type}:defaults_format", "symlink")
+    module(module_type, "setdefault", other_spec)
+    assert not os.path.exists(modulerc)
+    assert os.path.realpath(link_name) == os.path.realpath(writers[other_spec].layout.filename)
+
+    # Switch back to modulerc format and set the default to the preferred spec: the
+    # symlink is dropped and the default version statement is defined
+    mutable_config.set(f"modules:default:{module_type}:defaults_format", "modulerc")
+    module(module_type, "setdefault", preferred)
+    assert not os.path.lexists(link_name)
+    content = modulerc_content()
+    assert content.count(default_version_cmds[preferred]) == 1
+    assert default_version_cmds[other_spec] not in content
