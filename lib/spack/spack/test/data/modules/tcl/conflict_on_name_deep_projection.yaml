@@ -1,0 +1,7 @@
+enable:
+  - tcl
+tcl:
+  projections:
+    all: '{architecture}/{name}/{version}'
+  all:
+    autoload: none
