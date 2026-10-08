@@ -51,6 +51,11 @@ def _module_lines(filename: str) -> List[str]:
         return [line.strip() for line in f.readlines() if not line.startswith("## ")]
 
 
+def _pinned_callpath(content: List[str]) -> List[str]:
+    """Returns the lines requiring callpath by its hash variant only."""
+    return [x for x in content if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)]
+
+
 @pytest.fixture(params=["clang@=15.0.0", "gcc@=10.2.1"])
 def compiler(request):
     return request.param
@@ -1158,7 +1163,7 @@ class TestTcl:
         assert len([x for x in content if "    fum {on_}" in x]) == 1
 
     def test_no_fold_without_variants(
-        self, install_mockery, module_configuration, modulefile_filenames, factory, monkeypatch
+        self, install_mockery, module_configuration, modulefile_filename, factory, monkeypatch
     ):
         """Test that with variants disabled there is no folding, no database query, and the
         module file is removed on uninstall."""
@@ -1167,7 +1172,7 @@ class TestTcl:
         spec_b = "mpileaks@2.3 +debug ^zmpi"
 
         install("--fake", "--add", spec_a)
-        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        module_file_a = modulefile_filename("tcl", spec_a)
         content_a = _module_lines(module_file_a)
 
         # second installation maps to same module file, which is not overwritten
@@ -1229,7 +1234,7 @@ class TestTcl:
         assert "uses template 'override_from_modules.txt'" in str(excinfo.value)
         assert "uses the default template" in str(excinfo.value)
 
-    def test_fold_variants(self, install_mockery, module_configuration, modulefile_filenames):
+    def test_fold_variants(self, install_mockery, module_configuration, modulefile_filename):
         """Test generating and removing installations folded in same module file."""
         module_configuration("fold_variants_all")
         spec_o = "mpileaks@2.3 ~debug %clang@=15.0.0"
@@ -1237,26 +1242,17 @@ class TestTcl:
         spec_b = "mpileaks@2.3 +debug ^zmpi"
 
         install("--fake", "--add", spec_o)
-        module_file_o = modulefile_filenames("tcl", spec_o)[0]
+        module_file_o = modulefile_filename("tcl", spec_o)
         content_o = _module_lines(module_file_o)
         # dependency is pinned by its hash variant even if it has a single installation
-        assert (
-            len(
-                [
-                    x
-                    for x in content_o
-                    if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)
-                ]
-            )
-            == 1
-        )
+        assert len(_pinned_callpath(content_o)) == 1
 
         # install 2 packages folded in same module file
         install("--fake", "--add", spec_a)
-        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        module_file_a = modulefile_filename("tcl", spec_a)
         content_a = _module_lines(module_file_a)
         install("--fake", "--add", spec_b)
-        module_file_b = modulefile_filenames("tcl", spec_b)[0]
+        module_file_b = modulefile_filename("tcl", spec_b)
         content_b = _module_lines(module_file_b)
         assert module_file_a == module_file_b and content_a != content_b
 
@@ -1268,26 +1264,8 @@ class TestTcl:
         assert len([x for x in content_b if "if {$selected_installation eq {" in x]) == 2
         assert len([x for x in content_b if "depends-on " in x]) == 7
         # check each installation pins its own dependency installation by its hash variant
-        assert (
-            len(
-                [
-                    x
-                    for x in content_a
-                    if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)
-                ]
-            )
-            == 1
-        )
-        assert (
-            len(
-                [
-                    x
-                    for x in content_b
-                    if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)
-                ]
-            )
-            == 2
-        )
+        assert len(_pinned_callpath(content_a)) == 1
+        assert len(_pinned_callpath(content_b)) == 2
         assert len([x for x in content_b if "prepend-path -d {:} PATH " in x]) == 2
         assert len([x for x in content_b if "setenv FOOBAR " in x]) == 2
 
@@ -1311,7 +1289,7 @@ class TestTcl:
         spec_b = "manyvariants@1.0.1 ~a c=v2"
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
-        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        module_file_a = modulefile_filename("tcl", spec_a)
         content_a = _module_lines(module_file_a)
         variant_names = "set variant_names [list a b build_system c d hash]"
         assert len([x for x in content_a if variant_names in x]) == 1
@@ -1328,7 +1306,7 @@ class TestTcl:
         # test valued conditional variant
         spec_a = "forward-multi-value@1.0"
         install("--fake", "--add", spec_a)
-        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        module_file_a = modulefile_filename("tcl", spec_a)
         content_a = _module_lines(module_file_a)
         assert len([x for x in content_a if x == "cuda {0}\\"]) == 1
         assert len([x for x in content_a if "cuda_arch" in x]) == 0
@@ -1350,7 +1328,7 @@ class TestTcl:
         # test boolean conditional variant
         spec_a = "conditional-variant-pkg@2.0"
         install("--fake", "--add", spec_a)
-        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        module_file_a = modulefile_filename("tcl", spec_a)
         content_a = _module_lines(module_file_a)
         assert len([x for x in content_a if x == "version_based {1}\\"]) == 1
         assert len([x for x in content_a if x == "variant_based {0}\\"]) == 1
@@ -1375,7 +1353,7 @@ class TestTcl:
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
         install("--fake", "--add", spec_c)
-        module_file = modulefile_filenames("tcl", spec_a)[0]
+        module_file = modulefile_filename("tcl", spec_a)
         content = _module_lines(module_file)
         # each installation pins its own dependency installation by its hash variant only,
         # whatever conditional variants the dependency installations define
@@ -1407,7 +1385,6 @@ class TestTcl:
         writer.write()
         assert os.path.exists(writer.layout.modulerc)
         content = _module_lines(writer.layout.modulerc)
-        hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
         assert len([x for x in content if hide_implicit_rule == x]) == 1
 
         spec_c = "manyvariants@1.0.0 ~a ~b"
@@ -1419,7 +1396,6 @@ class TestTcl:
         uninstall("-y", spec_c)
         assert os.path.exists(writer.layout.modulerc)
         content = _module_lines(writer.layout.modulerc)
-        hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
         assert len([x for x in content if hide_implicit_rule == x]) == 1
 
         # check hash variant is defined last for the 3 folded installations, 2 of them
@@ -1430,7 +1406,7 @@ class TestTcl:
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
         install("--fake", "--add", spec_c)
-        module_file = modulefile_filenames("tcl", spec_a)[0]
+        module_file = modulefile_filename("tcl", spec_a)
         content = _module_lines(module_file)
         assert (
             len(
@@ -1453,19 +1429,19 @@ class TestTcl:
         assert content.index(install_a) < content.index(install_b) < content.index(install_c)
 
     def test_fold_variants_pinned_dependency(
-        self, install_mockery, module_configuration, modulefile_filenames
+        self, install_mockery, module_configuration, modulefile_filename
     ):
         """Test module file of a dependent does not change when a second installation of its
         dependency is folded in the same module file."""
         module_configuration("fold_variants_all")
         spec_a = "mpileaks@2.3 ~debug ^mpich"
         install("--fake", "--add", spec_a)
-        module_file_a = modulefile_filenames("tcl", spec_a)[0]
+        module_file_a = modulefile_filename("tcl", spec_a)
         content_a = _module_lines(module_file_a)
 
         # single installation of dependency: hash variant is defined with a single value
         dep_a = spack.store.STORE.db.query_one("callpath ^mpich")
-        module_file_dep = modulefile_filenames("tcl", "callpath ^mpich")[0]
+        module_file_dep = modulefile_filename("tcl", "callpath ^mpich")
         content_dep = _module_lines(module_file_dep)
         hash_a = dep_a.dag_hash(7)
         assert f"hash {{{hash_a}}}\\" in content_dep
@@ -1562,7 +1538,7 @@ class TestTcl:
             assert module_command.env == initial_env
 
     def test_fold_variants_explicit_from_database(
-        self, install_mockery, module_configuration, modulefile_filenames
+        self, install_mockery, module_configuration, modulefile_filename
     ):
         """Test the explicitness of the other folded installations is read from the database,
         so an implicit installation written alongside an explicit one does not hide the
@@ -1600,7 +1576,7 @@ class TestTcl:
         assert concrete_a.dag_hash(7) not in content
 
     def test_fold_variants_defaults(
-        self, install_mockery, module_configuration, modulefile_filenames
+        self, install_mockery, module_configuration, modulefile_filename
     ):
         """Test the default symlink follows the installations held by a folded module file."""
         module_configuration("fold_variants_defaults")
@@ -1611,7 +1587,7 @@ class TestTcl:
 
         # writing the installation that is not the default still links the module file, as
         # it holds the default installation
-        module_file = modulefile_filenames("tcl", spec_a)[0]
+        module_file = modulefile_filename("tcl", spec_a)
         default_link = os.path.join(os.path.dirname(module_file), "default")
         assert os.readlink(default_link) == module_file
 
@@ -1621,7 +1597,7 @@ class TestTcl:
         assert not os.path.lexists(default_link)
 
     def test_fold_variants_default_listed_first(
-        self, install_mockery, module_configuration, modulefile_filenames
+        self, install_mockery, module_configuration, modulefile_filename
     ):
         """Test the installation matching a configured default is listed first in a folded
         module file, though it was installed last."""
@@ -1632,7 +1608,7 @@ class TestTcl:
         install("--fake", "--add", spec_b)
         hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
         hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
-        content = _module_lines(modulefile_filenames("tcl", spec_a)[0])
+        content = _module_lines(modulefile_filename("tcl", spec_a))
         listed = [m.group(1) for x in content for m in [re.match(r"{.* (\w{7})}\\$", x)] if m]
         assert listed == [hash_b, hash_a]
 
@@ -1677,7 +1653,7 @@ class TestTcl:
         assert written == [concrete_a, concrete_dep]
 
     def test_fold_variants_default_link_removed_with_all_installations(
-        self, install_mockery, module_configuration, modulefile_filenames
+        self, install_mockery, module_configuration, modulefile_filename
     ):
         """Test the default symlink is removed with a folded module file, when the installation
         matching a default is not the first one removed.
@@ -1687,7 +1663,7 @@ class TestTcl:
         spec_b = "mpileaks@2.3 +debug ^zmpi"
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
-        module_file = modulefile_filenames("tcl", spec_a)[0]
+        module_file = modulefile_filename("tcl", spec_a)
         default_link = os.path.join(os.path.dirname(module_file), "default")
         assert os.readlink(default_link) == module_file
 
@@ -1697,7 +1673,7 @@ class TestTcl:
         assert not os.path.lexists(default_link)
 
     def test_fold_variants_default_link_removed_with_default_installation(
-        self, install_mockery, module_configuration, modulefile_filenames
+        self, install_mockery, module_configuration, modulefile_filename
     ):
         """Test the default symlink is removed when the installation matching a default is
         removed from a folded module file after another one.
@@ -1708,7 +1684,7 @@ class TestTcl:
         spec_c = "mpileaks@2.3 ~debug +opt ^zmpi"
         for spec in (spec_a, spec_b, spec_c):
             install("--fake", "--add", spec)
-        module_file = modulefile_filenames("tcl", spec_a)[0]
+        module_file = modulefile_filename("tcl", spec_a)
         default_link = os.path.join(os.path.dirname(module_file), "default")
         assert os.readlink(default_link) == module_file
 

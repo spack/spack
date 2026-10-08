@@ -57,7 +57,7 @@ def test_exit_with_failure(database, module_type, failure_args):
 
 
 @pytest.mark.db
-def test_remove_and_add(database, module_type, modulefile_filenames):
+def test_remove_and_add(database, module_type, modulefile_filename):
     """Tests adding and removing a tcl module file."""
 
     if module_type == "lmod":
@@ -66,17 +66,14 @@ def test_remove_and_add(database, module_type, modulefile_filenames):
         return
 
     rm_cli_args = ["rm", "-y", "mpileaks"]
-    module_files = modulefile_filenames(module_type, "mpileaks")
-    for item in module_files:
-        assert os.path.exists(item)
+    module_file = modulefile_filename(module_type, "mpileaks")
+    assert os.path.exists(module_file)
 
     module(module_type, *rm_cli_args)
-    for item in module_files:
-        assert not os.path.exists(item)
+    assert not os.path.exists(module_file)
 
     module(module_type, "refresh", "-y", "mpileaks")
-    for item in module_files:
-        assert os.path.exists(item)
+    assert os.path.exists(module_file)
 
 
 @pytest.mark.db

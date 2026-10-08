@@ -32,7 +32,7 @@ def test_find_and_loads_variants(mutable_database, module_configuration, subcomm
     assert "~debug~fortran~opt+shared+static build_system=generic hash=" in out
 
 
-def test_refresh_fold_variants(install_mockery, module_configuration, modulefile_filenames):
+def test_refresh_fold_variants(install_mockery, module_configuration, modulefile_filename):
     """Test same module version is folded into one module file after refresh."""
     spec_a = "mpileaks@2.3 ~debug ^zmpi"
     spec_b = "mpileaks@2.3 +debug ^zmpi"
@@ -40,8 +40,8 @@ def test_refresh_fold_variants(install_mockery, module_configuration, modulefile
     install("--fake", "--add", spec_b)
 
     module_configuration("variants_none")
-    module_file_a = modulefile_filenames("tcl", spec_a)[0]
-    module_file_b = modulefile_filenames("tcl", spec_b)[0]
+    module_file_a = modulefile_filename("tcl", spec_a)
+    module_file_b = modulefile_filename("tcl", spec_b)
     assert module_file_a != module_file_b
 
     module_configuration("fold_variants_all")
@@ -63,7 +63,7 @@ def test_refresh_name_clash_without_variants(install_mockery, module_configurati
     assert "installations of different versions cannot share a module file" not in out
 
 
-def test_rm_fold_variants(install_mockery, module_configuration, modulefile_filenames):
+def test_rm_fold_variants(install_mockery, module_configuration, modulefile_filename):
     """Test rm command removes the given installations from a module file holding several, and
     deletes the module file only when no installation remains."""
     module_configuration("fold_variants_all")
@@ -73,7 +73,7 @@ def test_rm_fold_variants(install_mockery, module_configuration, modulefile_file
 
     # remove module file holding one installation
     install("--fake", "--add", spec_a)
-    module_file = modulefile_filenames("tcl", spec_a)[0]
+    module_file = modulefile_filename("tcl", spec_a)
     module("tcl", "rm", "-y", spec_a)
     assert not os.path.exists(module_file)
 
@@ -92,7 +92,7 @@ def test_rm_fold_variants(install_mockery, module_configuration, modulefile_file
 
 
 def test_rm_prompt_lists_kept_installations(
-    install_mockery, module_configuration, modulefile_filenames, monkeypatch
+    install_mockery, module_configuration, modulefile_filename, monkeypatch
 ):
     """Test rm command tells which installations are removed from a shared module file, and
     which ones the module file keeps."""
@@ -101,7 +101,7 @@ def test_rm_prompt_lists_kept_installations(
     spec_b = "mpileaks@2.3 +debug ^zmpi"
     install("--fake", "--add", spec_a)
     install("--fake", "--add", spec_b)
-    module_file = modulefile_filenames("tcl", spec_a)[0]
+    module_file = modulefile_filename("tcl", spec_a)
     concrete_a = spack.store.STORE.db.query_one(spec_a)
     concrete_b = spack.store.STORE.db.query_one(spec_b)
 
@@ -115,7 +115,7 @@ def test_rm_prompt_lists_kept_installations(
     assert os.path.exists(module_file)
 
 
-def test_rm_excluded_installation(install_mockery, module_configuration, modulefile_filenames):
+def test_rm_excluded_installation(install_mockery, module_configuration, modulefile_filename):
     """Test rm command does not delete the module file of the other installations when given an
     installation excluded from it."""
     module_configuration("fold_variants_exclude")
@@ -123,7 +123,7 @@ def test_rm_excluded_installation(install_mockery, module_configuration, modulef
     spec_b = "mpileaks@2.3 +debug ^zmpi"
     install("--fake", "--add", spec_a)
     install("--fake", "--add", spec_b)
-    module_file = modulefile_filenames("tcl", spec_b)[0]
+    module_file = modulefile_filename("tcl", spec_b)
 
     out = module("tcl", "rm", "-y", spec_a, fail_on_error=False)
     assert module.returncode == 1
@@ -246,7 +246,7 @@ def test_refresh_name_clash_across_versions(install_mockery, module_configuratio
 
 
 def test_uninstall_does_not_recreate_module(
-    install_mockery, module_configuration, modulefile_filenames
+    install_mockery, module_configuration, modulefile_filename
 ):
     """Test uninstalling a folded installation does not write back a module file that was
     removed beforehand."""
@@ -255,7 +255,7 @@ def test_uninstall_does_not_recreate_module(
     spec_b = "mpileaks@2.3 +debug ^zmpi"
     install("--fake", "--add", spec_a)
     install("--fake", "--add", spec_b)
-    module_file = modulefile_filenames("tcl", spec_a)[0]
+    module_file = modulefile_filename("tcl", spec_a)
     module("tcl", "rm", "-y", "mpileaks@2.3 ^zmpi")
     assert not os.path.exists(module_file)
 
