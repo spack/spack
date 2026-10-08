@@ -362,8 +362,7 @@ def _ensure_templates_apply_to_folded_installations(error_cls):
                 continue
             # Installations of different versions never share a module file, so a constraint
             # on the package name and version applies to the whole module file
-            spec = spack.spec.Spec(constraint)
-            if str(spec) == spec.format("{name}{@versions}"):
+            if spack.spec.constrains_only_name_and_versions(spack.spec.Spec(constraint)):
                 continue
             summary = (
                 f"Setting a template for '{constraint}' in the tcl configuration of the "

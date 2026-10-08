@@ -989,7 +989,7 @@ class TestTcl:
         """Tests variant definitions when variants mode is ``"all"``."""
 
         # module variants enabled
-        module_configuration("variants_all")
+        module_configuration("fold_variants_all")
 
         # test module file of package without variants
         content = modulefile_content("module-long-help target=core2")
@@ -1093,7 +1093,7 @@ class TestTcl:
     def test_variants_all_reserved(self, modulefile_content, module_configuration):
         """Tests that variants reserved by Spack are not defined in module file."""
 
-        module_configuration("variants_all")
+        module_configuration("fold_variants_all")
 
         # patches variant is set on concretized spec of package with patches
         content = modulefile_content("patch@2.0")
@@ -1142,7 +1142,7 @@ class TestTcl:
         """Tests variant values are written in the form the module command reads back once
         loaded."""
 
-        module_configuration("variants_all")
+        module_configuration("fold_variants_all")
 
         # "++" is spelled "xx", and characters the module command reserves become "_"
         content = modulefile_content("gcc languages=c,c++,fortran")
@@ -1160,8 +1160,8 @@ class TestTcl:
     def test_no_fold_without_variants(
         self, install_mockery, module_configuration, modulefile_filenames, factory, monkeypatch
     ):
-        """Test module files behave as before when variants are disabled: no folding, no
-        database query, and module file is removed on uninstall."""
+        """Test that with variants disabled there is no folding, no database query, and the
+        module file is removed on uninstall."""
         module_configuration("fold_variants_none")
         spec_a = "mpileaks@2.3 ~debug ^zmpi"
         spec_b = "mpileaks@2.3 +debug ^zmpi"

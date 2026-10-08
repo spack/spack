@@ -112,8 +112,7 @@ class TclConfiguration(BaseConfiguration):
         with the values of a multi-valued variant joined by underscores."""
         if v.type == VariantType.BOOL:
             return {"value": "1" if v.value else "0", "type": v.type.string, "spec": str(v)}
-        value = "_".join(map(str, v.value)) if isinstance(v.value, tuple) else str(v.value)
-        value = module_variant_value(value)
+        value = module_variant_value("_".join(map(str, v.values)))
         return {"value": value, "type": v.type.string, "spec": f"{v.name}={value}"}
 
     @property
@@ -205,8 +204,7 @@ class TclConfiguration(BaseConfiguration):
 
             # A module file may be requested for an installation not recorded yet, the ones
             # being removed are still recorded until uninstalled
-            spec_list.add(self.spec)
-            spec_list = {x for x in spec_list if x not in self.removed_specs}
+            spec_list = (spec_list | {self.spec}) - self.removed_specs
 
             # Keep only specs that share the same module filename and are not excluded from
             # module file generation, this installation included, in the order a plain load
@@ -217,7 +215,7 @@ class TclConfiguration(BaseConfiguration):
                 conf = self.sibling_configuration(spec)
                 if conf.excluded:
                     continue
-                if conf is self or conf.layout.filename == self.layout.filename:
+                if conf.layout.filename == self.layout.filename:
                     confs_in_file.append(conf)
             confs_in_file.sort(key=self._installation_order_key)
 
@@ -360,7 +358,7 @@ class TclModuleContext(ModuleContext):
 
     @tengine.context_property
     def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
-        """Expose aggregated variant metadata to templates."""
+        """Returns the variants defined across the installations held by the module file."""
         return self.conf.aggregated_variants
 
     @tengine.context_property
@@ -423,5 +421,5 @@ class TclModulefileWriter(BaseModuleFileWriter):
         writer = type(self)(self.conf.sibling_configuration(remaining[0]))
         writer.write(overwrite=True)
         # The removed installation may have been the one making this module the default
-        if not any(conf.matches_default for conf in writer.conf.configurations_in_file):
+        if not writer.conf.file_matches_default:
             self.remove_module_defaults()
