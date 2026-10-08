@@ -13,14 +13,21 @@ sp_isolate = spack.main.SpackCommand("isolate")
 sp_config = spack.main.SpackCommand("config")
 
 
-def test_isolate_redirection(mock_spack_instance, tmp_path):
-    """Check that `spack isolate` sets up all future writes to go to
-    the selected isolation target.
-    """
+@pytest.fixture
+def isolate_paths(mock_spack_instance):
+    """Provide common path setup for isolate tests."""
     home_dir, base_prefix = mock_spack_instance
     base_prefix = Path(base_prefix)
     etc_spack = base_prefix / "etc" / "spack"
     isolate_scope_path = etc_spack / "isolate"
+    return home_dir, base_prefix, etc_spack, isolate_scope_path
+
+
+def test_isolate_redirection(isolate_paths, tmp_path):
+    """Check that `spack isolate` sets up all future writes to go to
+    the selected isolation target.
+    """
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
 
     isolated_path = tmp_path / "test-isolation"
     sp_isolate("--path", str(isolated_path))
@@ -48,12 +55,9 @@ def test_isolate_redirection(mock_spack_instance, tmp_path):
     assert "SPACK_DISABLE_LOCAL_CONFIG" not in include_text
 
 
-def test_isolate_added_config(mock_spack_instance, tmp_path):
+def test_isolate_added_config(isolate_paths, tmp_path):
     """Test that config added after isolate goes to the isolated path."""
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
 
     isolated_path = tmp_path / "test-isolation"
     sp_isolate("--path", str(isolated_path))
@@ -80,12 +84,9 @@ def test_isolate_added_config(mock_spack_instance, tmp_path):
     assert "cache:" in text
 
 
-def test_overwrite_replaces_old_isolate_config(mock_spack_instance, tmp_path):
+def test_overwrite_replaces_old_isolate_config(isolate_paths, tmp_path):
     """An old isolate scope is replaced by the current include override."""
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
     isolate_scope_path.mkdir(parents=True)
     (isolate_scope_path / "include.yaml").write_text(
         "include:\n  - name: user\n    path: old-target\n", encoding="utf-8"
@@ -101,13 +102,11 @@ def test_overwrite_replaces_old_isolate_config(mock_spack_instance, tmp_path):
     assert not (isolate_scope_path / "bootstrap.yaml").exists()
 
 
-def test_isolate_keeps_existing_resources_in_place(mock_spack_instance, tmp_path):
+def test_isolate_keeps_existing_resources_in_place(isolate_paths, tmp_path):
     """Some pre-1.3 artifacts like installs, licenses, etc. were stored in the
     Spack prefix: check that `spack isolate` continues to use those.
     """
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
     old_licenses = etc_spack / "licenses"
     old_licenses.mkdir()
     (old_licenses / "license.dat").write_text("license", encoding="utf-8")
@@ -126,7 +125,7 @@ def test_isolate_keeps_existing_resources_in_place(mock_spack_instance, tmp_path
     assert cfg.get("config:locations:data")[0] == str(target)
 
 
-def test_isolate_reuse_old_target(mock_spack_instance, tmp_path):
+def test_isolate_reuse_old_target(isolate_paths, tmp_path):
     """Reuse an old target after restoring tracked include.yaml before pulling.
 
     This test applies to any old isolation target. If the target came from
@@ -136,10 +135,7 @@ def test_isolate_reuse_old_target(mock_spack_instance, tmp_path):
     ``spack isolate --undo`` before the pull would remove that target and its
     configuration, leaving nothing for ``--reuse-old`` to reuse.
     """
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
     target = tmp_path / "old-isolation"
     target.mkdir()
     config_path = target / "config.yaml"
@@ -192,13 +188,10 @@ def test_isolate_reuse_old_target(mock_spack_instance, tmp_path):
 
 
 @pytest.mark.parametrize("args", [["--self"], ["--path", "isolate"]])
-def test_isolate_reuse_old_self_target(mock_spack_instance, tmp_path, args):
+def test_isolate_reuse_old_self_target(isolate_paths, tmp_path, args):
     """Check ``spack isolate --reuse-old`` with ``--self``, or with a ``--path``
     that is effectively the same as if they had used ``--self``."""
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
     isolate_scope_path.mkdir(parents=True)
     existing_files = {
         "config.yaml": "config:\n  build_jobs: 3\n",
@@ -237,30 +230,24 @@ def test_isolate_reuse_old_self_target(mock_spack_instance, tmp_path, args):
     assert cfg.highest_precedence_scope().path == str(isolate_scope_path / "user-redirect")
 
 
-def test_isolate_path_self_target_requires_reuse(mock_spack_instance):
+def test_isolate_path_self_target_requires_reuse(isolate_paths):
     """An existing self target is not reused implicitly through --path."""
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
     isolate_scope_path.mkdir(parents=True)
     with pytest.raises(Exception):
         sp_isolate("--path", str(isolate_scope_path))
 
 
-def test_isolate_rejects_reuse_and_overwrite_together(mock_spack_instance):
+def test_isolate_rejects_reuse_and_overwrite_together(isolate_paths):
     """Reuse and overwrite express contradictory target handling."""
     with pytest.raises(spack.main.SpackCommandError):
         sp_isolate("--self", "--reuse-old", "--overwrite")
 
 
-def test_self_isolate(mock_spack_instance, tmp_path):
+def test_self_isolate(isolate_paths, tmp_path):
     """`spack isolate --self` should setup highest-priority write scope
     inside the Spack prefix."""
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
 
     sp_isolate("--self")
     assert isolate_scope_path.exists()
@@ -285,12 +272,9 @@ packages:
     assert text == expected_text
 
 
-def test_isolate_overwrite_self(mock_spack_instance, tmp_path):
+def test_isolate_overwrite_self(isolate_paths, tmp_path):
     """Test --self --overwrite clears previous isolate config."""
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
 
     sp_isolate("--self")
     with pytest.raises(Exception):
@@ -326,12 +310,9 @@ packages:
     assert text == expected_text
 
 
-def test_isolate_undo(mock_spack_instance, tmp_path):
+def test_isolate_undo(isolate_paths, tmp_path):
     """Test that --undo removes the isolate scope."""
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
 
     isolated_path = tmp_path / "test-isolation"
     sp_isolate("--path", str(isolated_path))
