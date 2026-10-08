@@ -211,6 +211,7 @@ def test_find_external_manifest_failure(mutable_config, tmp_path: pathlib.Path, 
     def fail():
         raise Exception()
 
+    monkeypatch.setattr(spack.cray_manifest, "default_path", test_manifest_dir)
     monkeypatch.setattr(spack.cmd.external, "_collect_and_consume_cray_manifest_files", fail)
     monkeypatch.setenv("PATH", "")
     output = external("find")
@@ -290,7 +291,7 @@ def test_new_entries_are_reported_correctly(mock_executable, mutable_config, mon
     assert "No new external packages detected" in output
 
 
-@pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
+@pytest.mark.parametrize("command_args", [["-t", "build-tools"], ["cmake"]])
 @pytest.mark.not_on_windows("the test uses bash scripts")
 def test_use_tags_for_detection(
     command_args, mock_executable, mutable_config, monkeypatch, mock_packages
