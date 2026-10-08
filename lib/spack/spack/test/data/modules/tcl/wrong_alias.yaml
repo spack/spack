@@ -1,0 +1,8 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+  mpileaks:
+    alias:
+      - '{name}/{prefix}'
