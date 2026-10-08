@@ -399,7 +399,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a logs -d 'print ou
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a maintainers -d 'get information about package maintainers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a make-installer -d 'generate Windows installer'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mark -d 'mark packages as explicitly or implicitly installed'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a migrate -d 'undo auto-migration of licenses and environments'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a migrate -d 'manage migration of Spack resources'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a mirror -d 'manage mirrors (source and binary)'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a module -d 'generate/manage module files'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a patch -d 'patch expanded sources in preparation for install'
@@ -2362,12 +2362,14 @@ complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -f -a im
 complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -d 'mark packages as implicitly installed'
 
 # spack migrate
-set -g __fish_spack_optspecs_spack_migrate h/help dry-run
-complete -c spack -n '__fish_spack_using_command_pos 0 migrate' -f -a 'undo cleanup-old'
+set -g __fish_spack_optspecs_spack_migrate h/help dry-run restore-old-user-scope
+complete -c spack -n '__fish_spack_using_command_pos 0 migrate' -f -a 'undo cleanup-old use-new-layout'
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -f -a dry_run
 complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -d 'show what would be done without actually doing it'
+complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-user-scope -f -a restore_old_user_scope
+complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-user-scope -d 'restore the user scope to ~/.spack (changes git-managed config in the Spack repository)'
 
 # spack mirror
 set -g __fish_spack_optspecs_spack_mirror h/help n/no-checksum

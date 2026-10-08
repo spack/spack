@@ -49,7 +49,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         action="store_true",
         help=(
             "restore the user scope to ~/.spack (changes git-managed config in the"
-            "Spack repository)"
+            " Spack repository)"
         ),
     )
 
