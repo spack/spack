@@ -2290,8 +2290,9 @@ def _migrate_user_config() -> bool:
 def _migrate_package_repositories() -> bool:
     """Copy legacy package repositories to the new default state location."""
     old_path = spack.paths.old_package_repos_path
-    # Use default location directly without triggering config resolution
-    new_path = os.path.join(spack.paths.default_state_home, "package_repos")
+    # Use XDG fallback chain without triggering config resolution
+    state_home = _migration_state_home()
+    new_path = os.path.join(state_home, "package_repos")
 
     return _migrate_with_staging(
         old_path=old_path,
@@ -2680,6 +2681,48 @@ def _readline_with_timeout(timeout: float) -> Optional[str]:
     return sys.stdin.readline() if ready else None
 
 
+def _migration_data_home() -> str:
+    """Compute migration target for data_home with XDG fallback chain.
+
+    Uses (in order of precedence):
+    1. SPACK_DATA_HOME environment variable
+    2. XDG_DATA_HOME environment variable
+    3. Default XDG_DATA_HOME location: ~/.local/share/spack
+
+    This does not use config, since migration happens before config is fully loaded.
+    """
+    spack_data = os.getenv("SPACK_DATA_HOME")
+    if spack_data:
+        return spack_data
+
+    xdg_data = os.getenv("XDG_DATA_HOME")
+    if xdg_data:
+        return os.path.join(xdg_data, "spack")
+
+    return os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
+
+
+def _migration_state_home() -> str:
+    """Compute migration target for state_home with XDG fallback chain.
+
+    Uses (in order of precedence):
+    1. SPACK_STATE_HOME environment variable
+    2. XDG_STATE_HOME environment variable
+    3. Default XDG_STATE_HOME location: ~/.local/state/spack
+
+    This does not use config, since migration happens before config is fully loaded.
+    """
+    spack_state = os.getenv("SPACK_STATE_HOME")
+    if spack_state:
+        return spack_state
+
+    xdg_state = os.getenv("XDG_STATE_HOME")
+    if xdg_state:
+        return os.path.join(xdg_state, "spack")
+
+    return os.path.join(os.path.expanduser("~"), ".local", "state", "spack")
+
+
 def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float = 60) -> bool:
     """Ask whether portable resources under the Spack prefix may be copied
     A return value of ``True`` means the user saw the prompt and responded "yes";
@@ -2691,7 +2734,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
     """
     if os.getenv("SPACK_AUTOMIGRATE_YES"):
         return True
-    data_home = os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
+    data_home = _migration_data_home()
     resources = []
     if old_resources["gpg_keys"] and not os.getenv("SPACK_GNUPGHOME"):
         resources.append(
@@ -2717,7 +2760,8 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
 
     tty.info(
         "Spack found resources in its legacy internal layout.",
-        "Spack can copy the following resources to the new user data location:",
+        "Spack can copy the following resources to the new user data location",
+        "(based on XDG_DATA_HOME/XDG_STATE_HOME environment variables):",
         *[f"{name}: {old} -> {new}" for name, old, new in resources],
         stream=sys.stderr,
     )
@@ -2770,9 +2814,8 @@ def _do_migrate_spack_prefix(old_resources):
 
     migrated_resources: List[str] = []
 
-    # Compute data_home directly without config (CONFIG doesn't exist yet)
-    expanded_home = os.path.expanduser("~")
-    data_home = os.path.join(expanded_home, ".local", "share", "spack")
+    # Compute data_home using XDG fallback chain (without config, since CONFIG doesn't exist yet)
+    data_home = _migration_data_home()
 
     # 1. Handle GPG (both keyring and keys directory)
     old_gpg_home = spack.paths.old_gpg_path
