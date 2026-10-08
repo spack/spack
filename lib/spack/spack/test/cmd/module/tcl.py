@@ -22,22 +22,13 @@ writer_cls = spack.modules.tcl.TclModulefileWriter
 
 
 @pytest.mark.db
-def test_find_variants(mutable_database, module_configuration):
-    """Test found module is returned with its variant specification if enabled."""
-    module_configuration("variants_all")
+@pytest.mark.parametrize("subcommand", ["find", "loads"])
+def test_find_and_loads_variants(mutable_database, module_configuration, subcommand):
+    """Test the module is returned with its variant specification if enabled."""
+    module_configuration("fold_variants_all")
 
     module("tcl", "refresh", "-y", "--delete-tree")
-    out = module("tcl", "find", "mpileaks ^zmpi")
-    assert "~debug~fortran~opt+shared+static build_system=generic hash=" in out
-
-
-@pytest.mark.db
-def test_loads_variants(mutable_database, module_configuration):
-    """Test module to load is returned with its variant specification if enabled."""
-    module_configuration("variants_all")
-
-    module("tcl", "refresh", "-y", "--delete-tree")
-    out = module("tcl", "loads", "mpileaks ^zmpi")
+    out = module("tcl", subcommand, "mpileaks ^zmpi")
     assert "~debug~fortran~opt+shared+static build_system=generic hash=" in out
 
 

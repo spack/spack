@@ -91,6 +91,17 @@ class ModuleConfigurationCache:
             Tuple[str, str, bool, FrozenSet[spack.spec.Spec]], "BaseConfiguration"
         ] = {}
         self._local_installations: Optional[Dict[str, List[spack.spec.Spec]]] = None
+        self._explicit: Dict[str, bool] = {}
+
+    def explicit(self, spec: spack.spec.Spec) -> bool:
+        """Returns whether the spec is recorded as explicitly installed. The database is read
+        on the first call for a spec, later calls return what was recorded then.
+        """
+        dag_hash = spec.dag_hash()
+        if dag_hash not in self._explicit:
+            _, record = spack.store.STORE.db.query_by_spec_hash(dag_hash)
+            self._explicit[dag_hash] = bool(record and record.explicit)
+        return self._explicit[dag_hash]
 
     def local_installations(self, name: str) -> List[spack.spec.Spec]:
         """Returns the specs of a package installed in the local store. The database is read
@@ -385,8 +396,7 @@ class BaseConfiguration:
             cache = ModuleConfigurationCache()
 
         if explicit is None:
-            _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
-            explicit = bool(record and record.explicit)
+            explicit = cache.explicit(spec)
 
         key = (spec.dag_hash(), module_set_name, explicit, removed_specs)
         configuration = cache.configurations.get(key)
@@ -790,6 +800,11 @@ class BaseConfiguration:
     def other_specs_in_file(self) -> List[spack.spec.Spec]:
         """Returns the other specs the module file holds."""
         return [spec for spec in self.specs_in_file if spec != self.spec]
+
+    @property
+    def file_matches_default(self) -> bool:
+        """Whether a spec held by the module file matches a configured default."""
+        return any(conf.matches_default for conf in self.configurations_in_file)
 
 
 class FileLayout:
@@ -1456,7 +1471,7 @@ class BaseModuleFileWriter:
         self.update_module_hiddenness()
 
     def update_module_defaults(self) -> None:
-        if any(conf.matches_default for conf in self.conf.configurations_in_file):
+        if self.conf.file_matches_default:
             # A spec held by the module file matches a default, symlink it to default
             # Symlink to a tmp location first and move, so that existing
             # symlinks do not cause an error.
