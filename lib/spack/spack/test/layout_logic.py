@@ -625,7 +625,7 @@ def test_auto_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     monkeypatch.setattr(spack.config, "_do_migrate_home", track_home_migrate)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    spack.config._perform_auto_migration_at_module_load()
+    spack.config._perform_auto_migration()
 
     assert home_migrate_called, "_do_migrate_home should be called even with no old resources"
 
@@ -689,7 +689,7 @@ def test_migrate_with_staging_skips_occupied_destination(tmp_path, monkeypatch):
 def test_layout_scope_fallback_for_old_installs(mock_spack_instance, monkeypatch):
     """When old installs exist, layout scope retains install_tree at old location.
 
-    Verifies that auto-migration creates a layout scope pointing install_tree:root
+    Verifies that migration creates a layout scope pointing install_tree:root
     to the old location when installs are detected.
     """
     home_dir, base_prefix = mock_spack_instance
@@ -706,7 +706,7 @@ def test_layout_scope_fallback_for_old_installs(mock_spack_instance, monkeypatch
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     # Trigger migration
-    spack.config._perform_auto_migration_at_module_load()
+    spack.config._perform_auto_migration()
 
     # Reload config to pick up layout scope
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
