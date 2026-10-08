@@ -1675,3 +1675,44 @@ class TestTcl:
         )
         spack.hooks.post_database_add([concrete_a, concrete_dep, concrete_b])
         assert written == [concrete_a, concrete_dep]
+
+    def test_fold_variants_default_link_removed_with_all_installations(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Test the default symlink is removed with a folded module file, when the installation
+        matching a default is not the first one removed.
+        """
+        module_configuration("fold_variants_defaults")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        default_link = os.path.join(os.path.dirname(module_file), "default")
+        assert os.readlink(default_link) == module_file
+
+        removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
+        spack.hooks.post_database_remove(removed)
+        assert not os.path.exists(module_file)
+        assert not os.path.lexists(default_link)
+
+    def test_fold_variants_default_link_removed_with_default_installation(
+        self, install_mockery, module_configuration, modulefile_filenames
+    ):
+        """Test the default symlink is removed when the installation matching a default is
+        removed from a folded module file after another one.
+        """
+        module_configuration("fold_variants_defaults")
+        spec_a = "mpileaks@2.3 ~debug ~opt ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        spec_c = "mpileaks@2.3 ~debug +opt ^zmpi"
+        for spec in (spec_a, spec_b, spec_c):
+            install("--fake", "--add", spec)
+        module_file = modulefile_filenames("tcl", spec_a)[0]
+        default_link = os.path.join(os.path.dirname(module_file), "default")
+        assert os.readlink(default_link) == module_file
+
+        removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
+        spack.hooks.post_database_remove(removed)
+        assert os.path.exists(module_file)
+        assert not os.path.lexists(default_link)
