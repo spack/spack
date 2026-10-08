@@ -30,6 +30,7 @@ from typing import (
     IO,
     Any,
     Callable,
+    Container,
     Dict,
     Iterable,
     List,
@@ -42,6 +43,7 @@ from typing import (
     cast,
 )
 
+import spack.build_environment
 import spack.caches
 import spack.config
 import spack.database
@@ -61,6 +63,7 @@ import spack.store
 import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
+import spack.util.environment
 import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.lang
@@ -574,16 +577,19 @@ def file_matches(f: IO[bytes], regex: spack.util.lang.PatternBytes) -> bool:
         f.seek(0)
 
 
-def specs_to_relocate(spec: spack.spec.Spec) -> List[spack.spec.Spec]:
+def specs_to_relocate(
+    spec: spack.spec.Spec, include_externals: bool = False
+) -> List[spack.spec.Spec]:
     """Return the set of specs that may be referenced in the install prefix of the provided spec.
-    We currently include non-external transitive link and direct run dependencies."""
+    We currently include transitive link and direct run dependencies, and externals among them
+    only if ``include_externals`` is True."""
     specs = [
         s
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link", order="breadth", key=traverse.by_dag_hash),
             spec.dependencies(deptype="run"),
         )
-        if not s.external
+        if include_externals or not s.external
     ]
     return list(spack.util.lang.dedupe(specs, key=lambda s: s.dag_hash()))
 
@@ -1892,6 +1898,89 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
+def _virtuals_by_node(root: spack.spec.Spec) -> Dict[int, Set[str]]:
+    """Return the virtuals each node in the DAG of ``root`` provides, in the context of ``root``,
+    keyed by the ``id`` of the node. Same semantics as ``Spec._virtuals_provided``.
+    """
+    result: Dict[int, Set[str]] = defaultdict(set)
+    result[id(root)] = {v.name for v in root.provided_virtuals}
+    for edge in root.traverse_edges(root=False, cover="edges"):
+        result[id(edge.spec)].update(edge.virtuals)
+    return result
+
+
+class _SpliceAnalogs:
+    """Finds the node of the build spec that a node of a spliced spec replaced.
+
+    Candidates are the nodes of the build spec that ``Spec._splice_match`` accepts: those with the
+    same name, and those providing a superset of the virtuals the node provides.
+
+    Among them, same name is preferred, then higher version, then the first in traversal order,
+    as in ``Spec.splice``. The index is built in a single pass over the DAGs of both specs.
+    """
+
+    def __init__(self, spec: spack.spec.Spec) -> None:
+        # Candidates are referred to by their position in traversal order
+        self.candidates = list(spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
+        self.by_name: Dict[str, List[int]] = defaultdict(list)
+        self.by_virtual: Dict[str, Set[int]] = defaultdict(set)
+        build_spec_virtuals = _virtuals_by_node(spec.build_spec)
+        for i, d in enumerate(self.candidates):
+            self.by_name[d.name].append(i)
+            for virtual in build_spec_virtuals[id(d)]:
+                self.by_virtual[virtual].add(i)
+        self.spec_virtuals = _virtuals_by_node(spec)
+
+    def __call__(self, s: spack.spec.Spec) -> Optional[spack.spec.Spec]:
+        # For each virtual s provides, the candidates providing it
+        providers = [self.by_virtual.get(v, set()) for v in self.spec_virtuals[id(s)]]
+        # Candidates providing all virtuals of s; none if s provides no virtuals
+        common = set.intersection(*providers) if providers else set()
+        analogs = {*self.by_name.get(s.name, []), *common}
+        if not analogs:
+            return None
+        key = lambda i: (self.candidates[i].name == s.name, self.candidates[i].version, -i)
+        return self.candidates[max(analogs, key=key)]
+
+
+def _containing_prefix(path: bytes, prefixes: Container[bytes]) -> Optional[bytes]:
+    """Return the element of ``prefixes`` that is ``path`` or one of its parent directories"""
+    while path not in prefixes:
+        parent = os.path.dirname(path)
+        if parent == path:  # path is / or windows equivalent
+            return None
+        path = parent
+    return path
+
+
+class _SplicedRpaths:
+    """RPATH transform for a binary of a spliced spec, applied before prefix substitution.
+
+    Entries under a replaced prefix are replaced by the directories it maps to, which may be none,
+    and entries under an external prefix are moved after all others, as in a build. Duplicate
+    entries are dropped.
+    """
+
+    def __init__(self, replaced: Dict[str, List[str]], externals: Iterable[str]) -> None:
+        self.replaced = {
+            p.encode("utf-8"): [d.encode("utf-8") for d in dirs] for p, dirs in replaced.items()
+        }
+        self.externals = {p.encode("utf-8") for p in externals}
+
+    def __call__(self, rpaths: List[bytes]) -> List[bytes]:
+        result: List[bytes] = []
+        for rpath in rpaths:
+            replaced_prefix = _containing_prefix(rpath, self.replaced)
+            if replaced_prefix is not None:
+                result.extend(self.replaced[replaced_prefix])
+            else:
+                result.append(rpath)
+        external, spack_built = spack.util.lang.stable_partition(
+            result, lambda r: _containing_prefix(r, self.externals) is not None
+        )
+        return list(spack.util.lang.dedupe(spack_built + external))
+
+
 def relocate_package(spec: spack.spec.Spec) -> None:
     """Relocate binaries and text files in the given spec prefix, based on its buildinfo file."""
     spec_prefix = str(spec.prefix)
@@ -1927,32 +2016,54 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # the new spack store root.
 
     # If the spec is spliced, we need to handle the simultaneous mapping from the old install_tree
-    # to the new install_tree and from the build_spec to the spliced spec. Because foo.build_spec
-    # is foo for any non-spliced spec, we can simplify by checking for spliced-in nodes by checking
-    # for nodes not in the build_spec without any explicit check for whether the spec is spliced.
-    # An analog in this algorithm is any spec that shares a name or provides the same virtuals in
-    # the context of the relevant root spec. This ensures that the analog for a spec s is the spec
-    # that s replaced when we spliced.
-    relocation_specs = specs_to_relocate(spec)
-    build_spec_ids = {id(s) for s in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)}
+    # to the new install_tree and from the build_spec to the spliced spec. Nodes the splice did
+    # not change keep their hash. For the others, the old prefix is the one of their analog: the
+    # node of the build_spec they replaced. Externals are included so that a spliced-in external
+    # gets a mapping from the old prefix of its analog.
+    relocation_specs = specs_to_relocate(spec, include_externals=True)
+    splice_analogs = _SpliceAnalogs(spec) if spec.spliced else None
+    matched_old_hashes = set()
+    spliced_externals: Dict[str, spack.spec.Spec] = {}
     for s in relocation_specs:
         analog = s
-        if id(s) not in build_spec_ids:
-            analogs = [
-                d
-                for d in spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD)
-                if s._splice_match(d, self_root=spec, other_root=spec.build_spec)
-            ]
-            if analogs:
-                # Prefer same-name analogs and prefer higher versions
-                # This matches the preferences in spack.spec.Spec.splice, so we
-                # will find same node
-                analog = max(analogs, key=lambda a: (a.name == s.name, a.version))
+        if splice_analogs is not None and s.dag_hash() not in hash_to_old_prefix:
+            analog = splice_analogs(s) or s
 
         lookup_dag_hash = analog.dag_hash()
         if lookup_dag_hash in hash_to_old_prefix:
+            matched_old_hashes.add(lookup_dag_hash)
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
             prefix_to_prefix[old_dep_prefix] = str(s.prefix)
+            if s.external and analog is not s:
+                spliced_externals[old_dep_prefix] = s
+
+    rpath_transform = None
+    if spec.spliced:
+        # Nodes of the build_spec without an analog in the spliced spec were removed by the splice
+        replaced_prefixes: Dict[str, List[str]] = {
+            old_prefix: []
+            for dag_hash, old_prefix in hash_to_old_prefix.items()
+            if dag_hash not in matched_old_hashes
+        }
+        for old_prefix, external in spliced_externals.items():
+            # A build adds no RPATH entry for externals in system prefixes
+            if spack.util.environment.is_system_path(external.prefix):
+                replaced_prefixes[old_prefix] = []
+                continue
+            dirs = spack.build_environment.link_dirs_of(external[external.name])
+            replaced_prefixes[old_prefix] = dirs
+            if not dirs:
+                warnings.warn(
+                    f"no library directory found for external {external.name} at "
+                    f"{external.prefix}, spliced into {spec.name}: its libraries will not be "
+                    f"found through RPATH"
+                )
+        external_prefixes = [
+            str(s.prefix)
+            for s in relocation_specs
+            if s.external and not spack.util.environment.is_system_path(s.prefix)
+        ]
+        rpath_transform = _SplicedRpaths(replaced_prefixes, external_prefixes)
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix[old_layout_root] = str(spack.store.STORE.layout.root)
@@ -1977,9 +2088,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
 
     platform = spack.platforms.by_name(spec.platform)
     if "macho" in platform.binary_formats:
-        relocate.relocate_macho_binaries(binaries, prefix_to_prefix)
+        relocate.relocate_macho_binaries(binaries, prefix_to_prefix, rpath_transform)
     elif "elf" in platform.binary_formats:
-        relocate.relocate_elf_binaries(binaries, prefix_to_prefix)
+        relocate.relocate_elf_binaries(binaries, prefix_to_prefix, rpath_transform)
 
     relocate.relocate_links(links, prefix_to_prefix)
     relocate.relocate_text(textfiles, prefix_to_prefix)
