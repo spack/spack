@@ -596,6 +596,20 @@ To automatically fix formatting and linting issues, you can do:
 
     $ spack style --fix
 
+To perform linting tasks on a Spack Package Repo, pass its namespace to ``--repo``:
+
+.. code-block:: console
+
+    $ spack style --repo builtin
+
+Any linter configuration specified in a package repo will be respected by Spack's linter command.
+If there is no configuration specified, each linter tool will fall back to its default behavior.
+
+Type checking is skipped for repositories.
+
+Specifying both a specific spack root and a repository are mutually exclusive options.
+If you must lint another Spack instance and a repo, either lint the repo from that Spack instance, or add the repo to the active Spack instance.
+
 You do not need any of these Python packages installed on your system for the checks to work!
 Spack will bootstrap install them from packages for your use.
 
