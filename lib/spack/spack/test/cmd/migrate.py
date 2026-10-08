@@ -149,7 +149,6 @@ def test_migrate_can_alternate_between_old_and_new_layout(mock_spack_instance, m
     (old_gpg / "private-keys-v1.d").mkdir(parents=True)
     (old_gpg / "private-keys-v1.d" / "key").write_text("key", encoding="utf-8")
 
-    layout = Path(base_prefix) / "etc" / "spack" / "layout"
     new_data = Path(home_dir) / ".local" / "share" / "spack"
 
     # Round 1: use-new-layout should migrate to XDG locations
