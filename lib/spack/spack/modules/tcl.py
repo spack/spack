@@ -29,13 +29,9 @@ def module_variant_value(value: str) -> str:
     ``_``, ``-``, ``.`` and ``/`` becomes ``_``, and a value the module command reads as a
     boolean gets a trailing ``_``."""
     value = value.replace("++", "xx")
-    # The module command records loaded modules as name{+a:b=c}, where "+", "~", "@", ":",
-    # "," and "=" are syntax, and it cannot unload a module whose values hold them. Other
-    # non-alphanumeric characters break the Tcl lists of the module file or need quoting on
-    # the module command line.
+    # The other characters are module command syntax, break Tcl lists or need shell quoting
     value = re.sub(r"[^A-Za-z0-9_.\-/]", "_", value)
-    # The variant command refuses a boolean-looking value on a non-boolean variant, and the
-    # module command accepts any prefix of a boolean word but the ambiguous "o"
+    # The module command reads any prefix of a boolean word as a boolean, but "o"
     lower = value.lower()
     if lower not in ("", "o") and any(word.startswith(lower) for word in _MODULE_BOOLEAN_WORDS):
         value += "_"
@@ -146,8 +142,7 @@ class TclConfiguration(BaseConfiguration):
         if self.variants_mode == "none":
             return {}
 
-        # Variants reserved by Spack (like patches or dev_path) describe how the
-        # package was built rather than what it provides, they are not defined
+        # Variants reserved by Spack (like patches or dev_path) are not defined
         variant_dict = {
             v.name: self._variant_to_str_dict(v)
             for v in sorted(self.spec.variants.values(), key=lambda x: x.name)
@@ -187,8 +182,7 @@ class TclConfiguration(BaseConfiguration):
         return self._cache["configurations_in_file"]
 
     def _compute_configurations_in_file(self) -> List["TclConfiguration"]:
-        # A module file that cannot be shared holds this installation only, skip the database
-        # query in this case
+        # A module file that cannot be shared holds this installation only
         if not self.folds_installations:
             return cast(List[TclConfiguration], super().configurations_in_file)
 
@@ -202,14 +196,10 @@ class TclConfiguration(BaseConfiguration):
                 if x.satisfies(name_version_spec)
             }
 
-            # A module file may be requested for an installation not recorded yet, the ones
-            # being removed are still recorded until uninstalled
+            # This spec may not be recorded yet, the ones being removed still are
             spec_list = (spec_list | {self.spec}) - self.removed_specs
 
-            # Keep only specs that share the same module filename and are not excluded from
-            # module file generation, this installation included, in the order a plain load
-            # request selects them, as the module file selects the first installation matching
-            # a request
+            # Sorted as the module file selects the first installation matching a request
             confs_in_file = []
             for spec in spec_list:
                 conf = self.sibling_configuration(spec)
@@ -219,8 +209,7 @@ class TclConfiguration(BaseConfiguration):
                     confs_in_file.append(conf)
             confs_in_file.sort(key=self._installation_order_key)
 
-        # The other installations compute the same list, hand it over to spare them the
-        # database query
+        # The other installations compute the same list, hand it over
         for conf in confs_in_file:
             if conf is not self:
                 conf._cache.setdefault("configurations_in_file", confs_in_file)
@@ -246,11 +235,10 @@ class TclConfiguration(BaseConfiguration):
 
         A new installation is listed after the existing ones, unless it matches a default.
         """
-        spec = conf.spec
         # An installation not recorded yet is being added, it comes after the recorded ones
-        _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
+        record = conf._configuration_cache.record(conf.spec)
         installation_time = record.installation_time if record else math.inf
-        return (not conf.matches_default, installation_time, spec.dag_hash())
+        return (not conf.matches_default, installation_time, conf.spec.dag_hash())
 
     @property
     def aggregated_variants(self) -> Dict[str, Dict[str, Any]]:
@@ -283,8 +271,7 @@ class TclConfiguration(BaseConfiguration):
             # Conditional variant: some installations do not define it
             if seen_in[name] < total_installs:
                 v["values"].add(self._neutral_value(v))
-            # Sort variant values for deterministic module file content across regenerations,
-            # since dict/set iteration order of strings is not guaranteed to be stable
+            # Sorted, so that the module file content is the same across regenerations
             v["values"] = sorted(v["values"])
 
         # Keep the "hash" variant last, as it ends the depends-on lines of dependent modules
@@ -325,8 +312,8 @@ class TclFileLayout(FileLayout):
 class TclModuleContext(ModuleContext):
     """Template context of tcl module files, which may hold several installations."""
 
-    def __init__(self, configuration, layout: FileLayout) -> None:
-        super().__init__(configuration, layout)
+    def __init__(self, configuration) -> None:
+        super().__init__(configuration)
         self._installations: Optional[List["TclModuleContext"]] = None
 
     @tengine.context_property
@@ -346,7 +333,7 @@ class TclModuleContext(ModuleContext):
         the module file selects them."""
         if self._installations is None:
             self._installations = [
-                self if conf is self.conf else type(self)(conf, conf.layout)
+                self if conf is self.conf else type(self)(conf)
                 for conf in self.conf.configurations_in_file
             ]
         return self._installations
@@ -396,8 +383,7 @@ class TclModulefileWriter(BaseModuleFileWriter):
         if len(set(templates.values())) < 2:
             return
 
-        # A template rule matching only some of the folded installations wins or loses with the
-        # order the installations are written, name them all so the rule can be reworked
+        # Name every installation, so that the template rule can be reworked
         details = ", ".join(
             spec.format("{name}{@version}{variants}{/hash:7}")
             + (f" uses template '{template}'" if template else " uses the default template")

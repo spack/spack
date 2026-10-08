@@ -1606,18 +1606,15 @@ def module_configuration(request, mutable_config):
 
 
 @pytest.fixture()
-def modulefile_filenames():
-    """Returns a function that writes the module file of each given spec in the "default"
-    module set and returns the filenames written, in the same order."""
+def modulefile_filename():
+    """Returns a function that writes the module file of a spec in the "default" module set
+    and returns its filename."""
 
-    def _impl(module_type, *specs):
+    def _impl(module_type, spec):
         writer_cls = spack.modules.module_types[module_type]
-        filenames = []
-        for spec in specs:
-            writer = writer_cls.from_spec(spack.concretize.concretize_one(spec), "default")
-            writer.write()
-            filenames.append(writer.layout.filename)
-        return filenames
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec), "default")
+        writer.write()
+        return writer.layout.filename
 
     return _impl
 

@@ -45,6 +45,7 @@ import spack.build_environment
 import spack.compilers
 import spack.compilers.config
 import spack.config
+import spack.database
 import spack.deptypes as dt
 import spack.environment
 import spack.error
@@ -91,17 +92,21 @@ class ModuleConfigurationCache:
             Tuple[str, str, bool, FrozenSet[spack.spec.Spec]], "BaseConfiguration"
         ] = {}
         self._local_installations: Optional[Dict[str, List[spack.spec.Spec]]] = None
-        self._explicit: Dict[str, bool] = {}
+        self._records: Dict[str, Optional[spack.database.InstallRecord]] = {}
 
-    def explicit(self, spec: spack.spec.Spec) -> bool:
-        """Returns whether the spec is recorded as explicitly installed. The database is read
-        on the first call for a spec, later calls return what was recorded then.
+    def record(self, spec: spack.spec.Spec) -> Optional[spack.database.InstallRecord]:
+        """Returns the database record of the spec, or None if it has none. The database is
+        read on the first call for a spec, later calls return what was read then.
         """
         dag_hash = spec.dag_hash()
-        if dag_hash not in self._explicit:
-            _, record = spack.store.STORE.db.query_by_spec_hash(dag_hash)
-            self._explicit[dag_hash] = bool(record and record.explicit)
-        return self._explicit[dag_hash]
+        if dag_hash not in self._records:
+            _, self._records[dag_hash] = spack.store.STORE.db.query_by_spec_hash(dag_hash)
+        return self._records[dag_hash]
+
+    def explicit(self, spec: spack.spec.Spec) -> bool:
+        """Returns whether the spec is recorded as explicitly installed."""
+        record = self.record(spec)
+        return bool(record and record.explicit)
 
     def local_installations(self, name: str) -> List[spack.spec.Spec]:
         """Returns the specs of a package installed in the local store. The database is read
@@ -1036,9 +1041,9 @@ class FileLayout:
 class ModuleContext(tengine.Context):
     """Provides the context dictionary used by the template engine to render a module file."""
 
-    def __init__(self, configuration, layout: "FileLayout") -> None:
+    def __init__(self, configuration) -> None:
         self.conf = configuration
-        self.layout = layout
+        self.layout = configuration.layout
         self._environment_modifications: Optional[List[EnvironmentModification]] = None
         self._autoload: Optional[List[str]] = None
         self._prerequisites: Optional[List[str]] = None
@@ -1349,7 +1354,7 @@ class BaseModuleFileWriter:
     def __init__(self, conf: "BaseConfiguration") -> None:
         self.conf = conf
         self.layout = conf.layout
-        self.context = self.context_class(conf, self.layout)
+        self.context = self.context_class(conf)
 
     @classmethod
     def from_spec(
@@ -1552,7 +1557,7 @@ class BaseModuleFileWriter:
         """Removes the default symlink, if it targets this module file."""
         default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
         try:
-            if os.readlink(default_symlink) == self.layout.filename:
+            if spack.util.filesystem.readlink(default_symlink) == self.layout.filename:
                 os.unlink(default_symlink)
         except OSError:
             pass

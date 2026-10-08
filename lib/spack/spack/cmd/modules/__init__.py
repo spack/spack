@@ -178,8 +178,7 @@ def loads(module_type, specs, args, out=None):
         for spec in specs
     ]
 
-    # Installations folded into one module file cannot be loaded together: only the one the
-    # module file lists first gets a live load line
+    # Of the installations folded into one module file, only the first gets a live load line
     module_cls = spack.modules.module_types[module_type]
     with_module = {spec for spec, mod in modules if mod}
     shares_file_with: Dict[spack.spec.Spec, spack.spec.Spec] = {}
@@ -246,8 +245,7 @@ def find(module_type, specs, args):
 
     cache = spack.modules.common.ModuleConfigurationCache()
     if len(specs) > 1:
-        # An installation excluded from module files has no module to find, so it does not
-        # make the constraint ambiguous
+        # An installation excluded from module files does not make the constraint ambiguous
         module_cls = spack.modules.module_types[module_type]
         included = [
             spec
@@ -257,8 +255,7 @@ def find(module_type, specs, args):
         specs = included or specs
 
     if len(specs) > 1 and not args.recurse_dependencies:
-        # Installations folded into one module file are found by the name of the file, which
-        # selects none of them in particular
+        # Installations folded into one module file are found by the name of the file
         module_name = shared_module_name(module_type, specs, args, cache)
         if module_name:
             print(module_name)
@@ -314,8 +311,7 @@ def rm(module_type, specs, args):
     module_cls = spack.modules.module_types[module_type]
     cache = spack.modules.common.ModuleConfigurationCache()
 
-    # Installations sharing a module file are removed from it together: the file is deleted
-    # when none remains, written again for the others otherwise
+    # Installations sharing a module file are removed from it together
     file2specs: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
     for spec in specs:
         writer = module_cls.from_spec(spec, args.module_set_name, cache=cache)
@@ -407,8 +403,7 @@ def refresh(module_type, specs, args):
         if not answer:
             tty.die("Module file regeneration aborted.")
 
-    # Detect name clashes in module files: several writers may share a module file only
-    # when it folds all their installations
+    # Writers sharing a module file clash, unless the file folds all their installations
     file2writer = collections.defaultdict(list)
     for item in writers:
         file2writer[item.layout.filename].append(item)
