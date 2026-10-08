@@ -13,8 +13,10 @@ sp_isolate = spack.main.SpackCommand("isolate")
 sp_config = spack.main.SpackCommand("config")
 
 
-def test_isolate_smoke_test(mock_spack_instance, tmp_path):
-    """Basic smoke test for isolate command."""
+def test_isolate_redirection(mock_spack_instance, tmp_path):
+    """Check that `spack isolate` sets up all future writes to go to
+    the selected isolation target.
+    """
     home_dir, base_prefix = mock_spack_instance
     base_prefix = Path(base_prefix)
     etc_spack = base_prefix / "etc" / "spack"
@@ -48,16 +50,12 @@ def test_isolate_smoke_test(mock_spack_instance, tmp_path):
 
 def test_isolate_added_config(mock_spack_instance, tmp_path):
     """Test that config added after isolate goes to the isolated path."""
-
     home_dir, base_prefix = mock_spack_instance
     base_prefix = Path(base_prefix)
     etc_spack = base_prefix / "etc" / "spack"
     isolate_scope_path = etc_spack / "isolate"
 
-    # Create isolated user path
     isolated_path = tmp_path / "test-isolation"
-
-    # Run isolate command
     sp_isolate("--path", str(isolated_path))
 
     # Verify isolate scope was created
@@ -82,7 +80,7 @@ def test_isolate_added_config(mock_spack_instance, tmp_path):
     assert "cache:" in text
 
 
-def test_isolate_replaces_old_isolate_config(mock_spack_instance, tmp_path):
+def test_overwrite_replaces_old_isolate_config(mock_spack_instance, tmp_path):
     """An old isolate scope is replaced by the current include override."""
     home_dir, base_prefix = mock_spack_instance
     base_prefix = Path(base_prefix)
@@ -104,9 +102,8 @@ def test_isolate_replaces_old_isolate_config(mock_spack_instance, tmp_path):
 
 
 def test_isolate_keeps_existing_resources_in_place(mock_spack_instance, tmp_path):
-    """Isolation redirects new data without moving legacy resources.
-
-    In particular, artifacts already inside ``$spack`` must remain in place.
+    """Some pre-1.3 artifacts like installs, licenses, etc. were stored in the
+    Spack prefix: check that `spack isolate` continues to use those.
     """
     home_dir, base_prefix = mock_spack_instance
     base_prefix = Path(base_prefix)
@@ -280,7 +277,8 @@ def test_isolate_overwrite_different_dir(mock_spack_instance, tmp_path):
 
 
 def test_self_isolate(mock_spack_instance, tmp_path):
-    """Test --self isolate (stores isolation in Spack's prefix)."""
+    """`spack isolate --self` should setup highest-priority write scope
+    inside the Spack prefix."""
     home_dir, base_prefix = mock_spack_instance
     base_prefix = Path(base_prefix)
     etc_spack = base_prefix / "etc" / "spack"
