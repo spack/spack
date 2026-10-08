@@ -535,13 +535,60 @@ def substitute_version(path: str, new_version) -> str:
        "https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz"
     """  # noqa: E501
     (name, ns, nl, noffs, ver, vs, vl, voffs) = substitution_offsets(path)
+    if not ver:
+        return path
+
+    new_version_str = str(new_version)
+
+    replacements = []
+    for vo in voffs:
+        replacements.append((vo, vo + vl, new_version_str))
+
+    try:
+        ver_obj = spack.version.StandardVersion.from_string(ver)
+        new_ver_obj = spack.version.StandardVersion.from_string(new_version_str)
+
+        num_components = len(ver_obj.version[0])
+        if num_components > 1:
+            for k in range(num_components - 1, 0, -1):
+                ver_prefix = str(ver_obj.up_to(k))
+                new_prefix = str(new_ver_obj.up_to(k))
+                if ver_prefix == ver or ver_prefix == new_prefix:
+                    continue
+
+                prefix_offs = find_all(ver_prefix, path)
+                for po in prefix_offs:
+                    overlap = any(
+                        r_start <= po < r_end or po <= r_start < po + len(ver_prefix)
+                        for r_start, r_end, _ in replacements
+                    )
+                    if overlap:
+                        continue
+
+                    c_prev = path[po - 1] if po > 0 else ""
+                    c_next = path[po + len(ver_prefix)] if po + len(ver_prefix) < len(path) else ""
+
+                    if c_prev.isdigit():
+                        continue
+                    if c_next.isdigit() or (
+                        c_next == "."
+                        and po + len(ver_prefix) + 1 < len(path)
+                        and path[po + len(ver_prefix) + 1].isdigit()
+                    ):
+                        continue
+
+                    replacements.append((po, po + len(ver_prefix), new_prefix))
+    except Exception:
+        pass
+
+    replacements.sort(key=lambda x: x[0])
 
     new_path = ""
     last = 0
-    for vo in voffs:
-        new_path += path[last:vo]
-        new_path += str(new_version)
-        last = vo + vl
+    for r_start, r_end, r_str in replacements:
+        new_path += path[last:r_start]
+        new_path += r_str
+        last = r_end
 
     new_path += path[last:]
     return new_path
