@@ -582,6 +582,7 @@ class URLBuildcacheEntry:
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
         signing_key: Optional[str] = None,
+        if_match: Optional[str] = None,
     ) -> None:
         """Given a BuildcacheManifest, push it to the mirror using the given manifest
         name.  The component_type is used to indicate what type of thing the manifest
@@ -606,7 +607,9 @@ class URLBuildcacheEntry:
             mirror_url, *cls.get_relative_path_components(component_type), manifest_file_name
         )
 
-        web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
+        web_util.push_to_url(
+            manifest_path, manifest_destination_url, keep_original=False, if_match=if_match
+        )
 
     @classmethod
     def push_blob_from_file(
@@ -616,9 +619,18 @@ class URLBuildcacheEntry:
         component_type: BuildcacheComponent,
         compression: str = "none",
     ) -> BlobRecord:
-        """Push a local file as a blob of the given component type and return its record"""
-        checksum_algo = "sha256"
+        """Push a local file as a blob of the given component type and return its record.
 
+        Args:
+            local_file_path: Path the the file to push.
+            mirror_url: Base URL of the mirror to push to.
+            component_type: Component type of the blob that is being pushed.
+            compression: Type of compression to apply to blob on upload ('none' or 'gzip')
+
+        Return:
+            BlobRecord corresponding to uploaded blob.
+        """
+        checksum_algo = "sha256"
         with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
 
@@ -647,6 +659,7 @@ class URLBuildcacheEntry:
         manifest_name: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
+        if_match: Optional[str] = None,
     ) -> None:
         """Push a local file as a blob and a manifest with just that blob"""
         record = cls.push_blob_from_file(local_file_path, mirror_url, component_type, compression)
@@ -655,7 +668,12 @@ class URLBuildcacheEntry:
         )
         with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
             cls.push_manifest(
-                mirror_url, manifest_name, manifest, tmpdir, component_type=component_type
+                mirror_url,
+                manifest_name,
+                manifest,
+                tmpdir,
+                component_type=component_type,
+                if_match=if_match,
             )
 
     def push_binary_package(
@@ -1054,6 +1072,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         tmpdir: str,
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
         signing_key: Optional[str] = None,
+        if_match: Optional[str] = None,
     ) -> None:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
@@ -1065,6 +1084,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         manifest_name: str,
         component_type: BuildcacheComponent,
         compression: str = "none",
+        if_match: Optional[str] = None,
     ) -> None:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
@@ -1382,7 +1402,12 @@ class MirrorMetadata:
 
     __slots__ = ("url", "version", "view")
 
-    def __init__(self, url: str, version: int, view: Optional[str] = None):
+    def __init__(
+        self,
+        url: str,
+        version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+        view: Optional[str] = None,
+    ):
         self.url = url
         self.version = version
         self.view = view
