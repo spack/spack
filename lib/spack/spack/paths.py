@@ -52,6 +52,8 @@ class SpackPaths:
         self.opt_path = os.path.join(self.prefix, "opt")
         self.share_path = os.path.join(self.prefix, "share", "spack")
         self.etc_path = os.path.join(self.prefix, "etc", "spack")
+        self.isolate_scope_path = os.path.join(self.etc_path, "isolate")
+        self.layout_scope_path = os.path.join(self.etc_path, "layout")
 
         #: Things in $spack/var/spack
         self.var_path = os.path.join(self.prefix, "var", "spack")
@@ -202,6 +204,8 @@ if TYPE_CHECKING:
     opt_path: str
     share_path: str
     etc_path: str
+    isolate_scope_path: str
+    layout_scope_path: str
     var_path: str
     repos_path: str
     test_repos_path: str

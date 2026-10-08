@@ -1737,11 +1737,6 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     return config_paths
 
 
-def _layout_scope_path() -> str:
-    """Path to the layout scope directory."""
-    return os.path.join(spack.paths.etc_path, "layout")
-
-
 def _detect_old_resources() -> Dict[str, bool]:
     """Detect presence of old Spack-internal resources.
 
@@ -2916,9 +2911,8 @@ def _detect_invoked_command():
 
 
 def _force_old_layout(to_move, print_message=True) -> List[str]:
-    layout_scope_path = _layout_scope_path()
-    config_path = os.path.join(layout_scope_path, "config.yaml")
-    filesystem.mkdirp(layout_scope_path, default_perms="parents")
+    config_path = os.path.join(spack.paths.layout_scope_path, "config.yaml")
+    filesystem.mkdirp(spack.paths.layout_scope_path, default_perms="parents")
 
     config_changes: Dict[str, Any] = {}
     retained_resources: List[str] = []
@@ -2952,7 +2946,7 @@ def _force_old_layout(to_move, print_message=True) -> List[str]:
     else:
         tty.debug("No config changes needed, skipping config.yaml")
 
-    tty.debug(f"Created layout scope pointing to old locations {layout_scope_path}")
+    tty.debug(f"Created layout scope pointing to old locations {spack.paths.layout_scope_path}")
 
     marker_path = _migration_done_marker_path()
     with open(marker_path, "w", encoding="utf-8") as f:

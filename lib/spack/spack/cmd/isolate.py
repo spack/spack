@@ -16,8 +16,6 @@ description = "isolate the current spack instance from the home directory"
 section = "config"
 level = "long"
 
-ISOLATE_SCOPE_PATH = os.path.join(spack.paths.etc_path, "isolate")
-
 
 def _isolate_include_config(new_user_path):
     """Write include.yaml with include:: override to redirect user scope."""
@@ -41,7 +39,7 @@ def _isolate_include_config(new_user_path):
     include_key.override = True  # type: ignore[attr-defined]
     include_data = syaml.syaml_dict([(include_key, include_list)])
 
-    include_yaml_path = os.path.join(ISOLATE_SCOPE_PATH, "include.yaml")
+    include_yaml_path = os.path.join(spack.paths.isolate_scope_path, "include.yaml")
     with open(include_yaml_path, "w", encoding="utf-8") as f:
         syaml.dump_config(include_data, f)
 
@@ -60,27 +58,27 @@ def _setup_isolate_scope(
         (config_path, final_user_path) - where to write config, and the user redirect path
     """
     # Check if this is --self (isolate scope IS the user path)
-    is_self = os.path.exists(ISOLATE_SCOPE_PATH) and os.path.samefile(
-        new_user_path, ISOLATE_SCOPE_PATH
+    is_self = os.path.exists(spack.paths.isolate_scope_path) and os.path.samefile(
+        new_user_path, spack.paths.isolate_scope_path
     )
 
     # Bypass overwriting/pre-existing when using --self
-    if os.path.exists(ISOLATE_SCOPE_PATH):
+    if os.path.exists(spack.paths.isolate_scope_path):
         if is_self:
             pass
         elif overwrite:
-            shutil.rmtree(ISOLATE_SCOPE_PATH)
-            os.makedirs(ISOLATE_SCOPE_PATH)
+            shutil.rmtree(spack.paths.isolate_scope_path)
+            os.makedirs(spack.paths.isolate_scope_path)
         elif not reuse_old:
             raise Exception("An isolation already exists for this Spack instance")
     else:
-        os.makedirs(ISOLATE_SCOPE_PATH, exist_ok=True)
+        os.makedirs(spack.paths.isolate_scope_path, exist_ok=True)
 
     # For --self, create a user-redirect subdirectory for user config additions
     # The isolate scope's config files point to isolate/bootstrap, isolate/cache, etc.
     # But user additions go to isolate/user-redirect
     if is_self:
-        user_redirect_path = os.path.join(ISOLATE_SCOPE_PATH, "user-redirect")
+        user_redirect_path = os.path.join(spack.paths.isolate_scope_path, "user-redirect")
         os.makedirs(user_redirect_path, exist_ok=True)
         final_user_path = user_redirect_path
     else:
@@ -90,7 +88,7 @@ def _setup_isolate_scope(
     # If reusing an existing target config, write to layout scope to avoid overwriting it
     # Otherwise, write to the isolate target's config.yaml
     config_path = (
-        os.path.join(spack.config._layout_scope_path(), "config.yaml")
+        os.path.join(spack.paths.layout_scope_path, "config.yaml")
         if target_config_existed and reuse_old
         else os.path.join(new_user_path, "config.yaml")
     )
@@ -158,7 +156,7 @@ def _do_isolate(args):
 
     # If writing to layout scope (because we're reusing existing target config),
     # ensure layout scope doesn't already exist to avoid conflicts
-    layout_config = os.path.join(spack.config._layout_scope_path(), "config.yaml")
+    layout_config = os.path.join(spack.paths.layout_scope_path, "config.yaml")
     if config_path == layout_config and os.path.exists(config_path):
         raise Exception(
             f"Layout scope config already exists at {config_path}. "
@@ -209,18 +207,17 @@ def _do_isolate(args):
 
 
 def _undo_isolate():
-    if not os.path.exists(ISOLATE_SCOPE_PATH):
+    if not os.path.exists(spack.paths.isolate_scope_path):
         raise RuntimeError("Cannot find isolation to undo")
 
     # Remove the isolate scope directory
-    shutil.rmtree(ISOLATE_SCOPE_PATH)
-    tty.msg(f"Removed isolate scope: {ISOLATE_SCOPE_PATH}")
+    shutil.rmtree(spack.paths.isolate_scope_path)
+    tty.msg(f"Removed isolate scope: {spack.paths.isolate_scope_path}")
 
     # Remove layout scope if it exists (from --reuse-old writing isolation config there)
-    layout_scope_path = spack.config._layout_scope_path()
-    if os.path.exists(layout_scope_path):
-        shutil.rmtree(layout_scope_path)
-        tty.msg(f"Removed layout scope: {layout_scope_path}")
+    if os.path.exists(spack.paths.layout_scope_path):
+        shutil.rmtree(spack.paths.layout_scope_path)
+        tty.msg(f"Removed layout scope: {spack.paths.layout_scope_path}")
 
     # Remove migration marker and run migration to set up layout scope
     # with old resource pointers
@@ -240,7 +237,7 @@ def isolate(parser, args):
         if args.path is not None:
             tty.die("Cannot provide both --self and --path")
         else:
-            args.path = ISOLATE_SCOPE_PATH
+            args.path = spack.paths.isolate_scope_path
     elif args.path is None:
         tty.die("Must provide one of --path, --self, or --undo")
     _do_isolate(args)

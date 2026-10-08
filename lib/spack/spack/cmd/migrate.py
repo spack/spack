@@ -108,7 +108,7 @@ def _cleanup_old() -> None:
 
 def _use_new_layout(args):
     """Remove layout scope and trigger migration to new XDG locations."""
-    layout_scope_path = os.path.join(spack.paths.etc_path, "layout")
+    layout_scope_path = spack.paths.layout_scope_path
     marker_path = spack.config._migration_done_marker_path()
 
     old_resources = spack.config._detect_old_resources()

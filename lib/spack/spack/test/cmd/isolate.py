@@ -30,8 +30,6 @@ def mock_spack_paths(monkeypatch, tmp_path):
     monkeypatch.setattr(spack.paths, "locations", mock_paths)
 
     isolate_scope_path = etc_spack / "isolate"
-    monkeypatch.setattr(spack.cmd.isolate, "ISOLATE_SCOPE_PATH", str(isolate_scope_path))
-
     return base_prefix, etc_spack, isolate_scope_path
 
 
