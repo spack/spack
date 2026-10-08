@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import pathlib
+import re
 
 import pytest
 
@@ -10,9 +11,11 @@ import spack.bootstrap
 import spack.bootstrap.core
 import spack.cmd.mirror
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.util.spack_yaml as syaml
 from spack.config import Configuration
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
@@ -95,6 +98,51 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     _bootstrap("reset", "-y")
     assert not os.path.exists(bootstrap_yaml)
     assert os.path.exists(backup_file)
+
+
+def test_list_sources_url(config, tmp_path):
+    metadata_yaml = tmp_path / "metadata.yaml"
+    absolute_url = str(tmp_path / "bootstrap_cache")
+
+    # Relative URL
+    metadata = {"type": "install", "description": "test", "info": {"url": "../../bootstrap_cache"}}
+    with open(metadata_yaml, "w", encoding="utf-8") as f:
+        syaml.dump(metadata, f)
+    with spack.config.CONFIG.override(
+        "bootstrap",
+        {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
+    ):
+        output = _bootstrap("list")
+    match = re.search(r"url:(.+)", output)
+    url = match.group(1).strip()
+    expected = os.path.normpath(os.path.join(str(tmp_path), "../../bootstrap_cache"))
+    assert url == expected
+
+    # Absolute URL
+    metadata = {"type": "install", "description": "test", "info": {"url": absolute_url}}
+    with open(metadata_yaml, "w", encoding="utf-8") as f:
+        syaml.dump(metadata, f)
+    with spack.config.CONFIG.override(
+        "bootstrap",
+        {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
+    ):
+        output = _bootstrap("list")
+    match = re.search(r"url:(.+)", output)
+    url = match.group(1).strip()
+    assert url == absolute_url
+
+    # HTTP URL
+    metadata = {"type": "install", "description": "test", "info": {"url": "https://test.com"}}
+    with open(metadata_yaml, "w", encoding="utf-8") as f:
+        syaml.dump(metadata, f)
+    with spack.config.CONFIG.override(
+        "bootstrap",
+        {"sources": [{"name": "test", "metadata": str(tmp_path)}], "trusted": {"test": True}},
+    ):
+        output = _bootstrap("list")
+    match = re.search(r"url:(.+)", output)
+    url = match.group(1).strip()
+    assert url == "https://test.com"
 
 
 def test_list_sources(config):
