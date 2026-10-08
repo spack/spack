@@ -678,6 +678,7 @@ def test_migrate_with_staging_skips_occupied_destination(tmp_path, monkeypatch):
         lock_name=".test-lock",
         staging_name=".test-staging",
         description="test resource",
+        verify_destination_callback=spack.config._can_migrate_to_location,
     )
 
     assert not result
@@ -758,6 +759,7 @@ def test_migrate_with_staging_handles_lock_permission_error(tmp_path, monkeypatc
         lock_name=".test-lock",
         staging_name=".test-staging",
         description="test resource",
+        verify_destination_callback=spack.config._can_migrate_to_location,
     )
 
     # Migration should fail gracefully
