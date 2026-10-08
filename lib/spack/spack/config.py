@@ -2470,7 +2470,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                             f"which uses $env; skipping migration of all environments"
                         )
                         return False
-                except (OSError, syaml.SpackYAMLError) as e:
+                except (OSError, syaml.SpackYAMLError, AttributeError) as e:
                     # If we can't read/parse the file, be conservative and skip migration
                     tty.debug(f"Failed to read {spack_yaml}: {e}; skipping environment migration")
                     return False

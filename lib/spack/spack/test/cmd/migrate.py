@@ -180,7 +180,7 @@ def test_migrate_can_alternate_between_old_and_new_layout(mock_spack_instance, m
     # Round 2: undo should point back to old locations
     # First, put resources back in old locations for undo to work with
     if not (old_licenses / "license.dat").exists():
-        old_licenses.mkdir(parents=True, exist_ok=True)
+        old_licenses.mkdir(parents=True)
         (old_licenses / "license.dat").write_text("license", encoding="utf-8")
     if not (old_envs / "demo" / "spack.yaml").exists():
         (old_envs / "demo").mkdir(parents=True, exist_ok=True)
