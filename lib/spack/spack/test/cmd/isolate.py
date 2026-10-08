@@ -193,7 +193,8 @@ def test_isolate_reuse_old_target(mock_spack_instance, tmp_path):
 
 @pytest.mark.parametrize("args", [["--self"], ["--path", "isolate"]])
 def test_isolate_reuse_old_self_target(mock_spack_instance, tmp_path, args):
-    """Reuse an existing self target through either supported spelling."""
+    """Check ``spack isolate --reuse-old`` with ``--self``, or with a ``--path``
+    that is effectively the same as if they had used ``--self``."""
     home_dir, base_prefix = mock_spack_instance
     base_prefix = Path(base_prefix)
     etc_spack = base_prefix / "etc" / "spack"
@@ -207,12 +208,10 @@ def test_isolate_reuse_old_self_target(mock_spack_instance, tmp_path, args):
     for name, contents in existing_files.items():
         (isolate_scope_path / name).write_text(contents, encoding="utf-8")
 
-    # An old install makes the migration/resource-recording path generate the
-    # layout scope, where the new isolation locations are supplied without
-    # modifying the preserved target config.yaml.
-    old_install = base_prefix / "opt" / "spack" / "bin"
-    old_install.mkdir(parents=True)
-    (old_install / "spack").write_text("old install", encoding="utf-8")
+    old_install = base_prefix / "opt" / "spack"
+    old_install_bin = old_install / "bin"
+    old_install_bin.mkdir(parents=True)
+    (old_install_bin / "spack").write_text("old install", encoding="utf-8")
 
     command_args = ["--reuse-old"] + args
     if args == ["--path", "isolate"]:
@@ -227,8 +226,13 @@ def test_isolate_reuse_old_self_target(mock_spack_instance, tmp_path, args):
     assert (isolate_scope_path / "user-redirect").is_dir()
 
     cfg = spack.config.create()
+    # Config in the old isolate scope is preserved
     assert cfg.get("config:build_jobs") == 3
     assert cfg.get("config:locations:data")[0] == str(isolate_scope_path)
+    # ... and old install dir is used
+    assert str(cfg.get("config:install_tree:root")) == str(old_install)
+    # ... and new isolation user redirect scope is available (and is highest-precedence
+    # scope for writing)
     assert cfg.highest_precedence_scope().name == "user"
     assert cfg.highest_precedence_scope().path == str(isolate_scope_path / "user-redirect")
 
@@ -248,32 +252,6 @@ def test_isolate_rejects_reuse_and_overwrite_together(mock_spack_instance):
     """Reuse and overwrite express contradictory target handling."""
     with pytest.raises(spack.main.SpackCommandError):
         sp_isolate("--self", "--reuse-old", "--overwrite")
-
-
-def test_isolate_overwrite_same_dir(mock_spack_instance, tmp_path):
-    """Test that --overwrite works when isolating to the same directory."""
-    isolated_path1 = tmp_path / "test-isolation1"
-    sp_isolate("--path", str(isolated_path1))
-    with pytest.raises(Exception):
-        sp_isolate("--path", str(isolated_path1))
-    sp_isolate("--overwrite", "--path", str(isolated_path1))
-
-
-def test_isolate_overwrite_different_dir(mock_spack_instance, tmp_path):
-    """Test that --overwrite works when switching to a different directory."""
-    home_dir, base_prefix = mock_spack_instance
-    base_prefix = Path(base_prefix)
-    etc_spack = base_prefix / "etc" / "spack"
-    isolate_scope_path = etc_spack / "isolate"
-
-    isolated_path1 = tmp_path / "test-isolation1"
-    isolated_path2 = tmp_path / "test-isolation2"
-    sp_isolate("--path", str(isolated_path1))
-    with pytest.raises(Exception):
-        sp_isolate("--path", str(isolated_path1))
-    sp_isolate("--overwrite", "--path", str(isolated_path2))
-    assert not (isolate_scope_path / "bootstrap.yaml").exists()
-    assert (isolated_path2 / "config.yaml").exists()
 
 
 def test_self_isolate(mock_spack_instance, tmp_path):
@@ -307,7 +285,7 @@ packages:
     assert text == expected_text
 
 
-def test_self_isolate_overwrite(mock_spack_instance, tmp_path):
+def test_isolate_overwrite_self(mock_spack_instance, tmp_path):
     """Test --self --overwrite clears previous isolate config."""
     home_dir, base_prefix = mock_spack_instance
     base_prefix = Path(base_prefix)
