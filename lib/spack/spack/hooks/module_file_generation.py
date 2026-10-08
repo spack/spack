@@ -58,7 +58,7 @@ def post_database_remove(specs: Sequence[spack.spec.Spec]) -> None:
     module file holding several of them is updated once.
 
     Every spec is attempted: an error raised for one of them is reported as a warning."""
-    removed_specs = tuple(specs)
+    removed_specs = frozenset(specs)
     for name, module_type in _enabled_module_types():
         cache: spack.modules.common.ModuleConfigurationCache = {}
         updated_filenames: Set[str] = set()

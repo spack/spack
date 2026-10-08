@@ -339,7 +339,7 @@ def rm(module_type, specs, args):
 
     writers = [
         module_cls.from_spec(
-            group[0], args.module_set_name, removed_specs=tuple(group), cache=cache
+            group[0], args.module_set_name, removed_specs=frozenset(group), cache=cache
         )
         for group in file2specs.values()
     ]

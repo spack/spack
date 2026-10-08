@@ -206,7 +206,7 @@ class TclConfiguration(BaseConfiguration):
             # A module file may be requested for an installation not recorded yet, the ones
             # being removed are still recorded until uninstalled
             spec_list.add(self.spec)
-            spec_list.difference_update(self.removed_specs)
+            spec_list = {x for x in spec_list if x not in self.removed_specs}
 
             # Keep only specs that share the same module filename and are not excluded from
             # module file generation, this installation included, in the order a plain load

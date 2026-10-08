@@ -28,6 +28,7 @@ from typing import (
     Any,
     ClassVar,
     Dict,
+    FrozenSet,
     Iterator,
     List,
     NamedTuple,
@@ -81,8 +82,10 @@ EnvironmentModification = Tuple[
 ]
 
 #: Cache of configuration objects, keyed by (dag_hash, module_set_name, explicit,
-#: removed_hashes)
-ModuleConfigurationCache = Dict[Tuple[str, str, bool, Tuple[str, ...]], "BaseConfiguration"]
+#: removed_specs)
+ModuleConfigurationCache = Dict[
+    Tuple[str, str, bool, FrozenSet[spack.spec.Spec]], "BaseConfiguration"
+]
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -348,7 +351,7 @@ class BaseConfiguration:
         module_set_name: str,
         explicit: Optional[bool] = None,
         *,
-        removed_specs: Tuple[spack.spec.Spec, ...] = (),
+        removed_specs: FrozenSet[spack.spec.Spec] = frozenset(),
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseConfiguration":
         """Returns the configuration object for spec, reusing ``cache`` if it already holds one.
@@ -367,8 +370,7 @@ class BaseConfiguration:
             _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
             explicit = bool(record and record.explicit)
 
-        removed_hashes = tuple(sorted(x.dag_hash() for x in removed_specs))
-        key = (spec.dag_hash(), module_set_name, explicit, removed_hashes)
+        key = (spec.dag_hash(), module_set_name, explicit, removed_specs)
         configuration = cache.get(key)
         if configuration is None:
             configuration = cls(
@@ -383,7 +385,7 @@ class BaseConfiguration:
         module_set_name: str,
         explicit: bool,
         *,
-        removed_specs: Tuple[spack.spec.Spec, ...] = (),
+        removed_specs: FrozenSet[spack.spec.Spec] = frozenset(),
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> None:
         self.spec = spec
@@ -1323,7 +1325,7 @@ class BaseModuleFileWriter:
         module_set_name: str,
         explicit: Optional[bool] = None,
         *,
-        removed_specs: Tuple[spack.spec.Spec, ...] = (),
+        removed_specs: FrozenSet[spack.spec.Spec] = frozenset(),
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseModuleFileWriter":
         conf = cls.configuration_class.make_configuration(
