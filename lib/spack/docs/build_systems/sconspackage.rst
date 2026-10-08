@@ -270,7 +270,7 @@ If you pass them to the build and you see an error message like:
 
 
 you'll know that the package isn't compatible with Spack's compiler wrappers.
-In this case, you'll have to use the path to the actual compilers, which are stored in ``self.compiler.cc`` and friends.
+In this case, you'll have to use the path to the actual compilers, which are stored in ``self["c"].cc`` and friends.
 Note that this may involve passing additional flags to the build to locate dependencies, a task normally done by the compiler wrappers. serf is an example of a package with this limitation.
 
 External documentation
