@@ -211,7 +211,7 @@ After a migration attempt completes (marked by `.migration-done`):
 - resources that failed to copy continue using old paths (recorded in layout scope);
 - the layout scope remains authoritative.
 
-## 3.7 Undoing auto-migration
+## 3.7 Undoing migration
 
 `spack migrate undo` updates the layout scope to point all resources back to their old locations.
 
@@ -253,7 +253,7 @@ Home directory migration runs at config module load time whenever the above cond
 
 # 4. Updated `spack isolate` Behavior
 
-Isolation controls where newly generated artifacts are created for one Spack instance. It does not relocate old resources, even when old resources are present and automatic migration would otherwise be considered.
+Isolation controls where newly generated artifacts are created for one Spack instance. It does not relocate old resources, even when old resources are present and migration would otherwise be prompted.
 
 ## 4.1 Fresh isolation
 
@@ -440,15 +440,15 @@ Both home directory migrations can run safely alongside any number of other Spac
 
 **NOTE: This section was human-generated. Take special care to ask before modifying it.**
 
-This section provides implementation-level details of the locking algorithm and auto-migration logic.
+This section provides implementation-level details of the locking algorithm and migration logic.
 
 ## 7.1 Algorithm steps
 
 0. Migration happens at config module load time, before the CONFIG singleton exists. This means migration cannot check user configuration.
-1. If `.migration-done` marker exists, all auto-migration logic is skipped
+1. If `.migration-done` marker exists, all migration logic is skipped
 2. If the command is `spack isolate` (detected from raw `sys.argv`), migration is skipped
 3. If no old `$spack` resources are present, prefix migration is skipped without creating a migration lock, layout scope, or `.migration-done` marker; independently eligible home-directory migration may still run without writing into the Spack prefix
-4. Otherwise, Spack holds a global `$spack/.migration-lock` before doing auto-migration
+4. Otherwise, Spack holds a global `$spack/.migration-lock` before checking whether to migrate
 5. Spack prompts the user to approve migration (interactive sessions) or checks for explicit approval (non-interactive). If the user declines or the process is non-interactive without explicit approval, migration proceeds to step 8 (write layout scope for retained resources) and step 9 (write marker).
 6. Destinations for individual components are locked while migrating those components (e.g. envs)
 7. If approved, Spack copies old resources from old default locations to fixed new default locations, regardless of effective `config:locations` or resource-specific configuration. Even if the copy is successful, the old resources are kept in place. GPG is the exception when `SPACK_GNUPGHOME` is set: Spack preserves the selected GPG home and old import-keys directory rather than copying them.

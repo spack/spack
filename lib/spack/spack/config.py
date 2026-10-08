@@ -163,7 +163,7 @@ _CVARS_RE = "|".join(CONFIGURABLE_VARS)
 CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
 
 #: The command being invoked (extracted from sys.argv at module load)
-#: Used to decide whether to skip auto-migration (e.g., for 'isolate')
+#: Used to decide whether to skip migration prompt (e.g., for 'isolate')
 _invoked_command = None
 
 
@@ -2736,16 +2736,19 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
 
 
 def _do_migrate_spack_prefix(old_resources):
-    """Perform auto-migration of Spack prefix data from old to new locations.
+    """Migrate Spack prefix data from old to new locations.
 
     Migrates portable resources (licenses, environments, GPG data) from old
     locations under $spack to new XDG-style shared locations. Existing installs
     are retained in place. Configuration is written to the layout scope.
 
+    This is called during initialization after the user approves migration, or
+    directly by `spack migrate use-new-layout`.
+
     Returns:
         Dict with keys 'migrated' and 'retained' (lists of resource names)
     """
-    tty.debug("Spack prefix auto-migration called")
+    tty.debug("Spack prefix migration called")
 
     migrated_resources: List[str] = []
 
@@ -2990,7 +2993,7 @@ def generate_old_layout_config(old_resources, scope_config):
 
 
 def _perform_auto_migration_at_module_load():
-    """Perform auto-migration at module load time if appropriate.
+    """Check for migration at module load time and prompt if needed.
 
     This runs before the CONFIG singleton is created, so migration functions
     cannot rely on CONFIG being available.
@@ -3012,7 +3015,7 @@ def _perform_auto_migration():
         # in new location). This occurs whether or not there are resources in
         # the spack prefix that need to be migrated, but not if the
         # `spack isolate` command has been run (in which case it will write
-        # the same migration marker as auto-migration)
+        # the same migration marker)
         _do_migrate_home()
 
     old_resources = _detect_old_resources()
@@ -3035,11 +3038,11 @@ def _perform_auto_migration():
             # Read-only prefix: skip migration entirely, print nothing
             pass
         except spack.util.lock.LockTimeoutError as e:
-            # Some other auto-migration process is taking too long, bail vs. hang
+            # Some other migration process is taking too long, bail vs. hang
             tty.die(f"Timed out waiting for migration lock: {e}")
 
 
-# Detect command and perform auto-migration at module load time (before CONFIG is created)
+# Detect command and check for migration at module load time (before CONFIG is created)
 _detect_invoked_command()
 _perform_auto_migration_at_module_load()
 

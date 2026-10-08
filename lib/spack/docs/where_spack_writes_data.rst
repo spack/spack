@@ -44,21 +44,22 @@ Config values can reference these in any string field:
 * ``$spack``            — the Spack instance's prefix
 * ``$spack_instance_id`` — hash distinguishing co-installed Spack instances
 
-Auto-migration of ``$spack``-internal data for older instances
---------------------------------------------------------------
+Migration of ``$spack``-internal data for older instances
+----------------------------------------------------------
 
-If a user ``git pull``s into a pre-1.3 Spack instance, Spack will attempt to update where some artifacts are stored to match the new default layout.
+If a user ``git pull``s into a pre-1.3 Spack instance, Spack will prompt to update where some artifacts are stored to match the new default layout.
+The user must explicitly approve this migration, either interactively or by setting the ``SPACK_AUTOMIGRATE_YES`` environment variable.
 ``spack migrate undo`` restores use of the legacy locations by updating configuration; it does not remove files copied to the new locations.
-The original resources are still available because automatic migration leaves them in place.
+The original resources are still available because migration leaves them in place.
 
-Spack also independently copies user configuration from ``~/.spack`` to ``~/.config/spack`` and package repositories from ``~/.spack/package_repos`` to ``~/.local/state/spack/package_repos`` when the old locations contain data and the new destinations are available.
+Spack also independently (without prompting) copies user configuration from ``~/.spack`` to ``~/.config/spack`` and package repositories from ``~/.spack/package_repos`` to ``~/.local/state/spack/package_repos`` when the old locations contain data and the new destinations are available.
 This home-directory migration can occur for a fresh checkout and does not create migration state in the Spack prefix.
 The old files remain in place for use by older Spack instances.
 
-Redoing ``spack isolate`` (and avoiding auto-migration)
--------------------------------------------------------
+Using ``spack isolate`` to avoid migration prompts
+---------------------------------------------------
 
-If the first spack command you run after a ``git pull`` is ``spack isolate``, spack will not auto-migrate any resources that are in legacy locations (e.g. will not attempt to move environments out of ``$spack/var/spack/environments``).
+If the first spack command you run after a ``git pull`` is ``spack isolate``, spack will not prompt for migration of any resources that are in legacy locations (e.g. will not attempt to move environments out of ``$spack/var/spack/environments``).
 
 
 
