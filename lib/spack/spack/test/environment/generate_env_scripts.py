@@ -11,6 +11,7 @@ import pytest
 
 import spack.environment as ev
 import spack.environment.generate_env_scripts as env_script
+import spack.util.spack_yaml as syaml
 from spack.main import SpackCommand
 
 pytestmark = [pytest.mark.usefixtures("mutable_mock_env_path")]
@@ -297,3 +298,65 @@ def test_moved_env_uses_correct_path(
         deactivate_content = f.read()
 
     assert original_path not in deactivate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_custom_env_vars_in_activation_script(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that custom environment variables defined in spack.yaml env_vars section
+    are applied when generating environment activation scripts.
+
+    Example workflow:
+        spack env create test
+        # Edit spack.yaml to add:
+        # env_vars:
+        #   set:
+        #     MY_SETTING: on
+        spack env activate test
+        echo $MY_SETTING  # Should print "on"
+    """
+    env_name = f"test_env_vars_{shell}"
+    env("create", env_name)
+    test_env = ev.read(env_name)
+
+    spack_yaml_path = os.path.join(test_env.path, "spack.yaml")
+
+    with open(spack_yaml_path, "r") as f:
+        yaml_content = syaml.load(f)
+
+    yaml_content["spack"]["env_vars"] = {}
+    yaml_content["spack"]["env_vars"]["set"] = {}
+    yaml_content["spack"]["env_vars"]["set"]["MY_SETTING"] = "on"
+    yaml_content["spack"]["env_vars"]["set"]["MY_OTHER_VAR"] = "test_value"
+
+    with open(spack_yaml_path, "w") as f:
+        syaml.dump(yaml_content, f, default_flow_style=False)
+
+    env("activate", f"--{shell}", env_name)
+
+    test_env = ev.read(env_name)
+
+    activate_path = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view="default"
+    )
+
+    with open(activate_path, "r", encoding="utf-8") as f:
+        activate_content = f.read()
+
+    # Verify that MY_SETTING appears in the activation script
+    assert "MY_SETTING" in activate_content
+
+    # Verify that it's being set to "on"
+    if shell == "bat":
+        assert 'MY_SETTING' in activate_content and 'on' in activate_content
+    elif shell == "pwsh":
+        # PowerShell: $env:MY_SETTING = "on"
+        assert "MY_SETTING" in activate_content and "on" in activate_content
+    else:
+        # sh, csh, fish: export MY_SETTING=on or similar
+        assert "MY_SETTING" in activate_content and "on" in activate_content
+
+    assert "MY_OTHER_VAR" in activate_content
