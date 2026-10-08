@@ -3374,6 +3374,10 @@ def post_process_concretization_result(
     specs.clear()
     specs.update(new_specs)
 
+    # Stamp the install prefix on every concrete node, so consumers can read Spec.prefix
+    # without the spec having to reach into the store itself.
+    spack.store.STORE.set_prefixes(list(specs.values()))
+
 
 def execute_explicit_splices(
     specs: SpecDict, *, context: "spack.context.SpackContext"
