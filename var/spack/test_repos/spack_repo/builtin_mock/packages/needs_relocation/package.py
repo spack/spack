@@ -28,3 +28,13 @@ class NeedsRelocation(Package):
         with open(exe, "w", encoding="utf-8") as f:
             f.write(prefix)
         set_executable(exe)
+
+        mkdirp(prefix.lib)
+
+        static_lib_with_prefix = join_path(prefix.lib, "static_lib_with_prefix.a")
+        with open(static_lib_with_prefix, "wb") as f:
+            f.write(f"!<arch>\n{prefix}".encode("utf-8"))
+
+        static_lib_without_prefix = join_path(prefix.lib, "static_lib_without_prefix.a")
+        with open(static_lib_without_prefix, "wb") as f:
+            f.write(b"!<arch>\nnothing_to_relocate")
