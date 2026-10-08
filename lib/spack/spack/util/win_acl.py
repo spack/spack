@@ -1174,3 +1174,25 @@ def set_file_sddl(path: str, sddl: str) -> None:
         WindowsError: on any Windows API failure.
     """
     SecurityDescriptor(sddl).apply(path)
+
+
+def set_exclusive_owner_control(path: str) -> None:
+    """Set permissions so only the owner has access (chmod 700 equivalent).
+
+    Clears the existing DACL, protects it from parent inheritance, and grants
+    the owner FILE_ALL_ACCESS with OI+CI so subdirectories and files created
+    under a directory inherit the same restriction.
+    """
+    sd = SecurityDescriptor.from_file(path)
+    sd.clear_dacl()
+    sd._parsed["DACL_CONTROL"] = "P"
+    sd._parsed["DACL_PRESENT"] = True
+    sd.add_ace(
+        AccessControlEntry(
+            ace_type=AceType.SDDL_ACCESS_ALLOWED,
+            flags=[AceFlags.SDDL_OBJECT_INHERIT, AceFlags.SDDL_CONTAINER_INHERIT],
+            rights=FileAccessRights.FILE_ALL_ACCESS,
+            sid=sd.owner,
+        )
+    )
+    sd.apply(path)
