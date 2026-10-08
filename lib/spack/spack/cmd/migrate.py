@@ -107,7 +107,7 @@ def _cleanup_old() -> None:
 
 
 def _use_new_layout(args):
-    """Remove layout scope and trigger auto-migration to new XDG locations."""
+    """Remove layout scope and trigger migration to new XDG locations."""
     layout_scope_path = os.path.join(spack.paths.etc_path, "layout")
     marker_path = spack.config._migration_done_marker_path()
 
@@ -120,7 +120,7 @@ def _use_new_layout(args):
     if args.dry_run:
         if os.path.exists(layout_scope_path) or os.path.exists(marker_path):
             tty.msg(f"Would remove layout scope: {layout_scope_path}")
-        tty.msg("Would trigger auto-migration to new XDG layout")
+        tty.msg("Would trigger migration to new XDG layout")
         return
     else:
         if os.path.exists(layout_scope_path):

@@ -2992,7 +2992,7 @@ def generate_old_layout_config(old_resources, scope_config):
         tty.debug(f"Keeping environments in {spack.paths.old_envs_path}")
 
 
-def _perform_auto_migration_at_module_load():
+def _perform_migration_at_module_load():
     """Check for migration at module load time and prompt if needed.
 
     This runs before the CONFIG singleton is created, so migration functions
@@ -3001,10 +3001,10 @@ def _perform_auto_migration_at_module_load():
     if _invoked_command == "isolate":
         return
 
-    _perform_auto_migration()
+    _perform_migration()
 
 
-def _perform_auto_migration():
+def _perform_migration():
     # Because this rewrites config, it should either run first thing (before config
     # is loaded) or last (right before termination of the process)
     marker_path = _migration_done_marker_path()
@@ -3044,7 +3044,7 @@ def _perform_auto_migration():
 
 # Detect command and check for migration at module load time (before CONFIG is created)
 _detect_invoked_command()
-_perform_auto_migration_at_module_load()
+_perform_migration_at_module_load()
 
 
 def writable_scopes() -> List[ConfigScope]:

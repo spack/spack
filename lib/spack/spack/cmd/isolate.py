@@ -185,14 +185,14 @@ def _do_isolate(args):
     with open(config_path, "w", encoding="utf-8") as f:
         syaml.dump(scope_config, f)
 
-    # Write migration completion marker to prevent auto-migration after isolation
-    # Only needed if there are old resources that auto-migration would otherwise handle
+    # Write migration completion marker to prevent migration after isolation
+    # Only needed if there are old resources that migration would otherwise handle
     has_old_resources = any(old_resources.values())
     if has_old_resources:
         marker_path = spack.config._migration_done_marker_path()
         if os.path.exists(marker_path):
             tty.warn(
-                "Prior auto-migration was performed. There may be resources in $HOME, "
+                "Prior migration was performed. There may be resources in $HOME,"
                 "but as of now spack will not write anything into $HOME."
             )
         else:
@@ -202,7 +202,7 @@ def _do_isolate(args):
                 tty.debug(f"Wrote migration completion marker: {marker_path}")
             except OSError as e:
                 tty.warn(
-                    "Isolation incomplete for older spack instance. Auto-migration may move "
+                    "Isolation incomplete for older spack instance. Migration may move "
                     "resources into $HOME for future invocations that are not `spack isolate`. "
                     f"Could not write {marker_path}: {e}"
                 )
@@ -222,14 +222,14 @@ def _undo_isolate():
         shutil.rmtree(layout_scope_path)
         tty.msg(f"Removed layout scope: {layout_scope_path}")
 
-    # Remove migration marker and run auto-migration to set up layout scope
+    # Remove migration marker and run migration to set up layout scope
     # with old resource pointers
     marker_path = spack.config._migration_done_marker_path()
     if os.path.exists(marker_path):
         os.remove(marker_path)
         tty.debug("Removed migration marker")
 
-    spack.config._perform_auto_migration()
+    spack.config._perform_migration()
 
 
 def isolate(parser, args):

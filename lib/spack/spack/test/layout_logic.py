@@ -205,8 +205,8 @@ def test_substitute_user_cache(mock_spack_instance):
     )
 
 
-def test_auto_migration_copies_user_config(mock_spack_instance, monkeypatch):
-    """Auto-migration copies configuration from ~/.spack to ~/.config/spack."""
+def test_migration_copies_user_config(mock_spack_instance, monkeypatch):
+    """Migration copies configuration from ~/.spack to ~/.config/spack."""
     home_dir, base_prefix = mock_spack_instance
     old_config = pathlib.Path(home_dir) / ".spack"
     old_config.mkdir()
@@ -364,7 +364,7 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
 
 
 @pytest.mark.parametrize("conflict", ["environments", "gpg"])
-def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch, conflict):
+def test_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch, conflict):
     """Test migration of resources previously stored in ``$spack``.
 
     Migration is component-wise: configuration points to old locations for
@@ -434,8 +434,8 @@ def test_auto_migration_old_spack_internal_resources(mock_spack_instance, monkey
         )
 
 
-def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
-    """Automatic migration recursively copies the legacy package repository tree."""
+def test_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
+    """Migration recursively copies the legacy package repository tree."""
     home_dir, _ = mock_spack_instance
     old_repos = pathlib.Path(home_dir) / ".spack" / "package_repos"
     (old_repos / "first" / "nested").mkdir(parents=True)
@@ -460,9 +460,7 @@ def test_auto_migration_copies_package_repositories(mock_spack_instance, monkeyp
     assert not (new_repos.parent / ".package-repos-migration").exists()
 
 
-def test_auto_migration_skips_existing_package_repository_destination(
-    mock_spack_instance, monkeypatch
-):
+def test_migration_skips_existing_package_repository_destination(mock_spack_instance, monkeypatch):
     """An existing package repository destination is never overwritten."""
     home_dir, _ = mock_spack_instance
     old_repo = pathlib.Path(home_dir) / ".spack" / "package_repos" / "abc1234"
@@ -574,7 +572,7 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     assert env2_data["spack"]["include"][1] == expected_include  # was absolute
 
 
-def test_auto_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
+def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     """When no old resources exist in $spack, migration doesn't touch the spack prefix.
 
     Verifies that:
@@ -625,7 +623,7 @@ def test_auto_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     monkeypatch.setattr(spack.config, "_do_migrate_home", track_home_migrate)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    spack.config._perform_auto_migration()
+    spack.config._perform_migration()
 
     assert home_migrate_called, "_do_migrate_home should be called even with no old resources"
 
@@ -706,7 +704,7 @@ def test_layout_scope_fallback_for_old_installs(mock_spack_instance, monkeypatch
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     # Trigger migration
-    spack.config._perform_auto_migration()
+    spack.config._perform_migration()
 
     # Reload config to pick up layout scope
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
