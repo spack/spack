@@ -8,11 +8,14 @@ import shutil
 import pytest
 
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.main
 import spack.paths
 import spack.repo
 import spack.stage
+import spack.store
+from spack.environment.environment import env_root_path
 from spack.main import SpackCommand
 from spack.util.filesystem import mkdirp
 
@@ -234,6 +237,29 @@ def test_location_stage_dir(mock_spec):
 def test_location_stages(mock_spec, mutable_config):
     """Tests spack location --stages."""
     assert location("--stages").strip() == spack.stage.stage_root(mutable_config)
+
+
+def test_location_roots(mutable_mock_env_path, tmp_path):
+    """Tests spack location --env-root and --install-root."""
+    assert location("--env-root").strip() == env_root_path()
+    orig_install_root = str(spack.store.STORE.root)
+    assert location("--install-root").strip() == orig_install_root
+
+    new_install_root = str(tmp_path / "opt")
+    environment = ev.create("example")
+    with environment.manifest.use_config():
+        spack.config.CONFIG.set("config:install_tree:root", new_install_root)
+        assert spack.config.CONFIG.get("config:install_tree:root") == new_install_root
+    environment.write()
+
+    # Install root should not change
+    assert spack.config.CONFIG.get("config:install_tree:root") == orig_install_root
+    assert location("--install-root").strip() == orig_install_root
+
+    with environment:
+        assert spack.config.CONFIG.get("config:install_tree:root") == new_install_root
+        assert location("--env-root").strip() == env_root_path()
+        assert location("--install-root").strip() == new_install_root
 
 
 def test_location_specified_repo():
