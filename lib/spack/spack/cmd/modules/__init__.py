@@ -162,7 +162,7 @@ def loads(module_type, specs, args, out=None):
                 ]
             )
 
-    cache: spack.modules.common.ModuleConfigurationCache = {}
+    cache = spack.modules.common.ModuleConfigurationCache()
     modules = [
         (
             spec,
@@ -256,7 +256,7 @@ def find(module_type, specs, args):
     """Retrieve paths or use names of module files"""
     check_module_set_name(args.module_set_name)
 
-    cache: spack.modules.common.ModuleConfigurationCache = {}
+    cache = spack.modules.common.ModuleConfigurationCache()
     if len(specs) > 1:
         # An installation excluded from module files has no module to find, so it does not
         # make the constraint ambiguous
@@ -324,7 +324,7 @@ def rm(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
-    cache: spack.modules.common.ModuleConfigurationCache = {}
+    cache = spack.modules.common.ModuleConfigurationCache()
 
     # Installations sharing a module file are removed from it together: the file is deleted
     # when none remains, written again for the others otherwise
@@ -388,7 +388,7 @@ def refresh(module_type, specs, args):
         specs = [s for s in specs if not spack.store.STORE.db.installed_upstream(s)]
 
     cls = spack.modules.module_types[module_type]
-    cache: spack.modules.common.ModuleConfigurationCache = {}
+    cache = spack.modules.common.ModuleConfigurationCache()
 
     # Skip unknown packages.
     writers = [

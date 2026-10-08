@@ -81,11 +81,29 @@ EnvironmentModification = Tuple[
     str, Union[spack.util.environment.NameModifier, spack.util.environment.NameValueModifier]
 ]
 
-#: Cache of configuration objects, keyed by (dag_hash, module_set_name, explicit,
-#: removed_specs)
-ModuleConfigurationCache = Dict[
-    Tuple[str, str, bool, FrozenSet[spack.spec.Spec]], "BaseConfiguration"
-]
+
+class ModuleConfigurationCache:
+    """Objects computed once for a batch of specs, and shared by their configurations."""
+
+    def __init__(self) -> None:
+        #: Configuration objects, keyed by (dag_hash, module_set_name, explicit, removed_specs)
+        self.configurations: Dict[
+            Tuple[str, str, bool, FrozenSet[spack.spec.Spec]], "BaseConfiguration"
+        ] = {}
+        self._local_installations: Optional[Dict[str, List[spack.spec.Spec]]] = None
+
+    def local_installations(self, name: str) -> List[spack.spec.Spec]:
+        """Returns the specs of a package installed in the local store. The database is read
+        on the first call, later calls return what was recorded then."""
+        if self._local_installations is None:
+            by_name: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
+            for spec in spack.store.STORE.db.query(
+                installed=True, install_tree="local", sort=False
+            ):
+                by_name[spec.name].append(spec)
+            self._local_installations = by_name
+        return self._local_installations.get(name, [])
+
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -364,19 +382,19 @@ class BaseConfiguration:
         still be recorded in the database.
         """
         if cache is None:
-            cache = {}
+            cache = ModuleConfigurationCache()
 
         if explicit is None:
             _, record = spack.store.STORE.db.query_by_spec_hash(spec.dag_hash())
             explicit = bool(record and record.explicit)
 
         key = (spec.dag_hash(), module_set_name, explicit, removed_specs)
-        configuration = cache.get(key)
+        configuration = cache.configurations.get(key)
         if configuration is None:
             configuration = cls(
                 spec, module_set_name, explicit, removed_specs=removed_specs, cache=cache
             )
-            cache[key] = configuration
+            cache.configurations[key] = configuration
         return configuration
 
     def __init__(
@@ -392,7 +410,7 @@ class BaseConfiguration:
         self.name = module_set_name
         self.explicit = explicit
         self.removed_specs = removed_specs
-        self._configuration_cache = {} if cache is None else cache
+        self._configuration_cache = ModuleConfigurationCache() if cache is None else cache
         self._cache: Dict[str, Any] = {}
         _modules_cfg = spack.config.CONFIG.get_config("modules")
         _set_cfg = _modules_cfg.get(module_set_name, {})
