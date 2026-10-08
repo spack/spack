@@ -134,7 +134,6 @@ allowed-unresolved-imports = [
 [tool.ty.environment]
 root = ["lib/spack"]
 extra-paths = [
-  "share/spack/qa/typings",
   # mock package repositories imported by the unit tests
   "var/spack/test_repos",
 ]
