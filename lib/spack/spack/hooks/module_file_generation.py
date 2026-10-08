@@ -32,7 +32,7 @@ def post_database_add(specs: Sequence[spack.spec.Spec]) -> None:
     Every spec is attempted: an error raised for one of them is reported as a warning.
     """
     for name, module_type in _enabled_module_types():
-        cache: spack.modules.common.ModuleConfigurationCache = {}
+        cache = spack.modules.common.ModuleConfigurationCache()
         written_filenames: Set[str] = set()
         for spec in specs:
             try:
@@ -60,7 +60,7 @@ def post_database_remove(specs: Sequence[spack.spec.Spec]) -> None:
     Every spec is attempted: an error raised for one of them is reported as a warning."""
     removed_specs = frozenset(specs)
     for name, module_type in _enabled_module_types():
-        cache: spack.modules.common.ModuleConfigurationCache = {}
+        cache = spack.modules.common.ModuleConfigurationCache()
         updated_filenames: Set[str] = set()
         for spec in specs:
             try:

@@ -196,12 +196,12 @@ class TclConfiguration(BaseConfiguration):
         # One read transaction for the query and the records read for each installation
         with spack.store.STORE.db.read_transaction():
             # Upstream installations are left out: their module files belong to the upstream
-            name_version_spec = f"{self.spec.name}@={self.spec.version}"
-            spec_list = set(
-                spack.store.STORE.db.query(
-                    name_version_spec, installed=True, install_tree="local", sort=False
-                )
-            )
+            name_version_spec = spack.spec.Spec(f"{self.spec.name}@={self.spec.version}")
+            spec_list = {
+                x
+                for x in self._configuration_cache.local_installations(self.spec.name)
+                if x.satisfies(name_version_spec)
+            }
 
             # A module file may be requested for an installation not recorded yet, the ones
             # being removed are still recorded until uninstalled
