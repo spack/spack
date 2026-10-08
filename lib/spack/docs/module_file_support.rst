@@ -19,14 +19,14 @@ Modules (modules.yaml)
 ======================
 
 The use of module systems to manage user environments in a controlled way is a common practice at HPC centers that is sometimes embraced also by individual programmers on their development machines.
-To support this common practice Spack integrates with `Environment Modules <http://modules.sourceforge.net/>`_ and `Lmod <http://lmod.readthedocs.io/en/latest/>`_ by providing post-install hooks that generate module files and commands to manipulate them.
+To support this common practice Spack integrates with `Environment Modules <http://modules.sourceforge.net/>`_ and `Lmod <http://lmod.readthedocs.io/en/latest/>`_ by generating module files for the packages it installs and by providing commands to manipulate them.
 
 Modules are one of the several ways you can use installed packages, along with :ref:`spack load <spack-load>` and :ref:`environments <environments>`.
 
 Quick start
 -----------
 
-Spack can generate both Tcl and Lua module files, either with a post-install hook or at user's request through a command.
+Spack can generate both Tcl and Lua module files, either when packages are installed or at user's request through a command.
 
 If you're using the default configuration values, you can start by generating Tcl module files for all currently installed packages:
 
@@ -316,7 +316,7 @@ Users select an installation by stating its variants on the ``module load`` comm
 
 Stating all the variants is not needed, and several installations may match the ones stated.
 ``module load`` then selects the one that was installed first.
-A plain ``module load zlib`` thus loads ``zlib ~shared`` here:
+Here ``zlib ~shared`` was installed before ``zlib +shared``, so a plain ``module load zlib`` loads it:
 
 .. code-block:: console
 
@@ -324,6 +324,8 @@ A plain ``module load zlib`` thus loads ``zlib ~shared`` here:
    Loading zlib/1.3.2-gcc-13.3.0{build_system=makefile:hash=ickxcoy:+optimize:+pic:-shared}
 
 Installing another ``zlib@1.3.2`` later does not change what these commands load.
+The order is the one in which the installations were completed, whether they were requested or installed as dependencies.
+An installation built as a dependency of another installation of the same package version is thus selected before it.
 To have an installation selected before the older ones, list it under ``defaults``, see `Default module versions`_.
 
 If the stated variants do not match any installation, the error lists the installed configurations:
@@ -412,6 +414,7 @@ Spack writes a module file again whenever an installation is added to it or remo
 
 To leave an installation out of a module file, use the ``exclude`` option.
 ``spack module tcl rm`` does not last: the installation is still in the database, and is written back the next time the module file is.
+Until then, ``spack module tcl find`` and ``spack module tcl loads`` still print a module name for it, which ``module load`` refuses.
 
 The ``spack module tcl`` subcommands account for the installations in the same module file:
 
@@ -751,7 +754,7 @@ The ``find`` subcommand translates a spec into its module name, which is useful 
    $ spack module tcl find openmpi
    openmpi/5.0.6-gcc-13.3.0-fjv7c7n
 
-The spec must match exactly one installation that has a module file.
+The spec must match one installation that has a module file, or :ref:`several installations in the same module file<module-variants-folding>`.
 Installations excluded from module files, with ``exclude`` or ``exclude_implicits``, are not counted.
 
 .. _cmd-spack-module-setdefault:
