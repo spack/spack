@@ -116,6 +116,14 @@ def clear_env_vars(working_env, monkeypatch):
 def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths):
     """Create a mock Spack instance with simulated home and base prefix.
 
+    This fixture replicates essential Spack configuration structure without copying
+    user-modified files. This prevents developer config (e.g. etc/spack/config.yaml,
+    etc/spack/packages.yaml) from affecting test behavior.
+
+    Tradeoff: If a developer modifies core config files like include.yaml or
+    standard_scopes/include.yaml, those changes won't be reflected in tests.
+    However, this is preferable to tests failing due to unrelated local config.
+
     Returns:
         tuple: (home_dir, base_prefix)
     """
@@ -127,9 +135,57 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
     real_etc_spack = Path(spack.paths.prefix) / "etc" / "spack"
     simulated_etc = base_prefix / "etc" / "spack"
     simulated_etc.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(
-        real_etc_spack, simulated_etc, ignore=shutil.ignore_patterns("isolate", "layout")
+
+    # Copy defaults directory entirely (contains baseline config values)
+    if (real_etc_spack / "defaults").exists():
+        shutil.copytree(real_etc_spack / "defaults", simulated_etc / "defaults")
+
+    # Replicate include.yaml structure (don't copy to avoid user modifications)
+    include_yaml = simulated_etc / "include.yaml"
+    include_yaml.write_text(
+        "include:\n"
+        '  - path: "isolate"\n'
+        "    optional: true\n"
+        "    when: '\"SPACK_DISABLE_ISOLATION\" not in env'\n"
+        '  - path: "standard_scopes"\n',
+        encoding="utf-8",
     )
+
+    # Replicate standard_scopes/include.yaml structure
+    standard_scopes_dir = simulated_etc / "standard_scopes"
+    standard_scopes_dir.mkdir()
+    (standard_scopes_dir / "include.yaml").write_text(
+        "include:\n"
+        "  # user configuration scope\n"
+        '  - name: "user"\n'
+        "    path_override_env_var: SPACK_USER_CONFIG_PATH\n"
+        '    path: "~/.config/spack"\n'
+        "    optional: true\n"
+        "    prefer_modify: true\n"
+        "    when: '\"SPACK_DISABLE_LOCAL_CONFIG\" not in env'\n"
+        "\n"
+        "  # site configuration scope\n"
+        '  - name: "site"\n'
+        '    path: "$spack/etc/spack/site"\n'
+        "    optional: true\n"
+        "\n"
+        "  # system configuration scope\n"
+        '  - name: "system"\n'
+        "    path_override_env_var: SPACK_SYSTEM_CONFIG_PATH\n"
+        '    path: "/etc/spack"\n'
+        "    optional: true\n"
+        "    when: '\"SPACK_DISABLE_LOCAL_CONFIG\" not in env'\n"
+        "\n"
+        "  # layout scope - auto-generated path overrides for shared Spack\n"
+        "  # Loaded last so user/site/system can override it\n"
+        '  - name: "layout"\n'
+        '    path: "$spack/etc/spack/layout"\n'
+        "    optional: true\n",
+        encoding="utf-8",
+    )
+
+    # Create empty site directory (tests may write to it)
+    (simulated_etc / "site").mkdir(exist_ok=True)
 
     set_home(str(home_dir))
 
