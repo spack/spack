@@ -116,7 +116,7 @@ def make_spdx_2_3_package_entry(spec):
         "filesAnalyzed": False,
         "licenseDeclared": get_license(pkg) or "NOASSERTION",
         "licenseConcluded": "NOASSERTION",
-        "checksum": get_checksums(spec),
+        "checksums": get_checksums(spec),
     }
 
 
@@ -160,7 +160,9 @@ def generate_spdx_2_3(spec):
     deps = []
     relationships = [
         {
-            "spdxElementId": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
+            # The SPDX 2.3 spec requires the document's SPDXID to be the literal string
+            # "SPDXRef-DOCUMENT"; uniqueness comes from documentNamespace instead.
+            "spdxElementId": "SPDXRef-DOCUMENT",
             "relationshipType": "DESCRIBES",
             "relatedSpdxElement": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         }
@@ -182,7 +184,7 @@ def generate_spdx_2_3(spec):
     sbom = {
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
-        "SPDXID": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
+        "SPDXID": "SPDXRef-DOCUMENT",
         "documentNamespace": document_namespace,
         "creationInfo": {
             "created": created_time,
