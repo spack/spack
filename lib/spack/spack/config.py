@@ -2394,19 +2394,36 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         # Cannot create destination directory - migration not possible
         return False
 
-    # Define view exclusion callback
+    # Define environment metadata/view exclusion callback
     # Use hardcoded marker instead of importing from environment module to avoid
     # circular imports during module load time
     VIEW_MARKER_FILE = ".spack-view"
 
     def ignore_views(directory, names):
-        """Exclude view directories (identified by .spack-view marker) during environment copy."""
+        """Exclude view directories during environment copy.
+
+        Skips:
+        - .spack-env directories (default location for views, both old and new format)
+        - Directories with .spack-view marker (custom-location views created after June 2026)
+
+        This handles both old-format views (symlinks to ._view/<hash>/) and new-format views
+        (directories with .spack-view marker), whether in default or custom locations.
+
+        Note: Skipping .spack-env also excludes cached repos and locks as a side effect.
+        """
         ignored = []
         for name in names:
-            path = os.path.join(directory, name)
-            if os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
+            # Skip .spack-env directory which contains views by default
+            if name == ".spack-env":
+                path = os.path.join(directory, name)
                 ignored.append(name)
-                tty.debug(f"Excluding view directory: {path}")
+                tty.debug(f"Excluding .spack-env directory: {path}")
+            # Also skip custom-location views identified by marker file
+            else:
+                path = os.path.join(directory, name)
+                if os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
+                    ignored.append(name)
+                    tty.debug(f"Excluding view directory: {path}")
         return ignored
 
     # Define staging callback for environment migration
