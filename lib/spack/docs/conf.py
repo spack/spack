@@ -385,6 +385,7 @@ nitpick_ignore = [
     ("py:obj", "spack.util.lang.VT"),
     ("py:class", "_P"),
     ("py:class", "spack.util.web._R"),
+    ("py:obj", "spack.util.web._Response"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

@@ -35,6 +35,7 @@ import pathlib
 import re
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
+import spack.config
 import spack.error
 import spack.util.parallel
 import spack.util.url
@@ -658,7 +659,12 @@ def find_versions_of_archive(
 
     # Grab some web pages to scrape.
     with spack.util.parallel.make_concurrent_executor(concurrency) as executor:
-        _, links = spack.util.web.spider(list_urls, depth=list_depth, executor=executor)
+        _, links = spack.util.web.spider(
+            list_urls,
+            depth=list_depth,
+            executor=executor,
+            client=spack.util.web.NetworkClient.from_config(spack.config.CONFIG),
+        )
 
     # Scrape them for archive URLs
     regexes = []
