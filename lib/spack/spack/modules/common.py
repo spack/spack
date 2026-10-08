@@ -1516,14 +1516,11 @@ class BaseModuleFileWriter:
                 pass
 
     def remove_module_defaults(self) -> None:
-        if not self.conf.matches_default:
-            return
-
-        # This spec matches a default, symlink needs to be removed as we remove the module
-        # file it targets.
+        """Removes the default symlink, if it targets this module file."""
         default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
         try:
-            os.unlink(default_symlink)
+            if os.readlink(default_symlink) == self.layout.filename:
+                os.unlink(default_symlink)
         except OSError:
             pass
 
