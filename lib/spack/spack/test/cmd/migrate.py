@@ -152,12 +152,6 @@ def test_migrate_can_alternate_between_old_and_new_layout(mock_spack_instance, m
     layout = Path(base_prefix) / "etc" / "spack" / "layout"
     new_data = Path(home_dir) / ".local" / "share" / "spack"
 
-    # Start with no layout scope
-    if layout.exists():
-        import shutil
-
-        shutil.rmtree(layout)
-
     # Round 1: use-new-layout should migrate to XDG locations
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     sp_migrate("use-new-layout")
