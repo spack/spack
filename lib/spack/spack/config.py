@@ -2404,6 +2404,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
 
         Skips:
         - .spack-env directories (default location for views, both old and new format)
+        - Directories named "view" or "._view" (common view names/containers)
         - Directories with .spack-view marker (custom-location views created after June 2026)
 
         This handles both old-format views (symlinks to ._view/<hash>/) and new-format views
@@ -2418,6 +2419,11 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                 path = os.path.join(directory, name)
                 ignored.append(name)
                 tty.debug(f"Excluding .spack-env directory: {path}")
+            # Skip directories with common view names (both default and old-format container)
+            elif name in ("view", "._view"):
+                path = os.path.join(directory, name)
+                ignored.append(name)
+                tty.debug(f"Excluding view directory: {path}")
             # Also skip custom-location views identified by marker file
             else:
                 path = os.path.join(directory, name)
