@@ -5514,10 +5514,7 @@ class SpecfileReaderBase(abc.ABC):
 
     @classmethod
     def load(cls, data) -> Spec:
-        """Construct a spec from JSON/YAML using the format version 2.
-
-        This format is used in Spack v0.17, was introduced in
-        https://github.com/spack/spack/pull/22845
+        """Construct a spec from JSON/YAML in any format from version 2 on.
 
         Args:
             data: a nested dict/list data structure read from YAML or JSON.
