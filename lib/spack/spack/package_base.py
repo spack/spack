@@ -1805,6 +1805,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         This includes:
 
         * source artifacts (tarballs, repositories) used to build;
+        * the digest or commit, destination and placement of each applicable ``resource()``;
         * content hashes (``sha256``'s) of all patches applied by Spack; and
         * canonicalized contents the ``package.py`` recipe used to build.
 
@@ -1821,7 +1822,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         hash_content = []
 
         # source artifacts/repositories
-        # TODO: resources
         if self.spec.versions.concrete:
             try:
                 source_id = for_package_version(self).source_id()
@@ -1844,6 +1844,15 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 hash_content.append("".encode("utf-8"))
             else:
                 hash_content.append(source_id.encode("utf-8"))
+
+        # resources: what is fetched (digest or commit) and where it is placed. URLs and names
+        # are not build inputs, and `when` only selects which resources apply.
+        for resource in self._get_needed_resources():
+            source_id = resource.fetcher.source_id() or ""
+            placement = resource.placement if resource.placement is not None else ""
+            hash_content.append(
+                f"resource:{source_id}:{resource.destination}:{placement}".encode("utf-8")
+            )
 
         # patch sha256's
         # Only include these if they've been assigned by the concretizer.
