@@ -12,10 +12,12 @@ import spack.caches
 import spack.cmd
 import spack.concretize
 import spack.config
+import spack.deprecation
 import spack.fetch_strategy
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
+import spack.solver.error
 import spack.spec
 import spack.stage
 import spack.util.crypto
@@ -26,7 +28,7 @@ from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.error import SpackError
 from spack.util import lang, tty
-from spack.util.string import comma_or
+from spack.util.string import comma_or, plural
 from spack.util.tty import colify
 
 description = "manage mirrors (source and binary)"
@@ -527,8 +529,9 @@ def concrete_specs_from_user(args):
     """Return the list of concrete specs that the user wants to mirror. The list
     is passed either from command line or from a text file.
     """
-    specs = concrete_specs_from_cli_or_file(args)
-    specs = extend_with_additional_versions(specs, num_versions=versions_per_spec(args))
+    requested = specs_from_cli_or_file(args)
+    specs = spack.cmd.matching_specs_from_env(requested)
+    specs = extend_with_additional_versions(requested, specs, num_versions=versions_per_spec(args))
     if args.dependencies:
         specs = extend_with_dependencies(specs)
     specs = filter_externals(specs)
@@ -537,13 +540,40 @@ def concrete_specs_from_user(args):
     return specs
 
 
-def extend_with_additional_versions(specs, num_versions):
-    if num_versions == "all":
-        mirror_specs = spack.mirrors.utils.get_all_versions(specs)
-    else:
-        mirror_specs = spack.mirrors.utils.get_matching_versions(specs, num_versions=num_versions)
-    mirror_specs = [spack.concretize.concretize_one(x) for x in mirror_specs]
+def extend_with_additional_versions(requested, specs, num_versions):
+    """Return the concrete specs, together with other versions of their packages.
+
+    Args:
+        requested: the specs as requested by the user
+        specs: the concrete specs they resolved to, in the same order
+        num_versions: number of versions per spec, or "all"
+    """
+    mirror_specs = []
+    for request, spec in zip(requested, specs):
+        if num_versions == "all":
+            candidates, limit = spack.mirrors.utils.get_all_versions([spec]), None
+        else:
+            candidates = [spec] + spack.mirrors.utils.get_matching_versions(request, spec)
+            limit = num_versions
+        mirror_specs.extend(_concretize_versions(candidates, limit=limit))
     return mirror_specs
+
+
+def _concretize_versions(candidates, *, limit):
+    """Concretize the candidates in order, skipping the ones that fail to concretize, until
+    ``limit`` of them succeed.
+    """
+    result = []
+    for candidate in candidates:
+        if limit is not None and len(result) >= limit:
+            break
+        try:
+            # The solver prints the failure itself, before raising
+            with tty.SuppressOutput(msg_enabled=False, error_enabled=False):
+                result.append(spack.concretize.concretize_one(candidate))
+        except spack.solver.error.UnsatisfiableSpecError as e:
+            tty.msg(f"Skipping {candidate.format('{name}{@version}')}", str(e))
+    return result
 
 
 def filter_externals(specs):
@@ -563,7 +593,7 @@ def extend_with_dependencies(specs):
     return list(result)
 
 
-def concrete_specs_from_cli_or_file(args):
+def specs_from_cli_or_file(args):
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs, concretize=False)
         if not specs:
@@ -574,8 +604,7 @@ def concrete_specs_from_cli_or_file(args):
         if not specs:
             raise SpackError("unable to parse specs from file '{}'".format(args.file))
 
-    concrete_specs = spack.cmd.matching_specs_from_env(specs)
-    return concrete_specs
+    return specs
 
 
 class IncludeFilter:
@@ -625,6 +654,41 @@ def all_specs_with_all_versions():
     return mirror_specs
 
 
+def _skip_disallowed_versions(specs):
+    """Return the version specs the deprecation policy allows, and print how many were skipped.
+
+    The specs are not concretized, so only the deprecations of each version itself are checked.
+    """
+    policy = spack.deprecation.Policy.from_config(spack.config.CONFIG, repo=spack.repo.PATH)
+    allowed, skipped = [], 0
+    for spec in specs:
+        violations = policy.disallowed(spec)
+        if not violations:
+            allowed.append(spec)
+            continue
+
+        skipped += 1
+        lines = []
+        for constraint, entry in violations:
+            spec_str = spack.deprecation.deprecated_spec_str(spec.name, constraint)
+            attributes = spack.deprecation.deprecation_attributes_str(
+                entry.reason.value, entry.severity.name.lower(), entry.labels
+            )
+            lines.append(f"{spec_str} is deprecated ({attributes})")
+        spec_str = spec.format("{name}{@version}")
+        tty.verbose(
+            f"Skipping {spec_str}: not allowed by 'packages:{spec.name}:deprecation:allow'", *lines
+        )
+
+    if skipped:
+        tty.msg(
+            f"Skipping {plural(skipped, 'deprecated version')} not allowed by the deprecation "
+            "policy",
+            "Run 'spack -v mirror create' to list them, or pass '--deprecated' to include them",
+        )
+    return allowed
+
+
 def versions_per_spec(args):
     """Return how many versions should be mirrored per spec."""
     if not args.versions_per_spec:
@@ -635,8 +699,10 @@ def versions_per_spec(args):
         try:
             num_versions = int(args.versions_per_spec)
         except ValueError:
+            num_versions = 0
+        if num_versions < 1:
             args.subparser.error(
-                "'--versions-per-spec' must be a number or 'all', got '{0}'".format(
+                "'--versions-per-spec' must be a positive number or 'all', got '{0}'".format(
                     args.versions_per_spec
                 )
             )
@@ -705,7 +771,8 @@ def _specs_to_mirror(args):
     include_fn = IncludeFilter(args)
 
     if args.all and not active_environment():
-        mirror_specs = all_specs_with_all_versions()
+        mirror_specs = [x for x in all_specs_with_all_versions() if include_fn(x)]
+        return _skip_disallowed_versions(mirror_specs)
     elif args.all and active_environment():
         mirror_specs = concrete_specs_from_environment()
     else:
