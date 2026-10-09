@@ -385,3 +385,33 @@ def test_unload_script_reverses_load(
 
     assert load_prepends == unload_removes
     assert load_sets == unload_unsets
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_custom_prefix_inspections(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_config
+):
+    """Test that custom prefix inspections are applied when loading packages."""
+
+    modules_config = {
+        "prefix_inspections": {
+            "bin": ["PATH", "MY_TOOLS"],  # Add MY_TOOLS alongside PATH
+        }
+    }
+    mutable_config.update_config("modules", modules_config)
+
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    load_cmds = _get_load_cmds_from_script(spec, shell)
+
+    var = "MY_TOOLS"
+    if shell == "--bat":
+        var = f'"{var}"'
+
+    prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} {var}"
+
+    assert any(prepend_cmd in line for line in load_cmds.splitlines())
+    assert os.path.join(spec.prefix, "bin") in load_cmds
