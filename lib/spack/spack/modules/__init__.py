@@ -6,7 +6,6 @@
 include Tcl or Lua modules, and others.
 """
 
-import os
 from typing import Dict, Optional, Type
 
 import spack.repo
@@ -76,7 +75,7 @@ def get_module(
             return module.use_name
     else:
         writer = module_types[module_type].from_spec(spec, module_set_name, cache=cache)
-        if not os.path.isfile(writer.layout.filename):
+        if not writer.has_installation:
             fmt_str = "{name}{@version}{/hash:7}"
             if not writer.conf.excluded:
                 raise ModuleNotFoundError(

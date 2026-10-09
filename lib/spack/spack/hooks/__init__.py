@@ -12,6 +12,8 @@ Currently the following hooks are supported:
 
 * ``pre_install(spec)``
 * ``post_install(spec, explicit)``
+* ``post_database_add(specs)``
+* ``post_database_remove(specs)``
 * ``pre_uninstall(spec)``
 * ``post_uninstall(spec)``
 
@@ -66,6 +68,12 @@ class _HookRunner:
 # pre/post install and run by the install subprocess
 pre_install = _HookRunner("pre_install")
 post_install = _HookRunner("post_install")
+
+# run by the process that records a batch of specs in the database, once they are recorded
+post_database_add = _HookRunner("post_database_add")
+
+# run by the process that removes a batch of specs from the database, once they are removed
+post_database_remove = _HookRunner("post_database_remove")
 
 pre_uninstall = _HookRunner("pre_uninstall")
 post_uninstall = _HookRunner("post_uninstall")

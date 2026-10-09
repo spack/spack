@@ -2286,6 +2286,7 @@ def install_root_node(
         spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, allow_missing=allow_missing)
+        spack.hooks.post_database_add([spec])
 
 
 def install_single_spec(spec, unsigned=False, force=False):

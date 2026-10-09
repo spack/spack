@@ -8,6 +8,7 @@ import collections
 import os
 import shutil
 import sys
+from typing import Dict, List
 
 import spack.cmd
 import spack.config
@@ -16,10 +17,12 @@ import spack.modules
 import spack.modules.common
 import spack.modules.error
 import spack.repo
+import spack.spec
 import spack.store
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
 from spack.util import filesystem, tty
+from spack.util.lang import dedupe, stable_partition
 from spack.util.tty import color
 
 description = "manipulate module files"
@@ -159,7 +162,7 @@ def loads(module_type, specs, args, out=None):
                 ]
             )
 
-    cache: spack.modules.common.ModuleConfigurationCache = {}
+    cache = spack.modules.common.ModuleConfigurationCache()
     modules = [
         (
             spec,
@@ -175,6 +178,16 @@ def loads(module_type, specs, args, out=None):
         for spec in specs
     ]
 
+    # Of the installations folded into one module file, only the first gets a live load line
+    module_cls = spack.modules.module_types[module_type]
+    with_module = {spec for spec, mod in modules if mod}
+    shares_file_with: Dict[spack.spec.Spec, spack.spec.Spec] = {}
+    for spec in with_module:
+        conf = module_cls.from_spec(spec, args.module_set_name, cache=cache).conf
+        first = next((s for s in conf.specs_in_file if s in with_module), spec)
+        if first != spec:
+            shares_file_with[spec] = first
+
     module_commands = {"tcl": "module load ", "lmod": "module load "}
 
     d = {"command": "" if not args.shell else module_commands[module_type], "prefix": args.prefix}
@@ -189,6 +202,12 @@ def loads(module_type, specs, args, out=None):
         else:
             d["exclude"] = "## " if spec.name in exclude_set else ""
             d["comment"] = "" if not args.shell else "# {0}\n".format(spec.format())
+            if spec in shares_file_with:
+                d["exclude"] = "## "
+                if args.shell:
+                    d["comment"] += "# shares its module file with {0}\n".format(
+                        shares_file_with[spec].format()
+                    )
             d["name"] = mod
             module_output_for_spec = load_template.format(**d)
         out.write(module_output_for_spec)
@@ -196,11 +215,51 @@ def loads(module_type, specs, args, out=None):
 
     if not all(mod for _, mod in modules):
         tty.warn(_missing_modules_warning)
+    if shares_file_with:
+        tty.warn(
+            "Installations sharing a module file cannot be loaded together: only the first load"
+            " line of each module file is left active"
+        )
+
+
+def fold_into_one_file(writers) -> bool:
+    """Whether the module file of the first writer folds the installations of all of them."""
+    specs_in_file = writers[0].conf.specs_in_file
+    return all(x.spec in specs_in_file for x in writers)
+
+
+def shared_module_name(module_type, specs, args, cache):
+    """Returns the name, or path with ``--full-path``, of the module file folding every
+    installation of ``specs``, or None when they do not all share one."""
+    module_cls = spack.modules.module_types[module_type]
+    writers = [module_cls.from_spec(spec, args.module_set_name, cache=cache) for spec in specs]
+    first = writers[0]
+    if not fold_into_one_file(writers) or not first.has_installation:
+        return None
+    return first.layout.filename if args.full_path else first.layout.name
 
 
 def find(module_type, specs, args):
     """Retrieve paths or use names of module files"""
     check_module_set_name(args.module_set_name)
+
+    cache = spack.modules.common.ModuleConfigurationCache()
+    if len(specs) > 1:
+        # An installation excluded from module files does not make the constraint ambiguous
+        module_cls = spack.modules.module_types[module_type]
+        included = [
+            spec
+            for spec in specs
+            if not module_cls.from_spec(spec, args.module_set_name, cache=cache).conf.excluded
+        ]
+        specs = included or specs
+
+    if len(specs) > 1 and not args.recurse_dependencies:
+        # Installations folded into one module file are found by the name of the file
+        module_name = shared_module_name(module_type, specs, args, cache)
+        if module_name:
+            print(module_name)
+            return
 
     single_spec = one_spec_or_raise(specs)
 
@@ -211,7 +270,6 @@ def find(module_type, specs, args):
     else:
         dependency_specs_to_retrieve = []
 
-    cache: spack.modules.common.ModuleConfigurationCache = {}
     try:
         modules = [
             spack.modules.get_module(
@@ -251,34 +309,52 @@ def rm(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
-    cache: spack.modules.common.ModuleConfigurationCache = {}
-    module_exist = lambda x: os.path.exists(
-        module_cls.from_spec(x, args.module_set_name, cache=cache).layout.filename
-    )
+    cache = spack.modules.common.ModuleConfigurationCache()
 
-    specs_with_modules = [spec for spec in specs if module_exist(spec)]
+    # Installations sharing a module file are removed from it together
+    file2specs: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
+    for spec in specs:
+        writer = module_cls.from_spec(spec, args.module_set_name, cache=cache)
+        if writer.has_installation:
+            file2specs[writer.layout.filename].append(spec)
 
-    modules = [
-        module_cls.from_spec(spec, args.module_set_name, cache=cache)
-        for spec in specs_with_modules
-    ]
-
-    if not modules:
+    if not file2specs:
         tty.die("No module file matches your query")
+
+    writers = [
+        module_cls.from_spec(
+            group[0], args.module_set_name, removed_specs=frozenset(group), cache=cache
+        )
+        for group in file2specs.values()
+    ]
+    rewritten, deleted = stable_partition(writers, lambda x: x.has_other_installations)
 
     # Ask for confirmation
     if not args.yes_to_all:
-        msg = "You are about to remove {0} module files for:\n"
-        tty.msg(msg.format(module_type))
-        spack.cmd.display_specs(specs_with_modules, long=True)
-        print("")
+        if deleted:
+            msg = "You are about to remove {0} module files for:\n"
+            tty.msg(msg.format(module_type))
+            spack.cmd.display_specs([s for x in deleted for s in x.conf.removed_specs], long=True)
+            print("")
+        if rewritten:
+            msg = "You are about to remove the following installations from {0} module files"
+            msg += " shared with other installations:\n"
+            tty.msg(msg.format(module_type))
+            spack.cmd.display_specs(
+                [s for x in rewritten for s in x.conf.removed_specs], long=True
+            )
+            print("")
+            tty.msg("These module files are written again for the installations they keep:\n")
+            spack.cmd.display_specs(
+                [s for x in rewritten for s in x.conf.specs_in_file], long=True
+            )
+            print("")
         answer = tty.get_yes_or_no("Do you want to proceed?")
         if not answer:
             tty.die("Will not remove any module files")
 
-    # Remove the module files
-    for s in modules:
-        s.remove()
+    for x in writers:
+        x.remove_installation()
 
 
 def refresh(module_type, specs, args):
@@ -295,19 +371,8 @@ def refresh(module_type, specs, args):
     if not args.upstream_modules:
         specs = [s for s in specs if not spack.store.STORE.db.installed_upstream(s)]
 
-    if not args.yes_to_all:
-        msg = "You are about to regenerate {types} module files for:\n"
-        tty.msg(msg.format(types=module_type))
-        spack.cmd.display_specs(specs, long=True)
-        print("")
-        answer = tty.get_yes_or_no("Do you want to proceed?")
-        if not answer:
-            tty.die("Module file regeneration aborted.")
-
-    # Cycle over the module types and regenerate module files
-
     cls = spack.modules.module_types[module_type]
-    cache: spack.modules.common.ModuleConfigurationCache = {}
+    cache = spack.modules.common.ModuleConfigurationCache()
 
     # Skip unknown packages.
     writers = [
@@ -319,19 +384,43 @@ def refresh(module_type, specs, args):
     # Filter excluded packages early
     writers = [x for x in writers if not x.conf.excluded]
 
-    # Detect name clashes in module files
+    if not args.yes_to_all:
+        msg = "You are about to regenerate {types} module files for:\n"
+        tty.msg(msg.format(types=module_type))
+        spack.cmd.display_specs(specs, long=True)
+        print("")
+        # A module file folding several installations is written for all of them
+        selected = set(specs)
+        folded = [s for x in writers for s in x.conf.other_specs_in_file if s not in selected]
+        folded = list(dedupe(folded))
+        if folded:
+            msg = "The following installations share a module file with them and are written"
+            msg += " again too:\n"
+            tty.msg(msg)
+            spack.cmd.display_specs(folded, long=True)
+            print("")
+        answer = tty.get_yes_or_no("Do you want to proceed?")
+        if not answer:
+            tty.die("Module file regeneration aborted.")
+
+    # Writers sharing a module file clash, unless the file folds all their installations
     file2writer = collections.defaultdict(list)
     for item in writers:
         file2writer[item.layout.filename].append(item)
 
-    if len(file2writer) != len(writers):
+    clashes = {f: w for f, w in file2writer.items() if len(w) > 1 and not fold_into_one_file(w)}
+    if clashes:
         spec_fmt_str = "{name}@={version}%{compiler}/{hash:7} {variants} arch={arch}"
         message = "Name clashes detected in module files:\n"
-        for filename, writer_list in file2writer.items():
-            if len(writer_list) > 1:
-                message += "\nfile: {0}\n".format(filename)
-                for x in writer_list:
-                    message += "spec: {0}\n".format(x.spec.format(spec_fmt_str))
+        for filename, writer_list in clashes.items():
+            message += "\nfile: {0}\n".format(filename)
+            for x in writer_list:
+                message += "spec: {0}\n".format(x.spec.format(spec_fmt_str))
+            if len({x.spec.version for x in writer_list}) > 1:
+                message += (
+                    "installations of different versions cannot share a module file, "
+                    "add {version} to the projection\n"
+                )
         tty.error(message)
         tty.error("Operation aborted")
         raise SystemExit(1)
@@ -354,7 +443,8 @@ def refresh(module_type, specs, args):
         module_type_root, writers, overwrite=args.delete_tree
     )
     errors = []
-    for x in writers:
+    # A module file folding several installations is written once, from the first of them
+    for x in (writer_list[0] for writer_list in file2writer.values()):
         try:
             x.write(overwrite=True)
         except spack.error.SpackError as e:

@@ -376,15 +376,14 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
             spack.store.STORE.db.mark(spec, "explicit", True)
 
     except KeyError:
-        # If not, register it and generate the module file.
-        # For external packages we just need to run
-        # post-install hooks to generate module files.
-        tty.debug(f"{pre} generating module file")
+        # If not, run the post-install hooks, register it and generate the module file
         spack.hooks.post_install(spec, explicit)
 
         # Add to the DB
         tty.debug(f"{pre} registering into DB")
         spack.store.STORE.db.add(spec, explicit=explicit)
+        tty.debug(f"{pre} generating module file")
+        spack.hooks.post_database_add([spec])
 
 
 def _process_binary_cache_tarball(
@@ -432,6 +431,7 @@ def _process_binary_cache_tarball(
 
         pkg.installed_from_binary_cache = True
         spack.store.STORE.db.add(pkg.spec, explicit=explicit)
+        spack.hooks.post_database_add([pkg.spec])
         return True
 
 
@@ -1259,6 +1259,7 @@ class BuildTask(Task):
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, explicit=self.explicit)
+            spack.hooks.post_database_add([pkg.spec])
         except spack.error.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
@@ -2730,6 +2731,7 @@ def deprecate(spec: "spack.spec.Spec", deprecator: "spack.spec.Spec", link_fn) -
 
     # Now that we've handled metadata, uninstall and replace with link
     spack.package_base.PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+    spack.hooks.post_database_remove([spec])
     link_fn(deprecator.prefix, spec.prefix)
 
 
