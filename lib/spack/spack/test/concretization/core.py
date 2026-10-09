@@ -2084,7 +2084,7 @@ spack:
         for s in ["mpileaks ^mpich", "zmpi"]:
             reusable_specs.extend(spack.concretize.concretize_one(s).traverse(root=True))
 
-        root_specs = [Spec("mpileaks"), Spec("zmpi")]
+        root_specs = [Spec("mpileaks ^zmpi"), Spec("zmpi")]
 
         with mutable_config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver(context=spack.context.default())
@@ -6185,3 +6185,59 @@ def test_no_available_compiler_error(remove_all_compilers):
     remove_all_compilers()
     with pytest.raises(spack.compilers.config.NoAvailableCompilerError, match="in PATH"):
         spack.concretize.concretize_one("pkg-b")
+
+
+def test_root_provider_is_preferred_over_configured_provider(mock_packages, mutable_config):
+    """Tests that a root providing a virtual is used as the provider by the other roots, even
+    if another provider is preferred in configuration.
+    """
+    mutable_config.set("concretizer:unify", True)
+    mutable_config.set("packages:all:providers:mpi", ["mpich", "zmpi"])
+    mpileaks, zmpi = spack.concretize.concretize_spec_pairs(
+        [(Spec("mpileaks"), None), (Spec("zmpi"), None)]
+    )
+    assert mpileaks.satisfies(f"%mpi=zmpi/{zmpi.dag_hash()}")
+
+
+@pytest.mark.parametrize(
+    "spec_str", ["mpileaks %mpi=mpich", "mpileaks ^mpich", "mpileaks ^[virtuals=mpi] mpich"]
+)
+def test_explicit_provider_with_another_provider_as_root(spec_str, mock_packages, mutable_config):
+    """Tests that a root can request a provider explicitly, when another root is a possible
+    provider of the same virtual.
+    """
+    mutable_config.set("concretizer:unify", True)
+    mpileaks, zmpi = spack.concretize.concretize_spec_pairs(
+        [(Spec(spec_str), None), (Spec("zmpi"), None)]
+    )
+    assert mpileaks.satisfies("%mpi=mpich")
+
+
+def test_required_provider_with_another_provider_as_root(mock_packages, mutable_config):
+    """Tests that a requirement on a virtual is respected, when a root is a possible provider of
+    the same virtual and is not the required one.
+    """
+    mutable_config.set("concretizer:unify", True)
+    mutable_config.set("packages:mpi", {"require": "mpich2"})
+    mpileaks, zmpi = spack.concretize.concretize_spec_pairs(
+        [(Spec("mpileaks"), None), (Spec("zmpi"), None)]
+    )
+    assert mpileaks.satisfies("%mpi=mpich2")
+
+
+@pytest.mark.parametrize("pin_hash", [True, False])
+def test_reused_spec_keeps_provider_with_another_provider_as_root(
+    pin_hash, temporary_store, mock_packages, mutable_config
+):
+    """Tests that an installed spec is reused together with its provider of a virtual, when
+    another root is a possible provider of the same virtual.
+    """
+    installed = spack.concretize.concretize_one("mpileaks ^mpich")
+    PackageInstaller([installed.package], fake=True, explicit=True).install()
+
+    mutable_config.set("concretizer:unify", True)
+    spec_str = f"mpileaks/{installed.dag_hash()}" if pin_hash else "mpileaks"
+    mpileaks, zmpi = spack.concretize.concretize_spec_pairs(
+        [(Spec(spec_str), None), (Spec("zmpi"), None)]
+    )
+    assert mpileaks.satisfies(f"mpileaks/{installed.dag_hash()}")
