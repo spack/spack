@@ -715,6 +715,7 @@ An allowed deprecation is skipped entirely: the deprecated version is treated li
 
 The install-time check is static and does not depend on local install status: a spec is refused if a disallowed deprecation is found in the checked closure of the requested packages, even when the deprecated dependency is already installed.
 The check runs once, upfront, so an install never fails halfway because a deprecated spec was discovered late.
+``spack find`` applies the same check to installed specs, and marks those the configuration does not allow (see :ref:`cmd-spack-find-deprecations`).
 
 All deprecation settings live under a ``deprecation:`` block, which can be given globally under ``all:`` or for a specific package.
 Which deprecations are allowed is set with ``allow:``, a list of selectors:

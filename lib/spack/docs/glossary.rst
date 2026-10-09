@@ -468,10 +468,11 @@ For an alphabetic list of every documented keyword and environment variable, see
 
    deprecate
    deprecation
-      Marking a version (or whole package) as no longer supported.
-      Package authors set ``deprecated=True`` on a ``version(...)`` :term:`directive`; ``spack install`` then warns and prompts before fetching such a version (``spack install --deprecated`` or ``config:deprecated:true`` skips the check), and ``spack info`` lists it under "Deprecated versions".
+      Marking a version, or any other spec constraint, as no longer fit for use.
+      Package authors use the ``deprecated()`` :term:`directive` to give a reason, a severity, advisory labels and a message, or the legacy ``deprecated=True`` argument of ``version()``.
+      Spack refuses to concretize or install a deprecated spec unless ``packages:<name>:deprecation:allow`` allows it (``--deprecated`` allows every deprecation for one command), and ``spack find`` marks installed specs the configuration does not allow.
       Distinct from ``spack deprecate``, which replaces one installed spec with another in the :term:`store` by symlinking the old :term:`prefix` at the new one.
-      See :ref:`deprecate`.
+      See :ref:`deprecate` and :ref:`package-deprecations-config`.
 
    SBOM
       A Software Bill of Materials emitted by Spack in SPDX-2.3 format for every installation.
