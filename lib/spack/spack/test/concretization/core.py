@@ -56,7 +56,7 @@ import spack.util.parallel
 import spack.util.spack_yaml as syaml
 import spack.variant as vt
 import spack.version.git_ref_lookup
-from spack.concretize_ui import BufferedUI, HeadlessUI, SolveKind
+from spack.concretize_ui import BufferedUI, ConcretizationPhase, HeadlessUI, SolveKind
 from spack.config import Configuration
 from spack.database import Database
 from spack.externals import ExternalDependencyError
@@ -6508,3 +6508,50 @@ def test_diagnostics_are_reported_under_every_unify_mode(
     )
 
     assert any("explicit splice configuration has caused" in message for message, _ in ui.warnings)
+
+
+@pytest.mark.parametrize(
+    "cached,expected",
+    [
+        (
+            False,
+            [
+                ConcretizationPhase.REUSE,
+                ConcretizationPhase.SETUP,
+                ConcretizationPhase.GROUND,
+                ConcretizationPhase.SOLVE,
+                ConcretizationPhase.BUILD,
+            ],
+        ),
+        (True, [ConcretizationPhase.REUSE, ConcretizationPhase.SETUP, ConcretizationPhase.BUILD]),
+    ],
+)
+def test_solve_reports_its_phases(cached, expected, mutable_config, mock_packages, tmp_path):
+    """Tests that a solve reports the phases it goes through, in order, and that a result from
+    the concretization cache is neither grounded nor solved.
+    """
+    mutable_config.set("concretizer:concretization_cache:enable", True)
+    mutable_config.set("concretizer:concretization_cache:url", str(tmp_path))
+    if cached:
+        spack.concretize.concretize_one("pkg-a")
+
+    ui = RecordingUI()
+    spack.concretize.concretize_one("pkg-a", ui=ui)
+
+    assert ui.finished[-1][3] is cached
+    assert ui.phases == expected
+
+
+def test_rounds_select_reusable_specs_once(mutable_config, mock_packages):
+    """Tests that concretizing "when possible" selects reusable specs once for all its rounds,
+    and that every round is set up.
+    """
+    mutable_config.set("concretizer:unify", "when_possible")
+    ui = RecordingUI()
+    spack.concretize.concretize_spec_pairs(
+        [(Spec("pkg-a@1.0"), None), (Spec("pkg-a@2.0"), None)], ui=ui
+    )
+
+    assert ui.phases[0] is ConcretizationPhase.REUSE
+    assert ui.phases.count(ConcretizationPhase.REUSE) == 1
+    assert ui.phases.count(ConcretizationPhase.SETUP) == len(ui.solves) == 2
