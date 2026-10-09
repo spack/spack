@@ -107,8 +107,14 @@ def spec(parser, args):
 
     # With --yaml, --json, or --format, just print the raw specs to output
     if args.format:
+        first_doc = True
         for spec in concrete_specs:
             if args.format == "yaml":
+                if first_doc:
+                    first_doc = False
+                else:
+                    # add inter-doc marker
+                    sys.stdout.write("---\n")
                 # use write because to_yaml already has a newline.
                 sys.stdout.write(spec.to_yaml())
             elif args.format == "json":
