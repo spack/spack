@@ -105,6 +105,26 @@ def get_download_location(spec):
     return None
 
 
+def generate_external_refs(spec):
+    """Generate external references for a spec.
+
+    Args:
+        spec: The package spec
+
+    Returns:
+        A list of external references in JSON format.
+
+    Note: Only PackageURL (PURL) is currently supported.
+    """
+    return [
+        {
+            "referenceCategory": "SECURITY",
+            "referenceType": "purl",
+            "referenceLocator": f"pkg:spack/{spec.namespace}{spec.name}@{spec.version}?sha={spec.dag_hash()}",
+        }
+    ]
+
+
 def make_spdx_2_3_package_entry(spec):
     pkg = getattr(spec, "package", None)
     return {
@@ -117,6 +137,7 @@ def make_spdx_2_3_package_entry(spec):
         "licenseDeclared": get_license(pkg) or "NOASSERTION",
         "licenseConcluded": "NOASSERTION",
         "checksum": get_checksums(spec),
+        "externalRefs": generate_external_refs(spec),
     }
 
 
