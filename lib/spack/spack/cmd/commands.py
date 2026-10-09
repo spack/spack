@@ -64,7 +64,7 @@ def formatter(func: Callable[[Namespace, IO], None]) -> Callable[[Namespace, IO]
     Returns:
         The same function.
     """
-    formatters[func.__name__] = func
+    formatters[func.__name__] = func  # ty: ignore[unresolved-attribute]  # Callable has no __name__
     return func
 
 

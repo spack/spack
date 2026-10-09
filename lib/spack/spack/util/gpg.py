@@ -30,9 +30,9 @@ GPG: Optional["Gpg"] = None
 #: Executable instance for "gpgconf", initialized lazily
 GPGCONF: Optional[Executable] = None
 #: Socket directory required if a non default home directory is used
-SOCKET_DIR = None
+SOCKET_DIR: Optional[str] = None
 #: GNUPGHOME environment variable in the context of this Python module
-GNUPGHOME = None
+GNUPGHOME: Optional[str] = None
 
 #: Regular expression to pull spec contents out of clearsigned signature
 #: file.
@@ -203,7 +203,7 @@ class GpgKeyAlgorithm(enum.Enum):
         name = name.replace("_eo", " (Encryption only)")
         return name
 
-    def __format__(cls, fspec):
+    def __format__(cls, format_spec):
         """Format type with length
         ex.
             gpg_algo = GpgKeyAlgorithm.RSA
@@ -214,9 +214,9 @@ class GpgKeyAlgorithm(enum.Enum):
         """
         # Only allow integer sizes
         name = cls.name.lower()
-        if fspec:
-            fspec = int(fspec)
-            name += f" {fspec}"
+        if format_spec:
+            fmt_size = int(format_spec)
+            name += f" {fmt_size}"
 
         name = name.replace("_so", " (Signing only)")
         name = name.replace("_eo", " (Encryption only)")
@@ -513,14 +513,14 @@ class Gpg:
     @staticmethod
     def _init_gnupghome_posix(gnupghome: Optional[str] = None) -> pathlib.Path:
         """Init gnupg home and check permissions."""
-        gnupghome = Gpg._init_gnupghome_dir(gnupghome)
+        gnupghome_path = Gpg._init_gnupghome_dir(gnupghome)
 
         # Ensure safe permissions on posix systems
-        st = gnupghome.stat()
+        st = gnupghome_path.stat()
         if st.st_mode != (st.st_mode & 0o040700):
-            os.chmod(gnupghome, 0o700)
+            os.chmod(gnupghome_path, 0o700)
 
-        return gnupghome
+        return gnupghome_path
 
     def _create_gpgfn(
         self, finder: Callable[..., Optional[Tuple[Executable, spack.version.VersionType]]]
@@ -803,7 +803,9 @@ def init(gnupghome: Optional[str] = None, force: bool = False):
         return
 
     GPG = Gpg(gnupghome)
-    GNUPGHOME, GPGCONF, SOCKET_DIR = GPG.home, GPG.conf, GPG.socket_dir
+    GNUPGHOME = str(GPG.home)
+    GPGCONF = GPG.conf
+    SOCKET_DIR = str(GPG.socket_dir) if GPG.socket_dir is not None else None
 
 
 def _autoinit(func: Callable[..., Any]):
@@ -837,7 +839,9 @@ def gnupghome_override(dir: str):
     # Reset global state
     clear()
     GPG = Gpg(gnupghome=dir)
-    GNUPGHOME, GPGCONF, SOCKET_DIR = GPG.home, GPG.conf, GPG.socket_dir
+    GNUPGHOME = str(GPG.home)
+    GPGCONF = GPG.conf
+    SOCKET_DIR = str(GPG.socket_dir) if GPG.socket_dir is not None else None
 
     yield
 
@@ -845,7 +849,9 @@ def gnupghome_override(dir: str):
     clear()
     GPG = _GPG
     if GPG:
-        GNUPGHOME, GPGCONF, SOCKET_DIR = GPG.home, GPG.conf, GPG.socket_dir
+        GNUPGHOME = str(GPG.home)
+        GPGCONF = GPG.conf
+        SOCKET_DIR = str(GPG.socket_dir) if GPG.socket_dir is not None else None
 
 
 def _parse_gpg_fields(karray: List[str]):
@@ -922,6 +928,7 @@ class SpackGPGError(spack.error.SpackError):
 @_autoinit
 def create(**kwargs):
     """Create a new key pair."""
+    assert GPG is not None
     r, w = os.pipe()
     with contextlib.closing(os.fdopen(r, "r")) as r:
         with contextlib.closing(os.fdopen(w, "w")) as w:

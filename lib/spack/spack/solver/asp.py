@@ -819,6 +819,7 @@ class PyclingoDriver:
 
         if not result.satisfiable:
             return result
+        assert best is not None  # a satisfiable result has at least one model
 
         timer.start("construct_specs")
         builder = SpecBuilder(
@@ -1932,7 +1933,7 @@ class SpackSolverSetup:
         package_targets = self.target_specs_cache[:]
         package_targets.sort(key=key_fn)
         for i, preferred in enumerate(package_targets):
-            self.gen.fact(fn.target_weight(str(preferred.architecture.target), i))
+            self.gen.fact(fn.target_weight(str(preferred.target), i))
 
     def define_package_versions_and_validate_preferences(
         self, possible_pkgs: Set[str], *, require_checksum: bool
@@ -2106,7 +2107,7 @@ class SpackSolverSetup:
                         candidate_targets.append(ancestor)
 
         platform = spack.platforms.host()
-        uarch = spack.vendor.archspec.cpu.TARGETS.get(platform.default)
+        uarch = spack.vendor.archspec.cpu.TARGETS[platform.default]
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
             supported, unsupported = self._supported_targets(
@@ -2638,8 +2639,9 @@ class SpackSolverSetup:
             except spack.repo.UnknownPackageError:
                 pass
             else:
-                if hasattr(compiler_cls, "runtime_constraints"):
-                    compiler_cls.runtime_constraints(spec=compiler, pkg=recorder)
+                runtime_constraints = getattr(compiler_cls, "runtime_constraints", None)
+                if runtime_constraints is not None:
+                    runtime_constraints(spec=compiler, pkg=recorder)
                 # Inject default flags for compilers
                 recorder("*").default_flags(compiler)
 

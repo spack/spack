@@ -225,8 +225,9 @@ class InMemoryOCIRegistry(DummyServer):
         """Extract request.data, it's type remains a mystery"""
         assert req.data is not None
 
-        if hasattr(req.data, "read"):
-            return req.data.read()
+        read = getattr(req.data, "read", None)
+        if read is not None:
+            return read()
         elif isinstance(req.data, bytes):
             return req.data
 

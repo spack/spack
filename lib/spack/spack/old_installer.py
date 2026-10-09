@@ -38,7 +38,7 @@ import tempfile
 import time
 from collections import defaultdict
 from gzip import GzipFile
-from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
 
 from spack.vendor.typing_extensions import Literal
 
@@ -214,12 +214,12 @@ def _check_last_phase(pkg: "spack.package_base.PackageBase") -> None:
     Raises:
         ``BadInstallPhase`` if stop_before or last phase is invalid
     """
-    phases = spack.builder.create(pkg).phases  # type: ignore[attr-defined]
-    if pkg.stop_before_phase and pkg.stop_before_phase not in phases:  # type: ignore[attr-defined]
-        raise BadInstallPhase(pkg.name, pkg.stop_before_phase)  # type: ignore[attr-defined]
+    phases = spack.builder.create(pkg).phases
+    if pkg.stop_before_phase and pkg.stop_before_phase not in phases:
+        raise BadInstallPhase(pkg.name, pkg.stop_before_phase)
 
-    if pkg.last_phase and pkg.last_phase not in phases:  # type: ignore[attr-defined]
-        raise BadInstallPhase(pkg.name, pkg.last_phase)  # type: ignore[attr-defined]
+    if pkg.last_phase and pkg.last_phase not in phases:
+        raise BadInstallPhase(pkg.name, pkg.last_phase)
 
 
 def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explicit: bool) -> bool:
@@ -497,7 +497,7 @@ def get_dependent_ids(spec: "spack.spec.Spec") -> List[str]:
     return [package_id(d) for d in spec.dependents()]
 
 
-def install_msg(name: str, pid: int, install_status: InstallStatus) -> str:
+def install_msg(name: str, pid: int, install_status: Optional[InstallStatus]) -> str:
     """
     Colorize the name/id of the package being installed
 
@@ -641,8 +641,8 @@ class BuildRequest:
         if not self.pkg.spec.concrete:
             raise ValueError(f"{self.pkg.name} must have a concrete spec")
 
-        self.pkg.stop_before_phase = install_args.get("stop_before")  # type: ignore[attr-defined] # noqa: E501
-        self.pkg.last_phase = install_args.get("stop_at")  # type: ignore[attr-defined]
+        self.pkg.stop_before_phase = install_args.get("stop_before")
+        self.pkg.last_phase = install_args.get("stop_at")
 
         # Cache the package id for convenience
         self.pkg_id = package_id(pkg.spec)
@@ -882,6 +882,9 @@ class Task:
         # initialize cache variables
         self._install_action = None
 
+        # overrides the policy derived from the request (e.g. to fall back to a source build)
+        self._install_policy: Optional[InstallPolicy] = None
+
     def start(self):
         """Start the work of this task."""
         raise NotImplementedError
@@ -960,7 +963,7 @@ class Task:
             if not installed:
                 self.uninstalled_deps.add(pkg_id)
 
-    def flag_installed(self, installed: List[str]) -> None:
+    def flag_installed(self, installed: Iterable[str]) -> None:
         """
         Ensure the dependency is not considered to still be uninstalled.
 
@@ -1063,10 +1066,16 @@ class Task:
 
     @property
     def install_policy(self) -> InstallPolicy:
+        if self._install_policy is not None:
+            return self._install_policy
         if self.is_build_request:
             return self.request.install_args.get("root_policy", "auto")
         else:
             return self.request.install_args.get("dependencies_policy", "auto")
+
+    @install_policy.setter
+    def install_policy(self, value: InstallPolicy) -> None:
+        self._install_policy = value
 
     @property
     def key(self) -> Tuple[int, int]:
@@ -1120,8 +1129,8 @@ class BuildTask(Task):
     process_handle: Optional["spack.build_environment.BuildProcess"] = None
     started: bool = False
     no_op: bool = False
-    tmpdir = None
-    backup_dir = None
+    tmpdir: Optional[str] = None
+    backup_dir: Optional[str] = None
 
     def start(self):
         """Attempt to use the binary cache to install
@@ -1145,7 +1154,7 @@ class BuildTask(Task):
         pkg, pkg_id = self.pkg, self.pkg_id
 
         tests = install_args.get("tests")
-        pkg.run_tests = tests is True or tests and pkg.name in tests
+        pkg.run_tests = bool(tests is True or tests and pkg.name in tests)
 
         # Use the binary cache to install if requested,
         # save result to be handled in BuildTask.complete()
@@ -1189,14 +1198,18 @@ class BuildTask(Task):
         assert self.started or self.no_op, (
             "Can't call `poll()` before `start()` or identified no-operation task"
         )
-        return self.no_op or self.success_result or self.error_result or self.process_handle.poll()
+        result = self.no_op or self.success_result or self.error_result
+        if result:
+            return result
+        assert self.process_handle is not None
+        return self.process_handle.poll()
 
     def succeed(self):
         self.record.succeed()
 
         # delete the temporary backup for an overwrite
         # see spack.util.filesystem.restore_directory_transaction
-        if self.install_action == InstallAction.OVERWRITE:
+        if self.install_action == InstallAction.OVERWRITE and self.tmpdir is not None:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def fail(self, inner_exception):
@@ -1208,6 +1221,7 @@ class BuildTask(Task):
         # restore the overwrite directory from backup
         # see spack.util.filesystem.restore_directory_transaction
         try:
+            assert self.backup_dir is not None, "overwrite install has no backup directory"
             if os.path.exists(self.pkg.prefix):
                 shutil.rmtree(self.pkg.prefix)
             os.rename(self.backup_dir, self.pkg.prefix)
@@ -1253,6 +1267,7 @@ class BuildTask(Task):
             self.succeed()
             return ExecuteResult.FAILED
 
+        assert self.process_handle is not None, "build task was not started"
         try:
             # Check if the task's child process has completed
             spack.package_base.PackageBase._verbose = self.process_handle.complete()
@@ -1288,7 +1303,7 @@ class MockBuildProcess:
 class FakeBuildTask(BuildTask):
     """Blocking BuildTask executed directly in the main thread. Used for --fake installs."""
 
-    process_handle = MockBuildProcess()  # type: ignore[assignment]
+    process_handle = MockBuildProcess()
 
     def _start_build_process(self):
         build_process(self.pkg, self.request.install_args)
@@ -1885,7 +1900,7 @@ class PackageInstaller:
         fail_fast = bool(request.install_args.get("fail_fast"))
         self.fail_fast = self.fail_fast or fail_fast
 
-    def _complete_task(self, task: Task, install_status: InstallStatus) -> None:
+    def _complete_task(self, task: Task, install_status: Optional[InstallStatus]) -> None:
         """
         Complete the installation of the requested spec and/or dependency
         represented by the task.
@@ -2037,7 +2052,7 @@ class PackageInstaller:
         else:
             return None
 
-    def _requeue_task(self, task: Task, install_status: InstallStatus) -> None:
+    def _requeue_task(self, task: Task, install_status: Optional[InstallStatus]) -> None:
         """
         Requeues a task that appears to be in progress by another process.
 
@@ -2120,8 +2135,8 @@ class PackageInstaller:
         self.installed.add(pkg_id)
 
         # Update affected dependents
-        dependent_ids = dependent_ids or get_dependent_ids(pkg.spec)
-        for dep_id in set(dependent_ids):
+        dep_id_set: Set[str] = dependent_ids or set(get_dependent_ids(pkg.spec))
+        for dep_id in dep_id_set:
             tty.debug(f"Removing {pkg_id} from {dep_id}'s uninstalled dependencies.")
             if dep_id in self.build_tasks:
                 # Ensure the dependent's uninstalled dependencies are
@@ -2288,8 +2303,7 @@ class PackageInstaller:
                 f"Failed to install {pkg.name} from binary cache due "
                 f"to {str(exc)}: Requeuing to install from source."
             )
-            # this overrides a full method, which is ugly.
-            task.install_policy = "source_only"  # type: ignore[misc]
+            task.install_policy = "source_only"
             self._requeue_task(task, install_status)
             return None
 
@@ -2311,11 +2325,14 @@ class PackageInstaller:
 
             # Best effort installs suppress the exception and mark the
             # package as a failure.
-            if not isinstance(exc, spack.error.SpackError) or not exc.printed:  # type: ignore[union-attr] # noqa: E501
-                exc.printed = True  # type: ignore[union-attr]
-                # SpackErrors can be printed by the build process or at
-                # lower levels -- skip printing if already printed.
-                # TODO: sort out this and SpackError.print_context()
+            # SpackErrors can be printed by the build process or at
+            # lower levels -- skip printing if already printed.
+            # TODO: sort out this and SpackError.print_context()
+            already_printed = False
+            if isinstance(exc, spack.error.SpackError):
+                already_printed = exc.printed
+                exc.printed = True
+            if not already_printed:
                 tty.error(
                     f"Failed to install {pkg.name} due to {exc.__class__.__name__}: {str(exc)}"
                 )
@@ -2556,9 +2573,7 @@ class BuildProcessInstaller:
 
             self.timer.stop("stage")
 
-            tty.debug(
-                f"{self.pre} Building {self.pkg_id} [{self.pkg.build_system_class}]"  # type: ignore[attr-defined] # noqa: E501
-            )
+            tty.debug(f"{self.pre} Building {self.pkg_id} [{self.pkg.build_system_class}]")
 
             # get verbosity from install parameter or saved value
             self.echo = self.verbose

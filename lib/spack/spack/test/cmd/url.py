@@ -19,6 +19,13 @@ class MyPackage:
         self.versions = versions
 
 
+def _summary_count(label: str, out: str) -> int:
+    """Number reported on the ``label: <count>`` line of ``spack url summary`` output."""
+    match = re.search(rf"{label}:\s*(\d+)", out)
+    assert match, f"'{label}' not found in output"
+    return int(match.group(1))
+
+
 def test_name_parsed_correctly():
     # Expected True
     assert name_parsed_correctly(MyPackage("netcdf", []), "netcdf")
@@ -105,13 +112,13 @@ def test_url_summary(mock_packages):
 
     # make sure it agrees with the actual command.
     out = url("summary")
-    out_total_urls = int(re.search(r"Total URLs found:\s*(\d+)", out).group(1))
+    out_total_urls = _summary_count(r"Total URLs found", out)
     assert out_total_urls == total_urls
 
-    out_correct_names = int(re.search(r"Names correctly parsed:\s*(\d+)", out).group(1))
+    out_correct_names = _summary_count(r"Names correctly parsed", out)
     assert out_correct_names == correct_names
 
-    out_correct_versions = int(re.search(r"Versions correctly parsed:\s*(\d+)", out).group(1))
+    out_correct_versions = _summary_count(r"Versions correctly parsed", out)
     assert out_correct_versions == correct_versions
 
 

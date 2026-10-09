@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import enum
 import warnings
-from typing import List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import spack.vendor.archspec.cpu
 
@@ -313,10 +313,13 @@ class RequirementParser:
             requirements = [requirements]
 
         rules = []
-        for requirement in requirements:
+        for raw_requirement in requirements:
             # A string is equivalent to a one_of group with a single element
-            if isinstance(requirement, str):
-                requirement = {"one_of": [requirement]}
+            requirement: Dict[str, Any] = (
+                {"one_of": [raw_requirement]}
+                if isinstance(raw_requirement, str)
+                else raw_requirement
+            )
 
             for policy in ("spec", "one_of", "any_of"):
                 if policy not in requirement:

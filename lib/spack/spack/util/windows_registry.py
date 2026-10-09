@@ -203,7 +203,11 @@ class WindowsRegistryView:
     the root key used to instantiate this class.
     """
 
-    def __init__(self, key, root_key=HKEY.HKEY_CURRENT_USER):
+    key: str
+    root: RegistryKey
+    _reg: object
+
+    def __init__(self, key, root_key: RegistryKey = HKEY.HKEY_CURRENT_USER):
         """Constructs a Windows Registry entrypoint to key provided
         root_key should be an already open root key or an hkey constant if provided
 

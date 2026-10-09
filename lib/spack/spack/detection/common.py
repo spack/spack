@@ -19,7 +19,7 @@ import os
 import pathlib
 import re
 import sys
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 
 import spack.config
 import spack.error
@@ -30,6 +30,9 @@ import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
 from spack.util import tty
+
+if TYPE_CHECKING:
+    import spack.package_base
 
 
 def _externals_in_packages_yaml(config: spack.config.Configuration) -> Set[spack.spec.Spec]:
@@ -356,7 +359,7 @@ class WindowsKitExternalPaths:
             return []
         kit_root_reg = re.compile(r"KitsRoot[0-9]+")
         root_paths = []
-        for kit_root in filter(kit_root_reg.match, reg.get_values().keys()):
+        for kit_root in (k for k in reg.get_values().keys() if kit_root_reg.match(k)):
             root_paths.extend(
                 WindowsKitExternalPaths.find_windows_kit_lib_paths(reg.get_value(kit_root).value)
             )
@@ -370,7 +373,7 @@ class WindowsKitExternalPaths:
             "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows",
             root_key=spack.util.windows_registry.HKEY.HKEY_LOCAL_MACHINE,
         )
-        for key in filter(sdk_regex.match, [x.name for x in windows_reg.get_subkeys()]):
+        for key in (x.name for x in windows_reg.get_subkeys() if sdk_regex.match(x.name)):
             reg = windows_reg.get_subkey(key)
             sdk_paths.extend(
                 WindowsKitExternalPaths.find_windows_kit_lib_paths(

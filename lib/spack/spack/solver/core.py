@@ -25,7 +25,7 @@ class AspVar:
 
 
 @lang.key_ordering
-class AspFunction:
+class AspFunction(lang.Ordered):
     """A term in the ASP logic program"""
 
     __slots__ = ("name", "args")

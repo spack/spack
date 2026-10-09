@@ -144,9 +144,9 @@ Check out the `pytest documentation <http://pytest.org/>`_ and feel free to ask 
 Style Tests
 ^^^^^^^^^^^^
 
-Spack uses `Ruff <https://docs.astral.sh/ruff/>`_ for code formatting and linting, and `mypy <https://mypy.readthedocs.io/en/stable/>`_ for type checking.
+Spack uses `Ruff <https://docs.astral.sh/ruff/>`_ for code formatting and linting, and `ty <https://docs.astral.sh/ty/>`_ for type checking.
 In order to limit the number of PRs that were mostly style changes, we decided to enforce PEP 8 conformance.
-Your PR needs to comply with PEP 8 in order to be accepted, and if it modifies the Spack library, it needs to successfully type-check with mypy as well.
+Your PR needs to comply with PEP 8 in order to be accepted, and if it modifies the Spack library, it needs to successfully type-check with ty as well.
 
 Testing for compliance with Spack's style is easy.
 Simply run the ``spack style`` command:
@@ -177,7 +177,7 @@ If all is well, you'll see something like this:
 
    $ spack style
    ==> Running style checks on spack
-     selected: import, ruff-format, ruff-check, mypy
+     selected: import, ruff-format, ruff-check, ty
    ==> Checking Files:
      var/spack/repos/builtin/packages/hdf5/package.py
      var/spack/repos/builtin/packages/hdf/package.py
@@ -188,8 +188,9 @@ If all is well, you'll see something like this:
      ruff-format checks were clean
    ==> Running ruff-check checks
      ruff-check checks were clean
-   ==> Running mypy checks
-     mypy checks were clean
+   ==> Running ty checks
+   All checks passed!
+     ty checks were clean
    ==> spack style checks were clean
 
 However, if you are not compliant with PEP 8, Ruff will report errors:

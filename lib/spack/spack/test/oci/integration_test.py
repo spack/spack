@@ -334,8 +334,8 @@ def test_best_effort_upload(mutable_database: spack.database.Database, monkeypat
             buildcache("push", "--update-index", "oci-test", "mpileaks^mpich")
 
             # mpich's blob failed to upload and libdwarf's manifest failed to upload
-            assert re.search("mpich.+: Exception: Blob Server Error", e.value)
-            assert re.search("libdwarf.+: Exception: Manifest Server Error", e.value)
+            assert re.search("mpich.+: Exception: Blob Server Error", str(e.value))
+            assert re.search("libdwarf.+: Exception: Manifest Server Error", str(e.value))
 
         mpileaks: spack.spec.Spec = mutable_database.query_local("mpileaks^mpich")[0]
 

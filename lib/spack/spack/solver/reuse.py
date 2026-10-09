@@ -27,6 +27,7 @@ from spack.spec_filter import SpecFilter
 if typing.TYPE_CHECKING:
     import spack.context
     import spack.environment
+    import spack.store
 
 
 def spec_filter_from_store(store, *, is_reusable, include=None, exclude=None) -> SpecFilter:

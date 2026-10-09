@@ -100,7 +100,8 @@ class SetParallelJobs(argparse.Action):
     it can be retrieved using the spack.config API.
     """
 
-    def __call__(self, parser, namespace, jobs, option_string):
+    def __call__(self, parser, namespace, values, option_string=None):
+        jobs = values
         # Jobs is a single integer, type conversion is already applied
         # see https://docs.python.org/3/library/argparse.html#action-classes
         if jobs < 1:
@@ -119,7 +120,8 @@ class SetConcurrentPackages(argparse.Action):
     it can be retrieved using the spack.config API.
     """
 
-    def __call__(self, parser, namespace, concurrent_packages, option_string):
+    def __call__(self, parser, namespace, values, option_string=None):
+        concurrent_packages = values
         if concurrent_packages < 1:
             msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, concurrent_packages))
@@ -582,7 +584,7 @@ class ConfigSetAction(argparse.Action):
             help=help,
         )
 
-    def __call__(self, parser, namespace, values, option_string):
+    def __call__(self, parser, namespace, values, option_string=None):
         if self.require_environment and not active_environment():
             raise argparse.ArgumentTypeError(
                 f"argument '{self.option_strings[-1]}' requires an environment"
