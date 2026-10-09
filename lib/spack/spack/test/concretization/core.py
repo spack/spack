@@ -3346,6 +3346,38 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
     )
 
 
+@pytest.mark.parametrize(
+    "installed,configured,expected",
+    [
+        # unchanged extra attributes, or none at all
+        ({}, None, True),
+        ({"environment": {"set": {"FOO": "1"}}}, {"environment": {"set": {"FOO": "1"}}}, True),
+        # extra attributes added, removed, or changed in packages.yaml
+        ({}, {"environment": {"prepend_path": {"LD_LIBRARY_PATH": "/opt/cuda/lib64"}}}, False),
+        ({"environment": {"set": {"FOO": "1"}}}, None, False),
+        ({"environment": {"set": {"FOO": "1"}}}, {"environment": {"set": {"FOO": "2"}}}, False),
+    ],
+)
+def test_reusable_externals_extra_attributes(
+    mock_packages, tmp_path: pathlib.Path, installed, configured, expected
+):
+    """An installed external is not reused if its extra attributes changed in packages.yaml,
+    otherwise e.g. a newly added ``environment`` is silently ignored."""
+    spec = Spec("mpich@4.1~debug build_system=generic arch=linux-ubuntu23.04-zen2 %gcc@13.1.0")
+    spec.external_path = str(tmp_path)
+    spec.extra_attributes = installed
+    spec._mark_concrete()
+    entry = {"spec": "mpich@4.1", "prefix": str(tmp_path)}
+    if configured is not None:
+        entry["extra_attributes"] = configured
+    assert (
+        spack.solver.reuse._is_reusable(
+            spec, {"mpich": {"externals": [entry]}}, local=False, repo=spack.repo.PATH
+        )
+        is expected
+    )
+
+
 def test_concretization_version_order():
     versions = [
         (Version("develop"), {}),
