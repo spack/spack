@@ -18,7 +18,7 @@ import spack.repo_migrate
 from spack.config import Configuration
 from spack.error import SpackError
 from spack.util.executable import Executable
-from spack.util.filesystem import working_dir
+from spack.util.filesystem import symlink, working_dir
 
 repo = spack.main.SpackCommand("repo")
 env = spack.main.SpackCommand("env")
@@ -226,6 +226,26 @@ def test_repo_migrate(tmp_path: pathlib.Path, config):
     # new files are created and have updated contents
     assert pkg_py_7zip_new.read_bytes() == NEW_7ZIP
     assert pkg_py_numpy_new.read_bytes() == NEW_NUMPY
+
+
+def test_repo_migrate_relative_symlink(tmp_path: pathlib.Path, config):
+    """Symlinks between files in the repo point to the relocated files after migration"""
+    old_root, _ = spack.repo.create_repo(str(tmp_path), "org.repo", package_api=(1, 0))
+    pkgs_path = pathlib.Path(spack.repo.from_path(old_root).packages_path)
+    new_pkgs_path = pathlib.Path(old_root) / "spack_repo" / "org" / "repo" / "packages"
+
+    (pkgs_path / "7zip").mkdir(parents=True)
+    (pkgs_path / "py-numpy").mkdir(parents=True)
+    (pkgs_path / "7zip" / "package.py").write_bytes(OLD_7ZIP)
+    (pkgs_path / "py-numpy" / "package.py").write_bytes(OLD_NUMPY)
+    (pkgs_path / "7zip" / "fix.patch").write_bytes(b"patch contents")
+    symlink(os.path.join("..", "7zip", "fix.patch"), str(pkgs_path / "py-numpy" / "fix.patch"))
+
+    repo("migrate", "--fix", old_root)
+
+    new_link = new_pkgs_path / "py_numpy" / "fix.patch"
+    assert new_link.exists()
+    assert new_link.read_bytes() == b"patch contents"
 
 
 def test_migrate_diff(git: Executable, tmp_path: pathlib.Path):

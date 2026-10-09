@@ -756,7 +756,7 @@ def _install(
             os.unlink(pkg.log_path)
         except OSError:
             pass
-        os.symlink(request.log_path, pkg.log_path)
+        fs.symlink(request.log_path, pkg.log_path)
 
         send_state("staging", state_stream)
 
