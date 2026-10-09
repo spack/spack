@@ -38,10 +38,10 @@ Here is an example ``config.yaml`` file:
 
    config:
      install_tree:
-       root: $spack/opt/spack
+       root: $data_home/installs
      build_stage:
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
+     - $cache_home/stage
 
 Each Spack configuration file is nested under a top-level section corresponding to its name.
 So, ``config.yaml`` starts with ``config:``, ``mirrors.yaml`` starts with ``mirrors:``, etc.
@@ -84,7 +84,7 @@ From lowest to highest precedence:
    Settings here affect all instances of Spack running with the same Python installation.
    This scope takes higher precedence than site, system, and default scopes.
 
-#. **user**: Stored in the home directory: ``~/.spack/``.
+#. **user**: Stored in the home directory: ``~/.config/spack/``.
    These settings affect all instances of Spack and take higher precedence than site, system, plugin, or defaults scopes.
 
 #. **spack**: Stored in ``$(prefix)/etc/spack/``.
@@ -102,6 +102,12 @@ From lowest to highest precedence:
 
 #. **command line**: Build settings specified on the command line take precedence over all other scopes.
 
+.. note::
+
+   Spack may create a ``layout`` scope in ``$(prefix)/etc/spack/layout/`` for generated settings associated with migration or isolation.
+   It sits just above ``defaults``, but below ``system``, ``site``, ``plugin``, ``user``, and ``spack``.
+   A fresh Spack instance has no layout scope; it is created only when needed.
+
 Each configuration directory may contain several configuration files, such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``.
 When configurations conflict, settings from higher-precedence scopes override lower-precedence settings.
 
@@ -113,7 +119,7 @@ If you forget, you can always see the available configuration scopes in order of
     Scope            Path
     command_line
     spack            /home/username/spack/etc/spack
-    user             /home/username/.spack/
+    user             /home/username/.config/spack/
     site             /home/username/spack/etc/spack/site/
     defaults         /home/username/spack/etc/spack/defaults/
     defaults:darwin  /home/username/spack/etc/spack/defaults/darwin/
@@ -323,14 +329,14 @@ If your configurations look like this:
 
    config:
      install_tree:
-       root: $spack/opt/spack
+       root: $data_home/installs
      build_stage:
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
+     - $cache_home/stage
 
 
 .. code-block:: yaml
-   :caption: ``~/.spack/config.yaml``
+   :caption: ``~/.config/spack/config.yaml``
    :name: code-example-user-config-yaml
 
    config:
@@ -350,7 +356,7 @@ You can see the final, combined configuration with the ``spack config get <confi
        root: /some/other/directory
      build_stage:
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
+     - $cache_home/stage
 
 
 .. _config-prepend-append:
@@ -365,7 +371,7 @@ For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ``~/.spack/config.yaml``
+   :caption: ``~/.config/spack/config.yaml``
    :name: code-example-append-install-tree
 
    config:
@@ -382,14 +388,14 @@ Spack will then append to the lower-precedence configuration under the ``root`` 
        root: /some/other/directory/my/custom/suffix
      build_stage:
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
+     - $cache_home/stage
 
 
 Similarly, ``+:`` can be used to *prepend* to a path or name:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ``~/.spack/config.yaml``
+   :caption: ``~/.config/spack/config.yaml``
    :name: code-example-prepend-install-tree
 
    config:
@@ -412,7 +418,7 @@ For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ``~/.spack/config.yaml``
+   :caption: ``~/.config/spack/config.yaml``
    :name: code-example-override-config-section
 
    config::
@@ -455,13 +461,13 @@ The ``build_stage`` setting's value is an ordered list of directories:
    config:
      build_stage:
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
+     - $cache_home/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage`` paths:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/config.yaml``
+   :caption: ``~/.config/spack/config.yaml``
    :name: code-example-user-build-stage
 
    config:
@@ -470,7 +476,7 @@ Suppose the user configuration adds its *own* list of ``build_stage`` paths:
      - ~/mystage
 
 
-Spack will first look at the paths in the defaults ``config.yaml``, then the paths in the user's ``~/.spack/config.yaml``.
+Spack will first look at the paths in the defaults ``config.yaml``, then the paths in the user's ``~/.config/spack/config.yaml``.
 The list in the higher-precedence scope is *prepended* to the defaults.
 ``spack config get config`` shows the result:
 
@@ -485,7 +491,7 @@ The list in the higher-precedence scope is *prepended* to the defaults.
      - /lustre-scratch/$user/spack
      - ~/mystage
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
+     - $cache_home/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can *completely* override the lower-precedence scope using ``::``.
@@ -493,7 +499,7 @@ So if the user config looked like this:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ``~/.spack/config.yaml``
+   :caption: ``~/.config/spack/config.yaml``
    :name: code-example-override-build-stage
 
    config:
@@ -534,9 +540,13 @@ These are:
 
 * ``$env``: name of the currently active :ref:`environment <environments>`
 * ``$spack``: path to the prefix of this Spack installation
+* ``$spack_instance_id``: hash distinguishing co-installed Spack instances
+* ``$data_home``: the selected ``config:locations:data`` path
+* ``$state_home``: the selected ``config:locations:state`` path
+* ``$cache_home``: the selected ``config:locations:cache`` path
 * ``$tempdir``: default system temporary directory (as specified in Python's `tempfile.tempdir <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_ variable.
 * ``$user``: name of the current user
-* ``$user_cache_path``: user cache directory (``~/.spack`` unless :ref:`overridden <local-config-overrides>`)
+* ``$user_cache_path``: legacy alias for ``$state_home``
 * ``$architecture``: the architecture triple of the current host, as detected by Spack.
 * ``$arch``: alias for ``$architecture``.
 * ``$platform``: the platform of the current host, as detected by Spack.
@@ -619,16 +629,15 @@ For example, to see the fully merged ``config.yaml``, you can type:
      dirty: false
      build_jobs: 8
      install_tree:
-       root: $spack/opt/spack
+       root: $data_home/installs
      template_dirs:
      - $spack/templates
      directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
      build_stage:
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
-     - $spack/var/spack/stage
-     source_cache: $spack/var/spack/cache
-     misc_cache: ~/.spack/cache
+     - $cache_home/stage
+     source_cache: $data_home/downloads
+     misc_cache: $state_home/$spack_instance_id/cache
      locks: true
 
 Likewise, this will show the fully merged ``packages.yaml``:
@@ -668,10 +677,9 @@ If you do not know why Spack is behaving a certain way, this command can help yo
    /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
-   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $cache_home/stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $data_home/downloads
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $state_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
 You can see above that the ``build_jobs`` and ``debug`` settings are built-in and are not overridden by a configuration file.
@@ -686,13 +694,14 @@ Overriding Local Configuration
 Spack's ``system`` and ``user`` scopes provide ways for administrators and users to set global defaults for all Spack instances, but for use cases where one wants a clean Spack installation, these scopes can be undesirable.
 For example, users may want to opt out of global system configuration, or they may want to ignore their own home directory settings when running in a continuous integration environment.
 
-Spack also, by default, keeps various caches and user data in ``~/.spack``, but users may want to override these locations.
+Spack also, by default, keeps various caches and user data in XDG-compliant locations under ``~/.local/share/spack``, ``~/.local/state/spack``, and ``~/.cache/spack``, but users may want to override these locations.
+See :ref:`where_spack_writes_data` for details.
 
 Spack provides three environment variables that allow you to override or opt out of configuration locations:
 
 .. envvar:: SPACK_USER_CONFIG_PATH
 
-   Override the path to use for the ``user`` scope (``~/.spack`` by default).
+   Override the path to use for the ``user`` scope (``~/.config/spack`` by default).
 
 .. envvar:: SPACK_SYSTEM_CONFIG_PATH
 
@@ -701,42 +710,50 @@ Spack provides three environment variables that allow you to override or opt out
 .. envvar:: SPACK_DISABLE_LOCAL_CONFIG
 
    Set this environment variable to completely disable **both** the system and user configuration directories.
-   Spack will then only consider its own defaults and ``site`` configuration locations.
+   Spack will then only consider its own defaults and ``site`` configuration locations
+   (including the ``spack``, ``layout``, and ``isolate`` scopes).
 
-And one that allows you to move the default cache location:
+Isolating Spack instances
+-------------------------
 
-.. envvar:: SPACK_USER_CACHE_PATH
+If you want your spack instance to be completely independent of any others on the system (avoiding sharing of config or caches), then you can use ``spack isolate`` (described later) - which handles all components - or by modifying environment variables and editing config.
 
-   Override the default path to use for user data (misc_cache, tests, reports, etc.)
+Using ``spack isolate``
+^^^^^^^^^^^^^^^^^^^^^^^
 
-With these settings, if you want to isolate Spack in a CI environment, you can do this:
-
-.. code-block:: console
-
-  $ export SPACK_DISABLE_LOCAL_CONFIG=true
-  $ export SPACK_USER_CACHE_PATH=/tmp/spack
-
-
-``spack isolate``
-^^^^^^^^^^^^^^^^^^
-
-``spack isolate --path ISO_PATH`` provides a mechanism for isolating a single spack instance from ``~/.spack``.
-It modifies the current Spack instance by setting the ``user`` scope to use ``ISO_PATH`` and creating an ``isolate`` scope below the ``site`` scope that moves caches and stages that usually default to ``~/.spack`` to ``ISO_PATH`` instead.
+``spack isolate --path ISO_PATH`` provides a mechanism for isolating a single Spack instance from the user's home directory (configs in ``~/.config/spack`` and resources in ``~/.local/share/spack``, ``~/.local/state/spack``, and ``~/.cache/spack``).
+It modifies the current Spack instance by redirecting the ``user`` scope and resources into ``ISO_PATH``.
+This is implemented through configuration scopes, so higher-precedence scopes can override the generated settings for individual resources.
 This facilitates working with many independent Spack instances without worrying about overlapping configuration.
 ``spack isolate --undo`` reverts the changes to Spack made by ``spack isolate``.
 
 ``spack isolate --self`` is a shortcut that isolates Spack to its own prefix.
 
-Currently, ``spack isolate`` is a best-effort approach to isolation of a Spack instance.
-The default location Spack uses for cloning Git based package repositories can only be configured by the ``SPACK_USER_CACHE_PATH`` environment variable (see :ref:`automatic-repo-cloning`).
-``spack isolate --path ISO_PATH`` will explicitly set the destination of repositories that it knows about when invoked to a subdirectory of ``ISO_PATH``; however, newly added repositories without an explicit destination will be cloned to ``~/.spack``.
-To avoid this, either explicitly set ``SPACK_USER_CACHE_PATH`` or explicitly set the destination of newly added repositories to a different location (see :ref:`customizing-clone-location`).
-Furthermore, since ``spack isolate`` uses the user scope for isolation, setting ``SPACK_DISABLE_LOCAL_CONFIG`` will prevent future configuration changes from taking place in the isolated scope.
-You should unset this variable when using ``spack isolate``
+With default config and environment variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  .. warning::
+.. code-block:: console
 
-    This is an experimental feature that will be overhauled in v1.3, which will have big changes to how Spack is configured to store data and permit a more robust implementation.
+  $ export SPACK_DISABLE_LOCAL_CONFIG=true
+  $ export SPACK_STATE_HOME=/path1
+  $ export SPACK_DATA_HOME=/path2
+
+With config
+^^^^^^^^^^^
+
+.. code-block:: console
+
+   $ spack config get config
+   config:
+     locations:
+       data: ...
+       state: ...
+
+   $ cat etc/spack/include.yaml
+   # Override this list to remove the isolate scope
+   include: []
+
+This is effectively what ``spack isolate`` does, but you can exert more control over specifics (e.g. by only isolating specific components, or isolating them to different directories).
 
 .. _other-environment-variables:
 
@@ -780,7 +797,8 @@ A handful of additional environment variables influence Spack's runtime behavior
 
    Override the GnuPG home directory used by ``spack gpg`` and buildcache
    signing.
-   Defaults to ``$spack/opt/spack/gpg``.
+   When unset, Spack uses ``config:gpg_path``, which defaults to
+   ``$data_home/gpg``.
 
 .. envvar:: SPACK_GREP
 

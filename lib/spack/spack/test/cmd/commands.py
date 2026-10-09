@@ -278,8 +278,12 @@ def test_update_completion_arg(shell, tmp_path: pathlib.Path, monkeypatch):
 # Note: this test is never expected to be supported on Windows
 @pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
-def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
+def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, monkeypatch):
     """Make sure our shell tab completion scripts remain up-to-date."""
+
+    # Completion generation should use the normal scope graph, even when this
+    # test runs from an isolated Spack instance or inside an active environment.
+    monkeypatch.setenv("SPACK_DISABLE_ISOLATION", "1")
 
     width = 72
     lines = textwrap.wrap(
@@ -288,7 +292,7 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
         "update Spack's shell tab completion scripts by running:",
         width,
     )
-    lines.append("\n    spack commands --update-completion\n")
+    lines.append("\n    SPACK_DISABLE_ISOLATION=1 spack -E commands --update-completion\n")
     lines.extend(
         textwrap.wrap(
             "and adding the changed files (minus your global 'include:' scopes) "
