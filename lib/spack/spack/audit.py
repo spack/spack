@@ -475,6 +475,48 @@ def _check_patch_urls(pkgs, error_cls):
     return errors
 
 
+@package_directives
+def _patch_fixes_are_deprecation_labels(pkgs, error_cls):
+    """Reports labels in 'patch(fixes=...)' that no deprecated() directive of the patched
+    package declares.
+    """
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
+
+        # Patches that fix some label, by the name of the package they patch
+        fixing = collections.defaultdict(list)
+        fixing[pkg_name] = [x for patches in pkg_cls.patches.values() for x in patches if x.fixes]
+        for deps_by_name in pkg_cls.dependencies.values():
+            for dep_name, dep in deps_by_name.items():
+                for patches in (dep.patches or {}).values():
+                    fixing[dep_name].extend(x for x in patches if x.fixes)
+
+        for target, patches in fixing.items():
+            if not patches or not spack.repo.PATH.exists(target):
+                continue
+            target_cls = spack.repo.PATH.get_pkg_class(target)
+            labels = {
+                label
+                for entries in target_cls.deprecations.values()
+                for entry in entries
+                for label in entry.labels
+            }
+            for patch in patches:
+                for label in patch.fixes:
+                    if label in labels:
+                        continue
+                    name = getattr(patch, "relative_path", None) or patch.path_or_url
+                    summary = (
+                        f"{pkg_name}: patch '{name}' fixes '{label}', which is not a label of "
+                        f"any deprecated() directive of '{target}'"
+                    )
+                    errors.append(error_cls(summary, [f"in {filename}"]))
+
+    return errors
+
+
 @package_attributes
 def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
     """Ensure that packages don't override reserved names"""

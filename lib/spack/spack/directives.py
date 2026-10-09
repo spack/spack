@@ -330,6 +330,19 @@ class _Conflicts(NamedTuple):
         conflict_spec_list.append((get_spec(conflict_spec), msg_with_name))
 
 
+def _check_labels(labels: Optional[Sequence[str]], *, argument: str) -> None:
+    """Raise if the advisory labels passed to a directive argument are not a list of strings,
+    or contain the label reserved for ``version(..., deprecated=True)``.
+    """
+    if isinstance(labels, str):
+        raise DirectiveError(f"'{argument}' must be a list of strings, not a string")
+    if labels and LEGACY_DEPRECATION_LABEL in labels:
+        raise DirectiveError(
+            f"label '{LEGACY_DEPRECATION_LABEL}' in '{argument}' is reserved: Spack records it "
+            "for versions declared with 'deprecated=True'."
+        )
+
+
 @directive("deprecations", supports_when=False)
 def deprecated(
     spec: Optional[SpecType] = None,
@@ -353,11 +366,7 @@ def deprecated(
         labels: optional advisory identifiers (e.g. CVE, GHSA or PYSEC ids) this deprecation
             refers to. Users can skip the deprecation by allowing all of them.
     """
-    if isinstance(labels, (list, tuple)) and LEGACY_DEPRECATION_LABEL in labels:
-        raise DirectiveError(
-            f"label '{LEGACY_DEPRECATION_LABEL}' is reserved: Spack records it for versions "
-            "declared with 'deprecated=True', so that they can be selected apart."
-        )
+    _check_labels(labels, argument="labels")
     if reason == DeprecationReason.UNSPECIFIED.value and not msg:
         raise DirectiveError(
             f"reason '{reason}' requires a 'msg' argument: say why this spec is deprecated, "
@@ -689,6 +698,8 @@ def patch(
     reverse: bool = False,
     sha256: Optional[str] = None,
     archive_sha256: Optional[str] = None,
+    *,
+    fixes: Optional[Sequence[str]] = None,
 ) -> "_Patch":
     """Declare a patch to apply to package sources. A when spec can be provided to indicate that a
     particular patch should only be applied when the package's spec meets certain conditions.
@@ -697,6 +708,7 @@ def patch(
 
        patch("foo.patch", when="@1.0.0:")
        patch("https://example.com/foo.patch", sha256="...")
+       patch("cve-2026-1234.patch", when="@1.0", fixes=["CVE-2026-1234"])
 
     Args:
         url_or_filename: url or relative filename of the patch
@@ -707,9 +719,20 @@ def patch(
         sha256: sha256 sum of the patch, used to verify the patch (only required for URL patches)
         archive_sha256: sha256 sum of the *archive*, if the patch is compressed (only required for
             compressed URL patches)
+        fixes: labels of the ``deprecated()`` directives of the patched package that this patch
+            fixes. A spec with the patch applied is not refused for these labels.
     """
-
-    return _Patch(url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256)
+    _check_labels(fixes, argument="fixes")
+    return _Patch(
+        url_or_filename,
+        level,
+        when,
+        working_dir,
+        reverse,
+        sha256,
+        archive_sha256,
+        tuple(fixes or ()),
+    )
 
 
 class _Patch(NamedTuple):
@@ -720,11 +743,12 @@ class _Patch(NamedTuple):
     reverse: bool = False
     sha256: Optional[str] = None
     archive_sha256: Optional[str] = None
+    fixes: Tuple[str, ...] = ()
 
     def __call__(self, pkg: PackageType, dependency: Optional[Dependency] = None) -> None:
         """``pkg`` is the package that declares the patch; the patch file is looked up in its
         directory. The patch is added to ``dependency`` when set, otherwise to ``pkg`` itself."""
-        url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256 = self
+        url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256, fixes = self
         target: Union[PackageType, Dependency] = pkg if dependency is None else dependency
 
         if hasattr(pkg, "has_code") and not pkg.has_code:
@@ -760,10 +784,17 @@ class _Patch(NamedTuple):
                 ordering_key=ordering_key,
                 sha256=sha256,
                 archive_sha256=archive_sha256,
+                fixes=fixes,
             )
         else:
             patch = spack.patch.FilePatch(
-                pkg, url_or_filename, level, working_dir, reverse, ordering_key=ordering_key
+                pkg,
+                url_or_filename,
+                level,
+                working_dir,
+                reverse,
+                ordering_key=ordering_key,
+                fixes=fixes,
             )
 
         cur_patches.append(patch)

@@ -844,6 +844,25 @@ A directive can list several advisories, and users allow each of them separately
 The advisories listed together share the reason and severity of the directive, so advisories with different severities go in separate directives.
 See :ref:`package-deprecations-config` for how users allow them.
 
+.. _deprecate-patch-fixes:
+
+When a patch removes a vulnerability, list the labels it fixes with the ``fixes`` keyword of ``patch()``:
+
+.. code-block:: python
+
+   deprecated("@1.1.1t", reason="vuln", severity="high", labels=["CVE-2023-0286", "CVE-2023-0215"])
+   patch("cve-2023-0286.patch", when="@1.1.1t", fixes=["CVE-2023-0286"])
+
+A label is not refused on a spec that has a patch fixing it applied, and a deprecation is skipped once each of its labels is either fixed or allowed by the configuration.
+In this example ``openssl@1.1.1t`` is still refused for ``CVE-2023-0215``, unless the configuration allows that label.
+Deprecations without labels cannot be fixed by a patch, and neither can the reserved label ``version_deprecated``.
+
+A patch passed to ``depends_on(..., patches=...)`` can list ``fixes`` too.
+It fixes the labels only on the dependency of the package that declares it, so the same version is still refused anywhere else.
+
+Specs concretized before the patch was added to the recipe do not have it applied, so they are still refused until they are concretized again.
+``spack audit packages`` reports labels in ``fixes`` that no ``deprecated()`` directive of the patched package declares.
+
 Whether a deprecated version can be selected depends on the user's configuration.
 Users list the deprecations they allow, by severity, reason and labels, and Spack refuses the ones no entry in that list matches.
 This is a hard error both at concretization time and before the spec is installed.
@@ -2488,6 +2507,12 @@ Let's take the example patch from above and assume for some reason, it can only 
     #include "ad_lustre.h"
 
 Hence, the patch needs to be applied in the ``src/mpi`` subdirectory, and the ``working_dir="src/mpi"`` option would exactly do that.
+
+``fixes``
+"""""""""
+
+This lists the labels of the ``deprecated()`` directives of the patched package that the patch fixes.
+A spec with the patch applied is not refused for those labels, see :ref:`patches that fix a deprecation <deprecate-patch-fixes>`.
 
 Patch functions
 ^^^^^^^^^^^^^^^^^^^^^
