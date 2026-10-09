@@ -70,7 +70,6 @@ from spack.concretize_ui import ConcretizationPhase, ConcretizerUI, HeadlessUI
 from spack.enums import DeprecationSeverity
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
-from spack.util.lang import elide_list
 
 from .clauses import SpecClauseGenerator
 from .compat import default_clingo_control, make_error_control, symbol_name, symbol_string
@@ -93,6 +92,7 @@ from .error import (
     InvalidVersionError,
     OutputDoesNotSatisfyInputError,
     SpliceSerializationError,
+    UnsatisfiableModelError,
     UnsatisfiableSpecError,
 )
 from .input_analysis import create_counter, create_graph_analyzer
@@ -496,13 +496,9 @@ class DeprecationDetails(NamedTuple):
 
 class ErrorHandler:
     def __init__(
-        self,
-        model,
-        input_specs: List[spack.spec.Spec],
-        deprecation_details: Optional[Dict[DeprecationKey, DeprecationDetails]] = None,
+        self, model, deprecation_details: Optional[Dict[DeprecationKey, DeprecationDetails]] = None
     ):
         self.model = model
-        self.input_specs = input_specs
         self.full_model = None
         self.deprecation_details = deprecation_details or {}
 
@@ -619,27 +615,10 @@ class ErrorHandler:
             )
             raise spack.error.SpackError(msg) from e
 
-    @staticmethod
-    def _numbered(messages: List[str], start: int = 1) -> str:
-        return "\n".join(
-            f"    {number:2}. {msg}" for number, msg in enumerate(messages, start=start)
-        )
-
-    def raise_if_errors(self):
-        initial_error_args = extract_args(self.model, "error")
-        if not initial_error_args:
-            return
-
-        # Print initial error message before starting secondary solve for causal trees
-        input_specs = ", ".join(elide_list([f"`{s}`" for s in self.input_specs], 5))
-        header = f"failed to concretize {input_specs} for the following reasons:"
-        initial_messages = self.error_messages(initial_error_args)
-        tty.error(
-            header,
-            self._numbered(initial_messages),
-            "Analyzing the cause of the failure, this may take a moment...",
-        )
-
+    def reasons(self) -> List[str]:
+        """Return every reason the solve failed for, with its causes, which a second solve
+        derives. The model must have errors.
+        """
         error_causation = make_error_control()
 
         parent_dir = pathlib.Path(__file__).parent
@@ -658,23 +637,7 @@ class ErrorHandler:
             _ = error_causation.solve(on_model=on_model)
 
         # No choices so there will be only one model
-        error_args = extract_args(self.full_model, "error")
-        final_messages = self.error_messages(error_args)
-
-        # Print only the messages that were not part of the initial report, continuing
-        # its numbering
-        already_printed = set(initial_messages)
-        new_messages = [m for m in final_messages if m not in already_printed]
-        if new_messages:
-            tty.error(self._numbered(new_messages, start=len(initial_messages) + 1))
-        else:
-            tty.msg("No additional error causes discovered")
-
-        # The exception carries the full report so that it is self-contained for callers,
-        # but is marked as printed so the top-level handler does not print it again.
-        error = UnsatisfiableSpecError(f"{header}\n{self._numbered(final_messages)}")
-        error.printed = True
-        raise error
+        return self.error_messages(extract_args(self.full_model, "error"))
 
 
 def _raise_if_no_compiler_is_available(setup: "SpackSolverSetup") -> None:
@@ -806,23 +769,22 @@ class PyclingoDriver:
         # once done, construct the solve result
         result = Result(specs, repo=setup.context.repo)
         result.satisfiable = solve_result.satisfiable
-        best = min(models) if result.satisfiable else None
-        if best is None or extract_args(best[1], "error"):
-            _raise_if_no_compiler_is_available(setup)
-
         if not result.satisfiable:
+            _raise_if_no_compiler_is_available(setup)
             return result
+
+        min_cost, best_model = min(models)
+        if extract_args(best_model, "error"):
+            _raise_if_no_compiler_is_available(setup)
+            ui.on_phase(ConcretizationPhase.EXPLAIN)
+            reasons = ErrorHandler(best_model, setup.deprecation_details).reasons()
+            raise UnsatisfiableModelError(specs, reasons)
 
         ui.on_phase(ConcretizationPhase.BUILD)
         timer.start("construct_specs")
         builder = SpecBuilder(
             specs, repo=setup.context.repo, hash_lookup=setup.reusable_and_possible
         )
-        min_cost, best_model = best
-
-        # first check for errors
-        error_handler = ErrorHandler(best_model, specs, setup.deprecation_details)
-        error_handler.raise_if_errors()
 
         # build specs from spec attributes in the model
         spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
