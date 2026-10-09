@@ -209,8 +209,7 @@ def validate_view(env, view: Optional[str] = "default") -> None:
         env: the environment to validate
         view: the view name to validate
     """
-    # Simply call activate() and discard the result - it will trigger
-    # the same validation and error handling
+    # Call activate() and discard the result to trigger validation and error handling
     _ = activate(env, view)
 
 

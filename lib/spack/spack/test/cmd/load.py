@@ -397,7 +397,7 @@ def test_load_custom_prefix_inspections(
 
     modules_config = {
         "prefix_inspections": {
-            "bin": ["PATH", "MY_TOOLS"],  # Add MY_TOOLS alongside PATH
+            "bin": ["PATH", "MY_TOOLS"]  # Add MY_TOOLS alongside PATH
         }
     }
     mutable_config.update_config("modules", modules_config)

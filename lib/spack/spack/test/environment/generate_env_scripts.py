@@ -308,15 +308,6 @@ def test_custom_env_vars_in_activation_script(
 ):
     """Test that custom environment variables defined in spack.yaml env_vars section
     are applied when generating environment activation scripts.
-
-    Example workflow:
-        spack env create test
-        # Edit spack.yaml to add:
-        # env_vars:
-        #   set:
-        #     MY_SETTING: on
-        spack env activate test
-        echo $MY_SETTING  # Should print "on"
     """
     env_name = f"test_env_vars_{shell}"
     env("create", env_name)
@@ -346,17 +337,5 @@ def test_custom_env_vars_in_activation_script(
     with open(activate_path, "r", encoding="utf-8") as f:
         activate_content = f.read()
 
-    # Verify that MY_SETTING appears in the activation script
-    assert "MY_SETTING" in activate_content
-
-    # Verify that it's being set to "on"
-    if shell == "bat":
-        assert 'MY_SETTING' in activate_content and 'on' in activate_content
-    elif shell == "pwsh":
-        # PowerShell: $env:MY_SETTING = "on"
-        assert "MY_SETTING" in activate_content and "on" in activate_content
-    else:
-        # sh, csh, fish: export MY_SETTING=on or similar
-        assert "MY_SETTING" in activate_content and "on" in activate_content
-
+    assert "MY_SETTING" in activate_content and "on" in activate_content
     assert "MY_OTHER_VAR" in activate_content

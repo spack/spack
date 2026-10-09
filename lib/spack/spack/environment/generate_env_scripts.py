@@ -19,7 +19,8 @@ def _get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") -
     Returns:
         A list of commands to activate the environment
     """
-    env_mods = spack.environment.shell.activate(env=env, view=view)
+    with env.manifest.use_config():
+        env_mods = spack.environment.shell.activate(env=env, view=view)
 
     cmds = ""
     cmds += spack.environment.shell.activate_commands(env, shell, view)
@@ -68,16 +69,20 @@ def _script_matches_env(env, script_path: str) -> bool:
     return True
 
 
-def _script_needs_update(lockfile_mtime: float, script_path: str) -> bool:
+def _script_needs_update(yaml_mtime: float, lockfile_mtime: float, script_path: str) -> bool:
     """Check if a script needs to be regenerated.
 
     Args:
         lockfile_mtime: The modification time of the environment's lockfile
+        yaml_mtime: The modification time of the environment's manifest file
         script_path: Path to the cached activation/deactivation script
     Returns:
-        True if the script doesn't exist or is older than the lockfile
+        True if the script doesn't exist or is older than the yamlfile or lockfile
     """
     if not os.path.isfile(script_path):
+        return True
+
+    if yaml_mtime > os.stat(script_path).st_mtime:
         return True
 
     # Script does NOT need update if no lockfile exists
@@ -96,7 +101,8 @@ def _write_env_script(
     # Ensure .env subdir exists
     env.ensure_env_directory_exists(dot_env=True)
 
-    # Get lockfile modification time
+    # Get yamlfile & lockfile modification time
+    yaml_mtime = os.stat(env.manifest_path).st_mtime if os.path.isfile(env.manifest_path) else 0.0
     lockfile_mtime = os.stat(env.lock_path).st_mtime if os.path.isfile(env.lock_path) else 0.0
 
     if activate:
@@ -109,9 +115,9 @@ def _write_env_script(
     for shell in shells:
         script_path = path_to_env_script(env, shell, script_type, view)
 
-        if _script_needs_update(lockfile_mtime, script_path) or not _script_matches_env(
-            env, script_path
-        ):
+        if _script_needs_update(
+            yaml_mtime, lockfile_mtime, script_path
+        ) or not _script_matches_env(env, script_path):
             if activate:
                 cmds = _get_activate_commands(env, view=view, shell=shell)
             else:
