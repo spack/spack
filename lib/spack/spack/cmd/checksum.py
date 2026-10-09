@@ -211,11 +211,17 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
     num_total = len(version_hashes)
 
     for version, sha in version_hashes.items():
-        if version not in pkg.versions:
+        expected_sha = None
+        for when, version_def in pkg.version_definitions(version):
+            if pkg.spec.satisfies(when):
+                expected_sha = version_def.kwargs.get("sha256")
+                break
+
+        if expected_sha is None:
             msg = "No previous checksum"
             status = "-"
 
-        elif sha == pkg.versions[version]["sha256"]:
+        elif sha == expected_sha:
             msg = "Correct"
             status = "="
             num_verified += 1

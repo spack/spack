@@ -164,3 +164,13 @@ def test_info_lists_directive_deprecated_versions():
     assert "None" in safe_section.split("Safe versions:")[1]
     assert "1.0" in deprecated_section
     assert "2.0" in deprecated_section
+
+
+def test_info_when_versions():
+    output = info("when-versions platform=linux")
+    assert "when platform=linux" in output
+    assert "when platform=darwin" not in output
+
+    output = info("when-versions")
+    assert "when platform=linux" in output
+    assert "when platform=darwin" in output
