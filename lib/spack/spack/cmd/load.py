@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import os
 import sys
 
 import spack.cmd
@@ -108,7 +107,7 @@ def load(parser, args):
         else:
             load_script_path = spec_script.path_to_load_shell_script(spec, shell)
 
-            if not os.path.isfile(load_script_path):
+            if spec_script.script_needs_update(load_script_path):
                 spack_dir = spack.store.STORE.layout.metadata_path(spec)
 
                 try:

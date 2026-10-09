@@ -415,3 +415,33 @@ def test_load_custom_prefix_inspections(
 
     assert any(prepend_cmd in line for line in load_cmds.splitlines())
     assert os.path.join(spec.prefix, "bin") in load_cmds
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_regenerates_on_modules_config_change(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_config
+):
+    """Test that spack load regenerates scripts when modules.yaml changes."""
+
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    load(shell, "mpileaks")
+
+    var = "MY_CUSTOM_VAR"
+    if shell == "--bat":
+        var = f'"{var}"'
+
+    prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} {var}"
+
+    modules_config = {"prefix_inspections": {"bin": ["PATH", "MY_CUSTOM_VAR"]}}
+    mutable_config.update_config("modules", modules_config)
+
+    load(shell, "mpileaks")
+
+    updated_load_cmds = _get_load_cmds_from_script(spec, shell)
+
+    assert any(prepend_cmd in line for line in updated_load_cmds.splitlines())
+    assert os.path.join(spec.prefix, "bin") in updated_load_cmds

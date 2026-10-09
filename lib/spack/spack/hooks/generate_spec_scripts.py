@@ -8,6 +8,7 @@ import sys
 from typing import Tuple
 
 import spack.bootstrap.config
+import spack.config
 import spack.repo
 import spack.store
 import spack.user_environment as uenv
@@ -58,17 +59,6 @@ def path_to_unload_shell_script(spec, shell: str) -> str:
     return _get_shell_script_path(spec, shell, load=False)
 
 
-def write_script(shell_script_path: str, mods: str, shell: str):
-    """Helper function to write spec's shell scripts
-
-    Args:
-        shell_script_path: Path to the shell script.
-        mods: Modifications to write to the script.
-        shell: Shell type
-    """
-    uenv.write_shell_script(shell_script_path, mods, shell)
-
-
 def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment.
 
@@ -104,6 +94,46 @@ def get_environment_modifications(spec, shell, repo=None) -> Tuple[str, str]:
     unload_mods = unload_env_mod.shell_modifications(shell)
 
     return load_mods, unload_mods
+
+
+def script_needs_update(script_path: str) -> bool:
+    """Check if a script needs regeneration.
+
+    Args:
+        script_path: The path to the script
+
+    Returns:
+        True if the script needs to be regenerated
+    """
+    if not os.path.isfile(script_path):
+        return True
+
+    script_mtime = os.path.getmtime(script_path)
+
+    for scope_name in spack.config.CONFIG.scopes.keys():
+        try:
+            modules_config_path = spack.config.CONFIG.get_config_filename(scope_name, "modules")
+            if (
+                os.path.exists(modules_config_path)
+                and os.path.getmtime(modules_config_path) > script_mtime
+            ):
+                return True
+        except Exception:
+            # Some scopes may not support get_config_filename
+            continue
+
+    return False
+
+
+def write_script(shell_script_path: str, mods: str, shell: str):
+    """Helper function to write spec's shell scripts
+
+    Args:
+        shell_script_path: Path to the shell script.
+        mods: Modifications to write to the script.
+        shell: Shell type
+    """
+    uenv.write_shell_script(shell_script_path, mods, shell)
 
 
 def source_script(script_path: str, shell: str) -> str:

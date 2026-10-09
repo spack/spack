@@ -100,7 +100,7 @@ def unload(parser, args):
         else:
             unload_script_path = spec_script.path_to_unload_shell_script(spec, shell)
 
-            if not os.path.isfile(unload_script_path):
+            if spec_script.script_needs_update(unload_script_path):
                 spack_dir = spack.store.STORE.layout.metadata_path(spec)
 
                 try:
