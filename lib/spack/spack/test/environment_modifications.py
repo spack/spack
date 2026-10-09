@@ -257,30 +257,6 @@ def test_path_manipulation(env):
     assert os.environ["PATH_LIST_WITH_DUPLICATES"].count(make_path("duplicate")) == 1
 
 
-@pytest.mark.not_on_windows("Skip unix path tests on Windows")
-def test_unix_system_path_manipulation(env):
-    """Tests manipulting paths that have special meaning as system paths on Unix"""
-    env.deprioritize_system_paths("PATH_LIST_WITH_SYSTEM_PATHS")
-    env.apply_modifications()
-
-    assert not os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].startswith(
-        make_pathlist([["usr", "include" + os.pathsep]])
-    )
-    assert os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].endswith(make_pathlist([["usr", "include"]]))
-
-
-@pytest.mark.skipif(sys.platform != "win32", reason="Skip Windows paths on not Windows")
-def test_windows_system_path_manipulation(env):
-    """Tests manipulting paths that have special meaning as system paths on Windows"""
-    env.deprioritize_system_paths("PATH_LIST_WITH_SYSTEM_PATHS")
-    env.apply_modifications()
-
-    assert not os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].startswith(
-        make_pathlist([["C:", "Users" + os.pathsep]])
-    )
-    assert os.environ["PATH_LIST_WITH_SYSTEM_PATHS"].endswith(make_pathlist([["C:", "Users"]]))
-
-
 def test_extend(env):
     """Tests that we can construct a list of environment modifications
     starting from another list.

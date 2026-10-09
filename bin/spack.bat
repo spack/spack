@@ -183,11 +183,11 @@ if NOT "%_sp_args%"=="%_sp_args:--help=%" (
 ) else if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
     for /f "tokens=* USEBACKQ" %%I in (
         `call python %spack% %_sp_flags% env deactivate --bat %_sp_args:deactivate=%`
-    ) do %%I
+    ) do call %%I
 ) else if NOT "%_sp_args%"=="%_sp_args:activate=%" (
     for /f "tokens=* USEBACKQ" %%I in (
         `python %spack% %_sp_flags% env activate --bat %_sp_args:activate=%`
-    ) do %%I
+    ) do call %%I
 ) else (
     goto :default_case
 )
@@ -211,7 +211,7 @@ if NOT "%_sp_args%"=="%_sp_args:--help=%" (
 
 for /f "tokens=* USEBACKQ" %%I in (
     `python %spack% %_sp_flags% %_sp_subcommand% --bat %_sp_args%`
-    ) do %%I
+    ) do call %%I
 
 goto :end_switch
 
