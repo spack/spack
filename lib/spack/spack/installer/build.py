@@ -8,6 +8,7 @@ the :func:`worker_function` entry point, the install steps it drives, and the lo
 :class:`ChildInfo` handle the parent uses to talk to the child. See :mod:`spack.installer`
 for the overall design."""
 
+import errno
 import glob
 import io
 import json
@@ -21,7 +22,7 @@ import tempfile
 import traceback
 from gzip import GzipFile
 from multiprocessing import Process
-from typing import TYPE_CHECKING, List, NamedTuple, Optional
+from typing import TYPE_CHECKING, List, NamedTuple, Optional, Tuple
 
 from spack.vendor.typing_extensions import Protocol
 
@@ -32,14 +33,17 @@ import spack.config
 import spack.error
 import spack.hooks
 import spack.mirrors.mirror
+import spack.paths
 import spack.repo
 import spack.sandbox
+import spack.sandbox_namespaces
 import spack.spec
 import spack.store
 import spack.url_buildcache
 import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
+import spack.util.spack_yaml as syaml
 import spack.util.timer
 import spack.util.tty
 from spack.installer.base import (
@@ -90,6 +94,157 @@ class ProcessLike(Protocol):
     def is_alive(self) -> bool: ...
 
     def join(self, timeout: Optional[float] = None) -> None: ...
+
+
+class NamespacePolicyInputPaths(NamedTuple):
+    """Trusted host paths selected before namespace policy compilation."""
+
+    hidden_roots: Tuple[str, ...]
+    compiler_paths: Tuple[str, ...]
+    tool_paths: Tuple[str, ...]
+    header_paths: Tuple[str, ...]
+    runtime_paths: Tuple[str, ...]
+    temporary_paths: Tuple[str, ...]
+
+
+SANDBOX_POLICY_PATH = os.path.join(spack.paths.share_path, "sandbox", "sandbox.yaml")
+LINUX_HEADER_POLICY_PATH = os.path.join(
+    spack.paths.share_path, "sandbox", "linux-header-policy.yaml"
+)
+
+
+def _policy_error(policy_name: str, path: str, key: str, detail: str) -> spack.error.InstallError:
+    return spack.error.InstallError(f"Invalid {policy_name} key {key!r} in {path}: {detail}")
+
+
+def _load_policy_document(policy_name: str, path: str):
+    try:
+        with open(path, encoding="utf-8") as stream:
+            policy = syaml.load(stream)
+    except (OSError, syaml.SpackYAMLError) as error:
+        raise spack.error.InstallError(f"Cannot load {policy_name} {path}: {error}") from error
+
+    if not isinstance(policy, dict):
+        raise _policy_error(policy_name, path, "<document>", "expected a mapping")
+    if type(policy.get("version")) is not int or policy["version"] != 1:
+        raise _policy_error(policy_name, path, "version", "expected integer 1")
+    return policy
+
+
+def _validate_string_list(policy_name: str, path: str, policy: dict, key: str) -> None:
+    value = policy.get(key)
+    if not isinstance(value, list) or not all(isinstance(entry, str) for entry in value):
+        raise _policy_error(policy_name, path, key, "expected a list of strings")
+
+
+def _validate_absolute_path_list(policy_name: str, path: str, policy: dict, key: str) -> None:
+    _validate_string_list(policy_name, path, policy, key)
+    if any(not os.path.isabs(entry) for entry in policy[key]):
+        raise _policy_error(policy_name, path, key, "expected absolute paths")
+
+
+def _load_sandbox_policy(path: str = SANDBOX_POLICY_PATH) -> dict:
+    """Load and validate the shipped namespace sandbox compatibility policy."""
+    policy_name = "sandbox policy"
+    policy = _load_policy_document(policy_name, path)
+    if "commands" in policy:
+        raise _policy_error(
+            policy_name, path, "commands", "Landlock command stubs are unsupported"
+        )
+
+    list_keys = (
+        "host_runtime_read_paths",
+        "file_runtime_read_paths",
+        "compiler_languages",
+        "compiler_programs",
+        "binutils_programs",
+        "coreutils_install_programs",
+        "coreutils_file_programs",
+        "coreutils_util_programs",
+        "build_utilities_programs",
+        "script_interpreter_programs",
+        "compiler_files",
+        "stage_programs",
+        "device_nodes",
+    )
+    for key in list_keys:
+        _validate_string_list(policy_name, path, policy, key)
+    for key in ("hidden_roots", "replacement_roots"):
+        _validate_absolute_path_list(policy_name, path, policy, key)
+
+    aliases = policy.get("compiler_driver_aliases")
+    languages = policy.get("compiler_languages")
+    if not isinstance(aliases, dict) or set(aliases) != set(languages):
+        raise _policy_error(
+            policy_name,
+            path,
+            "compiler_driver_aliases",
+            "expected exactly one string-list entry for each compiler language",
+        )
+    for language in languages:
+        aliases_for_language = aliases.get(language)
+        if not isinstance(aliases_for_language, list) or not all(
+            isinstance(entry, str) for entry in aliases_for_language
+        ):
+            raise _policy_error(
+                policy_name,
+                path,
+                f"compiler_driver_aliases.{language}",
+                "expected a list of strings",
+            )
+    return policy
+
+
+def _validate_relative_header_paths(path: str, policy: dict, section: str, key: str) -> None:
+    full_key = f"{section}.{key}"
+    value = policy[section].get(key)
+    if not isinstance(value, list) or not all(isinstance(entry, str) for entry in value):
+        raise _policy_error("Linux header policy", path, full_key, "expected a list of strings")
+    for entry in value:
+        normalized = entry.replace("\\", "/")
+        if (
+            not normalized
+            or os.path.isabs(entry)
+            or normalized.startswith("/")
+            or ".." in normalized.split("/")
+        ):
+            raise _policy_error(
+                "Linux header policy", path, full_key, f"unsafe relative path {entry!r}"
+            )
+
+
+def _load_linux_header_policy(path: str = LINUX_HEADER_POLICY_PATH) -> dict:
+    """Load and validate the shipped Linux system-header policy."""
+    policy = _load_policy_document("Linux header policy", path)
+    include_root = policy.get("system_include_root")
+    if not isinstance(include_root, str) or not os.path.isabs(include_root):
+        raise _policy_error(
+            "Linux header policy", path, "system_include_root", "expected an absolute path"
+        )
+
+    for section in ("glibc", "linux"):
+        value = policy.get(section)
+        if not isinstance(value, dict):
+            raise _policy_error("Linux header policy", path, section, "expected a mapping")
+        required_keys = (
+            ("files", "directories", "target_files", "target_directories")
+            if section == "glibc"
+            else ("directories", "target_directories")
+        )
+        for key in required_keys:
+            _validate_relative_header_paths(path, policy, section, key)
+    libstdcxx = policy.get("libstdcxx")
+    if (
+        not isinstance(libstdcxx, dict)
+        or type(libstdcxx.get("maximum_major_for_non_gcc")) is not int
+    ):
+        raise _policy_error(
+            "Linux header policy",
+            path,
+            "libstdcxx.maximum_major_for_non_gcc",
+            "expected an integer",
+        )
+    return policy
 
 
 class ChildInfo:
@@ -507,8 +662,16 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
     os.dup2(sys.stdin.fileno(), 0)
 
-    # Start the tee thread to forward output to the log file and parent process.
-    tee = Tee(tee_control_r, tee_control_w, parent, log_path)
+    tee, state_stream, sandbox = _start_worker_output(
+        spack.config.CONFIG.get("config:sandbox", {}),
+        state,
+        tee_control_r,
+        tee_control_w,
+        parent,
+        log_path,
+        spec=spec,
+        stage_path=spec.package.stage.path,
+    )
 
     # Use closefd=False because of the connection objects. Use line buffering.
     # Replace sys.stdout/stderr AFTER the Tee redirected fds 1/2 so Python creates FileIO
@@ -521,12 +684,11 @@ def worker_function(
     sys.stderr = os.fdopen(
         sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
     )
-    state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
     try:
         with PrefixPivoter(spec.prefix, request.keep_prefix):
-            _install(request, state_stream, spack.store.STORE)
+            _install(request, state_stream, spack.store.STORE, sandbox=sandbox)
     except spack.error.StopPhase:
         exit_code = ExitCode.STOPPED_AT_PHASE
     except ProcessError as e:
@@ -625,39 +787,328 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
         spack.util.tty.debug(e)
 
 
-def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> None:
+def default_hide_as_empty_dirs(spec: spack.spec.Spec) -> List[str]:
+    """Return host directories hidden as empty by default for this build.
+
+    The host ``/usr/share/aclocal`` directory is hidden unless the spec has an
+    external ``autoconf`` dependency, because a host autoconf legitimately relies
+    on its own system macro directory.
+    """
+    hidden_dirs = []
+    if not any(dep.name == "autoconf" and dep.external for dep in spec.traverse(root=False)):
+        hidden_dirs.append("/usr/share/aclocal")
+    return hidden_dirs
+
+
+def namespace_filesystem_policy_from_inputs(
+    config: dict, spec: spack.spec.Spec, stage_path: str
+) -> spack.sandbox_namespaces.NamespaceFilesystemPolicy:
+    """Classify trusted installer inputs without changing the worker filesystem."""
+    read_only_paths = [str(dep.prefix) for dep in spec.traverse(root=False) if not dep.external]
+    read_only_paths.append(os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"))
+    read_only_paths.extend(
+        os.path.join(upstream_db.root, "bin", "sbang")
+        for upstream_db in spack.store.STORE.upstreams or []
+    )
+    read_only_paths.extend(config.get("allow_read", []))
+
+    read_write_paths = [stage_path, str(spec.prefix), tempfile.gettempdir(), os.devnull]
+    read_write_paths.extend(config.get("allow_write", []))
+
+    def existing_identity_mounts(paths):
+        resolved_paths = []
+        for path in paths:
+            resolved = os.path.realpath(os.path.abspath(path))
+            if os.path.exists(resolved):
+                resolved_paths.append(resolved)
+        minimal_paths = []
+        for path in sorted(set(resolved_paths)):
+            if any(
+                parent != path and os.path.commonpath((parent, path)) == parent
+                for parent in minimal_paths
+            ):
+                continue
+            minimal_paths.append(path)
+        return ((path, path) for path in minimal_paths)
+
+    return spack.sandbox_namespaces.build_namespace_filesystem_policy(
+        (path for path in default_hide_as_empty_dirs(spec) if os.path.isdir(path)),
+        existing_identity_mounts(read_only_paths),
+        existing_identity_mounts(read_write_paths),
+    )
+
+
+def namespace_filesystem_policy_and_plan_from_inputs(
+    config: dict,
+    spec: spack.spec.Spec,
+    stage_path: str,
+    mount_plan_stage: str,
+    selected_paths: NamespacePolicyInputPaths,
+) -> Tuple[
+    spack.sandbox_namespaces.NamespaceFilesystemPolicy, spack.sandbox_namespaces.NamespaceMountPlan
+]:
+    """Compile a trusted selected-tree policy without activating it.
+
+    Host compiler, tool, header, runtime, and scoped temporary paths are
+    explicit because a concrete compiler prefix such as ``/usr`` is too broad
+    to restore below a hidden tree. Active package repositories and immutable
+    Spack source subtrees are selected from trusted process state.
+    """
+
+    required_categories = (
+        ("hidden root", selected_paths.hidden_roots),
+        ("compiler", selected_paths.compiler_paths),
+        ("tool", selected_paths.tool_paths),
+        ("header", selected_paths.header_paths),
+        ("runtime", selected_paths.runtime_paths),
+        ("temporary", selected_paths.temporary_paths),
+    )
+    for category, paths in required_categories:
+        if not paths:
+            raise spack.sandbox_namespaces.NamespaceSetupError(
+                errno.EINVAL,
+                "select namespace policy inputs",
+                f"no {category} paths were selected",
+            )
+
+    repositories = tuple(spack.repo.PATH.repos)
+    repository_roots = tuple(repo.root for repo in repositories)
+    if not repository_roots:
+        raise spack.sandbox_namespaces.NamespaceSetupError(
+            errno.EINVAL,
+            "select namespace policy inputs",
+            "no package repository roots were selected",
+        )
+    spack_source_paths = (
+        spack.paths.bin_path,
+        spack.paths.lib_path,
+        spack.paths.share_path,
+        spack.paths.etc_path,
+    )
+
+    read_only_paths = [str(dep.prefix) for dep in spec.traverse(root=False) if not dep.external]
+    for _, paths in required_categories[1:-1]:
+        read_only_paths.extend(paths)
+    read_only_paths.extend(repository_roots)
+    read_only_paths.extend(spack_source_paths)
+    read_only_paths.extend(config.get("allow_read", []))
+
+    sbang_paths = [os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang")]
+    sbang_paths.extend(
+        os.path.join(upstream_db.root, "bin", "sbang")
+        for upstream_db in spack.store.STORE.upstreams or []
+    )
+    read_only_paths.extend(sbang_paths)
+
+    read_write_paths = [stage_path, str(spec.prefix), os.devnull]
+    read_write_paths.extend(selected_paths.temporary_paths)
+    read_write_paths.extend(config.get("allow_write", []))
+
+    def canonical_required_paths(paths):
+        result = []
+        for path in paths:
+            absolute = os.path.abspath(path)
+            resolved = os.path.realpath(absolute)
+            if not os.path.exists(resolved):
+                raise spack.sandbox_namespaces.NamespaceSetupError(
+                    errno.ENOENT,
+                    "select namespace policy inputs",
+                    f"required path does not exist: {path}",
+                )
+            if absolute != resolved:
+                raise spack.sandbox_namespaces.NamespaceSetupError(
+                    errno.EINVAL,
+                    "select namespace policy inputs",
+                    f"required path is not canonical: {path} resolves to {resolved}",
+                )
+            result.append(resolved)
+        return tuple(sorted(set(result)))
+
+    requested_hidden_roots = canonical_required_paths(selected_paths.hidden_roots)
+    requested_read_only = canonical_required_paths(read_only_paths)
+    requested_read_write = canonical_required_paths(read_write_paths)
+
+    def minimal_paths(paths):
+        result = []
+        for path in paths:
+            if any(
+                parent == path or os.path.commonpath((parent, path)) == parent for parent in result
+            ):
+                continue
+            result.append(path)
+        return tuple(result)
+
+    effective_read_only = minimal_paths(requested_read_only)
+    effective_read_write = minimal_paths(requested_read_write)
+    mount_targets = effective_read_only + effective_read_write
+
+    candidate_hidden_roots = list(requested_hidden_roots)
+    for target in mount_targets:
+        parent = os.path.dirname(target)
+        if parent == os.path.sep:
+            raise spack.sandbox_namespaces.NamespaceSetupError(
+                errno.EINVAL,
+                "select namespace policy hidden roots",
+                f"cannot isolate a top-level path without hiding the filesystem root: {target}",
+            )
+        candidate_hidden_roots.append(parent)
+    hidden_roots = minimal_paths(tuple(sorted(set(candidate_hidden_roots))))
+
+    policy = spack.sandbox_namespaces.build_namespace_filesystem_policy(
+        hidden_roots,
+        ((path, path) for path in effective_read_only),
+        ((path, path) for path in effective_read_write),
+    )
+
+    def assert_covered(paths, mounts, access):
+        targets = tuple(mount.target for mount in mounts)
+        for path in paths:
+            if not any(
+                target == path or os.path.commonpath((target, path)) == target
+                for target in targets
+            ):
+                raise spack.sandbox_namespaces.NamespaceSetupError(
+                    errno.EINVAL,
+                    "validate namespace policy coverage",
+                    f"{access} path is not represented by the policy: {path}",
+                )
+
+    assert_covered(requested_read_only, policy.read_only_mounts, "read-only")
+    assert_covered(requested_read_write, policy.read_write_mounts, "read-write")
+    plan = spack.sandbox_namespaces.build_namespace_mount_plan_from_policy(
+        policy, mount_plan_stage
+    )
+    return policy, plan
+
+
+def _prepare_namespace_sandbox_before_threads(
+    config: dict, spec: spack.spec.Spec, stage_path: str
+) -> Optional[spack.sandbox.Sandbox]:
+    """Prepare the namespace view and drop mount authority before ``Tee``.
+
+    The worker is still single-threaded here. The returned sandbox is reused
+    after recipe-controlled setup so that later code only grants and applies
+    Landlock; it cannot create additional mounts.
+    """
+    if not config.get("enable", False):
+        return None
+
+    spack.sandbox_namespaces.freeze_namespace_sandbox_capability()
+    try:
+        sandbox = spack.sandbox.get_sandbox()
+    except spack.sandbox.SandboxError as error:
+        raise spack.error.InstallError(f"Cannot enable build sandbox: {error}") from error
+
+    if isinstance(sandbox, spack.sandbox_namespaces.NamespaceSandbox):
+        hidden_dirs = default_hide_as_empty_dirs(spec)
+        if not sandbox.prepare_mount_tree(hidden_dirs, stage_path):
+            spack.util.tty.warn(
+                "Build sandbox could not mask host directories; kernel namespaces unavailable"
+            )
+        elif not sandbox.drop_mount_authority():
+            raise spack.error.InstallError("Cannot drop namespace mount authority")
+    return sandbox
+
+
+def _start_tee_after_namespace(
+    config: dict,
+    tee_control_r: IpcChannel,
+    tee_control_w: Optional[IpcChannel],
+    parent: IpcChannel,
+    log_path: str,
+    spec: Optional[spack.spec.Spec] = None,
+    stage_path: Optional[str] = None,
+):
+    sandbox = None
+    if config.get("enable", False):
+        assert spec is not None and stage_path is not None
+        sandbox = _prepare_namespace_sandbox_before_threads(config, spec, stage_path)
+    return Tee(tee_control_r, tee_control_w, parent, log_path), sandbox
+
+
+def _start_worker_output(
+    config: dict,
+    state: IpcChannel,
+    tee_control_r: IpcChannel,
+    tee_control_w: Optional[IpcChannel],
+    parent: IpcChannel,
+    log_path: str,
+    spec: Optional[spack.spec.Spec] = None,
+    stage_path: Optional[str] = None,
+):
+    state_stream = make_state_stream(state)
+    try:
+        tee, sandbox = _start_tee_after_namespace(
+            config, tee_control_r, tee_control_w, parent, log_path, spec, stage_path
+        )
+    except BaseException:
+        error = traceback.format_exc()
+        try:
+            with open(log_path, "a", encoding="utf-8") as stream:
+                stream.write(error)
+        except OSError:
+            print(error, file=sys.stderr)
+        state_stream.close()
+        sys.exit(ExitCode.BUILD_ERROR)
+    return tee, state_stream, sandbox
+
+
+def _enable_sandbox(
+    config: dict,
+    spec: spack.spec.Spec,
+    stage_path: str,
+    sandbox: Optional[spack.sandbox.Sandbox] = None,
+) -> None:
     if not config.get("enable", False):
         return
 
-    try:
-        sandbox = spack.sandbox.get_sandbox()
-    except spack.sandbox.SandboxError as e:
-        raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
+    namespace_prepared = sandbox is not None
+    if sandbox is None:
+        try:
+            sandbox = spack.sandbox.get_sandbox()
+        except spack.sandbox.SandboxError as e:
+            raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
-    for dep in spec.traverse(root=False):
-        if not dep.external:
-            sandbox.allow_read(dep.prefix)
-
-    sandbox.allow_write(stage_path)
-    sandbox.allow_write(spec.prefix)
-
-    # POSIX prescribes /tmp and /dev/null are present. In the future we can consider setting
-    # TMPPATH to a sibling of the stage path to isolate concurrent builds better.
-    sandbox.allow_write(tempfile.gettempdir())
-    sandbox.allow_write(os.devnull)
-
-    # Allow read access to sbang, which might be needed to run build scripts.
-    sandbox.allow_read(os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"))
-    for upstream_db in spack.store.STORE.upstreams or []:
-        sandbox.allow_read(os.path.join(upstream_db.root, "bin", "sbang"))
-
-    # User-configured paths
-    for p in config.get("allow_read", []):
-        sandbox.allow_read(p)
-    for p in config.get("allow_write", []):
-        sandbox.allow_write(p)
+    namespace_module = getattr(spack, "sandbox_namespaces", None)
+    # Direct callers prepare the namespace view here. The install worker hands
+    # in an already-prepared instance after its mount authority was dropped.
+    if (
+        namespace_module is not None
+        and isinstance(sandbox, namespace_module.NamespaceSandbox)
+        and not namespace_prepared
+    ):
+        hidden_dirs = default_hide_as_empty_dirs(spec)
+        if not sandbox.prepare_mount_tree(hidden_dirs, stage_path):
+            spack.util.tty.warn(
+                "Build sandbox could not mask host directories; kernel namespaces unavailable"
+            )
+        elif not sandbox.drop_mount_authority():
+            raise spack.error.InstallError("Cannot drop namespace mount authority")
 
     try:
+        for dep in spec.traverse(root=False):
+            if not dep.external:
+                sandbox.allow_read(dep.prefix)
+
+        sandbox.allow_write(stage_path)
+        sandbox.allow_write(spec.prefix)
+
+        # POSIX prescribes /tmp and /dev/null are present. In the future we can consider setting
+        # TMPPATH to a sibling of the stage path to isolate concurrent builds better.
+        sandbox.allow_write(tempfile.gettempdir())
+        sandbox.allow_write(os.devnull)
+
+        # Allow read access to sbang, which might be needed to run build scripts.
+        sandbox.allow_read(os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"))
+        for upstream_db in spack.store.STORE.upstreams or []:
+            sandbox.allow_read(os.path.join(upstream_db.root, "bin", "sbang"))
+
+        # User-configured paths
+        for p in config.get("allow_read", []):
+            sandbox.allow_read(p)
+        for p in config.get("allow_write", []):
+            sandbox.allow_write(p)
+
         sandbox.apply(block_network=not config.get("allow_network", True))
     except spack.sandbox.SandboxError as e:
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
@@ -683,7 +1134,10 @@ def _rewire_no_db(
 
 
 def _install(
-    request: BuildRequest, state_stream: io.TextIOWrapper, store: spack.store.Store
+    request: BuildRequest,
+    state_stream: io.TextIOWrapper,
+    store: spack.store.Store,
+    sandbox: Optional[spack.sandbox.Sandbox] = None,
 ) -> None:
     """Install a spec from build cache or source."""
     spec, explicit, install_policy = request.spec, request.explicit, request.install_policy
@@ -781,7 +1235,9 @@ def _install(
         if stop_at is not None and stop_at not in builder.phases:
             raise spack.error.InstallError(f"'{stop_at}' is not a valid phase for {pkg.name}")
 
-        _enable_sandbox(spack.config.CONFIG.get("config:sandbox", {}), spec, stage.path)
+        _enable_sandbox(
+            spack.config.CONFIG.get("config:sandbox", {}), spec, stage.path, sandbox=sandbox
+        )
 
         for phase in builder:
             if stop_before is not None and phase.name == stop_before:
