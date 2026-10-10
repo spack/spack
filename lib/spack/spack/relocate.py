@@ -82,7 +82,7 @@ def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
     return paths_to_paths
 
 
-def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
+def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths, rpath_transform=None):
     """
     This function is used to make machO buildcaches on macOS by
     replacing old paths with new paths using install_name_tool
@@ -92,6 +92,7 @@ def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
     original dependency paths
     original id path if a mach-o library
     dictionary mapping paths in old install layout to new install layout
+    optional transform applied to the original rpaths before the mapping
     """
     # avoid error message for libgcc_s
     if "libgcc_" in cur_path:
@@ -108,21 +109,35 @@ def _modify_macho_object(cur_path, rpaths, deps, idpath, paths_to_paths):
         if new_dep and dep != new_dep:
             args += [("-change", dep, new_dep)]
 
-    new_rpaths = []
-    for orig_rpath in rpaths:
-        new_rpath = paths_to_paths.get(orig_rpath)
-        if new_rpath and not orig_rpath == new_rpath:
-            args_to_add = ("-rpath", orig_rpath, new_rpath)
-            if args_to_add not in args and new_rpath not in new_rpaths:
-                args += [args_to_add]
-                new_rpaths.append(new_rpath)
+    # -add_rpath appends, so entries are dropped or reordered by deleting all and adding back.
+    # Adding runs in a second call, since an added entry may equal a deleted one.
+    add_args = []
+    if rpath_transform is not None:
+        transformed = [t.decode() for t in rpath_transform([r.encode() for r in rpaths])]
+        new_rpaths = list(spack.util.lang.dedupe(paths_to_paths.get(r, r) for r in transformed))
+        if new_rpaths != rpaths:
+            args += [("-delete_rpath", r) for r in spack.util.lang.dedupe(rpaths)]
+            add_args = [("-add_rpath", r) for r in new_rpaths]
+    else:
+        new_rpaths = []
+        for orig_rpath in rpaths:
+            new_rpath = paths_to_paths.get(orig_rpath)
+            if new_rpath and not orig_rpath == new_rpath:
+                args_to_add = ("-rpath", orig_rpath, new_rpath)
+                if args_to_add not in args and new_rpath not in new_rpaths:
+                    args += [args_to_add]
+                    new_rpaths.append(new_rpath)
 
     # Deduplicate and flatten
     args = list(itertools.chain.from_iterable(spack.util.lang.dedupe(args)))
+    add_args = list(itertools.chain.from_iterable(add_args))
     install_name_tool = executable.Executable("install_name_tool")
-    if args:
+    if args or add_args:
         with fs.edit_in_place_through_temporary_file(cur_path) as temp_path:
-            install_name_tool(*args, temp_path)
+            if args:
+                install_name_tool(*args, temp_path)
+            if add_args:
+                install_name_tool(*add_args, temp_path)
 
 
 def _macholib_get_paths(cur_path):
@@ -193,13 +208,15 @@ def _set_elf_rpaths_and_interpreter(
         return None
 
 
-def relocate_macho_binaries(path_names, prefix_to_prefix):
+def relocate_macho_binaries(
+    path_names, prefix_to_prefix, rpath_transform: Optional[elf.RpathTransform] = None
+):
     """
     Use macholib python package to get the rpaths, dependent libraries
     and library identity for libraries from the MachO object. Modify them
     with the replacement paths queried from the dictionary mapping old layout
     prefixes to hashes and the dictionary mapping hashes to the new layout
-    prefixes.
+    prefixes. If given, ``rpath_transform`` is applied to the rpaths before the mapping.
     """
 
     for path_name in path_names:
@@ -211,12 +228,16 @@ def relocate_macho_binaries(path_names, prefix_to_prefix):
         # get the mapping of paths in the old prerix to the new prefix
         paths_to_paths = _macho_find_paths(rpaths, deps, idpath, prefix_to_prefix)
         # replace the old paths with new paths
-        _modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths)
+        _modify_macho_object(path_name, rpaths, deps, idpath, paths_to_paths, rpath_transform)
 
 
-def relocate_elf_binaries(binaries: Iterable[str], prefix_to_prefix: Dict[str, str]) -> None:
+def relocate_elf_binaries(
+    binaries: Iterable[str],
+    prefix_to_prefix: Dict[str, str],
+    rpath_transform: Optional[elf.RpathTransform] = None,
+) -> None:
     """Take a list of binaries, and an ordered prefix to prefix mapping, and update the rpaths
-    accordingly."""
+    accordingly. If given, ``rpath_transform`` is applied to the rpaths before the mapping."""
 
     # Transform to binary string
     prefix_to_prefix_bin = {
@@ -225,7 +246,9 @@ def relocate_elf_binaries(binaries: Iterable[str], prefix_to_prefix: Dict[str, s
 
     for path in binaries:
         try:
-            elf.substitute_rpath_and_pt_interp_in_place_or_raise(path, prefix_to_prefix_bin)
+            elf.substitute_rpath_and_pt_interp_in_place_or_raise(
+                path, prefix_to_prefix_bin, rpath_transform
+            )
         except elf.ElfCStringUpdatesFailed as e:
             # Fall back to `patchelf --set-rpath ... --set-interpreter ...`
             rpaths = e.rpath.new_value.decode("utf-8").split(":") if e.rpath else []
