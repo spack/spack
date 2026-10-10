@@ -115,6 +115,9 @@ def add_mock_builds(tui: TerminalUI, count: int) -> List[str]:
     build_ids = [f"pkg{i}" for i in range(count)]
     for i, build_id in enumerate(build_ids):
         on_build_added(tui, build_id, version=f"{i}.0")
+    # The real installer event loop drains UI commands after handling each callback. Tests do
+    # not run that event loop, so emulate the drain to keep setup commands out of assertions.
+    tui.commands.clear()
     return build_ids
 
 
@@ -166,7 +169,7 @@ class TestBasicStateManagement:
         # Update to 'building' state
         tui.on_state_changed(build_id, "building")
         assert tui.builds[build_id].state == "building"
-        assert tui.builds[build_id].progress_percent is None
+        assert tui.builds[build_id].progress is None
         assert tui.completed == 0
 
         # Update to 'finished' state
@@ -303,13 +306,13 @@ class TestBasicStateManagement:
         assert "  line 1\n" in err and "  line 100\n" in err
 
     def test_on_progress(self):
-        """Test that on_progress updates percentages"""
+        """on_progress stores fetching percentages and marks only changed values dirty."""
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
         # Update progress
         tui.on_progress(build_id, 50, 100)
-        assert tui.builds[build_id].progress_percent == 50
+        assert tui.builds[build_id].progress == inst.BuildProgress("50%", "fetching")
         assert tui.dirty is True
 
         # Same percentage shouldn't mark dirty again
@@ -319,7 +322,7 @@ class TestBasicStateManagement:
 
         # Different percentage should mark dirty
         tui.on_progress(build_id, 75, 100)
-        assert tui.builds[build_id].progress_percent == 75
+        assert tui.builds[build_id].progress == inst.BuildProgress("75%", "fetching")
         assert tui.dirty is True
 
     def test_completion_counter(self):
@@ -808,7 +811,7 @@ class TestBuildInfo:
         assert build_info.external is False
         assert build_info.state == "starting"
         assert build_info.finished_time is None
-        assert build_info.progress_percent is None
+        assert build_info.progress is None
 
     def test_build_info_external_package(self):
         """Test BuildInfo for external package"""
@@ -827,6 +830,39 @@ class TestBuildInfo:
 class TestLogFollowing:
     """Test log following and on_log_output functionality"""
 
+    @pytest.mark.parametrize("is_tty,headless", [(True, True), (False, False), (False, True)])
+    def test_log_history_redraw_suppressed(self, is_tty, headless):
+        tui, _, fake_stdout = create_tui(total=1, is_tty=is_tty)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.headless = headless
+        tui.dirty = False
+        tui.active_area_rows = 3
+
+        tui._redraw_overview_with_log_history(build_id, b"hidden log\n")
+
+        assert fake_stdout.getvalue() == ""
+        assert tui.active_area_rows == 3
+        assert tui.dirty is False
+
+    @pytest.mark.parametrize("is_tty", [True, False])
+    @pytest.mark.parametrize("overview_mode", [True, False])
+    def test_navigate_to_failed_build_without_log_file(self, is_tty, overview_mode):
+        tui, _, fake_stdout = create_tui(total=1, is_tty=is_tty, color=False)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_state_changed(build_id, "failed")
+        tui.overview_mode = overview_mode
+        fake_stdout.clear()
+
+        tui.next()
+
+        output = fake_stdout.getvalue()
+        assert "==> Log summary of pkg0@0.0\n" in output
+        assert "Full log:" not in output
+        assert tui.tracked_build_id == build_id
+        assert tui.log_streaming is False
+        assert tui.log_ends_with_newline is True
+        assert tui.commands == []
+
     def test_print_logs_when_following(self):
         """Test that logs are printed when following a specific build"""
         tui, _, fake_stdout = create_tui()
@@ -843,8 +879,109 @@ class TestLogFollowing:
         # Check that logs were echoed to stdout
         assert fake_stdout._buffer.getvalue() == log_data
 
-    def test_print_logs_discarded_when_in_overview_mode(self):
-        """Test that logs are discarded when in overview mode"""
+    @pytest.mark.parametrize("render_first", [True, False])
+    def test_verbose_tty_streams_logs_above_overview(self, render_first):
+        """Verbose TTY mode streams tracked logs above the overview display."""
+        tui, time_values, fake_stdout = create_tui(total=1, verbose=True)
+        on_build_added(tui, "pkg0")
+        tui.on_jobs_changed(16, 16)
+
+        assert tui.overview_mode is True
+        assert tui.tracked_build_id == "pkg0"
+
+        if render_first:
+            tui.render()
+        fake_stdout.clear()
+        tui.on_log_output("pkg0", b"-- Configuring done\n")
+        time_values.append(1.0)
+        tui.on_log_output("pkg0", b"-- Generating done\n")
+
+        output = fake_stdout.getvalue()
+        assert "-- Configuring done\n" in output
+        assert "-- Generating done\n" in output
+        assert "Progress:" in output
+        assert "pkg0" in output
+        assert "@1.0" in output
+        assert "starting" in output
+        assert output.index("-- Configuring done") < output.rindex("Progress:")
+
+    def test_verbose_tty_continues_partial_log_line(self):
+        """A later log chunk completes a buffered fragment before display above the overview."""
+        tui, _, fake_stdout = create_tui(total=1, verbose=True)
+        on_build_added(tui, "pkg0")
+        tui.render()
+        fake_stdout.clear()
+
+        tui.on_log_output("pkg0", b"checking for boost...")
+        assert fake_stdout.getvalue() == ""
+
+        tui.on_log_output("pkg0", b"yes\n")
+
+        output = fake_stdout.getvalue()
+        assert "checking for boost...yes\n" in output
+        assert "Progress:" in output
+
+    def test_verbose_tty_toggle_off_clears_streamed_log(self):
+        """Turning streaming off clears the screen and restores the overview position."""
+        tui, _, fake_stdout = create_tui(total=1, verbose=True)
+        on_build_added(tui, "pkg0")
+        tui.render()
+        tui.on_log_output("pkg0", b"-- Configuring done\n")
+        fake_stdout.clear()
+
+        tui.toggle()
+
+        output = fake_stdout.getvalue()
+        assert output.startswith("\0337\033[2J\0338\033[2A\r")
+        assert "Progress:" in output
+        assert "-- Configuring done" not in output
+
+        fake_stdout.clear()
+        tui.toggle()
+
+        output = fake_stdout.getvalue()
+        assert output.startswith("\0337\033[2J\033[3A\r-- Configuring done\n\0338\033[2A\r")
+        assert "Progress:" in output
+
+    def test_verbose_tty_switching_builds_shows_cached_log_tail(self):
+        """Switching streamed builds shows the saved recent log tail for the new build."""
+        tui, _, fake_stdout = create_tui(total=2, verbose=True)
+        build_a, build_b = add_mock_builds(tui, 2)
+        tui.render()
+        tui.on_log_output(build_a, b"a: configure\n")
+        for index in range(inst.LOG_HISTORY_SIZE + 1):
+            tui.on_log_output(build_b, f"b: line {index}\n".encode())
+        fake_stdout.clear()
+
+        tui.next(1)
+
+        output = fake_stdout.getvalue()
+        assert "b: line 0\n" not in output
+        for index in range(1, inst.LOG_HISTORY_SIZE + 1):
+            assert f"b: line {index}\n" in output
+        assert "a: configure\n" not in output
+        assert "Progress:" in output
+
+    @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
+    def test_cached_log_tail_filters_padding(self):
+        """Switching builds does not replay path-padding placeholders."""
+        tui, _, fake_stdout = create_tui(total=2, verbose=True, filter_padding=True)
+        _, build_b = add_mock_builds(tui, 2)
+        tui.render()
+        tui.on_log_output(
+            build_b,
+            b"--with-foo=/base/__spack_path_placeholder__/__spack_path_placeholder__/bin\n",
+        )
+        fake_stdout.clear()
+
+        tui.next(1)
+
+        output = fake_stdout.getvalue()
+        assert "__spack_path_placeholder__" not in output
+        assert "--with-foo=/base/[padded-to-59-chars]/bin" in output
+
+    def test_unselected_overview_logs_are_cached_without_output(self):
+        """Unselected overview logs are cached without being written immediately."""
         tui, _, fake_stdout = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
@@ -873,6 +1010,142 @@ class TestLogFollowing:
 
         # Nothing should be printed since we're tracking pkg0, not pkg1
         assert fake_stdout.getvalue() == ""
+
+    @pytest.mark.parametrize("data", [b"[12] ignored\n", b"[1/0] ignored\n"])
+    def test_invalid_builder_progress_preserves_progress(self, data):
+        tui, _, _ = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_progress(build_id, 50, 100)
+        tui.dirty = False
+
+        tui.on_log_output(build_id, data)
+
+        assert tui.builds[build_id].progress == inst.BuildProgress("50%", "fetching")
+        assert tui.builds[build_id].progress_buffer == b""
+        assert not tui.dirty
+
+    def test_builder_progress_for_unknown_build(self):
+        tui, _, stdout = create_tui(total=1)
+        add_mock_builds(tui, 1)
+        tui.dirty = False
+        data = b"[50%] Building C object dir/file.c.o\n"
+
+        tui.on_log_output("unknown", data)
+
+        assert "unknown" not in tui.builds
+        assert list(tui.log_history["unknown"]) == [data]
+        assert stdout.getvalue() == ""
+        assert not tui.dirty
+
+    def test_parse_fractional_progress_line(self):
+        """A fractional builder progress line updates the structured overview row."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(build_id, b"...\n[2/10] ...\n")
+        assert fake_stdout.getvalue() == ""
+        assert tui.builds[build_id].progress == inst.BuildProgress("20%")
+
+    def test_progress_bazel_comma_fractional_progress_line(self):
+        """Bazel comma-separated action counts produce a percentage and file message."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(
+            build_id,
+            b"[15,557 / 23,143] TdGenerate dir/file.inc; 7s local ... (6 actions, 5 running)\n",
+        )
+
+        assert fake_stdout.getvalue() == ""
+        assert tui.builds[build_id].progress == inst.BuildProgress("67%", "dir/file.inc")
+
+    def test_progress_bazel_compiling_message(self):
+        """Bazel compiling progress produces a percentage and file message."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(
+            build_id, b"[51 / 100] Compiling dir/file.cc; 42s local ... (16 actions, 15 running)\n"
+        )
+
+        assert fake_stdout.getvalue() == ""
+        assert tui.builds[build_id].progress == inst.BuildProgress("51%", "dir/file.cc")
+
+    def test_overview_cmake_cxx_building_line(self):
+        """A CMake CXX building line updates the structured overview row."""
+        tui, _, fake_stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(
+            build_id,
+            b"...\n[ 96%] Building CXX object src/CMakeFiles/foo.cpp.o\nRunning tests...\n",
+        )
+
+        assert fake_stdout.getvalue() == ""
+        assert tui.builds[build_id].progress == inst.BuildProgress("96%", "foo.cpp")
+
+    def test_render_building_filename_as_progress_message(self):
+        """Test that a Building line's filename appears in the overview row."""
+        tui, _, _ = create_tui(color=False)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_state_changed(build_id, "build")
+        tui.on_log_output(build_id, b"[ 96%] Building CXX object src/CMakeFiles/foo.cpp.o\n")
+
+        rendered = "".join(tui._generate_line_components(tui.builds[build_id]))
+
+        assert " (96%) foo.cpp" in rendered
+
+    @pytest.mark.parametrize(
+        "message, expected",
+        [
+            ("Building CXX object src/CMakeFiles/foo.cpp.o", "foo.cpp"),
+            (r"Building CXX object src\CMakeFiles\foo.cpp.o", "foo.cpp"),
+            ("Compiling src/dir/file.cc; 42s local", "dir/file.cc"),
+            (r"Compiling src\dir\file.cc; 42s local", "dir/file.cc"),
+            ("Built target foo", "Built target foo"),
+        ],
+    )
+    @pytest.mark.parametrize("host_separator", ["/", "\\"])
+    def test_build_progress_message_removes_only_object_suffix(
+        self, message, expected, host_separator, monkeypatch
+    ):
+        """Only an exact object-file suffix is removed from a builder message."""
+        tui, _, _ = create_tui()
+        monkeypatch.setattr(inst.os, "sep", host_separator)
+
+        assert tui._build_progress_message(message) == expected
+
+    def test_parse_building_line_split_across_log_chunks(self):
+        """A CMake Building filename is parsed after its line arrives in two chunks."""
+        tui, _, _ = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(build_id, b"[ 96%] Building CXX object CMakeFiles/foo")
+        assert tui.builds[build_id].progress is None
+
+        tui.on_log_output(build_id, b".cpp.o\n")
+
+        assert tui.builds[build_id].progress == inst.BuildProgress("96%", "foo.cpp")
+
+    def test_parse_non_building_cmake_progress_lines(self):
+        """CMake status and non-Building progress lines become structured messages."""
+        tui, _, _ = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.on_log_output(build_id, b"CMake message\n")
+        assert tui.builds[build_id].progress == inst.BuildProgress(None, "CMake message")
+
+        tui.on_log_output(build_id, b"-- Checking\n")
+        assert tui.builds[build_id].progress == inst.BuildProgress(None, "Checking")
+
+        tui.on_log_output(build_id, b"[ 99%] Linking C executable timeit-target\n")
+        assert tui.builds[build_id].progress == inst.BuildProgress(
+            "99%", "Linking C executable timeit-target"
+        )
+        tui.on_log_output(build_id, b"[100%] Built target gmock_main\n")
+        assert tui.builds[build_id].progress == inst.BuildProgress(
+            "100%", "Built target gmock_main"
+        )
 
     def test_can_navigate_to_failed_build(self, tmp_path):
         """Test that navigating to a failed build shows log summary and path"""
@@ -914,6 +1187,37 @@ class TestLogFollowing:
             fake_stdout.getvalue()
         )
 
+    @pytest.mark.parametrize("is_tty", [True, False])
+    @pytest.mark.parametrize("overview_mode", [True, False])
+    @pytest.mark.parametrize("already_tracked", [True, False])
+    def test_toggle_to_failed_build_keeps_summary_after_redraw(
+        self, tmp_path, is_tty, overview_mode, already_tracked
+    ):
+        """Enabling log view redraws a failed build's summary above the overview."""
+        tui, _, fake_stdout = create_tui(total=1, is_tty=is_tty)
+        [build_id] = add_mock_builds(tui, 1)
+        log_file = tmp_path / "pkg0.log"
+        log_file.write_text("error: something went wrong\n")
+        tui.builds[build_id].log_path = str(log_file)
+        tui.on_state_changed(build_id, "failed")
+        tui.render()
+        tui.overview_mode = overview_mode
+        if already_tracked:
+            tui.tracked_build_id = build_id
+        fake_stdout.clear()
+
+        tui.toggle()
+
+        output = fake_stdout.getvalue()
+        after_clear = output.rsplit("\033[2J", 1)[-1]
+        assert "Log summary of pkg0" in after_clear
+        assert "> error: something went wrong" in after_clear
+        assert f"Full log: {log_file}" in after_clear
+        assert after_clear.count("Log summary of pkg0") == 1
+        assert ("Progress:" in after_clear) == (is_tty and overview_mode)
+        assert tui.log_streaming is False
+        assert tui.commands == []
+
     def test_navigation_skips_finished_build(self):
         """Test that navigation skips successfully finished builds"""
         tui, _, _ = create_tui(total=3)
@@ -932,8 +1236,28 @@ class TestLogFollowing:
 class TestNavigationIntegration:
     """Test the next() method and navigation between builds"""
 
-    def test_next_switches_from_overview_to_logs(self):
-        """Test that next() switches from overview mode to log-following mode"""
+    @pytest.mark.parametrize("is_tty", [True, False])
+    @pytest.mark.parametrize("log_streaming", [True, False])
+    def test_next_controls_log_forwarding(self, is_tty, log_streaming):
+        tui, _, fake_stdout = create_tui(total=2, is_tty=is_tty, verbose=log_streaming)
+        first_id, next_id = add_mock_builds(tui, 2)
+        if not log_streaming:
+            tui.next()
+
+        tui.next()
+
+        expected_commands = []
+        if log_streaming:
+            if not is_tty:
+                expected_commands.append(inst.SetEcho(first_id, False))
+            expected_commands.append(inst.SetEcho(next_id, True))
+        assert tui.commands == expected_commands
+        assert tui.tracked_build_id == next_id
+        assert tui.overview_mode is True
+        assert bool(fake_stdout.getvalue()) == (is_tty and log_streaming)
+
+    def test_next_selects_tracked_build_in_overview(self):
+        """Test that next() selects a tracked build without leaving overview mode."""
         tui, _, fake_stdout = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
 
@@ -944,15 +1268,12 @@ class TestNavigationIntegration:
         # Call next() to start following first build
         tui.next()
 
-        # Should have switched to log-following mode
-        assert tui.overview_mode is False
+        # Should have selected the first build while staying in overview mode
+        assert tui.overview_mode is True
+        assert tui.log_streaming is False
         assert tui.tracked_build_id == build_ids[0]
-        assert tui.commands == [inst.SetEcho(build_ids[0], True)]
-
-        # Should have printed "Following logs" message
-        output = fake_stdout.getvalue()
-        assert "Following logs of" in output
-        assert "pkg0" in output
+        assert tui.commands == []
+        assert fake_stdout.getvalue() == ""
 
     def test_next_cycles_through_builds(self):
         """Test that next() cycles through multiple builds"""
@@ -968,26 +1289,23 @@ class TestNavigationIntegration:
         # Navigate to next
         tui.next(1)
         assert tui.tracked_build_id == build_ids[1]
-        assert "pkg1" in fake_stdout.getvalue()
-        # Echoing stopped for the previous build and started for the new one
-        assert tui.commands[-2:] == [
-            inst.SetEcho(build_ids[0], False),
-            inst.SetEcho(build_ids[1], True),
-        ]
+        assert fake_stdout.getvalue() == ""
+        # TTY overview mode already keeps build logs enabled so progress parsing still works.
+        assert tui.commands == []
 
         fake_stdout.clear()
 
         # Navigate to next (third build)
         tui.next(1)
         assert tui.tracked_build_id == build_ids[2]
-        assert "pkg2" in fake_stdout.getvalue()
+        assert fake_stdout.getvalue() == ""
 
         fake_stdout.clear()
 
         # Navigate to next (should wrap to first)
         tui.next(1)
         assert tui.tracked_build_id == build_ids[0]
-        assert "pkg0" in fake_stdout.getvalue()
+        assert fake_stdout.getvalue() == ""
 
     def test_next_backward_navigation(self):
         """Test that next(-1) navigates backward"""
@@ -1044,10 +1362,52 @@ class TestNavigationIntegration:
 
 
 class TestToggle:
-    """Test toggle() method for switching between overview and log-following modes"""
+    """Test toggling selected-build log streaming above the overview."""
 
-    def test_toggle_from_overview_calls_next(self):
-        """Test that toggle() from overview mode calls next()"""
+    @pytest.mark.parametrize("count", [0, 1])
+    def test_toggle_without_unfinished_build_does_not_start_streaming(self, count):
+        tui, _, _ = create_tui(total=count)
+        for build_id in add_mock_builds(tui, count):
+            tui.on_state_changed(build_id, "finished")
+
+        tui.toggle()
+
+        assert tui.tracked_build_id == ""
+        assert tui.log_streaming is False
+        assert tui.commands == []
+
+    def test_non_tty_toggle_enables_and_disables_log_forwarding(self):
+        tui, _, fake_stdout = create_tui(total=1, is_tty=False)
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.toggle()
+
+        assert tui.commands == [inst.SetEcho(build_id, True)]
+        assert tui.log_streaming is True
+        tui.commands.clear()
+        tui.on_log_output(build_id, b"partial log")
+        assert fake_stdout.getvalue() == "partial log"
+
+        tui.toggle()
+
+        assert tui.commands == [inst.SetEcho(build_id, False)]
+        assert tui.log_streaming is False
+        assert tui.tracked_build_id == build_id
+        assert tui.log_ends_with_newline is True
+        assert fake_stdout.getvalue() == "partial log\n"
+
+    @pytest.mark.parametrize("is_tty", [True, False])
+    def test_toggle_stops_streaming_without_selected_build(self, is_tty):
+        tui, _, _ = create_tui(is_tty=is_tty, verbose=True)
+
+        tui.toggle()
+
+        assert tui.log_streaming is False
+        assert tui.tracked_build_id == ""
+        assert tui.commands == []
+
+    def test_toggle_from_overview_starts_streaming(self):
+        """Test that toggle() from overview mode starts streaming the tracked build."""
         tui, _, fake_stdout = create_tui(total=2)
         add_mock_builds(tui, 2)
 
@@ -1057,19 +1417,21 @@ class TestToggle:
         # Toggle should call next()
         tui.toggle()
 
-        # Should now be following logs
-        assert tui.overview_mode is False
+        # Log streaming now keeps the overview visible.
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
         assert tui.tracked_build_id != ""
-        assert "Following logs of" in fake_stdout.getvalue()
+        assert "Progress:" in fake_stdout.getvalue()
 
-    def test_toggle_from_logs_returns_to_overview(self):
-        """Test that toggle() from log-following mode returns to overview"""
+    def test_toggle_from_streaming_stops_streaming(self):
+        """Test that toggle() stops log streaming but keeps the tracked build selected."""
         tui, _, _ = create_tui(total=2)
         add_mock_builds(tui, 2)
 
         # Switch to log-following mode first
-        tui.next()
-        assert tui.overview_mode is False
+        tui.toggle()
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
         tracked_id = tui.tracked_build_id
         assert tracked_id != ""
 
@@ -1083,42 +1445,130 @@ class TestToggle:
 
         # Should be back in overview mode with cleaned state
         assert tui.overview_mode is True
-        assert tui.tracked_build_id == ""
+        assert tui.log_streaming is False
+        assert tui.tracked_build_id == tracked_id
         assert tui.search_term == ""
         assert tui.search_mode is False
-        assert tui.active_area_rows == 0
-        assert tui.dirty is True
-        # Echoing was stopped for the previously tracked build
-        assert tui.commands[-1] == inst.SetEcho(tracked_id, False)
+        assert tui.dirty is False
+        # TTY overview mode keeps build logs enabled so progress parsing still works later.
+        assert inst.SetEcho(tracked_id, False) not in tui.commands
 
-    def test_on_state_changed_finished_triggers_toggle_when_tracking(self):
-        """Test that finishing a tracked build triggers toggle back to overview"""
+    def test_non_tty_return_to_overview_disables_log_forwarding(self):
+        tui, _, _ = create_tui(total=1, is_tty=False)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.tracked_build_id = build_id
+        tui.overview_mode = False
+
+        tui.on_input("\x1b")
+
+        assert tui.commands == [inst.SetEcho(build_id, False)]
+
+    @pytest.mark.parametrize("is_tty", [True, False])
+    @pytest.mark.parametrize("char", ["q", "\x1b"])
+    def test_legacy_log_view_exit_restores_overview(self, is_tty, char):
+        tui, _, fake_stdout = create_tui(total=1, is_tty=is_tty)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.tracked_build_id = build_id
+        tui.overview_mode = False
+        tui.log_ends_with_newline = False
+        tui.active_area_rows = 5
+        tui.search_mode = True
+        tui.search_term = "pkg"
+
+        tui.on_input(char)
+
+        assert tui.overview_mode is True
+        assert tui.tracked_build_id == ""
+        assert tui.log_ends_with_newline is True
+        assert tui.active_area_rows == 0
+        assert tui.search_mode is False
+        assert tui.search_term == ""
+        assert fake_stdout.getvalue() == "\n"
+        assert tui.commands == ([] if is_tty else [inst.SetEcho(build_id, False)])
+
+    def test_legacy_overview_toggle_selects_next_build(self):
+        tui, _, _ = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui._toggle_overview()
+
+        assert tui.overview_mode is True
+        assert tui.tracked_build_id == build_id
+        assert tui.log_streaming is False
+
+    def test_tty_logs_remain_enabled_after_returning_to_overview(self):
+        """Returning from full-screen log view keeps TTY log delivery enabled."""
+        tui, _, _ = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.toggle()
+        tui.toggle()
+        tui.on_log_output(build_id, b"[ 96%] Building CXX object src/CMakeFiles/foo.cpp.o\n")
+
+        assert tui.overview_mode is True
+        assert tui.log_streaming is False
+        assert tui.builds[build_id].progress == inst.BuildProgress("96%", "foo.cpp")
+
+    def test_on_state_changed_finished_continues_streaming_next_build(self):
+        """Finishing a streamed build follows the next unfinished build."""
         tui, _, _ = create_tui(total=2)
         build_ids = add_mock_builds(tui, 2)
 
         # Start tracking first build
-        tui.next()
-        assert tui.overview_mode is False
+        tui.toggle()
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
         assert tui.tracked_build_id == build_ids[0]
 
         # Mark the tracked build as finished
         tui.on_state_changed(build_ids[0], "finished")
 
-        # Should have toggled back to overview mode
+        # Successful builds keep streaming active and advance the tracked build.
         assert tui.overview_mode is True
+        assert tui.log_streaming is True
+        assert tui.tracked_build_id == build_ids[1]
+
+    def test_on_state_changed_failed_stops_streaming(self):
+        tui, _, _ = create_tui(total=2, verbose=True)
+        build_id, _ = add_mock_builds(tui, 2)
+
+        tui.on_state_changed(build_id, "failed")
+
+        assert tui.log_streaming is False
+        assert tui.tracked_build_id == ""
+        assert tui.commands == []
+
+    def test_streaming_resumes_when_next_build_is_added(self):
+        """A later build is tracked when streaming outlives the previous build wave."""
+        tui, _, fake_stdout = create_tui(total=2)
+        [build_id] = add_mock_builds(tui, 1)
+
+        tui.toggle()
+        tui.on_log_output(build_id, b"old partial")
+        tui.on_state_changed(build_id, "finished")
+
+        assert tui.log_streaming is True
         assert tui.tracked_build_id == ""
 
-    def test_partial_line_newline_on_toggle_and_next(self):
-        """Ensure newline is inserted before mode transitions when log doesn't end with newline."""
+        on_build_added(tui, "next")
+
+        assert tui.log_streaming is True
+        assert tui.tracked_build_id == "next"
+
+        fake_stdout.clear()
+        tui.on_log_output("next", b"new output\n")
+        assert "new output\n" in fake_stdout.getvalue()
+        assert "old partial" not in fake_stdout.getvalue()
+
+    def test_partial_line_handling_on_toggle_and_next(self):
+        """Mode transitions preserve complete lines and discard unselected fragments."""
         tui, _, fake_stdout = create_tui(total=2)
         build_a, build_b = add_mock_builds(tui, 2)
 
-        # Follow a build, toggle back and forth between logs and overview mode, and receive logs
-        # that may or may not end with newlines.
-        tui.next()
+        tui.toggle()
         tui.on_log_output(build_a, b"checking for foo...")
         tui.toggle()
-        tui.next()
+        tui.toggle()
         tui.on_log_output(build_a, b"checking for bar... yes\n")
         tui.next(1)
         tui.on_log_output(build_b, b"checking for baz...")
@@ -1129,10 +1579,10 @@ class TestToggle:
         # There shouldn't be any double newlines:
         assert "\n\n" not in written
 
-        # All partial and newline-terminated logs should be present with appropriate newlines:
+        # Switching builds must not join an incomplete fragment from another build.
         assert "checking for foo...\n" in written
         assert "checking for bar... yes\n" in written
-        assert "checking for baz...\n" in written
+        assert "checking for baz..." not in written
 
     @pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
     @pytest.mark.parametrize("filter_padding", [True, False])
@@ -1243,7 +1693,7 @@ class TestSearchFilteringIntegration:
         tui.search_input("\r")
 
         # Should have started following first matching build
-        assert tui.overview_mode is False
+        assert tui.overview_mode is True
         assert tui.tracked_build_id == build_ids[0]
 
     def test_clearing_search_shows_all_builds(self):
@@ -1286,7 +1736,9 @@ class TestHandleInput:
         build_ids = add_mock_builds(tui, 3)
 
         tui.on_input("v")
-        assert tui.overview_mode is False
+        # Log streaming now keeps the overview visible.
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
         assert tui.tracked_build_id == build_ids[0]
 
         tui.on_input("n")
@@ -1296,7 +1748,10 @@ class TestHandleInput:
         assert tui.tracked_build_id == build_ids[0]
 
         tui.on_input("q")
+        # q unconditionally stops streaming without clearing the selection.
         assert tui.overview_mode is True
+        assert tui.log_streaming is False
+        assert tui.tracked_build_id == build_ids[0]
 
     def test_search_keys(self):
         """'/' enters search mode; subsequent characters build the search term."""
@@ -1350,12 +1805,13 @@ class TestEdgeCases:
         assert f"[+] {build_a[:7]} pkg0@0.0" in output
         assert f"[x] {build_b[:7]} pkg1@1.0" in output
 
-    def test_finalize_forces_overview_mode(self):
-        """update(finalize=True) leaves log-following mode for the final render."""
+    def test_finalize_keeps_overview_mode(self):
+        """render(finalize=True) keeps the overview mode even while logs are streaming."""
         tui, _, _ = create_tui(total=2)
         add_mock_builds(tui, 2)
-        tui.next()
-        assert tui.overview_mode is False
+        tui.toggle()
+        assert tui.overview_mode is True
+        assert tui.log_streaming is True
 
         tui.render(finalize=True)
         assert tui.overview_mode is True
@@ -1382,15 +1838,16 @@ class TestEdgeCases:
         tui, _, _ = create_tui()
         [build_id] = add_mock_builds(tui, 1)
 
+        # Test truncation
         # Test rounding
         tui.on_progress(build_id, 1, 3)
-        assert tui.builds[build_id].progress_percent == 33  # int(100/3)
+        assert tui.builds[build_id].progress == inst.BuildProgress("33%", "fetching")
 
         tui.on_progress(build_id, 2, 3)
-        assert tui.builds[build_id].progress_percent == 66  # int(200/3)
+        assert tui.builds[build_id].progress == inst.BuildProgress("66%", "fetching")
 
         tui.on_progress(build_id, 3, 3)
-        assert tui.builds[build_id].progress_percent == 100
+        assert tui.builds[build_id].progress == inst.BuildProgress("100%", "fetching")
 
 
 class TestTerminalUIVerbose:
@@ -1452,13 +1909,14 @@ class TestTerminalUIVerbose:
         stdout.flush()
         assert stdout.buffer.getvalue() == b""
 
-    def test_verbose_tty_no_effect(self):
-        """In TTY mode, on_build_added() does not set tracked_build_id automatically."""
+    def test_verbose_tty_tracks_first_build(self):
+        """Verbose mode selects the first TTY build while keeping the overview visible."""
         tui, _, _ = create_tui(is_tty=True, verbose=True, total=4)
 
         on_build_added(tui, "trivial-install-test-package")
-        assert tui.tracked_build_id == ""
-        assert tui.commands == []
+        assert tui.overview_mode is True
+        assert tui.tracked_build_id == "trivial-install-test-package"
+        assert tui.commands == [inst.SetEcho("trivial-install-test-package", True)]
 
 
 class TestTerminalUIColor:
@@ -1532,6 +1990,16 @@ class TestTargetJobs:
         output = fake_stdout.getvalue()
         assert "4=>2" in output
 
+    def test_header_shows_tracked_package_name(self):
+        """The overview header shows the currently tracked package in gray."""
+        tui, _, fake_stdout = create_tui(total=1, color=True)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.tracked_build_id = build_id
+        tui.render()
+        output = fake_stdout.getvalue()
+        assert "next/prev" in output
+        assert f"\033[0;90m({build_id})\033[0m" in output
+
 
 class TestHeadlessMode:
     """Test that headless mode suppresses terminal output."""
@@ -1592,10 +2060,13 @@ class TestHeadlessMode:
         assert "[/] pkg0 pkg0@0.0 starting" in stdout.getvalue()
 
     def test_refresh_interval_modes(self):
-        """Only an interactive, foreground terminal needs a periodic redraw tick."""
+        """Only a foreground TTY overview requests periodic redraws."""
         tui, _, _ = create_tui(is_tty=True)
         assert tui.refresh_interval() == inst.SPINNER_INTERVAL
         tui.headless = True
+        assert tui.refresh_interval() is None
+        tui.headless = False
+        tui.overview_mode = False
         assert tui.refresh_interval() is None
         non_tty, _, _ = create_tui(is_tty=False)
         assert non_tty.refresh_interval() is None
@@ -1627,13 +2098,29 @@ class TestBlockedIndicator:
 class TestLineRendering:
     """Test individual build-line components in the rendered output."""
 
+    @pytest.mark.parametrize(
+        "progress,expected",
+        [
+            (None, None),
+            (inst.BuildProgress(message="configuring"), None),
+            (inst.BuildProgress("50%", "fetching"), "50%"),
+        ],
+    )
+    def test_progress_prefix(self, progress, expected):
+        tui, _, _ = create_tui(total=1)
+        [build_id] = add_mock_builds(tui, 1)
+        build_info = tui.builds[build_id]
+        build_info.progress = progress
+
+        assert tui._progress_prefix(build_info) == expected
+
     def test_fetch_progress_rendered(self):
-        """A build with fetch progress shows a percentage instead of its state."""
-        tui, _, fake_stdout = create_tui(total=1)
+        """A build with fetch progress shows its percentage alongside the state."""
+        tui, _, fake_stdout = create_tui(total=1, color=False)
         [build_id] = add_mock_builds(tui, 1)
         tui.on_progress(build_id, 50, 100)
         tui.render()
-        assert "fetching: 50%" in fake_stdout.getvalue()
+        assert "(50%) fetching" in fake_stdout.getvalue()
 
     def test_failed_line_shows_log_path(self):
         """A failed build's line includes the path to its log file."""
@@ -1669,6 +2156,20 @@ class TestLineRendering:
         assert "pkg@1.0" in output
         # The prefix would exceed the terminal width, so it is not rendered.
         assert "/quite/long/prefix/path" not in output
+
+    def test_persisted_finished_line_keeps_prefix_in_narrow_terminal(self):
+        """A persisted completed build always shows its install prefix."""
+        tui, fake_time, fake_stdout = create_tui(total=1, terminal_cols=30, color=False)
+        on_build_added(tui, "pkg", prefix="/quite/long/prefix/path")
+        tui.on_state_changed("pkg", "finished")
+        fake_time.append(inst.CLEANUP_TIMEOUT + 0.1)
+
+        # The install prefix exceeds the terminal width and is omitted from the mutable row.
+        tui.render()
+
+        lines = [line for line in fake_stdout.getvalue().splitlines() if "pkg@1.0" in line]
+        assert lines
+        assert "/quite/long/prefix/path" in fake_stdout.getvalue()
 
 
 class TestStdinReader:
