@@ -4,6 +4,7 @@
 """Manage configuration swapping for bootstrapping purposes"""
 
 import contextlib
+import copy
 import os
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
@@ -118,8 +119,10 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
     # Read the "config" section but pop the install tree (the entry will not be
     # considered due to the use_store context manager, so it will be confusing
     # to have it in the configuration).
-    config_yaml = spack.config.CONFIG.get("config")
+    config_yaml = copy.deepcopy(spack.config.CONFIG.get("config"))
     config_yaml.pop("install_tree", None)
+    if sys.platform == "win32":
+        config_yaml.setdefault("sandbox", {})["enable"] = False
     return {
         "bootstrap": spack.config.CONFIG.get("bootstrap"),
         "config": config_yaml,
