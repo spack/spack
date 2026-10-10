@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import io
+import json
 import os
 import pathlib
 import subprocess
@@ -237,6 +238,55 @@ def test_pipeline_dag(config, repo_builder: RepoBuilder):
 
         a_deps_direct = [n.spec for n in pipeline.get_dependencies(pipeline.nodes[key_a])]
         assert all([s in a_deps_direct for s in [spec_a["pkg-b"], spec_a["pkg-c"]]])
+
+
+
+def test_pipeline_dag_to_dict():
+    """Serializing a pipeline preserves its stored nodes and edges."""
+    pipeline = ci.common.PipelineDag([])
+    pipeline.nodes = {
+        "z": ci.common.PipelineNode(Spec("pkg-z@1.0")),
+        "q": ci.common.PipelineNode(Spec("pkg-q@1.0")),
+        "b": ci.common.PipelineNode(Spec("pkg-b@1.0")),
+        "a": ci.common.PipelineNode(Spec("pkg-a@1.0")),
+    }
+    pipeline.nodes["a"].children.update({"z", "b"})
+    pipeline.nodes["z"].parents.add("a")
+    pipeline.nodes["b"].parents.add("a")
+
+    graph = pipeline.to_dict()
+    assert graph == {
+        "schema": "spack-ci-build-graph",
+        "schema_version": 1,
+        "roots": ["a", "q"],
+        "nodes": [
+            {
+                "id": "a",
+                "name": "pkg-a",
+                "spec": pipeline.nodes["a"].spec.format(),
+                "dependencies": ["b", "z"],
+            },
+            {
+                "id": "b",
+                "name": "pkg-b",
+                "spec": pipeline.nodes["b"].spec.format(),
+                "dependencies": [],
+            },
+            {
+                "id": "q",
+                "name": "pkg-q",
+                "spec": pipeline.nodes["q"].spec.format(),
+                "dependencies": [],
+            },
+            {
+                "id": "z",
+                "name": "pkg-z",
+                "spec": pipeline.nodes["z"].spec.format(),
+                "dependencies": [],
+            },
+        ],
+    }
+    assert json.loads(json.dumps(graph)) == graph
 
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
