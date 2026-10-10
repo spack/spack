@@ -182,6 +182,7 @@ extraPaths = ["lib/spack"]
 [tool.coverage.run]
 parallel = true
 concurrency = ["multiprocessing"]
+patch = ["subprocess", "_exit"]
 branch = true
 source = ["bin", "lib"]
 data_file = "./tests-coverage/.coverage"

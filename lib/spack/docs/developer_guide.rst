@@ -474,6 +474,21 @@ Unit tests
 Unit testing
 ------------
 
+Child-process coverage
+^^^^^^^^^^^^^^^^^^^^^^
+
+Run sandbox coverage with the CI version of Coverage.py (7.11) and the repository configuration:
+
+.. code-block:: console
+
+   $ python3 -m pytest --cov --cov-config=pyproject.toml lib/spack/spack/test/test_sandbox_namespaces.py
+
+The ``subprocess`` and ``_exit`` coverage patches collect execution from disposable namespace probe children and worker subprocesses, including children that terminate with ``os._exit``.
+Without these hooks, a passing live test can leave its child-only implementation reported as uncovered.
+Coverage collection does not bypass kernel namespace restrictions; live tests still require the capabilities they exercise.
+Mocked failure tests cover setup rejection without modifying the test runner's namespaces.
+Compare each proposed PR layer with its immediate parent, and keep its tests in that layer rather than relying on tests introduced later in a stack.
+
 Debugging Unit Tests in CI
 --------------------------
 

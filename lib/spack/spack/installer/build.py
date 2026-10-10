@@ -34,6 +34,7 @@ import spack.hooks
 import spack.mirrors.mirror
 import spack.repo
 import spack.sandbox
+import spack.sandbox_namespaces
 import spack.spec
 import spack.store
 import spack.url_buildcache
@@ -507,8 +508,16 @@ def worker_function(
     sys.stdin = open(os.devnull, "r", encoding=sys.stdin.encoding)
     os.dup2(sys.stdin.fileno(), 0)
 
-    # Start the tee thread to forward output to the log file and parent process.
-    tee = Tee(tee_control_r, tee_control_w, parent, log_path)
+    tee, state_stream, sandbox = _start_worker_output(
+        spack.config.CONFIG.get("config:sandbox", {}),
+        state,
+        tee_control_r,
+        tee_control_w,
+        parent,
+        log_path,
+        spec=spec,
+        stage_path=spec.package.stage.path,
+    )
 
     # Use closefd=False because of the connection objects. Use line buffering.
     # Replace sys.stdout/stderr AFTER the Tee redirected fds 1/2 so Python creates FileIO
@@ -521,12 +530,11 @@ def worker_function(
     sys.stderr = os.fdopen(
         sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
     )
-    state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
     try:
         with PrefixPivoter(spec.prefix, request.keep_prefix):
-            _install(request, state_stream, spack.store.STORE)
+            _install(request, state_stream, spack.store.STORE, sandbox=sandbox)
     except spack.error.StopPhase:
         exit_code = ExitCode.STOPPED_AT_PHASE
     except ProcessError as e:
@@ -625,39 +633,147 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
         spack.util.tty.debug(e)
 
 
-def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> None:
+def default_hide_as_empty_dirs(spec: spack.spec.Spec) -> List[str]:
+    """Return host directories hidden as empty by default for this build.
+
+    The host ``/usr/share/aclocal`` directory is hidden unless the spec has an
+    external ``autoconf`` dependency, because a host autoconf legitimately relies
+    on its own system macro directory.
+    """
+    hidden_dirs = []
+    if not any(dep.name == "autoconf" and dep.external for dep in spec.traverse(root=False)):
+        hidden_dirs.append("/usr/share/aclocal")
+    return hidden_dirs
+
+
+def _prepare_namespace_sandbox_before_threads(
+    config: dict, spec: spack.spec.Spec, stage_path: str
+) -> Optional[spack.sandbox.Sandbox]:
+    """Prepare the namespace view and drop mount authority before ``Tee``.
+
+    The worker is still single-threaded here. The returned sandbox is reused
+    after recipe-controlled setup so that later code only grants and applies
+    Landlock; it cannot create additional mounts.
+    """
+    if not config.get("enable", False):
+        return None
+
+    spack.sandbox_namespaces.freeze_namespace_sandbox_capability()
+    try:
+        sandbox = spack.sandbox.get_sandbox()
+    except spack.sandbox.SandboxError as error:
+        raise spack.error.InstallError(f"Cannot enable build sandbox: {error}") from error
+
+    if isinstance(sandbox, spack.sandbox_namespaces.NamespaceSandbox):
+        hidden_dirs = default_hide_as_empty_dirs(spec)
+        if not sandbox.prepare_mount_tree(hidden_dirs, stage_path):
+            spack.util.tty.warn(
+                "Build sandbox could not mask host directories; kernel namespaces unavailable"
+            )
+        elif not sandbox.drop_mount_authority():
+            raise spack.error.InstallError("Cannot drop namespace mount authority")
+    return sandbox
+
+
+def _start_tee_after_namespace(
+    config: dict,
+    tee_control_r: IpcChannel,
+    tee_control_w: Optional[IpcChannel],
+    parent: IpcChannel,
+    log_path: str,
+    spec: Optional[spack.spec.Spec] = None,
+    stage_path: Optional[str] = None,
+):
+    sandbox = None
+    if config.get("enable", False):
+        assert spec is not None and stage_path is not None
+        sandbox = _prepare_namespace_sandbox_before_threads(config, spec, stage_path)
+    return Tee(tee_control_r, tee_control_w, parent, log_path), sandbox
+
+
+def _start_worker_output(
+    config: dict,
+    state: IpcChannel,
+    tee_control_r: IpcChannel,
+    tee_control_w: Optional[IpcChannel],
+    parent: IpcChannel,
+    log_path: str,
+    spec: Optional[spack.spec.Spec] = None,
+    stage_path: Optional[str] = None,
+):
+    state_stream = make_state_stream(state)
+    try:
+        tee, sandbox = _start_tee_after_namespace(
+            config, tee_control_r, tee_control_w, parent, log_path, spec, stage_path
+        )
+    except BaseException:
+        error = traceback.format_exc()
+        try:
+            with open(log_path, "a", encoding="utf-8") as stream:
+                stream.write(error)
+        except OSError:
+            print(error, file=sys.stderr)
+        state_stream.close()
+        sys.exit(ExitCode.BUILD_ERROR)
+    return tee, state_stream, sandbox
+
+
+def _enable_sandbox(
+    config: dict,
+    spec: spack.spec.Spec,
+    stage_path: str,
+    sandbox: Optional[spack.sandbox.Sandbox] = None,
+) -> None:
     if not config.get("enable", False):
         return
 
-    try:
-        sandbox = spack.sandbox.get_sandbox()
-    except spack.sandbox.SandboxError as e:
-        raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
+    namespace_prepared = sandbox is not None
+    if sandbox is None:
+        try:
+            sandbox = spack.sandbox.get_sandbox()
+        except spack.sandbox.SandboxError as e:
+            raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
-    for dep in spec.traverse(root=False):
-        if not dep.external:
-            sandbox.allow_read(dep.prefix)
-
-    sandbox.allow_write(stage_path)
-    sandbox.allow_write(spec.prefix)
-
-    # POSIX prescribes /tmp and /dev/null are present. In the future we can consider setting
-    # TMPPATH to a sibling of the stage path to isolate concurrent builds better.
-    sandbox.allow_write(tempfile.gettempdir())
-    sandbox.allow_write(os.devnull)
-
-    # Allow read access to sbang, which might be needed to run build scripts.
-    sandbox.allow_read(os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"))
-    for upstream_db in spack.store.STORE.upstreams or []:
-        sandbox.allow_read(os.path.join(upstream_db.root, "bin", "sbang"))
-
-    # User-configured paths
-    for p in config.get("allow_read", []):
-        sandbox.allow_read(p)
-    for p in config.get("allow_write", []):
-        sandbox.allow_write(p)
+    namespace_module = getattr(spack, "sandbox_namespaces", None)
+    # Direct callers prepare the namespace view here. The install worker hands
+    # in an already-prepared instance after its mount authority was dropped.
+    if (
+        namespace_module is not None
+        and isinstance(sandbox, namespace_module.NamespaceSandbox)
+        and not namespace_prepared
+    ):
+        hidden_dirs = default_hide_as_empty_dirs(spec)
+        if not sandbox.prepare_mount_tree(hidden_dirs, stage_path):
+            spack.util.tty.warn(
+                "Build sandbox could not mask host directories; kernel namespaces unavailable"
+            )
+        elif not sandbox.drop_mount_authority():
+            raise spack.error.InstallError("Cannot drop namespace mount authority")
 
     try:
+        for dep in spec.traverse(root=False):
+            if not dep.external:
+                sandbox.allow_read(dep.prefix)
+
+        sandbox.allow_write(stage_path)
+        sandbox.allow_write(spec.prefix)
+
+        # POSIX prescribes /tmp and /dev/null are present. In the future we can consider setting
+        # TMPPATH to a sibling of the stage path to isolate concurrent builds better.
+        sandbox.allow_write(tempfile.gettempdir())
+        sandbox.allow_write(os.devnull)
+
+        # Allow read access to sbang, which might be needed to run build scripts.
+        sandbox.allow_read(os.path.join(spack.store.STORE.unpadded_root, "bin", "sbang"))
+        for upstream_db in spack.store.STORE.upstreams or []:
+            sandbox.allow_read(os.path.join(upstream_db.root, "bin", "sbang"))
+
+        # User-configured paths
+        for p in config.get("allow_read", []):
+            sandbox.allow_read(p)
+        for p in config.get("allow_write", []):
+            sandbox.allow_write(p)
+
         sandbox.apply(block_network=not config.get("allow_network", True))
     except spack.sandbox.SandboxError as e:
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
@@ -683,7 +799,10 @@ def _rewire_no_db(
 
 
 def _install(
-    request: BuildRequest, state_stream: io.TextIOWrapper, store: spack.store.Store
+    request: BuildRequest,
+    state_stream: io.TextIOWrapper,
+    store: spack.store.Store,
+    sandbox: Optional[spack.sandbox.Sandbox] = None,
 ) -> None:
     """Install a spec from build cache or source."""
     spec, explicit, install_policy = request.spec, request.explicit, request.install_policy
@@ -781,7 +900,9 @@ def _install(
         if stop_at is not None and stop_at not in builder.phases:
             raise spack.error.InstallError(f"'{stop_at}' is not a valid phase for {pkg.name}")
 
-        _enable_sandbox(spack.config.CONFIG.get("config:sandbox", {}), spec, stage.path)
+        _enable_sandbox(
+            spack.config.CONFIG.get("config:sandbox", {}), spec, stage.path, sandbox=sandbox
+        )
 
         for phase in builder:
             if stop_before is not None and phase.name == stop_before:
