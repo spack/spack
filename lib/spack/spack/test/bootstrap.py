@@ -4,6 +4,7 @@
 
 import json
 import pathlib
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 import pytest
@@ -235,6 +236,21 @@ def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.config.CONFIG.get("config:test_stage") == expected_dir
     assert spack.config.CONFIG.get("config:test_stage") == expected_dir
+
+
+@pytest.mark.parametrize("platform", ["win32", "linux"])
+@pytest.mark.parametrize("enabled", [True, False])
+def test_bootstrap_skips_linux_sandbox_on_windows(mutable_config, monkeypatch, platform, enabled):
+    sandbox = {"enable": enabled, "allow_network": True, "allow_read": ["/selected"]}
+    spack.config.CONFIG.set("config:sandbox", sandbox)
+    monkeypatch.setattr(spack.bootstrap.config, "sys", SimpleNamespace(platform=platform))
+
+    bootstrap_config = spack.bootstrap.config._read_and_sanitize_configuration()
+
+    assert bootstrap_config["config"]["sandbox"] == dict(
+        sandbox, enable=enabled and platform != "win32"
+    )
+    assert spack.config.CONFIG.get("config:sandbox") == sandbox
 
 
 @pytest.mark.regression("26548")
