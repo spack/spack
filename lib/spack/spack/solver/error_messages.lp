@@ -88,6 +88,8 @@ condition_cause(Condition2, ID2, Condition1, ID1) :-
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
+% When detailed version errors are disabled, this rule triggers for all version mismatches.
+% This fires only when version is NOT at a range boundary of ANY active constraint (XOR with the rules below).
 error(10000, "Cannot satisfy '{0}@{1}' (selected version {2} does not match)", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
@@ -95,16 +97,51 @@ error(10000, "Cannot satisfy '{0}@{1}' (selected version {2} does not match)", P
      condition_holds(ConstraintCause, node(CauseID, TriggerPkg)),
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     choose_version(node(ID, Package), Version).
+     pkg_fact(Package, version_order(Version, VersionIdx)),
+     0 = #count { Constraint2, TriggerPkg2, ConstraintCause2, EffectID2, CauseID2, MaxIdx :
+       pkg_fact(TriggerPkg2, condition_effect(ConstraintCause2, EffectID2)),
+       imposed_constraint(EffectID2, "node_version_satisfies", Package, Constraint2),
+       condition_holds(ConstraintCause2, node(CauseID2, TriggerPkg2)),
+       pkg_fact(Package, version_range(Constraint2, VersionIdx, MaxIdx)) },
+     0 = #count { Constraint3, TriggerPkg3, ConstraintCause3, EffectID3, CauseID3, MinIdx :
+       pkg_fact(TriggerPkg3, condition_effect(ConstraintCause3, EffectID3)),
+       imposed_constraint(EffectID3, "node_version_satisfies", Package, Constraint3),
+       condition_holds(ConstraintCause3, node(CauseID3, TriggerPkg3)),
+       pkg_fact(Package, version_range(Constraint3, MinIdx, VersionIdx)) }.
 
-error(100, "Cannot satisfy '{0}@{1}' (version {2} does not match)", Package, Constraint, Version, startcauses, ConstraintCause, CauseID)
+% Preferred error: selected version is at the lower bound of active range constraint
+error(100, "Cannot satisfy '{0}@{1}' ({3} from {4})", Package, Constraint, Version, Constraint2, TriggerPkg2, startcauses, ConstraintCause, CauseID, ConstraintCause2, CauseID2)
   :- attr("node_version_satisfies", node(ID, Package), Constraint),
      pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
      imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
      condition_holds(ConstraintCause, node(CauseID, TriggerPkg)),
      attr("version", node(ID, Package), Version),
      not pkg_fact(Package, version_satisfies(Constraint, Version)),
-     not choose_version(node(ID, Package), Version).
+     pkg_fact(TriggerPkg2, condition_effect(ConstraintCause2, EffectID2)),
+     imposed_constraint(EffectID2, "node_version_satisfies", Package, Constraint2),
+     condition_holds(ConstraintCause2, node(CauseID2, TriggerPkg2)),
+     pkg_fact(Package, version_range(Constraint2, MinIdx, MaxIdx)),
+     pkg_fact(Package, version_order(Version, VersionIdx)),
+     VersionIdx == MinIdx.
+
+% Preferred error: selected version is at the upper bound of active range constraint
+% Interestingly, spack can choose this for a constraint like @2: if it picks the maximum version in the package.
+% this is not considered a bug: the point is that the range is enforced, and no version in that range was viable
+error(100, "Cannot satisfy '{0}@{1}' ({3} from {4})", Package, Constraint, Version, Constraint2, TriggerPkg2, startcauses, ConstraintCause, CauseID, ConstraintCause2, CauseID2)
+  :- attr("node_version_satisfies", node(ID, Package), Constraint),
+     pkg_fact(TriggerPkg, condition_effect(ConstraintCause, EffectID)),
+     imposed_constraint(EffectID, "node_version_satisfies", Package, Constraint),
+     condition_holds(ConstraintCause, node(CauseID, TriggerPkg)),
+     attr("version", node(ID, Package), Version),
+     not pkg_fact(Package, version_satisfies(Constraint, Version)),
+     pkg_fact(TriggerPkg2, condition_effect(ConstraintCause2, EffectID2)),
+     imposed_constraint(EffectID2, "node_version_satisfies", Package, Constraint2),
+     condition_holds(ConstraintCause2, node(CauseID2, TriggerPkg2)),
+     pkg_fact(Package, version_range(Constraint2, MinIdx, MaxIdx)),
+     pkg_fact(Package, version_order(Version, VersionIdx)),
+     VersionIdx == MaxIdx,
+     % avoid double reporting: prior statement will catch this
+     not MinIdx == MaxIdx.
 
 error(0, "Cannot satisfy '{0}@{1}' and '{0}@{2}'", Package, Constraint1, Constraint2, startcauses, Cause1, C1ID, Cause2, C2ID)
   :- attr("node_version_satisfies", node(ID, Package), Constraint1),
@@ -174,6 +211,7 @@ pkg_fact(Package, version_satisfies(Constraint, Version)) :-
 #show error/9.
 #show error/10.
 #show error/11.
+#show error/12.
 
 #show condition_cause/4.
 #show condition_reason/2.
