@@ -120,7 +120,7 @@ def generate_external_refs(spec):
         {
             "referenceCategory": "SECURITY",
             "referenceType": "purl",
-            "referenceLocator": f"pkg:spack/{spec.namespace}/{spec.name}@{spec.version}?sha={spec.dag_hash()}",  # noqa: E501
+            "referenceLocator": f"pkg:spack/{spec.namespace}/{spec.name}@{spec.version}?daghash={spec.dag_hash()}",  # noqa: E501
         }
     ]
 
