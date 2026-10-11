@@ -4,7 +4,7 @@ build:
   os: "ubuntu-24.04"
   apt_packages:
     - graphviz
-    - inkscape
+    - librsvg2-bin  # provides rsvg-convert for sphinxcontrib.rsvgconverter
     - xindy
   tools:
     python: "3.14"
