@@ -9,6 +9,7 @@ import json
 import os
 import pathlib
 import re
+import shutil
 import tarfile
 import urllib.error
 import urllib.request
@@ -196,6 +197,77 @@ def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
         results = spack.binary_distribution.get_mirrors_for_spec(s)
         assert len(results) == 1
         assert results[0].url == url_util.path_to_file_url(str(tmp_path))
+
+
+def _remove_index_during_first_association(monkeypatch, mutable_config):
+    """Makes the first association see an index file that another config's update removed.
+
+    Returns the list that gets an entry when the other process has run.
+    """
+    associate = spack.binary_distribution.BinaryIndexCache._associate_built_specs_with_mirror
+    other_process_ran = []
+
+    def other_process_then_associate(self, cache_key, mirror_metadata):
+        if not other_process_ran:
+            other_process_ran.append(True)
+            mirrors = mutable_config.get("mirrors")
+            mutable_config.set("mirrors", {})
+            try:
+                other = spack.binary_distribution.BinaryIndexCache(
+                    self._index_cache_root, config=mutable_config
+                )
+                other.update(config=mutable_config)
+            finally:
+                mutable_config.set("mirrors", mirrors)
+        return associate(self, cache_key, mirror_metadata)
+
+    monkeypatch.setattr(
+        spack.binary_distribution.BinaryIndexCache,
+        "_associate_built_specs_with_mirror",
+        other_process_then_associate,
+    )
+    return other_process_ran
+
+
+def test_built_spec_cache_survives_index_removed_by_other_config(
+    install_mockery, mutable_config, tmp_path: pathlib.Path, monkeypatch
+):
+    """Sequential form of the shared-cache race behind the test_built_spec_cache flake.
+
+    Another process whose config lacks this mirror updates the shared index cache while
+    this process associates the mirror's index. That update removes the index file, and
+    the spec must still be found.
+    """
+    install_cmd("--fake", "--no-cache", "corge")
+    buildcache_cmd("push", "--unsigned", "--update-index", str(tmp_path), "corge")
+    mirror_cmd("add", "--type", "binary", "--unsigned", "test-mirror", str(tmp_path))
+    other_process_ran = _remove_index_during_first_association(monkeypatch, mutable_config)
+
+    buildcache_cmd("list", "-a", "-l")
+    assert other_process_ran
+
+    cspec = spack.concretize.concretize_one("corge")
+    results = spack.binary_distribution.get_mirrors_for_spec(cspec, index_only=True)
+    assert [r.url for r in results] == [url_util.path_to_file_url(str(tmp_path))]
+
+
+def test_index_removed_by_other_config_during_single_update(
+    install_mockery, mutable_config, tmp_path: pathlib.Path, monkeypatch
+):
+    """Same race as above, but with no later update to repair it: the spec must be found
+    once the single update that hit the race returns."""
+    install_cmd("--fake", "--no-cache", "corge")
+    cspec = spack.concretize.concretize_one("corge")
+    buildcache_cmd("push", "--unsigned", "--update-index", str(tmp_path), "corge")
+    mirror_cmd("add", "--type", "binary", "--unsigned", "test-mirror", str(tmp_path))
+    cache = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "indices"), config=mutable_config
+    )
+    other_process_ran = _remove_index_during_first_association(monkeypatch, mutable_config)
+
+    cache.update(config=mutable_config)
+    assert other_process_ran
+    assert cache.find_built_spec(cspec)
 
 
 def test_download_tarball_reports_signature_verification_failure(
@@ -471,6 +543,127 @@ def test_use_bin_index_with_view(
     )
     cache_list = buildcache_cmd("list", "-al")
     assert "libdwarf" in cache_list
+
+
+def _push_to_two_identical_mirrors(tmp_path: pathlib.Path, config: Configuration):
+    """Push one spec to a mirror and copy it, so both mirrors serve the same index."""
+    mirror_x, mirror_y = tmp_path / "mirror_x", tmp_path / "mirror_y"
+    url_x = url_util.path_to_file_url(str(mirror_x))
+    url_y = url_util.path_to_file_url(str(mirror_y))
+    config.set("mirrors", {"x": url_x})
+    s = spack.concretize.concretize_one("libdwarf")
+    install_cmd("--fake", "--no-cache", s.name)
+    buildcache_cmd("push", "-u", str(mirror_x), s.name)
+    buildcache_cmd("update-index", str(mirror_x))
+    shutil.copytree(mirror_x, mirror_y)
+    return s, url_x, url_y
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_identical_indices_associate_every_mirror(tmp_path: pathlib.Path, mutable_config):
+    s, url_x, url_y = _push_to_two_identical_mirrors(tmp_path, mutable_config)
+    mutable_config.set("mirrors", {"x": url_x, "y": url_y})
+    cache = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "indices"), config=mutable_config
+    )
+    cache.update(config=mutable_config)
+    assert {m.url for m in cache.find_built_spec(s)} == {url_x, url_y}
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_index_cache_entry_removed_by_other_mirror_config(tmp_path: pathlib.Path, mutable_config):
+    s, url_x, url_y = _push_to_two_identical_mirrors(tmp_path, mutable_config)
+    cache_root = str(tmp_path / "indices")
+    mutable_config.set("mirrors", {"x": url_x, "y": url_y})
+    spack.binary_distribution.BinaryIndexCache(cache_root, config=mutable_config).update(
+        config=mutable_config
+    )
+
+    # This instance loads the shared cache before another config drops mirror x from it
+    worker = spack.binary_distribution.BinaryIndexCache(cache_root, config=mutable_config)
+    worker._init_local_index_cache()
+    mutable_config.set("mirrors", {"y": url_y})
+    spack.binary_distribution.BinaryIndexCache(cache_root, config=mutable_config).update(
+        config=mutable_config
+    )
+
+    mutable_config.set("mirrors", {"x": url_x, "y": url_y})
+    worker.update(config=mutable_config)
+    assert {m.url for m in worker.find_built_spec(s)} == {url_x, url_y}
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_index_file_removed_before_association_is_retried(tmp_path: pathlib.Path, mutable_config):
+    s, url_x, _ = _push_to_two_identical_mirrors(tmp_path, mutable_config)
+    mutable_config.set("mirrors", {"x": url_x})
+    cache = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "indices"), config=mutable_config
+    )
+    cache.update(config=mutable_config)
+    assert cache.find_built_spec(s)
+
+    # Another process removes the index file before this one associates it
+    for entry in cache._local_index_cache.values():
+        cache._index_file_cache.remove(entry["index_path"])
+    cache.regenerate_spec_cache(clear_existing=True)
+    assert not cache.find_built_spec(s)
+
+    # Fetching the index again must associate its specs again
+    cache.update(config=mutable_config)
+    assert cache.find_built_spec(s)
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_removed_index_file_clears_stale_specs(tmp_path: pathlib.Path, mutable_config):
+    _, url_x, _ = _push_to_two_identical_mirrors(tmp_path, mutable_config)
+    mirror_x = tmp_path / "mirror_x"
+    cache = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "indices"), config=mutable_config
+    )
+    cache.update(config=mutable_config)
+    assert "libelf" in {s.name for s in cache.get_all_built_specs()}
+
+    specs_path = str(mirror_x / spack.binary_distribution.buildcache_relative_specs_path())
+    for libelf_file in glob.glob(os.path.join(specs_path, "libelf", "*libelf*")):
+        os.remove(libelf_file)
+    buildcache_cmd("update-index", str(mirror_x))
+
+    # Another process removes the cached index file before this one updates
+    for entry in cache._local_index_cache.values():
+        cache._index_file_cache.remove(entry["index_path"])
+    cache.update(config=mutable_config)
+    assert "libelf" not in {s.name for s in cache.get_all_built_specs()}
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+def test_unchanged_index_refetch_keeps_cached_file(
+    monkeypatch, tmp_path: pathlib.Path, mutable_config
+):
+    """A refetch that returns the cached content without being fresh (e.g. after an
+    ETag change) must not remove the cache file it just rewrote under the same name."""
+    _, url_x, _ = _push_to_two_identical_mirrors(tmp_path, mutable_config)
+    mutable_config.set("mirrors", {"x": url_x})
+    cache = spack.binary_distribution.BinaryIndexCache(
+        str(tmp_path / "indices"), config=mutable_config
+    )
+    cache.update(config=mutable_config)
+    key, entry = next(iter(cache._local_index_cache.items()))
+    data = cache._index_file_cache.cache_path(entry["index_path"]).read_text(encoding="utf-8")
+
+    class UnchangedIndexHandler:
+        def conditional_fetch(self):
+            return spack.binary_distribution.FetchIndexResult(
+                etag=None, hash=entry["index_hash"], data=data, fresh=False
+            )
+
+    monkeypatch.setattr(
+        spack.binary_distribution,
+        "get_index_fetcher",
+        lambda *args, **kwargs: UnchangedIndexHandler(),
+    )
+    meta = spack.binary_distribution.MirrorMetadata.from_string(key)
+    cache._fetch_and_cache_index(meta, cache_entry=dict(entry))
+    assert cache._index_file_cache.cache_path(entry["index_path"]).exists()
 
 
 def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
