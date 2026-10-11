@@ -172,12 +172,14 @@ config:
   # install prefix, and system temp directory are always writable.
   # Spack-installed dependency prefixes are always readable. Use the allow_read
   # and allow_write lists to grant additional permissions to other paths.
-  # This feature is only available on Linux kernels with Landlock support, and
-  # only works with the new installer.
+  # This feature is available with the new installer on supported Linux and
+  # Windows systems. Linux prefers user, mount, and (when network is blocked)
+  # network namespaces, with Landlock as a constrained fallback.
   sandbox:
-    enable: false
-    # Allow TCP network access during the build phase.
-    allow_network: true
+    enable: true
+    # Allow direct network access during the build phase. When false on Linux,
+    # the install worker uses a private network namespace with loopback enabled.
+    allow_network: false
     # Additional paths with read and execute permissions.
     allow_read: []
     # Additional paths with write and execute permissions.

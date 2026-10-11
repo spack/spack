@@ -21,9 +21,8 @@ import platform
 import stat
 import sys
 import warnings
-from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict
 
 # os.O_PATH is only defined on linux. Appease mypy with our own O_PATH.
 if sys.platform == "linux":
@@ -31,7 +30,7 @@ if sys.platform == "linux":
 else:
     O_PATH = 0
 
-import spack.error
+from spack.sandbox_base import Sandbox, SandboxError
 
 # Linux landlock syscalls
 SYSCALL_LANDLOCK_CREATE_RULESET = 444
@@ -85,31 +84,6 @@ class RulesetAttr(ctypes.Structure):
 
 class PathBeneathAttr(ctypes.Structure):
     _fields_ = [("allowed_access", ctypes.c_uint64), ("parent_fd", ctypes.c_int32)]
-
-
-class Sandbox(ABC):
-    """Abstract base class for sandbox implementations."""
-
-    def allow_read(self, path: Union[str, Path]):
-        p = Path(path).absolute()
-        resolved = p.resolve()
-        if resolved.exists():
-            self._allow_read(p, resolved)
-
-    def allow_write(self, path: Union[str, Path]):
-        p = Path(path).absolute()
-        resolved = p.resolve()
-        if resolved.exists():
-            self._allow_write(p, resolved)
-
-    @abstractmethod
-    def _allow_read(self, original: Path, resolved: Path): ...
-
-    @abstractmethod
-    def _allow_write(self, original: Path, resolved: Path): ...
-
-    @abstractmethod
-    def apply(self, block_network: bool = False): ...
 
 
 def _get_write_flags(abi_version: int) -> int:
@@ -267,10 +241,24 @@ def get_sandbox() -> Sandbox:
     if platform.system() != "Linux":
         raise SandboxError("Build sandboxing is only supported on Linux")
     try:
-        return LandlockSandbox()
+        from spack.sandbox_namespaces import NamespaceSandboxBackend, namespace_sandbox_decision
+
+        decision = namespace_sandbox_decision()
+        if decision.backend is NamespaceSandboxBackend.NAMESPACE:
+            from spack.sandbox_namespaces import NamespaceSandbox
+
+            return NamespaceSandbox(landlock_factory=LandlockSandbox)
+        if decision.backend is NamespaceSandboxBackend.LANDLOCK:
+            import spack.util.tty
+
+            spack.util.tty.debug(
+                "Namespace sandbox unavailable during {0}: {1}; using Landlock-only "
+                "sandbox".format(decision.capability.operation, decision.capability.reason)
+            )
+            return LandlockSandbox()
+        raise SandboxError(
+            "Namespace sandbox unavailable during {0}: {1}; unconstrained fallback is "
+            "not permitted".format(decision.capability.operation, decision.capability.reason)
+        )
     except OSError as e:
         raise SandboxError(f"Landlock sandboxing is unavailable: {e}") from e
-
-
-class SandboxError(spack.error.SpackError):
-    """Raised when the build sandbox cannot be set up or applied."""

@@ -17,11 +17,13 @@ import time
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
 
 import spack.binary_distribution
+import spack.caches
 import spack.config
 import spack.deprecation
 import spack.error
 import spack.mirrors.mirror
 import spack.report
+import spack.sandbox_namespaces
 import spack.spec
 import spack.stage
 import spack.store
@@ -41,7 +43,13 @@ from spack.installer.base import (
     InstallPolicy,
     JobServerBase,
 )
-from spack.installer.build import BuildRequest, ChildInfo, start_build
+from spack.installer.build import (
+    BuildLifecycle,
+    BuildRequest,
+    ChildInfo,
+    prepare_namespace_activation,
+    start_build,
+)
 from spack.installer.schedule import (
     AddSpecAction,
     BuildGraph,
@@ -490,6 +498,11 @@ class PackageInstaller:
                     if child.proc.is_alive():
                         child.proc.kill()
                         child.proc.join()
+                    child.finalize_lifecycle(
+                        child.proc.exitcode
+                        if child.proc.exitcode is not None
+                        else ExitCode.BUILD_ERROR
+                    )
                 except Exception:
                     pass
 
@@ -571,6 +584,7 @@ class PackageInstaller:
         self._drain_child_output(build, selector)
         self._drain_child_state(build, selector)
         exitcode = build.close(selector)
+        build.finalize_lifecycle(exitcode)
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
         if exitcode == ExitCode.SUCCESS:
@@ -751,6 +765,13 @@ class PackageInstaller:
         tests = self.tests
         run_tests = tests is True or bool(tests and spec.name in tests)
         is_root = dag_hash in self.build_graph.roots
+        sandbox_config = spack.config.CONFIG.get("config:sandbox", {})
+        lifecycle = None
+        if not spec.external:
+            lifecycle = BuildLifecycle(
+                spec, self.keep_stage or is_develop, keep_prefix=self.keep_prefix
+            )
+            lifecycle.prepare(create_prefix_target=sandbox_config.get("enable", False))
         # Both possible sub-processes (cache install, source build) append to the same log file.
         if dag_hash not in self.log_paths:
             if spec.external:
@@ -764,6 +785,33 @@ class PackageInstaller:
                 )
                 os.close(log_fd)
                 self.log_paths[dag_hash] = log_path
+
+        namespace_activation = None
+        if lifecycle is not None and sandbox_config.get("enable", False):
+            decision = spack.sandbox_namespaces.namespace_sandbox_decision()
+            if decision.backend is spack.sandbox_namespaces.NamespaceSandboxBackend.NAMESPACE:
+                assert lifecycle.stage_parent is not None
+                worker_root = tempfile.mkdtemp(
+                    dir=lifecycle.stage_parent, prefix=".spack-namespace-worker-"
+                )
+                jobserver_paths = []
+                fifo_path = getattr(jobserver, "fifo_path", None)
+                if fifo_path is not None:
+                    jobserver_paths.append(fifo_path)
+                try:
+                    namespace_activation, scratch = prepare_namespace_activation(
+                        sandbox_config,
+                        spec,
+                        lifecycle.stage_parent,
+                        self.log_paths[dag_hash],
+                        jobserver_paths,
+                        worker_root,
+                        spack.caches.fetch_cache_location(config=spack.config.CONFIG),
+                    )
+                except BaseException:
+                    lifecycle.finalize(ExitCode.BUILD_ERROR)
+                    raise
+                lifecycle.namespace_mount_plan_scratch = scratch
 
         request = BuildRequest(
             spec=spec,
@@ -783,8 +831,20 @@ class PackageInstaller:
             log_path=self.log_paths[dag_hash],
             stop_before=self.stop_before if is_root else None,
             stop_at=self.stop_at if is_root else None,
+            stage_parent=lifecycle.stage_parent if lifecycle else None,
+            stage_path=lifecycle.stage_path if lifecycle else None,
+            namespace_activation=namespace_activation,
         )
-        child_info = self.launcher(request, jobserver)
+        try:
+            child_info = self.launcher(request, jobserver)
+        except BaseException:
+            if lifecycle is not None:
+                lifecycle.finalize(ExitCode.BUILD_ERROR)
+            raise
+        child_info.lifecycle = lifecycle
+        if lifecycle is not None and lifecycle.namespace_mount_plan_scratch is not None:
+            assert child_info.proc.pid is not None
+            lifecycle.namespace_mount_plan_scratch.attach_worker(child_info.proc.pid)
         child_info.prefix_lock = prefix_lock
         self.running_builds[dag_hash] = child_info
         child_info.register_with_selector(selector, dag_hash)

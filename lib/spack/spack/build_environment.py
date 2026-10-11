@@ -581,6 +581,11 @@ def set_wrapper_variables(pkg, env):
         spack.store.STORE.db.root,
         *(db.root for db in spack.store.STORE.db.upstream_dbs),
     }
+    stage_root = spack.stage.stage_root(spack.config.CONFIG)
+    if os.path.splitdrive(pkg.stage.path)[0] != os.path.splitdrive(stage_root)[0] or (
+        os.path.commonpath((pkg.stage.path, stage_root)) != stage_root
+    ):
+        spack_managed_dirs.add(pkg.stage.path)
     spack_managed_dirs.update([os.path.realpath(p) for p in spack_managed_dirs])
 
     env.set(SPACK_MANAGED_DIRS, "|".join(f'"{p}/"*' for p in sorted(spack_managed_dirs)))
