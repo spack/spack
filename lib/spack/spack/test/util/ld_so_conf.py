@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-import spack.util.ld_so_conf as ld_so_conf
+from spack.util import ld_so_conf
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix path")

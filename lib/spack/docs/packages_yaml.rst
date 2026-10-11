@@ -7,7 +7,9 @@
    :description lang=en:
       A guide to customizing package settings in Spack using the packages.yaml file, including configuring compilers, specifying external packages, package requirements, and permissions.
 
-.. _packages-config:
+.. index::
+   single: packages.yaml; reference
+   :name: packages-config
 
 Package Settings (packages.yaml)
 ================================
@@ -37,6 +39,9 @@ You can override them in ``~/.spack/packages.yaml`` or ``etc/spack/packages.yaml
 For more details on how this works, see :ref:`configuration-scopes`.
 
 .. _sec-external-packages:
+
+.. index::
+   single: external package; configuring
 
 External packages
 -----------------
@@ -249,6 +254,9 @@ This method's conciseness comes with a strict requirement: each dependency must 
 This makes the approach suitable for simple or temporary configurations.
 In larger, more dynamic environments, however, it can become a maintenance challenge, as adding new external packages over time may require frequent updates to existing specs to preserve their uniqueness.
 
+.. index::
+   single: dependency; in config
+
 Dependencies using YAML configuration
 """""""""""""""""""""""""""""""""""""
 
@@ -396,7 +404,10 @@ The ``implicit_rpaths`` field is filled in automatically by Spack when detecting
 In addition, paths from ``extra_rpaths`` are added as library search paths for the linker.
 In the example above, both ``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be added as well.
 
-.. _package-requirements:
+.. index::
+   single: requirement; in config
+   single: require
+   :name: package-requirements
 
 Package Requirements
 --------------------
@@ -595,7 +606,10 @@ For instance with a configuration like:
 
 you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
-.. _package-strong-preferences:
+.. index::
+   single: conflict; in config
+   single: strong preference; in config
+   :name: package-strong-preferences
 
 Conflicts and strong preferences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -641,7 +655,10 @@ The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are opt
    Since only one of the requirements must hold, and ``@:`` is always true, the rule above is equivalent to a conflict.
    For "strong preferences" the same construction works, with the ``any_of`` policy instead of the ``one_of`` policy.
 
-.. _package-preferences:
+.. index::
+   single: preference
+   single: prefer
+   :name: package-preferences
 
 Package Preferences
 -------------------
@@ -686,6 +703,138 @@ Any preference can be overwritten on the command line if explicitly requested.
 
 Preferences cannot overcome explicit constraints, as they only set a preferred ordering among homogeneous attribute values.
 Going back to the example, if ``gperftools@2.3:`` was requested, then Spack will install version 2.4 since the most preferred version 2.2 is prohibited by the version constraint.
+
+.. _package-deprecations-config:
+
+Allowing Deprecated Versions
+----------------------------
+
+When a package uses the ``deprecated()`` directive (see :ref:`deprecate`), Spack refuses the deprecated spec unless the configuration allows it.
+A refusal is a concretization error, and also an install-time error for specs concretized earlier (for example from a lockfile).
+An allowed deprecation is skipped entirely: the deprecated version is treated like any other, with no warning and no penalty in the solve.
+
+The install-time check is static and does not depend on local install status: a spec is refused if a disallowed deprecation is found in the checked closure of the requested packages, even when the deprecated dependency is already installed.
+The check runs once, upfront, so an install never fails halfway because a deprecated spec was discovered late.
+
+All deprecation settings live under a ``deprecation:`` block, which can be given globally under ``all:`` or for a specific package.
+Which deprecations are allowed is set with ``allow:``, a list of selectors:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation:
+         allow:
+         - severity: low
+     openssl:
+       deprecation:
+         allow: []
+
+A ``deprecated()`` directive is skipped when at least one selector matches it, or, for a directive with labels, when each of its labels is matched by a selector.
+The default is an empty list, which allows none of them, so Spack will not select a deprecated version unless the configuration says so.
+
+In this example, deprecations of severity ``low`` on any package are allowed silently, while ``medium`` and above remain errors.
+The list for ``openssl`` replaces the one under ``all:``, so every deprecation on that package is an error regardless of the global setting.
+
+A selector may constrain the ``severity``, the ``reason``, and the ``labels`` of a deprecation.
+Attributes given in the same selector all have to match, and an attribute that is omitted matches anything.
+
+``severity`` is a maximum, so ``medium`` also matches ``low``.
+The values are ``"none"``, ``"low"``, ``"medium"``, ``"high"`` and ``"critical"``, in increasing order of urgency.
+They are named after the qualitative severity ratings of `CVSS <https://www.first.org/cvss/specification-document>`_.
+For a deprecation with reason ``vuln`` the level roughly corresponds to the rating of the advisory it refers to, so an advisory scored between 7.0 and 8.9 is declared ``"high"``.
+Spack neither computes nor verifies a score, so the level a recipe declares is the packager's judgement.
+The correspondence is a convention, and it exists so that a site can write these selectors from the same policy it already applies to advisories elsewhere.
+The other reasons have no score to correspond to, and there the level ranks how urgently users should move off the deprecated spec.
+
+``reason`` is the category a deprecation falls into, either a single value or a list of them.
+Reasons exist so that a selector can discriminate between them: a site may accept a version whose maintainers stopped supporting it, while refusing anything with a known vulnerability whatever its severity.
+The four reasons are:
+
+``vuln``
+   A known vulnerability affects the spec.
+
+``rename``
+   The package was renamed, and users should move to the new name.
+
+``retired``
+   The spec is going away, because the release reached its end of life or upstream removed it.
+
+``unspecified``
+   None of the reasons above applies, for instance a spec its maintainers no longer support although nothing is known to be wrong with it.
+   A recipe stating this reason has to explain itself with a message, so the error still says what is wrong and what to use instead.
+   Spack also records this reason for versions declared with the legacy ``version(..., deprecated=True)`` keyword, which carries no message.
+
+See :ref:`deprecate` for what a packager is expected to put in each one.
+
+Because selectors are matched independently, a list can hold some reasons to a stricter standard than others:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation:
+         allow:
+         - reason: [rename, retired, unspecified]
+           severity: low
+         - reason: vuln
+           severity: none
+
+Here a ``low``-severity rename, retirement or unspecified deprecation is allowed, while a vulnerability is allowed only if it was assessed to have no consequence.
+A reason that appears in no selector is refused whatever its severity, so a reason added in a later Spack version stays refused until the configuration names it.
+
+For a single command, the ``--deprecated`` flag allows every deprecation, whatever the configuration files say.
+It adds a selector allowing any severity under ``all:``, and to the ``allow:`` list of every package that has one.
+
+Since ``allow:`` is a list, configuration scopes merge it by concatenation, like every other list in ``packages.yaml``.
+Two scopes that both set it therefore allow the union of what each one allows.
+Write ``allow::`` in a scope that has to replace what the lower ones set, rather than add to it.
+
+Which dependencies are checked is controlled by the ``scope`` setting, which is global and can only be given under ``all:``:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation:
+         scope: runtime
+
+With the default ``"runtime"``, two sets of nodes are checked: the link and run closure of the requested packages, which is the set of dependencies that end up in their runtime environment, and any node Spack would build from sources.
+The second set means a deprecated build tool is not silently compiled and run: when a version that is not deprecated exists the concretizer selects it instead, and when the request leaves no alternative it is an error.
+Nodes that come from reuse are exempt, so an artifact that was built with a tool since deprecated is still reused as is.
+With ``"all"``, every node in the DAG is checked instead, including the build dependencies recorded in reused artifacts.
+The stricter ``"all"`` scope is technically more correct, since a compromised build tool can in principle affect its dependents, but it is also more likely to reject an install over a deprecation that has no effect on the produced binaries.
+
+Individual advisories can be allowed without allowing a whole severity, by listing them under ``labels``:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation:
+         allow:
+         - labels: [CVE-2023-0286]
+     openssl:
+       deprecation:
+         allow:
+         - labels: [GHSA-xxxx-yyyy-zzzz]
+
+A deprecation that declares ``labels`` (see :ref:`deprecate`) is skipped when each of its labels is listed in a selector whose other attributes match the deprecation too.
+The labels do not need to be in the same selector, nor in the same configuration scope: a directive citing two advisories is skipped when a site scope allows one and a user scope allows the other.
+A deprecation with no labels is never matched by a selector that lists some.
+A selector that constrains only the labels matches whatever the severity, which is what lets a site accept one advisory it assessed without accepting anything else.
+
+Spack attaches the reserved label ``version_deprecated`` to the deprecations that come from the legacy ``version(..., deprecated=True)`` keyword, which is how they can be allowed on their own:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       deprecation:
+         allow:
+         - labels: [version_deprecated]
+
+The directive refuses that label, so this selector matches no deprecation a recipe declares, including one with reason ``unspecified``.
 
 .. _package_permissions:
 
@@ -744,4 +893,39 @@ You can assign class-level attributes in the configuration:
 Attributes set this way will be accessible to any method executed in the package.py file (e.g. the ``install()`` method).
 Values for these attributes may be any value parseable by yaml.
 
-These can only be applied to specific packages, not "all" or virtual packages.
+Variable substitution in package attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Package attribute values support variable substitution, allowing you to use Spack-specific variables, environment variables, and user path expansion in your configuration.
+This is particularly useful for specifying paths relative to your Spack installation, environment, or home directory.
+
+For example, you can reference local source archives or build artifacts:
+
+.. code-block:: yaml
+
+   packages:
+     mypackage:
+       package_attributes:
+         # Use Spack installation directory
+         url: file://$spack/local-sources/mypackage-1.0.tar.gz
+         # Use environment name
+         git: $env/mypackage.git
+         # Use environment variables
+         custom_path: ${HOME}/build/artifacts
+         # Use user expansion
+         license_file: ~/licenses/mypackage.lic
+
+All the variables documented in :ref:`config-file-variables` are supported, including:
+
+* ``$spack``: path to the Spack installation
+* ``$env``: path to the currently active environment
+* ``$user``: current user name
+* ``${VARNAME}``: environment variables
+* ``~`` or ``~user``: user home directory expansion
+
+Variable substitution is applied to string values in ``package_attributes``.
+This allows you to create portable configurations that adapt to different environments and user contexts.
+
+.. note::
+
+   These can only be applied to specific packages, not "all" or virtual packages.

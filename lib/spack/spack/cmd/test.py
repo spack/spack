@@ -12,13 +12,13 @@ from collections import Counter
 
 import spack.cmd
 import spack.config
-import spack.environment as ev
 import spack.install_test
 import spack.repo
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
-from spack.llnl.util.tty import colify
+from spack.util import tty
+from spack.util.tty import colify
 
 from . import doc_dedented, doc_first_line
 
@@ -167,13 +167,13 @@ def test_run(args):
 
     # set config option for fail-fast
     if args.fail_fast:
-        spack.config.set("config:fail_fast", True, scope="command_line")
+        spack.config.CONFIG.set("config:fail_fast", True, scope="command_line")
 
     explicit = args.explicit or None
     explicit_str = "explicitly " if args.explicit else ""
 
     # Get specs to test
-    env = ev.active_environment()
+    env = active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
@@ -242,7 +242,7 @@ def test_list(args):
 
     # TODO: This can be extended to have all of the output formatting options
     # from `spack find`.
-    env = ev.active_environment()
+    env = active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.STORE.db.query(hashes=hashes)
@@ -328,9 +328,9 @@ def _report_suite_results(test_suite, args, constraints):
             for s in spack.store.STORE.db.query(spec, installed=True):
                 specs[s.dag_hash()] = s
         specs = sorted(specs.values())
-        test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs if s in specs)
+        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs if s in specs}
     else:
-        test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs)
+        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs}
 
     if not test_specs:
         return

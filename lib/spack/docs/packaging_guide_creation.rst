@@ -197,9 +197,17 @@ Controlling the editor
 When Spack needs to open an editor for you (e.g., for commands like :ref:`cmd-spack-create` or :ref:`cmd-spack-edit`), it looks at several environment variables to figure out what to use.
 The order of precedence is:
 
-* ``SPACK_EDITOR``: highest precedence, in case you want something specific for Spack;
-* ``VISUAL``: standard environment variable for full-screen editors like ``vim`` or ``emacs``;
-* ``EDITOR``: older environment variable for your editor.
+.. envvar:: SPACK_EDITOR
+
+   Highest precedence, in case you want something specific for Spack.
+
+.. envvar:: VISUAL
+
+   Standard environment variable for full-screen editors like ``vim`` or ``emacs``.
+
+.. envvar:: EDITOR
+
+   Older environment variable for your editor.
 
 You can set any of these to the command you want to run, e.g., in ``bash`` you might run one of these:
 
@@ -420,6 +428,10 @@ Spack packages are designed to be built from source code.
 Typically every package version has a corresponding source code archive, which Spack downloads and verifies before building the package.
 
 .. _versions-and-fetching:
+
+.. index::
+   single: version; directive
+   single: directive; version
 
 Versions and URLs
 ^^^^^^^^^^^^^^^^^
@@ -736,6 +748,9 @@ In this case, you can mark an older version as preferred using the ``preferred=T
 See the section on :ref:`version ordering <version-comparison>` for more details and exceptions on how the latest version is computed.
 
 
+.. index::
+   single: deprecation; of package versions
+
 .. _deprecate:
 
 Deprecating old versions
@@ -756,25 +771,89 @@ At the same time, there are many reasons to keep old versions of software:
 #. Requirements for older packages (e.g., some packages still rely on Qt 3)
 
 In general, you should not remove old versions from a ``package.py`` directly.
-Instead, you should first deprecate them using the following syntax:
+Instead, you should first deprecate them using the ``deprecated()`` directive.
+For example, to flag a version that has a known CVE:
 
 .. code-block:: python
 
-   version("1.2.3", sha256="...", deprecated=True)
+   class Openssl(Package):
+       version("3.0.7", sha256="...")
+       version("1.1.1t", sha256="...")
 
+       deprecated("@1.1.1t", reason="vuln", severity="high")
 
-This has two effects.
-First, ``spack info`` will no longer advertise that version.
-Second, commands like ``spack install`` that fetch the package will require user approval:
+The first positional argument is an optional spec constraint, in this case the version ``"@1.1.1t"``.
+If omitted, the whole package is deprecated.
 
-.. code-block:: spec
+.. warning::
 
-   $ spack install openssl@1.0.1e
-   ==> Warning: openssl@1.0.1e is deprecated and may be removed in a future Spack release.
-   ==>   Fetch anyway? [y/N]
+   The constraint is an ordinary spec, so ``@1.0`` is a range and also matches ``1.0.1`` and ``1.0.2``.
+   State the intent explicitly instead:
 
+   #. ``@=1.0`` deprecates exactly that version;
+   #. ``@1.0:1.2`` deprecates an explicit range;
+   #. ``@1.0.0``, written with three or more components, deprecates that release and anything extending it, such as ``1.0.0-custom`` or ``1.0.0.1``.
 
-If you use ``spack install --deprecated``, this check can be skipped.
+   The advice under :ref:`version_constraints` prefers ranges over ``@=`` so that dependencies and conflicts are not over-constrained.
+   It does not apply to deprecations, where a constraint that matches more than intended refuses versions users still need.
+
+The ``reason`` keyword is required, and states which category the deprecation falls into.
+Users set their tolerance per category, so the reason decides whether a site that accepts unmaintained versions still refuses this one.
+It must be one of:
+
+``vuln``
+   A known vulnerability affects the spec.
+   Use it for any advisory, whether it is a CVE, a GHSA or a PYSEC entry, and list the identifiers in ``labels`` so users can allow the ones they have assessed.
+   Take ``severity`` from the advisory's own rating.
+
+``rename``
+   The spec was renamed upstream or in the repository, and users should move to the new name.
+   A package that changed name is the usual case, and ``msg`` is the place to name the replacement.
+   Renamed variants are not covered: deprecating a variant gives users an error, with no way to map the old value onto the new one.
+
+``retired``
+   The spec is going away.
+   The release reached its end of life, upstream removed the source archive, or the package is about to be dropped from the repository.
+
+``unspecified``
+   None of the categories above applies.
+   A spec its maintainers no longer support, although nothing is known to be wrong with it, belongs here.
+   These usually take a low severity, since users who need the spec can still build it.
+   ``msg`` is required with this reason, since the category alone does not say why the spec is deprecated.
+
+The optional ``severity`` keyword ranks the urgency: ``"low"`` (default), ``"medium"``, ``"high"``, or ``"critical"`` in increasing order.
+
+The ``msg`` keyword adds guidance, shown after the reason and severity when Spack refuses the spec.
+It is optional for every reason but ``"unspecified"``.
+Use it to say what to install instead, which the reason alone cannot express:
+
+.. code-block:: python
+
+   deprecated("@1.1.1t", reason="retired", severity="high", msg="use @3.0, which is maintained")
+
+Keep it to a single line, since it is appended to a one-line error.
+
+The optional ``labels`` keyword lists the advisories a deprecation refers to.
+Any identifier works, so a GHSA or PYSEC id is as good as a CVE one:
+
+.. code-block:: python
+
+   deprecated("@1.1.1t", reason="vuln", severity="high", labels=["CVE-2023-0286"])
+
+A directive can list several advisories, and users allow each of them separately.
+The advisories listed together share the reason and severity of the directive, so advisories with different severities go in separate directives.
+See :ref:`package-deprecations-config` for how users allow them.
+
+Whether a deprecated version can be selected depends on the user's configuration.
+Users list the deprecations they allow, by severity, reason and labels, and Spack refuses the ones no entry in that list matches.
+This is a hard error both at concretization time and before the spec is installed.
+An allowed deprecation is used like any other version, with no warning and no penalty.
+The list is empty by default, so Spack will not select a deprecated version unless the user explicitly allows it.
+See :ref:`package-deprecations-config` for how to write that list.
+
+The older ``version("X.Y", deprecated=True)`` syntax is still supported.
+Spack records it as a deprecation of ``@=X.Y`` with reason ``"unspecified"``, severity ``"critical"``, and the reserved label ``version_deprecated``.
+That label is what tells these deprecations apart from a recipe that passes ``reason="unspecified"`` itself, so users can allow one set without the other.
 
 This also applies to package recipes that are renamed or removed.
 You should first deprecate all versions before removing a package.
@@ -783,7 +862,7 @@ If you need to rename it, you can deprecate the old package and create a new pac
 Version deprecations should always last at least one release cycle of the builtin package repository before the version is completely removed.
 No version should be removed without such a deprecation process.
 This gives users a chance to complain about the deprecation in case the old version is needed for some application.
-If you require a deprecated version of a package, simply submit a PR to remove ``deprecated=True`` from the package.
+If you require a deprecated version of a package, simply submit a PR to remove the ``deprecated()`` directive from the package.
 However, you may be asked to help maintain this version of the package if the current maintainers are unwilling to support this older version.
 
 
@@ -841,6 +920,9 @@ The logic behind this sort order is two-fold:
 #. The most-recent development version of a package will usually be newer than any released numeric versions.
    This allows the ``@develop`` version to satisfy dependencies like ``depends_on(abc, when="@x.y.z:")``
 
+
+.. index::
+   single: fetch strategy; version control
 
 .. _vcs-fetch:
 
@@ -1308,6 +1390,10 @@ The example sets permissions on the downloaded file to make it executable, then 
        installer("--prefix=%s" % prefix, "arg1", "arg2", "etc.")
 
 
+.. index::
+   single: resource; adding extra archives
+   single: directive; resource
+
 Extra Resources
 ^^^^^^^^^^^^^^^
 
@@ -1373,7 +1459,10 @@ For example, if the package defines the version ``1.2.3``, we know from :ref:`ve
    Then the specifier ``@=3.1`` is the correct way to select only ``3.1``, whereas ``@3.1`` would be satisfied by all three versions.
 
 
-.. _variants:
+.. index::
+   single: variant; directive
+   single: directive; variant
+   :name: variants
 
 Variants
 --------
@@ -1533,7 +1622,9 @@ In this case, examples of valid options are ``process_managers=auto``, ``process
 
 Both validator functions return a :py:class:`~spack.variant.DisjointSetsOfValues` object, which defines chaining methods to further customize the behavior of the variant.
 
-.. _variant-conditional-values:
+.. index::
+   single: conditional variant
+   :name: variant-conditional-values
 
 Conditional Possible Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1630,7 +1721,10 @@ The default for this variant, when it is present, is always ``True``, regardless
 This allows packages to override variants in packages or build system classes from which they inherit, by modifying the variant values without modifying the ``when`` clause.
 It also allows a package to implement ``or`` semantics for a variant ``when`` clause by duplicating the variant definition.
 
-.. _dependencies:
+.. index::
+   single: dependency; in package.py
+   single: directive; depends_on
+   :name: dependencies
 
 Dependencies
 ------------
@@ -1787,7 +1881,12 @@ In the above example, the project has presumably documented (with pyproject.toml
 It is *not* known whether future versions ``@1.68:`` are incompatible, so they must be included by the range.
 If and when future versions are known incompatible, the version range should be constrained with an upper bound.
 
-.. _dependency-types:
+.. index::
+   single: dependency type; build
+   single: dependency type; link
+   single: dependency type; run
+   single: dependency type; test
+   :name: dependency-types
 
 Dependency types
 ^^^^^^^^^^^^^^^^
@@ -1825,6 +1924,8 @@ If the dependency type is not specified, Spack uses a default of ``("build", "li
 This is the common case for compiler languages.
 Non-compiled packages like Python modules commonly use ``("build", "run")``.
 This means that the compiler wrappers don't need to inject the dependency's ``prefix/lib`` directory, but the package needs to be in ``PATH`` and ``PYTHONPATH`` during the build process and later when a user wants to run the package.
+
+.. index:: conditional dependency
 
 Conditional dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1944,7 +2045,10 @@ As with ``patch`` directives, patches are applied in the order they appear in th
    The patched version coexists with unpatched versions, and Spack's support for :ref:`handling_rpaths` guarantees that each installation finds the right version.
    If two packages depend on ``binutils`` patched *the same* way, they can both use a single installation of ``binutils``.
 
-.. _virtual-dependencies:
+.. index::
+   single: virtual package; defining
+   single: directive; provides
+   :name: virtual-dependencies
 
 Virtual dependencies
 --------------------
@@ -2015,6 +2119,8 @@ If you try to, Spack will report an error:
    ==> Error: concretization failed for the following reasons:
 
       1. Package 'openblas' needs to provide both 'lapack' and 'blas' together, but provides only 'lapack'
+
+.. index:: versioned interface
 
 Versioned Interfaces
 ^^^^^^^^^^^^^^^^^^^^
@@ -2092,7 +2198,10 @@ For example, the ``c`` compiler could be ``clang`` from the ``llvm`` package, wh
 This means that language dependencies translate to one or more compiler packages as build dependencies.
 
 
-.. _packaging_conflicts:
+.. index::
+   single: conflict; in package.py
+   single: directive; conflicts
+   :name: packaging_conflicts
 
 Conflicts
 ---------
@@ -2142,7 +2251,10 @@ means the package cannot be built on a Mac running Ventura, Monterey, or Big Sur
    See :ref:`sec-specs` for more information.
 
 
-.. _packaging_requires:
+.. index::
+   single: requirement; in package.py
+   single: directive; requires
+   :name: packaging_requires
 
 Requires
 --------
@@ -2193,7 +2305,10 @@ Or the package must be built with a GCC or Clang that supports C++ 20, which you
    See :ref:`sec-specs` for more information.
 
 
-.. _patching:
+.. index::
+   single: patch; applying
+   single: directive; patch
+   :name: patching
 
 Patches
 -------
@@ -2469,6 +2584,9 @@ Here you can see that the patch is applied to ``boost`` by ``dealii``, and that 
 
 .. _packaging_extensions:
 
+.. index::
+   single: directive; extends
+
 Extensions
 ----------
 
@@ -2581,7 +2699,9 @@ These mixins should be used as additional base classes for your package, in addi
 
 In the example above ``Cp2k`` inherits the variants and conflicts defined by ``CudaPackage``.
 
-.. _maintainers:
+.. index::
+   single: directive; maintainers
+   :name: maintainers
 
 Maintainers
 -----------
@@ -2659,7 +2779,9 @@ To determine which licenses are validated and which are not, there is the ``chec
 
 When you have validated a package license, either when doing so explicitly or as part of packaging a new package, please set the ``checked_by`` parameter to your Github username to signal that the license has been manually verified.
 
-.. _license:
+.. index::
+   single: directive; license
+   :name: license
 
 Proprietary software
 --------------------
@@ -2835,7 +2957,9 @@ The above is short for:
       depends_on("bar", when="+feature")
       depends_on("baz", when="+baz")  # Note: not when="+feature+baz"
 
-.. _custom-attributes:
+.. index::
+   single: custom attributes
+   :name: custom-attributes
 
 ``home``, ``command``, ``headers``, and ``libs``
 ------------------------------------------------

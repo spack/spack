@@ -5,8 +5,8 @@
 import argparse
 
 import spack.cmd
-import spack.llnl.util.tty as tty
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "add a spec to an environment"
 section = "environments"

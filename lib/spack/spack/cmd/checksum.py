@@ -7,20 +7,21 @@ import re
 import sys
 from typing import Dict, Optional, Tuple
 
-import spack.llnl.string
-import spack.llnl.util.lang
+import spack.config
 import spack.repo
 import spack.spec
 import spack.stage
+import spack.util.lang
+import spack.util.string
 import spack.util.web as web_util
 from spack.cmd.common import arguments
-from spack.llnl.util import tty
 from spack.package_base import (
     ManualDownloadRequiredError,
     PackageBase,
     deprecated_version,
     preferred_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.format import get_version_lines
 from spack.version import StandardVersion, Version
@@ -158,15 +159,20 @@ def checksum(parser, args):
             pkg.versions,
             url_changes=url_changed_for_version,
             initial_verion_filter=spec.versions,
+            config=spack.config.CONFIG,
         )
         if not filtered_url_dict:
             exit(0)
         url_dict = filtered_url_dict
     else:
-        tty.info(f"Found {spack.llnl.string.plural(len(url_dict), 'version')} of {pkg.name}")
+        tty.info(f"Found {spack.util.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
     version_hashes = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, keep_stage=args.keep_stage, fetch_options=pkg.fetch_options
+        url_dict,
+        pkg.name,
+        keep_stage=args.keep_stage,
+        fetch_options=pkg.fetch_options,
+        config=spack.config.CONFIG,
     )
 
     if args.verify:
@@ -223,10 +229,7 @@ def print_checksum_status(pkg: PackageBase, version_hashes: dict):
 
     # Display table of checksum results.
     tty.msg(
-        f"Verified {num_verified} of {num_total}",
-        "",
-        *spack.llnl.util.lang.elide_list(results),
-        "",
+        f"Verified {num_verified} of {num_total}", "", *spack.util.lang.elide_list(results), ""
     )
 
     # Terminate at the end of function to prevent additional output.

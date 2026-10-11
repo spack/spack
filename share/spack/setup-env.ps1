@@ -34,11 +34,6 @@ if (!$null -eq $py_path)
     $Env:Path = "$py_path;$Env:Path"
 }
 
-if (!$null -eq $py_exe)
-{
-    & "$py_exe" "$Env:SPACK_ROOT\bin\haspywin.py"
-}
-
 $Env:Path = "$Env:SPACK_ROOT\bin;$Env:Path"
 if ($null -eq $Env:EDITOR)
 {

@@ -4,8 +4,8 @@
 
 import pytest
 
-import spack.store
 from spack.main import SpackCommand, SpackCommandError
+from spack.store import Store
 
 gc = SpackCommand("gc")
 mark = SpackCommand("mark")
@@ -29,42 +29,42 @@ def test_mark_spec_required(mutable_database):
 
 
 @pytest.mark.db
-def test_mark_all_explicit(mutable_database):
+def test_mark_all_explicit(mutable_database_store: Store):
     mark("-e", "-a")
     gc("-y")
-    all_specs = spack.store.STORE.layout.all_specs()
+    all_specs = mutable_database_store.layout.all_specs()
     assert len(all_specs) == 17
 
 
 @pytest.mark.db
-def test_mark_all_implicit(mutable_database):
+def test_mark_all_implicit(mutable_database_store: Store):
     mark("-i", "-a")
     gc("-y")
-    all_specs = spack.store.STORE.layout.all_specs()
+    all_specs = mutable_database_store.layout.all_specs()
     assert len(all_specs) == 0
 
 
 @pytest.mark.db
-def test_mark_one_explicit(mutable_database):
+def test_mark_one_explicit(mutable_database_store: Store):
     mark("-e", "libelf")
     uninstall("-y", "-a", "mpileaks")
     gc("-y")
-    all_specs = spack.store.STORE.layout.all_specs()
+    all_specs = mutable_database_store.layout.all_specs()
     assert len(all_specs) == 4
 
 
 @pytest.mark.db
-def test_mark_one_implicit(mutable_database):
+def test_mark_one_implicit(mutable_database_store: Store):
     mark("-i", "externaltest")
     gc("-y")
-    all_specs = spack.store.STORE.layout.all_specs()
+    all_specs = mutable_database_store.layout.all_specs()
     assert len(all_specs) == 15
 
 
 @pytest.mark.db
-def test_mark_all_implicit_then_explicit(mutable_database):
+def test_mark_all_implicit_then_explicit(mutable_database_store: Store):
     mark("-i", "-a")
     mark("-e", "-a")
     gc("-y")
-    all_specs = spack.store.STORE.layout.all_specs()
+    all_specs = mutable_database_store.layout.all_specs()
     assert len(all_specs) == 17

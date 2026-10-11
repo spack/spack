@@ -9,6 +9,10 @@
 
 .. _cudapackage:
 
+.. index::
+   single: mixin; CUDA
+   single: CudaPackage
+
 Cuda
 ------
 

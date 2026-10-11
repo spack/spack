@@ -9,6 +9,10 @@
 
 .. _mavenpackage:
 
+.. index::
+   single: build system; Maven
+   single: MavenPackage
+
 Maven
 ------
 

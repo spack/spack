@@ -205,7 +205,7 @@ def test_get_name_error(monkeypatch, capfd):
     assert "Couldn't guess a name" in str(captured)
 
 
-def test_no_url():
+def test_no_url(mock_test_repo):
     """Test creation of package without a URL."""
     create("--skip-editor", "-n", "create-new-package")
 

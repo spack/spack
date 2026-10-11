@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 import pytest
 
-import spack.relocate_text as relocate_text
+from spack import relocate_text
 
 
 def test_text_relocation_regex_is_safe():

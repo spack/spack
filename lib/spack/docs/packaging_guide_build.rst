@@ -486,7 +486,11 @@ In those cases, the build system could use some help, for which we give a few ex
       args.append(f"-DMATH_LIBS={lapack_blas.ld_flags}")
 
 
-.. _before_after_build_phases:
+.. index::
+   single: phase; before and after callbacks
+   single: run_before (decorator)
+   single: run_after (decorator)
+   :name: before_after_build_phases
 
 Before and after build phases
 -----------------------------
@@ -631,19 +635,17 @@ All executables in Spack are instances of :class:`~spack.package.Executable`, se
 
 .. _attribute_parallel:
 
-Package-level parallelism
--------------------------
+Per-package build parallelism
+-----------------------------
 
 Many build tools support parallel builds, including ``make`` and ``ninja``, as well as certain Python build tools.
 
 As mentioned in :ref:`the previous section <running_build_executables>`, the ``gmake`` and ``ninja`` packages make their executables available as global functions, which you can use in your package class.
-They automatically add the ``-j <njobs>`` when invoked, where ``<njobs>`` is a sensible default for the number of jobs to run in parallel.
-This exact number :ref:`is determined <build-jobs>` depends on various factors, such as the ``spack install`` command line arguments, configuration options and available CPUs on the system.
-As a packager, you rarely need to pass the ``-j`` flag when calling ``make()`` or ``ninja()``; it is better to rely on the defaults.
+By default these are invoked in jobserver-aware mode: ``make`` and ``ninja`` acquire :term:`build job` tokens from Spack's :term:`jobserver` (forwarded via ``MAKEFLAGS``) rather than spawning a fixed number of jobs each.
+As a packager, you typically don't need to pass ``-j`` when calling ``make()`` or ``ninja()`` --- the jobserver handles concurrency for you.
 
-In certain cases however, you may need to override the default number of jobs for a specific package.
-If a package does not build properly in parallel, you can simply define ``parallel = False`` in your package class.
-For example:
+In certain cases however, you may want to force a specific package to build serially.
+If a package does not build properly in parallel, define ``parallel = False`` in your package class:
 
 .. code-block:: python
    :emphasize-lines: 4
@@ -653,9 +655,9 @@ For example:
 
        parallel = False
 
-This ensures that any ``make`` or ``ninja`` invocation will *not* set the ``-j <njobs>`` option, and the build will run sequentially.
+This tells Spack to invoke the build tool serially (e.g. ``make -j1``), bypassing the jobserver for this package.
 
-You can also disable parallel builds only for specific make invocation:
+You can also disable parallel builds for a specific ``make`` invocation only:
 
 .. code-block:: python
    :emphasize-lines: 5
@@ -814,7 +816,10 @@ File functions
   Create an empty file at ``path``.
 
 
-.. _multimethods:
+.. index::
+   single: @when
+   single: multimethod
+   :name: multimethods
 
 Multimethods and the ``@when`` decorator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -901,6 +906,12 @@ If your file or directory contains dashes or dots, use ``join`` instead:
 
 
 .. _environment-variables:
+
+.. index::
+   single: build environment; variables set by Spack
+   single: environment variable; CC, CXX, FC (set by compiler wrappers)
+   single: environment variable; PATH, CMAKE_PREFIX_PATH, PKG_CONFIG_PATH (set in builds)
+   single: environment variable; CFLAGS, LD_LIBRARY_PATH (cleaned in builds)
 
 The build environment
 ---------------------
@@ -1139,7 +1150,10 @@ To ensure that flags are always *passed to the build system*, you can use:
        flag_handler = build_system_flags  # Pass flags to the build system
 
 
-.. _compiler-wrappers:
+.. index::
+   single: compiler wrapper; in builds
+   single: compiler-wrapper package
+   :name: compiler-wrappers
 
 Compiler wrappers and flags
 ---------------------------
@@ -1190,7 +1204,9 @@ In the ``configure`` stage Spack by default simply :ref:`runs <running_build_exe
 The configure script picks up the compiler wrapper from the ``CC`` environment variable, and continues to run tests to find the ``libelf`` headers and libraries.
 Because the compiler wrapper is set up to automatically include the ``-I<libelf prefix>/include`` and ``-L<libelf prefix>/lib`` flags, the configure script succeeds and uses the correct ``libelf.h`` header and the ``libelf.so`` library out of the box.
 
-.. _handling_rpaths:
+.. index::
+   single: RPATH; handling
+   :name: handling_rpaths
 
 Runtime library search paths
 ----------------------------
@@ -1208,6 +1224,8 @@ If you use the ``CMakePackage``, Spack automatically sets the ``CMAKE_INSTALL_RP
 
 For packages that do not fit ``CMakePackage`` but still run ``cmake`` as part of the build, it is recommended to look at :meth:`spack_repo.builtin.build_systems.cmake.CMakeBuilder.std_args` on how to set the install RPATHs correctly.
 
+
+.. index:: MPI
 
 MPI support in Spack
 ---------------------

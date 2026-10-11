@@ -125,8 +125,18 @@ function Invoke-SpackLoad {
     }
 }
 
+function Set-SpackRoot {
+    if ([string]::IsNullOrEmpty($Env:SPACK_ROOT)) {
+        Push-Location $PSScriptRoot/..
+        $Env:SPACK_ROOT = $PWD.Path
+        Pop-Location
+    }
+}
+
+Set-SpackRoot
 
 $SpackCMD_params, $SpackSubCommand, $SpackSubCommandArgs = Read-SpackArgs $args
+
 
 if (Compare-CommonArgs $SpackCMD_params) {
     python "$Env:SPACK_ROOT/bin/spack" $SpackCMD_params $SpackSubCommand $SpackSubCommandArgs

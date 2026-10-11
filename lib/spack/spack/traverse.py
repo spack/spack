@@ -25,9 +25,6 @@ import spack.deptypes as dt
 if TYPE_CHECKING:
     import spack.spec
 
-# Export only the high-level API.
-__all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
-
 
 #: Data class that stores a directed edge together with depth at
 #: which the target vertex was found. It is passed to ``accept``
@@ -40,7 +37,8 @@ class EdgeAndDepth(NamedTuple):
 
 # Sort edges by name first, then abstract hash, then full edge comparison to break ties
 def sort_edges(edges):
-    edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or "", edge))
+    if len(edges) > 1:
+        edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or "", edge))
     return edges
 
 

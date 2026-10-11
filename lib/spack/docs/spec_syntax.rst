@@ -7,7 +7,9 @@
    :description lang=en:
       A detailed guide to the Spack spec syntax for describing package constraints, including versions, variants, and dependencies.
 
-.. _sec-specs:
+.. index::
+   single: spec; syntax
+   :name: sec-specs
 
 Spec Syntax
 ===========
@@ -118,7 +120,18 @@ You can put all the same modifiers on dependency specs that you would put on the
 That is, you can specify their versions, variants, and architectures just like any other spec.
 Specifiers are associated with the nearest package name to their left.
 
-.. _sec-virtual-dependencies:
+.. index::
+   single: spec; abstract vs. concrete
+
+A spec that leaves details unspecified, like ``mpileaks ^dyninst@8.1`` above, is called an :term:`abstract spec`.
+Everything a user writes on the command line or in configuration files is an abstract spec.
+Before installing, Spack *concretizes* it: every missing choice (version, variants, architecture, and the full dependency DAG) is filled in, yielding a :term:`concrete spec` that describes exactly one build.
+
+.. index::
+   single: virtual package; in specs
+   single: virtual dependency
+   single: provider; in specs
+   :name: sec-virtual-dependencies
 
 Virtual dependencies
 ^^^^^^^^^^^^^^^^^^^^
@@ -162,7 +175,14 @@ For instance, if an application needs MPI-2 functions, it can depend on ``mpi@2:
 
 Below are more details about the specifiers that you can add to specs.
 
-.. _version-specifier:
+.. index::
+   single: version; in specs
+   single: version specifier
+   single: version; range
+   single: version; list
+   single: @ (spec sigil)
+   single: spec sigil; @ (version)
+   :name: version-specifier
 
 Version specifier
 -----------------
@@ -216,6 +236,10 @@ For example:
 
 matches any version in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 
+.. index::
+   single: git version
+   single: commit variant
+
 Git versions
 ^^^^^^^^^^^^
 
@@ -242,12 +266,13 @@ Acceptable syntaxes for this are:
 
 Spack always needs to associate a Spack version with the git reference, which is used for version comparison.
 This Spack version is heuristically taken from the closest valid git tag among the ancestors of the git ref.
+The association happens once, when the spec is concretized, and requires a clone of the package's git repository.
 
 Once a Spack version is associated with a git ref, it is always printed with the git ref.
-For example, if the commit ``@git.abcdefg`` is tagged ``0.19``, then the spec will be shown as ``@git.abcdefg=0.19``.
+For example, if the commit ``@git.abcdef`` is tagged ``0.19``, then the concrete spec will be shown as ``@git.abcdef=0.19``.
 
 If the git ref is not exactly a tag, then the distance to the nearest tag is also part of the resolved version.
-``@git.abcdefg=0.19.git.8`` means that the commit is 8 commits away from the ``0.19`` tag.
+``@git.abcdef=0.19.git.8`` means that the commit is 8 commits away from the ``0.19`` tag.
 
 In cases where Spack cannot resolve a sensible version from a git ref, users can specify the Spack version to use for the git ref.
 This is done by appending ``=`` and the Spack version to the git ref.
@@ -260,7 +285,13 @@ For example:
 
 Details about how versions are compared and how Spack determines if one version is less than another are discussed in the developer guide.
 
-.. _basic-variants:
+.. index::
+   single: variant; in specs
+   single: + (spec sigil)
+   single: ~ (spec sigil)
+   single: spec sigil; + (enable variant)
+   single: spec sigil; ~ (disable variant)
+   :name: basic-variants
 
 Variants
 --------
@@ -272,6 +303,9 @@ The variants available for a particular package are defined by the package autho
 ``spack info <package>`` will provide information on what build variants are available.
 
 There are different types of variants.
+
+.. index::
+   single: variant; boolean
 
 Boolean Variants
 ^^^^^^^^^^^^^^^^
@@ -289,6 +323,9 @@ and disabled with
 
    ~debug
 
+.. index::
+   single: variant; single-valued
+
 Single-valued Variants
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -304,6 +341,11 @@ or
 .. code-block:: spec
 
    compression=zstd
+
+.. index::
+   single: variant; multi-valued
+   single: := (spec sigil)
+   single: spec sigil; := (exact multi-valued variant)
 
 Multi-valued Variants
 ^^^^^^^^^^^^^^^^^^^^^
@@ -329,6 +371,13 @@ If the intent is to enable *only* the specified fabrics, then the:
 syntax should be used with the ``:=`` operator.
 
 
+.. index::
+   single: propagation; of variants
+   single: ++ (spec sigil)
+   single: == (spec sigil)
+   single: spec sigil; ++ (propagate variant)
+   single: spec sigil; == (propagate value)
+
 Variant propagation to dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -350,6 +399,17 @@ For example, for the ``stackstart`` variant:
 
 Spack also allows variants to be propagated from a package that does not have that variant.
 
+.. index::
+   single: compiler flags; in specs
+   single: compiler flags; cflags
+   single: compiler flags; cxxflags
+   single: compiler flags; cppflags
+   single: compiler flags; fflags
+   single: compiler flags; ldflags
+   single: compiler flags; ldlibs
+   single: propagation; of compiler flags
+   single: environment variable; CFLAGS, CXXFLAGS, ... (see compiler flags)
+
 Compiler Flags
 --------------
 
@@ -367,7 +427,12 @@ The six compiler flags are injected in the same order as implicit make commands 
 If all flags are set, the order is ``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++, and ``$fflags $cppflags $ldflags <command> $ldlibs`` for Fortran.
 
 
-.. _architecture_specifiers:
+.. index::
+   single: architecture spec; syntax
+   single: platform
+   single: target; in specs
+   single: os
+   :name: architecture_specifiers
 
 Architecture specifiers
 -----------------------
@@ -451,7 +516,15 @@ In the snippet above, for instance, the microarchitecture was demoted to ``haswe
 Finally, if Spack has no information to match the compiler and target, it will proceed with the installation but avoid injecting any microarchitecture-specific flags.
 
 
-.. _sec-dependencies:
+.. index::
+   single: dependency
+   single: dependency; direct
+   single: dependency; transitive
+   single: % (spec sigil)
+   single: ^ (spec sigil)
+   single: spec sigil; % (direct dependency)
+   single: spec sigil; ^ (transitive dependency)
+   :name: sec-dependencies
 
 Dependencies
 ------------
@@ -506,7 +579,9 @@ The ``mpileaks`` package in particular only needs MPI-1 commands, so any MPI imp
 If another package depends on ``mpi@2`` and you try to give it an insufficient MPI implementation (e.g., one that provides only ``mpi@:1``), then Spack will raise an error.
 Likewise, if you try to plug in some package that doesn't provide MPI, Spack will raise an error.
 
-.. _explicit-binding-virtuals:
+.. index::
+   single: virtual binding
+   :name: explicit-binding-virtuals
 
 Explicit binding of virtual dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -529,6 +604,11 @@ Concretizing the spec above produces the following DAG:
 where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former.
 The ``lapack`` and ``blas`` dependencies are satisfied by ``openblas``.
 
+Note that ``^foo=bar`` binds the virtual ``foo`` to the package ``bar``.
+To constrain a variant of an unnamed dependency instead, use ``*`` as the name: ``^* foo=bar`` means "some dependency has the variant ``foo`` set to ``bar``".
+
+.. index:: edge attribute
+
 Dependency edge attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -539,6 +619,25 @@ Edge attributes are always specified as key-value pairs:
 .. code-block:: spec
 
    root ^[key=value] dep
+
+To specify multiple attributes, put each attribute in its own enclosing brackets.
+
+.. code-block:: spec
+
+   root ^[key=value][other=value] dep
+
+Repeated attributes combine, so ``virtuals`` and ``deptypes`` are accumulated, and ``when`` conditions are constrained together.
+For instance:
+
+.. code-block:: spec
+
+   root ^[virtuals=c][deptypes=build][virtuals=cxx][when=+foo][deptypes=run][when=target=x86_64] dep
+
+is equivalent to:
+
+.. code-block:: spec
+
+   root ^[virtuals=c,cxx][deptypes=build,run][when=+foo target=x86_64] dep
 
 In the following sections we'll discuss the edge attributes that are currently allowed in the spec syntax.
 
@@ -573,6 +672,15 @@ We can express conditional constraints by specifying the ``when`` edge attribute
 
 This tells Spack that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
 
+The value of ``when`` is a spec, which extends up to the closing bracket.
+An edge attribute that follows an unquoted condition would be parsed as part of it, so it goes in a separate group of brackets, unless the condition is quoted:
+
+.. code-block:: spec
+
+   $ spack install hdf5 ^[virtuals=mpi when=+mpi] mpich@3.1
+   $ spack install hdf5 ^[when=+mpi][virtuals=mpi] mpich@3.1
+   $ spack install hdf5 ^[when='+mpi' virtuals=mpi] mpich@3.1
+
 Dependency propagation
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -587,6 +695,13 @@ For instance, the following command:
 tells Spack to install ``hdf5`` using Clang as the C and C++ compiler, and GCC as the Fortran compiler.
 It also tells Spack to propagate the same choices, as :ref:`strong preferences <package-strong-preferences>`,  to the runtime sub-DAG of ``hdf5``.
 Build tools are unaffected and can still prefer to use a different compiler.
+
+.. index::
+   single: spec hash
+   single: hash; spec
+   single: DAG hash; in specs
+   single: / (spec sigil)
+   single: spec sigil; / (hash)
 
 Specifying Specs by Hash
 ------------------------

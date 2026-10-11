@@ -9,6 +9,10 @@
 
 .. _racketpackage:
 
+.. index::
+   single: build system; Racket
+   single: RacketPackage
+
 Racket
 ------
 

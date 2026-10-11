@@ -14,7 +14,8 @@ import spack.modules
 import spack.modules.lmod
 import spack.repo
 import spack.store
-from spack.installer import PackageInstaller
+from spack.config import Configuration
+from spack.old_installer import PackageInstaller
 
 module = spack.main.SpackCommand("module")
 
@@ -35,7 +36,7 @@ def ensure_module_files_are_there(mock_packages_repo, mock_store, mock_configura
 def _module_files(module_type, *specs):
     specs = [spack.concretize.concretize_one(x) for x in specs]
     writer_cls = spack.modules.module_types[module_type]
-    return [writer_cls(spec, "default").layout.filename for spec in specs]
+    return [writer_cls.from_spec(spec, "default").layout.filename for spec in specs]
 
 
 @pytest.fixture(
@@ -173,14 +174,14 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 
 
 @pytest.mark.db
-def test_setdefault_command(mutable_database, mutable_config):
+def test_setdefault_command(mutable_database, mutable_config: Configuration):
     data = {
         "default": {
             "enable": ["lmod"],
             "lmod": {"core_compilers": ["clang@3.3"], "hierarchy": ["mpi"]},
         }
     }
-    spack.config.set("modules", data)
+    mutable_config.set("modules", data)
     # Install two different versions of pkg-a
     other_spec, preferred = "pkg-a@1.0", "pkg-a@2.0"
 
@@ -191,8 +192,8 @@ def test_setdefault_command(mutable_database, mutable_config):
     PackageInstaller([s.package for s in specs], explicit=True, fake=True).install()
 
     writers = {
-        preferred: writer_cls(specs[1], "default"),
-        other_spec: writer_cls(specs[0], "default"),
+        preferred: writer_cls.from_spec(specs[1], "default"),
+        other_spec: writer_cls.from_spec(specs[0], "default"),
     }
 
     # Create two module files for the same software

@@ -12,9 +12,10 @@ import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
 import spack.installer_dispatch
-import spack.llnl.util.tty as tty
 import spack.repo
+import spack.store
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "build package from code in current working directory"
 section = "build"
@@ -116,14 +117,14 @@ def dev_build(self, args):
     spec.constrain(f'dev_path="{source_path}"')
     spec = spack.concretize.concretize_one(spec)
 
-    if spec.installed:
+    if spack.store.STORE.db.installed(spec):
         tty.error("Already installed in %s" % spec.prefix)
         tty.msg("Uninstall or try adding a version suffix for this dev build.")
         sys.exit(1)
 
     # disable checksumming if requested
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     tests = False
     if args.test == "all":

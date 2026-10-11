@@ -13,26 +13,24 @@ from urllib.parse import urlparse, urlunparse
 import spack.binary_distribution
 import spack.ci as spack_ci
 import spack.cmd
-import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.fetch_strategy
-import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty.color as clr
 import spack.mirrors.mirror
 import spack.package_base
 import spack.repo
 import spack.spec
 import spack.stage
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
-import spack.util.timer as timer
+import spack.util.tty.color as clr
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.llnl.util import tty
+from spack.cmd import buildcache
+from spack.util import timer, tty
 from spack.version import StandardVersion
 
 from . import doc_dedented, doc_first_line
@@ -290,7 +288,7 @@ def ci_rebuild(args):
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
     # to do.
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
     if not ci_config:
         tty.die("spack ci rebuild requires an env containing ci cfg")
 
@@ -318,7 +316,7 @@ def ci_rebuild(args):
     # Fail early if signing is required but we don't have a signing key
     sign_binaries = require_signing is not None and require_signing.lower() == "true"
     if sign_binaries and not spack_ci.can_sign_binaries():
-        gpg_util.list(False, True)
+        gpg_util.glist(False, True)
         tty.die("SPACK_REQUIRE_SIGNING=True => spack must have exactly one signing key")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
@@ -336,7 +334,7 @@ def ci_rebuild(args):
     # Query the environment manifest to find out whether we're reporting to a
     # CDash instance, and if so, gather some information from the manifest to
     # support that task.
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     cdash_handler = None
     if "build-group" in cdash_config:
         cdash_handler = spack_ci.CDashHandler(cdash_config)
@@ -421,7 +419,7 @@ def ci_rebuild(args):
     # also be used in the generated "spack install" command to install the spec
     tty.debug("job concrete spec path: {0}".format(job_spec_json_path))
     with open(job_spec_json_path, "w", encoding="utf-8") as fd:
-        fd.write(job_spec.to_json(hash=ht.dag_hash))
+        fd.write(job_spec.to_json())
 
     # Write some other details to aid in reproduction into an artifact
     repro_file = os.path.join(repro_dir, "repro.json")
@@ -466,7 +464,7 @@ def ci_rebuild(args):
     # Start with spack arguments
     spack_cmd = [SPACK_COMMAND, "--color=always", "install"]
 
-    config = cfg.get("config")
+    config = cfg.CONFIG.get("config")
     if not config["verify_ssl"]:
         spack_cmd.append("-k")
 
@@ -524,14 +522,14 @@ def ci_rebuild(args):
                 spack_ci_stack_name,
                 os.environ.get("CI_JOB_URL"),
                 os.environ.get("CI_PIPELINE_URL"),
-                job_spec.to_dict(hash=ht.dag_hash),
+                job_spec.to_dict(),
             )
 
     # Copy logs and archived files from the install metadata (.spack) directory to artifacts now
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
     # Clear the stage directory
-    spack.stage.purge()
+    spack.stage.purge(config=cfg.CONFIG)
 
     # If the installation succeeded and we're running stand-alone tests for
     # the package, run them and copy the output. Failures of any kind should
@@ -555,7 +553,7 @@ def ci_rebuild(args):
                 test_stage = fs.join_path(stage_root, "spack-standalone-tests")
                 tty.debug("Configuring test_stage to {0}".format(test_stage))
                 config_test_path = "config:test_stage:{0}".format(test_stage)
-                cfg.add(config_test_path, scope=cfg.default_modify_scope())
+                cfg.CONFIG.add(config_test_path, scope=cfg.CONFIG.default_modify_scope())
 
                 # Run the tests, resorting to junit results if not using cdash
                 log_file = (
@@ -738,18 +736,23 @@ def validate_standard_versions(
     """
     url_dict: Dict[StandardVersion, str] = {}
 
+    valid_checksums = True
+
     for version in versions:
         url = pkg.find_valid_url_for_version(version)
-        assert url is not None, (
-            f"Package {pkg.name} does not have a valid URL for version {version}"
-        )
-        url_dict[version] = url
+        if url is None:
+            tty.error(f"No valid URLs found for {pkg.name}@{version}")
+            all_urls = pkg.all_urls_for_version(version)
+            for url in all_urls:
+                tty.error(f"    [Failed] {url}")
+            valid_checksums = False
+        else:
+            url_dict[version] = url
 
     version_hashes = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, fetch_options=pkg.fetch_options
+        url_dict, pkg.name, fetch_options=pkg.fetch_options, config=cfg.CONFIG
     )
 
-    valid_checksums = True
     for version, sha in version_hashes.items():
         if sha != pkg.versions[version]["sha256"]:
             tty.error(
@@ -758,9 +761,8 @@ def validate_standard_versions(
                 f"    [Downloaded] {sha}"
             )
             valid_checksums = False
-            continue
-
-        tty.info(f"Validated {pkg.name}@{version} --> {sha}")
+        else:
+            tty.info(f"Validated {pkg.name}@{version} --> {sha}")
 
     return valid_checksums
 
@@ -776,9 +778,9 @@ def validate_git_versions(
     """
     valid_commit = True
     for version in versions:
-        fetcher = spack.fetch_strategy.for_package_version(pkg, version)
+        fetcher = spack.package_base.for_package_version(pkg, version)
         assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-        with spack.stage.Stage(fetcher) as stage:
+        with spack.stage.stage_from_config(fetcher, config=cfg.CONFIG) as stage:
             known_commit = pkg.versions[version]["commit"]
             try:
                 stage.fetch()

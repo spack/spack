@@ -14,6 +14,7 @@
 #heuristic attr("variant_value", PackageNode, Variant, Value). [80, level]
 #heuristic attr("node_target", node(PackageID, Package), Target). [80, level]
 #heuristic virtual_on_edge(PackageNode, ProviderNode, Virtual, Type). [80, level]
+#heuristic build_set_id(PackageNode, ID). [80, level]
 
 #heuristic attr("virtual_node", node(X, Virtual)). [600, init]
 #heuristic attr("virtual_node", node(X, Virtual)). [-1, sign]

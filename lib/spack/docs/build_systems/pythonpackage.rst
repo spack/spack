@@ -9,6 +9,10 @@
 
 .. _pythonpackage:
 
+.. index::
+   single: build system; Python
+   single: PythonPackage
+
 Python
 ------
 

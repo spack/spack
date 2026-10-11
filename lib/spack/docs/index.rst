@@ -97,6 +97,8 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    pipelines
    signing
    gpu_configuration
+   glossary
+   genindex
 
 .. toctree::
    :maxdepth: 2
@@ -129,6 +131,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
 Indices and tables
 ------------------
 
+* :doc:`glossary`
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

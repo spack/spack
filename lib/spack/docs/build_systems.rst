@@ -7,7 +7,9 @@
    :description lang=en:
       An overview of the build systems supported by Spack, with links to detailed documentation for each system.
 
-.. _build-systems:
+.. index::
+   single: build system; overview
+   :name: build-systems
 
 Build Systems
 =============

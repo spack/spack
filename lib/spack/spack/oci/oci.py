@@ -10,13 +10,14 @@ import urllib.parse
 from typing import List, NamedTuple, Tuple
 from urllib.request import Request
 
+import spack.config
 import spack.fetch_strategy
-import spack.llnl.util.tty as tty
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.oci.opener
 import spack.stage
 import spack.util.url
+from spack.util import tty
 
 from .image import Digest, ImageReference
 
@@ -375,9 +376,10 @@ def make_stage(
     # the OCI Image Layout Specification. What's missing though,
     # is the `oci-layout` and `index.json` files, which are
     # required by the spec.
-    return spack.stage.Stage(
+    return spack.stage.stage_from_config(
         fetch_strategy,
         mirror_paths=spack.mirrors.layout.OCILayout(digest),
         name=digest.digest,
         keep=keep,
+        config=spack.config.CONFIG,
     )

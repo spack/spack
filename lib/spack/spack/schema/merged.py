@@ -8,12 +8,11 @@
    :lines: 32-
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import spack.schema.bootstrap
 import spack.schema.cdash
 import spack.schema.ci
-import spack.schema.compilers
 import spack.schema.concretizer
 import spack.schema.config
 import spack.schema.container
@@ -35,7 +34,6 @@ import spack.schema.view
 sections: Dict[str, Any] = {
     **spack.schema.bootstrap.properties,
     **spack.schema.cdash.properties,
-    **spack.schema.compilers.properties,
     **spack.schema.concretizer.properties,
     **spack.schema.config.properties,
     **spack.schema.container.properties,
@@ -69,12 +67,27 @@ ref_sections: Dict[str, Any] = {
     name: {"$ref": f"#/definitions/section_{name}"} for name in sections
 }
 
+#: Placeholders for removed sections, so that ``removed_sections_errors`` reports them
+removed_sections: Dict[str, Any] = {"compilers": {}}
+
+#: Errors for sections that were removed
+removed_sections_errors: List[Dict[str, Any]] = [
+    {
+        "names": ["compilers"],
+        "message": "the '{name}' section was removed in Spack v1.3. Configure compilers as "
+        "externals in packages.yaml instead, see "
+        "https://spack.readthedocs.io/en/latest/configuring_compilers.html",
+        "error": True,
+    }
+]
+
 #: Full schema with metadata
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack merged configuration file schema",
     "type": "object",
     "additionalProperties": False,
-    "properties": ref_sections,
+    "properties": {**ref_sections, **removed_sections},
+    "deprecatedProperties": removed_sections_errors,
     "definitions": defs,
 }

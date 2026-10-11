@@ -39,6 +39,22 @@ def test_load_module_success(monkeypatch, working_env):
 
 
 @pytest.mark.not_on_windows("Module files are not supported on Windows")
+def test_load_module_already_loaded(monkeypatch, working_env):
+    """Test that loading an already-loaded module succeeds without reloading it."""
+
+    os.environ["LOADEDMODULES"] = "test_module"
+
+    def mock_module(*args, **kwargs):
+        if args[0] == "show":
+            return ""
+        pytest.fail("load should not be called for an already-loaded module")
+
+    monkeypatch.setattr(spack.util.module_cmd, "module", mock_module)
+
+    spack.util.module_cmd.load_module("test_module")
+
+
+@pytest.mark.not_on_windows("Module files are not supported on Windows")
 def test_load_module_failure(monkeypatch, working_env):
     """Test that load_module raises an exception when a module load fails."""
 

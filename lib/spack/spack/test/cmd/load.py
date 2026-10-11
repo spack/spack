@@ -75,9 +75,9 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         pkgs = [prefix_to_pkg(p) for p in paths_shell[:-2]]
 
         # Do we have all the runtime packages?
-        assert set(pkgs) == set(
+        assert set(pkgs) == {
             s.name for s in mpileaks_spec.traverse(deptype=("link", "run"), root=True)
-        )
+        }
 
         # Finally, do we list them in topo order?
         for i, pkg in enumerate(pkgs):

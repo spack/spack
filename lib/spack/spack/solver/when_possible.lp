@@ -29,9 +29,12 @@ do_not_impose(EffectID, node(X, Package)) :-
   trigger_and_effect(_, TriggerID, EffectID),
   trigger_requestor_node(TriggerID, node(X, Package)).
 
-opt_criterion(320, "number of input specs not concretized").
-#minimize{ 0@320: #true }.
-#minimize { 1@320,ID : literal_not_solved(ID) }.
+opt_criterion(1, "high", "", 0, "number of input specs not concretized").
+#minimize {
+    1@Priority, ID
+    : literal_not_solved(ID),
+    opt_priority(Priority, _, _, _, "number of input specs not concretized")
+}.
 
 #heuristic solve_literal(ID) : literal(ID). [1, sign]
 #heuristic solve_literal(ID) : literal(ID). [1000, init]

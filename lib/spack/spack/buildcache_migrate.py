@@ -9,16 +9,18 @@ import tempfile
 from typing import NamedTuple
 
 import spack.binary_distribution
+import spack.config
 import spack.database as spack_db
 import spack.error
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
+import spack.util.gpg
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.util import tty
 
 from .enums import InstallRecordStatus
 from .url_buildcache import (
@@ -118,7 +120,7 @@ def _migrate_spec(
         # User asked for unsigned, if we found a signed specfile, just ignore
         # the signature
         if v2_spec_url.endswith(".sig"):
-            spec_dict = spack.spec.Spec.extract_json_from_clearsig(spec_contents)
+            spec_dict = spack.util.gpg.extract_json_from_clearsig(spec_contents)
         else:
             spec_dict = json.loads(spec_contents)
     else:
@@ -131,7 +133,7 @@ def _migrate_spec(
         if not try_verify(local_signed_pre_verify):
             return MigrateSpecResult(False, f"Failed to verify signature of {print_spec}")
         with open(local_signed_pre_verify, encoding="utf-8") as fd:
-            spec_dict = spack.spec.Spec.extract_json_from_clearsig(fd.read())
+            spec_dict = spack.util.gpg.extract_json_from_clearsig(fd.read())
 
     # Read out and remove the bits needed to rename and position the archive
     bcc = spec_dict.pop("binary_cache_checksum", None)
@@ -151,7 +153,9 @@ def _migrate_spec(
     # need to download the archive locally, and then push it back to the target
     # location
     archive_stage_path = os.path.join(tmpdir, f"archive_stage_{s.name}_{s.dag_hash()}")
-    archive_stage = spack.stage.Stage(v2_archive_url, path=archive_stage_path)
+    archive_stage = spack.stage.stage_from_config(
+        v2_archive_url, path=archive_stage_path, config=spack.config.CONFIG
+    )
 
     try:
         archive_stage.create()
@@ -181,13 +185,18 @@ def _migrate_spec(
         spec_json_path, spec_dict, metadata_checksum_algo
     )
 
+    # Copied as is, so labeled with the oldest formats layout v3 reads
     tarball_blob_record = BlobRecord(
-        spec_dict["archive_size"], v3_cache_class.TARBALL_MEDIATYPE, "gzip", algorithm, checksum
+        spec_dict["archive_size"],
+        v3_cache_class.oldest_component_to_media_type(BuildcacheComponent.TARBALL),
+        "gzip",
+        algorithm,
+        checksum,
     )
 
     metadata_blob_record = BlobRecord(
         metadata_size,
-        v3_cache_class.SPEC_MEDIATYPE,
+        v3_cache_class.oldest_component_to_media_type(BuildcacheComponent.SPEC),
         "gzip",
         metadata_checksum_algo,
         metadata_checksum,
@@ -281,7 +290,7 @@ def migrate(
     except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
         index_path = os.path.join(tmpdir, "_tmp_index.json")
         with open(index_path, "w", encoding="utf-8") as fd:
             fd.write(contents)

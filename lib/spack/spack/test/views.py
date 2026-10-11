@@ -10,7 +10,7 @@ import pytest
 import spack.concretize
 from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import SimpleFilesystemView, YamlFilesystemView
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.test.conftest import FsTree
 

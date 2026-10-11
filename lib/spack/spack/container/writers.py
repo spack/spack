@@ -7,6 +7,7 @@ convenience functions.
 
 import copy
 import shlex
+import warnings
 from collections import namedtuple
 from typing import Optional
 
@@ -15,8 +16,8 @@ import spack.vendor.jsonschema
 import spack.environment as ev
 import spack.error
 import spack.schema.env
-import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
+from spack import tengine
 
 from .images import (
     bootstrap_template_for,
@@ -99,7 +100,7 @@ def _stage_base_images(images_config):
         image_name, tag = build_info(operating_system, spack_version)
         build_stage = "bootstrap"
         if image_name:
-            build_stage = ":".join([image_name, tag])
+            build_stage = f"{image_name}:{tag}"
 
     # Retrieve the bootstrap stage
     bootstrap_stage = None
@@ -157,7 +158,13 @@ class PathContext(tengine.Context):
 
     @tengine.context_property
     def depfile(self):
-        return self.container_config.get("depfile", False)
+        depfile = self.container_config.get("depfile", False)
+        if depfile:
+            warnings.warn(
+                "container:depfile is deprecated and will be removed in Spack v1.4, after which "
+                "`spack install` is always used. Remove the setting to use it now."
+            )
+        return depfile
 
     @tengine.context_property
     def run(self):

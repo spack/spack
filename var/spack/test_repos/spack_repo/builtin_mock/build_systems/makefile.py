@@ -18,13 +18,13 @@ from ._checks import execute_build_time_tests
 
 class MakefilePackage(PackageBase):
     build_system_class = "MakefilePackage"
-    default_buildsystem = "makefile"
+    default_buildsystem = "mock_makefile"
 
-    build_system("makefile")
-    depends_on("gmake", type="build", when="build_system=makefile")
+    build_system("mock_makefile")
+    depends_on("gmake", type="build", when="build_system=mock_makefile")
 
 
-@register_builder("makefile")
+@register_builder("mock_makefile")
 class MakefileBuilder(BuilderWithDefaults):
     phases = ("edit", "build", "install")
     package_methods = ("check", "installcheck")

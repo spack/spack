@@ -19,10 +19,17 @@ import enum
 import os
 import platform
 import stat
+import sys
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Union
+
+# os.O_PATH is only defined on linux. Appease mypy with our own O_PATH.
+if sys.platform == "linux":
+    O_PATH = os.O_PATH
+else:
+    O_PATH = 0
 
 import spack.error
 
@@ -235,7 +242,7 @@ class LandlockSandbox(Sandbox):
                 try:
                     # use O_PATH to get an fd w/o needing permissions, and O_NOFOLLOW to avoid
                     # TOCTOU issues after we've called resolve() on the path.
-                    fd = os.open(str(path), os.O_PATH | os.O_CLOEXEC | os.O_NOFOLLOW)
+                    fd = os.open(str(path), O_PATH | os.O_CLOEXEC | os.O_NOFOLLOW)
                 except OSError as e:
                     warnings.warn(f"Cannot allow sandbox access to {path} due to: {e}")
                     continue

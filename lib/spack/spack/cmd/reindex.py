@@ -6,7 +6,7 @@ import shutil
 
 import spack.database
 import spack.store
-from spack.llnl.util import tty
+from spack.util import tty
 
 description = "rebuild Spack's package database"
 section = "admin"

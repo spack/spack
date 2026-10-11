@@ -9,7 +9,7 @@ import re
 from typing import IO, Dict, Iterable, List, Union
 
 import spack.error
-from spack.llnl.util.lang import PatternBytes
+from spack.util.lang import PatternBytes
 
 Prefix = Union[str, bytes]
 PrefixToPrefix = Union[Dict[str, str], Dict[bytes, bytes]]

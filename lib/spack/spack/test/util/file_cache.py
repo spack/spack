@@ -9,7 +9,7 @@ import pathlib
 
 import pytest
 
-import spack.llnl.util.filesystem as fs
+import spack.util.filesystem as fs
 from spack.util.file_cache import CacheError, FileCache
 
 

@@ -7,10 +7,14 @@
    :description lang=en:
       Learn how Spack's bootstrapping feature automatically fetches and installs essential build tools when they are not available on the host system.
 
-.. _bootstrapping:
 .. _cmd-spack-bootstrap:
 .. _cmd-spack-bootstrap-status:
 .. _cmd-spack-bootstrap-now:
+
+.. index::
+   single: bootstrap; managing
+   single: spack bootstrap
+   :name: bootstrapping
 
 Bootstrapping
 =============
@@ -144,6 +148,8 @@ You can also reset the bootstrapping configuration to Spack's defaults:
    ==> Bootstrapping configuration is being reset to Spack's defaults. Current configuration will be lost.
    Do you want to continue? [Y/n]
    %
+
+.. index:: air-gapped
 
 .. _cmd-spack-bootstrap-mirror:
 .. _cmd-spack-bootstrap-add:

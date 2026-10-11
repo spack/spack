@@ -11,11 +11,11 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Tuple, Type, Union
 import spack
 import spack.error
 import spack.fetch_strategy
-import spack.llnl.util.filesystem
+import spack.util.filesystem
 import spack.util.spack_json as sjson
-from spack.llnl.url import allowed_archive
 from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
+from spack.util.url import allowed_archive
 
 if TYPE_CHECKING:
     import spack.package_base
@@ -61,7 +61,7 @@ def apply_patch(
     # has issues handling CRLF line endings unless the --binary
     # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
-    with spack.llnl.util.filesystem.working_dir(source_path):
+    with spack.util.filesystem.working_dir(source_path):
         patch(*args)
 
 
@@ -549,6 +549,8 @@ class PatchCache:
 
         for deps_by_name in pkg_class.dependencies.values():
             for dependency in deps_by_name.values():
+                if not dependency.patches:
+                    continue
                 for patch_list in dependency.patches.values():
                     for patch in patch_list:
                         dspec_cls = repository.get_pkg_class(dependency.spec.name)

@@ -4,21 +4,51 @@
 import operator
 import os
 import urllib.parse
-from typing import IO, Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union, overload
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+    overload,
+)
 
 import spack.config
-import spack.llnl.util.tty as tty
-import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.error import MirrorError
 from spack.oci.image import is_oci_url
 
+if TYPE_CHECKING:
+    import spack.spec
+
 #: What schemes do we support
 supported_url_schemes = ("file", "http", "https", "sftp", "ftp", "s3", "gs", "oci", "oci+http")
 
 #: The layout version spack can current install
-SUPPORTED_LAYOUT_VERSIONS = (3, 2)
+SUPPORTED_URL_LAYOUT_VERSIONS = (3, 2)
+BINARY_MEDIA_TYPE_VERSION = 2
+
+
+def _spec_matches_filters(spec: "spack.spec.Spec", include: List[str], exclude: List[str]) -> bool:
+    """Check if a spec matches include/exclude filters.
+
+    A spec is included when:
+    - include is empty, or spec matches at least one include pattern
+    - spec does not match any exclude pattern
+    """
+    if include and not any(spec.satisfies(s) for s in include):
+        return False
+
+    if exclude and any(spec.satisfies(e) for e in exclude):
+        return False
+
+    return True
 
 
 def _url_or_path_to_url(url_or_path: str) -> str:
@@ -31,7 +61,7 @@ def _url_or_path_to_url(url_or_path: str) -> str:
         return url_or_path
 
     # Otherwise we interpret it as path, and we should promote it to file:// URL.
-    return url_util.path_to_file_url(spack.util.path.canonicalize_path(url_or_path))
+    return url_util.path_to_file_url(spack.config.canonicalize_path(url_or_path))
 
 
 class Mirror:
@@ -91,6 +121,9 @@ class Mirror:
 
     def display(self, max_len: int = 0) -> None:
         fetch, push = self.fetch_url, self.push_url
+        fetch_view, push_view = self.fetch_view, self.push_view
+        fetch = f"{fetch}:{fetch_view}" if fetch_view else fetch
+        push = f"{push}:{push_view}" if push_view else push
         # don't print the same URL twice
         url = fetch if fetch == push else f"fetch: {fetch} push: {push}"
         source = "s" if self.source else " "
@@ -124,6 +157,18 @@ class Mirror:
             return False
         return self._data.get("autopush", False)
 
+    def include_binary(self, direction: str) -> List[str]:
+        return self._get_value("include_binary", direction) or []
+
+    def exclude_binary(self, direction: str) -> List[str]:
+        return self._get_value("exclude_binary", direction) or []
+
+    def matches_binary(self, spec: "spack.spec.Spec", direction: str) -> bool:
+        """Check if a spec passes this mirror's include/exclude buildcache filters."""
+        return _spec_matches_filters(
+            spec, self.include_binary(direction), self.exclude_binary(direction)
+        )
+
     @property
     def fetch_url(self) -> str:
         """Get the valid, canonicalized fetch URL"""
@@ -151,7 +196,7 @@ class Mirror:
         errors = []
 
         # Verify that the credentials that are variables expand
-        if access_pair and isinstance(access_pair, dict):
+        if access_pair:
             if "id_variable" in access_pair and access_pair["id_variable"] not in os.environ:
                 errors.append(f"id_variable {access_pair['id_variable']} not set in environment")
             if "secret_variable" in access_pair:
@@ -164,7 +209,7 @@ class Mirror:
         if access_token_variable:
             if access_token_variable not in os.environ:
                 errors.append(
-                    f"environment variable `{access_pair['access_token_variable']}` "
+                    f"environment variable `{access_token_variable}` "
                     "(access_token_variable) not set"
                 )
 
@@ -179,17 +224,18 @@ class Mirror:
         # Only check the fetch configuration, the push configuration is whatever the latest
         # mirror version is which should support all configurable features.
 
-        # All configured mirrors support the latest version
-        supported_versions = [SUPPORTED_LAYOUT_VERSIONS[0]]
-        has_view = self.fetch_view is not None
-
         # Check if the mirror supports older layout versions
-        # OCI - Only return the newest version, the layout version is a dummy version since OCI
-        #       has its own layout.
+        # OCI - Return the tarball media type version, not the url layout version.
+        #       TODO: Clean up the distinction between these two versions
         # Views - Only versions >=3 support the views feature
-        if not is_oci_url(self.fetch_url) and not has_view:
-            supported_versions.extend(SUPPORTED_LAYOUT_VERSIONS[1:])
+        if is_oci_url(self.fetch_url):
+            return [BINARY_MEDIA_TYPE_VERSION]
 
+        # All configured mirrors support the latest version
+        supported_versions = [SUPPORTED_URL_LAYOUT_VERSIONS[0]]
+        has_view = self.fetch_view is not None
+        if not has_view:
+            supported_versions.extend(SUPPORTED_URL_LAYOUT_VERSIONS[1:])
         return supported_versions
 
     def _update_connection_dict(self, current_data: dict, new_data: dict, top_level: bool) -> bool:
@@ -199,29 +245,16 @@ class Mirror:
         elif "access_token_variable" in current_data and "access_token" in new_data:
             current_data.pop("access_token_variable")
 
-        # If updating to a new access_pair that is the deprecated list, warn
-        warn_deprecated_access_pair = False
-        if "access_pair" in new_data:
-            warn_deprecated_access_pair = isinstance(new_data["access_pair"], list)
-        # If the not updating the current access_pair, and it is the deprecated list, warn
-        elif "access_pair" in current_data:
-            warn_deprecated_access_pair = isinstance(current_data["access_pair"], list)
-
-        if warn_deprecated_access_pair:
-            tty.warn(
-                f"in mirror {self.name}: support for plain text secrets in config files "
-                "(access_pair: [id, secret]) is deprecated and will be removed in a future Spack "
-                "version. Use environment variables instead (access_pair: "
-                "{id: ..., secret_variable: ...})"
-            )
-
         keys = [
-            "url",
             "access_pair",
             "access_token",
             "access_token_variable",
-            "profile",
             "endpoint_url",
+            "exclude",
+            "profile",
+            "select",
+            "url",
+            "view",
         ]
         if top_level:
             keys += ["binary", "source", "signed", "autopush"]
@@ -376,14 +409,11 @@ class Mirror:
 
     def get_access_pair(self, direction: str) -> Optional[Tuple[str, str]]:
         pair = self._get_value("access_pair", direction)
-        if isinstance(pair, (tuple, list)) and len(pair) == 2:
-            return (pair[0], pair[1]) if all(pair) else None
-        elif isinstance(pair, dict):
-            id_ = os.environ.get(pair["id_variable"]) if "id_variable" in pair else pair["id"]
-            secret = os.environ.get(pair["secret_variable"])
-            return (id_, secret) if id_ and secret else None
-        else:
+        if not pair:
             return None
+        id_ = os.environ.get(pair["id_variable"]) if "id_variable" in pair else pair["id"]
+        secret = os.environ.get(pair["secret_variable"])
+        return (id_, secret) if id_ and secret else None
 
     def get_profile(self, direction: str) -> Optional[str]:
         return self._get_value("profile", direction)
@@ -402,6 +432,8 @@ class MirrorCollection(Mapping[str, Mirror]):
         binary: Optional[bool] = None,
         source: Optional[bool] = None,
         autopush: Optional[bool] = None,
+        *,
+        config: Optional[spack.config.Configuration] = None,
     ):
         """Initialize a mirror collection.
 
@@ -416,11 +448,15 @@ class MirrorCollection(Mapping[str, Mirror]):
                     If None, do not filter on source mirrors.
             autopush: If True, only include mirrors that have autopush enabled.
                       If False, omit mirrors that have autopush enabled.
-                      If None, do not filter on autopush."""
+                      If None, do not filter on autopush.
+            config: configuration to look up mirrors from when ``mirrors`` is None. If None, the
+                    global ``spack.config.CONFIG`` is used."""
+        if config is None:
+            config = spack.config.CONFIG
         mirrors_data = (
             mirrors.items()
             if mirrors is not None
-            else spack.config.CONFIG.get_config("mirrors", scope=scope).items()
+            else config.get_config("mirrors", scope=scope).items()
         )
         mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
 

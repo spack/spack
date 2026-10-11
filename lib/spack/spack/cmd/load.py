@@ -7,9 +7,9 @@ import sys
 
 import spack.cmd
 import spack.cmd.common
-import spack.environment as ev
 import spack.store
 import spack.user_environment as uenv
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 
 description = "add package to the user environment"
@@ -76,7 +76,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def load(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
 
     if args.list:
         results = spack.cmd.filter_loaded_specs(args.specs())

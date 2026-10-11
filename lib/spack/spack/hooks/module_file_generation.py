@@ -7,22 +7,22 @@ from typing import Optional, Set
 import spack.config
 import spack.modules
 import spack.spec
-from spack.llnl.util import tty
+from spack.util import tty
 
 
 def _for_each_enabled(
     spec: spack.spec.Spec, method_name: str, explicit: Optional[bool] = None
 ) -> None:
     """Calls a method for each enabled module"""
-    set_names: Set[str] = set(spack.config.get("modules", {}).keys())
+    set_names: Set[str] = set(spack.config.CONFIG.get("modules", {}).keys())
     for name in set_names:
-        enabled = spack.config.get(f"modules:{name}:enable")
+        enabled = spack.config.CONFIG.get(f"modules:{name}:enable")
         if not enabled:
             tty.debug("NO MODULE WRITTEN: list of enabled module files is empty")
             continue
 
         for module_type in enabled:
-            generator = spack.modules.module_types[module_type](spec, name, explicit)
+            generator = spack.modules.module_types[module_type].from_spec(spec, name, explicit)
             try:
                 getattr(generator, method_name)()
             except RuntimeError as e:

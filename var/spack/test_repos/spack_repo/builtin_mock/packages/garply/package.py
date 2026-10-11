@@ -11,6 +11,14 @@ from spack_repo.builtin_mock.build_systems.generic import Package
 from spack.package import *
 
 
+def c_compiler():
+    """Return a C compiler, ignoring Spack's compiler wrapper on PATH."""
+    if sys.platform == "darwin":
+        return which("/usr/bin/clang")
+    path = ":".join(s for s in os.environ["PATH"].split(os.pathsep) if "lib/spack/env" not in s)
+    return which("gcc", path=path)
+
+
 class Garply(Package):
     """Toy package for testing dependencies"""
 
@@ -19,160 +27,40 @@ class Garply(Package):
     version("3.0.0")
 
     def install(self, spec, prefix):
-        garply_h = """#ifndef GARPLY_H_
-
-class Garply
-{
-private:
-    static const int version_major;
-    static const int version_minor;
-
-public:
-    Garply();
-    int get_version() const;
-    int garplinate() const;
-};
-
-#endif // GARPLY_H_
-"""
-        garply_cc = """#include "garply.h"
-#include "garply_version.h"
-#include <iostream>
-
-const int Garply::version_major = garply_version_major;
-const int Garply::version_minor = garply_version_minor;
-
-Garply::Garply() {}
-
-int
-Garply::get_version() const
-{
-    return 10 * version_major + version_minor;
-}
-
-int
-Garply::garplinate() const
-{
-    std::cout << "Garply::garplinate version " << get_version()
-              << " invoked" << std::endl;
-    std::cout << "Garply config dir = %s" << std::endl;
-    return get_version();
-}
-"""
-        garplinator_cc = """#include "garply.h"
-#include <iostream>
-
-int
-main()
-{
-    Garply garply;
-    garply.garplinate();
-
-    return 0;
-}
-"""
-        garply_version_h = """const int garply_version_major = %s;
-const int garply_version_minor = %s;
-"""
-        mkdirp("%s/garply" % prefix.include)
-        mkdirp("%s/garply" % self.stage.source_path)
-        with open("%s/garply_version.h" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(garply_version_h % (self.version[0], self.version[1:]))
-        with open("%s/garply/garply.h" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(garply_h)
-        with open("%s/garply/garply.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(garply_cc % prefix.config)
-        with open("%s/garply/garplinator.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(garplinator_cc)
-        gpp = which(
-            "g++",
-            path=":".join(
-                [s for s in os.environ["PATH"].split(os.pathsep) if "lib/spack/env" not in s]
-            ),
-        )
-        if sys.platform == "darwin":
-            gpp = which("/usr/bin/clang++")
-        gpp(
-            "-Dgarply_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-O2",
-            "-g",
-            "-DNDEBUG",
-            "-fPIC",
-            "-o",
-            "garply.cc.o",
-            "-c",
-            "%s/garply/garply.cc" % self.stage.source_path,
-        )
-        gpp(
-            "-Dgarply_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-O2",
-            "-g",
-            "-DNDEBUG",
-            "-fPIC",
-            "-o",
-            "garplinator.cc.o",
-            "-c",
-            "%s/garply/garplinator.cc" % self.stage.source_path,
-        )
-        if sys.platform == "darwin":
-            gpp(
-                "-fPIC",
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-dynamiclib",
-                "-Wl,-headerpad_max_install_names",
-                "-o",
-                "libgarply.dylib",
-                "-install_name",
-                "@rpath/libgarply.dylib",
-                "garply.cc.o",
+        # The library embeds its install path twice: as an rpath (relocated by
+        # relocate_elf_binaries, in the ELF dynamic section) and as a hard-coded
+        # .rodata string (relocated by relocate_text_bin / BinaryFilePrefixReplacer),
+        # so both relocation code paths are exercised.
+        with open("garply.h", "w", encoding="utf-8") as f:
+            f.write("int garplinate(void);\n")
+        with open("garply.c", "w", encoding="utf-8") as f:
+            f.write(
+                '#include "garply.h"\n'
+                'const char *garply_config = "%s";\n'
+                "int garplinate(void) { return 3; }\n" % prefix.config
             )
-            gpp(
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-Wl,-search_paths_first",
-                "-Wl,-headerpad_max_install_names",
-                "garplinator.cc.o",
-                "-o",
-                "garplinator",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "libgarply.dylib",
-            )
-            mkdirp(prefix.lib64)
-            copy("libgarply.dylib", "%s/libgarply.dylib" % prefix.lib64)
-            os.link("%s/libgarply.dylib" % prefix.lib64, "%s/libgarply.dylib.3.0" % prefix.lib64)
+        with open("garplinator.c", "w", encoding="utf-8") as f:
+            f.write('#include "garply.h"\nint main(void) { return garplinate(); }\n')
+
+        cc = c_compiler()
+        cc("-fPIC", "-O0", "-c", "garply.c", "-o", "garply.o")
+
+        mkdirp(prefix.lib64)
+        if sys.platform == "darwin":
+            lib = "libgarply.dylib"
+            cc("-dynamiclib", "-install_name", "@rpath/" + lib, "-o", lib, "garply.o")
+            cc("-o", "garplinator", "garplinator.c", "-Wl,-rpath,%s" % prefix.lib64, lib)
+            copy(lib, os.path.join(prefix.lib64, lib))
+            os.link(os.path.join(prefix.lib64, lib), os.path.join(prefix.lib64, lib + ".3.0"))
         else:
-            gpp(
-                "-fPIC",
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-shared",
-                "-Wl,-soname,libgarply.so",
-                "-o",
-                "libgarply.so",
-                "garply.cc.o",
-            )
-            gpp(
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-rdynamic",
-                "garplinator.cc.o",
-                "-o",
-                "garplinator",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "libgarply.so",
-            )
-            mkdirp(prefix.lib64)
-            copy("libgarply.so", "%s/libgarply.so" % prefix.lib64)
-            os.link("%s/libgarply.so" % prefix.lib64, "%s/libgarply.so.3.0" % prefix.lib64)
-        copy("garplinator", "%s/garplinator" % prefix.lib64)
-        copy("%s/garply/garply.h" % self.stage.source_path, "%s/garply/garply.h" % prefix.include)
+            lib = "libgarply.so"
+            cc("-shared", "-Wl,-soname,%s" % lib, "-o", lib, "garply.o")
+            cc("-o", "garplinator", "garplinator.c", "-Wl,-rpath,%s" % prefix.lib64, lib)
+            copy(lib, os.path.join(prefix.lib64, lib))
+            os.link(os.path.join(prefix.lib64, lib), os.path.join(prefix.lib64, lib + ".3.0"))
+        copy("garplinator", os.path.join(prefix.lib64, "garplinator"))
+
+        mkdirp("%s/garply" % prefix.include)
+        copy("garply.h", "%s/garply/garply.h" % prefix.include)
         mkdirp(prefix.bin)
-        copy("garply_version.h", "%s/garply_version.h" % prefix.bin)
         os.symlink("%s/garplinator" % prefix.lib64, "%s/garplinator" % prefix.bin)

@@ -7,7 +7,9 @@
    :description lang=en:
       Discover how to create, use, and manage build caches in Spack to share pre-built binary packages and speed up installations.
 
-.. _binary_caches:
+.. index::
+   single: buildcache; using
+   :name: binary_caches
 
 Build Caches
 ============
@@ -78,6 +80,9 @@ You can see that the mirror is added with ``spack mirror list`` as follows:
     mymirror           file:///home/spackuser/spack/spack-cache
     spack-public       https://spack-llnl-mirror.s3-us-west-2.amazonaws.com/
 
+
+.. index::
+   single: build cache index; updating
 
 At this point, you've created a build cache, but Spack hasn't indexed it, so if you run ``spack buildcache list``, you won't see any results.
 You need to index this new build cache as follows:
@@ -308,6 +313,32 @@ Alternatively, you can edit the ``mirrors.yaml`` configuration file directly:
 
 See also :ref:`mirrors`.
 
+
+Including and Excluding Specs in Build Caches
+---------------------------------------------
+
+.. versionadded:: 1.2
+
+When pushing to or fetching from a build cache, you can specify include and exclude patterns in the mirror configuration to control which specs are included in or excluded from the build cache.
+If a spec satisfies an include and exclude filter then the exclusion wins.
+By default, all specs are included and none are excluded.
+
+The ``mirrors.yaml`` has to be edited directly to specify include and exclude patterns:
+
+.. code-block:: yaml
+
+   mirrors:
+     <name>:
+       url: <url>
+       include_binary:
+       - "%gcc"  # include only specs that depend on gcc
+       exclude_binary:
+       - "dev_path=*"  # except development specs
+       - "^mpich"  # and any spec that depends on mpich
+
+
+.. index:: relocation
+
 Relocation
 ----------
 
@@ -327,6 +358,8 @@ To reduce the likelihood of this happening, it is highly recommended to add padd
        root: /opt/spack
        padded_length: 128
 
+
+.. index:: autopush
 
 Automatic Push to a Build Cache
 ---------------------------------
@@ -363,7 +396,10 @@ will have the same effect as
 
     Packages are automatically pushed to a build cache only if they are built from source.
 
-.. _binary_caches_oci:
+.. index::
+   single: buildcache; OCI registries
+   single: OCI registry
+   :name: binary_caches_oci
 
 OCI / Docker V2 Registries as Build Cache
 -----------------------------------------
@@ -571,7 +607,9 @@ Arguments  Description
 ``-y``     answer yes to all trust all keys downloaded
 =========  ==============================================
 
-.. _build_cache_layout:
+.. index::
+   single: buildcache; layout
+   :name: build_cache_layout
 
 Build Cache Layout
 ------------------
@@ -607,7 +645,7 @@ Such a file would live in the versioned spec manifests directory of a binary mir
        },
        {
          "contentLength": 1000,
-         "mediaType": "application/vnd.spack.spec.v5+json",
+         "mediaType": "application/vnd.spack.spec.v6+json",
          "compression": "gzip",
          "checksumAlgorithm": "sha256",
          "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
@@ -667,7 +705,7 @@ While an example spec manifest (i.e., a manifest for a binary package) is shown 
      "data": [
        {
          "contentLength": 6411,
-         "mediaType": "application/vnd.spack.db.v8+json",
+         "mediaType": "application/vnd.spack.db.v9+json",
          "compression": "none",
          "checksumAlgorithm": "sha256",
          "checksum": "225a3e9da24d201fdf9d8247d66217f5b3f4d0fc160db1498afd998bfd115234"
@@ -675,9 +713,14 @@ While an example spec manifest (i.e., a manifest for a binary package) is shown 
      ]
    }
 
-Some things to note about this manifest are that it points to a blob that is not compressed (``compression: "none"``) and that the ``mediaType`` is one we have not seen yet, ``application/vnd.spack.db.v8+json``.
+Some things to note about this manifest are that it points to a blob that is not compressed (``compression: "none"``) and that the ``mediaType`` is one we have not seen yet, ``application/vnd.spack.db.v9+json``.
 The decision not to compress build cache indices stems from the fact that Spack does not yet sign build cache index manifests.
 Once that changes, you may start to see these indices stored as compressed blobs.
+
+The media type ``application/vnd.spack.db.v8+json`` refers to the database format.
+A build cache index manifest can contain multiple indices under different media types, which ensures that different versions of Spack can use the same build cache.
+Spack fetches the build cache index that corresponds to the latest media type it supports, and similarly pushes using the latest media type.
+If you upgrade Spack and push to an existing build cache, older versions of Spack will continue to be able to use the build cache, but won't be able to reuse the specs pushed by the newest version of Spack.
 
 For completeness, here are examples of manifests for the other two types of entities you might find in a Spack build cache.
 First, a public key manifest:

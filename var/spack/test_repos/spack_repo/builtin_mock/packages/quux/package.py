@@ -7,6 +7,7 @@ import os
 import sys
 
 from spack_repo.builtin_mock.build_systems.generic import Package
+from spack_repo.builtin_mock.packages.garply.package import c_compiler
 
 from spack.package import *
 
@@ -21,181 +22,65 @@ class Quux(Package):
     depends_on("garply")
 
     def install(self, spec, prefix):
-        quux_cc = """#include "quux.h"
-#include "garply/garply.h"
-#include "quux_version.h"
-#include <iostream>
-#include <stdexcept>
+        # Trivial C sources. The library embeds its install path both as an
+        # rpath (relocated by relocate_elf_binaries) and as a hard-coded
+        # .rodata string (relocated by relocate_text_bin), so both relocation
+        # code paths are exercised.
+        garply = spec["garply"].prefix
+        with open("quux.h", "w", encoding="utf-8") as f:
+            f.write("int quuxify(void);\n")
+        with open("quux.c", "w", encoding="utf-8") as f:
+            f.write(
+                '#include "quux.h"\n#include "garply/garply.h"\n'
+                'const char *quux_config = "%s";\n'
+                "int quuxify(void) { return garplinate(); }\n" % prefix.config
+            )
+        with open("quuxifier.c", "w", encoding="utf-8") as f:
+            f.write('#include "quux.h"\nint main(void) { return quuxify(); }\n')
 
-const int Quux::version_major = quux_version_major;
-const int Quux::version_minor = quux_version_minor;
+        cc = c_compiler()
+        cc("-fPIC", "-O0", "-I%s" % garply.include, "-c", "quux.c", "-o", "quux.o")
 
-Quux::Quux() {}
-
-int
-Quux::get_version() const
-{
-    return 10 * version_major + version_minor;
-}
-
-int
-Quux::quuxify() const
-{
-    int quux_version = get_version();
-    std::cout << "Quux::quuxify version " << quux_version
-              << " invoked" <<std::endl;
-    std::cout << "Quux config directory is %s" <<std::endl;
-    Garply garply;
-    int garply_version = garply.garplinate();
-
-    if (garply_version != quux_version) {
-        throw std::runtime_error(
-            "Quux found an incompatible version of Garply.");
-    }
-
-    return quux_version;
-}
-"""
-        quux_h = """#ifndef QUUX_H_
-
-class Quux
-{
-private:
-    static const int version_major;
-    static const int version_minor;
-
-public:
-    Quux();
-    int get_version() const;
-    int quuxify() const;
-};
-
-#endif // QUUX_H_
-"""
-        quuxifier_cc = """
-#include "quux.h"
-#include <iostream>
-
-int
-main()
-{
-    Quux quux;
-    quux.quuxify();
-
-    return 0;
-}
-"""
-        quux_version_h = """const int quux_version_major = %s;
-const int quux_version_minor = %s;
-"""
-        mkdirp("%s/quux" % prefix.include)
-        mkdirp("%s/quux" % self.stage.source_path)
-        with open("%s/quux_version.h" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(quux_version_h % (self.version[0], self.version[1:]))
-        with open("%s/quux/quux.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(quux_cc % (prefix.config))
-        with open("%s/quux/quux.h" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(quux_h)
-        with open("%s/quux/quuxifier.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
-            f.write(quuxifier_cc)
-        gpp = which(
-            "g++",
-            path=":".join(
-                [s for s in os.environ["PATH"].split(os.pathsep) if "lib/spack/env" not in s]
-            ),
-        )
+        mkdirp(prefix.lib64)
         if sys.platform == "darwin":
-            gpp = which("/usr/bin/clang++")
-        gpp(
-            "-Dquux_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-I%s" % spec["garply"].prefix.include,
-            "-O2",
-            "-g",
-            "-DNDEBUG",
-            "-fPIC",
-            "-o",
-            "quux.cc.o",
-            "-c",
-            "quux/quux.cc",
-        )
-        gpp(
-            "-Dquux_EXPORTS",
-            "-I%s" % self.stage.source_path,
-            "-I%s" % spec["garply"].prefix.include,
-            "-O2",
-            "-g",
-            "-DNDEBUG",
-            "-fPIC",
-            "-o",
-            "quuxifier.cc.o",
-            "-c",
-            "quux/quuxifier.cc",
-        )
-        if sys.platform == "darwin":
-            gpp(
-                "-fPIC",
-                "-O2",
-                "-g",
-                "-DNDEBUG",
+            lib = "libquux.dylib"
+            garply_lib = os.path.join(garply.lib64, "libgarply.dylib")
+            cc(
                 "-dynamiclib",
-                "-Wl,-headerpad_max_install_names",
-                "-o",
-                "libquux.dylib",
                 "-install_name",
-                "@rpath/libquux.dylib",
-                "quux.cc.o",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
-                "%s/libgarply.dylib" % spec["garply"].prefix.lib64,
-            )
-            gpp(
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "quuxifier.cc.o",
+                "@rpath/" + lib,
                 "-o",
-                "quuxifier",
-                "-Wl,-rpath,%s" % prefix.lib64,
-                "-Wl,-rpath,%s" % spec["garply"].prefix.lib64,
-                "libquux.dylib",
-                "%s/libgarply.dylib" % spec["garply"].prefix.lib64,
+                lib,
+                "quux.o",
+                "-Wl,-rpath,%s" % garply.lib64,
+                garply_lib,
             )
-            mkdirp(prefix.lib64)
-            copy("libquux.dylib", "%s/libquux.dylib" % prefix.lib64)
-            os.link("%s/libquux.dylib" % prefix.lib64, "%s/libquux.dylib.3.0" % prefix.lib64)
         else:
-            gpp(
-                "-fPIC",
-                "-O2",
-                "-g",
-                "-DNDEBUG",
+            lib = "libquux.so"
+            garply_lib = os.path.join(garply.lib64, "libgarply.so")
+            cc(
                 "-shared",
-                "-Wl,-soname,libquux.so",
+                "-Wl,-soname,%s" % lib,
                 "-o",
-                "libquux.so",
-                "quux.cc.o",
-                "-Wl,-rpath,%s:%s::::" % (prefix.lib64, spec["garply"].prefix.lib64),
-                "%s/libgarply.so" % spec["garply"].prefix.lib64,
+                lib,
+                "quux.o",
+                "-Wl,-rpath,%s" % garply.lib64,
+                garply_lib,
             )
-            gpp(
-                "-O2",
-                "-g",
-                "-DNDEBUG",
-                "-rdynamic",
-                "quuxifier.cc.o",
-                "-o",
-                "quuxifier",
-                "-Wl,-rpath,%s:%s::::" % (prefix.lib64, spec["garply"].prefix.lib64),
-                "libquux.so",
-                "%s/libgarply.so" % spec["garply"].prefix.lib64,
-            )
-            mkdirp(prefix.lib64)
-            copy("libquux.so", "%s/libquux.so" % prefix.lib64)
-            os.link("%s/libquux.so" % prefix.lib64, "%s/libquux.so.3.0" % prefix.lib64)
-        copy("quuxifier", "%s/quuxifier" % prefix.lib64)
-        copy("%s/quux/quux.h" % self.stage.source_path, "%s/quux/quux.h" % prefix.include)
+        cc(
+            "-o",
+            "quuxifier",
+            "quuxifier.c",
+            "-Wl,-rpath,%s" % prefix.lib64,
+            "-Wl,-rpath,%s" % garply.lib64,
+            lib,
+        )
+        copy(lib, os.path.join(prefix.lib64, lib))
+        os.link(os.path.join(prefix.lib64, lib), os.path.join(prefix.lib64, lib + ".3.0"))
+        copy("quuxifier", os.path.join(prefix.lib64, "quuxifier"))
+
+        mkdirp("%s/quux" % prefix.include)
+        copy("quux.h", "%s/quux/quux.h" % prefix.include)
         mkdirp(prefix.bin)
-        copy("quux_version.h", "%s/quux_version.h" % prefix.bin)
         os.symlink("%s/quuxifier" % prefix.lib64, "%s/quuxifier" % prefix.bin)
-        os.symlink("%s/garplinator" % spec["garply"].prefix.lib64, "%s/garplinator" % prefix.bin)
+        os.symlink("%s/garplinator" % garply.lib64, "%s/garplinator" % prefix.bin)

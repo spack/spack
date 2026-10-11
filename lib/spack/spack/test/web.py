@@ -7,20 +7,26 @@ import os
 import pathlib
 import pickle
 import ssl
+import sys
+import types
+import urllib.error
 import urllib.request
-from typing import Dict
+from datetime import datetime
+from typing import Any, Dict, List, Tuple
 
 import pytest
 
-import spack.config
-import spack.llnl.util.tty as tty
+import spack.error
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
+import spack.util.parallel
 import spack.util.s3
 import spack.util.url as url_util
 import spack.util.web
-from spack.llnl.util.filesystem import working_dir
+from spack.config import Configuration
+from spack.util import tty
+from spack.util.filesystem import working_dir
 from spack.version import Version
 
 
@@ -38,6 +44,92 @@ page_4 = _create_url("4.html")
 
 root_with_fragment = _create_url("index_with_fragment.html")
 root_with_javascript = _create_url("index_with_javascript.html")
+
+
+class MockPages:
+    def search(self, *args, **kwargs):
+        return [
+            {"Key": "prefix/keyone"},
+            {"Key": "prefix/keytwo"},
+            {"Key": "prefix/keythree"},
+            {"Key": "prefix/nested/keyfour"},
+        ]
+
+
+class MockPaginator:
+    def paginate(self, *args, **kwargs):
+        return MockPages()
+
+
+class MockClientError(Exception):
+    def __init__(self, code="NoSuchKey"):
+        self.response = {"Error": {"Code": code}, "ResponseMetadata": {"HTTPStatusCode": 404}}
+
+
+class MockS3Client:
+    """Mock S3 client with canned responses."""
+
+    def __init__(self, url, method="fetch"):
+        Args = List[Any]
+        KWArgs = Dict[str, Any]
+        self.put_object_calls: List[Tuple[Args, KWArgs]] = []
+        self.upload_file_calls: List[Tuple[Args, KWArgs]] = []
+        self.delete_object_calls: List[Tuple[Args, KWArgs]] = []
+        self.ClientError = MockClientError
+
+    def put_object(self, *args, **kwargs):
+        # Read and store the contents of the Body filestream
+        if "Body" in kwargs:
+            kwargs["Body"] = kwargs["Body"].read()
+
+        self.put_object_calls.append((args, kwargs))
+
+    def upload_file(self, *args, **kwargs):
+        self.upload_file_calls.append((args, kwargs))
+
+    def get_paginator(self, *args, **kwargs):
+        return MockPaginator()
+
+    def delete_objects(self, *args, **kwargs):
+        return {
+            "Errors": [{"Key": "prefix/keyone", "Message": "Access Denied"}],
+            "Deleted": [{"Key": "prefix/keytwo"}, {"Key": "prefix/keythree"}],
+        }
+
+    def delete_object(self, *args, **kwargs):
+        self.delete_object_calls.append((args, kwargs))
+
+    def get_object(self, Bucket=None, Key=None):
+        if Bucket == "my-bucket" and Key == "subdirectory/my-file":
+            return {"ResponseMetadata": {"HTTPHeaders": {}}}
+        raise self.ClientError
+
+    def head_object(self, Bucket=None, Key=None):
+        if Bucket == "my-bucket" and Key == "subdirectory/my-file":
+            return {
+                "ResponseMetadata": {"HTTPHeaders": {}},
+                "LastModified": datetime.fromtimestamp(1360799444.0),
+                "ContentLength": 0,
+            }
+        if Bucket == "my-bucket" and Key == "subdirectory/actually-missing-file":
+            # HeadObject reports a missing key as "404", as opposed to other
+            # S3 APIs that include more specific information like "NoSuchKey".
+            raise self.ClientError(code="404")
+        raise self.ClientError
+
+
+@pytest.fixture
+def mock_s3_client(monkeypatch):
+    client = MockS3Client("s3://my-bucket/")
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
+
+    return client
 
 
 @pytest.mark.parametrize(
@@ -79,7 +171,8 @@ root_with_javascript = _create_url("index_with_javascript.html")
     ],
 )
 def test_spider(depth, expected_found, expected_not_found, expected_text):
-    pages, links = spack.util.web.spider(root, depth=depth)
+    with spack.util.parallel.make_concurrent_executor() as executor:
+        pages, links = spack.util.web.spider(root, depth=depth, executor=executor)
 
     for page in expected_found["pages"]:
         assert page in pages
@@ -232,63 +325,20 @@ def test_list_url(tmp_path: pathlib.Path):
     assert list_url(True) == ["dir/another-file.txt", "file-0.txt", "file-1.txt", "file-2.txt"]
 
 
-class MockPages:
-    def search(self, *args, **kwargs):
-        return [{"Key": "keyone"}, {"Key": "keytwo"}, {"Key": "keythree"}]
-
-
-class MockPaginator:
-    def paginate(self, *args, **kwargs):
-        return MockPages()
-
-
-class MockClientError(Exception):
-    def __init__(self):
-        self.response = {
-            "Error": {"Code": "NoSuchKey"},
-            "ResponseMetadata": {"HTTPStatusCode": 404},
-        }
-
-
-class MockS3Client:
-    def get_paginator(self, *args, **kwargs):
-        return MockPaginator()
-
-    def delete_objects(self, *args, **kwargs):
-        return {
-            "Errors": [{"Key": "keyone", "Message": "Access Denied"}],
-            "Deleted": [{"Key": "keytwo"}, {"Key": "keythree"}],
-        }
-
-    def delete_object(self, *args, **kwargs):
-        pass
-
-    def get_object(self, Bucket=None, Key=None):
-        self.ClientError = MockClientError
-        if Bucket == "my-bucket" and Key == "subdirectory/my-file":
-            return {"ResponseMetadata": {"HTTPHeaders": {}}}
-        raise self.ClientError
-
-    def head_object(self, Bucket=None, Key=None):
-        self.ClientError = MockClientError
-        if Bucket == "my-bucket" and Key == "subdirectory/my-file":
-            return {"ResponseMetadata": {"HTTPHeaders": {}}}
-        raise self.ClientError
-
-
 def test_gather_s3_information(monkeypatch):
+    monkeypatch.setenv("_SPACK_TEST_S3_SECRET", "CK")
     mirror = spack.mirrors.mirror.Mirror(
         {
             "fetch": {
                 "access_token": "AAAAAAA",
                 "profile": "SPacKDeV",
-                "access_pair": ("SPA", "CK"),
+                "access_pair": {"id": "SPA", "secret_variable": "_SPACK_TEST_S3_SECRET"},
                 "endpoint_url": "https://127.0.0.1:8888",
             },
             "push": {
                 "access_token": "AAAAAAA",
                 "profile": "SPacKDeV",
-                "access_pair": ("SPA", "CK"),
+                "access_pair": {"id": "SPA", "secret_variable": "_SPACK_TEST_S3_SECRET"},
                 "endpoint_url": "https://127.0.0.1:8888",
             },
         }
@@ -311,14 +361,8 @@ def test_gather_s3_information(monkeypatch):
     assert "endpoint_url" in client_args
 
 
-def test_remove_s3_url(monkeypatch, capfd):
+def test_remove_s3_url(mock_s3_client, capfd):
     fake_s3_url = "s3://my-bucket/subdirectory/mirror"
-
-    def get_s3_session(url, method="fetch"):
-        return MockS3Client()
-
-    monkeypatch.setattr(spack.util.web, "get_s3_session", get_s3_session)
-
     current_debug_level = tty.debug_level()
     tty.set_debug(1)
 
@@ -327,17 +371,187 @@ def test_remove_s3_url(monkeypatch, capfd):
 
     tty.set_debug(current_debug_level)
 
-    assert "Failed to delete keyone (Access Denied)" in err
-    assert "Deleted keythree" in err
-    assert "Deleted keytwo" in err
+    assert "Failed to delete prefix/keyone (Access Denied)" in err
+    assert "Deleted prefix/keythree" in err
+    assert "Deleted prefix/keytwo" in err
 
 
-def test_s3_url_exists(monkeypatch):
+def test_remove_s3_url_non_recursive(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/subdirectory/mirror"
+
+    spack.util.web.remove_url(fake_s3_url, recursive=False)
+
+    assert len(mock_s3_client.delete_object_calls) == 1
+    _, kwargs = mock_s3_client.delete_object_calls[0]
+    assert kwargs == {"Bucket": "my-bucket", "Key": "subdirectory/mirror"}
+
+
+def test_delete_objects_batches_over_1000_keys(monkeypatch):
+    """Verify that delete_objects flushes its delete request in batches of
+    <=1000 keys, since that's the limit enforced by the underlying S3 API."""
+
+    class ManyKeysPages:
+        def search(self, *args, **kwargs):
+            return ({"Key": f"prefix/key{i}"} for i in range(1500))
+
+    class ManyKeysPaginator:
+        def paginate(self, *args, **kwargs):
+            return ManyKeysPages()
+
+    class BatchTrackingS3Client:
+        ClientError = MockClientError
+
+        def __init__(self):
+            self.delete_objects_calls = []
+
+        def get_paginator(self, *args, **kwargs):
+            return ManyKeysPaginator()
+
+        def delete_objects(self, Bucket, Delete):
+            self.delete_objects_calls.append(list(Delete["Objects"]))
+            return {}
+
+    client = BatchTrackingS3Client()
+
     def get_s3_session(url, method="fetch"):
-        return MockS3Client()
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
 
-    monkeypatch.setattr(spack.util.s3, "get_s3_session", get_s3_session)
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
 
+    spack.util.web.remove_url("s3://my-bucket/prefix", recursive=True)
+
+    assert [len(batch) for batch in client.delete_objects_calls] == [1000, 500]
+
+
+def test_list_s3_url(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/prefix/"
+    listing = spack.util.web.list_url(fake_s3_url, recursive=False)
+    assert "keyone" in listing
+    assert "keytwo" in listing
+    assert "keythree" in listing
+    assert "nested/keyfour" not in listing
+
+    listing = spack.util.web.list_url(fake_s3_url, recursive=True)
+    assert "keyone" in listing
+    assert "keytwo" in listing
+    assert "keythree" in listing
+    assert "nested/keyfour" in listing
+
+
+def test_list_s3_url_wraps_client_error(monkeypatch):
+    """Verify that list_url normalizes ClientError to OSError."""
+
+    class FailingPaginator:
+        def paginate(self, *args, **kwargs):
+            raise MockClientError()
+
+    class FailingClient:
+        ClientError = MockClientError
+
+        def get_paginator(self, *args, **kwargs):
+            return FailingPaginator()
+
+    client = FailingClient()
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
+
+    with pytest.raises(OSError):
+        spack.util.web.list_url("s3://my-bucket/prefix/", recursive=True)
+
+
+def test_list_s3_url_skips_directory_marker_keys(monkeypatch):
+    """Verify that a key which exactly matches the specified prefix
+    is skipped instead of getting listed as an empty relative path."""
+
+    class MarkerPages:
+        def search(self, *args, **kwargs):
+            return [{"Key": "prefix/"}, {"Key": "prefix/real-key"}]
+
+    class MarkerPaginator:
+        def paginate(self, *args, **kwargs):
+            return MarkerPages()
+
+    class MarkerClient:
+        def get_paginator(self, *args, **kwargs):
+            return MarkerPaginator()
+
+    client = MarkerClient()
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
+
+    listing = spack.util.web.list_url("s3://my-bucket/prefix/", recursive=True)
+    assert listing == ["real-key"]
+
+
+def test_list_s3_url_at_bucket_root(monkeypatch):
+    """Verify that a mirror with no sub-path (e.g. s3://my-bucket) gets listed with an
+    empty Prefix (not "/")."""
+
+    class RootPages:
+        def search(self, *args, **kwargs):
+            return [{"Key": "some/object.txt"}]
+
+    class RootPaginator:
+        def __init__(self):
+            self.paginate_calls = []
+
+        def paginate(self, *args, **kwargs):
+            self.paginate_calls.append(kwargs)
+            return RootPages()
+
+    class RootClient:
+        def __init__(self):
+            self.paginator = RootPaginator()
+
+        def get_paginator(self, *args, **kwargs):
+            return self.paginator
+
+    client = RootClient()
+
+    def get_s3_session(url, method="fetch"):
+        if not isinstance(url, urllib.parse.ParseResult):
+            url = urllib.parse.urlparse(url)
+        return client, url
+
+    monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
+
+    listing = spack.util.web.list_url("s3://my-bucket", recursive=True)
+
+    assert client.paginator.paginate_calls == [
+        {"Bucket": "my-bucket", "Prefix": "", "MaxKeys": 1024}
+    ]
+    assert listing == ["some/object.txt"]
+
+
+def test_stat_s3_url(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/subdirectory/my-file"
+    size, mtime = spack.util.web.stat_url(fake_s3_url)
+    assert 0 == size
+    assert 1360799444.0 == mtime
+
+    with pytest.raises(OSError):
+        fake_s3_url = "s3://my-bucket/subdirectory/my-notfound-file"
+        spack.util.web.stat_url(fake_s3_url)
+
+
+def test_stat_s3_url_returns_none_for_404(mock_s3_client):
+    fake_s3_url = "s3://my-bucket/subdirectory/actually-missing-file"
+    assert spack.util.web.stat_url(fake_s3_url) is None
+
+
+def test_s3_url_exists(mock_s3_client):
     fake_s3_url_exists = "s3://my-bucket/subdirectory/my-file"
     assert spack.util.web.url_exists(fake_s3_url_exists)
 
@@ -348,6 +562,67 @@ def test_s3_url_exists(monkeypatch):
 def test_s3_url_parsing():
     assert spack.util.s3._parse_s3_endpoint_url("example.com") == "https://example.com"
     assert spack.util.s3._parse_s3_endpoint_url("http://example.com") == "http://example.com"
+
+
+@pytest.fixture
+def fake_boto3(monkeypatch):
+    """Stand in for the boto3/botocore packages.
+
+    get_s3_session imports boto3/botocore lazily so that they remain optional
+    dependencies; stub them out here so tests can exercise the real
+    get_s3_session logic without requiring those packages to be installed.
+    """
+
+    class FakeClientError(Exception):
+        pass
+
+    class FakeSession:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+        def get_credentials(self):
+            return None
+
+        def client(self, service_name, **kwargs):
+            return types.SimpleNamespace(service_name=service_name, kwargs=kwargs)
+
+    class FakeConfig:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    boto3_module = types.ModuleType("boto3")
+    boto3_module.Session = FakeSession
+
+    botocore_module = types.ModuleType("botocore")
+    botocore_module.UNSIGNED = object()
+
+    botocore_client_module = types.ModuleType("botocore.client")
+    botocore_client_module.Config = FakeConfig
+
+    botocore_exceptions_module = types.ModuleType("botocore.exceptions")
+    botocore_exceptions_module.ClientError = FakeClientError
+
+    monkeypatch.setitem(sys.modules, "boto3", boto3_module)
+    monkeypatch.setitem(sys.modules, "botocore", botocore_module)
+    monkeypatch.setitem(sys.modules, "botocore.client", botocore_client_module)
+    monkeypatch.setitem(sys.modules, "botocore.exceptions", botocore_exceptions_module)
+
+
+def test_get_s3_session_normalizes_method_and_returns_parsed_url(monkeypatch, fake_boto3):
+    """Verify that "GET" and "HEAD" are treated as "fetch", and everything else
+    is treated as "push"."""
+    monkeypatch.setattr(spack.util.s3, "s3_client_cache", {})
+
+    fetch_client, parsed_url = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="GET")
+    assert parsed_url.geturl() == "s3://my-bucket/prefix"
+    assert (None, "fetch") in spack.util.s3.s3_client_cache
+
+    head_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="head")
+    assert head_client is fetch_client
+
+    push_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="anything-else")
+    assert (None, "push") in spack.util.s3.s3_client_cache
+    assert push_client is not fetch_client
 
 
 def test_detailed_http_error_pickle(tmp_path: pathlib.Path):
@@ -373,12 +648,12 @@ def test_detailed_http_error_pickle(tmp_path: pathlib.Path):
 
 
 @pytest.fixture()
-def ssl_scrubbed_env(mutable_config, monkeypatch):
+def ssl_scrubbed_env(mutable_config: Configuration, monkeypatch):
     """clear out environment variables that could give false positives for SSL Cert tests"""
     monkeypatch.delenv("SSL_CERT_FILE", raising=False)
     monkeypatch.delenv("SSL_CERT_DIR", raising=False)
     monkeypatch.delenv("CURL_CA_BUNDLE", raising=False)
-    spack.config.set("config:verify_ssl", True)
+    mutable_config.set("config:verify_ssl", True)
 
 
 @pytest.mark.parametrize(
@@ -397,12 +672,17 @@ def ssl_scrubbed_env(mutable_config, monkeypatch):
     ],
 )
 def test_ssl_urllib(
-    cert_path, cert_creator, tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config, monkeypatch
+    cert_path,
+    cert_creator,
+    tmp_path: pathlib.Path,
+    ssl_scrubbed_env,
+    mutable_config: Configuration,
+    monkeypatch,
 ):
     """
     create a proposed cert type and then verify that they exist inside ssl's checks
     """
-    spack.config.set("config:url_fetch_method", "urllib")
+    mutable_config.set("config:url_fetch_method", "urllib")
 
     def mock_verify_locations(self, cafile, capath, cadata):
         """overwrite ssl's verification to simply check for valid file/path"""
@@ -417,9 +697,9 @@ def test_ssl_urllib(
     with working_dir(str(tmp_path)):
         mock_cert = cert_path(str(tmp_path))
         cert_creator(mock_cert)
-        spack.config.set("config:ssl_certs", mock_cert)
+        mutable_config.set("config:ssl_certs", mock_cert)
 
-        assert mock_cert == spack.config.get("config:ssl_certs", None)
+        assert mock_cert == mutable_config.get("config:ssl_certs", None)
 
         ssl_context = spack.util.web.ssl_create_default_context()
         assert ssl_context.verify_mode == ssl.CERT_REQUIRED
@@ -427,16 +707,20 @@ def test_ssl_urllib(
 
 @pytest.mark.parametrize("cert_exists", [True, False], ids=["exists", "missing"])
 def test_ssl_curl_cert_file(
-    cert_exists, tmp_path: pathlib.Path, ssl_scrubbed_env, mutable_config, monkeypatch
+    cert_exists,
+    tmp_path: pathlib.Path,
+    ssl_scrubbed_env,
+    mutable_config: Configuration,
+    monkeypatch,
 ):
     """
     Assure that if a valid cert file is specified curl executes
     with CURL_CA_BUNDLE in the env
     """
-    spack.config.set("config:url_fetch_method", "curl")
+    mutable_config.set("config:url_fetch_method", "curl")
     with working_dir(str(tmp_path)):
         mock_cert = str(tmp_path / "mock_cert.crt")
-        spack.config.set("config:ssl_certs", mock_cert)
+        mutable_config.set("config:ssl_certs", mock_cert)
         if cert_exists:
             open(mock_cert, "w", encoding="utf-8").close()
             assert os.path.isfile(mock_cert)
@@ -461,11 +745,10 @@ def test_ssl_curl_cert_file(
         (404, 1, 5, True),  # not transient, never retried
     ],
 )
-def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_failure):
+def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_failure, mock_sleep):
     import urllib.error
 
     call_count = 0
-    sleep_times = []
 
     def flaky_func():
         nonlocal call_count
@@ -477,7 +760,7 @@ def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_fa
         return "ok"
 
     retrying = spack.util.web.retry_on_transient_error(
-        flaky_func, retries=max_retries, sleep=sleep_times.append
+        flaky_func, spack.util.web.Retry(total=max_retries)
     )
 
     if expect_failure:
@@ -485,17 +768,16 @@ def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_fa
             retrying()
     else:
         assert retrying() == "ok"
-        assert sleep_times == [2**i for i in range(num_errors)]
+        assert mock_sleep.times == [2**i for i in range(num_errors)]
 
 
-def test_retry_on_transient_error_non_oserror():
+def test_retry_on_transient_error_non_oserror(mock_sleep):
     """Non-OSError exceptions with transient names (e.g. botocore) should be retried."""
 
     class ResponseStreamingError(Exception):
         pass
 
     call_count = 0
-    sleep_times = []
 
     def flaky_func():
         nonlocal call_count
@@ -504,10 +786,179 @@ def test_retry_on_transient_error_non_oserror():
             raise ResponseStreamingError("IncompleteRead")
         return "ok"
 
-    retrying = spack.util.web.retry_on_transient_error(
-        flaky_func, retries=5, sleep=sleep_times.append
-    )
+    retrying = spack.util.web.retry_on_transient_error(flaky_func)
 
     assert retrying() == "ok"
     assert call_count == 3
-    assert sleep_times == [1, 2]
+    assert mock_sleep.times == [1, 2]
+
+
+def test_retry(monkeypatch, mock_sleep):
+
+    retry = spack.util.web.Retry(total=5, backoff_factor=1.0, backoff_jitter=1.0, backoff_max=1)
+
+    # No early exit
+    count = 0
+    for _ in retry:
+        assert retry.count == count
+        count += 1
+
+    assert count == 5
+    assert retry.count == 5
+    assert mock_sleep.count == 4
+
+    # Exit early on last attempt
+    count = 0
+    for _ in retry:
+        assert retry.count == count
+        count += 1
+
+        # Skip the last increment step
+        if retry.is_last_attempt():
+            break
+
+    assert count == 5
+    assert retry.count == 4
+    assert mock_sleep.count == 8
+
+    count = 0
+    # Exit early on first attempt
+    for _ in retry:
+        count += 1
+        # Never increment retry, skips sleep
+        break
+
+    assert count == 1
+    assert retry.count == 0
+    assert mock_sleep.count == 8
+
+    count = 0
+    # Exit early on second attempt
+    for _ in retry:
+        count += 1
+        if count == 2:
+            break
+
+    assert count == 2
+    assert retry.count == 1
+    assert mock_sleep.count == 9
+
+
+def test_retry_on_transient_error_reuse(mock_sleep):
+    """A shared Retry instance must be reset on each wrapper invocation."""
+    call_count = 0
+
+    def flaky_func():
+        nonlocal call_count
+        call_count += 1
+        if call_count % 2 != 0:
+            raise urllib.error.HTTPError(
+                url="https://example.com", code=503, msg="err", hdrs={}, fp=None
+            )
+        return "ok"
+
+    retry = spack.util.web.Retry(total=2)
+    retrying = spack.util.web.retry_on_transient_error(flaky_func, retry)
+
+    assert retrying() == "ok"
+    assert retrying() == "ok"
+
+
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_s3_if_match(keep_original, mock_s3_client, tmp_path):
+    """Test that using if_match with s3 calls put_object."""
+    local_data = tmp_path / "data.txt"
+    local_data.write_text("hello")
+
+    spack.util.web.push_to_url(
+        str(local_data),
+        "s3://bucket/and/path/data.txt",
+        keep_original=keep_original,
+        content_type="text/plain",
+        if_match="etag1234",
+    )
+
+    assert 1 == len(mock_s3_client.put_object_calls)
+    call = mock_s3_client.put_object_calls[0]
+    assert 0 == len(call[0])
+    assert {
+        "Bucket": "bucket",
+        "Key": "and/path/data.txt",
+        "IfMatch": "etag1234",
+        "ContentType": "text/plain",
+        "Body": b"hello",
+    } == call[1]
+    assert local_data.exists() is keep_original
+
+    # We shouldn't have called upload_file
+    assert 0 == len(mock_s3_client.upload_file_calls)
+
+
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_s3(keep_original, mock_s3_client, tmp_path):
+    """Test that using if_match with s3 calls put_object."""
+    local_data = tmp_path / "data.txt"
+    local_data.write_text("hello")
+
+    spack.util.web.push_to_url(
+        str(local_data),
+        "s3://bucket/and/path/data.txt",
+        keep_original=keep_original,
+        content_type="text/plain",
+    )
+
+    assert 0 == len(mock_s3_client.put_object_calls)
+    assert local_data.exists() is keep_original
+
+    # We shouldn't have called upload_file
+    assert 1 == len(mock_s3_client.upload_file_calls)
+    call = mock_s3_client.upload_file_calls[0]
+    assert 3 == len(call[0])
+    assert {"ContentType": "text/plain"} == call[1]["ExtraArgs"]
+
+
+def test_push_object_defaults_extra_args_to_empty_dict(mock_s3_client, tmp_path):
+    local_data = tmp_path / "data.txt"
+    local_data.write_text("hello")
+
+    spack.util.s3.push_object("s3://bucket/and/path/data.txt", str(local_data), None)
+
+    assert 1 == len(mock_s3_client.upload_file_calls)
+    call = mock_s3_client.upload_file_calls[0]
+    assert call[1]["ExtraArgs"] == {}
+
+
+def test_push_object_rejects_oversized_file_for_if_match(monkeypatch, mock_s3_client, tmp_path):
+    """IfMatch is only supported via put_object, which can't handle files >= 5GB."""
+    local_data = tmp_path / "data.txt"
+    local_data.write_text("hello")
+
+    class HugeStatResult:
+        st_size = int(6e9)
+
+    real_stat = os.stat
+
+    def fake_stat(path, *args, **kwargs):
+        if str(path) == str(local_data):
+            return HugeStatResult()
+        return real_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(spack.util.s3.os, "stat", fake_stat)
+
+    with pytest.raises(spack.error.SpackError, match="File too large"):
+        spack.util.s3.push_object(
+            "s3://bucket/and/path/data.txt", str(local_data), {"IfMatch": "etag1234"}
+        )
+
+
+@pytest.mark.parametrize(
+    "exception", [RuntimeError("runtime"), Exception("e"), OSError(1, "dummy")]
+)
+def test_url_exists_no_raise(monkeypatch, exception):
+    """URL Exist check should return False for kind of exception."""
+
+    def _raising(*args, **kwargs):
+        raise exception
+
+    monkeypatch.setattr(spack.util.web, "_url_exists_urllib", _raising)
+    assert not spack.util.web.url_exists("https://not.real.io")

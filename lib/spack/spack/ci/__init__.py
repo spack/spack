@@ -21,9 +21,6 @@ import spack.binary_distribution
 import spack.builder
 import spack.config as cfg
 import spack.environment as ev
-import spack.llnl.path
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.tty as tty
 import spack.main
 import spack.mirrors.mirror
 import spack.paths
@@ -31,15 +28,19 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.git
 import spack.util.gpg as gpg_util
+import spack.util.path
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
+from spack.concretize_ui import TerminalUI
 from spack.error import SpackError
-from spack.llnl.util.tty.color import cescape, colorize
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.util import tty
+from spack.util.tty.color import cescape, colorize
 
 from .common import (
     IS_WINDOWS,
@@ -128,18 +129,43 @@ def filter_added_checksums(
     return list(added_checksums - removed_checksums)
 
 
+def _stack_path_matches(candidate: str, changed_path: str) -> bool:
+    """Return True if ``changed_path`` (posix-separated, as reported by git) is exactly
+    ``candidate`` or lives underneath it. ``candidate == "."`` (the git root itself)
+    matches any path."""
+    candidate = candidate.rstrip("/")
+    if candidate in ("", "."):
+        return True
+    return changed_path == candidate or changed_path.startswith(candidate + "/")
+
+
 def stack_changed(env_path: str) -> bool:
     """Given an environment manifest path, return whether or not the stack was changed.
     Returns True iff the environment manifest changed between the provided revisions (or
     additionally if the ``.gitlab-ci.yml`` file itself changed)."""
     # git returns posix paths always, normalize input to be compatible with that
-    env_path = spack.llnl.path.convert_to_posix_path(os.path.dirname(env_path))
+    env_path = spack.util.path.convert_to_posix_path(os.path.dirname(env_path))
 
     git = spack.util.git.git(required=True)
     git_dir = get_git_root(env_path)
 
     if git_dir is None:
         return False
+
+    rel_env_path = spack.util.path.convert_to_posix_path(os.path.relpath(env_path, git_dir))
+    stack_paths = [rel_env_path]
+
+    # Get the gitlab pipeline config from the CI variable. GitLab documents
+    # CI_CONFIG_PATH as already being relative to the project root, so only
+    # convert it with relpath (which is resolved against the current working
+    # directory, not git_dir) when it was given as an absolute path.
+    ci_config_path = os.environ.get("CI_CONFIG_PATH")
+    if ci_config_path:
+        if os.path.isabs(ci_config_path):
+            ci_config_path = os.path.relpath(ci_config_path, git_dir)
+        else:
+            ci_config_path = os.path.normpath(ci_config_path)
+        stack_paths.append(spack.util.path.convert_to_posix_path(ci_config_path))
 
     with fs.working_dir(git_dir):
         diff = git(
@@ -156,8 +182,8 @@ def stack_changed(env_path: str) -> bool:
             return False
 
         for path in diff.split():
-            if ".gitlab-ci.yml" in path or path in env_path:
-                tty.debug(f"env represented by {env_path} changed")
+            if any(_stack_path_matches(p, path) for p in stack_paths):
+                tty.debug(f"env represented by {rel_env_path} changed")
                 tty.debug(f"touched file: {path}")
                 return True
     return False
@@ -242,7 +268,7 @@ def create_already_built_pruner(check_index_only: bool = True) -> PrunerCallback
     """Return a filter that prunes specs already present on any configured
     mirrors"""
     try:
-        spack.binary_distribution.BINARY_INDEX.update()
+        spack.binary_distribution.BINARY_INDEX.update(config=cfg.CONFIG)
     except spack.binary_distribution.FetchCacheError as e:
         tty.warn(e)
 
@@ -254,7 +280,7 @@ def create_already_built_pruner(check_index_only: bool = True) -> PrunerCallback
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
 
-        urls = ",".join(f"{loc.url}@v{loc.version}" for loc in spec_locations)
+        urls = ",".join(f"{loc:_url@v_version? (view: _view)}" for loc in spec_locations)
         message = f"up-to-date [{urls}]"
         return RebuildDecision(False, message)
 
@@ -369,9 +395,9 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.check_index_only = args.index_only
     options.forward_variables = args.forward_variable or []
 
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
 
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     if "build-group" in cdash_config:
         options.cdash_handler = CDashHandler(cdash_config)
 
@@ -473,13 +499,13 @@ def generate_pipeline(env: ev.Environment, args) -> None:
             line.
     """
     with env.write_transaction():
-        env.concretize()
+        env.concretize(ui=TerminalUI())
         env.write()
 
     options = collect_pipeline_options(env, args)
 
     # Get the joined "ci" config with all of the current scopes resolved
-    ci_config = cfg.get("ci")
+    ci_config = cfg.CONFIG.get("ci")
     if not ci_config:
         raise SpackCIError("Environment does not have a `ci` configuration")
 
@@ -544,7 +570,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     generate_method(pipeline, spack_ci_config, options)
 
     # Use all unpruned specs to populate the build group for this set
-    cdash_config = cfg.get("cdash")
+    cdash_config = cfg.CONFIG.get("cdash")
     if options.cdash_handler and options.cdash_handler.auth_token:
         options.cdash_handler.create_buildgroup()
     elif cdash_config:
@@ -581,7 +607,7 @@ def import_signing_key(base64_signing_key: str) -> None:
         with open(sign_key_path, "w", encoding="utf-8") as fd:
             fd.write(decoded_key)
 
-        key_import_output = spack_gpg("trust", sign_key_path)
+        key_import_output = spack_gpg("trust", "-y", sign_key_path)
         tty.debug(f"spack gpg trust {sign_key_path}")
         tty.debug(key_import_output)
 
@@ -1053,7 +1079,11 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
                 f"share/spack/setup-env.{platform_script_ext}",
             ),
         ],
-        ["spack", "gpg", "trust", mounted_gpg_path if job_image else gpg_path] if gpg_path else [],
+        (
+            ["spack", "gpg", "trust", "-y", mounted_gpg_path if job_image else gpg_path]
+            if gpg_path
+            else []
+        ),
         ["spack", "env", "activate", mounted_env_dir if job_image else repro_dir],
         [
             (
@@ -1095,7 +1125,7 @@ def reproduce_ci_job(url, work_dir, autostart, gpg_url, runtime, use_local_head)
             "--name",
             f"spack_reproducer{container_suffix}",
             "-v",
-            ":".join([work_dir, mounted_workdir, "Z"]),
+            f"{work_dir}:{mounted_workdir}:Z",
             "-v",
             ":".join(
                 [
@@ -1266,7 +1296,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
     """Given a url to write to and the details of the failed job, write an entry
     in the broken specs list.
     """
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(cfg.CONFIG)) as tmpdir:
         file_path = os.path.join(tmpdir, "broken.txt")
 
         broken_spec_details = {
@@ -1282,9 +1312,7 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
         try:
             with open(file_path, "w", encoding="utf-8") as fd:
                 syaml.dump(broken_spec_details, fd)
-            web_util.push_to_url(
-                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-            )
+            web_util.push_to_url(file_path, url, keep_original=False, content_type="text/plain")
         except Exception as err:
             # If there is an S3 error (e.g., access denied or connection
             # error), the first non boto-specific class in the exception

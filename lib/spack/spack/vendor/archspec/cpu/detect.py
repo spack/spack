@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Detection of CPU microarchitectures"""
 import collections
+import functools
 import os
 import platform
 import re
@@ -15,6 +16,15 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 from ..vendor.cpuid.cpuid import CPUID
 from .microarchitecture import TARGETS, Microarchitecture, generic_microarchitecture
 from .schema import CPUID_JSON, TARGETS_JSON
+
+# Constants for sysctl calls on macOS
+MACHDEP_CPU_BRAND_STRING = "machdep.cpu.brand_string"
+# Intel-based macOS
+MACHDEP_CPU_VENDOR = "machdep.cpu.vendor"
+MACHDEP_CPU_FEATURES = "machdep.cpu.features"
+MACHDEP_CPU_LEAF7_FEATURES = "machdep.cpu.leaf7_features"
+MACHDEP_CPU_EXTFEATURES = "machdep.cpu.extfeatures"
+
 
 #: Mapping from operating systems to chain of commands
 #: to obtain a dictionary of raw info on the current cpu
@@ -115,6 +125,8 @@ def proc_cpuinfo() -> Microarchitecture:
     if architecture == RISCV64:
         if data.get("uarch") == "sifive,u74-mc":
             data["uarch"] = "u74mc"
+        elif data.get("uarch") == "spacemit,x60" or data.get("model name") == "Spacemit(R) X60":
+            data["uarch"] = "x60"
         return partial_uarch(name=data.get("uarch", RISCV64))
 
     return generic_microarchitecture(architecture)
@@ -207,12 +219,39 @@ def _check_output(args, env):
     return str(output.decode("utf-8"))
 
 
+@functools.lru_cache(maxsize=None)
+def _darwin_sysctl_data() -> Dict[str, str]:
+    """Returns a dict of sysctl key/value pairs relevant for CPU detection on Darwin.
+
+    The ``-i`` flag silently ignores keys that do not exist (e.g. Intel keys on Apple Silicon).
+    """
+    raw = _check_output(
+        [
+            "sysctl",
+            "-i",
+            MACHDEP_CPU_BRAND_STRING,
+            MACHDEP_CPU_VENDOR,
+            MACHDEP_CPU_FEATURES,
+            MACHDEP_CPU_LEAF7_FEATURES,
+            MACHDEP_CPU_EXTFEATURES,
+        ],
+        env=_ensure_bin_usrbin_in_path(),
+    )
+    data: Dict[str, str] = {}
+    for line in raw.splitlines():
+        key, sep, value = line.partition(": ")
+        if sep:
+            data[key.strip()] = value.strip()
+    return data
+
+
 WINDOWS_MAPPING = {
     "AMD64": X86_64,
     "ARM64": AARCH64,
 }
 
 
+@functools.lru_cache(maxsize=None)
 def _machine() -> str:
     """Return the machine architecture we are on"""
     operating_system = platform.system()
@@ -231,11 +270,9 @@ def _machine() -> str:
     # need to fix that.
     #
     # See: https://bugs.python.org/issue42704
-    output = _check_output(
-        ["sysctl", "-n", "machdep.cpu.brand_string"], env=_ensure_bin_usrbin_in_path()
-    ).strip()
+    brand = _darwin_sysctl_data().get(MACHDEP_CPU_BRAND_STRING, "")
 
-    if "Apple" in output:
+    if "Apple" in brand:
         # Note that a native Python interpreter on Apple M1 would return
         # "arm64" instead of "aarch64". Here we normalize to the latter.
         return AARCH64
@@ -246,38 +283,52 @@ def _machine() -> str:
 @detection(operating_system="Darwin")
 def sysctl_info() -> Microarchitecture:
     """Returns a raw info dictionary parsing the output of sysctl."""
-    child_environment = _ensure_bin_usrbin_in_path()
+    data = _darwin_sysctl_data()
+    cpu_brand = data.get(MACHDEP_CPU_BRAND_STRING, "")
 
-    def sysctl(*args: str) -> str:
-        return _check_output(["sysctl", *args], env=child_environment).strip()
+    if "Apple" not in cpu_brand:
+        return _sysctl_info_x86_64(data)
 
-    if _machine() == X86_64:
-        raw_features = sysctl(
-            "-n",
-            "machdep.cpu.features",
-            "machdep.cpu.leaf7_features",
-            "machdep.cpu.extfeatures",
-        )
-        features = set(raw_features.lower().split())
+    return _sysctl_info_apple(data)
 
-        # Flags detected on Darwin turned to their linux counterpart
-        for darwin_flags, linux_flags in TARGETS_JSON["conversions"]["darwin_flags"].items():
-            if all(x in features for x in darwin_flags.split()):
-                features.update(linux_flags.split())
 
-        return partial_uarch(vendor=sysctl("-n", "machdep.cpu.vendor"), features=features)
+def _sysctl_info_x86_64(data: Dict[str, str]) -> Microarchitecture:
+    """Returns a partial Microarchitecture for x86_64 on Darwin."""
+    raw_features = " ".join(
+        [
+            data.get(MACHDEP_CPU_FEATURES, ""),
+            data.get(MACHDEP_CPU_LEAF7_FEATURES, ""),
+            data.get(MACHDEP_CPU_EXTFEATURES, ""),
+        ]
+    )
+    features = set(raw_features.lower().split())
 
-    model = "unknown"
-    model_str = sysctl("-n", "machdep.cpu.brand_string").lower()
-    if "m4" in model_str:
-        model = "m4"
-    elif "m3" in model_str:
-        model = "m3"
-    elif "m2" in model_str:
-        model = "m2"
-    elif "m1" in model_str:
-        model = "m1"
-    elif "apple" in model_str:
+    # Flags detected on Darwin turned to their linux counterpart
+    for darwin_flags, linux_flags in TARGETS_JSON["conversions"]["darwin_flags"].items():
+        if all(x in features for x in darwin_flags.split()):
+            features.update(linux_flags.split())
+
+    return partial_uarch(vendor=data.get(MACHDEP_CPU_VENDOR, ""), features=features)
+
+
+def _sysctl_info_apple(data: Dict[str, str]) -> Microarchitecture:
+    """Returns a partial Microarchitecture for Apple Silicon."""
+    cpu_brand = data.get(MACHDEP_CPU_BRAND_STRING, "")
+    model_str = cpu_brand.lower()
+
+    # Default to generic ARM model
+    model = "aarch64"
+
+    # Example brand string: 'Apple M5', 'Apple M1 Pro'
+    match = re.search(r"apple\s+m(\d+)", model_str)
+    if match is not None:
+        # Found an M series: count down until we find a target in the jsonspec
+        for mnum in range(int(match.group(1)), 0, -1):
+            model = f"m{mnum}"
+            if model in TARGETS:
+                break
+    elif model_str == "apple processor":
+        # Very old OS or processor: see json/tests/targets/darwin-bigsur-m1
         model = "m1"
 
     return partial_uarch(name=model, vendor="Apple")
@@ -344,6 +395,7 @@ def compatible_microarchitectures(info: Microarchitecture) -> List[Microarchitec
     ]
 
 
+@functools.lru_cache(maxsize=None)
 def host() -> Microarchitecture:
     """Detects the host micro-architecture and returns it."""
     # Retrieve information on the host's cpu
@@ -458,11 +510,137 @@ def compatibility_check_for_riscv64(info, target):
 def brand_string() -> Optional[str]:
     """Returns the brand string of the host, if detected, or None."""
     if platform.system() == "Darwin":
-        return _check_output(
-            ["sysctl", "-n", "machdep.cpu.brand_string"], env=_ensure_bin_usrbin_in_path()
-        ).strip()
+        return _darwin_sysctl_data().get(MACHDEP_CPU_BRAND_STRING, "") or None
 
     if host().family == X86_64:
         return CpuidInfoCollector().brand_string()
 
     return None
+
+
+# Format strings used to emit human-readable messages to explain why
+# a micro-architecture is not compatible with the host
+_WHY_NOT_UNKNOWN = '"{name}" is not a known microarchitecture target'
+_WHY_NOT_IS_HOST = "{name} is the detected host microarchitecture"
+_WHY_NOT_HOST_MORE_SPECIFIC = (
+    "{name} is an ancestor of the detected host; {host} was selected as more specific"
+)
+_WHY_NOT_WRONG_FAMILY = (
+    "{name} belongs to the {target_family} architecture family, but the host is {host_family}"
+)
+_WHY_NOT_MISSING_FEATURES = "{name} requires features not available on the host: {features}"
+_WHY_NOT_VENDOR_MISMATCH = (
+    "{name} targets vendor {target_vendor}, but the host CPU vendor is {host_vendor}"
+)
+_WHY_NOT_INCOMPATIBLE = "{name} is not compatible with the detected host microarchitecture {host}"
+
+
+def _why_not_x86_64(
+    target: Microarchitecture, *, info: Microarchitecture, current_host: Microarchitecture
+) -> str:
+    if target.vendor not in (info.vendor, "generic"):
+        return _WHY_NOT_VENDOR_MISMATCH.format(
+            name=target.name,
+            target_vendor=target.vendor,
+            host_vendor=info.vendor,
+        )
+    missing = target.features - info.features
+    if missing:
+        return _WHY_NOT_MISSING_FEATURES.format(
+            name=target.name,
+            features=", ".join(sorted(missing)),
+        )
+    return _WHY_NOT_INCOMPATIBLE.format(name=target.name, host=str(current_host))
+
+
+def _why_not_power(
+    target: Microarchitecture, *, info: Microarchitecture, current_host: Microarchitecture
+) -> str:
+    if target.generation > info.generation:
+        return (
+            f"{target.name} requires POWER generation {target.generation}, "
+            f"but the host is generation {info.generation}"
+        )
+    return _WHY_NOT_INCOMPATIBLE.format(name=target.name, host=str(current_host))
+
+
+def _why_not_aarch64(
+    target: Microarchitecture, *, info: Microarchitecture, current_host: Microarchitecture
+) -> str:
+    if target.vendor not in (info.vendor, "generic"):
+        return _WHY_NOT_VENDOR_MISMATCH.format(
+            name=target.name,
+            target_vendor=target.vendor,
+            host_vendor=info.vendor,
+        )
+    if platform.system() != "Darwin":
+        missing = target.features - info.features
+        if missing:
+            return _WHY_NOT_MISSING_FEATURES.format(
+                name=target.name,
+                features=", ".join(sorted(missing)),
+            )
+    return _WHY_NOT_INCOMPATIBLE.format(name=target.name, host=str(current_host))
+
+
+def _why_not_riscv64(
+    target: Microarchitecture, *, info: Microarchitecture, current_host: Microarchitecture
+) -> str:
+    if target.name != info.name and target.vendor != "generic":
+        return (
+            f"{target.name} targets RISC-V microarchitecture {target.name!r}, "
+            f"but the host is {info.name!r}"
+        )
+    return _WHY_NOT_INCOMPATIBLE.format(name=target.name, host=str(current_host))
+
+
+def _why_not_for_arch(
+    target: Microarchitecture,
+    *,
+    info: Microarchitecture,
+    current_host: Microarchitecture,
+) -> str:
+    family = str(current_host.family)
+    if family == X86_64:
+        return _why_not_x86_64(target, info=info, current_host=current_host)
+    if family in (PPC64LE, PPC64):
+        return _why_not_power(target, info=info, current_host=current_host)
+    if family == AARCH64:
+        return _why_not_aarch64(target, info=info, current_host=current_host)
+    if family == RISCV64:
+        return _why_not_riscv64(target, info=info, current_host=current_host)
+    return _WHY_NOT_INCOMPATIBLE.format(name=target.name, host=str(current_host))
+
+
+def why_not(target_name: str) -> str:
+    """Returns a human-readable explanation of why the given target was not chosen as the host.
+
+    Args:
+        target_name: name of the target micro-architecture to explain.
+
+    Returns:
+        A human-readable string. Never raises; if the target is unknown the
+        string describes the problem.
+    """
+    if target_name not in TARGETS:
+        return _WHY_NOT_UNKNOWN.format(name=target_name)
+
+    target, current_host = TARGETS[target_name], host()
+
+    if target == current_host:
+        return _WHY_NOT_IS_HOST.format(name=target_name)
+
+    if target < current_host:
+        return _WHY_NOT_HOST_MORE_SPECIFIC.format(name=target_name, host=str(current_host))
+
+    architecture_family = _machine()
+    arch_root = TARGETS[architecture_family] if architecture_family in TARGETS else None
+
+    if arch_root is None or not (target == arch_root or arch_root in target.ancestors):
+        return _WHY_NOT_WRONG_FAMILY.format(
+            name=target_name,
+            target_family=str(target.family),
+            host_family=architecture_family,
+        )
+
+    return _why_not_for_arch(target, info=detected_info(), current_host=current_host)

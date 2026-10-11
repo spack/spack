@@ -6,9 +6,8 @@ import re
 
 import pytest
 
-import spack.store
-from spack.llnl.util.tty.color import color_when
 from spack.main import SpackCommand
+from spack.util.tty.color import color_when
 
 dependents = SpackCommand("dependents")
 
@@ -55,11 +54,9 @@ def test_immediate_installed_dependents(mock_packages, database):
     lines = [li for li in out.strip().split("\n") if not li.startswith("--")]
     hashes = set([re.split(r"\s+", li)[0] for li in lines if li])
 
-    expected = set(
-        [spack.store.STORE.db.query_one(s).dag_hash(7) for s in ["dyninst", "libdwarf"]]
-    )
+    expected = set([database.query_one(s).dag_hash(7) for s in ["dyninst", "libdwarf"]])
 
-    libelf = spack.store.STORE.db.query_one("libelf")
+    libelf = database.query_one("libelf")
     expected = set([d.dag_hash(7) for d in libelf.dependents()])
 
     assert expected == hashes
@@ -74,10 +71,7 @@ def test_transitive_installed_dependents(mock_packages, database):
     hashes = set([re.split(r"\s+", li)[0] for li in lines])
 
     expected = set(
-        [
-            spack.store.STORE.db.query_one(s).dag_hash(7)
-            for s in ["zmpi", "callpath^zmpi", "mpileaks^zmpi"]
-        ]
+        [database.query_one(s).dag_hash(7) for s in ["zmpi", "callpath^zmpi", "mpileaks^zmpi"]]
     )
 
     assert expected == hashes

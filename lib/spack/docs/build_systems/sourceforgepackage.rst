@@ -9,6 +9,10 @@
 
 .. _sourceforgepackage:
 
+.. index::
+   single: mixin; SourceForge
+   single: SourceforgePackage
+
 SourceForge
 -----------
 

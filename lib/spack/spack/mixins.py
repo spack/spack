@@ -7,8 +7,8 @@
 import os
 from typing import Optional
 
-import spack.llnl.util.filesystem
 import spack.phase_callbacks
+import spack.util.filesystem
 
 
 def filter_compiler_wrappers(
@@ -43,10 +43,10 @@ def filter_compiler_wrappers(
             recommended* to set this, as searching recursively from the installation prefix can be
             very slow.
         ignore_absent: if present, will be forwarded to
-            :func:`~spack.llnl.util.filesystem.filter_file`
+            :func:`~spack.util.filesystem.filter_file`
         backup: if present, will be forwarded to
-            :func:`~spack.llnl.util.filesystem.filter_file`
-        recursive: if present, will be forwarded to :func:`~spack.llnl.util.filesystem.find`
+            :func:`~spack.util.filesystem.filter_file`
+        recursive: if present, will be forwarded to :func:`~spack.util.filesystem.find`
     """
 
     def _filter_compiler_wrappers_impl(pkg_or_builder):
@@ -55,10 +55,10 @@ def filter_compiler_wrappers(
         root = os.path.join(pkg.prefix, relative_root) if relative_root else pkg.prefix
 
         # Compute the absolute path of the files to be filtered and remove links from the list.
-        abs_files = spack.llnl.util.filesystem.find(root, files, recursive=recursive)
+        abs_files = spack.util.filesystem.find(root, files, recursive=recursive)
         abs_files = [x for x in abs_files if not os.path.islink(x)]
 
-        x = spack.llnl.util.filesystem.FileFilter(*abs_files)
+        x = spack.util.filesystem.FileFilter(*abs_files)
 
         compiler_vars = []
         if "c" in pkg.spec:

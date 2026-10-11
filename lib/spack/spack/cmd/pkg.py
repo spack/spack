@@ -7,12 +7,12 @@ import os
 import sys
 
 import spack.cmd
-import spack.llnl.util.tty as tty
 import spack.repo
 import spack.util.executable as exe
 import spack.util.package_hash as ph
 from spack.cmd.common import arguments
-from spack.llnl.util.tty.colify import colify
+from spack.util import tty
+from spack.util.tty.colify import colify
 
 description = "query packages associated with particular git revisions"
 section = "developer"
@@ -155,7 +155,7 @@ def pkg_source(args):
     # regular source dump -- just get the package and print its contents
     if args.canonical:
         message = "Canonical source for %s:" % filename
-        content = ph.canonical_source(spec)
+        content = ph.canonical_source(spec, repo=spack.repo.PATH)
     else:
         message = "Source for %s:" % filename
         with open(filename, encoding="utf-8") as f:
@@ -171,7 +171,7 @@ def pkg_hash(args):
     specs = spack.cmd.parse_specs(args.spec, concretize=False)
 
     for spec in specs:
-        print(ph.package_hash(spec))
+        print(ph.package_hash(spec, repo=spack.repo.PATH))
 
 
 def get_grep(required=False):

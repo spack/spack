@@ -9,6 +9,10 @@
 
 .. _rpackage:
 
+.. index::
+   single: build system; R
+   single: RPackage
+
 R
 ------
 

@@ -82,7 +82,11 @@ container_schema = {
             },
         },
         "docker": {"type": "object", "additionalProperties": False, "default": {}},
-        "depfile": {"type": "boolean", "default": False},
+        "depfile": {
+            "type": "boolean",
+            "default": False,
+            "description": "Deprecated: install with spack env depfile and make",
+        },
     },
 }
 

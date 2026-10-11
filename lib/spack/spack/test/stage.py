@@ -20,12 +20,16 @@ import spack.error
 import spack.fetch_strategy
 import spack.stage
 import spack.util.executable
-import spack.util.path
 import spack.util.url as url_util
-from spack.llnl.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
+from spack.config import Configuration, canonicalize_path
 from spack.resource import Resource
-from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite
-from spack.util.path import canonicalize_path
+from spack.stage import (
+    StageComposite,
+    develop_stage_from_config,
+    resource_stage_from_config,
+    stage_from_config,
+)
+from spack.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -71,11 +75,14 @@ _include_extra = 3
 #
 
 
+#: Stage root resolution, taken before the mock_stage fixture replaces it
+_stage_root_from_config = spack.stage.stage_root
+
+
 @pytest.fixture
-def clear_stage_root(monkeypatch):
-    """Ensure spack.stage._stage_root is not set at test start."""
-    monkeypatch.setattr(spack.stage, "_stage_root", None)
-    yield
+def configured_stage_root(monkeypatch):
+    """Resolve the stage root from ``config:build_stage``, instead of using the mock stage."""
+    monkeypatch.setattr(spack.stage, "stage_root", _stage_root_from_config)
 
 
 def check_expand_archive(stage, stage_name, expected_file_list):
@@ -172,7 +179,7 @@ def get_stage_path(stage, stage_name):
     """Figure out where a stage should be living. This depends on
     whether it's named.
     """
-    stage_path = spack.stage.get_stage_root()
+    stage_path = stage.stage_root
     if stage_name is not None:
         # If it is a named stage, we know where the stage should be
         return os.path.join(stage_path, stage_name)
@@ -187,11 +194,11 @@ def get_stage_path(stage, stage_name):
 #       the `mock_stage` path in `mock_stage_archive`) per discussions in
 #       #12857.  See also #13065.
 @pytest.fixture
-def tmp_build_stage_dir(tmp_path: pathlib.Path, clear_stage_root):
+def tmp_build_stage_dir(tmp_path: pathlib.Path, configured_stage_root, mutable_config):
     """Use a temporary test directory for the stage root."""
     test_path = str(tmp_path / "stage")
-    with spack.config.override("config:build_stage", test_path):
-        yield tmp_path, spack.stage.get_stage_root()
+    with mutable_config.override("config:build_stage", test_path):
+        yield tmp_path, spack.stage.stage_root(mutable_config)
 
     shutil.rmtree(test_path)
 
@@ -301,18 +308,22 @@ def mock_expand_resource(tmp_path: pathlib.Path):
 
 
 @pytest.fixture
-def composite_stage_with_expanding_resource(mock_stage_archive, mock_expand_resource):
+def composite_stage_with_expanding_resource(
+    mock_stage_archive, mock_expand_resource, mutable_config
+):
     """Sets up a composite for expanding resources prior to staging."""
     composite_stage = StageComposite()
     archive = mock_stage_archive()
-    root_stage = Stage(archive.url)
+    root_stage = stage_from_config(archive.url, config=mutable_config)
     composite_stage.append(root_stage)
 
     test_resource_fetcher = spack.fetch_strategy.from_kwargs(url=mock_expand_resource.url)
     # Specify that the resource files are to be placed in the 'resource-dir'
     # directory
     test_resource = Resource("test_resource", test_resource_fetcher, "", "resource-dir")
-    resource_stage = ResourceStage(test_resource_fetcher, root_stage, test_resource)
+    resource_stage = resource_stage_from_config(
+        test_resource_fetcher, root_stage, test_resource, config=mutable_config
+    )
     composite_stage.append(resource_stage)
     return composite_stage, root_stage, resource_stage, mock_expand_resource
 
@@ -386,43 +397,43 @@ def check_stage_dir_perms(prefix, path):
 class TestStage:
     stage_name = "spack-test-stage"
 
-    def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive):
+    def test_setup_and_destroy_name_with_tmp(self, mock_stage_archive, mutable_config):
         archive = mock_stage_archive()
-        with Stage(archive.url, name=self.stage_name) as stage:
+        with stage_from_config(archive.url, name=self.stage_name, config=mutable_config) as stage:
             check_setup(stage, self.stage_name, archive)
         check_destroy(stage, self.stage_name)
 
-    def test_setup_and_destroy_name_without_tmp(self, mock_stage_archive):
+    def test_setup_and_destroy_name_without_tmp(self, mock_stage_archive, mutable_config):
         archive = mock_stage_archive()
-        with Stage(archive.url, name=self.stage_name) as stage:
+        with stage_from_config(archive.url, name=self.stage_name, config=mutable_config) as stage:
             check_setup(stage, self.stage_name, archive)
         check_destroy(stage, self.stage_name)
 
-    def test_setup_and_destroy_no_name_with_tmp(self, mock_stage_archive):
+    def test_setup_and_destroy_no_name_with_tmp(self, mock_stage_archive, mutable_config):
         archive = mock_stage_archive()
-        with Stage(archive.url) as stage:
+        with stage_from_config(archive.url, config=mutable_config) as stage:
             check_setup(stage, None, archive)
         check_destroy(stage, None)
 
-    def test_noexpand_stage_file(self, mock_stage_archive, mock_noexpand_resource):
+    def test_noexpand_stage_file(self, mock_stage_archive, mock_noexpand_resource, mutable_config):
         """When creating a stage with a nonexpanding URL, the 'archive_file'
         property of the stage should refer to the path of that file.
         """
         test_noexpand_fetcher = spack.fetch_strategy.from_kwargs(
             url=url_util.path_to_file_url(mock_noexpand_resource), expand=False
         )
-        with Stage(test_noexpand_fetcher) as stage:
+        with stage_from_config(test_noexpand_fetcher, config=mutable_config) as stage:
             stage.fetch()
             stage.expand_archive()
             assert os.path.exists(stage.archive_file)
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_noexpand_resource(
-        self, mock_stage_archive, mock_noexpand_resource
+        self, mock_stage_archive, mock_noexpand_resource, mutable_config
     ):
         archive = mock_stage_archive()
         composite_stage = StageComposite()
-        root_stage = Stage(archive.url)
+        root_stage = stage_from_config(archive.url, config=mutable_config)
         composite_stage.append(root_stage)
 
         resource_dst_name = "resource-dst-name.sh"
@@ -430,7 +441,9 @@ class TestStage:
             url=url_util.path_to_file_url(mock_noexpand_resource), expand=False
         )
         test_resource = Resource("test_resource", test_resource_fetcher, resource_dst_name, None)
-        resource_stage = ResourceStage(test_resource_fetcher, root_stage, test_resource)
+        resource_stage = resource_stage_from_config(
+            test_resource_fetcher, root_stage, test_resource, config=mutable_config
+        )
         composite_stage.append(resource_stage)
 
         composite_stage.create()
@@ -486,31 +499,42 @@ class TestStage:
         # Perform a little cleanup
         shutil.rmtree(root_stage.path)
 
-    def test_setup_and_destroy_no_name_without_tmp(self, mock_stage_archive):
+    def test_setup_and_destroy_no_name_without_tmp(self, mock_stage_archive, mutable_config):
         archive = mock_stage_archive()
-        with Stage(archive.url) as stage:
+        with stage_from_config(archive.url, config=mutable_config) as stage:
             check_setup(stage, None, archive)
         check_destroy(stage, None)
 
     @pytest.mark.parametrize("debug", [False, True])
-    def test_fetch(self, mock_stage_archive, debug):
+    def test_fetch(self, mutable_config: Configuration, mock_stage_archive, debug):
         archive = mock_stage_archive()
-        with spack.config.override("config:debug", debug):
-            with Stage(archive.url, name=self.stage_name) as stage:
+        with mutable_config.override("config:debug", debug):
+            with stage_from_config(
+                archive.url, name=self.stage_name, config=mutable_config
+            ) as stage:
                 stage.fetch()
                 check_setup(stage, self.stage_name, archive)
                 check_fetch(stage, self.stage_name)
             check_destroy(stage, self.stage_name)
 
-    def test_no_search_if_default_succeeds(self, mock_stage_archive, failing_search_fn):
+    def test_no_search_if_default_succeeds(
+        self, mock_stage_archive, failing_search_fn, mutable_config
+    ):
         archive = mock_stage_archive()
-        stage = Stage(archive.url, name=self.stage_name, search_fn=failing_search_fn)
+        stage = stage_from_config(
+            archive.url, name=self.stage_name, search_fn=failing_search_fn, config=mutable_config
+        )
         with stage:
             stage.fetch()
         check_destroy(stage, self.stage_name)
 
-    def test_no_search_mirror_only(self, failing_search_fn):
-        stage = Stage(FailingFetchStrategy(), name=self.stage_name, search_fn=failing_search_fn)
+    def test_no_search_mirror_only(self, failing_search_fn, config):
+        stage = stage_from_config(
+            FailingFetchStrategy(),
+            name=self.stage_name,
+            search_fn=failing_search_fn,
+            config=config,
+        )
         with stage:
             try:
                 stage.fetch(mirror_only=True)
@@ -525,8 +549,10 @@ class TestStage:
             (None, "All fetchers failed"),
         ],
     )
-    def test_search_if_default_fails(self, search_fn, err_msg, expected):
-        stage = Stage(FailingFetchStrategy(), name=self.stage_name, search_fn=search_fn)
+    def test_search_if_default_fails(self, search_fn, err_msg, expected, config):
+        stage = stage_from_config(
+            FailingFetchStrategy(), name=self.stage_name, search_fn=search_fn, config=config
+        )
 
         with stage:
             with pytest.raises(spack.error.FetchError, match=expected):
@@ -535,9 +561,9 @@ class TestStage:
         check_destroy(stage, self.stage_name)
         assert search_fn.performed_search
 
-    def test_ensure_one_stage_entry(self, mock_stage_archive):
+    def test_ensure_one_stage_entry(self, mock_stage_archive, mutable_config):
         archive = mock_stage_archive()
-        with Stage(archive.url, name=self.stage_name) as stage:
+        with stage_from_config(archive.url, name=self.stage_name, config=mutable_config) as stage:
             stage.fetch()
             stage_path = get_stage_path(stage, self.stage_name)
             spack.fetch_strategy._ensure_one_stage_entry(stage_path)
@@ -552,9 +578,9 @@ class TestStage:
             [_include_hidden, _include_readme],
         ],
     )
-    def test_expand_archive(self, expected_file_list, mock_stage_archive):
+    def test_expand_archive(self, expected_file_list, mock_stage_archive, mutable_config):
         archive = mock_stage_archive(expected_file_list)
-        with Stage(archive.url, name=self.stage_name) as stage:
+        with stage_from_config(archive.url, name=self.stage_name, config=mutable_config) as stage:
             stage.fetch()
             check_setup(stage, self.stage_name, archive)
             check_fetch(stage, self.stage_name)
@@ -562,10 +588,10 @@ class TestStage:
             check_expand_archive(stage, self.stage_name, expected_file_list)
         check_destroy(stage, self.stage_name)
 
-    def test_expand_archive_extra_expand(self, mock_stage_archive):
+    def test_expand_archive_extra_expand(self, mock_stage_archive, mutable_config):
         """Test expand with an extra expand after expand (i.e., no-op)."""
         archive = mock_stage_archive()
-        with Stage(archive.url, name=self.stage_name) as stage:
+        with stage_from_config(archive.url, name=self.stage_name, config=mutable_config) as stage:
             stage.fetch()
             check_setup(stage, self.stage_name, archive)
             check_fetch(stage, self.stage_name)
@@ -574,9 +600,9 @@ class TestStage:
             check_expand_archive(stage, self.stage_name, [_include_readme])
         check_destroy(stage, self.stage_name)
 
-    def test_restage(self, mock_stage_archive):
+    def test_restage(self, mock_stage_archive, mutable_config):
         archive = mock_stage_archive()
-        with Stage(archive.url, name=self.stage_name) as stage:
+        with stage_from_config(archive.url, name=self.stage_name, config=mutable_config) as stage:
             stage.fetch()
             stage.expand_archive()
 
@@ -595,29 +621,35 @@ class TestStage:
             assert "foobar" not in os.listdir(stage.source_path)
         check_destroy(stage, self.stage_name)
 
-    def test_no_keep_without_exceptions(self, mock_stage_archive):
+    def test_no_keep_without_exceptions(self, mock_stage_archive, mutable_config):
         archive = mock_stage_archive()
-        stage = Stage(archive.url, name=self.stage_name, keep=False)
+        stage = stage_from_config(
+            archive.url, name=self.stage_name, keep=False, config=mutable_config
+        )
         with stage:
             pass
         check_destroy(stage, self.stage_name)
 
     @pytest.mark.disable_clean_stage_check
-    def test_keep_without_exceptions(self, mock_stage_archive):
+    def test_keep_without_exceptions(self, mock_stage_archive, mutable_config):
         archive = mock_stage_archive()
-        stage = Stage(archive.url, name=self.stage_name, keep=True)
+        stage = stage_from_config(
+            archive.url, name=self.stage_name, keep=True, config=mutable_config
+        )
         with stage:
             pass
         path = get_stage_path(stage, self.stage_name)
         assert os.path.isdir(path)
 
     @pytest.mark.disable_clean_stage_check
-    def test_no_keep_with_exceptions(self, mock_stage_archive):
+    def test_no_keep_with_exceptions(self, mock_stage_archive, mutable_config):
         class ThisMustFailHere(Exception):
             pass
 
         archive = mock_stage_archive()
-        stage = Stage(archive.url, name=self.stage_name, keep=False)
+        stage = stage_from_config(
+            archive.url, name=self.stage_name, keep=False, config=mutable_config
+        )
         try:
             with stage:
                 raise ThisMustFailHere()
@@ -627,12 +659,14 @@ class TestStage:
             assert os.path.isdir(path)
 
     @pytest.mark.disable_clean_stage_check
-    def test_keep_exceptions(self, mock_stage_archive):
+    def test_keep_exceptions(self, mock_stage_archive, mutable_config):
         class ThisMustFailHere(Exception):
             pass
 
         archive = mock_stage_archive()
-        stage = Stage(archive.url, name=self.stage_name, keep=True)
+        stage = stage_from_config(
+            archive.url, name=self.stage_name, keep=True, config=mutable_config
+        )
         try:
             with stage:
                 raise ThisMustFailHere()
@@ -641,10 +675,10 @@ class TestStage:
             path = get_stage_path(stage, self.stage_name)
             assert os.path.isdir(path)
 
-    def test_source_path_available(self, mock_stage_archive):
+    def test_source_path_available(self, mock_stage_archive, mutable_config):
         """Ensure source path available but does not exist on instantiation."""
         archive = mock_stage_archive()
-        stage = Stage(archive.url, name=self.stage_name)
+        stage = stage_from_config(archive.url, name=self.stage_name, config=mutable_config)
 
         source_path = stage.source_path
         assert source_path
@@ -709,12 +743,12 @@ class TestStage:
             except OSError:
                 pass
 
-    def test_resolve_paths(self, monkeypatch):
+    def test_resolve_paths(self, monkeypatch, config):
         """Test _resolve_paths."""
-        assert spack.stage._resolve_paths([]) == []
+        assert spack.stage._resolve_paths([], config=config) == []
 
         user = "testuser"
-        monkeypatch.setattr(spack.util.path, "get_user", lambda: user)
+        monkeypatch.setattr(spack.config, "get_user", lambda: user)
 
         # Test that user is appended to path if not present (except on Windows)
         if sys.platform == "win32":
@@ -724,7 +758,7 @@ class TestStage:
             path = "/spack-test/a/b/c"
             expected = os.path.join(path, user)
 
-        assert spack.stage._resolve_paths([path]) == [expected]
+        assert spack.stage._resolve_paths([path], config=config) == [expected]
 
         # Test that user is NOT appended if already present
         if sys.platform == "win32":
@@ -732,7 +766,7 @@ class TestStage:
         else:
             path_with_user = f"/spack-test/spack-{user}/stage"
 
-        assert spack.stage._resolve_paths([path_with_user]) == [path_with_user]
+        assert spack.stage._resolve_paths([path_with_user], config=config) == [path_with_user]
 
         canonicalized_tempdir = canonicalize_path("$tempdir")
         temp_has_user = user in canonicalized_tempdir.split(os.sep)
@@ -751,18 +785,15 @@ class TestStage:
         elif sys.platform != "win32":
             res_paths[0] = os.path.join(res_paths[0], user)
 
-        assert spack.stage._resolve_paths(paths) == res_paths
+        assert spack.stage._resolve_paths(paths, config=config) == res_paths
 
     @pytest.mark.not_on_windows("Windows file permission erroring is not yet supported")
     @pytest.mark.skipif(getuid() == 0, reason="user is root")
-    def test_get_stage_root_bad_path(self, clear_stage_root):
+    def test_stage_root_bad_path(self, mutable_config: Configuration, configured_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
-        with spack.config.override("config:build_stage", "/no/such/path"):
+        with mutable_config.override("config:build_stage", "/no/such/path"):
             with pytest.raises(spack.stage.StageError, match="No accessible stage paths in"):
-                spack.stage.get_stage_root()
-
-        # Make sure the cached stage path values are unchanged.
-        assert spack.stage._stage_root is None
+                spack.stage.stage_root(mutable_config)
 
     @pytest.mark.parametrize(
         "path,purged",
@@ -772,18 +803,25 @@ class TestStage:
             ("stage-spack", False),
         ],
     )
-    def test_stage_purge(self, tmp_path: pathlib.Path, clear_stage_root, path, purged):
+    def test_stage_purge(
+        self,
+        mutable_config: Configuration,
+        tmp_path: pathlib.Path,
+        configured_stage_root,
+        path,
+        purged,
+    ):
         """Test purging of stage directories."""
         stage_config_path = str(tmp_path / "stage")
 
-        with spack.config.override("config:build_stage", stage_config_path):
-            stage_root = spack.stage.get_stage_root()
+        with mutable_config.override("config:build_stage", stage_config_path):
+            root = spack.stage.stage_root(mutable_config)
 
-            test_dir = pathlib.Path(stage_root) / path
+            test_dir = pathlib.Path(root) / path
             test_dir.mkdir(parents=True)
             test_path = str(test_dir)
 
-            spack.stage.purge()
+            spack.stage.purge(config=mutable_config)
 
             if purged:
                 assert not os.path.exists(test_path)
@@ -791,16 +829,16 @@ class TestStage:
                 assert os.path.exists(test_path)
                 shutil.rmtree(test_path)
 
-    def test_stage_constructor_no_fetcher(self):
+    def test_stage_constructor_no_fetcher(self, config):
         """Ensure Stage constructor with no URL or fetch strategy fails."""
         with pytest.raises(ValueError):
-            with Stage(None):
+            with stage_from_config(None, config=config):
                 pass
 
-    def test_stage_constructor_with_path(self, tmp_path: pathlib.Path):
+    def test_stage_constructor_with_path(self, tmp_path: pathlib.Path, config):
         """Ensure Stage constructor with a path uses it."""
         testpath = str(tmp_path)
-        with Stage("file:///does-not-exist", path=testpath) as stage:
+        with stage_from_config("file:///does-not-exist", path=testpath, config=config) as stage:
             assert stage.path == testpath
 
 
@@ -849,13 +887,15 @@ class TestDevelopStage:
 
         assert os.path.exists(os.path.join(srcdir, "a2"))
 
-    def test_develop_stage(self, develop_path, tmp_build_stage_dir):
+    def test_develop_stage(self, develop_path, tmp_build_stage_dir, mutable_config):
         """Check that (a) develop stages update the given
         `dev_path` with a symlink that points to the stage dir and
         (b) that destroying the stage does not destroy `dev_path`
         """
         devtree, srcdir = develop_path
-        stage = DevelopStage("test-stage", srcdir, reference_link="link-to-stage")
+        stage = develop_stage_from_config(
+            "test-stage", srcdir, reference_link="link-to-stage", config=mutable_config
+        )
         assert not os.path.exists(stage.reference_link)
         stage.create()
         assert os.path.exists(stage.reference_link)
@@ -872,10 +912,14 @@ class TestDevelopStage:
         srctree2 = _create_tree_from_dir_recursive(srcdir)
         assert srctree2 == devtree
 
-    def test_develop_stage_without_reference_link(self, develop_path, tmp_build_stage_dir):
+    def test_develop_stage_without_reference_link(
+        self, develop_path, tmp_build_stage_dir, mutable_config
+    ):
         """Check that develop stages can be created without creating a reference link"""
         devtree, srcdir = develop_path
-        stage = DevelopStage("test-stage", srcdir, reference_link=None)
+        stage = develop_stage_from_config(
+            "test-stage", srcdir, reference_link=None, config=mutable_config
+        )
         stage.create()
         srctree1 = _create_tree_from_dir_recursive(stage.source_path)
         assert srctree1 == devtree
@@ -888,7 +932,7 @@ class TestDevelopStage:
         assert srctree2 == devtree
 
 
-def test_stage_create_replace_path(tmp_build_stage_dir):
+def test_stage_create_replace_path(tmp_build_stage_dir, mutable_config):
     """Ensure stage creation replaces a non-directory path."""
     _, test_stage_path = tmp_build_stage_dir
     mkdirp(test_stage_path)
@@ -897,7 +941,7 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     touch(nondir)
     path = url_util.path_to_file_url(str(nondir))
 
-    stage = Stage(path, name="afile")
+    stage = stage_from_config(path, name="afile", config=mutable_config)
     stage.create()
 
     # Ensure the stage path is "converted" to a directory
@@ -914,10 +958,10 @@ def test_cannot_access(capfd):
     assert "Insufficient permissions" in str(captured)
 
 
-def test_override_keep_in_composite_stage():
-    stage_1 = Stage("file:///does-not-exist", keep=True)
-    stage_2 = Stage("file:///does-not-exist", keep=False)
-    stage_3 = Stage("file:///does-not-exist", keep=True)
+def test_override_keep_in_composite_stage(config):
+    stage_1 = stage_from_config("file:///does-not-exist", keep=True, config=config)
+    stage_2 = stage_from_config("file:///does-not-exist", keep=False, config=config)
+    stage_3 = stage_from_config("file:///does-not-exist", keep=True, config=config)
     stages = spack.stage.StageComposite.from_iterable((stage_1, stage_2, stage_3))
 
     # The getter for the composite stage just returns the value of the first stage

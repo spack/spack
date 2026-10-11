@@ -8,10 +8,9 @@ import sys
 import urllib.parse
 from typing import List, Optional, Tuple
 
-import spack.llnl.util.tty as tty
+import spack.config
 import spack.repo
 import spack.stage
-from spack.llnl.util.filesystem import mkdirp
 from spack.spec import Spec
 from spack.url import (
     UndetectableNameError,
@@ -20,8 +19,10 @@ from spack.url import (
     parse_name,
     parse_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp
 from spack.util.format import get_version_lines
 from spack.util.naming import pkg_name_to_class_name, simplify_name
 
@@ -63,6 +64,10 @@ class {class_name}({base_class_name}):
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
 {url_def}
+
+    # FIXME: Uncomment and add the upstream supplier (organization or author).
+    # If unknown or inapplicable, remove this entire block.
+    # supplier = organization_or_author
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
@@ -974,7 +979,9 @@ def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemA
         try:
             url_dict = find_versions_of_archive(args.url)
             if len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
-                url_dict_filtered = spack.stage.interactive_version_filter(url_dict)
+                url_dict_filtered = spack.stage.interactive_version_filter(
+                    url_dict, config=spack.config.CONFIG
+                )
                 if url_dict_filtered is None:
                     exit(0)
                 url_dict = url_dict_filtered
@@ -989,7 +996,11 @@ def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemA
             url_dict = {version: args.url}
 
         version_hashes = spack.stage.get_checksums_for_versions(
-            url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
+            url_dict,
+            name,
+            first_stage_function=guesser,
+            keep_stage=args.keep_stage,
+            config=spack.config.CONFIG,
         )
 
         versions = get_version_lines(version_hashes)

@@ -7,10 +7,15 @@ import argparse
 import pytest
 
 import spack.cmd
-import spack.cmd.common.arguments as arguments
+import spack.concretize
 import spack.config
+import spack.deprecation
 import spack.environment as ev
+import spack.error
 import spack.main
+from spack.cmd.common import arguments
+from spack.config import Configuration
+from spack.solver.asp import UnsatisfiableSpecError
 
 
 @pytest.fixture()
@@ -28,13 +33,13 @@ def job_parser():
 def test_setting_jobs_flag(job_parser):
     namespace = job_parser.parse_args(["-j", "24"])
     assert namespace.jobs == 24
-    assert spack.config.get("config:build_jobs", scope="command_line") == 24
+    assert spack.config.CONFIG.get("config:build_jobs", scope="command_line") == 24
 
 
 def test_omitted_job_flag(job_parser):
     namespace = job_parser.parse_args([])
     assert namespace.jobs is None
-    assert spack.config.get("config:build_jobs") is None
+    assert spack.config.CONFIG.get("config:build_jobs") is None
 
 
 def test_negative_integers_not_allowed_for_parallel_jobs(job_parser):
@@ -127,16 +132,16 @@ def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
         ("--fresh-roots", "dependencies"),
     ],
 )
-def test_concretizer_arguments(mutable_config, mock_packages, arg, conf):
+def test_concretizer_arguments(mutable_config: Configuration, mock_packages, arg, conf):
     """Ensure that ConfigSetAction is doing the right thing."""
     spec = spack.main.SpackCommand("spec")
 
-    assert spack.config.get("concretizer:reuse", None, scope="command_line") is None
+    assert mutable_config.get("concretizer:reuse", None, scope="command_line") is None
 
     spec(arg, "zlib")
 
-    assert spack.config.get("concretizer:reuse", None) == conf
-    assert spack.config.get("concretizer:reuse", None, scope="command_line") == conf
+    assert mutable_config.get("concretizer:reuse", None) == conf
+    assert mutable_config.get("concretizer:reuse", None, scope="command_line") == conf
 
 
 def test_use_buildcache_type():
@@ -162,7 +167,7 @@ def test_missing_config_scopes_are_valid_scope_arguments(mock_missing_dir_includ
     a.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     namespace = a.parse_args(["--scope", "sub_base"])
@@ -177,8 +182,47 @@ def test_missing_config_scopes_not_valid_read_scope(mock_missing_dir_include_sco
         "--scope",
         action=arguments.ConfigScope,
         type=arguments.config_scope_readable_validator,
-        default=lambda: spack.config.default_modify_scope(),
+        default=lambda: spack.config.CONFIG.default_modify_scope(),
         help="configuration scope to modify",
     )
     with pytest.raises(SystemExit):
         a.parse_args(["--scope", "sub_base"])
+
+
+def test_deprecated_flag_allows_deprecations_on_packages_with_an_allow_list(
+    mutable_config: Configuration, mock_packages
+):
+    """Tests that --deprecated allows the deprecations of a package with an 'allow' list of its
+    own, which replaces the one under 'all'.
+    """
+    mutable_config.set(
+        "packages:deprecated-with-labels:deprecation:allow", [{"labels": ["CVE-2026-0002"]}]
+    )
+    spec = spack.main.SpackCommand("spec")
+
+    with pytest.raises(UnsatisfiableSpecError, match="deprecated"):
+        spec("deprecated-with-labels@3.0")
+
+    assert "deprecated-with-labels@3.0" in spec("--deprecated", "deprecated-with-labels@3.0")
+
+
+def test_deprecated_flag_is_honored_by_the_install_time_check(
+    mutable_config: Configuration, mock_packages
+):
+    """Tests that after --deprecated is parsed the install-time check accepts every deprecation,
+    including those on a package with an 'allow' list of its own.
+    """
+    with mutable_config.override("packages:all:deprecation:allow", [{"severity": "critical"}]):
+        concrete = spack.concretize.concretize_one("deprecated-with-labels@3.0")
+
+    mutable_config.set(
+        "packages:deprecated-with-labels:deprecation:allow", [{"labels": ["CVE-2026-0002"]}]
+    )
+    with pytest.raises(spack.error.InstallError, match="deprecated"):
+        spack.deprecation.check_deprecations([concrete])
+
+    parser = argparse.ArgumentParser()
+    arguments.add_concretizer_args(parser)
+    parser.parse_args(["--deprecated"])
+
+    spack.deprecation.check_deprecations([concrete])  # must not raise

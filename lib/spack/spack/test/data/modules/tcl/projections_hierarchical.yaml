@@ -1,0 +1,9 @@
+enable:
+  - tcl
+tcl:
+  hierarchical: true
+  all:
+    autoload: none
+  projections:
+    all: '{name}/v{version}'
+    mpileaks: '{name}-mpiprojection'

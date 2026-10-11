@@ -9,6 +9,10 @@
 
 .. _wafpackage:
 
+.. index::
+   single: build system; Waf
+   single: WafPackage
+
 Waf
 ------
 

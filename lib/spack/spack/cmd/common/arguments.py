@@ -5,19 +5,18 @@
 import argparse
 import os
 import textwrap
-from typing import Any, Optional
 
 import spack.cmd
 import spack.config
+import spack.deprecation
 import spack.deptypes as dt
-import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.reporters
 import spack.spec
 import spack.store
-from spack.llnl.util.lang import stable_partition
+from spack.active_environment import active_environment
+from spack.util.lang import stable_partition
 from spack.util.pattern import Args
 
 __all__ = ["add_common_arguments"]
@@ -76,7 +75,7 @@ class ConstraintAction(argparse.Action):
 
         # If an environment is provided, we'll restrict the search to
         # only its installed packages.
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             kwargs["hashes"] = set(env.all_hashes())
 
@@ -108,7 +107,7 @@ class SetParallelJobs(argparse.Action):
             msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        spack.config.set("config:build_jobs", jobs, scope="command_line")
+        spack.config.CONFIG.set("config:build_jobs", jobs, scope="command_line")
 
         setattr(namespace, "jobs", jobs)
 
@@ -125,43 +124,11 @@ class SetConcurrentPackages(argparse.Action):
             msg = 'invalid value for argument "{0}" [expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, concurrent_packages))
 
-        spack.config.set("config:concurrent_packages", concurrent_packages, scope="command_line")
+        spack.config.CONFIG.set(
+            "config:concurrent_packages", concurrent_packages, scope="command_line"
+        )
 
         setattr(namespace, "concurrent_packages", concurrent_packages)
-
-
-class DeprecatedStoreTrueAction(argparse.Action):
-    """Like the builtin store_true, but prints a deprecation warning."""
-
-    def __init__(
-        self,
-        option_strings,
-        dest: str,
-        default: Optional[Any] = False,
-        required: bool = False,
-        help: Optional[str] = None,
-        removed_in: Optional[str] = None,
-        instructions: Optional[str] = None,
-    ):
-        super().__init__(
-            option_strings=option_strings,
-            dest=dest,
-            nargs=0,
-            const=True,
-            required=required,
-            help=help,
-            default=default,
-        )
-        self.removed_in = removed_in
-        self.instructions = instructions
-
-    def __call__(self, parser, namespace, value, option_string=None):
-        instructions = [] if not self.instructions else [self.instructions]
-        tty.warn(
-            f"{option_string} is deprecated and will be removed in {self.removed_in}.",
-            *instructions,
-        )
-        setattr(namespace, self.dest, self.const)
 
 
 class DeptypeAction(argparse.Action):
@@ -192,7 +159,7 @@ class ConfigScope(argparse.Action):
 
     @property
     def choices(self):
-        return spack.config.scopes().keys()
+        return spack.config.CONFIG.scopes.keys()
 
     @choices.setter
     def choices(self, value):
@@ -203,7 +170,7 @@ class ConfigScope(argparse.Action):
 
 
 def config_scope_readable_validator(value):
-    if value not in spack.config.existing_scope_names():
+    if value not in spack.config.CONFIG.existing_scope_names():
         raise ValueError(
             f"Invalid scope argument {value} "
             "for config read operation, scope context does not exist"
@@ -356,7 +323,7 @@ def clean():
     return Args(
         "--clean",
         action="store_false",
-        default=spack.config.get("config:dirty"),
+        default=spack.config.CONFIG.get("config:dirty"),
         dest="dirty",
         help="unset harmful variables in the build environment (default)",
     )
@@ -377,7 +344,7 @@ def dirty():
     return Args(
         "--dirty",
         action="store_true",
-        default=spack.config.get("config:dirty"),
+        default=spack.config.CONFIG.get("config:dirty"),
         dest="dirty",
         help="preserve user environment in spack's build environment (danger!)",
     )
@@ -458,6 +425,7 @@ def install_status():
             "show install status of packages\n"
             "[+] installed       [^] installed in an upstream\n"
             " -  not installed   [-] missing dep of installed package\n"
+            "[b] available in a buildcache\n"
         ),
     )
 
@@ -580,7 +548,7 @@ class ConfigSetAction(argparse.Action):
 
     This works like a ``store_const`` action but you can set the
     ``dest`` to some Spack configuration path (like ``concretizer:reuse``)
-    and the ``const`` will be stored there using ``spack.config.set()``
+    and the ``const`` will be stored there using ``spack.config.CONFIG.set()``
     """
 
     def __init__(
@@ -615,7 +583,7 @@ class ConfigSetAction(argparse.Action):
         )
 
     def __call__(self, parser, namespace, values, option_string):
-        if self.require_environment and not ev.active_environment():
+        if self.require_environment and not active_environment():
             raise argparse.ArgumentTypeError(
                 f"argument '{self.option_strings[-1]}' requires an environment"
             )
@@ -624,16 +592,30 @@ class ConfigSetAction(argparse.Action):
         # the const from the constructor or a value from the CLI.
         # Note that this is only called if the argument is actually
         # specified on the command line.
-        spack.config.set(self.config_path, self.const, scope="command_line")
+        spack.config.CONFIG.set(self.config_path, self.const, scope="command_line")
+
+
+class AllowDeprecatedAction(argparse.Action):
+    """Allows every deprecation for the current command, including the deprecations of packages
+    with an ``allow`` list of their own.
+    """
+
+    def __init__(self, option_strings, dest, default=None, help=None):
+        super().__init__(
+            option_strings=option_strings, dest=dest, nargs=0, default=default, help=help
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        spack.deprecation.allow_every_deprecation(spack.config.CONFIG)
+        setattr(namespace, self.dest, True)
 
 
 def add_concretizer_args(subparser):
     """Add a subgroup of arguments for controlling concretization.
 
     These will appear in a separate group called 'concretizer arguments'.
-    There's no need to handle them in your command logic -- they all use
-    ``ConfigSetAction``, which automatically handles setting configuration
-    options.
+    There's no need to handle them in your command logic -- they all set
+    configuration options when the arguments are parsed.
 
     If you *do* need to access a value passed on the command line, you can
     get at, e.g., the ``concretizer:reuse`` via ``args.concretizer_reuse``.
@@ -678,11 +660,10 @@ def add_concretizer_args(subparser):
     )
     subgroup.add_argument(
         "--deprecated",
-        action=ConfigSetAction,
-        dest="config:deprecated",
-        const=True,
+        action=AllowDeprecatedAction,
+        dest="deprecated",
         default=None,
-        help="allow concretizer to select deprecated versions",
+        help="allow the concretizer to select deprecated versions of any severity",
     )
 
 

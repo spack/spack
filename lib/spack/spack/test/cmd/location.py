@@ -13,8 +13,8 @@ import spack.main
 import spack.paths
 import spack.repo
 import spack.stage
-from spack.llnl.util.filesystem import mkdirp
 from spack.main import SpackCommand
+from spack.util.filesystem import mkdirp
 
 # Everything here uses (or can use) the mock config and database.
 pytestmark = [pytest.mark.usefixtures("mutable_config", "mutable_database")]
@@ -231,9 +231,9 @@ def test_location_stage_dir(mock_spec):
 
 
 @pytest.mark.db
-def test_location_stages(mock_spec):
+def test_location_stages(mock_spec, mutable_config):
     """Tests spack location --stages."""
-    assert location("--stages").strip() == spack.stage.get_stage_root()
+    assert location("--stages").strip() == spack.stage.stage_root(mutable_config)
 
 
 def test_location_specified_repo():

@@ -593,18 +593,24 @@ corresponding group.
       }
     }
 
+Version 8
+---------
+
+Version 8 uses spec format v6, in which concrete nodes record the virtuals they provide under
+``provided_virtuals``. The lockfile itself is unchanged.
+
 """
 
 from .environment import (
     TOP_LEVEL_KEY,
     Environment,
+    EnvironmentConcretizer,
     SpackEnvironmentConfigError,
     SpackEnvironmentDevelopError,
     SpackEnvironmentError,
     SpackEnvironmentViewError,
     activate,
     active,
-    active_environment,
     all_environment_names,
     all_environments,
     as_env_dir,
@@ -638,13 +644,13 @@ from .environment import (
 __all__ = [
     "TOP_LEVEL_KEY",
     "Environment",
+    "EnvironmentConcretizer",
     "SpackEnvironmentConfigError",
     "SpackEnvironmentDevelopError",
     "SpackEnvironmentError",
     "SpackEnvironmentViewError",
     "activate",
     "active",
-    "active_environment",
     "all_environment_names",
     "all_environments",
     "as_env_dir",

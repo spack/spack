@@ -7,7 +7,7 @@ import pytest
 
 import spack.concretize
 from spack.environment.list import SpecListParser
-from spack.installer import PackageInstaller
+from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 
 DEFAULT_EXPANSION = [

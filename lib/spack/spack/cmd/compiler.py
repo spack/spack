@@ -7,16 +7,18 @@ import sys
 from typing import List, Optional
 
 import spack.binary_distribution
+import spack.cmd
 import spack.compilers.config
 import spack.config
-import spack.llnl.util.tty as tty
+import spack.repo
 import spack.spec
 import spack.store
 from spack.cmd.common import arguments
-from spack.llnl.util.lang import index_by
-from spack.llnl.util.tty.colify import colify
-from spack.llnl.util.tty.color import colorize
 from spack.spec import Spec
+from spack.util import tty
+from spack.util.lang import index_by
+from spack.util.tty.colify import colify
+from spack.util.tty.color import colorize
 
 description = "manage compilers"
 section = "config"
@@ -36,7 +38,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     find_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
-        default=lambda: spack.config.default_modify_scope("packages"),
+        default=lambda: spack.config.CONFIG.default_modify_scope("packages"),
         help="configuration scope to modify",
     )
     arguments.add_common_arguments(find_parser, ["jobs"])
@@ -83,7 +85,11 @@ def compiler_find(args):
     """
     paths = args.add_paths or None
     new_compilers = spack.compilers.config.find_compilers(
-        path_hints=paths, scope=args.scope, max_workers=args.jobs
+        path_hints=paths,
+        config=spack.config.CONFIG,
+        repo=spack.repo.PATH,
+        scope=args.scope,
+        max_workers=args.jobs,
     )
     if new_compilers:
         n = len(new_compilers)
@@ -95,11 +101,14 @@ def compiler_find(args):
     else:
         tty.msg("Found no new compilers")
     tty.msg("Compilers are defined in the following files:")
-    colify(spack.compilers.config.compiler_config_files(), indent=4)
+    config_files = spack.compilers.config.compiler_config_files(
+        spack.config.CONFIG, repo=spack.repo.PATH
+    )
+    colify(config_files, indent=4)
 
 
 def compiler_remove(args):
-    remover = spack.compilers.config.CompilerRemover(spack.config.CONFIG)
+    remover = spack.compilers.config.CompilerRemover(spack.config.CONFIG, repo=spack.repo.PATH)
     candidates = remover.mark_compilers(match=args.compiler_spec, scope=args.scope)
     if not candidates:
         tty.die(f"No compiler matches '{args.compiler_spec}'")
@@ -148,7 +157,9 @@ def compiler_info(args):
             )
             continue
 
-        print(f"{c.tree(recurse_dependencies=False, status_fn=spack.spec.Spec.install_status)}")
+        print(
+            f"{c.tree(recurse_dependencies=False, status_fn=spack.store.STORE.db.install_status)}"
+        )
         print(f"  prefix: {c.prefix}")
         print("  compilers:")
         for language, exe in exes.items():
@@ -185,6 +196,12 @@ def compiler_list(args):
             print(c.format("{name}@{version}"))
         return
 
+    status_fn = (
+        spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+        if args.remote
+        else spack.store.STORE.db.install_status
+    )
+
     # If there are no compilers in any scope, and we're outputting to a tty, give a
     # hint to the user.
     if len(compilers) == 0:
@@ -205,7 +222,7 @@ def compiler_list(args):
     # Python 3
     convert_str = lambda tuple_container: tuple(str(x) if x else "" for x in tuple_container)
 
-    index_str_keys = list((convert_str(x), y) for x, y in index.items())
+    index_str_keys = [(convert_str(x), y) for x, y in index.items()]
     ordered_sections = sorted(index_str_keys, key=lambda item: item[0])
     for i, (key, compilers) in enumerate(ordered_sections):
         if i >= 1:
@@ -216,26 +233,27 @@ def compiler_list(args):
             os_str += f"-{target}"
         cname = f"{spack.spec.COMPILER_COLOR}{{{name}}} {os_str}"
         tty.hline(colorize(cname), char="-")
-        result = {
-            colorize(c.install_status().value) + c.format("{name}@{version}") for c in compilers
-        }
+        result = {colorize(status_fn(c).value) + c.format("{name}@{version}") for c in compilers}
         colify(reversed(sorted(result)))
 
 
 def _all_available_compilers(scope: Optional[str], remote: bool) -> List[Spec]:
-    supported_compilers = spack.compilers.config.supported_compilers()
+    supported_compilers = spack.compilers.config.supported_compilers(repo=spack.repo.PATH)
 
     def _is_compiler(x):
         return x.name in supported_compilers and x.package.supported_languages and not x.external
 
     compilers_from_store = [x for x in spack.store.STORE.db.query() if _is_compiler(x)]
-    compilers_from_yaml = spack.compilers.config.all_compilers(scope=scope, init_config=False)
+    compilers_from_yaml = spack.compilers.config.all_compilers(
+        spack.config.CONFIG, repo=spack.repo.PATH, scope=scope, init_config=False
+    )
     compilers = compilers_from_yaml + compilers_from_store
 
     if remote:
-        compilers.extend(
-            [x for x in spack.binary_distribution.update_cache_and_get_specs() if _is_compiler(x)]
+        candidates = spack.binary_distribution.update_cache_and_get_specs(
+            config=spack.config.CONFIG
         )
+        compilers.extend([x for x in candidates if _is_compiler(x)])
     return compilers
 
 

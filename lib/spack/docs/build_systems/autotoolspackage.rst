@@ -9,6 +9,10 @@
 
 .. _autotoolspackage:
 
+.. index::
+   single: build system; Autotools
+   single: AutotoolsPackage
+
 Autotools
 ---------
 

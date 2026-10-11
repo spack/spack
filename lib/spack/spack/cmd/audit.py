@@ -5,10 +5,12 @@ import argparse
 import warnings
 
 import spack.audit
-import spack.llnl.util.tty as tty
-import spack.llnl.util.tty.colify
-import spack.llnl.util.tty.color as cl
+import spack.caches
+import spack.config
 import spack.repo
+import spack.util.tty.colify
+import spack.util.tty.color as cl
+from spack.util import tty
 
 description = "audit configuration files, packages, etc."
 section = "packaging"
@@ -59,6 +61,15 @@ def configs(parser, args):
         _process_reports(reports)
 
 
+def _ensure_repos_are_valid() -> None:
+    """Exit with an error if any configured package repository cannot be constructed."""
+    descriptors = spack.repo.RepoDescriptors.from_config(spack.config.CONFIG)
+    _, errors = descriptors.construct(cache=spack.caches.MISC_CACHE)
+    if errors:
+        details = "\n".join(f"  {path}: {error}" for path, error in errors.items())
+        tty.die(f"cannot audit packages, some repositories could not be constructed:\n{details}")
+
+
 def packages(parser, args):
     pkgs = args.name or spack.repo.PATH.all_package_names()
     reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
@@ -79,7 +90,7 @@ def externals(parser, args):
     if args.list_externals:
         msg = "@*{The following packages have detection tests:}"
         tty.msg(cl.colorize(msg))
-        spack.llnl.util.tty.colify.colify(spack.audit.packages_with_detection_tests(), indent=2)
+        spack.util.tty.colify.colify(spack.audit.packages_with_detection_tests(), indent=2)
         return
 
     pkgs = args.name or spack.repo.PATH.all_package_names()
@@ -108,6 +119,8 @@ def audit(parser, args):
         "packages-https": packages_https,
         "list": list,
     }
+    if args.subcommand not in ("configs", "list"):
+        _ensure_repos_are_valid()
     subcommands[args.subcommand](parser, args)
 
 

@@ -58,11 +58,9 @@ import spack.spec
         ("hdf5~mpi %[when='+mpi' virtuals=mpi] zmpi", [], ["%[virtuals=mpi] zmpi", "^mpi"]),
     ],
 )
-def test_conditional_mpi_dependency(
-    abstract_spec, expected, not_expected, default_mock_concretization
-):
+def test_conditional_mpi_dependency(abstract_spec, expected, not_expected, config, mock_packages):
     """Test concretizing conditional mpi dependencies."""
-    concrete = default_mock_concretization(abstract_spec)
+    concrete = spack.concretize.concretize_one(abstract_spec)
 
     for x in expected:
         assert concrete.satisfies(x), x

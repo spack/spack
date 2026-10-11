@@ -7,11 +7,10 @@ import sys
 from typing import List
 
 import spack.cmd
-import spack.cmd.common.confirmation as confirmation
 import spack.environment as ev
-import spack.llnl.util.tty as tty
 import spack.spec
-from spack.cmd.common import arguments
+from spack.cmd.common import arguments, confirmation
+from spack.util import tty
 
 description = "remove specs from the lockfile of an environment"
 section = "environments"

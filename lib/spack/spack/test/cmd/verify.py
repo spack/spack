@@ -12,10 +12,10 @@ import pytest
 
 import spack.cmd.verify
 import spack.concretize
-import spack.installer
-import spack.llnl.util.filesystem as fs
+import spack.old_installer
 import spack.store
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.verify
 from spack.main import SpackCommand, SpackCommandError
@@ -104,7 +104,7 @@ def test_single_spec_verify_cmd(mock_packages, mock_archive, mock_fetch, install
 def test_libraries(tmp_path: pathlib.Path, install_mockery, mock_fetch):
     gcc = spack.util.executable.which("gcc", required=True)
     s = spack.concretize.concretize_one("libelf")
-    spack.installer.PackageInstaller([s.package], fake=True).install()
+    spack.old_installer.PackageInstaller([s.package], fake=True).install()
 
     # There are no ELF files so the verification should pass
     verify("libraries", f"/{s.dag_hash()}")

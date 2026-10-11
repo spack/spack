@@ -6,8 +6,7 @@ import pathlib
 import pytest
 
 import spack.concretize
-import spack.modules.lmod
-import spack.modules.tcl
+import spack.modules.common
 import spack.spec
 
 
@@ -20,7 +19,7 @@ def modulefile_content(request):
         if isinstance(spec_like, str):
             spec_like = spack.spec.Spec(spec_like)
         spec = spack.concretize.concretize_one(spec_like)
-        generator = writer_cls(spec, module_set_name, explicit)
+        generator = writer_cls.from_spec(spec, module_set_name, explicit)
         generator.write(overwrite=True)
         written_module = pathlib.Path(generator.layout.filename)
         content = written_module.read_text(encoding="utf-8").splitlines()
@@ -37,7 +36,7 @@ def factory(request, mock_modules_root):
 
     def _mock(spec_string, module_set_name="default", explicit=True):
         spec = spack.concretize.concretize_one(spec_string)
-        return writer_cls(spec, module_set_name, explicit), spec
+        return writer_cls.from_spec(spec, module_set_name, explicit), spec
 
     return _mock
 
@@ -45,7 +44,5 @@ def factory(request, mock_modules_root):
 @pytest.fixture()
 def mock_module_filename(monkeypatch, tmp_path: pathlib.Path):
     filename = tmp_path / "module"
-    # Set for both module types so we can test both
-    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout, "filename", str(filename))
-    monkeypatch.setattr(spack.modules.tcl.TclFileLayout, "filename", str(filename))
+    monkeypatch.setattr(spack.modules.common.FileLayout, "filename", str(filename))
     yield str(filename)

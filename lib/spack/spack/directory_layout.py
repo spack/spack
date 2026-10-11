@@ -11,13 +11,12 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import spack.config
-import spack.hash_types as ht
-import spack.llnl.util.filesystem as fs
 import spack.projections
 import spack.spec
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack.error import SpackError
-from spack.llnl.util.filesystem import readlink
+from spack.util.filesystem import readlink
 
 default_projections = {
     "all": "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
@@ -135,7 +134,7 @@ class DirectoryLayout:
         with open(path, "w", encoding="utf-8") as f:
             # The hash of the projection is the DAG hash which contains
             # the full provenance, so it's available if we want it later
-            spec.to_json(f, hash=ht.dag_hash)
+            spec.to_json(f)
 
     def write_host_environment(self, spec: "spack.spec.Spec") -> None:
         """The host environment is a json file with os, kernel, and spack
@@ -160,7 +159,7 @@ class DirectoryLayout:
                 else:
                     raise SpecReadError(f"Did not recognize spec file extension: {extension}")
         except Exception as e:
-            if spack.config.get("config:debug"):
+            if spack.config.CONFIG.get("config:debug"):
                 raise
             raise SpecReadError(f"Unable to read file: {path}", f"Cause: {e}")
 
@@ -389,24 +388,3 @@ class InvalidDirectoryLayoutParametersError(DirectoryLayoutError):
 
     def __init__(self, message, long_msg=None):
         super().__init__(message, long_msg)
-
-
-class InvalidExtensionSpecError(DirectoryLayoutError):
-    """Raised when an extension file has a bad spec in it."""
-
-
-class ExtensionAlreadyInstalledError(DirectoryLayoutError):
-    """Raised when an extension is added to a package that already has it."""
-
-    def __init__(self, spec, ext_spec):
-        super().__init__("%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
-
-
-class ExtensionConflictError(DirectoryLayoutError):
-    """Raised when an extension is added to a package that already has it."""
-
-    def __init__(self, spec, ext_spec, conflict):
-        super().__init__(
-            "%s cannot be installed in %s because it conflicts with %s"
-            % (ext_spec.short_spec, spec.short_spec, conflict.short_spec)
-        )

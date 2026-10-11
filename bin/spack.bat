@@ -12,6 +12,13 @@
 ::    . /path/to/spack/install/spack_cmd.bat
 ::
 @echo off
+:: We're directly invoking this script
+:: compute spack_root from this
+if "%SPACK_ROOT%" =="" (
+    pushd %~dp0..
+    set SPACK_ROOT=%CD%
+    popd
+)
 
 set spack="%SPACK_ROOT%\bin\spack"
 
