@@ -30,6 +30,9 @@ def rewire_node(spec, explicit):
     """This function rewires a single node, worrying only about references to
     its subgraph. Binaries, text, and links are all changed in accordance with
     the splice. The resulting package is then 'installed.'"""
+    # Stamp the install prefixes: the spliced spec's destination (layout path) and its build
+    # spec's source (the installed record path), so create_tarball and extract can read them.
+    spack.store.STORE.set_prefixes([spec, spec.build_spec])
     tempdir = tempfile.mkdtemp()
 
     # Copy spec.build_spec.prefix to spec.prefix through a temporary tarball

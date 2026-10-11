@@ -160,6 +160,9 @@ def test_verify_versions(mock_packages):
     for spec in specs:
         spec._mark_concrete()
 
+    # In production these specs come from the database with a prefix stamped; do the same here.
+    spack.store.STORE.set_prefixes(specs)
+
     msg_lines = spack.cmd.verify._verify_version(specs)
     assert "3 installed packages have unknown/deprecated" in msg_lines[0]
     assert "thisisnotapackage" in msg_lines[1]
