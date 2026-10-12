@@ -4,6 +4,7 @@
 """High-level functions to concretize list of specs"""
 
 import contextlib
+import functools
 import importlib
 import multiprocessing
 import pickle
@@ -14,6 +15,7 @@ from collections import Counter
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     Dict,
     Iterable,
     Iterator,
@@ -39,6 +41,7 @@ import spack.util.parallel
 from spack.concretize_ui import (
     DEFAULT_USER_SPEC_GROUP,
     BufferedUI,
+    ConcretizationPhase,
     ConcretizerUI,
     HeadlessUI,
     SolveKind,
@@ -69,6 +72,18 @@ SpecPair = Tuple[Spec, Spec]
 TestsType = Union[bool, Iterable[str]]
 #: Position of the spec in the input, spec string, tests, reuse factory, and events buffer
 TaskArguments = Tuple[int, str, TestsType, Optional["SpecFiltersFactory"], BufferedUI]
+
+#: Seconds the owning process waits for a task to finish before it reads the phases of the
+#: running tasks again
+PHASE_POLL_INTERVAL = 0.1
+
+#: Phases by the code a task stores in its slot. Code zero means the task has not started.
+_PHASE_BY_CODE = dict(enumerate(ConcretizationPhase, start=1))
+_CODE_BY_PHASE = {phase: code for code, phase in _PHASE_BY_CODE.items()}
+
+#: Phase code of each task of the pool, in memory shared with the owning process. Set in each
+#: worker by the pool initializer.
+_TASK_PHASES: Any = None
 
 if TYPE_CHECKING:
     from spack.solver.asp import Solver
@@ -235,19 +250,7 @@ def _concretize_separately(
     )
 
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
-    # Workers can't call the frontend, so each buffers its events and we replay them here. The
-    # buffer is per task, so the serial fallback doesn't accumulate events across specs.
-    args = [
-        (
-            i,
-            str(abstract),
-            tests,
-            factory,
-            BufferedUI(solves=ui.reports_solves, asp_program=ui.reports_asp_program),
-        )
-        for i, abstract in enumerate(to_concretize)
-        if not abstract.concrete
-    ]
+    positions = [i for i, abstract in enumerate(to_concretize) if not abstract.concrete]
     ret = [(i, abstract) for i, abstract in enumerate(to_concretize) if abstract.concrete]
     try:
         # Ensure we don't try to bootstrap clingo in parallel
@@ -269,7 +272,10 @@ def _concretize_separately(
 
     ensure_compilers_in_configuration()
 
-    for j, outcome in enumerate(_run_tasks(args, processes=processes), start=1):
+    outcomes = _run_tasks(
+        to_concretize, positions, tests=tests, factory=factory, ui=ui, processes=processes
+    )
+    for j, outcome in enumerate(outcomes, start=1):
         # Replay before raising, so a solve that failed still reports what it had to say
         outcome.buffered.replay(ui)
         if outcome.error is not None:
@@ -285,6 +291,7 @@ def _concretize_separately(
             concrete=outcome.concrete,
             count=j,
             duration=outcome.duration,
+            task=outcome.position,
         )
 
     # Add specs in original order, then combine the ones passed in as abstract with the ones
@@ -296,23 +303,107 @@ def _concretize_separately(
     ]
 
 
-def _run_tasks(args: List[TaskArguments], *, processes: int) -> Iterator[SolveOutcome]:
-    """Run a concretization task per item of ``args``, and yield their outcomes in the order
-    they finish.
+def _run_tasks(
+    specs: Sequence[Spec],
+    positions: List[int],
+    *,
+    tests: TestsType,
+    factory: Optional["SpecFiltersFactory"],
+    ui: ConcretizerUI,
+    processes: int,
+) -> Iterator[SolveOutcome]:
+    """Concretize ``specs[i]`` for each ``i`` in ``positions``, as a task each, and yield their
+    outcomes in the order the tasks finish.
 
     The tasks run in a pool of ``processes`` workers, or in this process when parallelism is
-    disabled (e.g. on Windows) or there is at most one task.
+    disabled (e.g. on Windows) or there is at most one task. Either way, the phases of task ``i``
+    are reported to ``ui`` from the calling thread, as ``on_phase(phase, task=i, spec=specs[i])``.
     """
-    if not spack.util.parallel.ENABLE_PARALLELISM or len(args) <= 1:
-        yield from map(_concretize_task, args)
+
+    # Workers can't call the frontend, so each task buffers its events, which the caller replays.
+    # The buffer is per task, so the serial fallback doesn't accumulate events across specs.
+    def task_arguments(
+        i: int, report_phase: Callable[[ConcretizationPhase], None]
+    ) -> TaskArguments:
+        buffered = _TaskUI(
+            report_phase, solves=ui.reports_solves, asp_program=ui.reports_asp_program
+        )
+        return (i, str(specs[i]), tests, factory, buffered)
+
+    # Run tasks serially if no parallelism, or if we have a single task
+    if not spack.util.parallel.ENABLE_PARALLELISM or len(positions) <= 1:
+        for i in positions:
+            report_phase = functools.partial(ui.on_phase, task=i, spec=specs[i])
+            yield _concretize_task(task_arguments(i, report_phase))
         return
+
+    # The slot of task i is phases[i]. Specs that are not solved leave their slot at zero.
+    args = [task_arguments(i, functools.partial(_report_phase_to_slot, i)) for i in positions]
+    # The array below is shared memory to pass phase information from the workers.
+    # It's not locked because:
+    # - Each byte has a single writer (the worker concretizing the spec)
+    # - A one byte write should be atomic
+    phases = multiprocessing.Array("b", len(specs), lock=False)
+    reported = [0] * len(specs)
 
     marshaler = spack.subprocess_context.GlobalStateMarshaler(serialize_env=True)
     # clingo does not release memory until the process exits, so each task gets a new worker
     with multiprocessing.Pool(
-        processes, initializer=marshaler.restore, maxtasksperchild=1
+        processes, initializer=_init_worker, initargs=(marshaler, phases), maxtasksperchild=1
     ) as pool:
-        yield from pool.imap_unordered(_concretize_task, args)
+        outcomes = pool.imap_unordered(_concretize_task, args)
+        while True:
+            try:
+                outcome = outcomes.next(timeout=PHASE_POLL_INTERVAL)
+            except multiprocessing.TimeoutError:
+                for i, code in enumerate(phases):
+                    if code != reported[i]:
+                        reported[i] = code
+                        ui.on_phase(_PHASE_BY_CODE[code], task=i, spec=specs[i])
+                continue
+            except StopIteration:
+                return
+            # The slot of a finished task keeps its last phase, which is not reported anymore
+            reported[outcome.position] = phases[outcome.position]
+            yield outcome
+
+
+def _init_worker(marshaler: spack.subprocess_context.GlobalStateMarshaler, phases: Any) -> None:
+    """Initialize a worker of the pool of ``_run_tasks``."""
+    global _TASK_PHASES
+    marshaler.restore()
+    _TASK_PHASES = phases
+
+
+def _report_phase_to_slot(task: int, phase: ConcretizationPhase) -> None:
+    """Store ``phase`` in the slot of a task, in a worker of the pool of ``_run_tasks``."""
+    _TASK_PHASES[task] = _CODE_BY_PHASE[phase]
+
+
+class _TaskUI(BufferedUI):
+    """Frontend of a task of ``_run_tasks``. It buffers the events of the solve, and passes each
+    phase to ``report_phase`` as it happens, since a replayed phase would arrive after the solve
+    is over.
+    """
+
+    def __init__(
+        self,
+        report_phase: Callable[[ConcretizationPhase], None],
+        *,
+        solves: bool,
+        asp_program: bool,
+    ) -> None:
+        super().__init__(solves=solves, asp_program=asp_program)
+        self.report_phase = report_phase
+
+    def on_phase(
+        self,
+        phase: ConcretizationPhase,
+        *,
+        task: Optional[int] = None,
+        spec: Optional[Spec] = None,
+    ) -> None:
+        self.report_phase(phase)
 
 
 def _concretize_task(packed_arguments: TaskArguments) -> SolveOutcome:
