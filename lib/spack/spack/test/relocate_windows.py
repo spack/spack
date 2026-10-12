@@ -19,6 +19,7 @@ import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.relocate
+import spack.relocate_windows
 import spack.spec
 import spack.store
 import spack.user_environment
@@ -34,7 +35,7 @@ data_path = os.path.join(spack.paths.test_path, "data", "windows_pe")
 #: The compiler wrapper pads every path it records in a PE or an import library out to
 #: exactly this many characters. Taken from the source rather than restated here, so the
 #: fixtures and the limit check can never disagree about it.
-WRAPPER_NAME_LEN = spack.relocate.WRAPPER_NAME_LEN
+WRAPPER_NAME_LEN = spack.relocate_windows.WRAPPER_NAME_LEN
 
 
 def wrapper_pad(path: str, pad_char: str = "\\") -> str:
@@ -203,7 +204,7 @@ def reloc_exe(monkeypatch):
     """A :class:`FakeRelocateExe` substituted for every path that would otherwise
     resolve or bootstrap the real ``relocate.exe``."""
     exe = FakeRelocateExe()
-    monkeypatch.setattr(spack.relocate, "relocate", lambda spec=None: exe)
+    monkeypatch.setattr(spack.relocate_windows, "relocate", lambda spec=None: exe)
     return exe
 
 
@@ -222,7 +223,7 @@ def env_of(envmod: EnvironmentModifications) -> dict:
 def test_extract_spack_id_returns_padded_absolute_path(name):
     """A wrapper-linked PE carries its link-time absolute path, padded to the
     wrapper's fixed width."""
-    raw = spack.relocate.extract_spack_id_from_win_pe(fixture(name))
+    raw = spack.relocate_windows.extract_spack_id_from_win_pe(fixture(name))
 
     assert raw is not None
     assert len(raw) == WRAPPER_NAME_LEN, "resource is not padded to the wrapper's width"
@@ -240,7 +241,7 @@ def test_extract_spack_id_sfn_fixture():
     """When the link-time path exceeds the wrapper's width, the wrapper falls back to
     an 8.3 short path, which Windows renders upper case."""
     name = "sfn_calc.dll"
-    raw = spack.relocate.extract_spack_id_from_win_pe(fixture(name))
+    raw = spack.relocate_windows.extract_spack_id_from_win_pe(fixture(name))
 
     assert raw is not None
     assert len(raw) == WRAPPER_NAME_LEN
@@ -254,13 +255,13 @@ def test_extract_spack_id_sfn_fixture():
 
 def test_extract_spack_id_pe_without_resource():
     """A DLL linked by stock link.exe carries no spack resource."""
-    assert spack.relocate.extract_spack_id_from_win_pe(fixture("plain.dll")) is None
+    assert spack.relocate_windows.extract_spack_id_from_win_pe(fixture("plain.dll")) is None
 
 
 @pytest.mark.parametrize("name", ["calc.lib", "static.lib"])
 def test_extract_spack_id_on_coff_archive(name):
     """COFF archives are not loadable modules, so there is nothing to extract."""
-    assert spack.relocate.extract_spack_id_from_win_pe(fixture(name)) is None
+    assert spack.relocate_windows.extract_spack_id_from_win_pe(fixture(name)) is None
 
 
 def _not_a_pe(tmp_path: pathlib.Path) -> str:
@@ -281,7 +282,7 @@ def test_extract_spack_id_when_the_module_will_not_load(make_target, tmp_path: p
     """``relocate_win_rpath`` inspects every file it finds in a prefix, so anything
     LoadLibraryExW refuses has to come back as "no resource" rather than raising. All
     three of these land on the same null-handle branch."""
-    assert spack.relocate.extract_spack_id_from_win_pe(make_target(tmp_path)) is None
+    assert spack.relocate_windows.extract_spack_id_from_win_pe(make_target(tmp_path)) is None
 
 
 def synth_pe(pe_offset: int = 0x40, signature: bytes = b"PE\x00\x00", size: int = 0x200) -> bytes:
@@ -332,7 +333,7 @@ def test_is_msvc_magic_synthetic(data, expected):
     "name,expected", [("calc.dll", True), ("plain.dll", True), ("tester.exe", False)]
 )
 def test_pe_has_exports_on_fixtures(name, expected):
-    assert spack.relocate.pe_has_exports(fixture(name)) is expected
+    assert spack.relocate_windows.pe_has_exports(fixture(name)) is expected
 
 
 def test_pe_has_exports_on_pe32(tmp_path: pathlib.Path):
@@ -346,11 +347,11 @@ def test_pe_has_exports_on_pe32(tmp_path: pathlib.Path):
     target = tmp_path / "x86.dll"
     target.write_bytes(bytes(pe))
 
-    assert spack.relocate.pe_has_exports(str(target)) is True
+    assert spack.relocate_windows.pe_has_exports(str(target)) is True
 
 
 def test_pe_has_exports_on_non_pe(tmp_path: pathlib.Path):
-    assert spack.relocate.pe_has_exports(_not_a_pe(tmp_path)) is False
+    assert spack.relocate_windows.pe_has_exports(_not_a_pe(tmp_path)) is False
 
 
 @pytest.mark.parametrize("name", ["calc.dll", "calc.lib"])
@@ -370,10 +371,10 @@ def test_verify_import_lib_only_excuses_the_static_library_exit(reloc_exe):
     reloc_exe.add_static_lib(static)
     reloc_exe.add_unparsable(broken)
 
-    assert spack.relocate.verify_import_lib(static, reloc_exe=reloc_exe) is False
+    assert spack.relocate_windows.verify_import_lib(static, reloc_exe=reloc_exe) is False
     assert reloc_exe.raised == [], "exit 1 is excused, so it must not raise at all"
 
-    assert spack.relocate.verify_import_lib(broken, reloc_exe=reloc_exe) is False
+    assert spack.relocate_windows.verify_import_lib(broken, reloc_exe=reloc_exe) is False
     assert len(reloc_exe.raised) == 1, "exit 2 is not excused, so it must raise"
 
 
@@ -383,7 +384,7 @@ def test_get_importlib_target_unpads_nothing_and_strips_cr(reloc_exe):
     dll = r"C:\opt\pkg\bin\calc.dll"
     reloc_exe.add_import_lib(lib, dll)
 
-    reported = spack.relocate.get_importlib_target(lib, reloc_exe=reloc_exe)
+    reported = spack.relocate_windows.get_importlib_target(lib, reloc_exe=reloc_exe)
 
     assert reported == wrapper_pad(dll)
     assert not reported.endswith("\r")
@@ -395,7 +396,7 @@ def test_get_importlib_target_no_output(reloc_exe):
     lib = r"C:\opt\pkg\lib\static.lib"
     reloc_exe.add_static_lib(lib)
 
-    assert spack.relocate.get_importlib_target(lib, reloc_exe=reloc_exe) is None
+    assert spack.relocate_windows.get_importlib_target(lib, reloc_exe=reloc_exe) is None
 
 
 def test_import_lib_targets_maps_padded_report(reloc_exe):
@@ -403,7 +404,7 @@ def test_import_lib_targets_maps_padded_report(reloc_exe):
     lib = r"C:\stage\pkg\lib\calc.lib"
     reloc_exe.add_import_lib(lib, r"C:\stage\pkg\bin\calc.dll")
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [lib, r"C:\install\pkg\bin\calc.dll"],
         {r"C:\stage\pkg": r"C:\install\pkg"},
         reloc_exe=reloc_exe,
@@ -418,7 +419,7 @@ def test_import_lib_targets_is_case_insensitive(reloc_exe):
     lib = r"C:\stage\pkg\lib\calc.lib"
     reloc_exe.add_import_lib(lib, r"c:\StAgE\PkG\bin\calc.dll")
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [lib], {r"C:\STAGE\PKG": r"C:\install\pkg"}, reloc_exe=reloc_exe
     )
 
@@ -431,7 +432,7 @@ def test_import_lib_targets_matches_uppercase_sfn_prefix(reloc_exe):
     lib = r"C:\install\pkg\lib\calc.lib"
     reloc_exe.add_import_lib(lib, r"C:\progra~1\spack\bin\calc.dll")
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [lib], {r"C:\PROGRA~1\SPACK": r"C:\install\pkg"}, reloc_exe=reloc_exe
     )
 
@@ -443,7 +444,7 @@ def test_import_lib_targets_longest_prefix_wins(reloc_exe):
     lib = r"C:\install\pkg\lib\calc.lib"
     reloc_exe.add_import_lib(lib, r"C:\opt\spack\pkg\bin\calc.dll")
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [lib],
         {r"C:\opt": r"C:\wrong", r"C:\opt\spack\pkg": r"C:\install\pkg"},
         reloc_exe=reloc_exe,
@@ -458,7 +459,7 @@ def test_import_lib_targets_empty_prefix_map(reloc_exe):
     lib = r"C:\install\pkg\lib\calc.lib"
     reloc_exe.add_import_lib(lib, r"C:\stage\pkg\bin\calc.dll")
 
-    assert spack.relocate._import_lib_targets([lib], {}, reloc_exe=reloc_exe) == {}
+    assert spack.relocate_windows._import_lib_targets([lib], {}, reloc_exe=reloc_exe) == {}
     # the wrapper is never consulted when there is nothing to map
     assert reloc_exe.calls == []
 
@@ -468,7 +469,7 @@ def test_import_lib_targets_mixed_case_extension(reloc_exe):
     lib = r"C:\stage\pkg\lib\CALC.LIB"
     reloc_exe.add_import_lib(lib, r"C:\stage\pkg\bin\calc.dll")
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [lib], {r"C:\stage\pkg": r"C:\install\pkg"}, reloc_exe=reloc_exe
     )
 
@@ -483,7 +484,7 @@ def test_import_lib_targets_stage_mode_maps_whole_file(reloc_exe):
     install_dll = r"C:\install\pkg\bin\calc.dll"
     reloc_exe.add_import_lib(lib, stage_dll)
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [lib], {stage_dll: install_dll}, reloc_exe=reloc_exe, stage=True
     )
 
@@ -495,7 +496,7 @@ def test_import_lib_targets_unmatched_lib_is_skipped(reloc_exe):
     lib = r"C:\install\pkg\lib\system.lib"
     reloc_exe.add_import_lib(lib, r"C:\Windows\System32\kernel32.dll")
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [lib], {r"C:\stage\pkg": r"C:\install\pkg"}, reloc_exe=reloc_exe
     )
 
@@ -507,7 +508,7 @@ def test_import_lib_targets_static_lib_is_skipped(reloc_exe):
     static = r"C:\install\pkg\lib\static.lib"
     reloc_exe.add_static_lib(static)
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [static], {r"C:\stage\pkg": r"C:\install\pkg"}, reloc_exe=reloc_exe
     )
 
@@ -519,7 +520,7 @@ def test_import_lib_targets_ignores_non_lib_targets(reloc_exe):
     import libraries."""
     targets = [r"C:\install\pkg\bin\calc.dll", r"C:\install\pkg\bin\tester.exe"]
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         targets, {r"C:\stage\pkg": r"C:\install\pkg"}, reloc_exe=reloc_exe
     )
 
@@ -535,7 +536,7 @@ def test_import_lib_targets_warns_on_lib_linked_without_wrapper(reported, reloc_
     lib = r"C:\install\pkg\lib\calc.lib"
     reloc_exe.add_import_lib_raw(lib, reported)
 
-    result = spack.relocate._import_lib_targets(
+    result = spack.relocate_windows._import_lib_targets(
         [lib], {r"C:\stage\pkg": r"C:\install\pkg"}, reloc_exe=reloc_exe
     )
 
@@ -591,7 +592,7 @@ def test_setup_relocate_run_attaches_the_wrapper_environment(tmp_path, wrapper_e
     without the wrapper's INCLUDE/LIB/PATH attached to it."""
     wrapper = _WrapperSpec(tmp_path / "bin")
 
-    exe = spack.relocate.setup_relocate_run(wrapper)
+    exe = spack.relocate_windows.setup_relocate_run(wrapper)
 
     assert exe.exe[0] == str(tmp_path / "bin" / "relocate.exe")
     assert wrapper_env == [wrapper], "the environment came from the wrapper spec"
@@ -602,13 +603,13 @@ def test_relocate_uses_the_wrapper_already_in_the_spec(tmp_path, wrapper_env, mo
     """A package built with the wrapper carries it as a dependency, so there is nothing
     to bootstrap."""
     monkeypatch.setattr(
-        spack.relocate,
+        spack.relocate_windows,
         "bootstrap_relocate",
         _raise_runtime_error,  # must not be reached
     )
     wrapper = _WrapperSpec(tmp_path / "bin")
 
-    exe = spack.relocate.relocate(_SpecWithWrapper(wrapper, name="pkg"))
+    exe = spack.relocate_windows.relocate(_SpecWithWrapper(wrapper, name="pkg"))
 
     assert exe.exe[0] == str(tmp_path / "bin" / "relocate.exe")
 
@@ -619,9 +620,9 @@ def test_relocate_bootstraps_when_the_spec_cannot_provide_the_wrapper(spec, monk
     be bootstrapped. ``_FakeSpec`` raises KeyError exactly as a Spec without the
     dependency does."""
     sentinel = object()
-    monkeypatch.setattr(spack.relocate, "bootstrap_relocate", lambda: sentinel)
+    monkeypatch.setattr(spack.relocate_windows, "bootstrap_relocate", lambda: sentinel)
 
-    assert spack.relocate.relocate(spec) is sentinel
+    assert spack.relocate_windows.relocate(spec) is sentinel
 
 
 def test_wrapper_failure_during_relocation_propagates(temporary_store, reloc_exe):
@@ -631,7 +632,7 @@ def test_wrapper_failure_during_relocation_propagates(temporary_store, reloc_exe
     reloc_exe.pe_returncode = 1
 
     with pytest.raises(spack.util.executable.ProcessError):
-        spack.relocate.relocate_windows_binaries(
+        spack.relocate_windows.relocate_windows_binaries(
             [r"C:\install\pkg\bin\a.dll", r"C:\install\pkg\bin\b.dll"],
             _FakeSpec(name="pkg", prefix=r"C:\install\pkg"),
             {r"C:\stage\pkg": r"C:\install\pkg"},
@@ -665,14 +666,14 @@ class _SfnProbe:
 @pytest.fixture()
 def sfn_enabled(monkeypatch):
     probe = _SfnProbe(True)
-    monkeypatch.setattr(spack.relocate.fs, "short_filenames_enabled", probe)
+    monkeypatch.setattr(spack.relocate_windows.fs, "short_filenames_enabled", probe)
     return probe
 
 
 @pytest.fixture()
 def sfn_disabled(monkeypatch):
     probe = _SfnProbe(False)
-    monkeypatch.setattr(spack.relocate.fs, "short_filenames_enabled", probe)
+    monkeypatch.setattr(spack.relocate_windows.fs, "short_filenames_enabled", probe)
     return probe
 
 
@@ -684,7 +685,7 @@ def test_paths_within_the_budget_are_recorded_directly(
     is irrelevant and must not even be probed."""
     pe = pe_of_length(length)
 
-    spack.relocate.relocate_windows_binaries(
+    spack.relocate_windows.relocate_windows_binaries(
         [pe], _FakeSpec(name="pkg", prefix=r"C:\install"), {r"C:\stage": r"C:\install"}
     )
 
@@ -698,7 +699,7 @@ def test_overlong_path_falls_back_to_sfn_when_available(sfn_enabled, temporary_s
     pe = pe_of_length(WRAPPER_NAME_LEN + 1)
     prefix = r"C:\install"
 
-    spack.relocate.relocate_windows_binaries(
+    spack.relocate_windows.relocate_windows_binaries(
         [pe], _FakeSpec(name="pkg", prefix=prefix), {r"C:\stage": prefix}
     )
 
@@ -713,8 +714,8 @@ def test_overlong_path_without_sfn_is_an_error(sfn_disabled, temporary_store, re
     pe = pe_of_length(WRAPPER_NAME_LEN + 1)
     prefix = r"C:\a-very-long-install-tree-root\that-the-user-should-shorten"
 
-    with pytest.raises(spack.relocate.WindowsPathTooLongError) as excinfo:
-        spack.relocate.relocate_windows_binaries(
+    with pytest.raises(spack.relocate_windows.WindowsPathTooLongError) as excinfo:
+        spack.relocate_windows.relocate_windows_binaries(
             [pe], _FakeSpec(name="pkg", prefix=prefix), {r"C:\stage": prefix}
         )
 
@@ -760,7 +761,7 @@ def stage_tree(tmp_path: pathlib.Path, monkeypatch, sfn_enabled):
     (prefix / "lib" / "calc.lib").write_bytes(b"!<arch>\n")
 
     monkeypatch.setattr(
-        spack.relocate, "extract_spack_id_from_win_pe", lambda pe: resources.get(pe)
+        spack.relocate_windows, "extract_spack_id_from_win_pe", lambda pe: resources.get(pe)
     )
     return _FakeSpec(name="pkg", prefix=str(prefix)), stage, resources
 
@@ -770,7 +771,7 @@ def test_relocate_win_rpath_maps_stage_to_install(temporary_store, reloc_exe, st
     lib = os.path.join(spec.prefix, "lib", "calc.lib")
     reloc_exe.add_import_lib(lib, str(stage / "build" / "calc.dll"))
 
-    spack.relocate.relocate_win_rpath(spec)
+    spack.relocate_windows.relocate_win_rpath(spec)
 
     env = env_of(reloc_exe.envs[-1])
     mapping = dict(p.split("|") for p in env["SPACK_RELOCATE_PATH"].split(os.pathsep))
@@ -789,7 +790,7 @@ def test_relocate_win_rpath_pairs_import_lib_with_its_dll(temporary_store, reloc
     lib = os.path.join(spec.prefix, "lib", "calc.lib")
     reloc_exe.add_import_lib(lib, str(stage / "build" / "calc.dll"))
 
-    spack.relocate.relocate_win_rpath(spec)
+    spack.relocate_windows.relocate_win_rpath(spec)
 
     coff_calls = {
         c[c.index("--pe") + 1]: c[c.index("--coff") + 1]
@@ -805,7 +806,7 @@ def test_relocate_win_rpath_skips_pe_without_resource(temporary_store, reloc_exe
     DLLs that moved."""
     spec, _, _ = stage_tree
 
-    spack.relocate.relocate_win_rpath(spec)
+    spack.relocate_windows.relocate_win_rpath(spec)
 
     env = env_of(reloc_exe.envs[-1])
     assert "vendor.dll" not in env["SPACK_RELOCATE_PATH"]
@@ -827,7 +828,7 @@ def test_relocate_win_rpath_skips_symlinks(temporary_store, reloc_exe, stage_tre
     # even if it somehow carried a resource, it must not contribute a mapping
     resources[link] = wrapper_pad(str(stage / "build" / "alias.dll"))
 
-    spack.relocate.relocate_win_rpath(spec)
+    spack.relocate_windows.relocate_win_rpath(spec)
 
     env = env_of(reloc_exe.envs[-1])
     assert "alias.dll" not in env["SPACK_RELOCATE_PATH"]
@@ -845,7 +846,7 @@ def test_relocate_win_rpath_warns_on_untagged_pe_with_exports(
     vendor = os.path.join(spec.prefix, "bin", "vendor.dll")
     shutil.copyfile(fixture(vendored), vendor)
 
-    spack.relocate.relocate_win_rpath(spec)
+    spack.relocate_windows.relocate_win_rpath(spec)
 
     assert (vendor in capsys.readouterr().err) is warns
 
@@ -862,13 +863,13 @@ def test_relocate_win_rpath_enforces_the_path_budget(
     dll.write_bytes(b"MZ")
     assert len(str(dll)) > WRAPPER_NAME_LEN, "test needs a path past the wrapper's budget"
     monkeypatch.setattr(
-        spack.relocate,
+        spack.relocate_windows,
         "extract_spack_id_from_win_pe",
         lambda pe: wrapper_pad(r"C:\stage\pkg\build\calc.dll"),
     )
 
-    with pytest.raises(spack.relocate.WindowsPathTooLongError):
-        spack.relocate.relocate_win_rpath(_FakeSpec(name="pkg", prefix=str(prefix)))
+    with pytest.raises(spack.relocate_windows.WindowsPathTooLongError):
+        spack.relocate_windows.relocate_win_rpath(_FakeSpec(name="pkg", prefix=str(prefix)))
 
     assert reloc_exe.calls == [], "nothing is rewritten once the check fails"
 
@@ -895,7 +896,7 @@ def test_relocate_win_rpath_whole_prefix(
     reloc_exe.add_import_lib(installed("lib", "sfn_calc.lib"), link_path("sfn_calc.dll"))
     reloc_exe.add_static_lib(installed("lib", "static.lib"))
 
-    spack.relocate.relocate_win_rpath(_FakeSpec(name="pkg", prefix=str(prefix)))
+    spack.relocate_windows.relocate_win_rpath(_FakeSpec(name="pkg", prefix=str(prefix)))
 
     pe_calls = {c[c.index("--pe") + 1]: c for c in reloc_exe.calls if "--pe" in c}
     assert set(pe_calls) == {installed("bin", name) for name in layout["bin"]}
@@ -969,7 +970,7 @@ def dispatch_recorder(monkeypatch):
             pass
 
     monkeypatch.setattr(
-        spack.relocate, "relocate_win_rpath", lambda spec: calls["relocate"].append(spec)
+        spack.relocate_windows, "relocate_win_rpath", lambda spec: calls["relocate"].append(spec)
     )
     monkeypatch.setattr(spack.package_base, "WindowsSimulatedRPath", _RecordingSimulatedRPath)
     return calls
@@ -1042,7 +1043,7 @@ def relocation_recorder(monkeypatch):
     recorded = []
     monkeypatch.setattr(spack.platforms, "by_name", lambda name: _PePlatform())
     monkeypatch.setattr(
-        bd.relocate,
+        bd.relocate_windows,
         "relocate_windows_binaries",
         lambda binaries, spec, prefixes, sfn_prefixes=None, stage=False: recorded.append(
             (binaries, spec, prefixes, sfn_prefixes)

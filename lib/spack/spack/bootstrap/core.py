@@ -507,13 +507,13 @@ def msvc_compiler_wrapper_root_spec() -> str:
     return _root_spec("compiler-wrapper@1.0")
 
 
-def ensure_msvc_compiler_wrappers_or_raise() -> None:
+def ensure_msvc_compiler_wrappers_or_raise() -> spack.util.executable.Executable:
     return ensure_executables_in_path_or_raise(
         executables=["cl"], abstract_spec=msvc_compiler_wrapper_root_spec()
     )
 
 
-def ensure_msvc_relocate_or_raise() -> None:
+def ensure_msvc_relocate_or_raise() -> spack.util.executable.Executable:
     return ensure_executables_in_path_or_raise(
         executables=["relocate.exe"], abstract_spec=msvc_compiler_wrapper_root_spec()
     )

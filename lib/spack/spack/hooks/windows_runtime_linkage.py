@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import spack.relocate
+import spack.relocate_windows
 
 
 def post_install(spec, explicit=None):
@@ -17,6 +17,6 @@ def post_install(spec, explicit=None):
     # available; otherwise it installs a placeholder and we fall back to the symlink-based
     # simulated rpath.
     if spec["compiler-wrapper"].package.has_code:
-        spack.relocate.relocate_win_rpath(spec)
+        spack.relocate_windows.relocate_win_rpath(spec)
     else:
         spec.package.windows_establish_runtime_linkage()

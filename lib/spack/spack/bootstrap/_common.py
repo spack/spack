@@ -207,7 +207,7 @@ def _executables_in_store(
             searchable_paths = (
                 [str(x) for x in prefix.glob("**") if x.is_dir()]
                 if sys.platform == "win32"
-                else [concrete_spec.prefix.bin]
+                else [str(concrete_spec.prefix.bin)]
             )
             command = spack.util.executable.which(*executables, path=searchable_paths)
             if command:

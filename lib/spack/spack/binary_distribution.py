@@ -72,7 +72,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack import relocate, traverse
+from spack import relocate, relocate_windows, traverse
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -2112,7 +2112,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     elif "elf" in platform.binary_formats:
         relocate.relocate_elf_binaries(binaries, prefix_to_prefix, rpath_transform)
     elif "pe" in platform.binary_formats and spec.name != "compiler-wrapper":
-        relocate.relocate_windows_binaries(binaries, spec, prefix_to_prefix, sfn_prefix_to_prefix)
+        relocate_windows.relocate_windows_binaries(
+            binaries, spec, prefix_to_prefix, sfn_prefix_to_prefix
+        )
 
     relocate.relocate_links(links, prefix_to_prefix)
     relocate.relocate_text(textfiles, prefix_to_prefix)
