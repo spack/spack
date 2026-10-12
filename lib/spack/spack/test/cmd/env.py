@@ -3405,11 +3405,11 @@ def test_concretize_user_specs_together(mutable_config):
         e.remove("mpich")
         e.add("mpich2")
 
-        exc_cls = spack.error.UnsatisfiableSpecError
+        # Concretizing without invalidating the concrete spec for mpileaks keeps its provider
+        e.concretize()
+        assert e.matching_spec("mpileaks").satisfies("^mpich")
+        assert e.matching_spec("mpich2")
 
-        # Concretizing without invalidating the concrete spec for mpileaks fails
-        with pytest.raises(exc_cls):
-            e.concretize()
         e.concretize(force=True)
 
         assert all("mpich2" in spec for _, spec in e.concretized_specs())

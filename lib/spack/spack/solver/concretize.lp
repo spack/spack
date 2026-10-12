@@ -1179,14 +1179,15 @@ do_not_impose(EffectID, node(X, Package))
      pkg_fact(Package, condition_effect(ID, EffectID)),
      not is_provider_of_virtual(node(X, Package), Virtual).
 
-% Choose the provider among root specs, if possible
-:- provider(ProviderNode, node(min_dupe_id, Virtual)),
-   virtual_condition_holds(_, PossibleProvider, Virtual),
-   PossibleProvider != ProviderNode,
-   explicitly_requested_root(PossibleProvider),
-   not self_build_requirement(PossibleProvider, ProviderNode),
-   not explicitly_requested_root(ProviderNode),
-   not language(Virtual).
+% Penalize the fact that a root could provide the virtual, but is not the provider
+provider_not_among_roots(ProviderNode, Virtual)
+  :- provider(ProviderNode, node(min_dupe_id, Virtual)),
+     virtual_condition_holds(_, PossibleProvider, Virtual),
+     PossibleProvider != ProviderNode,
+     explicitly_requested_root(PossibleProvider),
+     not self_build_requirement(PossibleProvider, ProviderNode),
+     not explicitly_requested_root(ProviderNode),
+     not language(Virtual).
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
@@ -2465,11 +2466,17 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
       opt_priority(Priority, BuildPriority, _, _, "variant penalty (non-roots)")
 }.
 
-% Minimize the weights of all the other providers (mpi, lapack, etc.)
+% Minimize the weights of all the other providers (mpi, lapack, etc.).
+% The penalty for a provider that is not a root, when a root could provide the virtual,
+% must be larger than any provider weight.
 #minimize{
     Weight@Priority, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not language(Virtual), not language_runtime(Virtual),
+      build_priority(ProviderNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, _, "preferred providers (excluded compilers and language runtimes)");
+    1000@Priority, ProviderNode,Virtual,"not a root"
+    : provider_not_among_roots(ProviderNode, Virtual),
       build_priority(ProviderNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, _, "preferred providers (excluded compilers and language runtimes)")
 }.
