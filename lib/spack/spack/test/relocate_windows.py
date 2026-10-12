@@ -14,6 +14,7 @@ import pytest
 
 import spack.binary_distribution as bd
 import spack.concretize
+import spack.hooks.windows_runtime_linkage
 import spack.package_base
 import spack.paths
 import spack.platforms
@@ -923,13 +924,14 @@ class _FakeWrapperNode:
 
 
 class _DispatchSpec:
-    """Spec stand-in for the WindowsRPath dispatch, which only consults
-    ``external``, ``satisfies("%compiler-wrapper")`` and the wrapper node."""
+    """Spec stand-in for the runtime linkage hook, which only consults ``external``,
+    ``satisfies("%compiler-wrapper")``, the wrapper node and the package."""
 
     def __init__(self, has_wrapper=True, has_code=True, external=False):
         self.external = external
         self._has_wrapper = has_wrapper
         self._wrapper = _FakeWrapperNode(has_code)
+        self.package = _DispatchPkg(self)
 
     def satisfies(self, query):
         assert query == "%compiler-wrapper"
@@ -942,6 +944,8 @@ class _DispatchSpec:
 
 
 class _DispatchPkg(spack.package_base.WindowsRPath):
+    installed_from_binary_cache = False
+
     def __init__(self, spec):
         self.spec = spec
 
@@ -965,7 +969,7 @@ def dispatch_recorder(monkeypatch):
             pass
 
     monkeypatch.setattr(
-        spack.package_base, "relocate_win_rpath", lambda spec: calls["relocate"].append(spec)
+        spack.relocate, "relocate_win_rpath", lambda spec: calls["relocate"].append(spec)
     )
     monkeypatch.setattr(spack.package_base, "WindowsSimulatedRPath", _RecordingSimulatedRPath)
     return calls
@@ -976,7 +980,7 @@ def test_dispatch_uses_wrapper_when_available(dispatch_recorder):
     relocation is driven through it."""
     spec = _DispatchSpec(has_code=True)
 
-    _DispatchPkg(spec).windows_establish_runtime_linkage()
+    spack.hooks.windows_runtime_linkage.post_install(spec)
 
     assert dispatch_recorder["relocate"] == [spec]
     assert dispatch_recorder["simulated"] == []
@@ -987,15 +991,14 @@ def test_dispatch_falls_back_without_wrapper_code(dispatch_recorder):
     installs a placeholder, so the symlink-based simulated rpath is used."""
     spec = _DispatchSpec(has_code=False)
 
-    pkg = _DispatchPkg(spec)
-    pkg.windows_establish_runtime_linkage()
+    spack.hooks.windows_runtime_linkage.post_install(spec)
 
     assert dispatch_recorder["relocate"] == []
-    assert dispatch_recorder["simulated"] == [pkg]
+    assert dispatch_recorder["simulated"] == [spec.package]
 
 
 def test_dispatch_noop_without_compiler_wrapper(dispatch_recorder):
-    _DispatchPkg(_DispatchSpec(has_wrapper=False)).windows_establish_runtime_linkage()
+    spack.hooks.windows_runtime_linkage.post_install(_DispatchSpec(has_wrapper=False))
 
     assert dispatch_recorder["relocate"] == []
     assert dispatch_recorder["simulated"] == []
@@ -1006,7 +1009,7 @@ def test_dispatch_skips_externals(dispatch_recorder, has_code):
     """Spack should not modify the bin directory of something it did not install."""
     spec = _DispatchSpec(has_code=has_code, external=True)
 
-    _DispatchPkg(spec).windows_establish_runtime_linkage()
+    spack.hooks.windows_runtime_linkage.post_install(spec)
 
     assert dispatch_recorder["relocate"] == []
     assert dispatch_recorder["simulated"] == []
