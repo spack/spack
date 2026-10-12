@@ -5,8 +5,10 @@
 
 import contextlib
 import importlib
+import pickle
 import sys
 import time
+import traceback
 from collections import Counter
 from typing import (
     TYPE_CHECKING,
@@ -15,6 +17,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -33,6 +36,7 @@ import spack.traverse
 import spack.util.parallel
 from spack.concretize_ui import (
     DEFAULT_USER_SPEC_GROUP,
+    BufferedUI,
     ConcretizerUI,
     HeadlessUI,
     SolveKind,
@@ -41,6 +45,22 @@ from spack.concretize_ui import (
 )
 from spack.spec import Spec
 from spack.util import tty
+
+
+class SolveOutcome(NamedTuple):
+    """What a worker process returns for one spec, whether the solve worked or not."""
+
+    #: Where the spec was in the input, which the pool does not preserve
+    position: int
+    #: The concretized spec, or None if the solve raised
+    concrete: Optional[Spec]
+    #: Seconds spent in the solve
+    duration: float
+    #: The events of the solve, to replay into the frontend
+    buffered: BufferedUI
+    #: What the solve raised, or None if it succeeded
+    error: Optional[Exception]
+
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
@@ -68,12 +88,14 @@ def ensure_compilers_in_configuration() -> None:
     _ = spack.compilers.config.all_compilers(spack.config.CONFIG, repo=spack.repo.PATH)
 
 
-def _solver(*, factory: Optional["SpecFiltersFactory"] = None) -> "Solver":
+def _solver(
+    *, factory: Optional["SpecFiltersFactory"] = None, ui: Optional[ConcretizerUI] = None
+) -> "Solver":
     """Return a solver to concretize with, with the compilers already in the configuration."""
     from spack.solver.asp import Solver
 
     ensure_compilers_in_configuration()
-    return Solver(context=spack.context.default(), specs_factory=factory)
+    return Solver(context=spack.context.default(), specs_factory=factory, ui=ui)
 
 
 def _concretize_specs_together(
@@ -81,6 +103,7 @@ def _concretize_specs_together(
     *,
     tests: TestsType = False,
     factory: Optional["SpecFiltersFactory"] = None,
+    ui: ConcretizerUI,
 ) -> List[Spec]:
     """Given a number of specs as input, tries to concretize them together.
 
@@ -89,8 +112,9 @@ def _concretize_specs_together(
         tests: list of package names for which to consider tests dependencies. If True, all nodes
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
+        ui: frontend to report the solve to
     """
-    result = _solver(factory=factory).solve(abstract_specs, tests=tests)
+    result = _solver(factory=factory, ui=ui).solve(abstract_specs, tests=tests)
     return [s.copy() for s in result.specs]
 
 
@@ -115,7 +139,7 @@ def _concretize_together(
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
 
     start = time.monotonic()
-    concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory)
+    concrete_specs = _concretize_specs_together(to_concretize, tests=tests, factory=factory, ui=ui)
     duration = time.monotonic() - start
 
     # A single solve produced all the specs, so they all report the duration of that solve
@@ -162,7 +186,7 @@ def _concretize_together_when_possible(
     result_by_user_spec: Dict[Spec, Spec] = {}
     j = 0
     start = time.monotonic()
-    for result in _solver(factory=factory).solve_in_rounds(to_concretize, tests=tests):
+    for result in _solver(factory=factory, ui=ui).solve_in_rounds(to_concretize, tests=tests):
         now = time.monotonic()
         duration = now - start
         for abstract, concrete in result.specs_by_input.items():
@@ -207,8 +231,16 @@ def _concretize_separately(
     )
 
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
+    # Workers can't call the frontend, so each buffers its events and we replay them here. The
+    # buffer is per task, so the serial fallback doesn't accumulate events across specs.
     args = [
-        (i, str(abstract), tests, factory)
+        (
+            i,
+            str(abstract),
+            tests,
+            factory,
+            BufferedUI(solves=ui.reports_solves, asp_program=ui.reports_asp_program),
+        )
         for i, abstract in enumerate(to_concretize)
         if not abstract.concrete
     ]
@@ -235,19 +267,28 @@ def _concretize_separately(
 
     # Solve the environment in parallel on Linux. imap_unordered falls back to a serial map when
     # parallelism is disabled (e.g. Windows), and when there is at most one spec to solve
-    for j, (i, concrete, duration) in enumerate(
+    for j, outcome in enumerate(
         spack.util.parallel.imap_unordered(
-            _concretize_task,
-            args,
-            processes=processes,
-            debug=tty.is_debug(),
-            maxtaskperchild=1,
-            serialize_env=True,
+            _concretize_task, args, processes=processes, maxtaskperchild=1, serialize_env=True
         ),
         start=1,
     ):
-        ret.append((i, concrete))
-        ui.on_spec_concretized(to_concretize[i], concrete=concrete, count=j, duration=duration)
+        # Replay before raising, so a solve that failed still reports what it had to say
+        outcome.buffered.replay(ui)
+        if outcome.error is not None:
+            raise outcome.error
+        if outcome.concrete is None:
+            raise spack.error.SpackError(
+                f"concretization of {to_concretize[outcome.position]} produced neither a spec nor "
+                f"an error"
+            )
+        ret.append((outcome.position, outcome.concrete))
+        ui.on_spec_concretized(
+            to_concretize[outcome.position],
+            concrete=outcome.concrete,
+            count=j,
+            duration=outcome.duration,
+        )
 
     # Add specs in original order, then combine the ones passed in as abstract with the ones
     # passed in as pairs
@@ -259,13 +300,25 @@ def _concretize_separately(
 
 
 def _concretize_task(
-    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"]],
-) -> Tuple[int, Spec, float]:
-    index, spec_str, tests, factory = packed_arguments
+    packed_arguments: Tuple[int, str, TestsType, Optional["SpecFiltersFactory"], BufferedUI],
+) -> SolveOutcome:
+    index, spec_str, tests, factory, buffered = packed_arguments
     with tty.SuppressOutput(msg_enabled=False):
         start = time.time()
-        spec = concretize_one(Spec(spec_str), tests=tests, factory=factory)
-        return index, spec, time.time() - start
+        try:
+            spec = concretize_one(Spec(spec_str), tests=tests, factory=factory, ui=buffered)
+        except Exception as e:
+            # Tracebacks don't pickle, so record this one where the parent can print it
+            tb = traceback.format_exc()
+            try:
+                pickle.loads(pickle.dumps(e))
+            except Exception:
+                # The pool unpickles results in a thread, and hangs if that fails
+                e = spack.error.SpackError(str(e))
+            if isinstance(e, spack.error.SpackError):
+                e.traceback = tb
+            return SolveOutcome(index, None, time.time() - start, buffered, e)
+        return SolveOutcome(index, spec, time.time() - start, buffered, None)
 
 
 def concretize_one(
@@ -312,12 +365,14 @@ def _concretize_one(
             return spec.copy()
 
         start = time.monotonic()
-        concrete = _solve_one(spec, tests=tests, factory=factory)
+        concrete = _solve_one(spec, tests=tests, factory=factory, ui=ui)
         ui.on_spec_concretized(spec, concrete=concrete, count=1, duration=time.monotonic() - start)
         return concrete
 
 
-def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"]) -> Spec:
+def _solve_one(
+    spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFactory"], ui: ConcretizerUI
+) -> Spec:
     """Run the single solve that concretizes ``spec``, and pick its answer."""
     for node in spec.traverse():
         if not node.name:
@@ -325,7 +380,7 @@ def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFa
                 f"Spec {node} has no name; cannot concretize an anonymous spec"
             )
 
-    result = _solver(factory=factory).solve([spec], tests=tests)
+    result = _solver(factory=factory, ui=ui).solve([spec], tests=tests)
 
     # take the best answer
     opt, i, answer = min(result.answers)

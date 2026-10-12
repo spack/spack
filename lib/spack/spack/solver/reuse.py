@@ -4,7 +4,6 @@
 import enum
 import functools
 import typing
-import warnings
 from typing import Any, Callable, List, Mapping, Optional
 
 import spack.binary_distribution
@@ -15,6 +14,7 @@ import spack.spec
 import spack.traverse
 import spack.util.path
 from spack.active_environment import active_environment
+from spack.concretize_ui import ConcretizerUI, HeadlessUI
 from spack.enums import InstallRecordStatus
 from spack.externals import ExternalSpecsParser
 from spack.externals_config import (
@@ -36,11 +36,16 @@ def spec_filter_from_store(store, *, is_reusable, include=None, exclude=None) ->
 
 
 def spec_filter_from_buildcache(
-    *, context: "spack.context.SpackContext", is_reusable, include=None, exclude=None
+    *,
+    context: "spack.context.SpackContext",
+    is_reusable,
+    ui: ConcretizerUI,
+    include=None,
+    exclude=None,
 ) -> SpecFilter:
     """Constructs a filter that takes the specs from the configured buildcaches."""
     factory = functools.partial(
-        _specs_from_mirror, binary_index=context.binary_index, config=context.config
+        _specs_from_mirror, binary_index=context.binary_index, config=context.config, ui=ui
     )
     return SpecFilter(factory=factory, is_usable=is_reusable, include=include, exclude=exclude)
 
@@ -149,7 +154,7 @@ def _specs_from_store(store):
         return store.db.query(installed=True, sort=False)
 
 
-def _specs_from_mirror(binary_index, config: spack.config.Configuration):
+def _specs_from_mirror(binary_index, config: spack.config.Configuration, ui: ConcretizerUI):
     try:
         specs = spack.binary_distribution.update_cache_and_get_specs(binary_index, config=config)
     except (spack.binary_distribution.FetchCacheError, IndexError):
@@ -158,7 +163,10 @@ def _specs_from_mirror(binary_index, config: spack.config.Configuration):
         # TODO: source cache (or any mirror really) doesn't have binaries.
         return []
     for url in sorted(binary_index.mirrors_without_index):
-        warnings.warn(f"the mirror at {url} cannot be used in concretization (no index found)")
+        ui.on_warning(
+            f"the mirror at {url} cannot be used in concretization (no index found)",
+            key=("mirror-without-index", url),
+        )
     return specs
 
 
@@ -190,11 +198,13 @@ class ReusableSpecsSelector:
         context: "spack.context.SpackContext",
         packages_with_externals: Any,
         factory: Optional[SpecFiltersFactory] = None,
+        ui: Optional[ConcretizerUI] = None,
     ) -> None:
         # Local import to break circular dependencies
         import spack.environment
 
         configuration, store, repo = context.config, context.store, context.repo
+        ui = ui or HeadlessUI()
         external_parser = create_external_parser(packages_with_externals, context=context)
         # Membership in this set replaces a per-spec query_by_spec_hash on the store
         external_db_hashes = _external_db_hashes(store)
@@ -231,7 +241,9 @@ class ReusableSpecsSelector:
             self.reuse_sources.extend(
                 [
                     spec_filter_from_store(store, is_reusable=local_is_reusable),
-                    spec_filter_from_buildcache(context=context, is_reusable=mirror_is_reusable),
+                    spec_filter_from_buildcache(
+                        context=context, is_reusable=mirror_is_reusable, ui=ui
+                    ),
                 ]
             )
         else:
@@ -272,6 +284,7 @@ class ReusableSpecsSelector:
                         spec_filter_from_buildcache(
                             context=context,
                             is_reusable=mirror_is_reusable,
+                            ui=ui,
                             include=include,
                             exclude=exclude,
                         )
