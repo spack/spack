@@ -204,7 +204,11 @@ def _executables_in_store(
             # than other platforms
             prefix = pathlib.Path(concrete_spec.prefix)
             # get all directories under prefix
-            searchable_paths = [str(x) for x in prefix.glob("**") if x.is_dir()] if sys.platform == "win32" else [concrete_spec.prefix.bin]
+            searchable_paths = (
+                [str(x) for x in prefix.glob("**") if x.is_dir()]
+                if sys.platform == "win32"
+                else [concrete_spec.prefix.bin]
+            )
             command = spack.util.executable.which(*executables, path=searchable_paths)
             if command:
                 bin_dir = os.path.dirname(command.path)

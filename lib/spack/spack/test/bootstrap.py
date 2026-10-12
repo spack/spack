@@ -3,11 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
-import pathlib
-from typing import Any, Dict, List, Optional
 import os
 import pathlib
 import sys
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -28,9 +27,9 @@ import spack.paths
 import spack.spec
 import spack.store
 import spack.util.executable
+import spack.util.prefix
 import spack.version
 from spack.active_environment import active_environment
-import spack.util.prefix
 
 CLINGO_METADATA = sorted(pathlib.Path(spack.paths.share_path).glob("bootstrap/*/clingo.json"))
 if not CLINGO_METADATA:
