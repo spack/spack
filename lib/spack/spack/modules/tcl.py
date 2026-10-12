@@ -6,6 +6,7 @@
 
 from typing import Tuple
 
+from . import cache
 from .common import BaseConfiguration, BaseModuleFileWriter
 
 
@@ -13,6 +14,12 @@ class TclConfiguration(BaseConfiguration):
     """Configuration class for tcl module files."""
 
     module_system = "tcl"
+
+    @property
+    def update_cache(self) -> bool:
+        """Returns True if the module cache of the modulepath directories changed by
+        Spack should be kept updated, False otherwise."""
+        return self._config.get("update_cache", False)
 
     def manipulate_path(self, token: str) -> str:
         if token in self.hierarchy_tokens:
@@ -29,6 +36,8 @@ class TclConfiguration(BaseConfiguration):
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
 
+    conf: TclConfiguration
+
     configuration_class = TclConfiguration
 
     default_template = "modules/modulefile.tcl"
@@ -36,3 +45,9 @@ class TclModulefileWriter(BaseModuleFileWriter):
     modulerc_header = ["#%Module4.7"]
 
     hide_cmd_format = "module-hide --soft --hidden-loaded %s"
+
+    def register_cache_update(self) -> None:
+        """Registers the modulepath directory of this module file for a module cache
+        update, if enabled in configuration."""
+        if self.conf.update_cache:
+            cache.register(self.layout.modulepath)
