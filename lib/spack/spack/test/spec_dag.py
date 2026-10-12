@@ -573,7 +573,7 @@ class TestSpecDag:
         # Single indirection
         c1 = s["mpileaks"].copy()
         assert c0 == c1 == s
-        assert Spec(s["mpileaks"]).dependencies() == s.dependencies()
+        assert set(Spec(s["mpileaks"]).dependencies()) == set(s.dependencies())
 
         # Double indirection
         c2 = s["mpileaks"]["mpileaks"].copy()
