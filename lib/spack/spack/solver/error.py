@@ -7,10 +7,11 @@ This module holds no solver state, so that both the solver and the types it prod
 depend on it without importing each other.
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 import spack.error
 import spack.spec
+from spack.util.lang import elide_list
 
 
 def format_unsolved(
@@ -37,6 +38,21 @@ class UnsatisfiableSpecError(spack.error.UnsatisfiableSpecError):
         self.provided = None
         self.required = None
         self.constraint_type = None
+
+
+class UnsatisfiableModelError(UnsatisfiableSpecError):
+    """The best model of a solve has errors, each reported as a reason the solve failed for."""
+
+    def __init__(self, specs: Sequence[spack.spec.Spec], reasons: Sequence[str]) -> None:
+        input_specs = ", ".join(elide_list([f"`{s}`" for s in specs], 5))
+        numbered = "\n".join(f"    {i:2}. {reason}" for i, reason in enumerate(reasons, start=1))
+        super().__init__(
+            f"failed to concretize {input_specs} for the following reasons:\n{numbered}"
+        )
+        #: Input specs of the solve
+        self.specs = list(specs)
+        #: Each error in the best model, as a message, in the order they are reported
+        self.reasons = list(reasons)
 
 
 class InternalConcretizerError(spack.error.UnsatisfiableSpecError):

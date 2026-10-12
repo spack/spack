@@ -2946,7 +2946,7 @@ class EnvironmentConcretizer:
             # "Enhance" the error message for multiple root specs, suggest a less strict
             # form of concretization.
             if len(self.env.user_specs_by(group=group)) > 1:
-                e.message += ". "
+                e.message += "\n"
                 if to_keep:
                     e.message += (
                         "Couldn't concretize without changing the existing environment. "

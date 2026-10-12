@@ -80,6 +80,8 @@ class ConcretizationPhase(enum.Enum):
     SOLVE = "solve"
     #: Building concrete specs from the best model, or from a cached result
     BUILD = "build"
+    #: Searching for the causes of the errors in the best model, to report them
+    EXPLAIN = "explain"
 
 
 class ConcretizerUI:
@@ -334,6 +336,7 @@ PHASE_LABELS = {
     ConcretizationPhase.GROUND: "grounding",
     ConcretizationPhase.SOLVE: "solving",
     ConcretizationPhase.BUILD: "building",
+    ConcretizationPhase.EXPLAIN: "explaining",
 }
 
 #: Width of the phase column of the rows, so that the specs of all rows start in the same column
@@ -525,6 +528,11 @@ class TerminalUI(HeadlessUI):
         task: Optional[int] = None,
         spec: Optional[Spec] = None,
     ) -> None:
+        # Off a terminal, nothing else is printed while the causes of a failure are searched
+        if phase is ConcretizationPhase.EXPLAIN and not self.live:
+            tty.msg("Analyzing the cause of the failure, this may take a moment...")
+            sys.stdout.flush()
+
         # Single solve with a single line to update
         if task is None:
             self._update_line(self.label, phase)
