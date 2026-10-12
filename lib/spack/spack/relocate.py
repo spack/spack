@@ -36,6 +36,17 @@ def _patchelf() -> Optional[executable.Executable]:
         return spack.bootstrap.ensure_patchelf_in_path_or_raise()
 
 
+def bootstrap_relocate() -> executable.Executable:
+    """Bootstraps and returns an executable reference to the Windows compiler
+    wrappers relocate utility, with the wrapper's run environment attached.
+
+    Bootstrapping relies on the buildcache machinery, which in turn relocates binaries,
+    so this has to import :mod:`spack.bootstrap` lazily, like :func:`_patchelf` does."""
+    import spack.bootstrap as bootstrapper
+
+    return bootstrapper.ensure_msvc_relocate_executable()
+
+
 def _decode_macho_data(bytestring):
     return bytestring.rstrip(b"\x00").decode("ascii")
 

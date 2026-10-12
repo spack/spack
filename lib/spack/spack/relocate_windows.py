@@ -16,6 +16,7 @@ import sys
 from typing import Dict, Iterable, List, Optional
 
 import spack.error
+import spack.relocate
 import spack.spec
 import spack.store
 import spack.user_environment
@@ -44,31 +45,6 @@ def setup_relocate_run(wrapper_spec) -> executable.Executable:
     return relocate_exe
 
 
-def bootstrap_relocate() -> executable.Executable:
-    """Bootstraps and returns an executable reference to the Windows compiler
-    wrappers relocate utility"""
-    import spack.bootstrap as bootstrapper
-
-    with bootstrapper.ensure_bootstrap_configuration():
-        # ensure_msvc_relocate_or_raise() may hand back a bare relocate.exe found
-        # via a PATH search, with no MSVC environment attached (see the early
-        # return in ensure_executables_in_path_or_raise). relocate.exe needs the
-        # vcvars-derived INCLUDE/LIB/PATH to find msvc utils (link.exe, lib.exe,
-        # dumpbin.exe, ...), so don't trust its return value: look up the
-        # concrete compiler-wrapper spec ourselves and always attach its
-        # environment, the same way setup_relocate_run does.
-        bootstrapper.ensure_msvc_relocate_or_raise()
-        wrapper_spec = next(
-            iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None
-        )
-        if not wrapper_spec:
-            raise RuntimeError(
-                "Failed to bootstrap the MSVC compiler wrapper: no compiler-wrapper spec "
-                "found in the bootstrap store after bootstrapping relocate.exe"
-            )
-        return setup_relocate_run(wrapper_spec)
-
-
 def relocate(spec=None) -> executable.Executable:
     """Relocate binaries for 'spec' on Windows."""
     wrapper_spec = None
@@ -79,7 +55,7 @@ def relocate(spec=None) -> executable.Executable:
             pass
     if not wrapper_spec:
         # We need to bootstrap
-        return bootstrap_relocate()
+        return spack.relocate.bootstrap_relocate()
     return setup_relocate_run(wrapper_spec)
 
 

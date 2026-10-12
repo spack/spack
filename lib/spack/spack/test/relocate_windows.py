@@ -603,7 +603,7 @@ def test_relocate_uses_the_wrapper_already_in_the_spec(tmp_path, wrapper_env, mo
     """A package built with the wrapper carries it as a dependency, so there is nothing
     to bootstrap."""
     monkeypatch.setattr(
-        spack.relocate_windows,
+        spack.relocate,
         "bootstrap_relocate",
         _raise_runtime_error,  # must not be reached
     )
@@ -620,7 +620,7 @@ def test_relocate_bootstraps_when_the_spec_cannot_provide_the_wrapper(spec, monk
     be bootstrapped. ``_FakeSpec`` raises KeyError exactly as a Spec without the
     dependency does."""
     sentinel = object()
-    monkeypatch.setattr(spack.relocate_windows, "bootstrap_relocate", lambda: sentinel)
+    monkeypatch.setattr(spack.relocate, "bootstrap_relocate", lambda: sentinel)
 
     assert spack.relocate_windows.relocate(spec) is sentinel
 

@@ -781,13 +781,12 @@ def test_executables_in_store_finds_executable_in_bin(tmp_path, store_containing
     prefix = tmp_path / "pkg"
     _make_executable(prefix / "bin", "cl")
     store_containing(prefix)
-    query_info = {}
 
-    found = spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper", query_info)
+    found = spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper")
 
-    assert found is True
-    assert query_info["command"] is not None
-    assert query_info["spec"].prefix == str(prefix)
+    assert found is not None
+    assert found.command is not None
+    assert found.spec.prefix == str(prefix)
     assert str(prefix / "bin") in os.environ["PATH"]
 
 
@@ -802,12 +801,8 @@ def test_executables_in_store_rejects_spec_without_the_executable(
     prefix = tmp_path / "pkg"
     (prefix / "bin" if make_bin else prefix).mkdir(parents=True)
     store_containing(prefix)
-    query_info = {}
 
-    found = spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper", query_info)
-
-    assert found is False
-    assert query_info == {}
+    assert spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper") is None
 
 
 def test_executables_in_store_falls_through_to_a_spec_that_has_it(tmp_path, store_containing):
@@ -818,12 +813,11 @@ def test_executables_in_store_falls_through_to_a_spec_that_has_it(tmp_path, stor
     provider = tmp_path / "provider"
     _make_executable(provider / "bin", "cl")
     store_containing(empty, provider)
-    query_info = {}
 
-    found = spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper", query_info)
+    found = spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper")
 
-    assert found is True
-    assert query_info["spec"].prefix == str(provider)
+    assert found is not None
+    assert found.spec.prefix == str(provider)
 
 
 def test_executables_in_store_accepts_any_of_the_alternatives(tmp_path, store_containing):
@@ -838,7 +832,7 @@ def test_executables_in_store_accepts_any_of_the_alternatives(tmp_path, store_co
 def test_executables_in_store_without_installed_specs(store_containing):
     store_containing()
 
-    assert spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper") is False
+    assert spack.bootstrap._common._executables_in_store(["cl"], "compiler-wrapper") is None
 
 
 @pytest.mark.only_windows("prefix/bin is a less common idiom on Windows")
@@ -851,12 +845,9 @@ def test_executables_in_store_searches_below_prefix_on_windows(
     tools = prefix / "Library" / "tools"
     _make_executable(tools, "relocate")
     store_containing(prefix)
-    query_info = {}
 
-    found = spack.bootstrap._common._executables_in_store(
-        ["relocate"], "compiler-wrapper", query_info
-    )
+    found = spack.bootstrap._common._executables_in_store(["relocate"], "compiler-wrapper")
 
-    assert found is True
+    assert found is not None
     assert str(tools) in os.environ["PATH"]
-    assert query_info["spec"].prefix == str(prefix)
+    assert found.spec.prefix == str(prefix)
