@@ -66,7 +66,7 @@ import spack.version.git_ref_lookup
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.compilers.libraries import CompilerPropertyDetector, FileCompilerCache
-from spack.concretize_ui import ConcretizerUI, HeadlessUI
+from spack.concretize_ui import ConcretizationPhase, ConcretizerUI, HeadlessUI
 from spack.enums import DeprecationSeverity
 from spack.spec import EMPTY_SPEC
 from spack.util import tty
@@ -746,6 +746,7 @@ class PyclingoDriver:
         # We could just take the cache_key and add it to clingo (since it is the
         # full problem representation), but we load control files separately as it
         # makes clingo give us better, file-aware error messages.
+        ui.on_phase(ConcretizationPhase.GROUND)
         with timer.measure("load"):
             # Add the problem instance
             self.control.add("base", [], problem_str)
@@ -764,6 +765,7 @@ class PyclingoDriver:
         def on_model(model):
             models.append((model.cost, model.symbols(shown=True, terms=True)))
 
+        ui.on_phase(ConcretizationPhase.SOLVE)
         timer.start("solve")
         # A timeout of 0 means no timeout
         time_limit = setup.context.config.get("concretizer:timeout", 0)
@@ -811,6 +813,7 @@ class PyclingoDriver:
         if not result.satisfiable:
             return result
 
+        ui.on_phase(ConcretizationPhase.BUILD)
         timer.start("construct_specs")
         builder = SpecBuilder(
             specs, repo=setup.context.repo, hash_lookup=setup.reusable_and_possible
@@ -924,6 +927,7 @@ class PyclingoDriver:
         if setup.enable_splicing:
             control_files.append("splices.lp")
 
+        ui.on_phase(ConcretizationPhase.SETUP)
         timer.start("setup")
         problem_builder = setup.setup(
             specs, reuse=reuse, packages_with_externals=packages_with_externals
@@ -975,6 +979,8 @@ class PyclingoDriver:
             # write result back to the cache *before* post-processing
             if cache and cache_key is not None:
                 cache.store(cache_key, result, self.control.statistics)
+        else:
+            ui.on_phase(ConcretizationPhase.BUILD)
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
@@ -3613,6 +3619,7 @@ class Solver:
         policy = spack.deprecation.Policy.from_config(
             self.context.config, repo=self.context.repo, warn_on_legacy=True
         )
+        self.ui.on_phase(ConcretizationPhase.REUSE)
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs, policy=policy))
         setup = SpackSolverSetup(
@@ -3661,6 +3668,7 @@ class Solver:
         policy = spack.deprecation.Policy.from_config(
             self.context.config, repo=self.context.repo, warn_on_legacy=True
         )
+        self.ui.on_phase(ConcretizationPhase.REUSE)
         reusable_specs = self._extract_concrete_specs(specs)
         reusable_specs.extend(self.selector.reusable_specs(specs, policy=policy))
         setup = SpackSolverSetup(
