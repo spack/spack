@@ -395,6 +395,15 @@ will have the same effect as
 .. note::
 
     Packages are automatically pushed to a build cache only if they are built from source.
+    Packages that may not be redistributed (see the ``redistribute()`` directive) are only pushed to mirrors marked private:
+
+    .. code-block:: yaml
+
+        mirrors:
+          <name>:
+            url: <url>
+            autopush: true
+            private: true  # also autopush non-redistributable packages
 
 .. index::
    single: buildcache; OCI registries
