@@ -439,9 +439,7 @@ def test_load_regenerates_on_modules_config_change(
     modules_config = {"prefix_inspections": {"bin": ["PATH", "MY_CUSTOM_VAR"]}}
     mutable_config.update_config("modules", modules_config)
 
-    load(shell, "mpileaks")
+    load_output = load(shell, "mpileaks")
 
-    updated_load_cmds = _get_load_cmds_from_script(spec, shell)
-
-    assert any(prepend_cmd in line for line in updated_load_cmds.splitlines())
-    assert os.path.join(spec.prefix, "bin") in updated_load_cmds
+    assert any(prepend_cmd in line for line in load_output.splitlines())
+    assert os.path.join(spec.prefix, "bin") in load_output

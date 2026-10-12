@@ -4,6 +4,7 @@
 import os
 import re
 import sys
+from typing import Optional
 
 import spack.build_environment
 import spack.config
@@ -80,6 +81,25 @@ def project_env_mods(
             mod.value = prefix_regex.sub(lambda m: prefix_to_prefix[m.group(0)], mod.value)
 
 
+def environment_modifications_from_prefix_inspections(
+    specs: list[spack.spec.Spec], topo_ordered: Optional[list] = None
+):
+    """Generate environment modifications based on prefix inspections."""
+    env = environment.EnvironmentModifications()
+
+    if not topo_ordered:
+        topo_ordered = list(
+            traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
+        )
+    # Static environment changes (prefix inspections)
+    for s in reversed(topo_ordered):
+        static = environment.inspect_path(
+            s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
+        )
+        env.extend(static)
+    return env
+
+
 def environment_modifications_for_specs(
     *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True, repo=None
 ):
@@ -96,17 +116,12 @@ def environment_modifications_for_specs(
             been built on a different but compatible OS)
         repo: optional repo to use when spec is not in builtin repo
     """
-    env = environment.EnvironmentModifications()
     topo_ordered = list(
         traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
     )
-
-    # Static environment changes (prefix inspections)
-    for s in reversed(topo_ordered):
-        static = environment.inspect_path(
-            s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
-        )
-        env.extend(static)
+    env = environment_modifications_from_prefix_inspections(
+        specs=list(specs), topo_ordered=topo_ordered
+    )
 
     # Dynamic environment changes (setup_run_environment etc)
     setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)

@@ -974,11 +974,11 @@ class EnvironmentModifications:
                 old = env.get(name, None)
                 if new != old:
                     if new is None:
-                        cmds += f"_spack_env_unset {name}\n"
+                        cmds += shell_cmd.unset(name)
                     else:
                         value = new_env[name]
                         value = shell_cmd.shell_quote(value, shell)
-                        cmds += f"_spack_env_set {name} {value}\n"
+                        cmds += shell_cmd.set(name, value)
             return cmds
         else:
             cache_commands = ""

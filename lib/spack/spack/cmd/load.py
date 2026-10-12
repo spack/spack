@@ -3,12 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import os
 import sys
 
 import spack.cmd
 import spack.cmd.common
 import spack.hooks.generate_spec_scripts as spec_script
 import spack.store
+import spack.user_environment as uenv
 import spack.util.tty as tty
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -107,7 +109,7 @@ def load(parser, args):
         else:
             load_script_path = spec_script.path_to_load_shell_script(spec, shell)
 
-            if spec_script.script_needs_update(load_script_path):
+            if not os.path.exists(load_script_path):
                 spack_dir = spack.store.STORE.layout.metadata_path(spec)
 
                 try:
@@ -125,4 +127,6 @@ def load(parser, args):
 
             commands = spec_script.source_script(load_script_path, shell)
 
+        env_mods = uenv.environment_modifications_from_prefix_inspections([spec])
+        commands += env_mods.shell_modifications(shell)
         sys.stdout.write(commands)

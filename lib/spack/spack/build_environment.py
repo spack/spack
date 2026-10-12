@@ -1070,7 +1070,7 @@ class SetupContext:
         from leaf to root. That way externals cannot contribute search paths that would shadow
         Spack's prefixes, and dependents override variables set by dependencies.
 
-            Args:
+        Args:
             cached_repo: Optional, this repo will be used to obtain package objects for"""
         env = EnvironmentModifications()
         for dspec, flag in chain(self.external, self.nonexternal):

@@ -318,8 +318,7 @@ else
 fi
 _spack_pathadd PATH "${_sp_prefix%/}/bin"
 
-# These are needed for environment modifications in spack load & spack unload
-. $_sp_share_dir/environment-mods.sh
+# These are needed for environment modifications in spack load/unload and spack env activate/deactivate.
 
 # Define the spack shell function with some informative no-ops, so when users
 # run `which spack`, they see the path to spack and where the function is from.
