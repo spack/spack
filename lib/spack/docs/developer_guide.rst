@@ -206,6 +206,8 @@ Other Modules
 :mod:`spack.util`
   In this package are a number of utility modules for the rest of Spack.
 
+The formats of the files these modules write to disk, such as spec files, the Database, and environment lockfiles, are documented in :ref:`file-formats`.
+
 .. _package-repositories:
 
 Package Repositories
