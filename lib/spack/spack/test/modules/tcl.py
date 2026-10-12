@@ -346,13 +346,87 @@ class TestTcl:
         """Tests adding conflicts to the module."""
 
         # This configuration has no error, so check the conflicts directives
-        # are there
+        # are there. The explicit '{name}' conflict is deduplicated with the
+        # one added by default on the module name.
         module_configuration("conflicts")
         content = modulefile_content("mpileaks")
 
         assert len([x for x in content if x.startswith("conflict")]) == 2
         assert len([x for x in content if x == "conflict mpileaks"]) == 1
         assert len([x for x in content if x == "conflict intel/14.0.1"]) == 1
+
+    def test_conflict_on_name(self, modulefile_content, module_configuration):
+        """Tests the reflexive conflict on module name added by default."""
+
+        module_configuration("autoload_direct")
+        content = modulefile_content("mpileaks")
+
+        assert len([x for x in content if x.startswith("conflict")]) == 1
+        assert len([x for x in content if x == "conflict mpileaks"]) == 1
+
+    def test_conflict_on_name_disabled(self, modulefile_content, module_configuration):
+        """Tests disabling the reflexive conflict on module name."""
+
+        module_configuration("conflict_on_name_disabled")
+        content = modulefile_content("mpileaks")
+
+        assert not [x for x in content if x.startswith("conflict")]
+
+    def test_conflict_on_name_disabled_for_spec(self, modulefile_content, module_configuration):
+        """Tests disabling the reflexive conflict on module name for a specific spec."""
+
+        module_configuration("conflict_on_name_disabled_spec")
+
+        content = modulefile_content("mpileaks")
+        assert not [x for x in content if x.startswith("conflict")]
+
+        content = modulefile_content("libdwarf target=x86_64")
+        assert len([x for x in content if x == "conflict libdwarf"]) == 1
+
+    @pytest.mark.parametrize(
+        "projection_config",
+        ["conflict_on_name_flat_projection", "conflict_on_name_version_in_name_projection"],
+    )
+    def test_conflict_on_name_not_derivable(
+        self, modulefile_content, module_configuration, projection_config
+    ):
+        """Tests that no reflexive conflict is added when it cannot be derived from
+        the projection: flat module names, or version held in the name component."""
+
+        module_configuration(projection_config)
+        content = modulefile_content("mpileaks")
+
+        assert not [x for x in content if x.startswith("conflict")]
+
+    def test_conflict_on_name_deep_projection(
+        self, factory, modulefile_content, module_configuration
+    ):
+        """Tests the reflexive conflict added for a projection with directories
+        before the '{name}' token."""
+
+        module_configuration("conflict_on_name_deep_projection")
+        content = modulefile_content("mpileaks")
+
+        writer, _ = factory("mpileaks")
+        expected = writer.spec.format("conflict {architecture}/{name}")
+        assert len([x for x in content if x.startswith("conflict")]) == 1
+        assert len([x for x in content if x == expected]) == 1
+
+    def test_conflict_on_name_hierarchical(
+        self, factory, modulefile_content, module_configuration
+    ):
+        """Tests that the reflexive conflict in hierarchical layout is on the module
+        name only, and does not include the hierarchy prefix of the module path."""
+
+        module_configuration("core_compilers")
+        content = modulefile_content("mpileaks%gcc@10.2.1")
+
+        # The module is placed in a compiler folder of the hierarchy, which must not
+        # appear in the conflict since it is part of the module path, not of the name
+        writer, _ = factory("mpileaks%gcc@10.2.1")
+        assert "gcc/10.2.1" in writer.layout.available_path_parts
+        assert len([x for x in content if x.startswith("conflict")]) == 1
+        assert len([x for x in content if x == "conflict mpileaks"]) == 1
 
     def test_inconsistent_conflict_in_modules_yaml(self, modulefile_content, module_configuration):
         """Tests inconsistent conflict definition in `modules.yaml`."""
