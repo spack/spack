@@ -238,10 +238,21 @@ jobs:
         ./share/spack/qa/validate_last_exit.ps1
         spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
         ./share/spack/qa/validate_last_exit.ps1
-    - name: Bootstrap GnuPG
+    - name: Install GnuPG
+      # The gpg from Git for Windows on PATH can't handle native paths, and Spack ignores it.
+      # Provide the same native build that win-gpg installs, so tests don't need to bootstrap.
       run: |
-        spack gpg list
+        $gpg_url = "https://spack.github.io/windows-bootstrap-resources/resources/gpg/2.4.5/gpg4win_2.4.5.tar.gz"
+        $gpg_sha256 = "249ab87bd06abea3140054089bad44d9a5d1531413590576da609142db2673ec"
+        $archive = Join-Path $env:RUNNER_TEMP "gpg4win.tar.gz"
+        $ProgressPreference = "SilentlyContinue"
+        Invoke-WebRequest -Uri $gpg_url -OutFile $archive
+        if ((Get-FileHash -Algorithm SHA256 $archive).Hash -ne $gpg_sha256) { throw "GnuPG archive checksum mismatch" }
+        & "$env:SystemRoot\System32\tar.exe" -xzf $archive -C $env:RUNNER_TEMP
+        $gpg_bin = Join-Path $env:RUNNER_TEMP "gpg\bin"
+        & (Join-Path $gpg_bin "gpg.exe") --version
         ./share/spack/qa/validate_last_exit.ps1
+        Add-Content -Path $env:GITHUB_PATH -Value $gpg_bin
     - name: Unit Test
       env:
         COVERAGE_FILE: coverage/.coverage-windows
