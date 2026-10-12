@@ -36,3 +36,5 @@ class TclModulefileWriter(BaseModuleFileWriter):
     modulerc_header = ["#%Module4.7"]
 
     hide_cmd_format = "module-hide --soft --hidden-loaded %s"
+
+    default_version_cmd_format = "module-version %s default"
