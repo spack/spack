@@ -5,6 +5,7 @@ import json
 import os
 import pathlib
 import shutil
+import urllib.request
 from typing import NamedTuple
 
 import pytest
@@ -15,6 +16,7 @@ import spack.binary_distribution
 import spack.cmd
 import spack.cmd.ci
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.main
 import spack.paths
@@ -143,6 +145,29 @@ def ci_generate_test(
     return _func
 
 
+@pytest.fixture()
+def mock_server(monkeypatch):
+    """Returns a function that makes network clients answer the URLs starting with ``prefix``
+    with ``respond``, and open every other URL as usual."""
+    real_urlopen = spack.util.web.NetworkClient.urlopen
+
+    def _mock_server(prefix, respond):
+        def _urlopen_property(client):
+            real = real_urlopen.fget(client)
+
+            def _urlopen(fullurl, data=None, timeout=None):
+                url = fullurl.full_url if isinstance(fullurl, urllib.request.Request) else fullurl
+                if url.startswith(prefix):
+                    return respond(fullurl, data, timeout)
+                return real(fullurl, data, timeout)
+
+            return _urlopen
+
+        monkeypatch.setattr(spack.util.web.NetworkClient, "urlopen", property(_urlopen_property))
+
+    return _mock_server
+
+
 @pytest.mark.parametrize("with_view", (False, True, "append", "force", "invalid_view_mode"))
 def test_ci_generate_with_env(
     ci_generate_test, tmp_path: pathlib.Path, mock_binary_index, with_view
@@ -262,7 +287,7 @@ spack:
 
 
 def test_ci_generate_with_cdash_token(
-    ci_generate_test, tmp_path: pathlib.Path, mock_binary_index, monkeypatch
+    ci_generate_test, tmp_path: pathlib.Path, mock_binary_index, monkeypatch, mock_server
 ):
     """Make sure we it doesn't break if we configure cdash"""
     monkeypatch.setenv("SPACK_CDASH_AUTH_TOKEN", "notreallyatokenbutshouldnotmatter")
@@ -291,7 +316,7 @@ spack:
     def _urlopen(*args, **kwargs):
         return MockHTTPResponse.with_json(200, "OK", headers={}, body={})
 
-    monkeypatch.setattr(ci.common, "_urlopen", _urlopen)
+    mock_server((tmp_path / "cdash").as_uri(), _urlopen)
 
     spack_yaml, original_file, output = ci_generate_test(spack_yaml_content)
     yaml_contents = syaml.load(original_file.read_text())
@@ -914,7 +939,10 @@ spack:
             # Validate resulting buildcache (database) index
             layout_version = spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
             mirror_metadata = spack.binary_distribution.MirrorMetadata(mirror_url, layout_version)
-            index_fetcher = spack.binary_distribution.DefaultIndexHandler(mirror_metadata, None)
+            client = spack.util.web.NetworkClient.from_config(spack.config.CONFIG)
+            index_fetcher = spack.binary_distribution.DefaultIndexHandler(
+                mirror_metadata, None, urlopen=client.urlopen
+            )
             result = index_fetcher.conditional_fetch()
             spack.vendor.jsonschema.validate(json.loads(result.data), db_idx_schema)
 
@@ -1405,7 +1433,7 @@ spack:
         env.concretize()
         env.write()
 
-    def fake_download_and_extract_artifacts(url, work_dir, merge_commit_test=True):
+    def fake_download_and_extract_artifacts(url, work_dir, *, urlopen, merge_commit_test=True):
         with working_dir(tmp_path), ev.Environment(".") as env:
             if not os.path.exists(repro_dir):
                 repro_dir.mkdir()
@@ -1496,7 +1524,9 @@ spack:
     monkeypatch.setattr(
         ci,
         "download_and_extract_artifacts",
-        lambda url, wd: fake_download_and_extract_artifacts(url, wd, False),
+        lambda url, wd, *, urlopen: fake_download_and_extract_artifacts(
+            url, wd, urlopen=urlopen, merge_commit_test=False
+        ),
     )
 
     # Cleanup between  tests
@@ -1742,14 +1772,14 @@ def test_ci_dynamic_mapping_empty(
     mutable_mock_env_path,
     install_mockery,
     mock_packages,
-    monkeypatch,
     ci_base_environment,
+    mock_server,
 ):
     # The test will always return an empty dictionary
     def _urlopen(*args, **kwargs):
         return MockHTTPResponse.with_json(200, "OK", headers={}, body={})
 
-    monkeypatch.setattr(ci.common, "_urlopen", _urlopen)
+    mock_server("https://fake.spack.io/mapper", _urlopen)
 
     _ = dynamic_mapping_setup(tmp_path)
     with working_dir(str(tmp_path)):
@@ -1767,8 +1797,8 @@ def test_ci_dynamic_mapping_full(
     mutable_mock_env_path,
     install_mockery,
     mock_packages,
-    monkeypatch,
     ci_base_environment,
+    mock_server,
 ):
     def _urlopen(*args, **kwargs):
         return MockHTTPResponse.with_json(
@@ -1778,7 +1808,7 @@ def test_ci_dynamic_mapping_full(
             body={"variables": {"MY_VAR": "hello"}, "ignored_field": 0, "unallowed_field": 0},
         )
 
-    monkeypatch.setattr(ci.common, "_urlopen", _urlopen)
+    mock_server("https://fake.spack.io/mapper", _urlopen)
 
     label = dynamic_mapping_setup(tmp_path)
     with working_dir(str(tmp_path)):
@@ -2030,7 +2060,7 @@ spack:
 @pytest.fixture
 def fetch_url_exists(monkeypatch):
     """Force URLs to always be valid without attempting to fetch."""
-    monkeypatch.setattr(spack.util.web, "url_exists", lambda url: True)
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url, *, client: True)
 
 
 @pytest.fixture

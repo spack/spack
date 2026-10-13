@@ -9,16 +9,22 @@ import urllib.parse
 import urllib.request
 import urllib.response
 from io import BufferedReader, BytesIO, IOBase
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from spack.vendor.typing_extensions import Literal
 
-import spack.config
 import spack.error
 from spack.util import tty
 
-#: Map (mirror name, method) tuples to s3 client instances.
-s3_client_cache: Dict[Tuple[Optional[str], str], Any] = dict()
+if TYPE_CHECKING:
+    import spack.mirrors.mirror
+    import spack.util.web
+
+#: Session and client arguments an s3 client is created with, each sorted by name.
+S3ClientKey = Tuple[Tuple[Tuple[str, Any], ...], Tuple[Tuple[str, Any], ...]]
+
+#: Map the arguments an s3 client is created with to the client.
+s3_client_cache: Dict[S3ClientKey, Any] = {}
 
 #: Allowed HTTP request methods
 S3OpenMethod = Literal["get", "head", "GET", "HEAD"]
@@ -27,7 +33,12 @@ S3OpenMethod = Literal["get", "head", "GET", "HEAD"]
 MirrorDirection = Literal["push", "fetch"]
 
 
-def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch"):
+def _get_s3_session(
+    url,
+    method: Literal[S3OpenMethod, MirrorDirection] = "fetch",
+    *,
+    client: "spack.util.web.NetworkClient",
+):
     # import boto and friends as late as possible.  We don't want to require boto as a
     # dependency unless the user actually wants to access S3 mirrors.
     from boto3 import Session
@@ -40,11 +51,6 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
     if method not in ("fetch", "push"):
         method = "fetch" if method in ("get", "head") else "push"
 
-    # Circular dependency
-    from spack.mirrors.mirror import MirrorCollection
-
-    global s3_client_cache
-
     # Parse the URL if not already done.
     if not isinstance(url, urllib.parse.ParseResult):
         url = urllib.parse.urlparse(url)
@@ -54,43 +60,33 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
         return mirror.fetch_url if method == "fetch" else mirror.push_url
 
     # Get all configured mirrors that could match.
-    all_mirrors = MirrorCollection()
-    mirrors = [
-        (name, mirror)
-        for name, mirror in all_mirrors.items()
-        if url_str.startswith(get_mirror_url(mirror))
-    ]
+    mirrors = [mirror for mirror in client.mirrors if url_str.startswith(get_mirror_url(mirror))]
 
-    name: Optional[str] = None
-    mirror: Any = {}
-    if mirrors:
-        # In case we have more than one mirror, we pick the longest matching url.
-        # The heuristic being that it's more specific, and you can have different
-        # credentials for a sub-bucket (if that is a thing).
-        name, mirror = max(
-            mirrors, key=lambda name_and_mirror: len(get_mirror_url(name_and_mirror[1]))
-        )
+    # In case we have more than one mirror, we pick the longest matching url.
+    # The heuristic being that it's more specific, and you can have different
+    # credentials for a sub-bucket (if that is a thing).
+    mirror = max(mirrors, key=lambda m: len(get_mirror_url(m))) if mirrors else None
 
-    key = (name, method)
+    s3_connection, s3_client_args = get_mirror_s3_connection_info(
+        mirror, method, verify_ssl=client.verify_ssl
+    )
+    key = (tuple(sorted(s3_connection.items())), tuple(sorted(s3_client_args.items())))
 
     # Did we already create a client for this? Then return it.
     if key in s3_client_cache:
         return s3_client_cache[key], url
-
-    # Otherwise, create it.
-    s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, method)
 
     session = Session(**s3_connection)
     # if no access credentials provided above, then access anonymously
     if not session.get_credentials():
         s3_client_args["config"] = Config(signature_version=UNSIGNED)
 
-    client = session.client("s3", **s3_client_args)
-    client.ClientError = ClientError
+    s3_client = session.client("s3", **s3_client_args)
+    s3_client.ClientError = ClientError
 
     # Cache the client.
-    s3_client_cache[key] = client
-    return client, url
+    s3_client_cache[key] = s3_client
+    return s3_client, url
 
 
 def _parse_s3_endpoint_url(endpoint_url):
@@ -100,16 +96,16 @@ def _parse_s3_endpoint_url(endpoint_url):
     return endpoint_url
 
 
-def get_mirror_s3_connection_info(mirror, method):
+def get_mirror_s3_connection_info(
+    mirror: Optional["spack.mirrors.mirror.Mirror"], method, *, verify_ssl: bool
+):
     """Create s3 config for session/client from a Mirror instance (or just set defaults
     when no mirror is given.)"""
-    from spack.mirrors.mirror import Mirror
-
     s3_connection = {}
-    s3_client_args = {"use_ssl": spack.config.CONFIG.get("config:verify_ssl")}
+    s3_client_args: Dict[str, Any] = {"use_ssl": verify_ssl}
 
     # access token
-    if isinstance(mirror, Mirror):
+    if mirror is not None:
         credentials = mirror.get_credentials(method)
         if credentials:
             if "access_token" in credentials:
@@ -162,8 +158,8 @@ class WrapStream(BufferedReader):
         return getattr(self.raw, key)
 
 
-def _s3_open(url, method: S3OpenMethod = "GET"):
-    s3, parsed = _get_s3_session(url, method=method)
+def _s3_open(url, method: S3OpenMethod = "GET", *, client: "spack.util.web.NetworkClient"):
+    s3, parsed = _get_s3_session(url, method=method, client=client)
 
     bucket = parsed.netloc
     key = parsed.path
@@ -198,8 +194,8 @@ def s3_command(method: MirrorDirection):
 
     def _s3_decorate_command(command):
         @functools.wraps(command)
-        def _s3_command_wrapped(url, *args, **kwargs):
-            s3, url = _get_s3_session(url, method=method)
+        def _s3_command_wrapped(url, *args, client: "spack.util.web.NetworkClient", **kwargs):
+            s3, url = _get_s3_session(url, method=method, client=client)
             try:
                 return command(s3, url, *args, **kwargs)
             except s3.ClientError as e:
@@ -211,9 +207,12 @@ def s3_command(method: MirrorDirection):
 
 
 class UrllibS3Handler(urllib.request.BaseHandler):
+    def __init__(self, client: "spack.util.web.NetworkClient") -> None:
+        self.client = client
+
     def s3_open(self, req):
         orig_url = req.get_full_url()
-        url, headers, stream = _s3_open(orig_url, method=req.get_method())
+        url, headers, stream = _s3_open(orig_url, method=req.get_method(), client=self.client)
         return urllib.response.addinfourl(stream, headers, url)
 
 

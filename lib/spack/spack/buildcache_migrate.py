@@ -78,6 +78,7 @@ def _migrate_spec(
     s: spack.spec.Spec, mirror_url: str, tmpdir: str, unsigned: bool = False, signing_key: str = ""
 ) -> MigrateSpecResult:
     """Parallelizable function to migrate a single spec"""
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     print_spec = f"{s.name}/{s.dag_hash()[:7]}"
 
     # Check if the spec file exists in the new location and exit early if so
@@ -105,7 +106,7 @@ def _migrate_spec(
 
     for meta_url in v2_metadata_urls:
         try:
-            spec_contents = web_util.read_text(meta_url)
+            spec_contents = web_util.read_text(meta_url, client=client)
             v2_spec_url = meta_url
             break
         except (web_util.SpackWebError, OSError):
@@ -210,7 +211,7 @@ def _migrate_spec(
     tty.debug(f"Pushing {local_tarfile_path} to {v3_archive_url}")
 
     try:
-        web_util.push_to_url(local_tarfile_path, v3_archive_url, keep_original=True)
+        web_util.push_to_url(local_tarfile_path, v3_archive_url, keep_original=True, client=client)
     except Exception:
         return MigrateSpecResult(False, f"Failed to push archive for {print_spec}")
 
@@ -218,7 +219,7 @@ def _migrate_spec(
     tty.debug(f"Pushing {spec_json_path} to {v3_spec_url}")
 
     try:
-        web_util.push_to_url(spec_json_path, v3_spec_url, keep_original=True)
+        web_util.push_to_url(spec_json_path, v3_spec_url, keep_original=True, client=client)
     except Exception:
         return MigrateSpecResult(False, f"Failed to push spec metadata for {print_spec}")
 
@@ -244,7 +245,7 @@ def _migrate_spec(
 
     # Push the manifest
     try:
-        web_util.push_to_url(manifest_path, v3_manifest_url, keep_original=True)
+        web_util.push_to_url(manifest_path, v3_manifest_url, keep_original=True, client=client)
     except Exception:
         return MigrateSpecResult(False, f"Failed to push manifest for {print_spec}")
 
@@ -261,6 +262,7 @@ def migrate(
     will attempt to verify signatures and re-sign specs, and will fail if not
     able to do so.  If delete_existing is True, spack will delete the original
     contents of the mirror once the migration is complete."""
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     signing_key = ""
     if not unsigned:
         try:
@@ -286,7 +288,7 @@ def migrate(
     contents = None
 
     try:
-        contents = web_util.read_text(index_url)
+        contents = web_util.read_text(index_url, client=client)
     except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 
@@ -355,6 +357,6 @@ def migrate(
         if delete_existing:
             delete_prefix = url_util.join(mirror_url, "build_cache")
             tty.msg(f"Recursively deleting {delete_prefix}")
-            web_util.remove_url(delete_prefix, recursive=True)
+            web_util.remove_url(delete_prefix, recursive=True, client=client)
 
     tty.msg("Migration complete")

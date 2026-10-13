@@ -226,7 +226,9 @@ def test_download_tarball_reports_signature_verification_failure(
             pass
 
     monkeypatch.setattr(
-        spack.mirrors.mirror, "MirrorCollection", lambda binary=True: {"test": MockMirror()}
+        spack.mirrors.mirror.MirrorCollection,
+        "from_config",
+        lambda config, binary=True: {"test": MockMirror()},
     )
     monkeypatch.setattr(
         spack.binary_distribution,
@@ -474,7 +476,7 @@ def test_use_bin_index_with_view(
 
 
 def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
-    def list_url(url, recursive=False):
+    def list_url(url, recursive=False, *, client):
         if "fails-listing" in url:
             raise Exception("Couldn't list the directory")
         return ["first.pub", "second.pub"]
@@ -497,7 +499,7 @@ def test_generate_key_index_failure(monkeypatch, tmp_path: pathlib.Path):
 
 
 def test_generate_package_index_failure(monkeypatch, tmp_path: pathlib.Path, capfd):
-    def mock_list_url(url, recursive=False):
+    def mock_list_url(url, recursive=False, *, client):
         raise OSError("Some HTTP error")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)
@@ -533,7 +535,7 @@ def test_generate_package_index_push_failure(monkeypatch, tmp_path: pathlib.Path
 
 
 def test_generate_indices_exception(monkeypatch, tmp_path: pathlib.Path, capfd):
-    def mock_list_url(url, recursive=False):
+    def mock_list_url(url, recursive=False, *, client):
         raise OSError("Test Exception handling")
 
     monkeypatch.setattr(web_util, "list_url", mock_list_url)

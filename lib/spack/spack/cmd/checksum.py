@@ -141,11 +141,12 @@ def checksum(parser, args):
     # here we check whether the crawled and computed URLs disagree, and if so, prioritize the
     # former if that URL exists (just sending a HEAD request that is).
     url_changed_for_version = set()
+    client = web_util.NetworkClient.from_config(spack.config.CONFIG)
     for version, url in url_dict.items():
         possible_urls = pkg.all_urls_for_version(version)
         if url not in possible_urls:
             for possible_url in possible_urls:
-                if web_util.url_exists(possible_url):
+                if web_util.url_exists(possible_url, client=client):
                     url_dict[version] = possible_url
                     break
             else:

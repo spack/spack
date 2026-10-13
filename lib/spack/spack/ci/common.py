@@ -38,9 +38,6 @@ from spack.util.lang import memoized
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 
-# this exists purely for testing purposes
-_urlopen = web_util.urlopen
-
 
 def copy_gzipped(glob_or_path: str, dest: str) -> None:
     """Copy all of the files in the source glob/path to the destination.
@@ -169,7 +166,9 @@ class CDashHandler:
     Class for managing CDash data and processing.
     """
 
-    def __init__(self, ci_cdash):
+    def __init__(self, ci_cdash, *, urlopen: web_util.OpenType):
+        self._urlopen = urlopen
+
         # start with the gitlab ci configuration
         self.url = ci_cdash.get("url")
         self.build_group = ci_cdash.get("build-group")
@@ -266,7 +265,7 @@ class CDashHandler:
         group_id = None
 
         try:
-            with _urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+            with self._urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
                 response_text = response.read()
         except OSError as e:
             tty.warn(f"Failed to create CDash buildgroup: {e}")
@@ -299,7 +298,7 @@ class CDashHandler:
             buildstamp=self.build_stamp,
             track=None,
         )
-        reporter = CDash(configuration=configuration)
+        reporter = CDash(configuration=configuration, urlopen=self._urlopen)
         reporter.test_skipped_report(report_dir, spec, reason)
 
 
@@ -478,13 +477,18 @@ class SpackCIConfig:
     used by the CI generator(s).
     """
 
-    def __init__(self, ci_config):
+    def __init__(self, ci_config, *, urlopen: web_util.OpenType):
         """Given the information from the ci section of the config
         and the staged jobs, set up meta data needed for generating Spack
         CI IR.
+
+        Args:
+            ci_config: the ci section of the configuration
+            urlopen: function to query the dynamic mapping endpoints with
         """
 
         self.ci_config = ci_config
+        self._urlopen = urlopen
         self.named_jobs = ["any", "build", "copy", "cleanup", "noop", "reindex", "signing"]
 
         self.ir = {
@@ -592,7 +596,9 @@ class SpackCIConfig:
             {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
         ]
 
-        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection.from_config(
+            cfg.CONFIG, binary=True
+        )
         buildcache_destination = pipeline_mirrors["buildcache-destination"]
         update_index_extra_args = []
         if buildcache_destination.push_view:
@@ -732,7 +738,7 @@ class SpackCIConfig:
                         endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
                     )
                     try:
-                        with _urlopen(request) as response:
+                        with self._urlopen(request) as response:
                             config = json.load(response)
                     except Exception as e:
                         # For now just ignore any errors from dynamic mapping and continue

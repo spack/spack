@@ -235,7 +235,7 @@ def create_mirror_from_package_object(
 
 def require_mirror_name(mirror_name):
     """Find a mirror by name and raise if it does not exist"""
-    mirror = MirrorCollection().get(mirror_name)
+    mirror = MirrorCollection.from_config(spack.config.CONFIG).get(mirror_name)
     if not mirror:
         raise ValueError(f'no mirror named "{mirror_name}"')
     return mirror

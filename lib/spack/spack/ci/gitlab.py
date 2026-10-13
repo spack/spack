@@ -341,7 +341,9 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
             }
         )
 
-        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection.from_config(
+            spack.config.CONFIG, binary=True
+        )
         if "buildcache-source" not in pipeline_mirrors:
             raise SpackCIError("Copy-only pipelines require a mirror named 'buildcache-source'")
 
