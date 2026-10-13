@@ -12,6 +12,7 @@ if sys.platform == "win32":
 import fcntl
 import os
 import pathlib
+import pty
 import selectors
 import stat
 
@@ -20,6 +21,7 @@ from spack.installer.posix import (
     FifoMakeflags,
     PipeMakeflags,
     PosixJobServer,
+    PosixTerminalState,
     create_jobserver_fifo,
     get_jobserver_config,
     open_existing_jobserver_fifo,
@@ -522,3 +524,15 @@ class TestApplyMakeflags:
                 os.close(w)
         finally:
             js.close()
+
+
+def test_teardown_input_after_terminal_hangup(monkeypatch):
+    """Tests that the terminal state is torn down without error when the terminal is gone."""
+    controller, terminal = pty.openpty()
+    with os.fdopen(terminal) as stdin:
+        monkeypatch.setattr(sys, "stdin", stdin)
+        state = PosixTerminalState(selectors.DefaultSelector())
+        monkeypatch.setattr(state, "_should_enter_foreground", lambda: False)
+        state.setup()
+        os.close(controller)
+        state.teardown_input()
