@@ -369,19 +369,35 @@ def windows_executable_extensions() -> List[str]:
     return [ext.lower() for ext in pathext.split(";") if ext.strip()]
 
 
+def _win_is_exe(path: str) -> bool:
+    """Whether ``path`` is a file the current process can launch: the counterpart of the
+    ``os.access(path, os.X_OK)`` check on POSIX, which does not consult ACLs on Windows.
+
+    Launching a program (or having ``cmd.exe`` run a batch script) needs both read and execute
+    access, so the file must be openable with both."""
+    from spack.util.win_acl import FileAccessRights, has_file_access
+
+    # TODO: determine read/execute access from the file's ACL instead of by opening it, once
+    # spack.util.win_acl can evaluate the current user's effective access more robustly.
+    return os.path.isfile(path) and has_file_access(
+        path, FileAccessRights.FILE_READ_DATA | FileAccessRights.FILE_EXECUTE
+    )
+
+
 def _win_resolve_exe(path: str) -> Optional[str]:
     """Windows implementation of :func:`resolve_exe`."""
     extensions = windows_executable_extensions()
     # Windows determines whether a file is executable from its extension, not from its
     # permissions, so a path that already names a file with an executable extension is done.
-    if os.path.splitext(path)[1].lower() in extensions and os.path.isfile(path):
+    if os.path.splitext(path)[1].lower() in extensions and _win_is_exe(path):
         return path
     # Otherwise the extension may be missing entirely ("clang" for "clang.exe") or the name may
     # end in something that only looks like one ("clang-19.1" for "clang-19.1.exe"), so append
-    # each executable extension in turn, as the shell and CreateProcess do.
+    # each executable extension in turn, as the shell and CreateProcess do. A candidate we cannot
+    # launch (e.g. one we lack read access to) does not hide the ones after it.
     for extension in extensions:
         candidate = path + extension
-        if os.path.isfile(candidate):
+        if _win_is_exe(candidate):
             return candidate
     return None
 
@@ -444,11 +460,8 @@ def which_string(
         for directory in search_paths:
             # On Windows the executable extension is usually omitted from the name we search
             # for, so resolve_exe appends the extensions in PATHEXT to find the file.
-            try:
-                exe = resolve_exe(directory / Path(search_item))
-            except OSError:
-                continue
-            if exe is not None:
+            exe = resolve_exe(directory / Path(search_item))
+            if exe:
                 return exe
 
     if required:
