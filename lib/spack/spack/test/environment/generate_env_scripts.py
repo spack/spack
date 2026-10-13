@@ -315,7 +315,7 @@ def test_custom_env_vars_in_activation_script(
 
     spack_yaml_path = os.path.join(test_env.path, "spack.yaml")
 
-    with open(spack_yaml_path, "r") as f:
+    with open(spack_yaml_path, "r", encoding="utf-8") as f:
         yaml_content = syaml.load(f)
 
     yaml_content["spack"]["env_vars"] = {}
@@ -323,7 +323,7 @@ def test_custom_env_vars_in_activation_script(
     yaml_content["spack"]["env_vars"]["set"]["MY_SETTING"] = "on"
     yaml_content["spack"]["env_vars"]["set"]["MY_OTHER_VAR"] = "test_value"
 
-    with open(spack_yaml_path, "w") as f:
+    with open(spack_yaml_path, "w", encoding="utf-8") as f:
         syaml.dump(yaml_content, f, default_flow_style=False)
 
     env("activate", f"--{shell}", env_name)
