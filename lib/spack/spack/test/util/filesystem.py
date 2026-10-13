@@ -4,6 +4,7 @@
 
 """Tests for ``util/filesystem.py``"""
 
+import errno
 import filecmp
 import os
 import pathlib
@@ -1461,3 +1462,74 @@ def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
         assert dst.read_text() == "updated"
     finally:
         os.umask(old_umask)
+
+
+@pytest.mark.not_on_windows("symlinks and modes are not fully supported on Windows")
+def test_copy_atomically_replaces_the_destination(tmp_path: pathlib.Path):
+    """Tests that the destination is replaced by a copy with the mode of the source, and that a
+    symlink at the destination is replaced rather than written through.
+    """
+    src = tmp_path / "src.txt"
+    src.write_text("new")
+    os.chmod(src, 0o604)
+
+    outside = tmp_path / "outside.txt"
+    outside.write_text("untouched")
+    dst = tmp_path / "dst.txt"
+
+    os.symlink(str(outside), str(dst))
+
+    fs.copy_atomically(str(src), str(dst))
+
+    assert not os.path.islink(dst)
+    assert dst.read_text() == "new"
+    assert stat.S_IMODE(os.stat(dst).st_mode) == 0o604
+    assert outside.read_text() == "untouched"
+    assert sorted(os.listdir(tmp_path)) == ["dst.txt", "outside.txt", "src.txt"]
+
+
+def test_copy_atomically_leaves_the_destination_alone_on_failure(tmp_path: pathlib.Path):
+    """A copy that fails after the temporary is created leaves neither a partial destination
+    nor the temporary behind.
+    """
+    dst = tmp_path / "dst.txt"
+    dst.write_text("old")
+
+    with pytest.raises(FileNotFoundError):
+        fs.copy_atomically(str(tmp_path / "does-not-exist.txt"), str(dst))
+
+    assert dst.read_text() == "old"
+    assert os.listdir(tmp_path) == ["dst.txt"]
+
+
+@pytest.mark.parametrize("cross_device", [False, True])
+def test_move_atomically(cross_device, tmp_path: pathlib.Path, monkeypatch):
+    """Tests the move within a filesystem, where the source file itself is renamed into place,
+    and across filesystems, which a real ``rename`` reports as EXDEV.
+    """
+    if cross_device:
+        real_rename = fs.rename
+
+        def rename_across_directories(src, dst):
+            if os.path.dirname(src) != os.path.dirname(dst):
+                raise OSError(errno.EXDEV, "cross-device link")
+            return real_rename(src, dst)
+
+        monkeypatch.setattr(fs, "rename", rename_across_directories)
+
+    src_dir = tmp_path / "one"
+    dst_dir = tmp_path / "two"
+    src_dir.mkdir()
+    dst_dir.mkdir()
+    src = src_dir / "src.txt"
+    src.write_text("new")
+    src_inode = os.stat(src).st_ino
+    dst = dst_dir / "dst.txt"
+    dst.write_text("old")
+
+    fs.move_atomically(str(src), str(dst))
+
+    assert dst.read_text() == "new"
+    assert (os.stat(dst).st_ino == src_inode) is not cross_device
+    assert os.listdir(src_dir) == []
+    assert os.listdir(dst_dir) == ["dst.txt"]

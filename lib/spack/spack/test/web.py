@@ -962,3 +962,21 @@ def test_url_exists_no_raise(monkeypatch, exception):
 
     monkeypatch.setattr(spack.util.web, "_url_exists_urllib", _raising)
     assert not spack.util.web.url_exists("https://not.real.io")
+
+
+@pytest.mark.parametrize("keep_original", [True, False])
+def test_push_to_url_file(keep_original, tmp_path: pathlib.Path):
+    """Tests that pushing to a file:// URL replaces an existing entry with a new file."""
+    src = tmp_path / "data.txt"
+    src.write_text("hello")
+    dst = tmp_path / "mirror" / "sub" / "data.txt"
+    dst.parent.mkdir(parents=True)
+    dst.write_text("stale")
+    stale_inode = os.stat(dst).st_ino
+
+    spack.util.web.push_to_url(str(src), url_util.path_to_file_url(str(dst)), keep_original)
+
+    assert dst.read_text() == "hello"
+    assert os.stat(dst).st_ino != stale_inode
+    assert src.exists() is keep_original
+    assert os.listdir(dst.parent) == ["data.txt"]
