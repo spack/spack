@@ -2011,6 +2011,8 @@ If you need something more sophisticated, you can nest a ``patch()`` directive i
 
 Note that there are two optional ``when`` conditions here -- one on the ``patch`` directive and the other on ``depends_on``.
 The condition in the ``patch`` directive applies to ``binutils`` (the package being patched), while the condition in ``depends_on`` applies to ``special-tool``.
+The patch is applied to whichever package satisfies the dependency, from any repository.
+To patch only one repository's package, qualify the dependency with its namespace, for example ``depends_on("builtin.binutils", patches=...)``.
 See `patch directive <patching_>`_ for details on all the arguments the ``patch`` directive can take.
 
 Finally, if you need *multiple* patches on a dependency, you can provide a list for ``patches``, e.g.:

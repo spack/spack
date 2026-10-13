@@ -378,6 +378,8 @@ class PatchCache:
                     <patch json>
                 namespace2.package2:
                     <patch json>
+                [namespace.]dependency: # patches from depends_on(..., patches=...), as written
+                    <patch json>
                 ... etc. ...
     """
 
@@ -443,8 +445,9 @@ class PatchCache:
                 f"Couldn't find patch for package {pkg.fullname} with sha256: {sha256}"
             )
 
-        # Find patches for this class or any class it inherits from
-        for fullname in pkg.fullnames:
+        # Find patches for this class or any class it inherits from, then patches on a
+        # dependency written without a namespace (see _index_patches)
+        for fullname in (*pkg.fullnames, pkg.name):
             patch_dict = sha_index.get(fullname)
             if patch_dict:
                 break
@@ -462,7 +465,7 @@ class PatchCache:
                 )
             try:
                 owner_pkg_cls = self.repository.get_pkg_class(owner)
-                current_index = PatchCache._index_patches(owner_pkg_cls, self.repository)
+                current_index = PatchCache._index_patches(owner_pkg_cls)
             except Exception as e:
                 raise spack.error.PatchLookupError(
                     f"Could not validate patch cache for {pkg.fullname}: {e}"
@@ -507,7 +510,7 @@ class PatchCache:
         # update the index with per-package patch indexes
         for pkg_fullname in pkgs_fullname:
             pkg_cls = self.repository.get_pkg_class(pkg_fullname)
-            partial_index = self._index_patches(pkg_cls, self.repository)
+            partial_index = self._index_patches(pkg_cls)
             for sha256, package_to_patch in partial_index.items():
                 p2p = self.index.setdefault(sha256, {})
                 p2p.update(package_to_patch)
@@ -523,14 +526,11 @@ class PatchCache:
             p2p.update(package_to_patch)
 
     @staticmethod
-    def _index_patches(
-        pkg_class: Type["spack.package_base.PackageBase"], repository: "spack.repo.RepoPath"
-    ) -> Dict[Any, Any]:
+    def _index_patches(pkg_class: Type["spack.package_base.PackageBase"]) -> Dict[Any, Any]:
         """Patch index for a specific patch.
 
         Args:
             pkg_class: package object to get patches for
-            repository: repository containing the package
 
         Returns:
             The patch index for that package.
@@ -553,9 +553,11 @@ class PatchCache:
                     continue
                 for patch_list in dependency.patches.values():
                     for patch in patch_list:
-                        dspec_cls = repository.get_pkg_class(dependency.spec.name)
                         patch_dict = patch.to_dict()
                         patch_dict.pop("sha256")  # save some space
-                        index[patch.sha256] = {dspec_cls.fullname: patch_dict}
+                        # Key by the dependency as written: an explicit namespace is kept,
+                        # otherwise the bare name, since this per-repo index cannot know
+                        # which repository will provide the dependency.
+                        index[patch.sha256] = {dependency.spec.fullname: patch_dict}
 
         return index

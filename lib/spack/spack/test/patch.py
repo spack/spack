@@ -589,3 +589,81 @@ def test_patch_lookup_for_shadowed_package(mock_packages, config, repo_builder):
         # raises SpecError if the lookup uses the bare name: the shadowing
         # class's patch index has no such sha256
         assert {p.sha256 for p in spec.patches} == {foo_sha256, baz_sha256}
+
+
+@pytest.mark.regression("51505")
+def test_patch_dependency_from_another_repo(mock_packages, config, repo_builder):
+    """A package can patch a dependency that only exists in another repository."""
+    sha256 = "b" * 64
+    package_py = pathlib.Path(repo_builder.root, "packages", "patch_foreign_dep", "package.py")
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(
+        "from spack_repo.builtin_mock.build_systems.generic import Package\n"
+        "from spack.package import *\n\n"
+        "class PatchForeignDep(Package):\n"
+        '    url = "http://www.example.com/patch-foreign-dep-1.0.tar.gz"\n'
+        '    version("1.0", md5="0123456789abcdef0123456789abcdef")\n'
+        '    depends_on("libelf", patches=patch("http://example.com/x.patch",'
+        f' sha256="{sha256}"))\n'
+    )
+
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        libelf = spack.concretize.concretize_one("patch-foreign-dep")["libelf"]
+        assert libelf.namespace == "builtin_mock"
+        assert [p.sha256 for p in libelf.patches] == [sha256]
+
+
+@pytest.mark.regression("51505")
+def test_patched_dependency_shadowed_by_another_repo(mock_packages, config, repo_builder):
+    """A dependency patch still resolves when a higher-precedence repo provides the dependency."""
+    repo_builder.add_package("libelf")
+
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        libelf = spack.concretize.concretize_one("patch-a-dependency")["libelf"]
+        assert libelf.namespace == repo_builder.namespace
+        assert len(libelf.patches) == 1
+
+
+def _write_namespaced_dependency_patcher(repo_builder, sha256):
+    """Add a package that patches builtin_mock.libelf explicitly, and a shadowing libelf."""
+    repo_builder.add_package("libelf")
+    package_py = pathlib.Path(repo_builder.root, "packages", "patch_ns_dep", "package.py")
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(
+        "from spack_repo.builtin_mock.build_systems.generic import Package\n"
+        "from spack.package import *\n\n"
+        "class PatchNsDep(Package):\n"
+        '    url = "http://www.example.com/patch-ns-dep-1.0.tar.gz"\n'
+        '    version("1.0", md5="0123456789abcdef0123456789abcdef")\n'
+        '    depends_on("builtin_mock.libelf", patches=patch("http://example.com/y.patch",'
+        f' sha256="{sha256}"))\n'
+    )
+
+
+@pytest.mark.regression("51505")
+def test_patch_explicitly_namespaced_dependency(mock_packages, config, repo_builder):
+    """A patch on an explicitly namespaced dependency applies despite a shadowing package."""
+    sha256 = "c" * 64
+    _write_namespaced_dependency_patcher(repo_builder, sha256)
+
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        libelf = spack.concretize.concretize_one("patch-ns-dep")["libelf"]
+        assert libelf.namespace == "builtin_mock"
+        assert [p.sha256 for p in libelf.patches] == [sha256]
+
+
+def test_namespaced_dependency_patch_is_not_found_for_other_namespace(
+    mock_packages, config, repo_builder
+):
+    """The patch index keeps an explicit namespace: the patch does not resolve for a
+    same-named package from another repository."""
+    sha256 = "d" * 64
+    _write_namespaced_dependency_patcher(repo_builder, sha256)
+
+    with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
+        index = repos.get_patch_index()
+        builtin_libelf = repos.get_pkg_class("builtin_mock.libelf")
+        shadowing_libelf = repos.get_pkg_class(f"{repo_builder.namespace}.libelf")
+        assert index.patch_for_package(sha256, builtin_libelf).sha256 == sha256
+        with pytest.raises(spack.error.PatchLookupError):
+            index.patch_for_package(sha256, shadowing_libelf)
