@@ -144,11 +144,13 @@ def test_windows_resolve_exe_searches_pathext(tmp_path: pathlib.Path, monkeypatc
     # so is a path ending in something that only looks like an extension
     assert ex.resolve_exe(str(tmp_path / "clang-19.1")) == str(tmp_path / "clang-19.1.exe")
 
-    # files Windows does not consider executable, and files that don't exist, are not
+    # files that exist but have no extension in PATHEXT are not executables
     assert ex.resolve_exe(str(tmp_path / "notes.txt")) is None
-    assert ex.resolve_exe(str(tmp_path / "notes")) is None
     assert ex.resolve_exe(str(tmp_path / "extensionless")) is None
-    assert ex.resolve_exe(str(tmp_path / "does-not-exist")) is None
+
+    # nor are files that don't exist, with or without an extension in PATHEXT
+    assert ex.resolve_exe(str(tmp_path / "missing.exe")) is None
+    assert ex.resolve_exe(str(tmp_path / "missing")) is None
 
     # extensions outside of PATHEXT are not executable
     (tmp_path / "script.cmd").touch()
@@ -171,14 +173,52 @@ def test_which_searches_pathext(tmp_path: pathlib.Path, monkeypatch):
     assert script and script.path == str(tmp_path / "script.bat")
     assert bat_script and bat_script.path == str(tmp_path / "script.bat")
 
-    # PATHEXT determines which extension wins when several are present
+    # PATHEXT determines which extension wins when several are present...
     prog = ex.which("prog")
     assert prog and prog.path == str(tmp_path / "prog.com")
 
-    # files Windows does not consider executable are not found
-    assert ex.which("notes") is None
+    # ...unless the extension is given explicitly
+    prog_exe = ex.which("prog.exe")
+    assert prog_exe and prog_exe.path == str(tmp_path / "prog.exe")
+
+    # files that exist but have no extension in PATHEXT are not found
     assert ex.which("notes.txt") is None
     assert ex.which("extensionless") is None
+
+    # nor are files that don't exist, with or without an extension in PATHEXT
+    assert ex.which("missing.exe") is None
+    assert ex.which("missing") is None
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_windows_resolve_exe_requires_access(tmp_path: pathlib.Path, monkeypatch):
+    """A candidate the current user cannot read (and so cannot launch) is skipped, without
+    hiding the candidates after it."""
+    from spack.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        FileAccessRights,
+        SecurityDescriptor,
+    )
+
+    monkeypatch.setenv("PATHEXT", ".BAT;.EXE")
+    for name in ("script.bat", "script.exe"):
+        (tmp_path / name).touch()
+
+    unreadable = str(tmp_path / "script.bat")
+    sd = SecurityDescriptor.from_file(unreadable)
+    sd.add_ace(
+        AccessControlEntry(
+            AceType.SDDL_ACCESS_DENIED,
+            rights=FileAccessRights.FILE_READ_DATA,
+            sid=SecurityDescriptor.get_sid_for_user(),
+        ),
+        index=0,
+    )
+    sd.apply(unreadable)
+
+    assert ex.resolve_exe(str(tmp_path / "script")) == str(tmp_path / "script.exe")
+    assert ex.resolve_exe(unreadable) is None
 
 
 @pytest.fixture
