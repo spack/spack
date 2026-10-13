@@ -57,7 +57,13 @@ from spack.error import InstallError, NoURLError, PackageError
 from spack.filesystem_view import YamlFilesystemView
 from spack.resource import Resource
 from spack.util import tty
-from spack.util.filesystem import AlreadyExistsError, find_all_shared_libraries, islink, symlink
+from spack.util.filesystem import (
+    AlreadyExistsError,
+    find_all_shared_libraries,
+    is_symlink_fallback,
+    islink,
+    symlink,
+)
 from spack.util.lang import ClassProperty, classproperty, dedupe, memoized
 from spack.util.package_hash import package_hash
 from spack.util.string import comma_and, quote
@@ -2474,7 +2480,9 @@ class WindowsSimulatedRPath:
         def report_already_linked():
             # We have either already symlinked or we are encountering a naming clash
             # either way, we don't want to overwrite existing libraries
-            already_linked = islink(str(dest_file))
+            already_linked = islink(str(dest_file)) or is_symlink_fallback(
+                str(path), str(dest_file)
+            )
             tty.debug(
                 "Linking library %s to %s failed, " % (str(path), str(dest_file))
                 + "already linked."

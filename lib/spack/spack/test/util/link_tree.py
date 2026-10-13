@@ -11,6 +11,7 @@ import pytest
 import spack.util.filesystem
 from spack.test.conftest import FsTree
 from spack.util.filesystem import (
+    is_symlink_fallback,
     islink,
     mkdirp,
     readlink,
@@ -40,8 +41,8 @@ def check_file_link(filename: str, expected_target: str):
         assert islink(filename)
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
     else:
-        # Without symlink privileges, file links on Windows are hard links, which are not links
-        assert os.path.samefile(filename, expected_target)
+        # Without symlink privileges, file links on Windows are hard links to the source
+        assert is_symlink_fallback(os.path.abspath(expected_target), filename)
 
 
 @pytest.mark.parametrize("run_as_root", [True, False] if sys.platform == "win32" else [False])

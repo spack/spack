@@ -3041,7 +3041,8 @@ def _windows_islink(path: str) -> bool:
     Windows-only methods will return false for other operating systems.
 
     For Windows: spack considers symlinks and junctions to be links. Hard links are not, since
-    there is no way to tell which of the paths sharing a file is the link.
+    there is no way to tell which of the paths sharing a file is the link. When the expected
+    source is known, use ``is_symlink_fallback`` to recognize them.
 
     Args:
         path (str): path to check if it is a link.
@@ -3050,6 +3051,25 @@ def _windows_islink(path: str) -> bool:
          bool - whether the path is any kind link or not.
     """
     return os.path.islink(path) or _windows_is_junction(path)
+
+
+def _windows_is_symlink_fallback(src: str, dst: str) -> bool:
+    """Returns True if ``dst`` is the junction or hard link that ``symlink(src, dst)`` creates
+    when the user cannot create symbolic links. As with ``symlink``, a relative ``src`` is
+    relative to the directory containing ``dst``.
+
+    A hard link does not record which path is the link, so this requires knowing the expected
+    source: a hard link to it is then known to be the link."""
+    source = os.path.join(os.path.dirname(dst), src)
+    if os.path.islink(dst) or not os.path.exists(dst) or not os.path.exists(source):
+        return False
+    is_fallback = _windows_is_junction(dst) or _windows_is_hardlink(dst)
+    return is_fallback and os.path.samefile(source, dst)
+
+
+def _is_symlink_fallback(src: str, dst: str) -> bool:
+    """``symlink`` only falls back to junctions and hard links on Windows"""
+    return False
 
 
 def _windows_is_hardlink(path: str) -> bool:
@@ -3173,6 +3193,8 @@ def _windows_create_junction(source: str, link: str):
 
     import subprocess
 
+    # Junction targets must be absolute; don't rely on mklink resolving relative paths
+    source = os.path.abspath(source)
     cmd = ["cmd", "/C", "mklink", "/J", link, source]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
@@ -3258,11 +3280,13 @@ if sys.platform == "win32":
     symlink = _windows_symlink
     readlink = _windows_readlink
     islink = _windows_islink
+    is_symlink_fallback = _windows_is_symlink_fallback
     rename = _win_rename
 else:
     symlink = os.symlink
     readlink = os.readlink
     islink = os.path.islink
+    is_symlink_fallback = _is_symlink_fallback
     rename = os.rename
 
 

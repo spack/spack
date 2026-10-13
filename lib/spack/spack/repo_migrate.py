@@ -198,15 +198,10 @@ def migrate_v1_to_v2(
         else:
             tgt = os.path.realpath(old_path)
 
-        # no-op if the same, error if different. Compare files rather than link targets, since on
-        # Windows without symlink privileges the link may be a hard link.
+        # no-op if the same, error if different
         if os.path.lexists(new_path):
-            resolved_tgt = os.path.join(os.path.dirname(new_path), tgt)
-            if not (
-                os.path.exists(new_path)
-                and os.path.exists(resolved_tgt)
-                and os.path.samefile(new_path, resolved_tgt)
-            ):
+            is_same_link = fs.islink(new_path) and fs.readlink(new_path) == tgt
+            if not (is_same_link or fs.is_symlink_fallback(tgt, new_path)):
                 print(
                     f"Cannot upgrade from v1 to v2, because the file '{new_path}' already exists",
                     file=err,
