@@ -278,7 +278,7 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
 
 
 def _exec_git_commands(git_exe, cmds, debug, dest=None):
-    # background maintenance races with copying the clone
+    # no detached maintenance: the repository must not change after git returns
     dest_args = ["-c", "maintenance.auto=false"]
     if dest:
         dest_args.extend(["-C", dest])
