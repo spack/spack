@@ -297,7 +297,7 @@ def has_extension(path_or_url: str, ext: str) -> bool:
     """Returns true if the extension in input is present in path, false otherwise."""
     prefix, _ = split_url_on_sourceforge_suffix(path_or_url)
     if not ext.startswith(r"\."):
-        ext = rf"\.{ext}$"
+        ext = rf"\.{re.escape(ext)}$"
 
     if re.search(ext, prefix):
         return True
@@ -322,7 +322,7 @@ def extension_from_path(path_or_url: Optional[str]) -> Optional[str]:
 
 def remove_extension(path_or_url: str, *, extension: str) -> str:
     """Returns the input with the extension removed"""
-    suffix = rf"\.{extension}$"
+    suffix = rf"\.{re.escape(extension)}$"
     return re.sub(suffix, "", path_or_url)
 
 
