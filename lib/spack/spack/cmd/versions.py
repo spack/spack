@@ -39,7 +39,7 @@ def versions(parser, args):
     pkg_cls = spack.repo.PATH.get_pkg_class(spec.name)
     pkg = pkg_cls(spec)
 
-    safe_versions = pkg.versions
+    safe_versions = pkg.all_versions()
 
     if not (args.remote or args.new):
         if sys.stdout.isatty():

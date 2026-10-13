@@ -5,10 +5,18 @@
 standard library
 """
 
-from typing import List, Optional, Sequence
+from typing import Any, List, Optional, Sequence
 
 
-def comma_list(sequence: Sequence[str], article: str = "") -> str:
+def comma_list(sequence: Sequence[Any], article: str = "") -> str:
+    """Create a comma-separated list out of a sequence of stringifiable objects.
+
+    Arguments:
+        sequence: objects to be stringified
+        article: optionally use an article (e.g., 'and' or 'or' to separate the last two elements).
+            With two elements, only the article is used as a separator. With three or more, use
+            an Oxford comma (as everyone should).
+    """
     if type(sequence) is not list:
         sequence = list(sequence)
 
@@ -27,16 +35,20 @@ def comma_list(sequence: Sequence[str], article: str = "") -> str:
     return out
 
 
-def comma_or(sequence: Sequence[str]) -> str:
-    """Return a string with all the elements of the input joined by comma, but the last
-    one (which is joined by ``"or"``).
+def comma_or(sequence: Sequence[Any]) -> str:
+    """Create a comma-separated list with a final ``"or"`` (foo, bar, or baz).
+
+    Arguments:
+        sequence: objects in the list
     """
     return comma_list(sequence, "or")
 
 
-def comma_and(sequence: List[str]) -> str:
-    """Return a string with all the elements of the input joined by comma, but the last
-    one (which is joined by ``"and"``).
+def comma_and(sequence: Sequence[Any]) -> str:
+    """Create a comma-separated list with a final ``"and"`` (foo, bar, and baz).
+
+    Arguments:
+        sequence: objects in the list
     """
     return comma_list(sequence, "and")
 
@@ -55,8 +67,13 @@ def ordinal(number: int) -> str:
     return f"{number}{suffix}"
 
 
-def quote(sequence: List[str], q: str = "'") -> List[str]:
-    """Quotes each item in the input list with the quote character passed as second argument."""
+def quote(sequence: Sequence[Any], q: str = "'") -> List[str]:
+    """Returns a list of quoted strings made from each item in the input list.
+
+    Arguments:
+        sequence: a sequence of anything that can be turned into a string
+        q: quote character to use
+    """
     return [f"{q}{e}{q}" for e in sequence]
 
 

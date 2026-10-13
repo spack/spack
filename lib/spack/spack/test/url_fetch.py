@@ -171,6 +171,7 @@ def test_fetch(
     config: Configuration,
     mutable_mock_repo,
     monkeypatch,
+    set_version_def,
 ):
     """Fetch an archive and make sure we can checksum it."""
     algo = crypto.hash_fun_for_algo(checksum_type)()
@@ -183,10 +184,8 @@ def test_fetch(
     # monkeypatch to restore it after the test instead of leaking it into later tests.
     s = spack.concretize.concretize_one("url-test")
     s.package.url = mock_archive.url
-    monkeypatch.setitem(
-        s.package.versions,
-        spack.version.Version("test"),
-        {checksum_type: checksum, "url": s.package.url},
+    set_version_def(
+        spack.version.Version("test"), {checksum_type: checksum, "url": s.package.url}, s.package
     )
 
     # Enter the stage directory and check some properties
