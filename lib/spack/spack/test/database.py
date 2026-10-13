@@ -584,6 +584,26 @@ def test_try_write_transaction_does_not_flush_on_exception(mutable_database: Dat
         assert db.query("mpileaks")
 
 
+def test_failed_write_transaction_without_index_is_not_written_later(
+    tmp_path: pathlib.Path, mock_packages, config
+):
+    """Tests that a failed transaction on a database without an index is dropped, instead of
+    being written by the next transaction."""
+    db = Database(str(tmp_path))
+    spec = spack.concretize.concretize_one("pkg-a")
+
+    with pytest.raises(ValueError):
+        with db.write_transaction():
+            db._add(spec, explicit=True, allow_missing=True)
+            raise ValueError("interrupted transaction")
+
+    with db.write_transaction():
+        pass
+
+    with db.read_transaction():
+        assert not db.query()
+
+
 def test_try_read_transaction(mutable_database: Database, monkeypatch):
     db = mutable_database
 
