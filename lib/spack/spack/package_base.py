@@ -1577,7 +1577,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # does not, and os.path.isfile does not resolve it for us (unlike subprocess.Popen), so
         # let resolve_exe fill it in.
         exe_path = spack.util.executable.resolve_exe(path)
-        if exe_path is not None:
+        if exe_path:
             return spack.util.executable.Executable(exe_path)
         raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
 
