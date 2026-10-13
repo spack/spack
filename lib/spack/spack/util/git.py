@@ -278,7 +278,10 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
 
 
 def _exec_git_commands(git_exe, cmds, debug, dest=None):
-    dest_args = ["-C", dest] if dest else []
+    # background maintenance races with copying the clone
+    dest_args = ["-c", "maintenance.auto=false"]
+    if dest:
+        dest_args.extend(["-C", dest])
     error_stream = sys.stdout if debug else os.devnull  # swallow extra output for non-debug
     for cmd in cmds:
         git_exe(*dest_args, *cmd, error=error_stream)
