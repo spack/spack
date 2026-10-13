@@ -1,7 +1,9 @@
 include:
   # user configuration scope
   - name: "user"
-    path_override_env_var: SPACK_USER_CONFIG_PATH
+    path_override_env_var:
+      - SPACK_USER_CONFIG_PATH
+      - $XDG_CONFIG_HOME/spack
     path: "~/.config/spack"
     optional: true
     prefer_modify: true

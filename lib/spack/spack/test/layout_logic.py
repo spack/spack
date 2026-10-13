@@ -223,6 +223,37 @@ def test_migration_copies_user_config(mock_spack_instance, monkeypatch):
     assert new_config.read_text(encoding="utf-8") == "config:\n  build_jobs: 3\n"
 
 
+def test_migration_skips_user_config_when_spack_user_config_path_set(
+    mock_spack_instance, monkeypatch
+):
+    """Migration skips user config if SPACK_USER_CONFIG_PATH is set."""
+    home_dir, base_prefix = mock_spack_instance
+    old_config = pathlib.Path(home_dir) / ".spack"
+    old_config.mkdir()
+    (old_config / "config.yaml").write_text("config:\n  build_jobs: 3\n", encoding="utf-8")
+
+    # Set SPACK_USER_CONFIG_PATH to indicate user has explicit override
+    custom_path = pathlib.Path(home_dir) / "custom_config"
+    custom_path.mkdir()
+    monkeypatch.setenv("SPACK_USER_CONFIG_PATH", str(custom_path))
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    result = spack.config._do_migrate_home()
+
+    # Migration should be skipped
+    assert result["user_config"] is False, "User config migration should be skipped"
+
+    # Default location should not have migrated files
+    default_config = pathlib.Path(home_dir) / ".config" / "spack" / "config.yaml"
+    assert not default_config.exists(), "Config should not be migrated to default location"
+
+    # Custom path should remain empty (no migration)
+    assert not list(custom_path.iterdir()), "Custom config path should remain empty"
+
+    # Old config should still exist (not moved)
+    assert (old_config / "config.yaml").exists(), "Old config should remain untouched"
+
+
 def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
     """Config migration applies the four path-handling scenarios.
 

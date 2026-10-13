@@ -251,6 +251,47 @@ Home directory migration runs at config module load time whenever the above cond
 
 `~/.spack` is retained after migration because older Spack instances may still reference it.
 
+### XDG environment variable support
+
+Home directory migration respects XDG Base Directory environment variables when determining migration targets. This ensures migration is consistent with runtime configuration path resolution.
+
+**User config migration** (`~/.spack` → user config location):
+
+The migration target is determined by the following precedence (checked in order):
+
+1. **`SPACK_USER_CONFIG_PATH`**: If set, migration is **skipped entirely**. This environment variable indicates an explicit user override of the config location, so Spack respects that decision and does not migrate `~/.spack` files. The user's existing configuration at the custom location is used as-is.
+
+2. **`XDG_CONFIG_HOME`**: If set and `SPACK_USER_CONFIG_PATH` is not, config is migrated to `$XDG_CONFIG_HOME/spack`.
+
+3. **Default**: If neither variable is set, config is migrated to `~/.config/spack` (the XDG default for config home).
+
+**Package repositories migration** (`~/.spack/package_repos` → state location):
+
+The migration target is determined by:
+
+1. **`SPACK_STATE_HOME`**: If set, repositories are migrated to `$SPACK_STATE_HOME/package_repos`.
+
+2. **`XDG_STATE_HOME`**: If set and `SPACK_STATE_HOME` is not, repositories are migrated to `$XDG_STATE_HOME/spack/package_repos`.
+
+3. **Default**: If neither variable is set, repositories are migrated to `~/.local/state/spack/package_repos` (the XDG default for state home).
+
+**Runtime path resolution**: At runtime (after config is loaded), Spack's user config path is determined by the `path_override_env_var` setting in `etc/spack/standard_scopes/include.yaml`:
+
+```yaml
+- name: "user"
+  path_override_env_var:
+    - SPACK_USER_CONFIG_PATH
+    - $XDG_CONFIG_HOME/spack
+  path: "~/.config/spack"
+```
+
+Each entry in `path_override_env_var` is tried in order:
+- Simple environment variable names (like `SPACK_USER_CONFIG_PATH`) are checked directly
+- Entries with `$` syntax (like `$XDG_CONFIG_HOME/spack`) are expanded, and used if all variables resolve
+- The first entry that resolves is used; if none resolve, the `path` field is used
+
+This ensures migration targets match runtime config locations: migration uses the same XDG precedence that runtime config will use.
+
 # 4. Updated `spack isolate` Behavior
 
 Isolation controls where newly generated artifacts are created for one Spack instance. It does not relocate old resources, even when old resources are present and migration would otherwise be prompted.

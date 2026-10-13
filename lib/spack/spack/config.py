@@ -1459,9 +1459,32 @@ class IncludePath(OptionalInclude):
 
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
-        if path_override_env_var and path_override_env_var in os.environ:
-            path = os.environ[path_override_env_var]
-        else:
+
+        # Support both string and list for path_override_env_var
+        path_candidates = []
+        if isinstance(path_override_env_var, str):
+            path_candidates = [path_override_env_var] if path_override_env_var else []
+        elif isinstance(path_override_env_var, list):
+            path_candidates = path_override_env_var
+
+        # Try each candidate in order, use first one that resolves
+        path = None
+        for candidate in path_candidates:
+            if "$" in candidate:
+                # Contains variable syntax like $XDG_CONFIG_HOME/spack
+                resolved = os.path.expandvars(candidate)
+                if "$" not in resolved:
+                    # All variables resolved successfully
+                    path = resolved
+                    break
+            else:
+                # Simple env var name like SPACK_USER_CONFIG_PATH
+                if candidate in os.environ:
+                    path = os.environ[candidate]
+                    break
+
+        # Fall back to path field if no candidate resolved
+        if path is None:
             path = entry.get("path", "")
 
         context_prefix = f"({self.name}) " if self.name else ""
@@ -2272,9 +2295,16 @@ def _prepare_gpg_staging(old_path, staging_path, marker_name):
 
 
 def _migrate_user_config() -> bool:
-    """Copy config files from ~/.spack to ~/.config/spack."""
+    """Copy config files from ~/.spack to user config location.
+
+    Respects XDG_CONFIG_HOME but skips migration if SPACK_USER_CONFIG_PATH is set.
+    """
+    # If SPACK_USER_CONFIG_PATH is set, don't migrate - user has explicit override
+    if os.getenv("SPACK_USER_CONFIG_PATH"):
+        return False
+
     old_location = os.path.expanduser("~/.spack")
-    new_location = os.path.expanduser("~/.config/spack")
+    new_location = _migration_config_home()
 
     return _migrate_with_staging(
         old_path=old_location,
@@ -2679,6 +2709,23 @@ def _readline_with_timeout(timeout: float) -> Optional[str]:
 
     ready, _, _ = select.select([sys.stdin], [], [], timeout)
     return sys.stdin.readline() if ready else None
+
+
+def _migration_config_home() -> str:
+    """Compute migration target for config_home with XDG fallback chain.
+
+    Uses (in order of precedence):
+    1. XDG_CONFIG_HOME environment variable (append /spack)
+    2. Default XDG_CONFIG_HOME location: ~/.config/spack
+
+    This does not use config, since migration happens before config is fully loaded.
+    Does not check SPACK_USER_CONFIG_PATH - if that's set, caller should skip migration.
+    """
+    xdg_config = os.getenv("XDG_CONFIG_HOME")
+    if xdg_config:
+        return os.path.join(xdg_config, "spack")
+
+    return os.path.join(os.path.expanduser("~"), ".config", "spack")
 
 
 def _migration_data_home() -> str:
