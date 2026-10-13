@@ -9,7 +9,7 @@ import spack.environment.shell
 import spack.user_environment as uenv
 
 
-def _get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
+def get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
     """Get the commands to activate an environment.
 
     Args:
@@ -29,7 +29,7 @@ def _get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") -
     return cmds
 
 
-def _get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
+def get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
     """Get the commands to deactivate an environment.
 
     Args:
@@ -119,9 +119,9 @@ def _write_env_script(
             yaml_mtime, lockfile_mtime, script_path
         ) or not _script_matches_env(env, script_path):
             if activate:
-                cmds = _get_activate_commands(env, view=view, shell=shell)
+                cmds = get_activate_commands(env, view=view, shell=shell)
             else:
-                cmds = _get_deactivate_commands(env, view=view, shell=shell)
+                cmds = get_deactivate_commands(env, view=view, shell=shell)
             uenv.write_shell_script(script_path, cmds, shell)
 
 

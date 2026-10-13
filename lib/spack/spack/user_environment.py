@@ -162,5 +162,6 @@ def write_shell_script(shell_script_path: str, mods: str, shell: str):
         with fs.write_tmp_and_move(shell_script_path, encoding="utf-8") as f:
             f.write(header)
             f.write(mods)
-    except OSError as e:
+    except Exception as e:
         tty.error(f"Error generating {shell_script_path}: {e}")
+        raise e

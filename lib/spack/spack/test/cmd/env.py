@@ -406,7 +406,6 @@ def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
     assert test_env.views["view1"].root == view1_path
     assert test_env.views["view2"].root == view2_path
 
-    env("activate", f"--{shell}", "--with-view", "view2", "multi_view_test")
     activate_output = env("activate", f"--{shell}", "--with-view", "view2", "multi_view_test")
     activate_content = _get_cmds_from_script(activate_output, shell)
 
@@ -3518,11 +3517,10 @@ def test_stack_view_activate_from_default(
     # Replace the name of the view
     content = content.replace("combinatorial:", "default:")
     with installed_environment(content):
-        activate_content = env("activate", "--sh", "test")
+        activate_output = env("activate", "--sh", "test")
+        activate_content = _get_cmds_from_script(activate_output, "sh")
 
-        activate_content = _get_cmds_from_script(activate_content, "sh")
-
-        assert "PATH" in activate_content
+        assert "PATH" in activate_content, activate_content
         assert str(view_dir / "bin") in activate_content
         assert "_spack_env_set FOOBAR mpileaks" in activate_content
 

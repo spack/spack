@@ -1,10 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Tests for environment script generation."""
-
 import os
 import shutil
+import stat
 import sys
 
 import pytest
@@ -14,12 +13,22 @@ import spack.environment.generate_env_scripts as env_script
 import spack.util.spack_yaml as syaml
 from spack.main import SpackCommand
 
-pytestmark = [pytest.mark.usefixtures("mutable_mock_env_path")]
-
 env = SpackCommand("env")
 
 
-def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_packages):
+def _get_shell_cmd_invocation(shell, cmd, var, value=""):
+    if shell == "--bat":
+        if value:
+            return f'%{cmd}% "{var}" "{value}"'
+        return f'%{cmd}% "{var}"'
+    if value:
+        return f"{cmd} {var} {value}"
+    return f"{cmd} {var}"
+
+
+def test_paths_to_env_scripts(
+    install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
+):
     """Test that activate & deactivate shell scripts are written to the right location."""
     env("create", "test_path_scripts")
     test_env = ev.read("test_path_scripts")
@@ -57,7 +66,7 @@ def test_paths_to_env_scripts(install_mockery, mock_fetch, mock_archive, mock_pa
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_write_env_activate_script(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
 ):
     """Test that write_env_activate_script creates a script."""
     env_name = f"test_write_activate_{shell}"
@@ -71,25 +80,23 @@ def test_write_env_activate_script(
     )
 
     test_env_path = test_env.path
-    cmd_name = "_spack_env_set"
-    var_name = "SPACK_ENV"
-    if shell == "bat":
-        test_env_path = f'"{test_env_path}"'
-        cmd_name = f"%{cmd_name}%"
-        var_name = f'"{var_name}"'
     assert os.path.exists(script_path)
 
     with open(script_path, "r", encoding="utf-8") as f:
         activation_content = f.read()
 
-    assert f"{cmd_name} {var_name} {test_env_path}" in activation_content
+    cmd_name = "_spack_env_set"
+    var_name = "SPACK_ENV"
+    assert (
+        _get_shell_cmd_invocation(shell, cmd_name, var_name, test_env_path) in activation_content
+    )
 
 
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_write_env_deactivate_script(
-    shell, mutable_mock_env_path, install_mockery, mock_fetch, mock_archive, mock_packages
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
 ):
     """Test that write_env_deactivate_script creates a script."""
     env_name = f"test_write_deactivate_{shell}"
@@ -102,27 +109,21 @@ def test_write_env_deactivate_script(
         test_env, shell, script_type="deactivate", view="default"
     )
 
-    # batch "commands" are actually variables
-    cmd_name = "_spack_env_unset"
-    var_name = "SPACK_ENV"
-    if shell == "bat":
-        cmd_name = f"%{cmd_name}%"
-        var_name = f'"{var_name}"'
-
     assert os.path.exists(script_path)
 
-    # Verify content
     with open(script_path, "r", encoding="utf-8") as f:
         deactivation_content = f.read()
 
-    assert f"{cmd_name} {var_name}" in deactivation_content
+    assert (
+        _get_shell_cmd_invocation(shell, "_spack_env_unset", "SPACK_ENV") in deactivation_content
+    )
 
 
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_create_individual_env_scripts(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
 ):
     """Ensure that each environment's activation/deactivation scripts contain only
     their own environment modifications and aren't mixed when multiple environments
@@ -130,20 +131,17 @@ def test_create_individual_env_scripts(
     env_name_1 = f"test_env_1_{shell}"
     env_name_2 = f"test_env_2_{shell}"
 
-    # Create environments individually
     env("create", env_name_1)
     env("create", env_name_2)
 
     env_1 = ev.read(env_name_1)
     env_2 = ev.read(env_name_2)
 
-    # Generate scripts by writing them directly (can't activate both at once)
-    env_script.write_env_activate_script(env_1)
+    env_script.write_env_activate_script(env_1, view="default")
     env_script.write_env_deactivate_script(env_1, view="default")
-    env_script.write_env_activate_script(env_2)
+    env_script.write_env_activate_script(env_2, view="default")
     env_script.write_env_deactivate_script(env_2, view="default")
 
-    # Check that each activation script only references its own environment
     activate_path_1 = env_script.path_to_env_script(
         env_1, shell, script_type="activate", view="default"
     )
@@ -151,36 +149,23 @@ def test_create_individual_env_scripts(
         env_2, shell, script_type="activate", view="default"
     )
 
-    # batch "commands" are actually variables wrapping a
-    # 'call' operation, which in turn invokes another batch script
-    # containing the goto which implements the "command" functionality
-    # as such they need to be dereferenced
     env1_path = env_1.path
     env2_path = env_2.path
-    set_cmd_name = "_spack_env_set"
-    unset_cmd_name = "_spack_env_unset"
-    var_name = "SPACK_ENV"
-    if shell == "bat":
-        var_name = f'"{var_name}"'
-        env1_path = f'"{env1_path}"'
-        env2_path = f'"{env2_path}"'
-        set_cmd_name = f"%{set_cmd_name}%"
-        unset_cmd_name = f"%{unset_cmd_name}%"
+
+    set_var_name = _get_shell_cmd_invocation(shell, "_spack_env_set", "SPACK_ENV")
+    unset_var_name = _get_shell_cmd_invocation(shell, "_spack_env_unset", "SPACK_ENV")
 
     with open(activate_path_1, "r", encoding="utf-8") as f:
         activate_content_1 = f.read()
     with open(activate_path_2, "r", encoding="utf-8") as f:
         activate_content_2 = f.read()
 
-    # Each script should reference its own environment path
-    assert f"{set_cmd_name} {var_name} {env1_path}" in activate_content_1
-    assert f"{set_cmd_name} {var_name} {env2_path}" in activate_content_2
+    assert f"{set_var_name} {env1_path}" in activate_content_1
+    assert f"{set_var_name} {env2_path}" in activate_content_2
 
-    # But not the other environment's path
     assert env_2.path not in activate_content_1
     assert env_1.path not in activate_content_2
 
-    # Check that each deactivation script only references its own environment
     deactivate_path_1 = env_script.path_to_env_script(
         env_1, shell, script_type="deactivate", view="default"
     )
@@ -193,9 +178,8 @@ def test_create_individual_env_scripts(
     with open(deactivate_path_2, "r", encoding="utf-8") as f:
         deactivate_content_2 = f.read()
 
-    # Both should have the deactivation command
-    assert f"{unset_cmd_name} {var_name}" in deactivate_content_1
-    assert f"{unset_cmd_name} {var_name}" in deactivate_content_2
+    assert f"{unset_var_name}" in deactivate_content_1
+    assert f"{unset_var_name}" in deactivate_content_2
 
     # Environment names shouldn't appear in the other's scripts
     assert env_name_2 not in activate_content_1
@@ -208,7 +192,13 @@ def test_create_individual_env_scripts(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_copied_env_uses_correct_path(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages, tmp_path
+    shell,
+    install_mockery,
+    mock_fetch,
+    mock_archive,
+    mock_packages,
+    mutable_mock_env_path,
+    tmp_path,
 ):
     """Test that when an environment is copied and the copy is activated,
     the environment commands use the copied environment's path, not the original."""
@@ -231,15 +221,13 @@ def test_copied_env_uses_correct_path(
     with open(activate_path, "r", encoding="utf-8") as f:
         activate_content = f.read()
 
-    copied_env_path = copied_env.path
     set_cmd_name = "_spack_env_set"
     var_name = "SPACK_ENV"
-    if shell == "bat":
-        copied_env_path = f'"{copied_env_path}"'
-        set_cmd_name = f"%{set_cmd_name}%"
-        var_name = f'"{var_name}"'
 
-    assert f"{set_cmd_name} {var_name} {copied_env_path}" in activate_content
+    assert (
+        _get_shell_cmd_invocation(shell, set_cmd_name, var_name, copied_env.path)
+        in activate_content
+    )
     assert original_env.path not in activate_content
 
     deactivate_path = env_script.path_to_env_script(
@@ -255,7 +243,13 @@ def test_copied_env_uses_correct_path(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_moved_env_uses_correct_path(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages, tmp_path
+    shell,
+    install_mockery,
+    mock_fetch,
+    mock_archive,
+    mock_packages,
+    tmp_path,
+    mutable_mock_env_path,
 ):
     """Test that when an environment is moved and then activated,
     the environment commands use the new moved path, not the original."""
@@ -283,12 +277,11 @@ def test_moved_env_uses_correct_path(
     moved_env_path = moved_env.path
     set_cmd_name = "_spack_env_set"
     var_name = "SPACK_ENV"
-    if shell == "bat":
-        moved_env_path = f'"{moved_env_path}"'
-        set_cmd_name = f"%{set_cmd_name}%"
-        var_name = f'"{var_name}"'
 
-    assert f"{set_cmd_name} {var_name} {moved_env_path}" in activate_content
+    assert (
+        _get_shell_cmd_invocation(shell, set_cmd_name, var_name, moved_env_path)
+        in activate_content
+    )
     assert original_path not in activate_content
 
     deactivate_path = env_script.path_to_env_script(
@@ -304,7 +297,7 @@ def test_moved_env_uses_correct_path(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
 def test_custom_env_vars_in_activation_script(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
 ):
     """Test that custom environment variables defined in spack.yaml env_vars section
     are applied when generating environment activation scripts.
@@ -339,3 +332,48 @@ def test_custom_env_vars_in_activation_script(
 
     assert "MY_SETTING" in activate_content and "on" in activate_content
     assert "MY_OTHER_VAR" in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_readonly_outputs_env_modifications(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
+):
+    """Test that if the .spack-env directory is read-only, when activating an environment
+    spack outputs the environment modifications to stdout instead of writing to a script.
+    """
+
+    env_name = f"test_readonly_{shell}"
+    env("create", env_name)
+    test_env = ev.read(env_name)
+
+    spack_env_dir = os.path.join(test_env.path, ".spack-env")
+
+    # Remove any existing scripts
+    for filename in os.listdir(spack_env_dir):
+        if "_activate" in filename or "_deactivate" in filename:
+            os.remove(os.path.join(spack_env_dir, filename))
+
+    # Make the .spack-env directory read-only
+    original_mode = os.stat(spack_env_dir).st_mode
+
+    try:
+        os.chmod(spack_env_dir, stat.S_IRUSR | stat.S_IXUSR)
+
+        activate_output = env("activate", f"--{shell}", env_name, fail_on_error=False)
+
+        activation_script_path = env_script.path_to_env_script(
+            test_env, shell, script_type="activate", view="default"
+        )
+
+        assert f"Error generating {activation_script_path}" in activate_output
+        assert "Permission denied" in activate_output
+
+        cmd_name = "_spack_env_set"
+        var_name = "SPACK_ENV"
+        assert _get_shell_cmd_invocation(shell, cmd_name, var_name) in activate_output
+
+    finally:
+        # Restore original permissions
+        os.chmod(spack_env_dir, original_mode)
