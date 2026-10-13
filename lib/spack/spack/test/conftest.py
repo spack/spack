@@ -107,7 +107,7 @@ def clear_env_vars(working_env, monkeypatch):
     monkeypatch.delenv("SPACK_SYSTEM_CONFIG_PATH", raising=False)
 
     # Clear XDG and SPACK location overrides
-    for location in ["DATA", "STATE", "CACHE"]:
+    for location in ["CONFIG", "DATA", "STATE", "CACHE"]:
         monkeypatch.delenv(f"XDG_{location}_HOME", raising=False)
         monkeypatch.delenv(f"SPACK_{location}_HOME", raising=False)
 
