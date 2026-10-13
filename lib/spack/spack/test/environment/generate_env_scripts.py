@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
-import stat
 import sys
 
 import pytest
@@ -17,7 +16,7 @@ env = SpackCommand("env")
 
 
 def _get_shell_cmd_invocation(shell, cmd, var, value=""):
-    if shell == "--bat":
+    if shell == "bat":
         if value:
             return f'%{cmd}% "{var}" "{value}"'
         return f'%{cmd}% "{var}"'
@@ -332,48 +331,3 @@ def test_custom_env_vars_in_activation_script(
 
     assert "MY_SETTING" in activate_content and "on" in activate_content
     assert "MY_OTHER_VAR" in activate_content
-
-
-@pytest.mark.parametrize(
-    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
-)
-def test_env_activate_readonly_outputs_env_modifications(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
-):
-    """Test that if the .spack-env directory is read-only, when activating an environment
-    spack outputs the environment modifications to stdout instead of writing to a script.
-    """
-
-    env_name = f"test_readonly_{shell}"
-    env("create", env_name)
-    test_env = ev.read(env_name)
-
-    spack_env_dir = os.path.join(test_env.path, ".spack-env")
-
-    # Remove any existing scripts
-    for filename in os.listdir(spack_env_dir):
-        if "_activate" in filename or "_deactivate" in filename:
-            os.remove(os.path.join(spack_env_dir, filename))
-
-    # Make the .spack-env directory read-only
-    original_mode = os.stat(spack_env_dir).st_mode
-
-    try:
-        os.chmod(spack_env_dir, stat.S_IRUSR | stat.S_IXUSR)
-
-        activate_output = env("activate", f"--{shell}", env_name, fail_on_error=False)
-
-        activation_script_path = env_script.path_to_env_script(
-            test_env, shell, script_type="activate", view="default"
-        )
-
-        assert f"Error generating {activation_script_path}" in activate_output
-        assert "Permission denied" in activate_output
-
-        cmd_name = "_spack_env_set"
-        var_name = "SPACK_ENV"
-        assert _get_shell_cmd_invocation(shell, cmd_name, var_name) in activate_output
-
-    finally:
-        # Restore original permissions
-        os.chmod(spack_env_dir, original_mode)

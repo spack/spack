@@ -114,7 +114,6 @@ def unload(parser, args):
                 except Exception as err:
                     tty.debug(f"Error writing to {unload_script_path}\n{err}")
                     sys.stdout.write(mods)
-                    return 1
 
             commands = spec_script.source_script(unload_script_path, shell)
 

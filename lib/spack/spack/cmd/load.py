@@ -123,7 +123,6 @@ def load(parser, args):
                 except Exception as err:
                     tty.debug(f"Error writing to {load_script_path}\n{err}")
                     sys.stdout.write(mods)
-                    return 1
 
             commands = spec_script.source_script(load_script_path, shell)
 

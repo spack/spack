@@ -423,7 +423,7 @@ def test_load_custom_prefix_inspections(
 def test_load_regenerates_on_modules_config_change(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_config
 ):
-    """Test that spack load regenerates scripts when modules.yaml changes."""
+    """Test that spack load outputs updated environment modifications."""
 
     spec = spack.concretize.concretize_one("mpileaks")
     PackageInstaller([spec.package], fake=True).install()
@@ -443,3 +443,46 @@ def test_load_regenerates_on_modules_config_change(
 
     assert any(prepend_cmd in line for line in load_output.splitlines())
     assert os.path.join(spec.prefix, "bin") in load_output
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_readonly_prefix_outputs_env_modifications(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that if the .spack directory is read-only, when loading a package
+    spack outputs the environment modifications to stdout instead of writing to a script.
+    """
+    import stat
+
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    load_script_path = spec_script.path_to_load_shell_script(spec, shell[2:])
+    spack_dir = os.path.dirname(load_script_path)
+
+    # Remove the cached script
+    os.remove(load_script_path)
+
+    # Make the .spack directory read-only
+    original_mode = os.stat(spack_dir).st_mode
+
+    try:
+        os.chmod(spack_dir, stat.S_IRUSR | stat.S_IXUSR)
+
+        load_output = load(shell, "mpileaks", fail_on_error=False)
+
+        # Verify error messages are present
+        assert f"Error generating {load_script_path}" in load_output
+        assert "Permission denied" in load_output
+
+        # Verify environment modifications are in the output
+        cmd_name = _get_shell_cmd_invocation("_spack_env_prepend", shell)
+
+        assert f"{cmd_name} {uenv.spack_loaded_hashes_var}" in load_output
+        assert os.path.join(spec.prefix, "bin") in load_output
+
+    finally:
+        # Restore original permissions
+        os.chmod(spack_dir, original_mode)

@@ -9,6 +9,7 @@ import json
 import os
 import pathlib
 import shutil
+import stat
 import sys
 from argparse import Namespace
 from typing import Any, Dict, Optional
@@ -459,6 +460,58 @@ def test_env_activate_without_view(
 
     activate_content = _get_cmds_from_script(activate_output, shell)
     assert "SPACK_ENV_VIEW" not in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_env_activate_readonly_outputs_env_modifications(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
+):
+    """Test that if the .spack-env directory is read-only, when activating an environment
+    spack outputs the environment modifications to stdout instead of writing to a script.
+
+    Similar to test_load_readonly_prefix_should_succeed in test/cmd/load.py, this tests
+    the command-line behavior when scripts cannot be cached due to permission issues.
+    """
+
+    env_name = f"test_readonly_{shell[2:]}"
+    env("create", env_name)
+    test_env = ev.read(env_name)
+
+    spack_env_dir = os.path.join(test_env.path, ".spack-env")
+
+    # Remove any existing scripts
+    for filename in os.listdir(spack_env_dir):
+        if "_activate" in filename or "_deactivate" in filename:
+            os.remove(os.path.join(spack_env_dir, filename))
+
+    # Make the .spack-env directory read-only
+    original_mode = os.stat(spack_env_dir).st_mode
+
+    try:
+        os.chmod(spack_env_dir, stat.S_IRUSR | stat.S_IXUSR)
+
+        activate_output = env("activate", shell, env_name, fail_on_error=False)
+
+        activation_script_path = env_script.path_to_env_script(
+            test_env, shell[2:], script_type="activate", view="default"
+        )
+
+        assert f"Error generating {activation_script_path}" in activate_output
+        assert "Permission denied" in activate_output
+
+        cmd_name = "_spack_env_set"
+        var_name = "SPACK_ENV"
+        if shell == "--bat":
+            cmd_name = f"%{cmd_name}%"
+            var_name = f'"{var_name}"'
+
+        assert f"{cmd_name} {var_name}" in activate_output
+
+    finally:
+        # Restore original permissions
+        os.chmod(spack_env_dir, original_mode)
 
 
 def test_env_track_existing_env_fails():
