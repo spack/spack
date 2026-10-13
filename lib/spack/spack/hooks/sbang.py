@@ -98,7 +98,7 @@ def filter_shebang(path):
         # only the arguments are truncated, but note that for PHP we need the full line
         # since we have to append `?>` to it. Since our shebang limit is already very
         # generous, it's unlikely to happen, and it should be fine to ignore.
-        if len(old_shebang_line) == spack_shebang_limit and old_shebang_line[-1] != b"\n":
+        if len(old_shebang_line) == spack_shebang_limit and not old_shebang_line.endswith(b"\n"):
             return False
 
         # This line will be prepended to file
