@@ -90,28 +90,40 @@ def test_reindex_with_deprecated_packages(
     assert new_libelf.ref_count == 1
 
 
-def test_reindex_migrates_db_from_padded_to_unpadded_root(
-    mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path: pathlib.Path, monkeypatch
-):
-    """Test that reindex migrates database from padded root to unpadded root."""
+def _padded_store(tmp_path: pathlib.Path, monkeypatch, *, pre_migration: bool) -> Store:
+    """Create a padded/unpadded root pair and point spack.store.STORE at it.
+
+    If `pre_migration` is True, the DB is placed at the padded root (old layout), as if
+    created before the move to the unpadded root. Otherwise the DB ends up wherever a
+    fresh Store puts it (the unpadded root).
+    """
     unpadded = str(tmp_path / "opt" / "spack")
     padded = spack.util.path.add_padding(unpadded, len(unpadded) + 64)
     assert padded != unpadded
 
     store = Store(root=padded, unpadded_root=unpadded, projections={"all": "{name}/{version}"})
 
-    old_db_path = pathlib.Path(store.root) / spack.database._DB_DIRNAME
-    old_db_path.mkdir(parents=True, exist_ok=True)
-    store.metadata_root = store.root
-    store.db = spack.database.Database(store.root, layout=store.layout)
+    if pre_migration:
+        old_db_path = pathlib.Path(store.root) / spack.database._DB_DIRNAME
+        old_db_path.mkdir(parents=True, exist_ok=True)
+        store.metadata_root = store.root
+        store.db = spack.database.Database(store.root, layout=store.layout)
 
     monkeypatch.setattr(spack.store, "STORE", store)
+    return store
+
+
+def test_reindex_migrates_db_from_padded_to_unpadded_root(
+    mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path: pathlib.Path, monkeypatch
+):
+    """Test that reindex migrates database from padded root to unpadded root."""
+    store = _padded_store(tmp_path, monkeypatch, pre_migration=True)
+    old_db_path = pathlib.Path(store.root) / spack.database._DB_DIRNAME
+    new_db_path = pathlib.Path(store.unpadded_root) / spack.database._DB_DIRNAME
 
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.12")
     all_installed = store.db.query()
-
-    new_db_path = pathlib.Path(store.unpadded_root) / spack.database._DB_DIRNAME
     assert old_db_path.exists()
     assert not new_db_path.exists()
 
@@ -127,23 +139,15 @@ def test_reindex_no_migration_when_already_migrated(
     mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path: pathlib.Path, monkeypatch
 ):
     """Test that reindex doesn't migrate when DB already in new location."""
-    unpadded = str(tmp_path / "opt" / "spack")
-    padded = spack.util.path.add_padding(unpadded, len(unpadded) + 64)
-    assert padded != unpadded
-
-    store = Store(root=padded, unpadded_root=unpadded, projections={"all": "{name}/{version}"})
-
-    monkeypatch.setattr(spack.store, "STORE", store)
+    store = _padded_store(tmp_path, monkeypatch, pre_migration=False)
+    old_db_path = pathlib.Path(store.root) / spack.database._DB_DIRNAME
+    new_db_path = pathlib.Path(store.unpadded_root) / spack.database._DB_DIRNAME
 
     install("--fake", "libelf@0.8.13")
     install("--fake", "libelf@0.8.12")
     all_installed = store.db.query()
-
-    new_db_path = pathlib.Path(store.unpadded_root) / spack.database._DB_DIRNAME
-    old_db_path = pathlib.Path(store.root) / spack.database._DB_DIRNAME
     assert new_db_path.exists()
     assert not old_db_path.exists()
-    assert store.metadata_root == store.unpadded_root
 
     reindex()
 
@@ -151,3 +155,53 @@ def test_reindex_no_migration_when_already_migrated(
     assert not old_db_path.exists()
     assert store.db.query() == all_installed
     assert store.metadata_root == store.unpadded_root
+
+
+def test_reindex_migration_failure_restores_old_db(
+    mock_packages, mock_archive, mock_fetch, install_mockery, tmp_path: pathlib.Path, monkeypatch
+):
+    """Test that a failed migration moves the old database back to the padded root."""
+    store = _padded_store(tmp_path, monkeypatch, pre_migration=True)
+    old_db_path = pathlib.Path(store.root) / spack.database._DB_DIRNAME
+
+    install("--fake", "libelf@0.8.13")
+    all_installed = store.db.query()
+
+    def _fail_reindex(self):
+        raise RuntimeError("reindex failed")
+
+    monkeypatch.setattr(Store, "reindex", _fail_reindex)
+
+    reindex(fail_on_error=False)
+    assert isinstance(reindex.error, RuntimeError)
+    assert str(reindex.error) == "reindex failed"
+
+    old_db_temp = pathlib.Path(str(old_db_path) + ".old")
+    assert old_db_path.exists()
+    assert not old_db_temp.exists()
+    assert (old_db_path / spack.database.INDEX_JSON_FILE).exists()
+
+    restored = Store(
+        root=store.root, unpadded_root=store.unpadded_root, projections=store.projections
+    )
+    assert restored.metadata_root == restored.root
+    assert restored.db.query() == all_installed
+
+
+def test_reindex_without_existing_index(
+    mock_packages, mock_archive, mock_fetch, temporary_store: Store, install_mockery
+):
+    """Test that reindex works and skips the backup when there is no index file yet."""
+    install("--fake", "libelf@0.8.13")
+    all_installed = temporary_store.db.query()
+
+    index_path = temporary_store.db._index_path
+    index_path.unlink()
+
+    output = reindex()
+
+    assert "Created a backup copy" not in output
+    assert "If you need to restore" not in output
+    assert not pathlib.Path(f"{index_path}.bkp").exists()
+    assert index_path.exists()
+    assert temporary_store.db.query() == all_installed
