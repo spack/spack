@@ -143,6 +143,44 @@ def ci_generate_test(
     return _func
 
 
+@pytest.mark.parametrize("output_name", [None, "custom-ci.json"])
+def test_ci_generate_json(
+    tmp_path: pathlib.Path,
+    mutable_mock_env_path,
+    install_mockery,
+    ci_base_environment,
+    mock_binary_index,
+    output_name,
+):
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        f"""
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    buildcache-destination: {tmp_path / "ci-mirror"}
+  ci:
+    target: json
+"""
+    )
+
+    ev.create("test", init_file=spack_yaml, with_view=False)
+    output_file = tmp_path / (output_name or "ci.json")
+
+    args = ["generate", "--prune-dag"]
+    if output_name is not None:
+        args.extend(["--output-file", str(output_file)])
+
+    with working_dir(str(tmp_path)):
+        with ev.read("test"):
+            ci_cmd(*args)
+
+    assert output_file.is_file()
+    with open(output_file, encoding="utf-8") as stream:
+        assert isinstance(json.load(stream), dict)
+
+
 @pytest.mark.parametrize("with_view", (False, True, "append", "force", "invalid_view_mode"))
 def test_ci_generate_with_env(
     ci_generate_test, tmp_path: pathlib.Path, mock_binary_index, with_view
