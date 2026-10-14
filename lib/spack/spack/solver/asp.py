@@ -2507,18 +2507,26 @@ class SpackSolverSetup:
         # Calculate develop specs
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
-        dev_specs: Tuple[spack.spec.Spec, ...] = ()
+        dev_specs_list = []
         env = active_environment()
         if env:
-            dev_specs = tuple(
-                self._assign_git_versions(spack.spec.Spec(info["spec"])).constrained(
-                    'dev_path="%s"'
-                    % spack.config.canonicalize_path(
-                        info["path"], default_wd=env.path, config=self.context.config
+            for name, info in env.dev_specs_from(self.context.config).items():
+                spec = spack.spec.Spec(info["spec"])
+                if not self.context.repo.exists(spec.name):
+                    tty.warn(
+                        f"Package '{spec.name}' listed in 'develop' section of environment "
+                        f"does not exist in any repository."
+                    )
+                    continue
+                dev_specs_list.append(
+                    self._assign_git_versions(spec).constrained(
+                        'dev_path="%s"'
+                        % spack.config.canonicalize_path(
+                            info["path"], default_wd=env.path, config=self.context.config
+                        )
                     )
                 )
-                for name, info in env.dev_specs_from(self.context.config).items()
-            )
+        dev_specs = tuple(dev_specs_list)
 
         specs = tuple(specs)  # ensure compatible types to add
 
