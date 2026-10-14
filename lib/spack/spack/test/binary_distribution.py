@@ -9,6 +9,7 @@ import json
 import os
 import pathlib
 import re
+import stat
 import tarfile
 import urllib.error
 import urllib.request
@@ -1062,19 +1063,11 @@ def test_tarball_common_prefix(dummy_prefix, tmp_path: pathlib.Path):
         with tarfile.open("example.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
 
-        # Open, verify common prefix, and extract it.
+        # Verify common prefix, then extract into prefix2.
         with tarfile.open("example.tar", mode="r") as tar:
-            common_prefix = spack.binary_distribution._ensure_common_prefix(tar)
-            assert common_prefix == expected_prefix
+            assert spack.binary_distribution._ensure_common_prefix(tar) == expected_prefix
 
-            # For consistent behavior across all supported Python versions
-            tar.extraction_filter = lambda member, path: member
-
-            # Extract into prefix2
-            tar.extractall(
-                path="prefix2",
-                members=spack.binary_distribution._tar_strip_component(tar, common_prefix),
-            )
+        spack.binary_distribution.extract_buildcache_tarball("example.tar", "prefix2")
 
         # Verify files are all there at the correct level.
         assert set(os.listdir("prefix2")) == {"bin", "share", ".spack"}
@@ -1134,6 +1127,273 @@ def test_tarfile_with_files_outside_common_prefix(tmp_path: pathlib.Path, dummy_
             ValueError, match="Tarball contains file /etc/config_file outside of prefix"
         ):
             spack.binary_distribution._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))
+
+
+def test_extract_rejects_paths_escaping_prefix(tmp_path: pathlib.Path, dummy_prefix):
+    """Members with .. components must be rejected before anything is written."""
+    with working_dir(tmp_path):
+        with tarfile.open("escape.tar", mode="w") as tar:
+            tar.addfile(tarfile.TarInfo(name="prefix/../escape"), fileobj=io.BytesIO(b"hello"))
+            tar.add(name=dummy_prefix)
+
+        with pytest.raises(ValueError, match="unsafe path prefix/../escape"):
+            spack.binary_distribution.extract_buildcache_tarball("escape.tar", "prefix2")
+
+        assert not os.path.exists("escape")
+
+
+def _evil_tarball_members(tar: tarfile.TarFile, prefix: str = "prefix"):
+    """Add the members every buildcache tarball must contain to pass validation."""
+    for name in (prefix, f"{prefix}/.spack"):
+        dir_info = tarfile.TarInfo(name)
+        dir_info.type = tarfile.DIRTYPE
+        dir_info.mode = 0o755
+        tar.addfile(dir_info)
+    file_info = tarfile.TarInfo(f"{prefix}/.spack/binary_distribution")
+    file_info.size = 2
+    tar.addfile(file_info, io.BytesIO(b"{}"))
+
+
+def _add_evil_member(
+    tar: tarfile.TarFile,
+    name: str,
+    type_: bytes,
+    data: bytes = b"",
+    linkname: str = "",
+    mode: Optional[int] = None,
+):
+    info = tarfile.TarInfo(name)
+    info.type = type_
+    info.mode = (0o755 if type_ == tarfile.DIRTYPE else 0o644) if mode is None else mode
+    if type_ == tarfile.REGTYPE:
+        info.size = len(data)
+        tar.addfile(info, io.BytesIO(data))
+    else:
+        info.linkname = linkname
+        tar.addfile(info)
+
+
+@pytest.mark.not_on_windows("symlinks need elevated privileges on Windows")
+def test_extract_rejects_write_through_symlink(tmp_path: pathlib.Path):
+    """A file member at a symlink path would write through the link: creation fails closed
+    since nothing may exist at the path."""
+    victim = tmp_path / "victim" / "authorized_keys"
+    victim.parent.mkdir()
+    victim.write_text("clean\n")
+
+    with working_dir(tmp_path):
+        with tarfile.open("evil.tar", mode="w") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(tar, "prefix/evil", tarfile.SYMTYPE, linkname=str(victim))
+            _add_evil_member(tar, "prefix/evil", tarfile.REGTYPE, data=b"attacker\n")
+
+        with pytest.raises(FileExistsError):
+            spack.binary_distribution.extract_buildcache_tarball("evil.tar", "prefix2")
+
+        assert victim.read_text() == "clean\n"
+        # The temporary extraction dir should be cleaned up on failure.
+        assert os.listdir("prefix2") == []
+
+
+@pytest.mark.not_on_windows("symlinks need elevated privileges on Windows")
+def test_extract_rejects_hardlink_through_symlink(tmp_path: pathlib.Path):
+    """Hardlinks are resolved relative to the extraction dir; a linkname that traverses a
+    symlink would chmod/utime a file outside the extraction dir."""
+    victim = tmp_path / "victim" / "target"
+    victim.parent.mkdir()
+    victim.write_text("clean\n")
+    os.chmod(victim, 0o644)
+
+    with working_dir(tmp_path):
+        with tarfile.open("evil.tar", mode="w") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(tar, "prefix/esc", tarfile.SYMTYPE, linkname=str(victim.parent))
+            _add_evil_member(tar, "prefix/file", tarfile.REGTYPE, data=b"hello")
+            _add_evil_member(
+                tar, "prefix/hardlink", tarfile.LNKTYPE, linkname="prefix/esc/target", mode=0o7777
+            )
+
+        with pytest.raises(ValueError, match="writes through symlink"):
+            spack.binary_distribution.extract_buildcache_tarball("evil.tar", "prefix2")
+
+        assert stat.S_IMODE(os.stat(victim).st_mode) == 0o644
+        assert os.listdir("prefix2") == []
+
+
+@pytest.mark.not_on_windows("symlinks need elevated privileges on Windows")
+def test_extract_rejects_symlinked_prefix(tmp_path: pathlib.Path):
+    """If the package prefix entry itself were a symlink, the contents of its target would be
+    moved into the destination: a directory member never replaces an existing path."""
+    victim = tmp_path / "victim"
+    victim.mkdir()
+    (victim / "secret.txt").write_text("secret\n")
+
+    with working_dir(tmp_path):
+        with tarfile.open("evil.tar", mode="w") as tar:
+            _add_evil_member(tar, "prefix", tarfile.SYMTYPE, linkname=str(victim))
+            _evil_tarball_members(tar)
+
+        with pytest.raises(FileExistsError):
+            spack.binary_distribution.extract_buildcache_tarball("evil.tar", "prefix2")
+
+        assert os.listdir(victim) == ["secret.txt"]
+        assert os.listdir("prefix2") == []
+
+
+def test_extract_rejects_special_files(tmp_path: pathlib.Path):
+    """Devices and fifos are never part of a Spack-made tarball; don't extract them."""
+    with working_dir(tmp_path):
+        with tarfile.open("evil.tar", mode="w") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(tar, "prefix/pipe", tarfile.FIFOTYPE)
+
+        with pytest.raises(ValueError, match="unsupported member prefix/pipe"):
+            spack.binary_distribution.extract_buildcache_tarball("evil.tar", "prefix2")
+
+
+def test_extract_normalizes_modes(tmp_path: pathlib.Path):
+    """Recorded modes are not restored: executables get 0o755, other files 0o644, and
+    directories 0o755. Privilege bits and restrictive modes are dropped."""
+    with working_dir(tmp_path):
+        with tarfile.open("evil.tar", mode="w") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(
+                tar, "prefix/rootkit", tarfile.REGTYPE, data=b"#!/bin/sh\n", mode=0o4755
+            )
+            _add_evil_member(tar, "prefix/loose", tarfile.DIRTYPE, mode=0o2777)
+            _add_evil_member(tar, "prefix/secret", tarfile.REGTYPE, data=b"key\n", mode=0o600)
+            _add_evil_member(tar, "prefix/exec", tarfile.REGTYPE, data=b"#!/bin/sh\n", mode=0o711)
+
+        spack.binary_distribution.extract_buildcache_tarball("evil.tar", "prefix2")
+
+        assert stat.S_IMODE(os.stat("prefix2/rootkit").st_mode) == 0o755
+        assert stat.S_IMODE(os.stat("prefix2/loose").st_mode) == 0o755
+        assert stat.S_IMODE(os.stat("prefix2/secret").st_mode) == 0o644
+        assert stat.S_IMODE(os.stat("prefix2/exec").st_mode) == 0o755
+        # Timestamps are not restored either (Spack tarballs record mtime 0).
+        assert os.stat("prefix2/rootkit").st_mtime > 0
+
+
+@pytest.mark.not_on_windows("symlinks need elevated privileges on Windows")
+def test_extract_tarball_with_hardlinks_and_symlinks(tmp_path: pathlib.Path):
+    """Legitimate buildcache content -- in-prefix hardlinks, relative and absolute symlinks --
+    round-trips through extraction."""
+    prefix = tmp_path / "prefix"
+    (prefix / "bin").mkdir(parents=True)
+    app = prefix / "bin" / "app"
+    app.write_text("hello world")
+    os.chmod(app, 0o755)
+    os.link(app, prefix / "bin" / "app-hardlink")
+    os.symlink("app", prefix / "bin" / "relative-link")
+    os.symlink(str(app), prefix / "bin" / "absolute-link")
+    (prefix / ".spack").mkdir()
+    (prefix / ".spack" / "binary_distribution").write_text("{}")
+
+    with working_dir(tmp_path):
+        tarball = "example.tar"
+        spack.binary_distribution._do_create_tarball(
+            tarball, prefix=str(prefix), buildinfo={}, prefixes_to_relocate=[]
+        )
+
+        spack.binary_distribution.extract_buildcache_tarball(tarball, "prefix2")
+
+        # Hardlinks are still hardlinks (same inode).
+        extracted = os.stat("prefix2/bin/app")
+        hardlink = os.stat("prefix2/bin/app-hardlink")
+        assert (extracted.st_dev, extracted.st_ino) == (hardlink.st_dev, hardlink.st_ino)
+        # Executables stay executable.
+        assert stat.S_IMODE(extracted.st_mode) == 0o755
+
+        assert readlink("prefix2/bin/relative-link") == "app"
+        assert readlink("prefix2/bin/absolute-link") == str(app)
+
+
+def test_extract_rejects_duplicate_members(tmp_path: pathlib.Path):
+    """Nothing is ever written on top of an existing path."""
+    with working_dir(tmp_path):
+        with tarfile.open("dup.tar", mode="w") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(tar, "prefix/dup", tarfile.REGTYPE, data=b"one")
+            _add_evil_member(tar, "prefix/dup", tarfile.REGTYPE, data=b"two")
+
+        with pytest.raises(FileExistsError):
+            spack.binary_distribution.extract_buildcache_tarball("dup.tar", "prefix2")
+
+
+@pytest.mark.parametrize(
+    "name", ["prefix\\file", "prefix/dir\\..\\escape", "C:/prefix/file", "/prefix/file"]
+)
+def test_extract_rejects_unsafe_names(tmp_path: pathlib.Path, name: str):
+    with working_dir(tmp_path):
+        with tarfile.open("evil.tar", mode="w") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(tar, name, tarfile.REGTYPE, data=b"hello")
+
+        with pytest.raises(ValueError, match="unsafe path"):
+            spack.binary_distribution.extract_buildcache_tarball("evil.tar", "prefix2")
+
+
+def test_extract_rejects_sibling_of_prefix(tmp_path: pathlib.Path):
+    """Names sharing a string prefix with the package prefix are not inside it."""
+    with working_dir(tmp_path):
+        with tarfile.open("evil.tar", mode="w") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(tar, "prefix-evil/file", tarfile.REGTYPE, data=b"hello")
+
+        with pytest.raises(ValueError, match="outside of prefix"):
+            spack.binary_distribution.extract_buildcache_tarball("evil.tar", "prefix2")
+
+
+def test_extract_old_layout_without_parent_dirs(tmp_path: pathlib.Path):
+    """Spack <= 0.21 tarballs list the package prefix dir but not the directories leading up
+    to it."""
+    with working_dir(tmp_path):
+        with tarfile.open("old.tar", mode="w") as tar:
+            _evil_tarball_members(tar, prefix="opt/spack/pkg-1.0-hash")
+            _add_evil_member(tar, "opt/spack/pkg-1.0-hash/bin", tarfile.DIRTYPE)
+            _add_evil_member(
+                tar, "opt/spack/pkg-1.0-hash/bin/app", tarfile.REGTYPE, data=b"app", mode=0o755
+            )
+
+        spack.binary_distribution.extract_buildcache_tarball("old.tar", "prefix2")
+
+        assert set(os.listdir("prefix2")) == {"bin", ".spack"}
+        assert pathlib.Path("prefix2/bin/app").read_bytes() == b"app"
+
+
+@pytest.mark.not_on_windows("umask is a posix concept")
+def test_extract_modes_independent_of_umask(tmp_path: pathlib.Path):
+    with working_dir(tmp_path):
+        with tarfile.open("example.tar", mode="w") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(tar, "prefix/bin", tarfile.DIRTYPE)
+            _add_evil_member(tar, "prefix/bin/app", tarfile.REGTYPE, data=b"app", mode=0o755)
+            _add_evil_member(tar, "prefix/bin/data", tarfile.REGTYPE, data=b"data", mode=0o644)
+
+        umask = os.umask(0o077)
+        try:
+            spack.binary_distribution.extract_buildcache_tarball("example.tar", "prefix2")
+        finally:
+            os.umask(umask)
+
+        assert stat.S_IMODE(os.stat("prefix2/bin").st_mode) == 0o755
+        assert stat.S_IMODE(os.stat("prefix2/bin/app").st_mode) == 0o755
+        assert stat.S_IMODE(os.stat("prefix2/bin/data").st_mode) == 0o644
+
+
+def test_extract_large_file(tmp_path: pathlib.Path):
+    """Files larger than the copy buffer are copied in chunks, byte for byte."""
+    data = os.urandom(3 * 1024 * 1024 + 7)
+    with working_dir(tmp_path):
+        with tarfile.open("large.tar.gz", mode="w:gz") as tar:
+            _evil_tarball_members(tar)
+            _add_evil_member(tar, "prefix/large", tarfile.REGTYPE, data=data)
+            _add_evil_member(tar, "prefix/after", tarfile.REGTYPE, data=b"after")
+
+        spack.binary_distribution.extract_buildcache_tarball("large.tar.gz", "prefix2")
+
+        assert pathlib.Path("prefix2/large").read_bytes() == data
+        assert pathlib.Path("prefix2/after").read_bytes() == b"after"
 
 
 def test_tarfile_of_spec_prefix(tmp_path: pathlib.Path):
