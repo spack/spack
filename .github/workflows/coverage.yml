@@ -3,6 +3,10 @@ name: coverage
 on:
   workflow_call:
 
+# Default permissions for this workflow are restrictive; individual jobs can overwrite if they need additional access.
+permissions:
+  contents: read
+
 jobs:
   # Upload coverage reports to codecov once as a single bundle
   upload:

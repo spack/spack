@@ -14,6 +14,10 @@ env:
   # the plugin expands the variable itself.
   SPACK_TEST_CONCRETIZATION_CACHE: ${RUNNER_TEMP}/spack-concretization-cache
 
+# Default permissions for this workflow are restrictive; individual jobs can overwrite if they need additional access.
+permissions:
+  contents: read
+
 jobs:
   # Run unit tests with different configurations on linux
   ubuntu:
