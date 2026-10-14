@@ -14,6 +14,7 @@ import urllib.response
 from typing import List
 from urllib.error import URLError
 from urllib.request import BaseHandler
+from typing import Optional, Tuple
 
 from spack.util import tty
 
@@ -216,6 +217,9 @@ class GCSBlob:
     def get_blob_headers(self):
         blob = self.bucket.get_blob(self.blob_path)
 
+        if not blob:
+            return {}
+
         headers = {
             "Content-type": blob.content_type,
             "Content-encoding": blob.content_encoding,
@@ -224,6 +228,12 @@ class GCSBlob:
         }
 
         return headers
+
+    def stat(self) -> Optional[Tuple[int, float]]:
+        blob = self.bucket.get_blob(self.blob_path)
+        if not blob:
+            return None
+        return blob.size, blob.time_created.timestamp()
 
 
 def gcs_open(req, *args, **kwargs):
