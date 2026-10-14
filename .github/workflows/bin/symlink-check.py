@@ -11,7 +11,11 @@ import argparse
 import ast
 import os
 import sys
-from typing import Dict, List, Sequence
+from collections import Counter
+from typing import Dict, List, Sequence, Tuple
+
+#: A usage, as its line number and the stripped text of that line
+Usage = Tuple[int, str]
 
 
 def symlink_usages(tree: ast.AST) -> List[int]:
@@ -32,7 +36,7 @@ def symlink_usages(tree: ast.AST) -> List[int]:
     return sorted(lines)
 
 
-def collect(root: str, exclude: Sequence[str]) -> Dict[str, List[int]]:
+def collect(root: str, exclude: Sequence[str]) -> Dict[str, List[Usage]]:
     """Map each Python file under root, relative to root, to its ``os.symlink`` usages."""
     usages = {}
     for dirpath, dirnames, filenames in os.walk(root):
@@ -50,8 +54,29 @@ def collect(root: str, exclude: Sequence[str]) -> Dict[str, List[int]]:
                 continue
             lines = symlink_usages(ast.parse(contents, filename=path))
             if lines:
-                usages[os.path.relpath(path, root).replace(os.sep, "/")] = lines
+                text = contents.decode("utf-8").splitlines()
+                usages[os.path.relpath(path, root).replace(os.sep, "/")] = [
+                    (line, text[line - 1].strip()) for line in lines
+                ]
     return usages
+
+
+def diff(old: List[Usage], new: List[Usage]) -> List[Tuple[str, Usage]]:
+    """Match usages by the text of their line, since line numbers shift with unrelated changes,
+    and mark each as added (+), removed (-) or unchanged (blank)."""
+    unmatched = Counter(text for _, text in old)
+    result = []
+    for usage in new:
+        if unmatched[usage[1]] > 0:
+            unmatched[usage[1]] -= 1
+            result.append((" ", usage))
+        else:
+            result.append(("+", usage))
+    for usage in old:
+        if unmatched[usage[1]] > 0:
+            unmatched[usage[1]] -= 1
+            result.append(("-", usage))
+    return result
 
 
 def main(argv: Sequence[str]) -> int:
@@ -73,17 +98,16 @@ def main(argv: Sequence[str]) -> int:
     old_total = sum(len(lines) for lines in old.values())
     new_total = sum(len(lines) for lines in new.values())
 
-    # Report per file, but only fail on the global count, so moving a usage is not an error
+    # Report per file, but only fail on the global count, so moving a usage is not an error.
+    # Removed usages show their line number in the baseline.
     print(f"os.symlink usages: {old_total} -> {new_total}")
     for rel_path in sorted(old.keys() | new.keys()):
-        old_count = len(old.get(rel_path, []))
-        new_lines = new.get(rel_path, [])
-        marker = "+" if len(new_lines) > old_count else "-" if len(new_lines) < old_count else " "
-        where = ", ".join(f"{rel_path}:{line}" for line in new_lines)
-        print(
-            f"{marker} {rel_path}: {old_count} -> {len(new_lines)}"
-            + (f" ({where})" if where else "")
-        )
+        old_usages, new_usages = old.get(rel_path, []), new.get(rel_path, [])
+        old_count, new_count = len(old_usages), len(new_usages)
+        marker = "+" if new_count > old_count else "-" if new_count < old_count else " "
+        print(f"{marker} {rel_path}: {old_count} -> {new_count}")
+        for change, (line, text) in diff(old_usages, new_usages):
+            print(f"    {change} {rel_path}:{line}: {text}")
 
     if new_total > old_total:
         sys.stdout.flush()
