@@ -72,7 +72,7 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
-from .list import SpecList, SpecListError, SpecListParser
+from .list import SpecList, SpecListError, SpecListParser, spec_string
 
 SpecPair = Tuple[Spec, Spec]
 
@@ -1543,7 +1543,7 @@ class Environment:
                     raise SpackEnvironmentError(f"no such package: {spec.name}")
 
         list_to_change = self.spec_lists[list_name]
-        existing = str(spec) in list_to_change.yaml_list
+        existing = any(spec_string(x) == str(spec) for x in list_to_change.yaml_list)
         if not existing:
             list_to_change.add(spec)
             if list_name == USER_SPECS_KEY:
@@ -2124,8 +2124,14 @@ class Environment:
         self.install_specs(None, **install_args)
 
     def install_specs(self, specs: Optional[List[Spec]] = None, **install_args):
-        roots = self.concrete_roots()
+        roots = self.installable_roots()
         specs = specs if specs is not None else roots
+
+        # Roots marked install: false are still installed when other specs depend on them
+        skipped = {x.hash for x in self.concretized_roots} - {s.dag_hash() for s in roots}
+        for s in traverse.traverse_nodes(specs, key=traverse.by_dag_hash):
+            if s.dag_hash() in skipped and not s.installed:
+                tty.warn(f"{s.name} is marked install: false, but other specs depend on it")
 
         # Extract reporter arguments
         reporter = install_args.pop("reporter", None)
@@ -2224,6 +2230,29 @@ class Environment:
         """Same as concretized_specs, except it returns the list of concrete
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
+
+    def installable_roots(self) -> List[Spec]:
+        """Same as concrete_roots(), but excludes roots marked ``install: false``"""
+        not_installable: Set[Tuple[str, Spec]] = set()
+        for group in self.manifest.groups():
+            speclist = self.user_specs_by(group=group)
+            not_installable.update(
+                (group, spec)
+                for spec, install in zip(speclist.specs, speclist.install_flags)
+                if not install
+            )
+
+        result = [
+            self.specs_by_hash[x.hash]
+            for x in self.concretized_roots
+            if (x.group, x.root) not in not_installable
+        ]
+        result.extend(
+            concrete
+            for included_env in self.included_concretized_roots
+            for _, concrete in self.concretized_specs_from_included_environment(included_env)
+        )
+        return result
 
     def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
         """Generates all the (abstract, concrete) spec pairs for a given group"""
@@ -3373,6 +3402,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     )
                 elif "specs" in item:
                     self._user_specs[group].extend(item["specs"])
+                elif "spec" in item:
+                    self._user_specs[group].append(item)
 
     def _clear_user_specs(self) -> None:
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
@@ -3380,7 +3411,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
         self._explicit = {DEFAULT_USER_SPEC_GROUP: True}
 
-    def _all_matches(self, user_spec: str) -> List[str]:
+    def _all_matches(self, user_spec: str) -> List[Union[str, Dict]]:
         """Maps the input string to the first equivalent user spec in the manifest,
         and returns it.
 
@@ -3391,9 +3422,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ValueError: if no equivalent match is found
         """
         result = []
-        for yaml_spec_str in self.configuration["specs"]:
-            if Spec(yaml_spec_str) == Spec(user_spec):
-                result.append(yaml_spec_str)
+        for item in self.configuration["specs"]:
+            spec_str = spec_string(item)
+            if spec_str is not None and Spec(spec_str) == Spec(user_spec):
+                result.append(item)
 
         if not result:
             raise ValueError(f"cannot find a spec equivalent to {user_spec}")
@@ -3512,7 +3544,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             SpackEnvironmentError: when the user spec cannot be overridden
         """
         try:
-            self.configuration["specs"][idx] = user_spec
+            entry = self.configuration["specs"][idx]
+            if isinstance(entry, dict):
+                entry["spec"] = user_spec
+            else:
+                self.configuration["specs"][idx] = user_spec
             self._clear_user_specs()
             self._init_user_specs()
         except ValueError as e:
@@ -3566,7 +3602,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             try:
-                item[list_name].remove(user_spec)
+                del item[list_name][[spec_string(x) for x in item[list_name]].index(user_spec)]
                 break
             except ValueError:
                 pass
@@ -3592,8 +3628,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
             try:
-                sub_index = item[list_name].index(user_spec)
-                item[list_name][sub_index] = override
+                sub_index = [spec_string(x) for x in item[list_name]].index(user_spec)
+                if isinstance(item[list_name][sub_index], dict):
+                    item[list_name][sub_index]["spec"] = override
+                else:
+                    item[list_name][sub_index] = override
                 break
             except ValueError:
                 pass
