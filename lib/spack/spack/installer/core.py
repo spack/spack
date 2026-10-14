@@ -508,7 +508,8 @@ class PackageInstaller:
             except Exception:
                 pass
 
-            # The prefix locks are still held here; an exception is re-raised after cleanup.
+            # Run before the prefix locks are released, so a concurrent uninstall waits for the
+            # module files to be written. An exception is re-raised after cleanup.
             hook_exc: Optional[BaseException] = None
             if recorded_specs:
                 try:
