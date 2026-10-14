@@ -52,9 +52,9 @@ SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for 
 class ShellCmdString:
     """Formats commands to set or unset an environment variable for a given shell."""
 
-    def __init__(self, shell: str):
+    def __init__(self, shell: str, separator: str = os.pathsep):
         self.shell = shell
-        self.separator = ":" if shell not in ("bat", "pwsh") else ";"
+        self.separator = separator
 
     def shell_quote(self, value: str, shell: Optional[str] = None) -> str:
         """Quote a string for safe use in a shell script.
@@ -464,7 +464,7 @@ class SetEnv(NameValueModifier):
         env[self.name] = self.value
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.set(self.name, str(self.value))
 
 
@@ -477,7 +477,7 @@ class AppendFlagsEnv(NameValueModifier):
             env[self.name] = self.value
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.append(self.name, str(self.value))
 
 
@@ -488,7 +488,7 @@ class UnsetEnv(NameModifier):
         env.pop(self.name, None)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.unset(self.name)
 
 
@@ -501,7 +501,7 @@ class RemoveFlagsEnv(NameValueModifier):
         env[self.name] = self.separator.join(flags)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.remove_value(self.name, str(self.value))
 
 
@@ -523,7 +523,7 @@ class SetPath(NameValueModifier):
         env[self.name] = self.value
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.set(self.name, str(self.value))
 
 
@@ -536,7 +536,7 @@ class AppendPath(NamePathModifier):
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         value = path_to_os_path(os.path.normpath(self.value)).pop()
         return shell_cmd.append(self.name, value)
 
@@ -550,7 +550,7 @@ class PrependPath(NamePathModifier):
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         value = path_to_os_path(os.path.normpath(self.value)).pop()
 
         return shell_cmd.prepend(self.name, value)
@@ -568,7 +568,7 @@ class RemoveFirstPath(NamePathModifier):
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.remove_first(self.name, str(self.value))
 
 
@@ -584,7 +584,7 @@ class RemoveLastPath(NamePathModifier):
         env[self.name] = self.separator.join(directories[::-1])
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.remove_last(self.name, str(self.value))
 
 
@@ -601,7 +601,7 @@ class RemovePath(NamePathModifier):
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         value = path_to_os_path(os.path.normpath(self.value)).pop()
         return shell_cmd.remove_value(self.name, value)
 
@@ -617,7 +617,7 @@ class PruneDuplicatePaths(NameModifier):
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        shell_cmd = ShellCmdString(shell)
+        shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.prune_duplicates(self.name)
 
 

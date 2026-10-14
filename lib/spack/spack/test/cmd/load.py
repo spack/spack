@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+import stat
 import sys
 
 import pytest
@@ -420,7 +421,7 @@ def test_load_custom_prefix_inspections(
 @pytest.mark.parametrize(
     "shell", (["--bat"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
-def test_load_regenerates_on_modules_config_change(
+def test_load_outputs_module_env_modifications(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_config
 ):
     """Test that spack load outputs updated environment modifications."""
@@ -440,9 +441,10 @@ def test_load_regenerates_on_modules_config_change(
     mutable_config.update_config("modules", modules_config)
 
     load_output = load(shell, "mpileaks")
+    load_script_path = spec_script.path_to_load_shell_script(spec, shell[2:])
 
-    assert any(prepend_cmd in line for line in load_output.splitlines())
-    assert os.path.join(spec.prefix, "bin") in load_output
+    assert f"{prepend_cmd} PATH MY_CUSTOM_VAR" in load_output
+    assert spec_script.source_script(load_script_path, shell) in load_output
 
 
 @pytest.mark.parametrize(
@@ -454,8 +456,6 @@ def test_load_readonly_prefix_outputs_env_modifications(
     """Test that if the .spack directory is read-only, when loading a package
     spack outputs the environment modifications to stdout instead of writing to a script.
     """
-    import stat
-
     spec = spack.concretize.concretize_one("mpileaks")
     PackageInstaller([spec.package], fake=True).install()
 
@@ -486,3 +486,28 @@ def test_load_readonly_prefix_outputs_env_modifications(
     finally:
         # Restore original permissions
         os.chmod(spack_dir, original_mode)
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_load_preserves_custom_path_separator(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages
+):
+    """Test that spack load preserves custom path separators from package recipe
+    when generating environment modifications.
+    """
+
+    spec = spack.concretize.concretize_one("module-path-separator")
+    PackageInstaller([spec.package], fake=True).install()
+
+    load_cmds = _get_load_cmds_from_script(spec, shell)
+
+    append_cmd = f"{_get_shell_cmd_invocation('_spack_env_append', shell)}"
+    separator = ";"
+    if "bat" in shell or "pwsh" in shell:
+        return f'"{separator}"'
+    else:
+        return f"'{separator}'"
+
+    assert f"{append_cmd} SEMICOLON bar {separator}" in load_cmds

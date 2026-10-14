@@ -4,7 +4,7 @@
 import os
 import re
 import sys
-from typing import Optional
+from typing import List, Optional
 
 import spack.build_environment
 import spack.config
@@ -82,17 +82,15 @@ def project_env_mods(
 
 
 def environment_modifications_from_prefix_inspections(
-    specs: list[spack.spec.Spec], topo_ordered: Optional[list] = None
+    specs: List[spack.spec.Spec], topo_ordered: Optional[List] = None
 ):
     """Generate environment modifications based on prefix inspections."""
     env = environment.EnvironmentModifications()
 
-    if not topo_ordered:
-        topo_ordered = list(
-            traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
-        )
+    spec_list = topo_ordered if topo_ordered else specs
+
     # Static environment changes (prefix inspections)
-    for s in reversed(topo_ordered):
+    for s in reversed(spec_list):
         static = environment.inspect_path(
             s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
         )
