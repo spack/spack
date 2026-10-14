@@ -807,6 +807,38 @@ def test_temporary_dir_context_manager():
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
 
 
+@pytest.mark.not_on_windows("Tests behavior that relies on bits to determine executability")
+def test_is_exe(tmp_path: pathlib.Path):
+    """See ``test/util/executable.py`` for how paths are resolved to executables."""
+    script = tmp_path / "script"
+    script.touch()
+
+    # a regular file is only an executable once it has executable permissions
+    assert not fs.is_exe(str(script))
+    fs.set_executable(str(script))
+    assert fs.is_exe(str(script))
+
+    # directories and missing files are not executables
+    assert not fs.is_exe(str(tmp_path))
+    assert not fs.is_exe(str(tmp_path / "does-not-exist"))
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_is_exe_windows(tmp_path: pathlib.Path):
+    """Windows determines whether a file is executable from its extension, not its permissions."""
+    (tmp_path / "script.exe").touch()
+    (tmp_path / "notes.txt").touch()
+
+    assert fs.is_exe(str(tmp_path / "script.exe"))
+    # the extension may be omitted
+    assert fs.is_exe(str(tmp_path / "script"))
+
+    # files without an executable extension, directories and missing files are not executables
+    assert not fs.is_exe(str(tmp_path / "notes.txt"))
+    assert not fs.is_exe(str(tmp_path))
+    assert not fs.is_exe(str(tmp_path / "does-not-exist"))
+
+
 @pytest.mark.not_on_windows("No shebang on Windows")
 def test_is_nonsymlink_exe_with_shebang(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):

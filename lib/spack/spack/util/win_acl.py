@@ -16,6 +16,7 @@ Public API:
 - :class:`AccessControlEntry` -- a single ACE; built with the semantic enum types below and
   passed to :meth:`SecurityDescriptor.add_ace`.
 - :func:`get_file_owner` -- return the account name of the owner of a file.
+- :func:`has_file_access` -- whether the current process can open a file with given rights.
 - :func:`copy_file_permissions` -- copy the DACL from one file to another.
 - :func:`get_file_sddl` / :func:`set_file_sddl` -- low-level SDDL string read/write;
   intended primarily (but not exclusively) for testing and debugging rather than general use.
@@ -133,6 +134,9 @@ class FileAccessRights(AccessRightsEnum):
     FILE_GENERIC_READ = 0x00120089
     FILE_GENERIC_WRITE = 0x00120116
     FILE_GENERIC_EXECUTE = 0x001200A0
+    # Specific rights (no SDDL token of their own)
+    FILE_READ_DATA = 0x00000001
+    FILE_EXECUTE = 0x00000020
 
 
 class RegistryKeyAccessRights(AccessRightsEnum):
@@ -461,6 +465,25 @@ _LocalFree = _bind(_kernel32, "LocalFree", [wintypes.HLOCAL], wintypes.HLOCAL)
 _GetCurrentProcess = _bind(_kernel32, "GetCurrentProcess", [], wintypes.HANDLE)
 
 _CloseHandle = _bind(_kernel32, "CloseHandle", [wintypes.HANDLE], wintypes.BOOL)
+
+_CreateFileW = _bind(
+    _kernel32,
+    "CreateFileW",
+    [
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    ],
+    wintypes.HANDLE,
+)
+
+_FILE_SHARE_ALL = 0x1 | 0x2 | 0x4  # FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE
+_OPEN_EXISTING = 3
+_INVALID_HANDLE_VALUE = wintypes.HANDLE(-1).value
 
 # pObjectName is LPWSTR (mutable) per the Windows SDK header, not LPCWSTR.
 _SetNamedSecurityInfoW = _bind(
@@ -1151,6 +1174,24 @@ def copy_file_permissions(src: str, dst: str) -> None:
     Delegates to :meth:`SecurityDescriptor.copy_permissions`.
     """
     SecurityDescriptor.copy_permissions(src, dst)
+
+
+def has_file_access(path: str, access: int) -> bool:
+    """Return ``True`` if the current process can open *path* with the rights in *access*,
+    e.g. ``FileAccessRights.FILE_READ_DATA | FileAccessRights.FILE_EXECUTE``.
+
+    This is the Windows counterpart of :func:`os.access`.  Rather than evaluating the DACL
+    itself, it asks the OS to open the file with the requested rights, so group membership,
+    deny-only SIDs, ownership and integrity levels are all accounted for.  The file is opened
+    and immediately closed, never read.  Returns ``False`` if the file cannot be opened for any
+    reason, including when it does not exist.
+    """
+    handle = _CreateFileW(path, access, _FILE_SHARE_ALL, None, _OPEN_EXISTING, 0, None)
+    if handle is None or handle == _INVALID_HANDLE_VALUE:
+        # The open failed, so there is no handle to close
+        return False
+    _CloseHandle(handle)
+    return True
 
 
 def get_file_sddl(path: str) -> str:
