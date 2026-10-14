@@ -52,9 +52,19 @@ SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for 
 class ShellCmdString:
     """Formats commands to set or unset an environment variable for a given shell."""
 
-    def __init__(self, shell: str, separator: str = os.pathsep):
+    def __init__(self, shell: str, separator: str = None):
+        """Initialize ShellCmdString.
+
+        Args:
+            shell: The target shell (sh, csh, fish, bat, pwsh)
+            separator: The path separator to use. If None, defaults to shell-appropriate
+                separator (: for Unix shells, ; for Windows shells).
+        """
         self.shell = shell
-        self.separator = separator
+        if separator:
+            self.separator = separator
+        else:
+            self.separator = ":" if shell not in ("bat", "pwsh") else ";"
 
     def shell_quote(self, value: str, shell: Optional[str] = None) -> str:
         """Quote a string for safe use in a shell script.
@@ -569,7 +579,8 @@ class RemoveFirstPath(NamePathModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell, self.separator)
-        return shell_cmd.remove_first(self.name, str(self.value))
+        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        return shell_cmd.remove_first(self.name, value)
 
 
 class RemoveLastPath(NamePathModifier):
@@ -585,7 +596,8 @@ class RemoveLastPath(NamePathModifier):
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
         shell_cmd = ShellCmdString(shell, self.separator)
-        return shell_cmd.remove_last(self.name, str(self.value))
+        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        return shell_cmd.remove_last(self.name, value)
 
 
 class RemovePath(NamePathModifier):

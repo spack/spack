@@ -431,11 +431,12 @@ def test_load_outputs_module_env_modifications(
 
     load(shell, "mpileaks")
 
-    var = "MY_CUSTOM_VAR"
+    custom_var = "MY_CUSTOM_VAR"
+    path_var = "PATH"
     if shell == "--bat":
-        var = f'"{var}"'
-
-    prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} {var}"
+        custom_var = f'"{custom_var}"'
+        path_var = f'"{path_var}"'
+    prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)}"
 
     modules_config = {"prefix_inspections": {"bin": ["PATH", "MY_CUSTOM_VAR"]}}
     mutable_config.update_config("modules", modules_config)
@@ -443,8 +444,9 @@ def test_load_outputs_module_env_modifications(
     load_output = load(shell, "mpileaks")
     load_script_path = spec_script.path_to_load_shell_script(spec, shell[2:])
 
-    assert f"{prepend_cmd} PATH MY_CUSTOM_VAR" in load_output
-    assert spec_script.source_script(load_script_path, shell) in load_output
+    assert f"{prepend_cmd} {custom_var} {os.path.join(spec.prefix, 'bin')}" in load_output
+    assert f"{prepend_cmd} {path_var} {os.path.join(spec.prefix, 'bin')}" in load_output
+    assert spec_script.source_script(load_script_path, shell[2:]) in load_output
 
 
 @pytest.mark.parametrize(
@@ -506,8 +508,8 @@ def test_load_preserves_custom_path_separator(
     append_cmd = f"{_get_shell_cmd_invocation('_spack_env_append', shell)}"
     separator = ";"
     if "bat" in shell or "pwsh" in shell:
-        return f'"{separator}"'
+        separator = f'"{separator}"'
     else:
-        return f"'{separator}'"
+        separator = f"'{separator}'"
 
     assert f"{append_cmd} SEMICOLON bar {separator}" in load_cmds
