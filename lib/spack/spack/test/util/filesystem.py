@@ -807,7 +807,7 @@ def test_temporary_dir_context_manager():
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
 
 
-@pytest.mark.not_on_windows("Executables are determined by file extension on Windows")
+@pytest.mark.not_on_windows("Tests behavior that relies on bits to determine executability")
 def test_is_exe(tmp_path: pathlib.Path):
     """See ``test/util/executable.py`` for how paths are resolved to executables."""
     script = tmp_path / "script"
