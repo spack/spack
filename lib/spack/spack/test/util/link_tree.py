@@ -11,7 +11,6 @@ import pytest
 import spack.util.filesystem
 from spack.test.conftest import FsTree
 from spack.util.filesystem import (
-    is_symlink_fallback,
     islink,
     mkdirp,
     readlink,
@@ -37,12 +36,9 @@ def stage(tmp_path: pathlib.Path):
 
 def check_file_link(filename: str, expected_target: str):
     assert os.path.isfile(filename)
+    assert islink(filename)
     if sys.platform != "win32" or spack.util.filesystem._windows_can_symlink():
-        assert islink(filename)
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
-    else:
-        # Without symlink privileges, file links on Windows are hard links to the source
-        assert is_symlink_fallback(os.path.abspath(expected_target), filename)
 
 
 @pytest.mark.parametrize("run_as_root", [True, False] if sys.platform == "win32" else [False])
@@ -70,9 +66,7 @@ def test_merge_to_new_directory(stage: str, monkeypatch, run_as_root: bool):
 
         for dest, source in files:
             check_file_link(dest, source)
-            # Hard links are regular files, so they cannot be read.
-            if sys.platform != "win32" or run_as_root:
-                assert os.path.isabs(readlink(dest))
+            assert os.path.isabs(readlink(dest))
 
         link_tree.unmerge("dest")
 
