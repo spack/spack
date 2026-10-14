@@ -350,18 +350,16 @@ It receives the spec and an optional boolean indicating whether this spec is an 
 ``post_database_add(specs)``
 """"""""""""""""""""""""""""
 
-A ``post_database_add`` hook runs in the process that records specs in the database, once they are recorded, after their ``post_install`` hooks ran.
-It receives the list of specs that were recorded.
-A command may call it once with every spec it recorded, or several times with batches of any size, down to one spec per call.
-An implementation must give the same result however the specs are split into calls, and must not assume that a call holds every spec the command records.
-The hook must not raise: an error for one spec is reported as a warning, and the other specs are still processed.
+A ``post_database_add`` hook runs after specs are added to the database, in the process that added them, and after their ``post_install`` hooks.
+It receives the list of added specs: a command may pass all the specs it added in one call, or split them over several calls.
+It must not raise: report a failure for one spec as a warning, and go on with the other specs.
 
 ``post_database_remove(specs)``
 """""""""""""""""""""""""""""""
 
-A ``post_database_remove`` hook runs in the process that uninstalls or deprecates specs, once their prefix is removed and the database is updated.
-It receives the list of specs that were removed.
-As for ``post_database_add``, a command may call it once or several times with batches of any size, and the hook must not raise.
+A ``post_database_remove`` hook runs after specs are uninstalled or deprecated, in the process that removed them.
+It receives the list of removed specs.
+The same rules as for ``post_database_add`` apply.
 
 ``pre_uninstall(spec)``
 """""""""""""""""""""""
