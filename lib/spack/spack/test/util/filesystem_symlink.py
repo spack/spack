@@ -32,9 +32,10 @@ def check_link(link_mode: str, src: str, dst: str) -> None:
         assert os.path.islink(dst)
         assert fs.islink(dst)
         assert fs.readlink(dst) == os.path.normpath(src)
+        assert fs.is_link_to(src, dst)
     else:
         assert not os.path.islink(dst)
-        assert fs.is_symlink_fallback(src, dst)
+        assert fs.is_link_to(src, dst)
 
 
 def test_symlink_file(tmp_path: pathlib.Path, link_mode: str):
@@ -183,6 +184,9 @@ def test_windows_create_junction(tmp_path: pathlib.Path):
         assert fs._windows_is_junction(junction_link_dir)
         assert fs.islink(junction_link_dir)
         assert not os.path.islink(junction_link_dir)
+        # Junctions are only created from absolute paths
+        with pytest.raises(fs.SymlinkError):
+            fs._windows_create_junction("real_dir", os.path.join(test_dir, "relative_link_dir"))
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
@@ -204,7 +208,7 @@ def test_windows_create_hard_link(tmp_path: pathlib.Path):
         assert not os.path.islink(link_file)
         with pytest.raises(OSError):
             fs.readlink(link_file)
-        assert fs.is_symlink_fallback(real_file, link_file)
+        assert fs.is_link_to(real_file, link_file)
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
@@ -244,9 +248,24 @@ def test_windows_create_link_file(tmp_path: pathlib.Path):
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
-def test_windows_read_link(tmp_path: pathlib.Path):
-    """Makes sure readlink can read the link source for junctions on windows. Junctions store
-    absolute paths, even when created from a relative one."""
+def test_windows_is_link_to(tmp_path: pathlib.Path):
+    """"""
+    with fs.working_dir(str(tmp_path)):
+        os.mkdir("real_dir")
+        os.mkdir("other_dir")
+        fs.touch("real_file")
+        fs.touch("other_file")
+        fs._windows_create_junction(os.path.abspath("real_dir"), "junction")
+        fs._windows_create_hard_link("real_file", "hard_link")
+
+        assert fs.islink("junction")
+        assert fs.is_link_to("real_dir", "junction")
+        assert fs.is_link_to("real_file", "hard_link")
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_windows_read_junction(tmp_path: pathlib.Path):
+    """Makes sure readlink can read the link source for junctions on windows"""
     with fs.working_dir(str(tmp_path)):
         real_dir_1 = "real_dir_1"
         real_dir_2 = "real_dir_2"
@@ -255,8 +274,8 @@ def test_windows_read_link(tmp_path: pathlib.Path):
         os.mkdir(real_dir_1)
         os.mkdir(real_dir_2)
 
-        fs._windows_create_junction(real_dir_1, link_dir_1)
-        fs._windows_create_junction(real_dir_2, link_dir_2)
+        fs._windows_create_junction(os.path.abspath(real_dir_1), link_dir_1)
+        fs._windows_create_junction(os.path.abspath(real_dir_2), link_dir_2)
 
         assert fs.readlink(link_dir_1) == os.path.abspath(real_dir_1)
         assert fs.readlink(link_dir_2) == os.path.abspath(real_dir_2)
@@ -272,7 +291,8 @@ def test_symlink_relative_source_is_relative_to_link(tmp_path: pathlib.Path, lin
         `-- a
             |-- b/
             |-- in_link_dir
-            |-- link      -> only_in_cwd   error: a/only_in_cwd does not exist
+            |-- link      -> only_in_cwd      error: a/only_in_cwd does not exist
+            |-- cwd_link  -> ../only_in_cwd
             |-- file_link -> in_link_dir
             `-- dir_link  -> b
     """
@@ -281,10 +301,16 @@ def test_symlink_relative_source_is_relative_to_link(tmp_path: pathlib.Path, lin
         fs.touch("only_in_cwd")
         fs.touch(os.path.join("a", "in_link_dir"))
 
-        # Exists relative to the working directory only, so the link would be broken
+        # only_in_cwd exists relative to our current working directory, but does not exist
+        # relative to the symlink's directory, so creating a symlink pointing to this relative
+        # path should fail
         with pytest.raises(fs.SymlinkError):
             fs.symlink("only_in_cwd", os.path.join("a", "link"))
         assert not os.path.lexists(os.path.join("a", "link"))
+
+        # The same file, relative to the symlink's directory
+        fs.symlink(os.path.join("..", "only_in_cwd"), os.path.join("a", "cwd_link"))
+        check_link(link_mode, os.path.join("..", "only_in_cwd"), os.path.join("a", "cwd_link"))
 
         fs.symlink("in_link_dir", os.path.join("a", "file_link"))
         check_link(link_mode, "in_link_dir", os.path.join("a", "file_link"))
@@ -303,7 +329,6 @@ def test_symlink_to_existing_path_raises_file_exists_error(tmp_path: pathlib.Pat
     with pytest.raises(FileExistsError) as e:
         fs.symlink(str(target), str(link))
     assert e.value.errno == errno.EEXIST
-    assert issubclass(fs.AlreadyExistsError, FileExistsError)
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
@@ -311,6 +336,6 @@ def test_windows_read_junction_special_characters(tmp_path: pathlib.Path):
     """Junction names containing regex metacharacters can be read"""
     with fs.working_dir(str(tmp_path)):
         os.mkdir("real")
-        fs._windows_create_junction("real", "gcc+c++")
+        fs._windows_create_junction(os.path.abspath("real"), "gcc+c++")
         assert fs.readlink("gcc+c++") == os.path.abspath("real")
         assert fs._windows_read_junction("gcc+c++") == os.path.abspath("real")
