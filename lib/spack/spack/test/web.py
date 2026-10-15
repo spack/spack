@@ -205,6 +205,7 @@ class MockGCSClient:
 
         self.ClientError = MockClientError
         self.NotFound = MockClientError
+        self.GoogleAPIError = MockClientError
 
         self.fail_list_blobs = False
         self.fail_delete_blobs: List[str] = []

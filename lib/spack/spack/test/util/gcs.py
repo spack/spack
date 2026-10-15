@@ -11,14 +11,17 @@ import urllib.request
 import pytest
 
 import spack.util.gcs as gcs
+from spack.test.web import mock_gcs_client  # noqa
 
 
 @pytest.fixture
-def fake_google_api_core(monkeypatch):
+def fake_google_api_core(monkeypatch, mock_gcs_client):
     """Stand in for google.api_core.exceptions.GoogleAPIError."""
 
     class GoogleAPIError(Exception):
         pass
+
+    mock_gcs_client.GoogleAPIError = GoogleAPIError
 
     api_core_exceptions = types.ModuleType("google.api_core.exceptions")
     api_core_exceptions.GoogleAPIError = GoogleAPIError

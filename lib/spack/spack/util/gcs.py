@@ -25,7 +25,7 @@ def gcs_command(command):
         client = gcs_client()
         try:
             return command(*args, **kwargs)
-        except client.ClientError as e:
+        except client.GoogleAPIError as e:
             raise urllib.error.URLError(e) from e
 
     return _gcs_command_wrapped
@@ -45,6 +45,7 @@ def gcs_client():
 
     try:
         import google.auth
+        from google.api_core.exceptions import GoogleAPIError
         from google.cloud import storage
         from google.cloud.exceptions import ClientError, NotFound
     except ImportError as ex:
@@ -58,6 +59,7 @@ def gcs_client():
     storage_client = storage.Client(storage_project, storage_credentials)
     setattr(storage_client, "ClientError", ClientError)
     setattr(storage_client, "NotFound", NotFound)
+    setattr(storage_client, "GoogleAPIError", GoogleAPIError)
 
     gcs_client_cache = storage_client
     return storage_client
@@ -282,9 +284,8 @@ class GCSBlob:
 
 def gcs_open(req, *args, **kwargs):
     """Open a reader stream to a blob object on GCS"""
-    from google.api_core.exceptions import GoogleAPIError
-
     url = urllib.parse.urlparse(req.get_full_url())
+    client = gcs_client()
     try:
         gcsblob = GCSBlob(url)
 
@@ -292,7 +293,7 @@ def gcs_open(req, *args, **kwargs):
             raise URLError("GCS blob {0} does not exist".format(gcsblob.blob_path))
         stream = gcsblob.get_blob_byte_stream()
         headers = gcsblob.get_blob_headers()
-    except GoogleAPIError as e:
+    except client.GoogleAPIError as e:
         raise URLError(e) from e
 
     return urllib.response.addinfourl(stream, headers, url)
