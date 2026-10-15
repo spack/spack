@@ -12,7 +12,7 @@ import os
 import sys
 import urllib.parse
 import urllib.response
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.error import URLError
 from urllib.request import BaseHandler
 
@@ -63,6 +63,9 @@ def gcs_client():
     return storage_client
 
 
+gcs_bucket_cache: Dict[str, Any] = {}
+
+
 class GCSBucket:
     """GCS Bucket Object
     Create a wrapper object for a GCS Bucket. Provides methods to wrap spack
@@ -89,24 +92,41 @@ class GCSBucket:
 
         self.client = client or gcs_client()
 
-        self.bucket = None
+        self._bucket = None
         tty.debug("New GCS bucket:")
         tty.debug("    name: {0}".format(self.name))
         tty.debug("    prefix: {0}".format(self.prefix))
 
+    @property
+    def bucket(self):
+        if self._bucket is not None:
+            return self._bucket
+
+        global gcs_bucket_cache
+        if self.name in gcs_bucket_cache:
+            self._bucket = gcs_bucket_cache[self.name]
+            return self._bucket
+
+        try:
+            self._bucket = self.client.bucket(self.name)
+            if self._bucket is not None:
+                gcs_bucket_cache[self.name] = self._bucket
+        except self.client.NotFound as ex:
+            tty.error("{0}, Failed to get GCS bucket".format(ex))
+
+        return self._bucket
+
     @gcs_command
     def exists(self):
-        if not self.bucket:
-            try:
-                self.bucket = self.client.bucket(self.name)
-            except self.client.NotFound as ex:
-                tty.error("{0}, Failed check for bucket existence".format(ex))
         return self.bucket is not None
 
     @gcs_command
     def create(self):
+        global gcs_bucket_cache
         if not self.bucket:
             self.bucket = self.client.create_bucket(self.name)
+            if self.bucket is not None:
+                gcs_bucket_cache[self.name] = self.bucket
 
     @gcs_command
     def get_blob(self, blob_path):

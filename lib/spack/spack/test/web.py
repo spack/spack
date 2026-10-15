@@ -261,6 +261,9 @@ def mock_gcs_client(monkeypatch):
         return client
 
     monkeypatch.setattr(spack.util.gcs, "gcs_client", _get_gcs_client)
+    # Reset the global cache
+    monkeypatch.setattr(spack.util.gcs, "gcs_client_cache", None)
+    monkeypatch.setattr(spack.util.gcs, "gcs_bucket_cache", {})
 
     return client
 
