@@ -23,6 +23,61 @@ def isolate_paths(mock_spack_instance):
     return home_dir, base_prefix, etc_spack, isolate_scope_path
 
 
+@pytest.mark.parametrize("use_self", [False, True])
+def test_isolate_user_overrides_layout(isolate_paths, tmp_path, use_self):
+    """User scope in isolation should have higher priority than layout scope.
+
+    This is like test_isolate_added_config but this test simulates a pre-existing
+    layout scope.
+    """
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
+
+    # Create a layout scope with a config value
+    layout_dir = etc_spack / "layout"
+    layout_dir.mkdir()
+    (layout_dir / "config.yaml").write_text(
+        "config:\n  install_tree:\n    root: /from-layout-scope\n", encoding="utf-8"
+    )
+    layout_config = layout_dir / "config.yaml"
+
+    if use_self:
+        sp_isolate("--self")
+        user_redirect_path = isolate_scope_path / "user-redirect"
+        user_config = user_redirect_path / "config.yaml"
+    else:
+        isolated_path = tmp_path / "test-isolation"
+        sp_isolate("--path", str(isolated_path))
+        user_config = isolated_path / "config.yaml"
+
+    # Reload config to pick up the isolate scope
+    spack.config.CONFIG = spack.config.create()
+
+    # Record initial contents
+    initial_layout_content = layout_config.read_text(encoding="utf-8")
+    initial_user_content = (
+        user_config.read_text(encoding="utf-8") if user_config.exists() else None
+    )
+
+    # Use spack config add to set a value (should go to user scope)
+    sp_config("add", "config:install_tree:root:/from-config-add")
+
+    # Assert that user_config changed and layout_config didn't
+    final_user_content = user_config.read_text(encoding="utf-8")
+    assert final_user_content != initial_user_content, "user config should have changed"
+    assert "/from-config-add" in final_user_content, "new value should be in user config"
+
+    final_layout_content = layout_config.read_text(encoding="utf-8")
+    assert final_layout_content == initial_layout_content, "layout config should not have changed"
+
+    # Assert that config API retrieves the value we set (user overrides layout)
+    # Need to reload config to pick up the change made by config add
+    spack.config.CONFIG = spack.config.create()
+    retrieved_value = spack.config.CONFIG.get("config:install_tree:root")
+    assert retrieved_value == "/from-config-add", (
+        f"Expected /from-config-add, got {retrieved_value}"
+    )
+
+
 def test_isolate_redirection(isolate_paths, tmp_path):
     """Check that `spack isolate` sets up all future writes to go to
     the selected isolation target.
