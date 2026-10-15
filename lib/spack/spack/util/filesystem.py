@@ -3006,10 +3006,8 @@ def _windows_symlink(
     privileges.
 
     Junction: A link to a directory on the same or different volume (drive letter) but not to a
-    remote directory. Don't need System Administrator privileges.
-
-    Hard links are indistinguishable from the file they link to, so ``islink`` and ``readlink``
-    treat them as regular files."""
+    remote directory. Don't need System Administrator privileges."""
+    # Junctions and hard links do not accept unnormalized paths (e.g. doubled separators)
     source_path = os.path.normpath(src)
     link_path = os.path.normpath(dst)
 
@@ -3018,10 +3016,10 @@ def _windows_symlink(
         raise AlreadyExistsError(f"Link path ({link_path}) already exists. Cannot create link.")
 
     # Like os.symlink, a relative source path is relative to the directory containing the link,
-    # not to the current working directory. Hard links and junctions do not resolve relative
-    # paths this way, so they are created from the resolved path.
-    resolved_source_path = os.path.join(os.path.dirname(link_path), source_path)
-    if not os.path.exists(resolved_source_path):
+    # not to the current working directory. A symlink resolves it each time it is followed, but
+    # hard links and junctions are created once, from the absolute path.
+    abs_source_path = os.path.abspath(os.path.join(os.path.dirname(link_path), source_path))
+    if not os.path.exists(abs_source_path):
         raise SymlinkError(
             f"Source path ({source_path}) does not exist relative to the link path "
             f"({link_path}). Resulting link would be broken so not making link."
@@ -3029,9 +3027,9 @@ def _windows_symlink(
 
     # Create the symlink
     if not _windows_can_symlink():
-        _windows_create_link(resolved_source_path, link_path)
+        _windows_create_link(abs_source_path, link_path)
     else:
-        os.symlink(source_path, link_path, target_is_directory=os.path.isdir(resolved_source_path))
+        os.symlink(source_path, link_path, target_is_directory=os.path.isdir(abs_source_path))
 
 
 def _windows_islink(path: str) -> bool:
@@ -3042,7 +3040,7 @@ def _windows_islink(path: str) -> bool:
 
     For Windows: spack considers symlinks and junctions to be links. Hard links are not, since
     there is no way to tell which of the paths sharing a file is the link. When the expected
-    source is known, use ``is_symlink_fallback`` to recognize them.
+    source is known, use ``is_link_to`` to recognize them.
 
     Args:
         path (str): path to check if it is a link.
@@ -3053,23 +3051,24 @@ def _windows_islink(path: str) -> bool:
     return os.path.islink(path) or _windows_is_junction(path)
 
 
-def _windows_is_symlink_fallback(src: str, dst: str) -> bool:
-    """Returns True if ``dst`` is the junction or hard link that ``symlink(src, dst)`` creates
-    when the user cannot create symbolic links. As with ``symlink``, a relative ``src`` is
-    relative to the directory containing ``dst``.
+def _windows_is_link_to(src: str, dst: str) -> bool:
+    """Returns True if ``dst`` is the link that ``symlink(src, dst)`` creates: a symlink that
+    reads as ``src`` or, without symlink privileges, a junction or hard link to ``src``. As with
+    ``symlink``, a relative ``src`` is relative to the directory containing ``dst``.
 
-    A hard link does not record which path is the link, so this requires knowing the expected
-    source: a hard link to it is then known to be the link."""
-    source = os.path.join(os.path.dirname(dst), src)
-    if os.path.islink(dst) or not os.path.exists(dst) or not os.path.exists(source):
+    A hard link cannot be told apart from the file it links to, so this is also True when ``dst``
+    is ``src`` itself."""
+    if os.path.islink(dst):
+        return _windows_readlink(dst) == os.path.normpath(src)
+    try:
+        return os.path.samefile(os.path.join(os.path.dirname(dst), src), dst)
+    except OSError:
         return False
-    is_fallback = _windows_is_junction(dst) or _windows_is_hardlink(dst)
-    return is_fallback and os.path.samefile(source, dst)
 
 
-def _is_symlink_fallback(src: str, dst: str) -> bool:
-    """``symlink`` only falls back to junctions and hard links on Windows"""
-    return False
+def _is_link_to(src: str, dst: str) -> bool:
+    """Returns True if ``dst`` is the symlink that ``symlink(src, dst)`` creates"""
+    return os.path.islink(dst) and os.readlink(dst) == src
 
 
 def _windows_is_hardlink(path: str) -> bool:
@@ -3190,11 +3189,11 @@ def _windows_create_junction(source: str, link: str):
         raise AlreadyExistsError("Link path already exists, cannot create a junction.")
     elif not os.path.isdir(source):
         raise SymlinkError("Source path is not a directory, cannot create a junction.")
+    elif not os.path.isabs(source):
+        raise SymlinkError(f"Junction source path ({source}) must be absolute.")
 
     import subprocess
 
-    # Junction targets must be absolute; don't rely on mklink resolving relative paths
-    source = os.path.abspath(source)
     cmd = ["cmd", "/C", "mklink", "/J", link, source]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
@@ -3280,13 +3279,13 @@ if sys.platform == "win32":
     symlink = _windows_symlink
     readlink = _windows_readlink
     islink = _windows_islink
-    is_symlink_fallback = _windows_is_symlink_fallback
+    is_link_to = _windows_is_link_to
     rename = _win_rename
 else:
     symlink = os.symlink
     readlink = os.readlink
     islink = os.path.islink
-    is_symlink_fallback = _is_symlink_fallback
+    is_link_to = _is_link_to
     rename = os.rename
 
 
