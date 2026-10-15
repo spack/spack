@@ -2675,7 +2675,7 @@ def _do_migrate_home() -> Dict[str, bool]:
                 "  - Copied package repositories from ~/.spack to the shared state location."
             )
         parts.append("  - ~/.spack was retained because older Spack instances may still use it.")
-        tty.msg("\n".join(parts))
+        sys.stderr.write("\n".join(parts) + "\n")
 
     return {"user_config": user_config_migrated, "package_repos": package_repos_migrated}
 
@@ -2927,7 +2927,7 @@ def _do_migrate_spack_prefix(old_resources):
 
     if migrated_resources:
         parts.extend(["", "To undo this migration, run `spack migrate undo`."])
-    tty.msg("\n".join(parts))
+    sys.stderr.write("\n".join(parts) + "\n")
 
 
 def create_incremental() -> Generator[Configuration, None, None]:
@@ -3071,7 +3071,7 @@ def _force_old_layout(to_move, print_message=True) -> List[str]:
         parts = ["No Spack-internal resources were migrated"]
         if retained_resources:
             parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
-        tty.msg("\n".join(parts))
+        sys.stderr.write("\n".join(parts) + "\n")
 
     return retained_resources
 
