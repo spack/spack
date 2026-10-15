@@ -12,7 +12,7 @@ import os
 import sys
 import urllib.parse
 import urllib.response
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 from urllib.error import URLError
 from urllib.request import BaseHandler
 
@@ -31,10 +31,17 @@ def gcs_command(command):
     return _gcs_command_wrapped
 
 
+gcs_client_cache: Optional[Any] = None
+
+
 def gcs_client():
     """Create a GCS client
     Creates an authenticated GCS client to access GCS buckets and blobs
     """
+
+    global gcs_client_cache
+    if gcs_client_cache is not None:
+        return gcs_client_cache
 
     try:
         import google.auth
@@ -51,6 +58,8 @@ def gcs_client():
     storage_client = storage.Client(storage_project, storage_credentials)
     setattr(storage_client, "ClientError", ClientError)
     setattr(storage_client, "NotFound", NotFound)
+
+    gcs_client_cache = storage_client
     return storage_client
 
 

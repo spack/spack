@@ -785,7 +785,7 @@ def test_list_gcs_url_wraps_client_error(mock_gcs_client):
 
     mock_gcs_client.fail_list_blobs = True
     with pytest.raises(OSError):
-        spack.util.web.list_url("s3://my-bucket/prefix/", recursive=True)
+        spack.util.web.list_url("gs://my-bucket/prefix/", recursive=True)
 
 
 def test_list_gcs_url_skips_directory_marker_keys(mock_gcs_client):
