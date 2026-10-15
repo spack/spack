@@ -209,7 +209,9 @@ class ShellCmdString:
         """Returns the command to set an environment variable to a value using
         plain shell commands.
         """
-        return self._SET_STRINGS[self.shell].format(self.shell_quote(name), self.shell_quote(value, self.shell))
+        return self._SET_STRINGS[self.shell].format(
+            self.shell_quote(name), self.shell_quote(value, self.shell)
+        )
 
     def unset(self, name: str) -> str:
         """Returns the command to unset an environment variable using plain shell commands."""
