@@ -382,8 +382,8 @@ The isolate include uses an override so external user, site, and system scopes a
 
 The intended effective precedence is:
 
-1. isolated user or user-redirect scope;
-2. the defining isolate scope, including preserved old target configuration when applicable;
+1. the defining isolate scope, including preserved old target configuration when applicable;
+2. isolated user or user-redirect scope;
 3. layout scope;
 4. built-in defaults.
 
