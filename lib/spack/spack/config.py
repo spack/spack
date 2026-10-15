@@ -3792,7 +3792,7 @@ def substitute_config_variables(path, config: Optional["Configuration"] = None):
     - $spack               The Spack instance's prefix
     - $tempdir             Default temporary directory returned by tempfile.gettempdir()
     - $user                The current user's username
-    - $user_cache_path     The user cache directory (~/.spack, unless overridden)
+    - $user_cache_path     The user cache directory (alias for $state_home)
     - $spack_instance_id   Hash that distinguishes Spack instances on the filesystem
     - $architecture        The spack architecture triple for the current system
     - $arch                The spack architecture triple for the current system
@@ -3803,6 +3803,9 @@ def substitute_config_variables(path, config: Optional["Configuration"] = None):
     - $target_family       The family of the target detected for the system
     - $date                The current date (YYYY-MM-DD)
     - $spack_short_version The spack short version
+    - $data_home           Default location for permanent important data (e.g. installs)
+    - $state_home          Default location for important caches (e.g. provider index)
+    - $cache_home          Backup location for temporary caches (e.g. staging)
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only
