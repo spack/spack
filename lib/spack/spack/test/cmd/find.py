@@ -7,6 +7,7 @@ import io
 import json
 import os
 import pathlib
+from typing import List
 
 import pytest
 
@@ -19,9 +20,11 @@ import spack.paths
 import spack.repo
 import spack.spec
 import spack.user_environment as uenv
+import spack.util.tty
 from spack.database import Database
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
+from spack.test.conftest import RepoBuilder
 from spack.test.utilities import SpackCommandArgs
 from spack.util.filesystem import working_dir
 from spack.util.pattern import Bunch
@@ -606,3 +609,121 @@ def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: path
 
     assert all(x in output for x in expected)
     assert all(x not in output for x in not_expected)
+
+
+def _lines(output: str) -> List[str]:
+    return [line.rstrip() for line in output.splitlines()]
+
+
+def _find_lines(*args: str) -> List[str]:
+    return _lines(find(*args))
+
+
+def test_find_marks_deprecated_specs_and_their_dependents(
+    lib_built_with_deprecated_tool, mutable_config
+):
+    """Tests that spack find marks an installed spec the deprecation policy disallows, and the
+    installed specs whose checked closure contains it.
+    """
+    mutable_config.set("packages:all:deprecation:scope", "all")
+
+    lines = _find_lines()
+
+    assert "deprecated-tool@1.0 (deprecated)" in lines
+    assert "deprecated-tool-lib@1.0 (depends on deprecated)" in lines
+    assert (
+        "==> 2 specs shown are affected by the deprecation policy, run `spack -v find` for details"
+        in lines
+    )
+
+
+def test_find_marks_dependents_only_through_the_deprecation_scope(
+    lib_built_with_deprecated_tool, mutable_config
+):
+    """Tests that under the 'runtime' scope a spec built with a deprecated tool is not marked."""
+    mutable_config.set("packages:all:deprecation:scope", "runtime")
+
+    lines = _find_lines()
+
+    assert "deprecated-tool@1.0 (deprecated)" in lines
+    assert "deprecated-tool-lib@1.0" in lines
+    assert (
+        "==> 1 spec shown is affected by the deprecation policy, run `spack -v find` for details"
+        in lines
+    )
+
+
+def test_find_marks_dependencies_shown_with_deps(lib_built_with_deprecated_tool, mutable_config):
+    """Tests that dependencies displayed with --deps are marked, even when they are outside the
+    checked closure of the spec that was queried.
+    """
+    mutable_config.set("packages:all:deprecation:scope", "runtime")
+
+    lines = _find_lines("--deps", "deprecated-tool-lib")
+
+    assert "deprecated-tool-lib@1.0" in lines
+    assert "    deprecated-tool@1.0 (deprecated)" in lines
+
+
+def test_find_does_not_mark_allowed_deprecations(lib_built_with_deprecated_tool, mutable_config):
+    """Tests that spack find output is unchanged when the configuration allows the deprecation."""
+    mutable_config.set("packages:all:deprecation:scope", "all")
+    mutable_config.set("packages:deprecated-tool:deprecation:allow", [{"reason": "vuln"}])
+
+    output = find()
+
+    assert "(deprecated)" not in output
+    assert "(depends on deprecated)" not in output
+    assert "deprecation policy" not in output
+
+
+def test_find_verbose_reports_deprecation_details(
+    lib_built_with_deprecated_tool, mutable_config, monkeypatch, capsys
+):
+    """Tests that spack -v find reports each disallowed spec with its deprecation, and the
+    specs shown that depend on it.
+    """
+    mutable_config.set("packages:all:deprecation:scope", "all")
+    tool = lib_built_with_deprecated_tool["deprecated-tool"]
+
+    # SpackCommand takes no global options, and resets verbosity before running the command
+    monkeypatch.setattr(spack.util.tty, "_verbose", True)
+    spack.cmd.find.find(None, SpackCommandArgs("find")())
+    lines = _lines(capsys.readouterr().out)
+
+    assert "==> 1 spec is deprecated and not allowed by the configuration:" in lines
+    assert f"    {tool.short_spec}" in lines
+    assert "        deprecated-tool@1.0 is deprecated (reason: vuln, severity: critical)" in lines
+    assert "==> 1 spec shown depends on it:" in lines
+    assert f"    {lib_built_with_deprecated_tool.short_spec}" in lines
+    assert not any("run `spack -v find` for details" in line for line in lines)
+
+
+def test_find_format_has_no_deprecation_markers(lib_built_with_deprecated_tool, mutable_config):
+    """Tests that output meant for scripts is not marked."""
+    mutable_config.set("packages:all:deprecation:scope", "all")
+
+    output = find("--format", "{name}@{version}")
+
+    assert set(output.split()) == {"deprecated-tool@1.0", "deprecated-tool-lib@1.0"}
+
+
+def test_find_warns_when_a_recipe_cannot_be_loaded(
+    mock_packages, temporary_store, repo_builder: RepoBuilder
+):
+    """Tests that spack find lists installed specs, and warns, when the recipe needed to check
+    them against the deprecation policy cannot be loaded.
+    """
+    spec = spack.concretize.concretize_one("pkg-c")
+    temporary_store.layout.create_install_directory(spec)
+    temporary_store.db.add(spec, explicit=True)
+
+    repo_builder.add_package("pkg-c")
+    recipe = pathlib.Path(repo_builder.root, "packages", "pkg_c", "package.py")
+    recipe.write_text("raise RuntimeError('broken recipe')\n")
+
+    with spack.repo.use_repositories(repo_builder.root):
+        with pytest.warns(UserWarning, match="cannot check specs against the deprecation policy"):
+            output = find()
+
+    assert "pkg-c@1.0" in output
