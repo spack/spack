@@ -209,7 +209,7 @@ def test_shell_modifications_are_properly_escaped(shell):
 )
 def test_append_shell_cmd_string(shell, append_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.append("FOO", "path/to/bar") == append_expected
+    assert shell_cmd._spack_append("FOO", "path/to/bar") == append_expected
 
 
 @pytest.mark.parametrize(
@@ -224,7 +224,7 @@ def test_append_shell_cmd_string(shell, append_expected):
 )
 def test_prepend_shell_cmd_string(shell, prepend_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.prepend("FOO", "path/to/bar") == prepend_expected
+    assert shell_cmd._spack_prepend("FOO", "path/to/bar") == prepend_expected
 
 
 @pytest.mark.parametrize(
@@ -239,7 +239,7 @@ def test_prepend_shell_cmd_string(shell, prepend_expected):
 )
 def test_prune_dups_shell_cmd_string(shell, prune_dups_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.prune_duplicates("FOO") == prune_dups_expected
+    assert shell_cmd._spack_prune_duplicates("FOO") == prune_dups_expected
 
 
 @pytest.mark.parametrize(
@@ -254,7 +254,7 @@ def test_prune_dups_shell_cmd_string(shell, prune_dups_expected):
 )
 def test_remove_first_shell_cmd_string(shell, remove_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.remove_first("FOO", "path/to/bar") == remove_expected
+    assert shell_cmd._spack_remove_first("FOO", "path/to/bar") == remove_expected
 
 
 @pytest.mark.parametrize(
@@ -269,7 +269,7 @@ def test_remove_first_shell_cmd_string(shell, remove_expected):
 )
 def test_remove_last_shell_cmd_string(shell, remove_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.remove_last("FOO", "path/to/bar") == remove_expected
+    assert shell_cmd._spack_remove_last("FOO", "path/to/bar") == remove_expected
 
 
 @pytest.mark.parametrize(
@@ -284,7 +284,37 @@ def test_remove_last_shell_cmd_string(shell, remove_expected):
 )
 def test_remove_value_shell_cmd_string(shell, remove_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.remove_value("FOO", "path/to/bar") == remove_expected
+    assert shell_cmd._spack_remove_value("FOO", "path/to/bar") == remove_expected
+
+
+@pytest.mark.parametrize(
+    "shell, set_expected",
+    [
+        ("sh", "export FOO=path/to/bar;\n"),
+        ("csh", "setenv FOO path/to/bar;\n"),
+        ("fish", "set -gx FOO path/to/bar;\n"),
+        ("pwsh", "$Env:FOO='path/to/bar'\n"),
+        ("bat", 'set "FOO=path/to/bar"\n'),
+    ],
+)
+def test_set_shell_cmd_string(shell, set_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.set("FOO", "path/to/bar") == set_expected
+
+
+@pytest.mark.parametrize(
+    "shell, unset_expected",
+    [
+        ("sh", "unset FOO;\n"),
+        ("csh", "unsetenv FOO;\n"),
+        ("fish", "set -e FOO;\n"),
+        ("pwsh", "Set-Item -Path Env:FOO\n"),
+        ("bat", 'set "FOO="\n'),
+    ],
+)
+def test_unset_shell_cmd_string(shell, unset_expected):
+    shell_cmd = envutil.ShellCmdString(shell)
+    assert shell_cmd.unset("FOO") == unset_expected
 
 
 @pytest.mark.parametrize(
@@ -297,9 +327,9 @@ def test_remove_value_shell_cmd_string(shell, remove_expected):
         ("bat", '%_spack_env_set% "FOO" "path/to/bar"\n'),
     ],
 )
-def test_set_shell_cmd_string(shell, set_expected):
+def test_spack_set_shell_cmd_string(shell, set_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.set("FOO", "path/to/bar") == set_expected
+    assert shell_cmd._spack_set("FOO", "path/to/bar") == set_expected
 
 
 @pytest.mark.parametrize(
@@ -312,9 +342,9 @@ def test_set_shell_cmd_string(shell, set_expected):
         ("bat", '%_spack_env_unset% "FOO"\n'),
     ],
 )
-def test_unset_shell_cmd_string(shell, unset_expected):
+def test_spack_unset_shell_cmd_string(shell, unset_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.unset("FOO") == unset_expected
+    assert shell_cmd._spack_unset("FOO") == unset_expected
 
 
 @pytest.mark.parametrize(
@@ -362,5 +392,5 @@ def test_alias_shell_cmd_string(shell, alias):
 )
 def test_quoting_shell_cmd_string(shell, dollarsign_expected, spacing_expected):
     shell_cmd = envutil.ShellCmdString(shell)
-    assert shell_cmd.append("FOO", "path/with/$dollarsign") == dollarsign_expected
-    assert shell_cmd.append("FOO", "path/with/ space") == spacing_expected
+    assert shell_cmd._spack_append("FOO", "path/with/$dollarsign") == dollarsign_expected
+    assert shell_cmd._spack_append("FOO", "path/with/ space") == spacing_expected

@@ -563,3 +563,36 @@ def test_sourcing_file_with_spaces(tmp_path):
 
     assert env["FROM_SPACED_PATH"] == "yes"
     assert env["FROM_SPACED_ARG"] == "arg with space"
+
+
+@pytest.mark.parametrize(
+    "shell, set_cmd, unset_cmd",
+    [
+        ("sh", "export {0}={1};", "unset {0};"),
+        ("csh", "setenv {0} {1}", "unsetenv {0}"),
+        ("fish", "set -gx {0} {1}", "set -e {0}"),
+        ("bat", 'set "{0}={1}"', 'set "{0}="'),
+        ("pwsh", "$Env:{0}='{1}'", "Set-Item -Path Env:{0}"),
+    ],
+)
+def test_explicit_modifications_recorded_independent_of_base_env(shell, set_cmd, unset_cmd):
+    """Test that explicit modifications are always recorded, even if they match the base env."""
+
+    mods = EnvironmentModifications()
+    mods.set("CC", "/usr/bin/gcc")
+    mods.set("CXX", "/usr/bin/g++")
+    mods.unset("CFLAGS")
+    mods.unset("CXXFLAGS")
+    mods.unset("LDFLAGS")
+
+    base_env = {"CC": "/usr/bin/clang", "CFLAGS": "-O2"}
+
+    # Generate shell modifications with explicit=True
+    shell_code = mods.shell_modifications(shell=shell, explicit=True, env=base_env)
+
+    assert set_cmd.format("CC", "/usr/bin/gcc") in shell_code
+    assert set_cmd.format("CXX", "/usr/bin/g++") in shell_code
+
+    assert unset_cmd.format("CFLAGS") in shell_code
+    assert unset_cmd.format("CXXFLAGS") in shell_code
+    assert unset_cmd.format("LDFLAGS") in shell_code
