@@ -47,7 +47,9 @@ function Set-SpackEnv {
     # so we iterate over the list to invoke the env modification
     # expressions one at a time
     foreach($envop in $args[0]){
-        Invoke-Expression $envop
+        if(![string]::IsNullOrEmpty($envop)) {
+            Invoke-Expression $envop
+        }
     }
 }
 
