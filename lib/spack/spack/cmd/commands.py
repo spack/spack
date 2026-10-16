@@ -863,6 +863,7 @@ def update_completion(parser: ArgumentParser, args: Namespace) -> None:
         parser: Argument parser.
         args: Command-line arguments.
     """
+
     for shell, shell_args in update_completion_args.items():
         for attr, value in shell_args.items():
             setattr(args, attr, value)
@@ -879,6 +880,9 @@ def commands(parser: ArgumentParser, args: Namespace) -> None:
     if args.update_completion:
         if args.format != "names" or any([args.aliases, args.update, args.header]):
             args.subparser.error("--update-completion can only be specified alone")
+
+        if "SPACK_DISABLE_LOCAL_CONFIG" in os.environ:
+            tty.error("SPACK_DISABLE_LOCAL_CONFIG affects completion output: unset it and re-run")
 
         # this runs the command multiple times with different arguments
         update_completion(parser, args)
