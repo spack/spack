@@ -591,30 +591,30 @@ def test_patch_lookup_for_shadowed_package(mock_packages, config, repo_builder):
         assert {p.sha256 for p in spec.patches} == {foo_sha256, baz_sha256}
 
 
-def test_patch_reversed_patch_no_prompt(mock_packages, install_mockery, mock_fetch, capfd):
-    """Test to ensure patches that could cause patch to prompt for user interaction
-    do not and correctly fail to apply"""
+def test_patch_reversed_patch_no_prompt(mock_packages, config, tmp_path, capfd):
+    """Test that re-applying an already applied patch fails without prompting the user
+    and without silently applying the patch in reverse"""
     spec = spack.concretize.concretize_one("reversed-patch")
-    with spec.package.stage as stage:
-        if not os.path.isdir(stage.source_path):
-            os.makedirs(stage.source_path)
-        with working_dir(stage.source_path):
-            with open("message.txt", "w+", encoding="utf-8") as f:
-                f.write("fixed\n")
-        # ensure patching failed
-        with pytest.raises(ProcessError):
-            spec.package.do_patch()
-        # now ensure it failed under the right circumstances
-        cap = capfd.readouterr()
-        # ensure it was a reverse patch that failed
-        # freebsd/macos patch reports this case differently than gnu patch
-        # which is what we use on posix and windows
-        darwin_or_freebsd = sys.platform == "darwin" or sys.platform.startswith("freebsd")
-        failure_str = (
-            "Ignoring previously applied (or reversed) patch"
-            if darwin_or_freebsd
-            else "Reversed (or previously applied) patch detected"
+    (patch,) = spec.patches
+    message = tmp_path / "message.txt"
+    message.write_text("broken\n", encoding="utf-8")
+
+    def apply():
+        spack.patch.apply_patch(
+            str(tmp_path), patch.path, patch.level, patch.working_dir, patch.reverse
         )
-        assert failure_str in cap.out
-        # ensure the user was not prompted
-        assert "Assume -R?" not in cap.out
+
+    # the patch applies cleanly to the original contents
+    apply()
+    assert message.read_text(encoding="utf-8") == "fixed\n"
+
+    capfd.readouterr()
+    # applying it again must fail rather than prompt or apply the patch in reverse
+    with pytest.raises(ProcessError):
+        apply()
+    assert message.read_text(encoding="utf-8") == "fixed\n"
+    out = capfd.readouterr().out
+    # gnu patch: "Reversed (or previously applied) patch detected"
+    # bsd patch: "Ignoring previously applied (or reversed) patch"
+    assert "previously applied" in out
+    assert "Assume -R?" not in out
