@@ -116,7 +116,7 @@ def make_spdx_2_3_package_entry(spec):
         "filesAnalyzed": False,
         "licenseDeclared": get_license(pkg) or "NOASSERTION",
         "licenseConcluded": "NOASSERTION",
-        "checksum": get_checksums(spec),
+        "checksums": get_checksums(spec),
     }
 
 
