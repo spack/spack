@@ -178,7 +178,6 @@ def _do_isolate(args):
 
     spack.config.generate_old_layout_config(old_resources, scope_config)
 
-    # Write the config file
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
     with open(config_path, "w", encoding="utf-8") as f:
         syaml.dump(scope_config, f)
@@ -191,7 +190,7 @@ def _do_isolate(args):
         if os.path.exists(marker_path):
             tty.warn(
                 "Prior migration was performed. There may be resources in $HOME,"
-                "but as of now spack will not write anything into $HOME."
+                " but as of now this Spack instance will not write anything into $HOME."
             )
         else:
             try:
