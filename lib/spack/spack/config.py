@@ -2841,9 +2841,10 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
             return False
 
         answer = answer.strip().lower()
-        if answer in ("y", "yes", "Y"):
+        if answer in ("y", "yes"):
             return True
-        elif answer in ("n", "no", "N"):
+        elif answer in ("n", "no", ""):
+            # Empty string (just hitting enter) defaults to "no"
             return False
         else:
             sys.stderr.write(f'Must enter (y)es or (n)o, got: "{answer}"\n')
