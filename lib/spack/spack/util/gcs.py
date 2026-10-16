@@ -8,7 +8,7 @@ integrate GCS Blob storage with spack buildcache.
 """
 
 import functools
-import os
+import posixpath
 import sys
 import urllib.parse
 import urllib.response
@@ -174,7 +174,7 @@ class GCSBucket:
         return blob_list
 
     def _relative_blob_name(self, blob_name):
-        return os.path.relpath(blob_name, self.prefix)
+        return posixpath.relpath(blob_name, self.prefix)
 
     @gcs_command
     def destroy(self, recursive=False, **kwargs):
