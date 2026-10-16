@@ -2993,27 +2993,38 @@ def _extract_command_from_argv(argv=None):
     Returns:
         Command name string, or None if no command present
     """
-    if argv is None:
-        argv = sys.argv[1:]
-
-    # Import argparse_common to get global argument definitions
-    # This module is lightweight and has no circular dependencies
-    import spack.argparse_common
-
-    # Create minimal parser and add all global options using shared function
-    parser = argparse.ArgumentParser(add_help=False)
-    spack.argparse_common.add_all_global_arguments(parser)
-
-    # The command is everything that remains after global options
-    parser.add_argument("command", nargs=argparse.REMAINDER)
-
     try:
-        args = parser.parse_args(argv)
+        if argv is None:
+            # Check if invoked via CLI or as a library
+            argv0 = sys.argv[0]
+            basename = os.path.basename(argv0)
+            is_cli = basename == "spack" or argv0.endswith("/bin/spack")
+
+            if not is_cli:
+                # Library usage - argv won't contain spack commands
+                return None
+
+            argv = sys.argv[1:]
+
+        # Import argparse_common to get global argument definitions
+        # This module is lightweight and has no circular dependencies
+        import spack.argparse_common
+
+        # Create minimal parser and add all global options using shared function
+        parser = argparse.ArgumentParser(add_help=False)
+        spack.argparse_common.add_all_global_arguments(parser)
+
+        # The command is everything that remains after global options
+        parser.add_argument("command", nargs=argparse.REMAINDER)
+
+        # Use parse_known_args to gracefully handle unknown arguments
+        # (e.g., when spack is imported as a library with its own argparse)
+        args, _unknown = parser.parse_known_args(argv)
         if args.command and len(args.command) > 0:
             return args.command[0]
         return None
-    except SystemExit:
-        # Parser error (e.g., invalid option) - can't determine command
+    except (AttributeError, IndexError):
+        # sys.argv doesn't exist or is empty (embedded Python, library usage)
         return None
 
 
