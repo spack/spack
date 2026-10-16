@@ -520,6 +520,7 @@ def test_load_readonly_prefix_outputs_env_modifications(
     assert f"{cmd_name} {uenv.spack_loaded_hashes_var}" in load_output
     assert os.path.join(spec.prefix, "bin") in load_output
 
+
 pytest.mark.parametrize(
     "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
