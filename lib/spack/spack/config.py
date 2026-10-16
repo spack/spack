@@ -180,7 +180,7 @@ def substitute_include_path(path, context):
     Raises:
         ValueError: if path contains prohibited configurable variables
     """
-    banned_var = re.match(CONFIGURABLE_VARS_REGEX, path)
+    banned_var = re.search(CONFIGURABLE_VARS_REGEX, path)
     if banned_var:
         msg = (
             "Included scope is defined in terms of prohibited config variable."
