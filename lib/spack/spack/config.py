@@ -2808,8 +2808,13 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
     tty.info(
         "Spack found resources in its legacy internal layout.",
         "Spack can copy the following resources to the new user data location",
-        "(based on XDG_DATA_HOME/XDG_STATE_HOME environment variables):",
+        "(based on XDG_DATA_HOME/SPACK_DATA_HOME environment variables):",
         *[f"{name}: {old} -> {new}" for name, old, new in resources],
+        "If (y)es: Spack attempts to copy local resources into the new default location;"
+        " the old resources are not deleted and this can be undone later with"
+        " `spack migrate --undo`",
+        "If (n)o (the default): configuration is updated to prefer the old locations over"
+        " the new defaults; nothing inside the Spack prefix is copied into $HOME.",
         stream=sys.stderr,
     )
 
