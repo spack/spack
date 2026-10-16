@@ -160,8 +160,6 @@ def generate_spdx_2_3(spec):
     deps = []
     relationships = [
         {
-            # The SPDX 2.3 spec requires the document's SPDXID to be the literal string
-            # "SPDXRef-DOCUMENT"; uniqueness comes from documentNamespace instead.
             "spdxElementId": "SPDXRef-DOCUMENT",
             "relationshipType": "DESCRIBES",
             "relatedSpdxElement": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
