@@ -11,6 +11,7 @@ import sys
 from typing import IO, Dict, List, Optional, Set, Tuple
 
 import spack.repo
+import spack.util.filesystem as fs
 import spack.util.naming
 import spack.util.spack_yaml
 
@@ -193,7 +194,7 @@ def migrate_v1_to_v2(
         if ino in ino_to_relpath:
             # link by path relative to the new root
             _, new_target = _relocate(ino_to_relpath[ino])
-            tgt = os.path.relpath(new_target, new_path)
+            tgt = os.path.relpath(new_target, os.path.dirname(new_path))
         else:
             tgt = os.path.realpath(old_path)
 
@@ -208,7 +209,7 @@ def migrate_v1_to_v2(
             continue
 
         if not patch_file:
-            os.symlink(tgt, new_path)
+            fs.symlink(tgt, new_path)
         else:
             patch_file.write(b"create symlink ")
             patch_file.write(new_path.encode("utf-8"))

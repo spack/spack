@@ -36,8 +36,8 @@ def stage(tmp_path: pathlib.Path):
 
 def check_file_link(filename: str, expected_target: str):
     assert os.path.isfile(filename)
-    assert islink(filename)
     if sys.platform != "win32" or spack.util.filesystem._windows_can_symlink():
+        assert islink(filename)
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
 
@@ -66,7 +66,11 @@ def test_merge_to_new_directory(stage: str, monkeypatch, run_as_root: bool):
 
         for dest, source in files:
             check_file_link(dest, source)
-            assert os.path.isabs(readlink(dest))
+            if sys.platform != "win32" or run_as_root:
+                assert os.path.isabs(readlink(dest))
+
+        if sys.platform == "win32" and not run_as_root:
+            pytest.skip("Unmerging link trees of hard links is not supported")
 
         link_tree.unmerge("dest")
 
@@ -100,6 +104,9 @@ def test_merge_to_new_directory_relative(stage: str, monkeypatch, run_as_root: b
             # Hard links/junctions are inherently absolute.
             if sys.platform != "win32" or run_as_root:
                 assert not os.path.isabs(readlink(dest))
+
+        if sys.platform == "win32" and not run_as_root:
+            pytest.skip("Unmerging link trees of hard links is not supported")
 
         link_tree.unmerge("dest")
 
@@ -136,6 +143,9 @@ def test_merge_to_existing_directory(stage: str, monkeypatch, run_as_root):
 
         assert os.path.isfile("dest/x")
         assert os.path.isfile("dest/a/b/y")
+
+        if sys.platform == "win32" and not run_as_root:
+            pytest.skip("Unmerging link trees of hard links is not supported")
 
         link_tree.unmerge("dest")
 
