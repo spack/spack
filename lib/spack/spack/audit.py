@@ -798,7 +798,12 @@ def _uses_deprecated_globals(pkgs, error_cls):
 
 
 #: Decorators registering a phase callback, which accept a ``when=`` argument
-PHASE_CALLBACK_DECORATORS = ("run_before", "run_after")
+PHASE_CALLBACK_DECORATORS = (
+    "run_before",
+    "run_after",
+    "run_before_dependent",
+    "run_after_dependent",
+)
 
 
 def _decorator_name(node: ast.expr) -> Optional[str]:
@@ -814,7 +819,7 @@ def _decorator_name(node: ast.expr) -> Optional[str]:
 
 @package_properties
 def _ensure_when_is_not_combined_with_phase_callbacks(pkgs, error_cls):
-    """Ensure @when is not used on the same method as @run_before or @run_after."""
+    """Ensure @when is not combined with a phase callback decorator."""
     errors = []
     for pkg_name in pkgs:
         file = spack.repo.PATH.filename_for_package_name(pkg_name)

@@ -31,6 +31,13 @@ def builder_test_repository(config):
                 ("BEFORE_INSTALL_2_CALLED", "1"),
                 ("CALLBACKS_INSTALL_CALLED", "1"),
                 ("AFTER_INSTALL_1_CALLED", "1"),
+                ("BEFORE_DEPENDENT_INSTALL_CALLED", "callbacks"),
+                ("BEFORE_DEPENDENT_INSTALL_VALUE", "unset"),
+                ("DEPENDENT_CALLBACK_RAN_BEFORE_FIRST_PHASE", "callbacks"),
+                ("AFTER_DEPENDENT_LAST_PHASE_CALLED", "callbacks"),
+                ("AFTER_DEPENDENT_LAST_PHASE_VALUE", "2"),
+                ("MATCHING_DEPENDENT_CALLBACK", "callbacks"),
+                ("BUILDER_DEPENDENT_CALLBACK", "callbacks"),
                 ("TEST_VALUE", "3"),
                 ("INSTALL_VALUE", "CALLBACKS"),
             ],
@@ -44,6 +51,13 @@ def builder_test_repository(config):
                 ("CALLBACKS_INSTALL_CALLED", "1"),
                 ("AFTER_INSTALL_1_CALLED", "1"),
                 ("AFTER_INSTALL_2_CALLED", "1"),
+                ("BEFORE_DEPENDENT_INSTALL_CALLED", "callbacks"),
+                ("BEFORE_DEPENDENT_INSTALL_VALUE", "unset"),
+                ("DEPENDENT_CALLBACK_RAN_BEFORE_FIRST_PHASE", "callbacks"),
+                ("AFTER_DEPENDENT_LAST_PHASE_CALLED", "callbacks"),
+                ("AFTER_DEPENDENT_LAST_PHASE_VALUE", "2"),
+                ("MATCHING_DEPENDENT_CALLBACK", "callbacks"),
+                ("BUILDER_DEPENDENT_CALLBACK", "callbacks"),
                 ("TEST_VALUE", "4"),
                 ("INSTALL_VALUE", "CALLBACKS"),
             ],
@@ -89,6 +103,9 @@ def test_callbacks_and_installation_procedure(
     # Check calls have produced the expected side effects
     for var_name, expected in expected_values:
         assert os.environ[var_name] == expected, os.environ
+    if spec_str.startswith("callbacks"):
+        assert "NONMATCHING_DEPENDENT_CALLBACK" not in os.environ
+        assert "NONMATCHING_DEPENDENT_SPEC_CALLBACK" not in os.environ
 
 
 @pytest.mark.usefixtures("builder_test_repository", "config")
@@ -188,6 +205,31 @@ def test_mixins_with_builders(working_env):
 
     # Check that callback from the GenericBuilder are in the list too
     assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder._run_after_callbacks)
+
+
+def test_parallel_edges_run_dependent_callback_once(builder_test_repository, monkeypatch):
+    spec = spack.concretize.concretize_one("callbacks")
+    edge = spec.edges_to_dependencies("dependentcallback")[0]
+    spec._dependencies["dependentcallback"].append(edge.copy())
+
+    builder = spack.builder.create(spec.package)
+
+    # one from each dependency, no duplicate from the duplicated edge
+    assert len(builder.callbacks["install"].run_after_dependent) == 2
+
+
+def test_callback_debug_messages(builder_test_repository, working_env, ensure_debug, capfd):
+    spec = spack.concretize.concretize_one("callbacks")
+    builder = spack.builder.create(spec.package)
+
+    for phase in builder:
+        phase.execute()
+
+    output = capfd.readouterr().err
+    assert "Executing phase callback: Dependentcallback.before_dependent_install" in output
+    assert "Executing phase callback: GenericBuilder.before_install_1" in output
+    assert "Executing phase callback: Dependentcallback.after_dependent_last_phase" in output
+    assert "Executing phase callback: GenericBuilder.after_install_1" in output
 
 
 def test_reading_api_v20_attributes():
