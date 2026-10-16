@@ -163,6 +163,35 @@ def intermediate_repr(sym):
     return symbol_string(sym)
 
 
+#: Signatures of atoms needed for error causation. They are not shown in display.lp, since
+#: turning hundreds of thousands of them into Python objects for every model is slow. Instead,
+#: the true ones are collected only for models with errors.
+DIAGNOSTIC_SIGNATURES = (
+    ("condition_reason", 2),
+    ("pkg_fact", 2),
+    ("condition_holds", 2),
+    ("imposed_constraint", 3),
+    ("imposed_constraint", 4),
+    ("imposed_constraint", 5),
+    ("imposed_constraint", 6),
+    ("condition_requirement", 3),
+    ("condition_requirement", 4),
+    ("condition_requirement", 5),
+    ("condition_requirement", 6),
+    ("node_has_variant", 3),
+    ("build", 1),
+    ("external", 1),
+    ("trigger_and_effect", 3),
+    ("unification_set", 2),
+    ("provider", 2),
+    ("condition_nodes", 2),
+    ("trigger_node", 3),
+    ("imposed_nodes", 2),
+    ("variant_single_value", 2),
+    ("has_provider", 1),
+)
+
+
 def extract_args(model, predicate_name):
     """Extract the arguments to predicates with the provided name from a model.
 
@@ -749,6 +778,14 @@ class PyclingoDriver:
         parent_dir = os.path.dirname(__file__)
         return [os.path.join(parent_dir, rel_path) for rel_path in control_files]
 
+    def _diagnostic_atoms(self) -> List[Tuple[int, Any]]:
+        """Return ``(literal, symbol)`` for every grounded atom that error causation needs."""
+        return [
+            (atom.literal, atom.symbol)
+            for name, arity in DIAGNOSTIC_SIGNATURES
+            for atom in self.control.symbolic_atoms.by_signature(name, arity)
+        ]
+
     def _run_clingo(
         self,
         specs: List[spack.spec.Spec],
@@ -779,9 +816,18 @@ class PyclingoDriver:
 
         # With a grounded program, we can run the solve.
         models = []  # stable models if things go well
+        diagnostics: Optional[List[Tuple[int, Any]]] = None
 
         def on_model(model):
-            models.append((model.cost, model.symbols(shown=True, terms=True)))
+            nonlocal diagnostics
+            symbols = model.symbols(shown=True, terms=True)
+            # Error causation needs atoms that are too many to show for every model, so add the
+            # true ones only to models with errors.
+            if any(symbol_name(sym) == "error" for sym in symbols):
+                if diagnostics is None:
+                    diagnostics = self._diagnostic_atoms()
+                symbols = [*symbols, *(sym for lit, sym in diagnostics if model.is_true(lit))]
+            models.append((model.cost, symbols))
 
         timer.start("solve")
         # A timeout of 0 means no timeout
