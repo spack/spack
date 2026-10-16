@@ -3199,6 +3199,10 @@ def reorder_flags(specs: SpecDict) -> None:
     flags inserted, and should always appear in that order.
     """
     for node, spec in specs.items():
+        # Reused specs are concrete, and keep the flag order they were built with
+        if spec.concrete:
+            continue
+
         # if bootstrapping, compiler is not in config and has no flags
         flagmap_from_compiler = {
             flag_type: [x for x in values if x.source == "compiler"]
@@ -3221,7 +3225,11 @@ def reorder_flags(specs: SpecDict) -> None:
         # For flags that are applied by dependents, put flags from parents
         # before children; we depend on the stability of traverse() to
         # achieve a stable flag order for flags introduced in this manner.
-        topo_order = [s.name for s in spec.traverse(order="post", direction="parents")]
+
+        # Traversal is skipped for nodes without flags, which never read it.
+        topo_order: List[str] = []
+        if any(spec.compiler_flags.values()):
+            topo_order = [s.name for s in spec.traverse(order="post", direction="parents")]
 
         for flag_type in spec.compiler_flags.valid_compiler_flags():
             ordered_flags: List[str] = []
