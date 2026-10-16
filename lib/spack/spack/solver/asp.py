@@ -48,6 +48,7 @@ import spack.deprecation
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
+import spack.gpus
 import spack.hash_lookup
 import spack.package_base
 import spack.package_prefs
@@ -1221,6 +1222,7 @@ class SpackSolverSetup:
 
         # If true, we have to load the code for synthesizing splices
         self.enable_splicing: bool = self.context.config.get("concretizer:splice:automatic")
+        self.detect_host_gpus: bool = self.context.config.get("concretizer:gpus:detect", False)
 
     def pkg_version_rules(self, pkg: Type[spack.package_base.PackageBase]) -> None:
         """Declares known versions, their origins, and their weights."""
@@ -1918,6 +1920,56 @@ class SpackSolverSetup:
                     fn.variant_default_value_from_packages_yaml(pkg_name, variant.name, value)
                 )
 
+    def host_gpu_variants(self, pkg_name):
+        """Facts on variant defaults derived from GPUs detected on the host.
+
+        These take precedence over the defaults in package.py, but are overridden by
+        packages.yaml preferences and by values set on the command line.
+        """
+        if not self.detect_host_gpus:
+            return
+
+        detected = spack.gpus.host_variants()
+        if not detected:
+            return
+
+        pkg_cls = self.clauses.pkg_class(pkg_name)
+        declared = pkg_cls.variant_names()
+        emitted = False
+        for variant_name in sorted(detected):
+            if variant_name not in declared:
+                continue
+
+            for value in detected[variant_name]:
+                variant = spack.spec.Spec(f"{pkg_name} {variant_name}={value}").variants[
+                    variant_name
+                ]
+                # perform validation of the variant and values
+                try:
+                    variant_defs = vt.prevalidate_variant_value(pkg_cls, variant)
+                except (vt.InvalidVariantValueError, KeyError, ValueError) as e:
+                    tty.debug(
+                        f"[SETUP]: rejected host GPU {variant_name}={value} "
+                        f"for {pkg_name}: {str(e)}"
+                    )
+                    continue
+
+                if not emitted:
+                    self.gen.h2(f"Host GPU defaults: {pkg_name}")
+                    emitted = True
+
+                for variant_def in variant_defs:
+                    self.clauses.record_variant_value(pkg_name, variant_def, value)
+                self.gen.fact(fn.variant_default_value_from_host(pkg_name, variant_name, value))
+
+                # A single-valued variant can only take one default: the first GPU wins
+                if not all(d.multi for d in variant_defs):
+                    break
+
+        # DEMO: tell the user which GPUs were used, only for packages they asked for
+        if emitted and pkg_name in getattr(self, "_root_names", set()):
+            tty.msg(f"{pkg_name}: using host GPU defaults: {spack.gpus.summary()}")
+
     def target_preferences(self):
         key_fn = spack.package_prefs.PackagePrefs(
             "all", "target", configuration=self.context.config
@@ -2493,6 +2545,8 @@ class SpackSolverSetup:
         )
         self.possible_virtuals = node_counter.possible_virtuals()
         self.pkgs = node_counter.possible_dependencies()
+        # DEMO: names of the root specs, used to restrict the host GPU notice to roots
+        self._root_names = {s.name for s in specs if s.name}
 
         self.requirement_parser.parse_rules_from_input_specs(specs)
         self.gen.h1("Generic information")
@@ -2574,6 +2628,7 @@ class SpackSolverSetup:
             self.gen.h2(f"Package rules: {pkg}")
             self.pkg_rules(pkg, tests=self.tests)
             self.preferred_variants(pkg)
+            self.host_gpu_variants(pkg)
 
         self.gen.h1("Condition Triggers and Imposed Effects")
         self.trigger_rules()
