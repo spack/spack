@@ -13,8 +13,11 @@ raising an OSError if we are unable to find one.
 """
 
 import os
+import re
 import shlex
-from typing import Callable, List
+import subprocess
+import sys
+from typing import Callable, Iterator, List, Optional, Tuple
 
 import spack.util.executable
 from spack.util import tty
@@ -23,30 +26,92 @@ from spack.util import tty
 _default_editors = ["vim", "vi", "emacs", "nano", "notepad"]
 
 
-def _find_exe_from_env_var(var: str):
+def _split_windows_args(args: str) -> List[str]:
+    """Split a Windows command line string into arguments, following the MSVC runtime rules.
+
+    Whitespace separates arguments, double quotes group them, and backslashes are literal
+    unless they precede a double quote (``2n`` backslashes + ``"`` yield ``n`` backslashes and
+    toggle quoting, ``2n+1`` backslashes + ``"`` yield ``n`` backslashes and a literal ``"``).
+    """
+    result: List[str] = []
+    current: Optional[str] = None
+    in_quotes = False
+    for match in re.finditer(r'(\\*)"|(\\+)|(\s+)|([^\\"\s]+)', args):
+        slashes_before_quote, slashes, space, text = match.groups()
+        if space is not None and not in_quotes:
+            if current is not None:
+                result.append(current)
+                current = None
+            continue
+        current = current or ""
+        if slashes_before_quote is not None:
+            current += "\\" * (len(slashes_before_quote) // 2)
+            if len(slashes_before_quote) % 2:
+                current += '"'
+            else:
+                in_quotes = not in_quotes
+        else:
+            current += slashes or space or text
+    if current is not None:
+        result.append(current)
+    return result
+
+
+def _windows_exe_candidates(value: str) -> Iterator[Tuple[str, List[str]]]:
+    """Yield possible ``(program, args)`` splits of a Windows command line, in the order
+    ``CreateProcess`` would try them."""
+    if value.startswith('"'):
+        program, _, rest = value[1:].partition('"')
+        yield program, _split_windows_args(rest)
+        return
+
+    # An unquoted program path may contain spaces (e.g. C:\Program Files\...), so like
+    # CreateProcess, try each whitespace-delimited prefix, shortest first.
+    for match in re.finditer(r"\s+|$", value):
+        yield value[: match.start()], _split_windows_args(value[match.end() :])
+
+
+def _find_exe_from_env_var(var: str) -> Tuple[Optional[str], List[str]]:
     """Find an executable from an environment variable.
 
     Args:
-        var (str): environment variable name
+        var: environment variable name
 
     Returns:
-        (str or None, list): executable string (or None if not found) and
-            arguments parsed from the env var
+        executable path (or None if not found) and the full argument list parsed from the env
+        var, starting with the executable path itself (i.e. ``argv`` for ``os.execv``)
     """
-    # try to get the environment variable
-    exe = os.environ.get(var)
-    if not exe:
+    value = os.environ.get(var, "").strip()
+    if not value:
         return None, []
 
     # split env var into executable and args if needed
-    args = shlex.split(str(exe))
+    if sys.platform == "win32":
+        # backslashes are path separators on Windows, not escapes, so shlex can't be used
+        candidates: Iterator[Tuple[str, List[str]]] = _windows_exe_candidates(value)
+    else:
+        args = shlex.split(value)
+        candidates = iter([(args[0], args[1:])] if args else [])
 
-    if not args:
-        return None, []
+    for program, args in candidates:
+        exe = spack.util.executable.which_string(program)
+        if exe:
+            return exe, [exe] + args
 
-    exe = spack.util.executable.which_string(args[0])
-    args = [exe] + args[1:]
-    return exe, args
+    return None, []
+
+
+def _execv(exe: str, args: List[str]) -> int:
+    """``os.execv()``, with arguments quoted on Windows.
+
+    The Windows CRT builds the child's command line by joining ``args`` with spaces and no
+    quoting, so any argument containing whitespace (like an executable under
+    ``C:\\Program Files``) is split apart by the child. ``argv[0]`` must still be passed, since
+    the child parses its own program name from the start of the command line.
+    """
+    if sys.platform == "win32":
+        args = [subprocess.list2cmdline([arg]) for arg in args]
+    os.execv(exe, args)
 
 
 def executable(exe: str, args: List[str]) -> int:
@@ -59,7 +124,7 @@ def executable(exe: str, args: List[str]) -> int:
     return cmd.returncode
 
 
-def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = os.execv) -> bool:
+def editor(*args: str, exec_fn: Callable[[str, List[str]], int] = _execv) -> bool:
     """Invoke the user's editor.
 
     This will try to execute the following, in order:
