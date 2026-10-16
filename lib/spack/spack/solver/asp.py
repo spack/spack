@@ -1871,19 +1871,25 @@ class SpackSolverSetup:
                 self.gen.newline()
                 requirement_weight += 1
 
-    def external_packages(self, packages_with_externals):
-        """Facts on external packages, from packages.yaml and implicit externals."""
-        self.gen.h1("External packages")
-        for pkg_name, data in packages_with_externals.items():
-            if pkg_name == "all":
-                continue
+    def buildable_constraints(self, packages_with_externals):
+        """Emit buildable_false facts. For each package, 'buildable' is taken from
+        the first of these that is set:
 
-            # This package is not among possible dependencies
-            if pkg_name not in self.pkgs:
-                continue
+            1. packages:<pkg>:buildable
+            2. packages:<virtual>:buildable, for virtuals the package provides
+            3. packages:all:buildable  (default: True)
 
-            if not data.get("buildable", True):
-                self.gen.h2(f"External package: {pkg_name}")
+        Note that ``packages_with_externals`` already accounts for virtual package 'buildable'
+        settings via ``spack.externals_config._normalize_packages_yaml``.
+        """
+        all_buildable = packages_with_externals.get("all", {}).get("buildable", True)
+
+        self.gen.h1("Buildable constraints")
+        for pkg_name in sorted(self.pkgs):
+            pkg_setting = packages_with_externals.get(pkg_name, {}).get("buildable", all_buildable)
+
+            if not pkg_setting:
+                self.gen.h2(f"Non-buildable package: {pkg_name}")
                 self.gen.fact(fn.buildable_false(pkg_name))
 
     def preferred_variants(self, pkg_name):
@@ -2551,7 +2557,7 @@ class SpackSolverSetup:
         self.target_defaults(specs + dev_specs)
 
         self.virtual_requirements_and_weights()
-        self.external_packages(packages_with_externals)
+        self.buildable_constraints(packages_with_externals)
 
         # TODO: make a config option for this undocumented feature
         checksummed = "SPACK_CONCRETIZER_REQUIRE_CHECKSUM" in os.environ
