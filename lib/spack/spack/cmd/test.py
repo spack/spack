@@ -179,7 +179,7 @@ def test_run(args):
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
+        matching = spack.store.STORE.db.query(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
             tty.warn(f"No {explicit_str}installed packages match spec {spec}")
 
