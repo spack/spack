@@ -731,7 +731,8 @@ This facilitates working with many independent Spack instances without worrying 
 
 .. note::
 
-   For an upgraded older Spack instance (pre-1.3), installs, GPG keys, and licenses remain stored in their pre-1.3 locations inside ``$spack`` (e.g., ``$spack/opt/spack``, ``$spack/etc/spack/gpg``) rather than being moved to the isolate path. These resources are not shared but stay in the Spack prefix for compatibility with older Spack versions.
+   For an upgraded older Spack instance (pre-1.3), installs, GPG keys, and licenses remain stored in their pre-1.3 locations inside ``$spack`` (e.g., ``$spack/opt/spack``, ``$spack/etc/spack/gpg``) rather than being moved to the isolate path.
+   These resources are not shared but stay in the Spack prefix for compatibility with older Spack versions.
 
 With default config and environment variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
