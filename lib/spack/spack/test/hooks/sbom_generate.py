@@ -38,6 +38,16 @@ def test_sbom_generated_with_post_install(mock_packages, install_mockery):
     assert pkg["filesAnalyzed"] is False
     assert pkg["licenseConcluded"] == "NOASSERTION"
     assert "SPDXID" in pkg
+    assert "externalRefs" in pkg
+
+    assert len(pkg["externalRefs"]) > 0
+    for extRef in pkg["externalRefs"]:
+        # Every externalRef has a PURL (locator)
+        assert extRef["referenceLocator"]
+
+        # That PURL is the expected format
+        purl = f"pkg:spack/{spec.namespace}/{spec.name}@{spec.version}?daghash={spec.dag_hash()}"
+        assert extRef["referenceLocator"] == purl
 
 
 def test_sbom_contains_dependencies(mock_packages, install_mockery):
