@@ -82,3 +82,13 @@ class Dependency:
             return f"<Dependency: {self.spec} [{types}, {self.patches}]>"
         else:
             return f"<Dependency: {self.spec} [{types}]>"
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality between two Dependency objects."""
+        if not isinstance(other, Dependency):
+            return False
+        return (
+            self.spec == other.spec
+            and self.depflag == other.depflag
+            and self.patches == other.patches
+        )
