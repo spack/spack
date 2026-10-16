@@ -70,7 +70,10 @@ def _setup_isolate_scope(
             shutil.rmtree(spack.paths.isolate_scope_path)
             os.makedirs(spack.paths.isolate_scope_path)
         elif not reuse_old:
-            raise Exception("An isolation already exists for this Spack instance")
+            tty.die(
+                "An isolation already exists for this Spack instance:"
+                " see --help for --overwrite/--reuse-old options"
+            )
     else:
         os.makedirs(spack.paths.isolate_scope_path, exist_ok=True)
 
@@ -106,7 +109,7 @@ def _ensure_destination_setup(destination: str, overwrite: bool):
         if overwrite:
             shutil.rmtree(destination)
         else:
-            raise Exception(f"Isolation destination: {destination} already exists")
+            tty.die(f"Isolation destination: {destination} already exists")
     os.mkdir(destination)
     return os.path.abspath(destination)
 
@@ -126,12 +129,18 @@ def setup_parser(subparser: ArgumentParser):
         "--undo", action="store_true", help="undo the result of calling isolate"
     )
     subparser.add_argument(
-        "--overwrite", action="store_true", help="overwrite existing isolation if necessary"
+        "--overwrite",
+        action="store_true",
+        help="overwrite (delete and replace) existing isolation",
     )
     subparser.add_argument(
         "--reuse-old",
         action="store_true",
-        help="reuse an existing isolation target without overwriting its configuration",
+        help=(
+            "reuse an existing isolation target without overwriting its configuration"
+            " (this is generally for Spack instances that used `spack isolate` before"
+            " 1.3 and then upgraded to 1.3)"
+        ),
     )
 
 
@@ -146,7 +155,10 @@ def _do_isolate(args):
         elif args.reuse_old:
             destination = os.path.abspath(args.path)
         else:
-            raise Exception(f"Isolation destination: {args.path} already exists")
+            tty.die(
+                f"Isolation destination: {args.path} already exists:"
+                " see --help for --overwrite/--reuse-old options"
+            )
     else:
         destination = _ensure_destination_setup(args.path, overwrite=False)
 
@@ -158,7 +170,7 @@ def _do_isolate(args):
     # ensure layout scope doesn't already exist to avoid conflicts
     layout_config = os.path.join(spack.paths.layout_scope_path, "config.yaml")
     if config_path == layout_config and os.path.exists(config_path):
-        raise Exception(
+        tty.die(
             f"Layout scope config already exists at {config_path}. "
             "Cannot write isolation config without overwriting it."
         )
@@ -207,7 +219,7 @@ def _do_isolate(args):
 
 def _undo_isolate():
     if not os.path.exists(spack.paths.isolate_scope_path):
-        raise RuntimeError("Cannot find isolation to undo")
+        tty.die("Cannot find isolation to undo")
 
     # Remove the isolate scope directory
     shutil.rmtree(spack.paths.isolate_scope_path)
