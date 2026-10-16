@@ -200,7 +200,7 @@ def migrate_v1_to_v2(
 
         # no-op if the same, error if different
         if os.path.lexists(new_path):
-            if not fs.is_link_to(tgt, new_path):
+            if not os.path.islink(new_path) or os.readlink(new_path) != tgt:
                 print(
                     f"Cannot upgrade from v1 to v2, because the file '{new_path}' already exists",
                     file=err,

@@ -32,10 +32,10 @@ def check_link(link_mode: str, src: str, dst: str) -> None:
         assert os.path.islink(dst)
         assert fs.islink(dst)
         assert fs.readlink(dst) == os.path.normpath(src)
-        assert fs.is_link_to(src, dst)
     else:
+        # A junction or hard link to src, which is relative to the link's directory as for symlinks
         assert not os.path.islink(dst)
-        assert fs.is_link_to(src, dst)
+        assert os.path.samefile(os.path.join(os.path.dirname(dst), src), dst)
 
 
 def test_symlink_file(tmp_path: pathlib.Path, link_mode: str):
@@ -208,7 +208,7 @@ def test_windows_create_hard_link(tmp_path: pathlib.Path):
         assert not os.path.islink(link_file)
         with pytest.raises(OSError):
             fs.readlink(link_file)
-        assert fs.is_link_to(real_file, link_file)
+        assert os.path.samefile(real_file, link_file)
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
@@ -248,37 +248,12 @@ def test_windows_create_link_file(tmp_path: pathlib.Path):
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
-def test_windows_is_link_to(tmp_path: pathlib.Path):
-    """"""
-    with fs.working_dir(str(tmp_path)):
-        os.mkdir("real_dir")
-        os.mkdir("other_dir")
-        fs.touch("real_file")
-        fs.touch("other_file")
-        fs._windows_create_junction(os.path.abspath("real_dir"), "junction")
-        fs._windows_create_hard_link("real_file", "hard_link")
-
-        assert fs.islink("junction")
-        assert fs.is_link_to("real_dir", "junction")
-        assert fs.is_link_to("real_file", "hard_link")
-
-
-@pytest.mark.only_windows("Test is for Windows specific behavior")
 def test_windows_read_junction(tmp_path: pathlib.Path):
     """Makes sure readlink can read the link source for junctions on windows"""
     with fs.working_dir(str(tmp_path)):
-        real_dir_1 = "real_dir_1"
-        real_dir_2 = "real_dir_2"
-        link_dir_1 = "link_dir_1"
-        link_dir_2 = "link_dir_2"
-        os.mkdir(real_dir_1)
-        os.mkdir(real_dir_2)
-
-        fs._windows_create_junction(os.path.abspath(real_dir_1), link_dir_1)
-        fs._windows_create_junction(os.path.abspath(real_dir_2), link_dir_2)
-
-        assert fs.readlink(link_dir_1) == os.path.abspath(real_dir_1)
-        assert fs.readlink(link_dir_2) == os.path.abspath(real_dir_2)
+        os.mkdir("real_dir")
+        fs._windows_create_junction(os.path.abspath("real_dir"), "link_dir")
+        assert fs.readlink("link_dir") == os.path.abspath("real_dir")
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")

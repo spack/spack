@@ -3039,8 +3039,7 @@ def _windows_islink(path: str) -> bool:
     Windows-only methods will return false for other operating systems.
 
     For Windows: spack considers symlinks and junctions to be links. Hard links are not, since
-    there is no way to tell which of the paths sharing a file is the link. When the expected
-    source is known, use ``is_link_to`` to recognize them.
+    there is no way to tell which of the paths sharing a file is the link.
 
     Args:
         path (str): path to check if it is a link.
@@ -3049,26 +3048,6 @@ def _windows_islink(path: str) -> bool:
          bool - whether the path is any kind link or not.
     """
     return os.path.islink(path) or _windows_is_junction(path)
-
-
-def _windows_is_link_to(src: str, dst: str) -> bool:
-    """Returns True if ``dst`` is the link that ``symlink(src, dst)`` creates: a symlink that
-    reads as ``src`` or, without symlink privileges, a junction or hard link to ``src``. As with
-    ``symlink``, a relative ``src`` is relative to the directory containing ``dst``.
-
-    A hard link cannot be told apart from the file it links to, so this is also True when ``dst``
-    is ``src`` itself."""
-    if os.path.islink(dst):
-        return _windows_readlink(dst) == os.path.normpath(src)
-    try:
-        return os.path.samefile(os.path.join(os.path.dirname(dst), src), dst)
-    except OSError:
-        return False
-
-
-def _is_link_to(src: str, dst: str) -> bool:
-    """Returns True if ``dst`` is the symlink that ``symlink(src, dst)`` creates"""
-    return os.path.islink(dst) and os.readlink(dst) == src
 
 
 def _windows_is_hardlink(path: str) -> bool:
@@ -3279,13 +3258,11 @@ if sys.platform == "win32":
     symlink = _windows_symlink
     readlink = _windows_readlink
     islink = _windows_islink
-    is_link_to = _windows_is_link_to
     rename = _win_rename
 else:
     symlink = os.symlink
     readlink = os.readlink
     islink = os.path.islink
-    is_link_to = _is_link_to
     rename = os.rename
 
 
