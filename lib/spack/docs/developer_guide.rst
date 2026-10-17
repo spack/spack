@@ -347,6 +347,20 @@ It receives the spec as its only argument.
 A ``post_install`` hook runs within the install subprocess after installation finishes, but before the build stage is removed and the spec is registered in the database.
 It receives the spec and an optional boolean indicating whether this spec is an explicit user request, or a dependency.
 
+``post_database_add(specs)``
+""""""""""""""""""""""""""""
+
+A ``post_database_add`` hook runs after specs are added to the database, in the process that added them, and after their ``post_install`` hooks.
+It receives the list of added specs: a command may pass all the specs it added in one call, or split them over several calls.
+It must not raise: report a failure for one spec as a warning, and go on with the other specs.
+
+``post_database_remove(specs)``
+"""""""""""""""""""""""""""""""
+
+A ``post_database_remove`` hook runs after specs are uninstalled or deprecated, in the process that removed them.
+It receives the list of removed specs.
+The same rules as for ``post_database_add`` apply.
+
 ``pre_uninstall(spec)``
 """""""""""""""""""""""
 
@@ -357,7 +371,7 @@ It receives the spec as its only argument.
 """"""""""""""""""""""""
 
 A ``post_uninstall`` hook runs after package uninstallation finishes.
-It receives the spec as its only argument and is primarily used for cleaning up module files during uninstall operations.
+It receives the spec as its only argument.
 
 
 Adding a New Hook Module

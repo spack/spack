@@ -44,6 +44,7 @@ import spack.directives_meta
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.modules
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -1602,6 +1603,20 @@ def module_configuration(request, mutable_config):
     # ConfigUpdate, when called, will modify configuration, so we need to use
     # the mutable_config fixture
     return ConfigUpdate(root_for_conf)
+
+
+@pytest.fixture()
+def modulefile_filename():
+    """Returns a function that writes the module file of a spec in the "default" module set
+    and returns its filename."""
+
+    def _impl(module_type, spec):
+        writer_cls = spack.modules.module_types[module_type]
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec), "default")
+        writer.write()
+        return writer.layout.filename
+
+    return _impl
 
 
 @pytest.fixture()
