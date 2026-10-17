@@ -13,6 +13,7 @@ from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
 
 import spack.builder
 import spack.util.tty as _tty
+from spack import min_package_api_version, package_api_version, spack_version, spack_version_info
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
     MakeExecutable,
@@ -450,6 +451,12 @@ api: Dict[str, Tuple[str, ...]] = {
         "windows_sfn",
     ),
     "v2.6": ("deprecated",),
+    "v2.7": (
+        "spack_version",
+        "spack_version_info",
+        "package_api_version",
+        "min_package_api_version",
+    ),
 }
 
 # Splatting does not work for static analysis tools.
@@ -619,7 +626,13 @@ __all__ = [
     "static_library_suffix",
     "substitute_version_in_url",
     "windows_sfn",
+    # v2.6
     "deprecated",
+    # v2.7
+    "spack_version",
+    "spack_version_info",
+    "package_api_version",
+    "min_package_api_version",
 ]
 
 # These are just here for editor support; they may be set when the build env is set up.
