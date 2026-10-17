@@ -90,7 +90,10 @@ class PosixTerminalState(BaseTerminalState):
     def teardown_input(self) -> None:
         """Restore terminal settings and signal handlers, close pipes."""
         with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
+            try:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
+            except termios.error as e:
+                spack.util.tty.debug(f"Failed to restore terminal settings: {e}")
 
         for sig, old in ((signal.SIGTSTP, self.old_sigtstp), (signal.SIGWINCH, self.old_sigwinch)):
             if old is not None:

@@ -4,6 +4,7 @@
 """Tests for the installer.core module: the PackageInstaller event loop."""
 
 import os
+import signal
 import sys
 
 import pytest
@@ -338,6 +339,32 @@ def test_keyboard_interrupt_terminates_builds_and_flushes_db(temporary_store, mo
     assert launcher.hanging[0].terminated
     assert _record(temporary_store, dep) is not None
     assert _record(temporary_store, root) is None
+
+
+@pytest.mark.not_on_windows("signals are not delivered to handlers on Windows")
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+@pytest.mark.parametrize("signum", ["SIGTERM", "SIGHUP"])
+def test_termination_signal_is_handled_like_keyboard_interrupt(
+    signum, temporary_store, mock_packages
+):
+    """SIGTERM and SIGHUP terminate the running build and flush finished builds to the database,
+    and are left to their previous handler after the install."""
+    signum = getattr(signal, signum)
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: Script(hang=True)})
+
+    def tick():
+        if launcher.hanging:  # the dep finished and the root build is now running
+            os.kill(os.getpid(), signum)
+
+    with pytest.raises(KeyboardInterrupt):
+        _install(launcher, root, ui=DrivingUI(tick))
+
+    assert launcher.hanging[0].terminated
+    assert _record(temporary_store, dep) is not None
+    assert _record(temporary_store, root) is None
+    assert signal.getsignal(signum) is signal.SIG_DFL
 
 
 @pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root
