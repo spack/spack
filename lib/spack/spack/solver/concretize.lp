@@ -429,17 +429,46 @@ node_in_deprecation_scope(node(ID, Package)) :-
 node_in_deprecation_scope(node(ID, Package)) :-
     build(node(ID, Package)), deprecation_scope("runtime").
 
-% Directives are emitted only when the deprecation policy does not allow them, so a directive
-% matching a selected non-external node in scope is a concretization error. Reason and severity
-% appear in the error term for the message, with severity as an integer:
-% 0=none, 1=low, 2=medium, 3=high, 4=critical.
-error(1, "deprecated_error", Package, CondID, Reason, Severity)
-  :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
+% Labels fixed on a node by the patches applied to it
+
+deprecation_label_fixed(node(ID, Package), Label) % same recipe patch()
+  :- pkg_fact(Package, deprecation_fix(CondID, Label)),
+     condition_holds(CondID, node(ID, Package)),
+     build(node(ID, Package)).
+
+deprecation_label_fixed(node(ID, Package), Label) % depends_on(..., patches=...)
+  :- pkg_fact(Parent, dependency_deprecation_fix(ParentCondID, Package, CondID, Label)),
+     condition_holds(ParentCondID, node(ParentID, Parent)),
+     depends_on(node(ParentID, Parent), node(ID, Package)),
+     condition_holds(CondID, node(ID, Package)),
+     build(node(ID, Package)).
+
+deprecation_label_fixed(node(ID, Package), Label)  % reused node
+  :- attr("hash", node(ID, Package), Hash),
+     reused_deprecation_fix(Hash, Label).
+
+% Only the directives and labels the policy refuses are emitted.
+% A directive without labels is an error on every node it matches,
+% one with labels is an error for each label not fixed by a patch
+deprecated_node(node(ID, Package), DeprecationID)
+  :- pkg_fact(Package, deprecation_directive(DeprecationID, CondID)),
      condition_holds(CondID, node(ID, Package)),
      not external(node(ID, Package)),
      node_in_deprecation_scope(node(ID, Package)).
 
-#defined deprecation_directive/3.
+deprecation_has_labels(Package, DeprecationID)
+  :- pkg_fact(Package, deprecation_label(DeprecationID, _)).
+
+error(1, "deprecated_error", Package, DeprecationID)
+  :- deprecated_node(node(ID, Package), DeprecationID),
+     not deprecation_has_labels(Package, DeprecationID).
+
+error(1, "deprecated_error", Package, DeprecationID, Label)
+  :- deprecated_node(node(ID, Package), DeprecationID),
+     pkg_fact(Package, deprecation_label(DeprecationID, Label)),
+     not deprecation_label_fixed(node(ID, Package), Label).
+
+#defined reused_deprecation_fix/2.
 #defined deprecation_scope/1.
 
 %-----------------------------------------------------------------------------
