@@ -267,6 +267,29 @@ class _PathsModule(types.ModuleType):
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
         return getattr(locs, name)  # type: ignore[return-value]
 
+    def __setattr__(self, name: str, value) -> None:
+        # Allow setting special module-level attributes
+        if name in ("locations", "SpackPaths", "set_working_dir", "_original_module"):
+            object.__setattr__(self, name, value)
+            return
+
+        # spack_working_dir is mutable - allow setting it
+        if name == "spack_working_dir":
+            module_dict = object.__getattribute__(self, "__dict__")
+            original_module = module_dict.get("_original_module")
+            if original_module is not None:
+                original_module.__dict__[name] = value
+            else:
+                object.__setattr__(self, name, value)
+            return
+
+        # For path attributes that come from locations, raise an error
+        raise AttributeError(
+            f"Cannot set 'spack.paths.{name}' directly. "
+            "To change spack paths, create a new SpackPaths object and assign it: "
+            "spack.paths.locations = SpackPaths(_prefix=...)"
+        )
+
 
 _original_module = sys.modules[__name__]
 _shim = _PathsModule(__name__)
