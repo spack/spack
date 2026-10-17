@@ -9,7 +9,7 @@ import pytest
 
 import spack.concretize
 from spack.directory_layout import DirectoryLayout
-from spack.filesystem_view import SimpleFilesystemView, YamlFilesystemView
+from spack.filesystem_view import SimpleFilesystemView, YamlFilesystemView, view_copy
 from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.test.conftest import FsTree
@@ -150,3 +150,14 @@ def test_view_no_dir_symlinks(mock_packages, tmp_path: pathlib.Path):
     # File should be a symlink.
     ah_path = os.path.join(include_dir, "a.h")
     assert os.path.islink(ah_path)
+
+
+def test_view_copy_leaves_non_text_files_unchanged(mock_packages, tmp_path: pathlib.Path):
+    view = SimpleFilesystemView(str(tmp_path / "view"), DirectoryLayout(str(tmp_path / "view")))
+    a = Spec("pkg-a")
+    a.set_prefix(str(tmp_path / "a"))
+    a._mark_concrete()
+    data = f"{a.prefix}/lib".encode() + b"\x00\xff"
+    (tmp_path / "src.pyc").write_bytes(data)
+    view_copy(str(tmp_path / "src.pyc"), str(tmp_path / "dst.pyc"), view, a)
+    assert (tmp_path / "dst.pyc").read_bytes() == data
