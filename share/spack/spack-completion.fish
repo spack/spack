@@ -2210,9 +2210,9 @@ complete -c spack -n '__fish_spack_using_command isolate' -l self -d 'store isol
 complete -c spack -n '__fish_spack_using_command isolate' -l undo -f -a undo
 complete -c spack -n '__fish_spack_using_command isolate' -l undo -d 'undo the result of calling isolate'
 complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -f -a overwrite
-complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -d 'overwrite existing isolation if necessary'
+complete -c spack -n '__fish_spack_using_command isolate' -l overwrite -d 'overwrite (delete and replace) existing isolation'
 complete -c spack -n '__fish_spack_using_command isolate' -l reuse-old -f -a reuse_old
-complete -c spack -n '__fish_spack_using_command isolate' -l reuse-old -d 'reuse an existing isolation target without overwriting its configuration'
+complete -c spack -n '__fish_spack_using_command isolate' -l reuse-old -d 'reuse an existing isolation target without overwriting its configuration (this is generally for Spack instances that used `spack isolate` before 1.3 and then upgraded to 1.3)'
 
 # spack license
 set -g __fish_spack_optspecs_spack_license h/help root=
