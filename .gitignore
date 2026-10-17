@@ -14,6 +14,9 @@ spack-db.*
 *.in.log
 *.out.log
 CLAUDE.md
+# Auto-migration markers
+.migration-done
+.migration-lock
 
 # Configuration: Ignore everything in /etc/spack,
 # except defaults and site scopes that ship with spack

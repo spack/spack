@@ -11,7 +11,7 @@
 #   $SPACK_ROOT/etc/spack/packages.yaml
 #
 # Per-user settings (overrides default and site settings):
-#   ~/.spack/packages.yaml
+#   ~/.config/spack/packages.yaml
 # -------------------------------------------------------------------------
 packages:
   all:
