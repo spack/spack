@@ -2859,9 +2859,6 @@ def _do_migrate_spack_prefix(old_resources):
 
     This is called during initialization after the user approves migration, or
     directly by `spack migrate use-new-layout`.
-
-    Returns:
-        Dict with keys 'migrated' and 'retained' (lists of resource names)
     """
     tty.debug("Spack prefix migration called")
 
