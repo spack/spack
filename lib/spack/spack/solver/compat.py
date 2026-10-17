@@ -19,7 +19,7 @@ import functools
 import importlib
 import pathlib
 from types import ModuleType
-from typing import Any, Optional, Tuple
+from typing import Any, Iterable, Optional, Tuple
 
 #: Process-global cache of the lazily-imported clingo module.
 _CLINGO_MODULE: Optional[ModuleType] = None
@@ -200,6 +200,19 @@ class _ClingoBackend:
         self._backend.rule(head, body, choice)
 
 
+class _ClingoV6SymbolicAtoms:
+    """Adapter exposing the legacy ``SymbolicAtoms.by_signature`` on clingo 6's atom base."""
+
+    __slots__ = ("_base",)
+
+    def __init__(self, base: Any) -> None:
+        self._base = base
+
+    def by_signature(self, name: str, arity: int, positive: bool = True) -> Iterable[Any]:
+        atoms = self._base.get((name, arity, positive))
+        return () if atoms is None else atoms.values()
+
+
 class _ClingoV6Control:
     """Adapter exposing the legacy clingo ``Control`` interface on top of the restructured clingo
     6 Python API. Only the subset of the API used by Spack's solver is implemented; instantiate
@@ -228,6 +241,10 @@ class _ClingoV6Control:
 
     def backend(self) -> _ClingoBackend:
         return _ClingoBackend(self._control.backend)
+
+    @property
+    def symbolic_atoms(self) -> "_ClingoV6SymbolicAtoms":
+        return _ClingoV6SymbolicAtoms(self._control.base)
 
     @property
     def statistics(self) -> Any:
