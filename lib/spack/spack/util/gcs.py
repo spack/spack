@@ -7,15 +7,31 @@ This file contains the definition of the GCS Blob storage Class used to
 integrate GCS Blob storage with spack buildcache.
 """
 
-import os
+import functools
+import posixpath
 import sys
 import urllib.parse
 import urllib.response
-from typing import List
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.error import URLError
 from urllib.request import BaseHandler
 
 from spack.util import tty
+
+
+def gcs_command(command):
+    @functools.wraps(command)
+    def _gcs_command_wrapped(*args, **kwargs):
+        client = gcs_client()
+        try:
+            return command(*args, **kwargs)
+        except client.GoogleAPIError as e:
+            raise urllib.error.URLError(e) from e
+
+    return _gcs_command_wrapped
+
+
+gcs_client_cache: Optional[Any] = None
 
 
 def gcs_client():
@@ -23,9 +39,15 @@ def gcs_client():
     Creates an authenticated GCS client to access GCS buckets and blobs
     """
 
+    global gcs_client_cache
+    if gcs_client_cache is not None:
+        return gcs_client_cache
+
     try:
         import google.auth
+        from google.api_core.exceptions import GoogleAPIError
         from google.cloud import storage
+        from google.cloud.exceptions import ClientError, NotFound
     except ImportError as ex:
         tty.error(
             "{0}, google-cloud-storage python module is missing.".format(ex)
@@ -35,7 +57,15 @@ def gcs_client():
 
     storage_credentials, storage_project = google.auth.default()
     storage_client = storage.Client(storage_project, storage_credentials)
+    setattr(storage_client, "ClientError", ClientError)
+    setattr(storage_client, "NotFound", NotFound)
+    setattr(storage_client, "GoogleAPIError", GoogleAPIError)
+
+    gcs_client_cache = storage_client
     return storage_client
+
+
+gcs_bucket_cache: Dict[str, Any] = {}
 
 
 class GCSBucket:
@@ -60,43 +90,59 @@ class GCSBucket:
             )
         self.url = url
         self.name = self.url.netloc
-        if self.url.path[0] == "/":
-            self.prefix = self.url.path[1:]
-        else:
-            self.prefix = self.url.path
+        self.prefix = self.url.path.lstrip("/")
 
         self.client = client or gcs_client()
 
-        self.bucket = None
+        self._bucket = None
         tty.debug("New GCS bucket:")
         tty.debug("    name: {0}".format(self.name))
         tty.debug("    prefix: {0}".format(self.prefix))
 
-    def exists(self):
-        from google.cloud.exceptions import NotFound
+    @property
+    def bucket(self):
+        if self._bucket is not None:
+            return self._bucket
 
-        if not self.bucket:
-            try:
-                self.bucket = self.client.bucket(self.name)
-            except NotFound as ex:
-                tty.error("{0}, Failed check for bucket existence".format(ex))
-                sys.exit(1)
+        global gcs_bucket_cache
+        if self.name in gcs_bucket_cache:
+            self._bucket = gcs_bucket_cache[self.name]
+            return self._bucket
+
+        try:
+            self._bucket = self.client.bucket(self.name)
+            if self._bucket is not None:
+                gcs_bucket_cache[self.name] = self._bucket
+        except self.client.NotFound as ex:
+            tty.error("{0}, Failed to get GCS bucket".format(ex))
+
+        return self._bucket
+
+    @gcs_command
+    def exists(self):
         return self.bucket is not None
 
+    @gcs_command
     def create(self):
+        global gcs_bucket_cache
         if not self.bucket:
             self.bucket = self.client.create_bucket(self.name)
+            if self.bucket is not None:
+                gcs_bucket_cache[self.name] = self.bucket
 
+    @gcs_command
     def get_blob(self, blob_path):
         if self.exists():
             return self.bucket.get_blob(blob_path)
         return None
 
+    @gcs_command
     def blob(self, blob_path):
         if self.exists():
             return self.bucket.blob(blob_path)
         return None
 
+    @gcs_command
     def get_all_blobs(self, recursive: bool = True, relative: bool = True) -> List[str]:
         """Get a list of all blobs
 
@@ -128,8 +174,9 @@ class GCSBucket:
         return blob_list
 
     def _relative_blob_name(self, blob_name):
-        return os.path.relpath(blob_name, self.prefix)
+        return posixpath.relpath(blob_name, self.prefix)
 
+    @gcs_command
     def destroy(self, recursive=False, **kwargs):
         """Bucket destruction method
 
@@ -137,8 +184,6 @@ class GCSBucket:
 
         Uses GCS Batch operations to bundle several delete operations together.
         """
-        from google.cloud.exceptions import NotFound
-
         tty.debug("Bucket.destroy(recursive={0})".format(recursive))
         try:
             bucket_blobs = self.get_all_blobs(recursive=recursive, relative=False)
@@ -150,9 +195,8 @@ class GCSBucket:
                     for j in range(i, min(i + batch_size, num_blobs)):
                         blob = self.blob(bucket_blobs[j])
                         blob.delete()
-        except NotFound as ex:
+        except self.client.NotFound as ex:
             tty.error("{0}, Could not delete a blob in bucket {1}.".format(ex, self.name))
-            sys.exit(1)
 
 
 class GCSBlob:
@@ -183,38 +227,43 @@ class GCSBlob:
             tty.warn("The bucket {0} does not exist, it will be created".format(self.bucket.name))
             self.bucket.create()
 
+    @gcs_command
     def get(self):
         return self.bucket.get_blob(self.blob_path)
 
+    @gcs_command
     def exists(self):
-        from google.cloud.exceptions import NotFound
-
         try:
             blob = self.bucket.blob(self.blob_path)
             exists = blob.exists()
-        except NotFound:
+        except self.client.NotFound:
             return False
 
         return exists
 
+    @gcs_command
     def delete_blob(self):
-        from google.cloud.exceptions import NotFound
-
         try:
             blob = self.bucket.blob(self.blob_path)
             blob.delete()
-        except NotFound as ex:
+        except self.client.NotFound as ex:
             tty.error("{0}, Could not delete gcs blob {1}".format(ex, self.blob_path))
 
+    @gcs_command
     def upload_to_blob(self, local_file_path):
         blob = self.bucket.blob(self.blob_path)
         blob.upload_from_filename(local_file_path)
 
+    @gcs_command
     def get_blob_byte_stream(self):
         return self.bucket.get_blob(self.blob_path).open(mode="rb")
 
+    @gcs_command
     def get_blob_headers(self):
         blob = self.bucket.get_blob(self.blob_path)
+
+        if not blob:
+            return {}
 
         headers = {
             "Content-type": blob.content_type,
@@ -225,12 +274,18 @@ class GCSBlob:
 
         return headers
 
+    @gcs_command
+    def stat(self) -> Optional[Tuple[int, float]]:
+        blob = self.bucket.get_blob(self.blob_path)
+        if not blob:
+            return None
+        return blob.size, blob.time_created.timestamp()
+
 
 def gcs_open(req, *args, **kwargs):
     """Open a reader stream to a blob object on GCS"""
-    from google.api_core.exceptions import GoogleAPIError
-
     url = urllib.parse.urlparse(req.get_full_url())
+    client = gcs_client()
     try:
         gcsblob = GCSBlob(url)
 
@@ -238,7 +293,7 @@ def gcs_open(req, *args, **kwargs):
             raise URLError("GCS blob {0} does not exist".format(gcsblob.blob_path))
         stream = gcsblob.get_blob_byte_stream()
         headers = gcsblob.get_blob_headers()
-    except GoogleAPIError as e:
+    except client.GoogleAPIError as e:
         raise URLError(e) from e
 
     return urllib.response.addinfourl(stream, headers, url)
