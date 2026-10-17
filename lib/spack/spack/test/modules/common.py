@@ -130,6 +130,7 @@ module_index:
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
     m1 = upstream_index.upstream_module(s1, "tcl")
+    assert m1 is not None
     assert m1.path == "/path/to/a"
 
     # No modules are defined for the DB associated with s2
@@ -168,7 +169,7 @@ module_index:
     monkeypatch.setattr(spack.store, "STORE", types.SimpleNamespace(db=mock_db))
     try:
         old_index = spack.modules.common.upstream_module_index
-        spack.modules.common.upstream_module_index = upstream_index
+        spack.modules.common.upstream_module_index = upstream_index  # ty: ignore[invalid-assignment]
 
         m1_path = spack.modules.get_module("tcl", s1, True)
         assert m1_path == "/path/to/a"

@@ -456,7 +456,7 @@ class CDash(Reporter):
             url = "{0}&{1}".format(self.cdash_upload_url, encoded_params)
             request = Request(url, data=f, method="PUT")
             request.add_header("Content-Type", "text/xml")
-            request.add_header("Content-Length", os.path.getsize(filename))
+            request.add_header("Content-Length", str(os.path.getsize(filename)))
             if self.authtoken:
                 request.add_header("Authorization", "Bearer {0}".format(self.authtoken))
             try:

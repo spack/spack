@@ -10,6 +10,7 @@ import ssl
 import sys
 import types
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime
 from typing import Any, Dict, List, Tuple
@@ -70,7 +71,7 @@ class MockS3Client:
     """Mock S3 client with canned responses."""
 
     def __init__(self, url, method="fetch"):
-        Args = List[Any]
+        Args = Tuple[Any, ...]
         KWArgs = Dict[str, Any]
         self.put_object_calls: List[Tuple[Args, KWArgs]] = []
         self.upload_file_calls: List[Tuple[Args, KWArgs]] = []
@@ -537,7 +538,9 @@ def test_list_s3_url_at_bucket_root(monkeypatch):
 
 def test_stat_s3_url(mock_s3_client):
     fake_s3_url = "s3://my-bucket/subdirectory/my-file"
-    size, mtime = spack.util.web.stat_url(fake_s3_url)
+    result = spack.util.web.stat_url(fake_s3_url)
+    assert result is not None
+    size, mtime = result
     assert 0 == size
     assert 1360799444.0 == mtime
 
@@ -591,16 +594,16 @@ def fake_boto3(monkeypatch):
             self.kwargs = kwargs
 
     boto3_module = types.ModuleType("boto3")
-    boto3_module.Session = FakeSession
+    setattr(boto3_module, "Session", FakeSession)
 
     botocore_module = types.ModuleType("botocore")
-    botocore_module.UNSIGNED = object()
+    setattr(botocore_module, "UNSIGNED", object())
 
     botocore_client_module = types.ModuleType("botocore.client")
-    botocore_client_module.Config = FakeConfig
+    setattr(botocore_client_module, "Config", FakeConfig)
 
     botocore_exceptions_module = types.ModuleType("botocore.exceptions")
-    botocore_exceptions_module.ClientError = FakeClientError
+    setattr(botocore_exceptions_module, "ClientError", FakeClientError)
 
     monkeypatch.setitem(sys.modules, "boto3", boto3_module)
     monkeypatch.setitem(sys.modules, "botocore", botocore_module)
@@ -620,7 +623,10 @@ def test_get_s3_session_normalizes_method_and_returns_parsed_url(monkeypatch, fa
     head_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="head")
     assert head_client is fetch_client
 
-    push_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="anything-else")
+    push_client, _ = spack.util.s3._get_s3_session(
+        "s3://my-bucket/prefix",
+        method="anything-else",  # ty: ignore[invalid-argument-type]
+    )
     assert (None, "push") in spack.util.s3.s3_client_cache
     assert push_client is not fetch_client
 
@@ -755,7 +761,11 @@ def test_retry_on_transient_error(error_code, num_errors, max_retries, expect_fa
         call_count += 1
         if call_count <= num_errors:
             raise urllib.error.HTTPError(
-                url="https://example.com", code=error_code, msg="err", hdrs={}, fp=None
+                url="https://example.com",
+                code=error_code,
+                msg="err",
+                hdrs=email.message.Message(),
+                fp=None,
             )
         return "ok"
 
@@ -853,7 +863,11 @@ def test_retry_on_transient_error_reuse(mock_sleep):
         call_count += 1
         if call_count % 2 != 0:
             raise urllib.error.HTTPError(
-                url="https://example.com", code=503, msg="err", hdrs={}, fp=None
+                url="https://example.com",
+                code=503,
+                msg="err",
+                hdrs=email.message.Message(),
+                fp=None,
             )
         return "ok"
 

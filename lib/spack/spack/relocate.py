@@ -51,7 +51,7 @@ def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
     """
     paths_to_paths = dict()
     # Sort from longest path to shortest, to ensure we try /foo/bar/baz before /foo/bar
-    prefix_iteration_order = sorted(prefix_to_prefix, key=len, reverse=True)
+    prefix_iteration_order = sorted(prefix_to_prefix, key=lambda p: len(p), reverse=True)
     for orig_rpath in orig_rpaths:
         for old_prefix in prefix_iteration_order:
             new_prefix = prefix_to_prefix[old_prefix]

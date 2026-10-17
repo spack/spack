@@ -221,7 +221,7 @@ class AbstractStage(abc.ABC):
         # TODO: temporary stage area in the stage root.
         self.name = name
         if name is None:
-            self.name = stage_prefix + next(tempfile._get_candidate_names())  # type: ignore[attr-defined]
+            self.name = stage_prefix + next(tempfile._get_candidate_names())  # ty: ignore[unresolved-attribute]
 
         # Use the provided path or construct an optionally named stage path.
         if path is not None:
@@ -679,6 +679,9 @@ class Stage(AbstractStage):
             self.fetcher.check()
 
     def cache_local(self):
+        if self.mirror_layout is None:
+            tty.debug(f"Not caching {self.name}: it has no mirror layout")
+            return
         self.download_cache.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(

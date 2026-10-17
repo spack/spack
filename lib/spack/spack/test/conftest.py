@@ -412,6 +412,7 @@ def clear_recorded_monkeypatches():
 @pytest.fixture(scope="session", autouse=True)
 def record_monkeypatch_setattr():
     import _pytest
+    import _pytest.monkeypatch
 
     saved_setattr = _pytest.monkeypatch.MonkeyPatch.setattr
 
@@ -419,11 +420,11 @@ def record_monkeypatch_setattr():
         spack.subprocess_context.MONKEYPATCHES.append((target, name))
         saved_setattr(cls, target, name, value, *args, **kwargs)
 
-    _pytest.monkeypatch.MonkeyPatch.setattr = record_setattr
+    setattr(_pytest.monkeypatch.MonkeyPatch, "setattr", record_setattr)
     try:
         yield
     finally:
-        _pytest.monkeypatch.MonkeyPatch.setattr = saved_setattr
+        setattr(_pytest.monkeypatch.MonkeyPatch, "setattr", saved_setattr)
 
 
 def _can_access(path, perms):
@@ -1309,7 +1310,7 @@ def mock_store(
         with spack.store.use_store(str(store_path)) as store:
             with spack.repo.use_repositories(mock_packages_repo):
                 try:
-                    spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
+                    spack.bootstrap.ensure_winsdk_external_or_raise = _return_none  # ty: ignore[invalid-assignment]
                     _populate(store.db)
                 finally:
                     spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
@@ -1594,6 +1595,7 @@ def module_configuration(request, mutable_config):
     writer_cls = getattr(request.module, "writer_cls")
     # Module where the module file writer is defined
     writer_mod = inspect.getmodule(writer_cls)
+    assert writer_mod is not None
     # Key for specific settings relative to this module type
     writer_key = str(writer_mod.__name__).split(".")[-1]
     # Root folder for configuration
@@ -2113,7 +2115,9 @@ def mock_svn_repository(tmp_path_factory: pytest.TempPathFactory):
     def get_rev():
         output = svn("info", "--xml", output=str)
         info = xml.etree.ElementTree.fromstring(output)
-        return info.find("entry/commit").get("revision")
+        commit = info.find("entry/commit")
+        assert commit is not None
+        return commit.get("revision")
 
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
@@ -2272,7 +2276,7 @@ def inode_cache():
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(
+    spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(  # ty: ignore[invalid-assignment]
         spack.binary_distribution._binary_index
     )
 
@@ -2545,11 +2549,11 @@ def do_not_check_runtimes_on_reuse(monkeypatch):
 @pytest.fixture(autouse=True, scope="session")
 def _c_compiler_always_exists():
     fn = spack.solver.asp.c_compiler_runs
-    spack.solver.asp.c_compiler_runs = _true
+    spack.solver.asp.c_compiler_runs = _true  # ty: ignore[invalid-assignment]
     mthd = spack.compilers.libraries.CompilerPropertyDetector.default_libc
-    spack.compilers.libraries.CompilerPropertyDetector.default_libc = _libc_from_python
+    spack.compilers.libraries.CompilerPropertyDetector.default_libc = _libc_from_python  # ty: ignore[invalid-assignment]
     host_libc = spack.util.libc.libc_from_current_python_process
-    spack.util.libc.libc_from_current_python_process = _libc_from_python
+    spack.util.libc.libc_from_current_python_process = _libc_from_python  # ty: ignore[invalid-assignment]
     yield
     spack.solver.asp.c_compiler_runs = fn
     spack.compilers.libraries.CompilerPropertyDetector.default_libc = mthd
@@ -2574,7 +2578,7 @@ class MockHTTPResponse(io.IOBase):
         self.code = status
         self.reason = reason
         self.debuglevel = 0
-        self._body = body
+        self._body = body if body is not None else io.BytesIO()
 
         if headers is not None:
             for key, value in headers.items():
