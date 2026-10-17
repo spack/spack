@@ -281,16 +281,13 @@ def write_file(filename, contents):
 
 
 @pytest.fixture
-def override_git_repos_cache_path(tmp_path: Path, monkeypatch):
+def override_git_repos_cache_path(tmp_path: Path):
+    saved = spack.paths.user_repos_cache_path
     tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
     tmp_git_path.mkdir()
-    # user_repos_cache_path is a property, so we need to monkeypatch it on the locations object
-    monkeypatch.setattr(
-        type(spack.paths.locations),
-        "user_repos_cache_path",
-        property(lambda self: str(tmp_git_path)),
-    )
+    spack.paths.user_repos_cache_path = str(tmp_git_path)
     yield
+    spack.paths.user_repos_cache_path = saved
 
 
 @pytest.fixture(scope="session")

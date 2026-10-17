@@ -254,11 +254,17 @@ class _PathsModule(types.ModuleType):
                 return module_dict[name]
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
 
-        # spack_working_dir is mutable - look it up in the original module
-        if name in ["spack_working_dir"]:
+        # Mutable module-level attributes - look them up in the original module
+        if name in ["spack_working_dir", "user_repos_cache_path"]:
             original_module = module_dict.get("_original_module")
             if original_module is not None:
-                return original_module.__dict__.get(name)
+                val = original_module.__dict__.get(name)
+                # For user_repos_cache_path, if not set as module var, compute from locations
+                if name == "user_repos_cache_path" and val is None:
+                    locs = module_dict.get("locations")
+                    if locs:
+                        return getattr(locs, name)
+                return val
             return module_dict.get(name)
 
         # Otherwise delegate to locations object
@@ -273,8 +279,8 @@ class _PathsModule(types.ModuleType):
             object.__setattr__(self, name, value)
             return
 
-        # spack_working_dir is mutable - allow setting it
-        if name == "spack_working_dir":
+        # Mutable module-level attributes - allow setting them
+        if name in ("spack_working_dir", "user_repos_cache_path"):
             module_dict = object.__getattribute__(self, "__dict__")
             original_module = module_dict.get("_original_module")
             if original_module is not None:
