@@ -2109,8 +2109,9 @@ class SpackSolverSetup:
         uarch = spack.vendor.archspec.cpu.TARGETS.get(platform.default)
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
+            archspec_name = self.context.repo.get(compiler).archspec_name()
             supported, unsupported = self._supported_targets(
-                compiler.name, compiler.version, candidate_targets
+                archspec_name, compiler.version, candidate_targets
             )
 
             for target in supported:
