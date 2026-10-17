@@ -286,7 +286,9 @@ def override_git_repos_cache_path(tmp_path: Path, monkeypatch):
     tmp_git_path.mkdir()
     # user_repos_cache_path is a property, so we need to monkeypatch it on the locations object
     monkeypatch.setattr(
-        type(spack.paths.locations), "user_repos_cache_path", property(lambda self: str(tmp_git_path))
+        type(spack.paths.locations),
+        "user_repos_cache_path",
+        property(lambda self: str(tmp_git_path)),
     )
     yield
 
