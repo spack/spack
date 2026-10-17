@@ -137,6 +137,33 @@ If you have a *very* large number of packages you want to mirror, you can supply
 
 This is useful if there is a specific suite of software managed by your site.
 
+.. _mirror-deprecated-versions:
+
+Deprecated versions
+^^^^^^^^^^^^^^^^^^^
+
+With ``--versions-per-spec``, ``spack mirror create`` concretizes each additional version of a package, and skips the versions that fail to concretize.
+A version fails, for instance, when it or one of its dependencies is deprecated, and the deprecation policy in :ref:`packages.yaml <package-deprecations-config>` does not allow it:
+
+.. code-block:: console
+
+   $ spack mirror create --versions-per-spec all foo
+   ==> Skipping foo@1.0
+     failed to concretize `foo@=1.0` for the following reasons:
+        1. 'foo@1.0': deprecated spec (reason: vuln, severity: high, labels: CVE-2026-1234) is not allowed by 'packages:foo:deprecation:allow'; use foo@1.1
+   ==> Adding package foo@0.9 to mirror
+   ==> Adding package foo@1.1 to mirror
+
+A skipped version does not count towards ``--versions-per-spec``.
+The specs given on the command line are concretized as usual, so ``spack mirror create foo@1.0`` fails with the error that explains why ``foo@1.0`` is not allowed.
+
+With ``--all`` outside of an environment, versions are not concretized, and only the deprecations of each version itself are checked.
+The skipped versions are reported with a single line, and listed one by one with ``spack -v mirror create --all``.
+This includes the versions marked with ``version(..., deprecated=True)``.
+
+The mirror follows the policy of the configuration that creates it.
+To mirror every version, pass ``--deprecated``, or create the mirror with the configuration of the site it serves.
+
 Mirror environment
 ^^^^^^^^^^^^^^^^^^
 

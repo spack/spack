@@ -2397,7 +2397,7 @@ complete -c spack -n '__fish_spack_using_command mirror create' -l skip-unstable
 complete -c spack -n '__fish_spack_using_command mirror create' -s D -l dependencies -f -a dependencies
 complete -c spack -n '__fish_spack_using_command mirror create' -s D -l dependencies -d 'also fetch all dependencies'
 complete -c spack -n '__fish_spack_using_command mirror create' -s n -l versions-per-spec -r -f -a versions_per_spec
-complete -c spack -n '__fish_spack_using_command mirror create' -s n -l versions-per-spec -r -d 'the number of versions to fetch for each spec, choose '"'"'all'"'"' to retrieve all versions of each package'
+complete -c spack -n '__fish_spack_using_command mirror create' -s n -l versions-per-spec -r -d 'the number of versions to fetch for each spec, choose '"'"'all'"'"' to retrieve every version that matches the spec'
 complete -c spack -n '__fish_spack_using_command mirror create' -l private -f -a private
 complete -c spack -n '__fish_spack_using_command mirror create' -l private -d 'for a private mirror, include non-redistributable packages'
 complete -c spack -n '__fish_spack_using_command mirror create' -s f -l force -f -a concretizer_force

@@ -4,6 +4,7 @@
 import os
 import traceback
 from collections import Counter
+from typing import List
 
 import spack.caches
 import spack.config
@@ -42,49 +43,30 @@ def get_all_versions(specs):
     return version_specs
 
 
-def get_matching_versions(specs, num_versions=1):
-    """Get a spec for EACH known version matching any spec in the list.
-    For concrete specs, this retrieves the concrete version and, if more
-    than one version per spec is requested, retrieves the latest versions
-    of the package.
+def get_matching_versions(
+    requested: spack.spec.Spec, concrete: spack.spec.Spec
+) -> List[spack.spec.Spec]:
+    """Return a spec for each version of a package that matches the spec it was requested as,
+    except the version of its concrete spec, newest first.
+
+    The specs have the variants of the request. The request constrains the versions and the
+    variants only if it names the same package as the concrete spec.
+
+    Args:
+        requested: the spec as requested by the user
+        concrete: the concrete spec the request resolved to
     """
-    matching = []
-    for spec in specs:
-        pkg = spec.package
-
-        # Skip any package that has no known versions.
-        if not pkg.versions:
-            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
+    request = requested if requested.name == concrete.name else spack.spec.Spec()
+    pkg_cls = spack.repo.PATH.get_pkg_class(concrete.name)
+    result = []
+    for v in sorted(pkg_cls.versions, reverse=True):
+        if v == concrete.version or not v.intersects(request.versions):
             continue
-
-        pkg_versions = num_versions
-
-        version_order = list(reversed(sorted(pkg.versions)))
-        matching_spec = []
-        if spec.concrete:
-            matching_spec.append(spec)
-            pkg_versions -= 1
-            if spec.version in version_order:
-                version_order.remove(spec.version)
-
-        for v in version_order:
-            # Generate no more than num_versions versions for each spec.
-            if pkg_versions < 1:
-                break
-
-            # Generate only versions that satisfy the spec.
-            if spec.concrete or v.intersects(spec.versions):
-                s = spack.spec.Spec(pkg.name)
-                s.versions = spack.version.VersionList([v])
-                s.variants = spec.variants.copy()
-                matching_spec.append(s)
-                pkg_versions -= 1
-
-        if not matching_spec:
-            tty.warn("No known version matches spec: %s" % spec)
-        matching.extend(matching_spec)
-
-    return matching
+        s = spack.spec.Spec(concrete.name)
+        s.versions = spack.version.VersionList([v])
+        s.variants = request.variants.copy()
+        result.append(s)
+    return result
 
 
 def get_mirror_cache(path, skip_unstable_versions=False):
