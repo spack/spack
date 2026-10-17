@@ -281,13 +281,14 @@ def write_file(filename, contents):
 
 
 @pytest.fixture
-def override_git_repos_cache_path(tmp_path: Path):
-    saved = spack.paths.user_repos_cache_path
+def override_git_repos_cache_path(tmp_path: Path, monkeypatch):
     tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
     tmp_git_path.mkdir()
-    spack.paths.user_repos_cache_path = str(tmp_git_path)
+    # user_repos_cache_path is a property, so we need to monkeypatch it on the locations object
+    monkeypatch.setattr(
+        type(spack.paths.locations), "user_repos_cache_path", property(lambda self: str(tmp_git_path))
+    )
     yield
-    spack.paths.user_repos_cache_path = saved
 
 
 @pytest.fixture(scope="session")
@@ -504,9 +505,7 @@ def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFac
 
 
 @pytest.fixture
-def mock_git_package_changes(
-    _mock_git_package_changes_template, tmp_path: Path, override_git_repos_cache_path
-):
+def mock_git_package_changes(_mock_git_package_changes_template, tmp_path: Path):
     """Copy of a mock git repo with known structure of package edits
 
     The structure of commits in this repo is as follows::
