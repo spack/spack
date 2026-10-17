@@ -14,6 +14,7 @@ import spack.repo
 import spack.util.package_hash as ph
 from spack.repo import RepoPath
 from spack.spec import Spec
+from spack.test.conftest import RepoBuilder
 from spack.util.unparse import unparse
 
 # This module tests package content hashing itself, so it needs the real thing rather than the
@@ -166,6 +167,73 @@ def test_content_hash_all_same_but_archive_hash(mock_packages: RepoPath, config)
 def test_content_hash_parse_dynamic_function_call(mock_packages, config):
     spec = spack.concretize.concretize_one("hash-test4")
     spec.package.content_hash(repo=spack.repo.PATH)
+
+
+_RESOURCE_RECIPE = """\
+from spack.package import *
+
+
+class Toto(Package):
+    url = "http://www.example.com/toto-1.0.tar.gz"
+
+    version("1.0", sha256="{a}")
+
+    resource(
+        name="extra",
+        url="{url}",
+        sha256="{sha}",
+        destination="{destination}",
+        placement="{placement}",
+        when="{when}",
+    )
+"""
+
+_RESOURCE_BASE = dict(
+    a="a" * 64,
+    url="http://www.example.com/extra-1.0.tar.gz",
+    sha="b" * 64,
+    destination="dest",
+    placement="extra",
+    when="@1.0",
+)
+
+
+def _resource_content_hash(tmp_path, name, **changes):
+    fields = dict(_RESOURCE_BASE, **changes)
+    builder = RepoBuilder(str(tmp_path / name))
+    pkg_dir = os.path.join(builder.root, "packages", "toto")
+    os.makedirs(pkg_dir)
+    with open(os.path.join(pkg_dir, "package.py"), "w", encoding="utf-8") as f:
+        f.write(_RESOURCE_RECIPE.format(**fields))
+    with spack.repo.use_repositories(builder.root, override=False):
+        spec = Spec(f"{builder.namespace}.toto@=1.0")
+        pkg_cls = spack.repo.PATH.get_pkg_class(spec.fullname)
+        return pkg_cls(spec).content_hash(repo=spack.repo.PATH)
+
+
+@pytest.mark.parametrize(
+    "changes,same",
+    [
+        ({"sha": "c" * 64}, False),
+        ({"destination": "other"}, False),
+        ({"placement": "renamed"}, False),
+        ({"url": "http://mirror.example.org/extra-1.0.tar.gz"}, True),
+        ({"when": "@:1.0"}, True),
+    ],
+)
+def test_content_hash_resource_build_inputs(mock_packages, config, tmp_path, changes, same):
+    """The digest, destination and placement of a resource are build inputs; its URL and the
+    spelling of its ``when`` condition are not."""
+    base = _resource_content_hash(tmp_path, "base")
+    changed = _resource_content_hash(tmp_path, "changed", **changes)
+    assert (base == changed) == same
+
+
+def test_content_hash_resource_when_selects_resources(mock_packages, config, tmp_path):
+    """A resource only contributes to the hash when its ``when`` condition matches the spec."""
+    with_resource = _resource_content_hash(tmp_path, "applies")
+    without_resource = _resource_content_hash(tmp_path, "skipped", when="@2.0")
+    assert with_resource != without_resource
 
 
 many_strings = '''\
