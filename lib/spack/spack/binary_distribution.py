@@ -72,7 +72,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack import relocate, traverse
+from spack import relocate, relocate_windows, traverse
 from spack.oci.image import (
     Digest,
     ImageReference,
@@ -845,12 +845,16 @@ NOT_ISO8859_1_TEXT = re.compile(b"[\x00\x7f-\x9f]")
 
 def file_type(f: IO[bytes]) -> int:
     try:
-        # first check if this is an ELF or mach-o binary.
-        magic = f.read(8)
-        if len(magic) < 8:
-            return FileTypes.UNKNOWN
-        elif relocate.is_elf_magic(magic) or relocate.is_macho_magic(magic):
-            return FileTypes.BINARY
+        # first check if this is an ELF, Win32, or mach-o binary.
+        if sys.platform == "win32":
+            if relocate.is_msvc_magic(f):
+                return FileTypes.BINARY
+        else:
+            magic = f.read(8)
+            if len(magic) < 8:
+                return FileTypes.UNKNOWN
+            elif relocate.is_elf_magic(magic) or relocate.is_macho_magic(magic):
+                return FileTypes.BINARY
 
         f.seek(0)
 
@@ -962,6 +966,12 @@ def _do_create_tarball(
         tar_gz_checksum,
         tar_checksum,
     ):
+        # Compute Windows SFN (8.3) names for every relocation-relevant prefix,
+        # keyed by the same dag hashes as hash_to_prefix.
+        if sys.platform == "win32":
+            buildinfo["hash_to_prefix_sfn"] = {
+                h: fsys.windows_sfn(p) for h, p in buildinfo.get("hash_to_prefix", {}).items()
+            }
         # Tarball the install prefix
         files_to_relocate = tarfile_of_spec_prefix(tar, prefix, prefixes_to_relocate)
         buildinfo.update(files_to_relocate)
@@ -2005,7 +2015,13 @@ def relocate_package(spec: spack.spec.Spec) -> None:
             "and an older buildcache create implementation. It cannot be relocated."
         )
 
+    # Windows 8.3 (SFN) form of each old prefix, if the tarball was pushed from a
+    # Windows host. Used to recognize DLL references that were converted to short
+    # filenames at build time; absent for tarballs built on other platforms.
+    hash_to_old_prefix_sfn: Dict[str, str] = buildinfo.get("hash_to_prefix_sfn", {})
+
     prefix_to_prefix: Dict[str, str] = {}
+    sfn_prefix_to_prefix: Dict[str, str] = {}
 
     if "sbang_install_path" in buildinfo:
         old_sbang_install_path = str(buildinfo["sbang_install_path"])
@@ -2036,6 +2052,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
             prefix_to_prefix[old_dep_prefix] = str(s.prefix)
             if s.external and analog is not s:
                 spliced_externals[old_dep_prefix] = s
+        if lookup_dag_hash in hash_to_old_prefix_sfn:
+            old_dep_prefix_sfn = hash_to_old_prefix_sfn[lookup_dag_hash]
+            sfn_prefix_to_prefix[old_dep_prefix_sfn] = str(s.prefix)
 
     rpath_transform = None
     if spec.spliced:
@@ -2071,8 +2090,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # Delete identity mappings from prefix_to_prefix
     prefix_to_prefix = {k: v for k, v in prefix_to_prefix.items() if k != v}
 
-    # If there's nothing to relocate, we're done.
-    if not prefix_to_prefix:
+    # If there's nothing to relocate, we're done. An SFN-only mapping is still
+    # something to relocate, so don't bail out on prefix_to_prefix alone.
+    if not prefix_to_prefix and not sfn_prefix_to_prefix:
         return
 
     for old, new in prefix_to_prefix.items():
@@ -2091,6 +2111,10 @@ def relocate_package(spec: spack.spec.Spec) -> None:
         relocate.relocate_macho_binaries(binaries, prefix_to_prefix, rpath_transform)
     elif "elf" in platform.binary_formats:
         relocate.relocate_elf_binaries(binaries, prefix_to_prefix, rpath_transform)
+    elif "pe" in platform.binary_formats and spec.name != "compiler-wrapper":
+        relocate_windows.relocate_windows_binaries(
+            binaries, spec, prefix_to_prefix, sfn_prefix_to_prefix
+        )
 
     relocate.relocate_links(links, prefix_to_prefix)
     relocate.relocate_text(textfiles, prefix_to_prefix)
@@ -2283,7 +2307,6 @@ def install_root_node(
     with spack.store.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, tarball_stage, force)
-        spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, allow_missing=allow_missing)
 
