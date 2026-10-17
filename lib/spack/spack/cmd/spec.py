@@ -15,6 +15,7 @@ import spack.traverse
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.concretize_ui import HeadlessUI, TerminalUI
+from spack.util import tty
 from spack.util.lang import nullcontext
 
 description = "show what would be installed, given a spec"
@@ -72,6 +73,12 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         "-t", "--types", action="store_true", default=False, help="show dependency types"
     )
+    subparser.add_argument(
+        "--test",
+        default=None,
+        choices=["root", "all"],
+        help="concretize with test dependencies of only root packages or all packages",
+    )
     arguments.add_common_arguments(subparser, ["specs"])
     arguments.add_concretizer_args(subparser)
 
@@ -87,8 +94,16 @@ def spec(parser, args):
     ui = HeadlessUI() if args.format else TerminalUI()
 
     if args.specs:
-        concrete_specs = spack.cmd.parse_specs(args.specs, concretize=True, ui=ui)
+        if args.test == "all":
+            tests = True
+        elif args.test == "root":
+            tests = [spec.name for spec in spack.cmd.parse_specs(args.specs)]
+        else:
+            tests = False
+        concrete_specs = spack.cmd.parse_specs(args.specs, concretize=True, tests=tests, ui=ui)
     elif env:
+        if args.test is not None:
+            tty.die("spack spec for environments does not support test dependency selection")
         env.concretize(ui=ui)
         concrete_specs = env.concrete_roots()
     else:
