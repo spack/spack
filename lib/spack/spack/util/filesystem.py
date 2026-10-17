@@ -866,15 +866,10 @@ def copy_tree(
                 link_target = resolve_link_target_relative_to_the_link(s)
                 if symlinks:
                     target = readlink(s)
-                    if os.path.isabs(target):
-
-                        def escaped_path(path):
-                            return path.replace("\\", r"\\")
-
-                        new_target = re.sub(escaped_path(abs_src), escaped_path(abs_dest), target)
-                        if new_target != target:
-                            tty.debug("Redirecting link {0} to {1}".format(target, new_target))
-                            target = new_target
+                    if os.path.isabs(target) and target.startswith(abs_src):
+                        new_target = abs_dest + target[len(abs_src) :]
+                        tty.debug("Redirecting link {0} to {1}".format(target, new_target))
+                        target = new_target
 
                     links.append((target, d, s))
                     continue
