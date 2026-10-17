@@ -733,7 +733,7 @@ containing both the custom template extension and the Spack environment manifest
 To use a custom template, the Spack environment must register the directory containing it and declare its use under the ``container`` configuration:
 
 .. code-block:: yaml
-   :emphasize-lines: 7-8,12
+   :emphasize-lines: 7-8,11
 
    spack:
      specs:
@@ -745,7 +745,6 @@ To use a custom template, the Spack environment must register the directory cont
        - /opt/environment/templates
      container:
        format: docker
-       depfile: true
        template: container/CustomDockerfile
 
 The template extension can override two blocks, named ``build_stage`` and ``final_stage``, similarly to the example below:
@@ -798,7 +797,7 @@ The recipe that gets generated contains the two extra instructions that we added
    &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
    # Install the software, remove unnecessary deps
-   RUN cd /opt/spack-environment && spack env activate . && spack concretize && spack env depfile -o Makefile && make -j $(nproc) && spack gc -y
+   RUN cd /opt/spack-environment && spack env activate . && spack install --fail-fast && spack gc -y
 
    # Strip all the binaries
    RUN find -L /opt/views/view/* -type f -exec readlink -f '{}' \; | \
@@ -854,7 +853,7 @@ The tables below describe all the configuration options that are currently suppo
      - ``docker`` or ``singularity``
      - Yes
    * - ``depfile``
-     - Whether to use a depfile for installation, or not
+     - Deprecated, removed in Spack v1.4: whether to install with ``spack env depfile`` and ``make``
      - True or False (default)
      - No
    * - ``images:os``

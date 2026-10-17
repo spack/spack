@@ -100,7 +100,7 @@ from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
 from .result import Result, SpecDict, build_criteria_names
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
-from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder, all_libcs
+from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder
 from .versions import Provenance
 
 if TYPE_CHECKING:
@@ -697,6 +697,15 @@ class ErrorHandler:
         raise error
 
 
+def _raise_if_no_compiler_is_available(setup: "SpackSolverSetup") -> None:
+    needs_compiler = any(x in setup.possible_virtuals for x in ("c", "cxx", "fortran"))
+    if needs_compiler and not setup.possible_compilers:
+        raise spack.compilers.config.NoAvailableCompilerError(
+            "no compiler configured, and Spack cannot find working compilers in PATH, in the "
+            "store, or among the specs that can be reused"
+        )
+
+
 def _strip_asp_problem(asp_problem: Iterable[str]) -> List[str]:
     """Remove empty lines from an ASP program."""
     return [stmt for stmt in asp_problem if stmt]
@@ -804,15 +813,18 @@ class PyclingoDriver:
         # once done, construct the solve result
         result = Result(specs, repo=setup.context.repo)
         result.satisfiable = solve_result.satisfiable
+        best = min(models) if result.satisfiable else None
+        if best is None or extract_args(best[1], "error"):
+            _raise_if_no_compiler_is_available(setup)
+
         if not result.satisfiable:
             return result
 
         timer.start("construct_specs")
-        # get the best model
         builder = SpecBuilder(
             specs, repo=setup.context.repo, hash_lookup=setup.reusable_and_possible
         )
-        min_cost, best_model = min(models)
+        min_cost, best_model = best
 
         # first check for errors
         error_handler = ErrorHandler(best_model, specs, setup.deprecation_details)
@@ -2435,7 +2447,7 @@ class SpackSolverSetup:
         self.gen = ProblemInstanceBuilder()
         self.clauses = SpecClauseGenerator(
             repo=self.context.repo,
-            libcs=sorted(all_libcs(self.context)),
+            libcs=sorted(spack.externals_config.all_libcs(self.context)),
             explicitly_required_namespaces={
                 node.name: node.namespace
                 for node in traverse.traverse_nodes(specs)
@@ -2989,7 +3001,7 @@ def possible_compilers(
     # Compilers from the local store
     supported_compilers = spack.compilers.config.supported_compilers(repo=context.repo)
     for pkg_name in supported_compilers:
-        result.update(context.store.db.query(pkg_name, repo=context.repo))
+        result.update(context.store.db.query(pkg_name))
 
     return result, rejected
 
@@ -3325,11 +3337,14 @@ def post_process_concretization_result(
             for edge in s.edges_to_dependencies():
                 edge.direct = True
 
-    # inject patches -- note that we can't use set() to unique the
-    # roots here, because the specs aren't complete, and the hash
-    # function will loop forever.
+    # note that we can't use set() to unique the roots here, because the specs aren't
+    # complete, and the hash function will loop forever.
     roots = [spec.root for spec in specs.values()]
     roots = {id(r): r for r in roots}
+
+    # ``when="^mpi@2:"`` needs frozen virtuals; ``provides`` when clauses need direct edges
+    spack.repo.freeze_provided_virtuals(roots.values(), repo=context.repo)
+
     for root in roots.values():
         spack.spec._inject_patches_variant(root, repo=context.repo)
 
@@ -3342,7 +3357,7 @@ def post_process_concretization_result(
         _specs_with_commits(s, repo=context.repo)
 
     # mark concrete and assign hashes to all specs in the solve
-    spack.spec.finalize_concretization(roots.values(), repo=context.repo)
+    spack.spec.assign_hashes(roots.values(), repo=context.repo)
 
     # Unify hashes (this is to avoid duplicates of runtimes and compilers)
     unifier = ConcreteSpecsByHash()
@@ -3352,7 +3367,7 @@ def post_process_concretization_result(
         unifier.add(current_spec)
         specs[key] = unifier[current_spec.dag_hash()]
 
-    # needs to happen after finalize_concretization, as it looks up hashes
+    # needs to happen after assign_hashes, as it looks up hashes
     _ensure_no_deprecated(specs.values(), store=context.store)
 
     new_specs = execute_explicit_splices(specs, context=context)

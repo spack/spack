@@ -49,7 +49,7 @@ def _lookup_one(
     matches = (
         (active_env.all_matching_specs(spec) if active_env else [])
         or _matching_external_specs(spec, context=context)
-        or context.store.db.query(spec, installed=InstallRecordStatus.ANY, repo=context.repo)
+        or context.store.db.query(spec, installed=InstallRecordStatus.ANY)
         or spack.binary_distribution.BinaryCacheQuery(
             True, index=context.binary_index, config=context.config
         )(spec)

@@ -11,12 +11,6 @@ import pytest
 import spack.util.gpg
 
 
-@pytest.fixture()
-def has_socket_dir():
-    spack.util.gpg.init()
-    return bool(spack.util.gpg.SOCKET_DIR)
-
-
 def test_parse_gpg_output_case_one():
     now = int(time.time())
     # Two keys, fingerprint for primary keys, but not subkeys
@@ -77,8 +71,9 @@ fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
     assert keys[1].fpr == "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
 
 
-def test_really_long_gnupghome_dir(tmp_path: pathlib.Path, has_socket_dir):
-    if not has_socket_dir:
+@pytest.mark.not_on_windows("GnuPG socket directories and long paths are POSIX specific")
+def test_really_long_gnupghome_dir(tmp_path: pathlib.Path, mock_gnupghome):
+    if not spack.util.gpg.SOCKET_DIR:
         pytest.skip("This test requires /var/run/user/$(id -u)")
 
     N = 960
@@ -161,7 +156,6 @@ def test_gpg_key_algorithm():
 
 
 @pytest.mark.maybeslow
-@pytest.mark.not_on_windows("does not run on windows")
 def test_trust_secret_key_file(tmp_path: pathlib.Path, mock_gnupghome):
     """Verify that `spack gpg trust` can import secret keys from a keyfile."""
     # Create a signing key.
@@ -185,6 +179,20 @@ def test_trust_secret_key_file(tmp_path: pathlib.Path, mock_gnupghome):
     restored = spack.util.gpg.signing_keys()
     assert len(restored) == 1, "signing key should be restored after trusting secret key file"
     assert restored[0].fpr == original_fpr, "restored key fingerprint should match original"
+
+
+@pytest.mark.only_windows("POSIX emulation layers are specific to Windows")
+def test_search_path_skips_posix_emulation_dirs(tmp_path: pathlib.Path, monkeypatch):
+    """GnuPG builds for MSYS2 or Cygwin (e.g. from Git for Windows) can't handle native paths"""
+    msys_bin, cygwin_bin, native_bin = tmp_path / "msys", tmp_path / "cygwin", tmp_path / "native"
+    for d in (msys_bin, cygwin_bin, native_bin):
+        d.mkdir()
+        (d / "gpg.exe").touch()
+    (msys_bin / "msys-2.0.dll").touch()
+    (cygwin_bin / "cygwin1.dll").touch()
+
+    monkeypatch.setenv("PATH", os.pathsep.join(str(d) for d in (msys_bin, cygwin_bin, native_bin)))
+    assert spack.util.gpg.search_path() == [str(native_bin)]
 
 
 def test_gpg_key_type():

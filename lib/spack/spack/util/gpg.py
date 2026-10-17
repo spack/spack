@@ -25,6 +25,9 @@ from spack.util.executable import Executable
 GPG_NAMES = ("gpg", "gpg2")
 GPGCONF_NAMES = ("gpgconf", "gpg2conf", "gpgconf2")
 
+#: Runtime libraries of POSIX emulation layers on Windows (MSYS2, Cygwin)
+_POSIX_RUNTIME_DLLS = ("msys-2.0.dll", "cygwin1.dll")
+
 #: Executable instance for "gpg", initialized lazily
 GPG: Optional["Gpg"] = None
 #: Executable instance for "gpgconf", initialized lazily
@@ -1089,10 +1092,27 @@ def _verify_exe_or_raise(exe) -> spack.version.VersionType:
     return gpg_version
 
 
+def search_path() -> Optional[List[str]]:
+    """Return the directories to search for GnuPG executables, or None to search PATH.
+
+    On Windows, directories containing a POSIX emulation runtime are skipped. GnuPG builds
+    for those layers, like the one shipped with Git for Windows, treat native Windows paths
+    as relative POSIX paths, so they can't operate on the GNUPGHOME and files Spack gives them.
+    """
+    if sys.platform != "win32":
+        return None
+
+    return [
+        d
+        for d in os.environ.get("PATH", "").split(os.pathsep)
+        if d and not any(os.path.exists(os.path.join(d, dll)) for dll in _POSIX_RUNTIME_DLLS)
+    ]
+
+
 def _gpgconf() -> Optional[Tuple[Executable, spack.version.VersionType]]:
     """Get executable for gpgconf if it exists"""
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
-    exe = spack.util.executable.which(*GPGCONF_NAMES)
+    exe = spack.util.executable.which(*GPGCONF_NAMES, path=search_path())
     if not exe:
         return None
 
@@ -1107,7 +1127,7 @@ def _gpgconf() -> Optional[Tuple[Executable, spack.version.VersionType]]:
 
 def _gpg() -> Tuple[Executable, spack.version.VersionType]:
     """Get executable for gpg"""
-    exe = spack.util.executable.which(*GPG_NAMES, required=True)
+    exe = spack.util.executable.which(*GPG_NAMES, path=search_path(), required=True)
     version = _verify_exe_or_raise(exe)
     return exe, version
 

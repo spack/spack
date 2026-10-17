@@ -21,7 +21,7 @@ import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import EnvironmentManifestFile
+from spack.environment.environment import CURRENT_LOCKFILE_VERSION, EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
 from spack.util.lang import Singleton, ensure_unwrapped
@@ -1885,7 +1885,7 @@ spack:
             spack.spec.Spec("mpich"),
         ]
 
-    def test_environment_without_groups_use_lockfile_v6(self, create_temporary_manifest):
+    def test_environment_without_groups_has_no_group_attribute(self, create_temporary_manifest):
         manifest = create_temporary_manifest(
             """
 spack:
@@ -1897,7 +1897,7 @@ spack:
         with ev.Environment(manifest.manifest_dir) as e:
             e.concretize()
             lockfile_data = e._to_lockfile_dict()
-            assert lockfile_data["_meta"]["lockfile-version"] == 6
+            assert lockfile_data["_meta"]["lockfile-version"] == CURRENT_LOCKFILE_VERSION
             assert all("group" not in x for x in lockfile_data["roots"])
 
     def test_independent_groups_concretization(self, create_temporary_manifest):
@@ -2333,6 +2333,23 @@ class TestLockfileWrites:
             e.concretize(force=True)
             e.write()
         assert json.loads(lockfile.read_text())["_meta"]["lockfile-version"] == current
+
+    def test_lockfile_v7_reconstructs_provided_virtuals(self, lockfile):
+        """A v7 lockfile does not record provided virtuals, so they are reconstructed on read."""
+        with ev.Environment(lockfile.parent) as e:
+            expected = {s.dag_hash(): s.provided_virtuals for s in e.all_specs()}
+        assert any(expected.values())
+
+        data = json.loads(lockfile.read_text())
+        data["_meta"]["lockfile-version"] = 7
+        data["_meta"]["specfile-version"] = 5
+        for node in data["concrete_specs"].values():
+            node.pop("provided_virtuals", None)
+            node["annotations"]["original_specfile_version"] = 5
+        lockfile.write_text(json.dumps(data))
+
+        with ev.Environment(lockfile.parent) as e:
+            assert {s.dag_hash(): s.provided_virtuals for s in e.all_specs()} == expected
 
     def test_lockfile_written_when_roots_change(self, lockfile):
         def roots():

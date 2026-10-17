@@ -8,8 +8,8 @@ import time
 import urllib.parse
 
 import spack.error
+import spack.store
 import spack.util.spack_json as sjson
-from spack.store import STORE
 from spack.util import tty
 
 
@@ -116,7 +116,7 @@ def make_spdx_2_3_package_entry(spec):
         "filesAnalyzed": False,
         "licenseDeclared": get_license(pkg) or "NOASSERTION",
         "licenseConcluded": "NOASSERTION",
-        "checksum": get_checksums(spec),
+        "checksums": get_checksums(spec),
     }
 
 
@@ -130,7 +130,7 @@ def sbom_path(spec, sbom_type="spdx-2.3"):
     Returns:
         Path to the SBOM file
     """
-    sbom_dir = os.path.join(STORE.layout.metadata_path(spec), "sbom")
+    sbom_dir = os.path.join(spack.store.STORE.layout.metadata_path(spec), "sbom")
     return os.path.join(sbom_dir, f"{sbom_type}.json")
 
 
@@ -160,7 +160,7 @@ def generate_spdx_2_3(spec):
     deps = []
     relationships = [
         {
-            "spdxElementId": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
+            "spdxElementId": "SPDXRef-DOCUMENT",
             "relationshipType": "DESCRIBES",
             "relatedSpdxElement": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         }
@@ -182,7 +182,7 @@ def generate_spdx_2_3(spec):
     sbom = {
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
-        "SPDXID": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
+        "SPDXID": "SPDXRef-DOCUMENT",
         "documentNamespace": document_namespace,
         "creationInfo": {
             "created": created_time,

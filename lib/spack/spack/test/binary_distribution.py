@@ -43,8 +43,10 @@ from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
+    BlobRecord,
     BuildcacheComponent,
     BuildcacheEntryError,
+    BuildcacheManifest,
     ListMirrorSpecsError,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
@@ -318,6 +320,51 @@ def test_generate_index_missing(
         cache_list = buildcache_cmd("list", "--allarch")
         assert "libdwarf" in cache_list
         assert "libelf" not in cache_list
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
+@pytest.mark.parametrize("view", ["", "test_view"])
+def test_push_index_keeps_records_of_other_formats(tmp_path: pathlib.Path, view: str):
+    """Pushing an index replaces only the record of the format it writes"""
+    mirror_dir = tmp_path / "mirror"
+    mirror_url = url_util.path_to_file_url(str(mirror_dir))
+    install_cmd("--fake", "--no-cache", "libdwarf")
+    buildcache_cmd("push", "-u", str(mirror_dir), "libdwarf")
+
+    manifest_path = pathlib.Path(URLBuildcacheEntry.get_index_url(str(mirror_dir), view))
+    current_type = URLBuildcacheEntry.current_component_to_media_type(BuildcacheComponent.INDEX)
+
+    def update_index():
+        spack.binary_distribution._url_generate_package_index(mirror_url, str(tmp_path), name=view)
+
+    def records():
+        return json.loads(manifest_path.read_text(encoding="utf-8"))["data"]
+
+    # No index yet
+    update_index()
+    (current,) = records()
+    assert current["mediaType"] == current_type
+
+    # As if another Spack wrote the index
+    old = {**current, "mediaType": "application/vnd.spack.db.v1+json"}
+    manifest_path.write_text(json.dumps({"version": 3, "data": [old]}), encoding="utf-8")
+
+    for _ in range(2):  # merging twice gives the same result
+        update_index()
+        new, kept = records()
+        assert new["mediaType"] == current_type and kept == old
+
+    # This Spack reads the record of the current format
+    metadata = spack.url_buildcache.MirrorMetadata(
+        mirror_url, spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION, view
+    )
+    result = spack.binary_distribution.DefaultIndexHandler(metadata, None).conditional_fetch()
+    assert result.hash == new["checksum"]
+
+    # An unreadable manifest is replaced
+    manifest_path.write_text("not json", encoding="utf-8")
+    update_index()
+    assert [r["mediaType"] for r in records()] == [current_type]
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch")
@@ -1287,7 +1334,7 @@ def mock_index(tmp_path: pathlib.Path, monkeypatch) -> IndexInformation:
 
     index_blob_record = spack.binary_distribution.BlobRecord(
         os.stat(index_blob_path).st_size,
-        cache_class.BUILDCACHE_INDEX_MEDIATYPE,
+        cache_class.current_component_to_media_type(BuildcacheComponent.INDEX),
         "none",
         "sha256",
         index_json_hash,
@@ -1827,3 +1874,22 @@ def test_select_signing_key_shows_fingerprints(monkeypatch):
     monkeypatch.setattr(spack.util.gpg, "signing_keys", lambda *a: keys)
     with pytest.raises(spack.binary_distribution.PickKeyException, match="AAAA\n  BBBB"):
         spack.binary_distribution.select_signing_key()
+
+
+@pytest.mark.parametrize(
+    "component,oldest",
+    [
+        (BuildcacheComponent.SPEC, "application/vnd.spack.spec.v5+json"),
+        (BuildcacheComponent.INDEX, "application/vnd.spack.db.v8+json"),
+    ],
+)
+def test_manifest_reads_older_media_types(component, oldest):
+    """Blobs of the formats layout v3 started with are still read, after the current ones."""
+    current = URLBuildcacheEntry.current_component_to_media_type(component)
+    media_types = URLBuildcacheEntry.component_to_media_types(component)
+    assert media_types[0] == current
+    assert URLBuildcacheEntry.oldest_component_to_media_type(component) == oldest
+
+    records = [BlobRecord(1, t, "gzip", "sha256", t) for t in (oldest, current)]
+    manifest = BuildcacheManifest(layout_version=3, data=records)
+    assert [r.checksum for r in manifest.get_blob_records(media_types)] == [current, oldest]

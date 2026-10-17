@@ -422,6 +422,9 @@ def _mock_remove(spec, db):
 
 
 def test_default_queries(database):
+    # Executables carry a .exe extension on Windows
+    exe_suffix = ".exe" if sys.platform == "win32" else ""
+
     # Testing a package whose name *doesn't* start with 'lib'
     # to ensure the library has 'lib' prepended to the name
     rec = database.get_record("zmpi")
@@ -438,7 +441,7 @@ def test_default_queries(database):
 
     command = spec["zmpi"].command
     assert isinstance(command, Executable)
-    assert command.name == "zmpi"
+    assert command.name == "zmpi" + exe_suffix
     assert os.path.exists(command.path)
 
     # Testing a package whose name *does* start with 'lib'
@@ -457,7 +460,7 @@ def test_default_queries(database):
 
     command = spec["libelf"].command
     assert isinstance(command, Executable)
-    assert command.name == "libelf"
+    assert command.name == "libelf" + exe_suffix
     assert os.path.exists(command.path)
 
 
@@ -1371,7 +1374,7 @@ def test_query_with_predicate_fn(database):
 
 
 @pytest.mark.regression("49964")
-def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
+def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path, mock_packages):
     """Tests that we can query a reindexed database from before compilers as dependencies,
     and get appropriate results for %<compiler> and similar selections.
     """
@@ -1391,6 +1394,25 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     assert len(specs) == 8
     assert len([x for x in specs if x.external]) == 2
     assert len([x for x in specs if x.original_spec_format() < 5]) == 8
+
+
+def test_database_v8_reconstructs_provided_virtuals(database, tmp_path: pathlib.Path):
+    """A v8 database does not record provided virtuals, so they are reconstructed on read."""
+    data = json.loads(pathlib.Path(database._index_path).read_text(encoding="utf-8"))
+    data["database"]["version"] = "8"
+    for record in data["database"]["installs"].values():
+        record["spec"].pop("provided_virtuals", None)
+        record["spec"]["annotations"]["original_specfile_version"] = 5
+
+    index_json = tmp_path / spack.database._DB_DIRNAME / spack.database.INDEX_JSON_FILE
+    index_json.parent.mkdir(parents=True)
+    index_json.write_text(json.dumps(data))
+
+    db = Database(str(tmp_path))
+    mpich = db.query_one("mpich")
+    assert mpich is not None and mpich.provided_virtuals == (spack.spec.Spec("mpi@:3"),)
+    expected = {s.dag_hash() for s in database.query("mpi")}
+    assert expected and {s.dag_hash() for s in db.query("mpi")} == expected
 
 
 def test_database_installed(

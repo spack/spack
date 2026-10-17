@@ -22,6 +22,7 @@ from spack.util.win_acl import (
     copy_file_permissions,
     get_file_owner,
     get_file_sddl,
+    has_file_access,
     set_file_sddl,
 )
 
@@ -570,3 +571,43 @@ def test_copy_mode_only_changes_execute_on_windows(tmp_path):
     before = get_file_sddl(str(dst))
     fs.copy_mode(str(src), str(dst))
     assert get_file_sddl(str(dst)) == before
+
+
+def _deny_current_user(path, rights):
+    """Prepend a Deny ACE for the current user to the DACL of *path*."""
+    sd = SecurityDescriptor.from_file(str(path))
+    sd.add_ace(
+        AccessControlEntry(
+            AceType.SDDL_ACCESS_DENIED, rights=rights, sid=SecurityDescriptor.get_sid_for_user()
+        ),
+        index=0,
+    )
+    sd.apply(str(path))
+
+
+def test_has_file_access(tmp_path):
+    """has_file_access reports what the OS lets the current process open, per right."""
+    _READ = FileAccessRights.FILE_READ_DATA
+    _EXEC = FileAccessRights.FILE_EXECUTE
+
+    plain = tmp_path / "plain.exe"
+    no_read = tmp_path / "no_read.exe"
+    no_exec = tmp_path / "no_exec.exe"
+    for path in (plain, no_read, no_exec):
+        path.touch()
+    _deny_current_user(no_read, _READ)
+    _deny_current_user(no_exec, _EXEC)
+
+    assert has_file_access(str(plain), _READ | _EXEC)
+
+    assert not has_file_access(str(no_read), _READ)
+    assert has_file_access(str(no_read), _EXEC)
+    assert not has_file_access(str(no_read), _READ | _EXEC)
+
+    assert has_file_access(str(no_exec), _READ)
+    assert not has_file_access(str(no_exec), _EXEC)
+    assert not has_file_access(str(no_exec), _READ | _EXEC)
+
+    # missing files and directories cannot be opened as files
+    assert not has_file_access(str(tmp_path / "missing.exe"), _READ)
+    assert not has_file_access(str(tmp_path), _READ)

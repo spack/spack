@@ -4,13 +4,14 @@
 """Helpers to build an ExternalSpecsParser from Spack configuration."""
 
 import itertools
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Set
 
 import spack.compilers.config
 import spack.compilers.libraries
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.util.libc
 from spack.externals import (
     ExternalSpecsParser,
     complete_architecture,
@@ -67,17 +68,30 @@ def external_config_with_implicit_externals(
     if not spack.platforms.using_libc_compatibility():
         return packages_yaml
 
-    cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
-    seen = set()
-    for compiler in spack.compilers.config.all_compilers_from(configuration, repo=repo):
-        libc = spack.compilers.libraries.CompilerPropertyDetector(
-            compiler, repo=repo, cache=cache
-        ).default_libc()
-        if libc and libc not in seen:
-            seen.add(libc)
-            entry = {"spec": f"{libc}", "prefix": libc.external_path}
-            packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
+    for libc in sorted(all_libcs(context)):
+        entry = {"spec": f"{libc}", "prefix": libc.external_path}
+        packages_yaml.setdefault(libc.name, {}).setdefault("externals", []).append(entry)
     return packages_yaml
+
+
+def all_libcs(context: "spack.context.SpackContext") -> Set[spack.spec.Spec]:
+    """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
+    libc determined from the current Python process if dynamically linked.
+    """
+    cache = spack.compilers.libraries.FileCompilerCache(context.misc_cache)
+    libcs = set()
+    for c in spack.compilers.config.all_compilers_from(context.config, repo=context.repo):
+        candidate = spack.compilers.libraries.CompilerPropertyDetector(
+            c, repo=context.repo, cache=cache
+        ).default_libc()
+        if candidate is not None:
+            libcs.add(candidate)
+
+    if libcs:
+        return libcs
+
+    libc = spack.util.libc.libc_from_current_python_process()
+    return {libc} if libc else set()
 
 
 def create_external_parser(
