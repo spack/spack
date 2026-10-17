@@ -1948,6 +1948,7 @@ class Environment:
         if default_view_name not in self.views:
             return
 
+        self.default_view._ensure_safe_to_replace()
         view_path = pathlib.Path(self.default_view.root)
         try:
             if view_path.is_symlink():

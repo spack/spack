@@ -3934,6 +3934,17 @@ def test_env_view_fail_if_symlink_points_elsewhere(
     assert os.path.isdir(non_view_dir)
 
 
+def test_env_view_disable_fails_on_unmanaged_dir(tmp_path: pathlib.Path):
+    view = tmp_path / "view"
+    view.mkdir()
+    (view / "dont-delete-me").touch()
+    env("create", "--with-view", str(view), "test")
+    with ev.read("test"):
+        with pytest.raises(ev.SpackEnvironmentViewError):
+            env("view", "disable")
+    assert (view / "dont-delete-me").exists()
+
+
 def test_env_view_backward_compat_old_symlink_format(
     tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
 ):
