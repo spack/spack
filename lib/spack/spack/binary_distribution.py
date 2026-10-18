@@ -2068,6 +2068,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix[old_layout_root] = str(spack.store.STORE.layout.root)
 
+    if spec.platform == "darwin" or sys.platform == "darwin":
+        prefix_to_prefix = relocate.expand_macos_firmlink_prefixes(prefix_to_prefix)
+
     # Delete identity mappings from prefix_to_prefix
     prefix_to_prefix = {k: v for k, v in prefix_to_prefix.items() if k != v}
 
