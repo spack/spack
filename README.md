@@ -51,10 +51,10 @@ Installation
 ----------------
 
 To install spack, first make sure you have Python & Git.
-Then:
+Then clone the latest release:
 
 ```bash
-git clone --depth=2 https://github.com/spack/spack.git
+git clone --depth=2 --branch releases/latest https://github.com/spack/spack.git
 ```
 
 ```bash
