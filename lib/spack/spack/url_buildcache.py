@@ -490,7 +490,9 @@ class URLBuildcacheEntry:
         manifest_contents = ""
 
         try:
-            manifest_contents = web_util.read_text(manifest_url)
+            manifest_contents = web_util.read_text(
+                manifest_url, download_dir=spack.stage.stage_root(spack.config.CONFIG)
+            )
         except (web_util.SpackWebError, OSError) as e:
             raise BuildcacheEntryError(f"Error reading manifest at {manifest_url}") from e
 

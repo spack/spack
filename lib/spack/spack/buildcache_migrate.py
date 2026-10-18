@@ -105,7 +105,9 @@ def _migrate_spec(
 
     for meta_url in v2_metadata_urls:
         try:
-            spec_contents = web_util.read_text(meta_url)
+            spec_contents = web_util.read_text(
+                meta_url, download_dir=spack.stage.stage_root(spack.config.CONFIG)
+            )
             v2_spec_url = meta_url
             break
         except (web_util.SpackWebError, OSError):
@@ -286,7 +288,9 @@ def migrate(
     contents = None
 
     try:
-        contents = web_util.read_text(index_url)
+        contents = web_util.read_text(
+            index_url, download_dir=spack.stage.stage_root(spack.config.CONFIG)
+        )
     except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 
