@@ -506,22 +506,24 @@ def test_load_readonly_prefix_outputs_env_modifications(
     # Remove the cached script
     os.remove(load_script_path)
 
-    os.chmod(spack_dir, stat.S_IRUSR | stat.S_IXUSR)
+    try:
+        os.chmod(spack_dir, stat.S_IRUSR | stat.S_IXUSR)
 
-    load_output = load(shell, "mpileaks", fail_on_error=False)
+        load_output = load(shell, "mpileaks", fail_on_error=False)
 
-    # Verify error messages are present
-    assert f"Error generating {load_script_path}" in load_output
-    assert "Permission denied" in load_output
+        assert f"Error generating {load_script_path}" in load_output
+        assert "Permission denied" in load_output
 
-    # Verify environment modifications are in the output
-    cmd_name = _get_shell_cmd_invocation("_spack_env_prepend", shell)
+        cmd_name = _get_shell_cmd_invocation("_spack_env_prepend", shell)
 
-    assert f"{cmd_name} {uenv.spack_loaded_hashes_var}" in load_output
-    assert os.path.join(spec.prefix, "bin") in load_output
+        assert f"{cmd_name} {uenv.spack_loaded_hashes_var}" in load_output
+        assert os.path.join(spec.prefix, "bin") in load_output
+    finally:
+        # Restore write permissions for cleanup
+        os.chmod(spack_dir, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
 
-pytest.mark.parametrize(
+@pytest.mark.parametrize(
     "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
 def test_load_dev_bypasses_cached_script(
