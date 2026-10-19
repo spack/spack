@@ -129,7 +129,7 @@ def two_keys_file(tmp_path: pathlib.Path) -> str:
     keyfile.write_text(
         pathlib.Path(spack.paths.mock_gpg_keys_path, "external.key").read_text(encoding="utf-8")
         + pathlib.Path(spack.paths.share_path, "keys", "tutorial.pub").read_text(encoding="utf-8"),
-        encoding="utf-8"
+        encoding="utf-8",
     )
     return str(keyfile)
 
