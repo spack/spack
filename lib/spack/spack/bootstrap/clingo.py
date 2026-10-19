@@ -12,7 +12,7 @@ JSON file for a similar platform.
 
 import pathlib
 import sys
-from typing import Any, Dict, Optional, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import spack.vendor.archspec.cpu
 
@@ -23,6 +23,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.traverse
+import spack.util.libc
 import spack.version
 from spack.config import Configuration
 
@@ -40,6 +41,36 @@ def _select_best_version(
     except (KeyError, ValueError, IndexError):
         return
     node.versions.versions = [spack.version.from_string(f"={best_version}")]
+
+
+def _external_spec(initial_spec, architecture: spack.spec.ArchSpec) -> spack.spec.Spec:
+    initial_spec.namespace = "builtin"
+    initial_spec.architecture = architecture
+    for flag_type in spack.spec.FlagMap.valid_compiler_flags():
+        initial_spec.compiler_flags[flag_type] = []
+    return spack.spec.parse_with_version_concrete(initial_spec)
+
+
+def _python_external_spec(architecture: spack.spec.ArchSpec) -> spack.spec.Spec:
+    """Python external spec corresponding to the current running interpreter"""
+    result = spack.spec.Spec(spec_for_current_python(), external_path=sys.exec_prefix)
+    return _external_spec(result, architecture)
+
+
+def host_externals() -> List[spack.spec.Spec]:
+    """Return concrete external specs for the interpreter running Spack and for its libc.
+
+    They replace the externals of the host where a binary was built.
+    """
+    architecture = spack.spec.ArchSpec.default_arch()
+    architecture.target = str(spack.vendor.archspec.cpu.host().family)
+    result = [_python_external_spec(architecture)]
+    libc = spack.util.libc.libc_from_current_python_process()
+    if libc:
+        result.append(_external_spec(libc, architecture))
+    spack.repo.freeze_provided_virtuals(result, repo=spack.repo.PATH)
+    spack.spec.assign_hashes(result, repo=spack.repo.PATH)
+    return result
 
 
 def _add_compilers_if_missing(config: Configuration, *, repo: spack.repo.RepoPath) -> None:
@@ -65,7 +96,7 @@ class ClingoBootstrapConcretizer:
         self.host_architecture = spack.spec.ArchSpec.default_arch()
         self.host_architecture.target = str(self.host_target)
         self.host_compiler = self._valid_compiler_or_raise(config)
-        self.host_python = self.python_external_spec()
+        self.host_python = _python_external_spec(self.host_architecture)
         if str(self.host_platform) == "linux":
             self.host_libc = self.libc_external_spec()
 
@@ -125,7 +156,7 @@ class ClingoBootstrapConcretizer:
                 if not s.intersects(f"arch={self.host_architecture}"):
                     continue
 
-                selected[pkg_name] = self._external_spec(s)
+                selected[pkg_name] = _external_spec(s, self.host_architecture)
                 break
         return selected["cmake"], selected["bison"]
 
@@ -213,21 +244,8 @@ class ClingoBootstrapConcretizer:
         # we modified edges inconsistently
         return s.copy()
 
-    def python_external_spec(self) -> "spack.spec.Spec":
-        """Python external spec corresponding to the current running interpreter"""
-        result = spack.spec.Spec(spec_for_current_python(), external_path=sys.exec_prefix)
-        return self._external_spec(result)
-
     def libc_external_spec(self) -> "spack.spec.Spec":
         detector = spack.compilers.libraries.CompilerPropertyDetector(
             self.host_compiler, repo=self.repo, cache=self.compiler_cache
         )
-        result = detector.default_libc()
-        return self._external_spec(result)
-
-    def _external_spec(self, initial_spec) -> "spack.spec.Spec":
-        initial_spec.namespace = "builtin"
-        initial_spec.architecture = self.host_architecture
-        for flag_type in spack.spec.FlagMap.valid_compiler_flags():
-            initial_spec.compiler_flags[flag_type] = []
-        return spack.spec.parse_with_version_concrete(initial_spec)
+        return _external_spec(detector.default_libc(), self.host_architecture)

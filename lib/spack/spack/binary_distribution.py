@@ -112,7 +112,6 @@ from .url_buildcache import (
     get_entries_from_cache,
     get_url_buildcache_class,
     get_valid_spec_file,
-    validate_checksum,
 )
 from .vendor.jsonschema.exceptions import ValidationError
 from .vendor.typing_extensions import TypedDict
@@ -2421,25 +2420,13 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
     return pkg_prefix
 
 
-def install_root_node(
-    spec: spack.spec.Spec,
-    unsigned=False,
-    force: bool = False,
-    sha256: Optional[str] = None,
-    allow_missing: bool = False,
-) -> None:
+def install_root_node(spec: spack.spec.Spec, unsigned=False, force: bool = False) -> None:
     """Install the root node of a concrete spec from a buildcache.
-
-    Checking the sha256 sum of a node before installation is usually needed only
-    for software installed during Spack's bootstrapping (since we might not have
-    a proper signature verification mechanism available).
 
     Args:
         spec: spec to be installed (note that only the root node will be installed)
         unsigned: if True allows installing unsigned binaries
         force: force installation if the spec is already present in the local store
-        sha256: optional sha256 of the binary package, to be checked before installation
-        allow_missing: when true, allows installing a node with missing dependencies
     """
     # Early termination
     if spec.external or not spec.concrete:
@@ -2454,20 +2441,13 @@ def install_root_node(
         msg = 'download of binary cache file for spec "{0}" failed'
         raise RuntimeError(msg.format(spec.build_spec.format()))
 
-    if sha256:
-        try:
-            validate_checksum(tarball_stage.save_filename, "sha256", sha256)
-        except spack.error.NoChecksumException:
-            tarball_stage.destroy()
-            raise
-
     # don't print long padded paths while extracting/relocating binaries
     with spack.store.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
         extract_tarball(spec, tarball_stage, force)
         spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
-        spack.store.STORE.db.add(spec, allow_missing=allow_missing)
+        spack.store.STORE.db.add(spec)
 
 
 def install_single_spec(spec, unsigned=False, force=False):

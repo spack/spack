@@ -33,26 +33,8 @@ BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/down
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
 
-# Metadata for a generated binary mirror
-BINARY_METADATA = {
-    "type": "buildcache",
-    "description": (
-        "Buildcache copied from a public tarball available on Github."
-        "The sha256 checksum of binaries is checked before installation."
-    ),
-    "info": {
-        # This is a mis-nomer since it's not a URL; but file urls cannot
-        # represent relative paths, so we have to live with it for now.
-        "url": os.path.join("..", "..", LOCAL_MIRROR_DIR),
-        "homepage": "https://github.com/spack/spack-bootstrap-mirrors",
-        "releases": "https://github.com/spack/spack-bootstrap-mirrors/releases",
-        "tarball": BINARY_TARBALL,
-    },
-}
-
-CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v2/clingo.json"
-GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v2/gnupg.json"
-PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v2/patchelf.json"
+#: Metadata of the bootstrapping source whose binaries are in the tarball
+BINARY_METADATA = "$spack/share/spack/bootstrap/github-actions-v2/metadata.yaml"
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
@@ -444,10 +426,14 @@ def _mirror(args):
     _, rel_directory = write_metadata(subdir="sources", metadata=SOURCE_METADATA)
     instructions += cmd.format("local-sources", rel_directory)
     if args.binary_packages:
-        abs_directory, rel_directory = write_metadata(subdir="binaries", metadata=BINARY_METADATA)
-        shutil.copy(spack.config.canonicalize_path(CLINGO_JSON), abs_directory)
-        shutil.copy(spack.config.canonicalize_path(GNUPG_JSON), abs_directory)
-        shutil.copy(spack.config.canonicalize_path(PATCHELF_JSON), abs_directory)
+        with open(spack.config.canonicalize_path(BINARY_METADATA), encoding="utf-8") as f:
+            metadata = spack.util.spack_yaml.load(f)
+        metadata["description"] = "Buildcache copied from a public tarball available on GitHub."
+        # This is a misnomer since it's not a URL; but file urls cannot
+        # represent relative paths, so we have to live with it for now.
+        metadata["info"]["url"] = os.path.join("..", "..", LOCAL_MIRROR_DIR)
+        metadata["info"]["tarball"] = BINARY_TARBALL
+        _, rel_directory = write_metadata(subdir="binaries", metadata=metadata)
         instructions += cmd.format("local-binaries", rel_directory)
     print(instructions)
 
