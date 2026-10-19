@@ -340,7 +340,7 @@ def install_from_buildcache(
 
     send_state("relocating", state_stream)
     with timer.measure("install"):
-        spack.binary_distribution.extract_tarball(spec, tarball_stage, force=False, timer=timer)
+        spack.binary_distribution.extract_tarball(spec, tarball_stage, timer=timer)
 
     if spec.spliced:  # overwrite old metadata with new
         spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
