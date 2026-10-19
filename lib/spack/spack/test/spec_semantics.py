@@ -1791,6 +1791,17 @@ class TestSpecSemantics:
         assert transitive == ("+foo" in out["splice-z"])
 
     @pytest.mark.parametrize("transitive", [True, False])
+    def test_splice_replaces_node_with_same_name_only(self, transitive):
+        """A replacement replaces only the node with its name, also when other nodes provide its
+        virtuals"""
+        spec = spack.concretize.concretize_one("splice-t")
+        provider = spack.concretize.concretize_one("splice-a")
+        spec._add_dependency(provider, depflag=dt.LINK, virtuals=("something",))
+        spack.spec.rehash_mutated([provider], repo=spack.repo.PATH)
+        out = spec.splice(spack.concretize.concretize_one("splice-h+foo"), transitive)
+        assert out["something"].name == "splice-a"
+
+    @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names_mismatch_virtuals(self, transitive):
         vt = spack.concretize.concretize_one("splice-vt")
         vh = spack.concretize.concretize_one("splice-vh+foo")
