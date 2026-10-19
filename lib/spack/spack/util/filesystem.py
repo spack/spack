@@ -3138,6 +3138,12 @@ def _windows_can_symlink() -> bool:
     return can_symlink_directories and can_symlink_files
 
 
+def can_symlink() -> bool:
+    """Returns whether ``symlink`` creates symbolic links, rather than the junctions and hard
+    links it falls back to when the user lacks the privileges to create them"""
+    return sys.platform != "win32" or _windows_can_symlink()
+
+
 def _windows_create_link(source: str, link: str):
     """
     Attempts to create a Hard Link or Junction as an alternative
