@@ -127,8 +127,9 @@ TUTORIAL_KEY = "2C8DD3224EF3573A42BD221FA8E0CA3C1C2ADA2F"
 def two_keys_file(tmp_path: pathlib.Path) -> str:
     keyfile = tmp_path / "two.keys"
     keyfile.write_text(
-        pathlib.Path(spack.paths.mock_gpg_keys_path, "external.key").read_text()
-        + pathlib.Path(spack.paths.share_path, "keys", "tutorial.pub").read_text()
+        pathlib.Path(spack.paths.mock_gpg_keys_path, "external.key").read_text(encoding="utf-8")
+        + pathlib.Path(spack.paths.share_path, "keys", "tutorial.pub").read_text(encoding="utf-8"),
+        encoding="utf-8"
     )
     return str(keyfile)
 
