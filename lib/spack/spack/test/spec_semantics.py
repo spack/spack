@@ -1685,6 +1685,12 @@ class TestSpecSemantics:
         assert out2["splice-t"].build_spec.dag_hash() == spec["splice-t"].dag_hash()
         assert out2.spliced
 
+        # Cached hashes are those of the spliced DAG
+        fresh = out2.copy()
+        for node in fresh.traverse():
+            node.clear_caches(keep_package_hash=True)
+        assert [x.dag_hash() for x in fresh.traverse()] == [x.dag_hash() for x in out2.traverse()]
+
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_dict(self, transitive):
         spec = spack.concretize.concretize_one("splice-t")
