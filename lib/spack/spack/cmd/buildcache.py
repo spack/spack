@@ -89,9 +89,15 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
     )
     push.add_argument(
+        "--upload-key",
+        action="store_true",
+        default=True,
+        dest="upload_key",
+        help="Upload the public part of the signing to to the build cache",
+    )
+    push.add_argument(
         "--no-upload-key",
         action="store_false",
-        default=True,
         dest="upload_key",
         help="Don't upload the public part of the signing to to the build cache",
     )
