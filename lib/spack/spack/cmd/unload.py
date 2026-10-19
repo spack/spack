@@ -103,7 +103,10 @@ def unload(parser, args):
         commands = ""
 
         if args.dev or spec.external:
-            _, commands = spec_script.get_environment_modifications(spec, shell)
+            env_mods = uenv.environment_modifications_from_prefix_inspections([spec])
+            commands += env_mods.shell_modifications(shell, cache=False)
+            sys.stdout.write(commands)
+            return
         else:
             unload_script_path = spec_script.path_to_unload_shell_script(spec, shell)
 
@@ -126,5 +129,4 @@ def unload(parser, args):
 
         env_mods = uenv.environment_modifications_from_prefix_inspections([spec])
         commands += env_mods.shell_modifications(shell, cache=True)
-
         sys.stdout.write(commands)

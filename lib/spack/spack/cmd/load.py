@@ -112,7 +112,10 @@ def load(parser, args):
         commands = ""
 
         if args.dev or spec.external:
-            commands, _ = spec_script.get_environment_modifications(spec, shell)
+            env_mods = uenv.environment_modifications_from_prefix_inspections([spec])
+            commands += env_mods.shell_modifications(shell, cache=False)
+            sys.stdout.write(commands)
+            return
         else:
             load_script_path = spec_script.path_to_load_shell_script(spec, shell)
 
