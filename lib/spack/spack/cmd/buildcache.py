@@ -93,13 +93,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         default=True,
         dest="upload_key",
-        help="Upload the public part of the signing to to the build cache",
+        help="Upload the public part of the signing key to to the build cache",
     )
     push.add_argument(
         "--no-upload-key",
         action="store_false",
         dest="upload_key",
-        help="Don't upload the public part of the signing to to the build cache",
+        help="Don't upload the public part of the signing key to to the build cache",
     )
     push.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
