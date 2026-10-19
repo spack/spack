@@ -17,4 +17,4 @@ spack compiler find --scope site
 
 # Setup buildcaches
 spack mirror add --scope site develop https://binaries.spack.io/develop
-spack buildcache keys --install --trust
+spack buildcache keys --install --trust --yes-to-all

@@ -1,3 +1,6 @@
+## Package API v2.7
+- Added the `fixes` argument to the `patch()` directive, also on patches passed to `depends_on(..., patches=...)`. It lists the labels of the `deprecated()` directives of the patched package that the patch fixes, and a spec with the patch applied is not refused for them.
+
 ## Package API v2.6
 - Added the `deprecated()` directive to mark specific configurations or entire packages as deprecated, with a `reason`, a `severity`, optional advisory `labels`, and an optional `msg` telling users what to use instead. Accepted reasons are `vuln`, `rename`, `retired` and `unspecified`.
 - `version(..., deprecated=True)` is now recorded as `reason="unspecified"`, `severity="critical"`, and the label `version_deprecated`.
