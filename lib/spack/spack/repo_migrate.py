@@ -140,6 +140,16 @@ def migrate_v1_to_v2(
     if errors:
         return False, None
 
+    # Junctions and hard links do not behave like the symlinks they replace, e.g. a hard link does
+    # not follow its target when the target is replaced, so fail before changing anything
+    if symlink_to_ino and not fs.can_symlink():
+        print(
+            "Cannot upgrade from v1 to v2, because the repository contains symlinks and the "
+            "current user cannot create them (on Windows, enable Developer Mode)",
+            file=err,
+        )
+        return False, None
+
     rename_regex = re.compile("^(" + "|".join(re.escape(k) for k in rename.keys()) + ")")
 
     if not patch_file:
