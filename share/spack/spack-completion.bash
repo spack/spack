@@ -1406,7 +1406,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --list"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --list --dev"
     else
         _installed_packages
     fi
@@ -2086,7 +2086,7 @@ _spack_unit_test() {
 _spack_unload() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -a --all"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -a --all --dev"
     else
         _installed_packages
     fi
