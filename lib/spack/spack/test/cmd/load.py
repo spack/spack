@@ -552,13 +552,13 @@ def test_load_preserves_custom_path_separator(
     "shell, set_cmake",
     (
         [("--pwsh", "$Env:CMAKE_PREFIX_PATH"), ("--bat", 'set "CMAKE_PREFIX_PATH')]
-        if sys.platform == "win32" else
-        [
+        if sys.platform == "win32"
+        else [
             ("--sh", "export CMAKE_PREFIX_PATH"),
             ("--csh", "setenv CMAKE_PREFIX_PATH"),
             ("--fish", "set -gx CMAKE_PREFIX_PATH"),
         ]
-    )
+    ),
 )
 def test_load_dev_bypasses_cached_script(
     shell, set_cmake, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
@@ -584,13 +584,13 @@ def test_load_dev_bypasses_cached_script(
     "shell, set_cmake",
     (
         [("--pwsh", "$Env:CMAKE_PREFIX_PATH"), ("--bat", 'set "CMAKE_PREFIX_PATH')]
-        if sys.platform == "win32" else
-        [
+        if sys.platform == "win32"
+        else [
             ("--sh", "export CMAKE_PREFIX_PATH"),
             ("--csh", "setenv CMAKE_PREFIX_PATH"),
             ("--fish", "set -gx CMAKE_PREFIX_PATH"),
         ]
-    )
+    ),
 )
 def test_load_dev_bypasses_cached_repo(
     shell, set_cmake, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
@@ -615,15 +615,15 @@ def test_load_dev_bypasses_cached_repo(
     (
         [
             ("--pwsh", f"Set-Item -Path Env:{uenv.spack_loaded_hashes_var}"),
-            ("--bat", f'set "{uenv.spack_loaded_hashes_var}="')
-         ]
-        if sys.platform == "win32" else
-        [
+            ("--bat", f'set "{uenv.spack_loaded_hashes_var}="'),
+        ]
+        if sys.platform == "win32"
+        else [
             ("--sh", f"unset {uenv.spack_loaded_hashes_var}"),
             ("--csh", f"unsetenv {uenv.spack_loaded_hashes_var}"),
             ("--fish", f"set -e {uenv.spack_loaded_hashes_var}"),
         ]
-    )
+    ),
 )
 def test_unload_dev_bypasses_cached_script(
     shell, unset_hash, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
@@ -651,15 +651,15 @@ def test_unload_dev_bypasses_cached_script(
     (
         [
             ("--pwsh", f"Set-Item -Path Env:{uenv.spack_loaded_hashes_var}"),
-            ("--bat", f'set "{uenv.spack_loaded_hashes_var}="')
-         ]
-        if sys.platform == "win32" else
-        [
+            ("--bat", f'set "{uenv.spack_loaded_hashes_var}="'),
+        ]
+        if sys.platform == "win32"
+        else [
             ("--sh", f"unset {uenv.spack_loaded_hashes_var}"),
             ("--csh", f"unsetenv {uenv.spack_loaded_hashes_var}"),
             ("--fish", f"set -e {uenv.spack_loaded_hashes_var}"),
         ]
-    )
+    ),
 )
 def test_unload_dev_bypasses_cached_repo(
     shell, unset_hash, install_mockery, mock_fetch, mock_archive, mock_packages, working_env

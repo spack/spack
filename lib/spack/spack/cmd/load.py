@@ -124,7 +124,9 @@ def load(parser, args):
                 try:
                     # Try to get cached repo if it exists
                     cached_repo = spec_script.make_repo_path(spack_dir)
-                    mods, _ = spec_script.get_cached_environment_modifications(spec, shell, cached_repo)
+                    mods, _ = spec_script.get_cached_environment_modifications(
+                        spec, shell, cached_repo
+                    )
                 except Exception as err:
                     tty.die(f"Error generating environment modifications for {spec}:\n{err}")
                 try:

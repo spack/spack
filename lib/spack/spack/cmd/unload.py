@@ -115,7 +115,9 @@ def unload(parser, args):
                 try:
                     # Try to get cached repo if it exists
                     cached_repo = spec_script.make_repo_path(spack_dir)
-                    _, mods = spec_script.get_cached_environment_modifications(spec, shell, cached_repo)
+                    _, mods = spec_script.get_cached_environment_modifications(
+                        spec, shell, cached_repo
+                    )
                 except Exception as err:
                     tty.die(f"Error generating environment modifications for {spec}:\n{err}")
 
