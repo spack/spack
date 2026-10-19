@@ -67,7 +67,6 @@ ConfigDictionary = Dict[str, Any]
 ResultT = TypeVar("ResultT")
 
 _SOURCE_ONLY = {"root_policy": "source_only", "dependencies_policy": "source_only"}
-_CACHE_ONLY = {"root_policy": "cache_only", "dependencies_policy": "cache_only"}
 
 
 class BootstrapRequest(Generic[ResultT]):
@@ -220,24 +219,15 @@ def _install_from_source(
     tty.debug(f"Bootstrapping {request.abstract_spec.name} from {source['name']}")
     with spack.config.CONFIG.override(_mirror_scope(source)):
         if source["type"] == "buildcache":
-            sha256 = source["sha256"]
-            concrete_spec = _pinned_binary(request.abstract_spec, sha256)
-            # Nodes without a pinned binary, like a venv for the python of this host, come first
-            from_sources = [
-                s
-                for s in concrete_spec.traverse(root=False, deptype=dt.LINK | dt.RUN)
-                if not s.external and s.build_spec.dag_hash() not in sha256
-            ]
-            installs = [
-                (from_sources, _SOURCE_ONLY),
-                ([concrete_spec], {**_CACHE_ONLY, "binary_checksums": sha256}),
-            ]
+            concrete_spec = _pinned_binary(request.abstract_spec, source["sha256"])
+            # The installer builds the nodes without a binary, like the venv for this python
+            installer_args: Dict[str, Any] = {"binary_checksums": source["sha256"]}
         else:
             # If we compile code from sources detecting a few build tools
             # might reduce compilation time by a fair amount
             _add_externals_if_missing()
             concrete_spec = request.concretize(request.abstract_spec)
-            installs = [([concrete_spec], request.installer_args)]
+            installer_args = request.installer_args
 
         env = _core_environment()
         with env.write_transaction():
@@ -245,9 +235,7 @@ def _install_from_source(
                 env.deconcretize_by_user_spec(request.abstract_spec)
             env.add_concrete_spec(request.abstract_spec, concrete_spec)
             env.write(regenerate=False)
-            for specs, installer_args in installs:
-                if specs:
-                    env.install_specs(specs, fail_fast=True, **installer_args)
+            env.install_specs([concrete_spec], fail_fast=True, **installer_args)
 
     return request.probe(concrete_spec)
 
