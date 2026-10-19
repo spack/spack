@@ -77,11 +77,11 @@ def _setup_isolate_scope(
     else:
         os.makedirs(spack.paths.isolate_scope_path, exist_ok=True)
 
-    # For --self, create a user-redirect subdirectory for user config additions
+    # For --self, create a redirected user subdirectory for user config additions
     # The isolate scope's config files point to isolate/bootstrap, isolate/cache, etc.
     # But user additions go to isolate/user-redirect
     if is_self:
-        user_redirect_path = os.path.join(spack.paths.isolate_scope_path, "user-redirect")
+        user_redirect_path = os.path.join(spack.paths.isolate_scope_path, "user")
         os.makedirs(user_redirect_path, exist_ok=True)
         final_user_path = user_redirect_path
     else:

@@ -42,8 +42,7 @@ def test_isolate_user_overrides_layout(isolate_paths, tmp_path, use_self):
 
     if use_self:
         sp_isolate("--self")
-        user_redirect_path = isolate_scope_path / "user-redirect"
-        user_config = user_redirect_path / "config.yaml"
+        user_config = isolate_scope_path / "user" / "config.yaml"
     else:
         isolated_path = tmp_path / "test-isolation"
         sp_isolate("--path", str(isolated_path))
@@ -269,9 +268,9 @@ def test_isolate_reuse_old_self_target(isolate_paths, tmp_path, args):
     for name, contents in existing_files.items():
         assert (isolate_scope_path / name).read_text(encoding="utf-8") == contents
     include_text = (isolate_scope_path / "include.yaml").read_text(encoding="utf-8")
-    assert "user-redirect" in include_text
+    assert "user" in include_text
     assert "layout" in include_text
-    assert (isolate_scope_path / "user-redirect").is_dir()
+    assert (isolate_scope_path / "user").is_dir()
 
     cfg = spack.config.create()
     # Config in the old isolate scope is preserved
@@ -282,7 +281,7 @@ def test_isolate_reuse_old_self_target(isolate_paths, tmp_path, args):
     # ... and new isolation user redirect scope is available (and is highest-precedence
     # scope for writing)
     assert cfg.highest_precedence_scope().name == "user"
-    assert cfg.highest_precedence_scope().path == str(isolate_scope_path / "user-redirect")
+    assert cfg.highest_precedence_scope().path == str(isolate_scope_path / "user")
 
 
 def test_isolate_path_self_target_requires_reuse(isolate_paths):
@@ -309,14 +308,14 @@ def test_self_isolate(isolate_paths, tmp_path):
     assert not (isolate_scope_path / "bootstrap.yaml").exists()
     assert (isolate_scope_path / "config.yaml").exists()
     assert (isolate_scope_path / "include.yaml").exists()
-    assert (isolate_scope_path / "user-redirect").exists()
+    assert (isolate_scope_path / "user").exists()
 
     # Reload config to pick up isolate scope
     spack.config.CONFIG = spack.config.create()
 
     sp_config("add", "packages:gcc:buildable:false")
-    # Config goes to user-redirect subdirectory
-    new_config_path = isolate_scope_path / "user-redirect" / "packages.yaml"
+    # Config goes to redirected user scope
+    new_config_path = isolate_scope_path / "user" / "packages.yaml"
     assert new_config_path.exists()
     with open(new_config_path, encoding="utf-8") as f:
         text = f.read().strip()
@@ -335,9 +334,9 @@ def test_isolate_overwrite_self(isolate_paths, tmp_path):
     with pytest.raises(Exception):
         sp_isolate("--self")
 
-    # Config goes to user-redirect subdirectory
-    new_concr_config_path = isolate_scope_path / "user-redirect" / "concretizer.yaml"
-    new_pkgs_config_path = isolate_scope_path / "user-redirect" / "packages.yaml"
+    # Config goes to redirected user scope
+    new_concr_config_path = isolate_scope_path / "user" / "concretizer.yaml"
+    new_pkgs_config_path = isolate_scope_path / "user" / "packages.yaml"
 
     # Reload and add config
     spack.config.CONFIG = spack.config.create()
