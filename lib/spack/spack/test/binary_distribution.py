@@ -40,6 +40,7 @@ from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.config import Configuration
 from spack.database import INDEX_JSON_FILE
 from spack.hooks import sbang
+from spack.installer.build import install_from_buildcache
 from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
@@ -646,6 +647,30 @@ def test_install_root_node_checks_sha256(install_mockery, temporary_mirror):
 
     spack.binary_distribution.install_root_node(spec, unsigned=True, sha256=sha256)
     assert spec.installed
+
+
+def test_install_from_buildcache_trusts_pinned_sha256(install_mockery, temporary_mirror):
+    """A pinned sha256 is checked instead of a signature, and a mismatch is an error"""
+    install_cmd("--fake", "--no-cache", "libelf")
+    buildcache_cmd("push", "--unsigned", temporary_mirror, "libelf")
+    spec = spack.concretize.concretize_one("libelf")
+    uninstall_cmd("-y", "libelf")
+
+    mirror_url = url_util.path_to_file_url(temporary_mirror)
+    cache_entry = URLBuildcacheEntry(mirror_url, spec, allow_unsigned=True)
+    cache_entry.read_manifest()
+    sha256 = cache_entry.get_blob_record(BuildcacheComponent.TARBALL).checksum
+
+    def install(sha256: Optional[str]) -> bool:
+        state = io.TextIOWrapper(io.BytesIO())
+        return install_from_buildcache([], spec, False, state, sha256=sha256)
+
+    assert not install(None)
+    with pytest.raises(spack.error.NoChecksumException):
+        install("0" * 64)
+    assert not os.path.exists(spec.prefix)
+    assert install(sha256)
+    assert os.path.exists(spec.prefix)
 
 
 def test_FetchCacheError_only_accepts_lists_of_errors():

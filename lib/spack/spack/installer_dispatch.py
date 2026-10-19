@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import warnings
-from typing import TYPE_CHECKING, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Union
 
 from spack.vendor.typing_extensions import Literal
 
@@ -42,6 +42,7 @@ def create_installer(
     root_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     dependencies_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     create_reports: bool = False,
+    binary_checksums: Optional[Dict[str, str]] = None,
 ) -> Union["spack.old_installer.PackageInstaller", "spack.installer.PackageInstaller"]:
     """Create an installer based on the current configuration and feature support."""
     use_old_installer = spack.config.CONFIG.get("config:installer", "new") == "old"
@@ -69,7 +70,7 @@ def create_installer(
     else:
         from spack.installer import PackageInstaller  # type: ignore
 
-        extra = {"show_log_on_error": show_log_on_error}
+        extra = {"show_log_on_error": show_log_on_error, "binary_checksums": binary_checksums}
 
     return PackageInstaller(
         packages,

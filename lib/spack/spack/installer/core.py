@@ -200,6 +200,7 @@ class PackageInstaller:
         ui: Optional[InstallerUI] = None,
         launcher: Callable[[BuildRequest, JobServerBase], ChildInfo] = start_build,
         store: Optional[spack.store.Store] = None,
+        binary_checksums: Optional[Dict[str, str]] = None,
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
@@ -249,6 +250,8 @@ class PackageInstaller:
         #: Per-spec buildcache mirrors; populated in install() from the binary index.
         self.binary_cache_for_spec: Dict[str, List[spack.url_buildcache.MirrorMetadata]] = {}
         self.unsigned = unsigned
+        #: Expected sha256 of binary tarballs by DAG hash; these are trusted without signature
+        self.binary_checksums = binary_checksums or {}
         self.dirty = dirty
         self.fake = fake
         self.launcher = launcher
@@ -770,6 +773,7 @@ class PackageInstaller:
             explicit=explicit,
             mirrors=self.binary_cache_for_spec[dag_hash],
             unsigned=self.unsigned,
+            sha256=self.binary_checksums.get(spec.build_spec.dag_hash()),
             install_policy=self._effective_install_policy(dag_hash, is_root),
             dirty=self.dirty,
             # keep_stage/restage logic taken from installer.py
