@@ -109,6 +109,7 @@ from .url_buildcache import (
     get_entries_from_cache,
     get_url_buildcache_class,
     get_valid_spec_file,
+    validate_checksum,
 )
 from .vendor.typing_extensions import TypedDict
 
@@ -2278,6 +2279,13 @@ def install_root_node(
     if not tarball_stage:
         msg = 'download of binary cache file for spec "{0}" failed'
         raise RuntimeError(msg.format(spec.build_spec.format()))
+
+    if sha256:
+        try:
+            validate_checksum(tarball_stage.save_filename, "sha256", sha256)
+        except spack.error.NoChecksumException:
+            tarball_stage.destroy()
+            raise
 
     # don't print long padded paths while extracting/relocating binaries
     with spack.store.filter_padding():
