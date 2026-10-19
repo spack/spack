@@ -42,7 +42,7 @@ Config values can reference these in any string field:
 * ``$cache_home``       — ``config:locations:cache``, defaults to ``~/.cache/spack``
 * ``$user_cache_path``  — alias for ``$state_home`` (legacy)
 * ``$spack``            — the Spack instance's prefix
-* ``$spack_instance_id`` — hash distinguishing co-installed Spack instances
+* ``$spack_instance_id`` — hash distinguishing individual Spack instances
 
 Migration of ``$spack``-internal data for older instances
 ----------------------------------------------------------
