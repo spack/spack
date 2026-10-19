@@ -4939,6 +4939,11 @@ class Spec:
                 for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
                     copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
 
+        # Spec comparisons while splicing cache hashes of nodes that are changed afterwards
+        for node in spec.traverse():
+            if node._build_spec:
+                node.clear_caches(keep_package_hash=True)
+
         return spec
 
     def mutate(self, mutator) -> bool:
