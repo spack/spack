@@ -1025,7 +1025,7 @@ def update_view(
 
     # If in append mode and there is nothing to
     # append, skip updating the index, otherwise create
-    # an index reguardless of hashes.
+    # an index regardless of hashes.
     if hashes or update_mode != ViewUpdateMode.APPEND:
         if not hashes:
             # This has to be a tty.warn or else the output is lost for tests
