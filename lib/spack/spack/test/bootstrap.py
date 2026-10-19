@@ -272,6 +272,15 @@ def test_nested_use_of_context_manager(mutable_config):
     assert spack.config.CONFIG == user_config
 
 
+def test_bootstrapping_state_is_part_of_the_configuration(mutable_config, monkeypatch):
+    """Installer child processes restore the configuration, so they see they are bootstrapping"""
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        bootstrap_config = spack.config.CONFIG
+    assert not spack.bootstrap.is_bootstrapping()
+    monkeypatch.setattr(spack.config, "CONFIG", bootstrap_config)
+    assert spack.bootstrap.is_bootstrapping()
+
+
 @pytest.mark.parametrize("expected_missing", [False, True])
 def test_status_function_find_files(
     mutable_config, mock_executable, tmp_path: pathlib.Path, monkeypatch, expected_missing
