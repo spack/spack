@@ -216,9 +216,9 @@ class BinaryIndexCache:
         # stores a map of mirror URL and version layout to index hash and cache key (index path)
         self._local_index_cache: dict[str, _LocalIndexCache] = {}
 
-        # hashes of remote indices already ingested into the concrete spec
+        # (mirror, index hash) pairs already ingested into the concrete spec
         # cache (_mirrors_for_spec)
-        self._specs_already_associated: Set[str] = set()
+        self._specs_already_associated: Set[Tuple[str, str]] = set()
 
         # mapping from mirror urls to the time.time() of the last index fetch and a bool indicating
         # whether the fetch succeeded or not.
@@ -247,11 +247,13 @@ class BinaryIndexCache:
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             json.dump(self._local_index_cache, new)
 
-    def regenerate_spec_cache(self, clear_existing=False):
+    def regenerate_spec_cache(self, clear_existing=False) -> bool:
         """Populate the local cache of concrete specs (``_mirrors_for_spec``)
         from the locally cached buildcache index files.  This is essentially a
         no-op if it has already been done, as we keep track of the index
-        hashes for which we have already associated the built specs."""
+        hashes for which we have already associated the built specs.
+
+        Returns False if an index file was missing, so that some specs were not associated."""
         self._init_local_index_cache()
 
         if clear_existing:
@@ -259,33 +261,41 @@ class BinaryIndexCache:
             self._mirrors_for_spec = defaultdict(set)
             self._known_specs = {}
 
+        complete = True
         for mirror_metadata in self._local_index_cache:
             cache_entry = self._local_index_cache[mirror_metadata]
             cached_index_path = cache_entry["index_path"]
-            cached_index_hash = cache_entry["index_hash"]
-            if cached_index_hash not in self._specs_already_associated:
-                self._associate_built_specs_with_mirror(
+            association_key = (mirror_metadata, cache_entry["index_hash"])
+            if association_key not in self._specs_already_associated:
+                if self._associate_built_specs_with_mirror(
                     cached_index_path, MirrorMetadata.from_string(mirror_metadata)
-                )
-                self._specs_already_associated.add(cached_index_hash)
+                ):
+                    self._specs_already_associated.add(association_key)
+                else:
+                    complete = False
+        return complete
 
-    def _associate_built_specs_with_mirror(self, cache_key, mirror_metadata: MirrorMetadata):
+    def _associate_built_specs_with_mirror(
+        self, cache_key, mirror_metadata: MirrorMetadata
+    ) -> bool:
+        """Returns False if the index file is missing, so the association is retried later."""
         with tempfile.TemporaryDirectory(
             dir=spack.stage.stage_root(spack.config.CONFIG)
         ) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
             with self._index_file_cache.read_transaction(cache_key) as f:
-                if f is not None:
-                    try:
-                        db._read_from_stream(f)
-                    except spack.database.InvalidDatabaseVersionError as e:
-                        tty.warn(
-                            "you need a newer Spack version to read the buildcache index for the "
-                            f"following v{mirror_metadata.version} mirror: "
-                            f"'{mirror_metadata.url}'. {e.database_version_message}"
-                        )
-                        return
+                if f is None:
+                    return False
+                try:
+                    db._read_from_stream(f)
+                except spack.database.InvalidDatabaseVersionError as e:
+                    tty.warn(
+                        "you need a newer Spack version to read the buildcache index for the "
+                        f"following v{mirror_metadata.version} mirror: "
+                        f"'{mirror_metadata.url}'. {e.database_version_message}"
+                    )
+                    return True
 
             spec_list = [
                 s
@@ -301,6 +311,7 @@ class BinaryIndexCache:
                 mirrors.add(mirror_metadata.strip_view())
                 if dag_hash not in self._known_specs:
                     self._known_specs[dag_hash] = spec
+            return True
 
     def get_all_built_specs(self) -> List[spack.spec.Spec]:
         """Returns a list of all concrete specs known to be available in a binary cache."""
@@ -357,6 +368,13 @@ class BinaryIndexCache:
         Args:
             with_cooldown: skip mirrors whose index was fetched recently (within the TTL).
             config: configuration to read the mirror list and TTL from."""
+        # Another process sharing the index cache can remove an index file between its fetch
+        # and its association. The second pass fetches that index again.
+        if not self._update(with_cooldown, config=config):
+            self._update(with_cooldown, config=config)
+
+    def _update(self, with_cooldown: bool, *, config: spack.config.Configuration) -> bool:
+        """Runs one pass of :meth:`update`, returns False if some specs were not associated."""
         self._init_local_index_cache()
         self.mirrors_without_index = set()
 
@@ -398,7 +416,8 @@ class BinaryIndexCache:
             )
 
         if regenerate_cache:
-            self.regenerate_spec_cache(clear_existing=clear_cache)
+            return self.regenerate_spec_cache(clear_existing=clear_cache)
+        return True
 
     def _fetch_mirror_index(
         self,
@@ -417,6 +436,15 @@ class BinaryIndexCache:
         for version in versions:
             meta = MirrorMetadata(url, version, view)
             cache_entry = self._local_index_cache.get(str(meta))
+            had_cache_entry = cache_entry is not None
+
+            # Another process sharing the cache may have removed the index file
+            if (
+                cache_entry is not None
+                and not self._index_file_cache.cache_path(cache_entry["index_path"]).exists()
+            ):
+                cache_entry = None
+                self._local_index_cache.pop(str(meta), None)
 
             if cache_entry is not None and (
                 # Cache entry in cooldown
@@ -438,16 +466,13 @@ class BinaryIndexCache:
                 return _MirrorIndexResult(
                     succeeded=True,
                     regenerate=regenerate,
-                    had_cache_entry=cache_entry is not None,
+                    had_cache_entry=had_cache_entry,
                     error=None,
                 )
             except FetchIndexError as e:
                 self._last_fetch_times[meta] = _LastFetch(time=now, succeeded=False)
                 return _MirrorIndexResult(
-                    succeeded=False,
-                    regenerate=False,
-                    had_cache_entry=cache_entry is not None,
-                    error=e,
+                    succeeded=False, regenerate=False, had_cache_entry=had_cache_entry, error=e
                 )
             except BuildcacheIndexNotExists:
                 # Try next lower layout version
@@ -529,9 +554,9 @@ class BinaryIndexCache:
             "etag": result.etag,
         }
 
-        # clean up the old cache_key if necessary
+        # clean up the old cache_key unless it is the file just written
         old_cache_key = cache_entry.get("index_path", None)
-        if old_cache_key:
+        if old_cache_key and old_cache_key != cache_key:
             self._index_file_cache.remove(old_cache_key)
 
         # We fetched an index and updated the local index cache, we should
