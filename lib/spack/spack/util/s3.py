@@ -43,8 +43,6 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
     # Circular dependency
     from spack.mirrors.mirror import MirrorCollection
 
-    global S3_CLIENT_CACHE
-
     # Parse the URL if not already done.
     if not isinstance(url, urllib.parse.ParseResult):
         url = urllib.parse.urlparse(url)

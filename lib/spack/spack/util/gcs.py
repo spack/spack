@@ -104,7 +104,6 @@ class GCSBucket:
         if self._bucket is not None:
             return self._bucket
 
-        global GCS_BUCKET_CACHE
         if self.name in GCS_BUCKET_CACHE:
             self._bucket = GCS_BUCKET_CACHE[self.name]
             return self._bucket
@@ -124,7 +123,6 @@ class GCSBucket:
 
     @gcs_command
     def create(self):
-        global GCS_BUCKET_CACHE
         if not self.bucket:
             self.bucket = self.client.create_bucket(self.name)
             if self.bucket is not None:
