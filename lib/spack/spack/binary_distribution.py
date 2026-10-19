@@ -1773,6 +1773,10 @@ def download_tarball(
 
         # TODO: refactor this to some "nice" place.
         if spack.oci.image.is_oci_url(fetch_url):
+            if mirror.signed and not currently_unsigned:
+                raise spack.error.MirrorError(
+                    f"mirror '{mirror.name}': `signed: true` is not supported for OCI build caches"
+                )
             ref = ImageReference.from_url(fetch_url).with_tag(_oci_default_tag(spec))
 
             # Fetch the manifest
