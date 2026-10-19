@@ -1121,34 +1121,26 @@ def test_internal_config_scope_cache_clearing():
 def test_system_config_path_is_overridable(working_env):
     p = "/some/path"
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = p
-    from spack.paths import SpackPaths
-
-    paths = SpackPaths()
+    paths = spack.paths.SpackPaths()
     assert paths.system_config_path == p
 
 
 def test_system_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
-    from spack.paths import SpackPaths
-
-    paths = SpackPaths()
+    paths = spack.paths.SpackPaths()
     assert os.sep + os.path.join("etc", "spack") == paths.system_config_path
 
 
 def test_user_config_path_is_overridable(working_env):
     p = "/some/path"
     os.environ["SPACK_USER_CONFIG_PATH"] = p
-    from spack.paths import SpackPaths
-
-    paths = SpackPaths()
+    paths = spack.paths.SpackPaths()
     assert p == paths.user_config_path
 
 
 def test_user_config_path_is_default_when_env_var_is_empty(working_env, mutable_empty_config):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    from spack.paths import SpackPaths
-
-    paths = SpackPaths()
+    paths = spack.paths.SpackPaths()
     assert os.path.expanduser(os.path.join("~", ".config", "spack")) == paths.user_config_path
 
 
