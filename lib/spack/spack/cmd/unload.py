@@ -103,8 +103,7 @@ def unload(parser, args):
         commands = ""
 
         if args.dev or spec.external:
-            env_mods = uenv.environment_modifications_from_prefix_inspections([spec])
-            commands += env_mods.shell_modifications(shell, cache=False)
+            _, commands = spec_script.get_environment_modifications(spec, shell)
             sys.stdout.write(commands)
             return
         else:
@@ -116,9 +115,10 @@ def unload(parser, args):
                 try:
                     # Try to get cached repo if it exists
                     cached_repo = spec_script.make_repo_path(spack_dir)
-                    _, mods = spec_script.get_environment_modifications(spec, shell, cached_repo)
+                    _, mods = spec_script.get_cached_environment_modifications(spec, shell, cached_repo)
                 except Exception as err:
                     tty.die(f"Error generating environment modifications for {spec}:\n{err}")
+
                 try:
                     spec_script.write_script(unload_script_path, mods, shell)
                 except Exception as err:

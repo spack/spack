@@ -526,30 +526,6 @@ def test_load_readonly_prefix_outputs_env_modifications(
 @pytest.mark.parametrize(
     "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
 )
-def test_load_dev_bypasses_cached_script(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
-):
-    """Test that --dev flag bypasses cached scripts and generates fresh environment
-    modifications.
-    """
-    spec = spack.concretize.concretize_one("mpileaks")
-    PackageInstaller([spec.package], fake=True).install()
-
-    load_script_path = spec_script.path_to_load_shell_script(spec, shell[2:])
-    assert os.path.exists(load_script_path)
-
-    os.remove(load_script_path)
-
-    output = load(shell, "--dev", "mpileaks")
-
-    assert not os.path.exists(load_script_path)
-    assert spec.prefix in output
-    assert _get_shell_cmd_invocation("_spack_env_prepend", shell) in output
-
-
-@pytest.mark.parametrize(
-    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
-)
 def test_load_preserves_custom_path_separator(
     shell, install_mockery, mock_fetch, mock_archive, mock_packages
 ):
@@ -573,10 +549,51 @@ def test_load_preserves_custom_path_separator(
 
 
 @pytest.mark.parametrize(
-    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+    "shell, set_cmake",
+    (
+        [("--pwsh", "$Env:CMAKE_PREFIX_PATH"), ("--bat", 'set "CMAKE_PREFIX_PATH')]
+        if sys.platform == "win32" else
+        [
+            ("--sh", "export CMAKE_PREFIX_PATH"),
+            ("--csh", "setenv CMAKE_PREFIX_PATH"),
+            ("--fish", "set -gx CMAKE_PREFIX_PATH"),
+        ]
+    )
+)
+def test_load_dev_bypasses_cached_script(
+    shell, set_cmake, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Test that --dev flag bypasses cached scripts and generates fresh environment
+    modifications.
+    """
+    spec = spack.concretize.concretize_one("mpileaks")
+    PackageInstaller([spec.package], fake=True).install()
+
+    load_script_path = spec_script.path_to_load_shell_script(spec, shell[2:])
+    assert os.path.exists(load_script_path)
+
+    os.remove(load_script_path)
+
+    output = load(shell, "--dev", "mpileaks")
+
+    assert not os.path.exists(load_script_path)
+    assert set_cmake in output
+
+
+@pytest.mark.parametrize(
+    "shell, set_cmake",
+    (
+        [("--pwsh", "$Env:CMAKE_PREFIX_PATH"), ("--bat", 'set "CMAKE_PREFIX_PATH')]
+        if sys.platform == "win32" else
+        [
+            ("--sh", "export CMAKE_PREFIX_PATH"),
+            ("--csh", "setenv CMAKE_PREFIX_PATH"),
+            ("--fish", "set -gx CMAKE_PREFIX_PATH"),
+        ]
+    )
 )
 def test_load_dev_bypasses_cached_repo(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+    shell, set_cmake, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
     """Test that --dev flag bypasses cached repo and uses builtin package repo."""
     spec = spack.concretize.concretize_one("mpileaks")
@@ -590,14 +607,26 @@ def test_load_dev_bypasses_cached_repo(
     output = load(shell, "--dev", "mpileaks")
 
     assert spec.prefix in output
-    assert _get_shell_cmd_invocation("_spack_env_prepend", shell) in output
+    assert set_cmake in output
 
 
 @pytest.mark.parametrize(
-    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+    "shell, unset_hash",
+    (
+        [
+            ("--pwsh", f"Set-Item -Path Env:{uenv.spack_loaded_hashes_var}"),
+            ("--bat", f'set "{uenv.spack_loaded_hashes_var}="')
+         ]
+        if sys.platform == "win32" else
+        [
+            ("--sh", f"unset {uenv.spack_loaded_hashes_var}"),
+            ("--csh", f"unsetenv {uenv.spack_loaded_hashes_var}"),
+            ("--fish", f"set -e {uenv.spack_loaded_hashes_var}"),
+        ]
+    )
 )
 def test_unload_dev_bypasses_cached_script(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+    shell, unset_hash, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
     """Test that --dev flag bypasses cached scripts for unload and generates fresh
     environment modifications."""
@@ -614,15 +643,26 @@ def test_unload_dev_bypasses_cached_script(
     output = unload(shell, "--dev", "mpileaks")
 
     assert not os.path.exists(unload_script_path)
-    assert _get_shell_cmd_invocation("_spack_env_remove", shell) in output
-    assert spec.dag_hash() in output
+    assert unset_hash in output
 
 
 @pytest.mark.parametrize(
-    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+    "shell, unset_hash",
+    (
+        [
+            ("--pwsh", f"Set-Item -Path Env:{uenv.spack_loaded_hashes_var}"),
+            ("--bat", f'set "{uenv.spack_loaded_hashes_var}="')
+         ]
+        if sys.platform == "win32" else
+        [
+            ("--sh", f"unset {uenv.spack_loaded_hashes_var}"),
+            ("--csh", f"unsetenv {uenv.spack_loaded_hashes_var}"),
+            ("--fish", f"set -e {uenv.spack_loaded_hashes_var}"),
+        ]
+    )
 )
 def test_unload_dev_bypasses_cached_repo(
-    shell, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+    shell, unset_hash, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
     """Test that --dev flag bypasses cached repo for unload and uses builtin package
     repo."""
@@ -638,5 +678,4 @@ def test_unload_dev_bypasses_cached_repo(
 
     output = unload(shell, "--dev", "mpileaks")
 
-    assert _get_shell_cmd_invocation("_spack_env_remove", shell) in output
-    assert spec.dag_hash() in output
+    assert unset_hash in output
