@@ -3057,6 +3057,10 @@ def _windows_is_hardlink(path: str) -> bool:
     larger than 1. Note that both the original and hard-linked file will
     return True because they share the same inode.
 
+    This method cannot determine the source and target link files,
+    it only has a sense of whether this file and another share a file id
+    in the file table. 
+
     Args:
         path (str): Windows path to check for a hard link
 
