@@ -87,10 +87,7 @@ spack_env_view_var = "SPACK_ENV_VIEW"
 _active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
 #: default path where environments are stored (XDG-compliant location)
-default_env_path = os.path.join(
-    os.path.expanduser("~"), ".local", "share", "spack", "environments"
-)
-
+default_env_path = f"$data_home{os.sep}environments"
 
 #: Name of the input yaml file for an environment
 manifest_name = "spack.yaml"
