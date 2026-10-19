@@ -263,8 +263,8 @@ def mock_gcs_client(monkeypatch):
 
     monkeypatch.setattr(spack.util.gcs, "gcs_client", _get_gcs_client)
     # Reset the global cache
-    monkeypatch.setattr(spack.util.gcs, "gcs_client_cache", None)
-    monkeypatch.setattr(spack.util.gcs, "gcs_bucket_cache", {})
+    monkeypatch.setattr(spack.util.gcs, "GCS_CLIENT_CACHE", None)
+    monkeypatch.setattr(spack.util.gcs, "GCS_BUCKET_CACHE", {})
 
     return client
 
@@ -748,17 +748,17 @@ def fake_boto3(monkeypatch):
 def test_get_s3_session_normalizes_method_and_returns_parsed_url(monkeypatch, fake_boto3):
     """Verify that "GET" and "HEAD" are treated as "fetch", and everything else
     is treated as "push"."""
-    monkeypatch.setattr(spack.util.s3, "s3_client_cache", {})
+    monkeypatch.setattr(spack.util.s3, "S3_CLIENT_CACHE", {})
 
     fetch_client, parsed_url = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="GET")
     assert parsed_url.geturl() == "s3://my-bucket/prefix"
-    assert (None, "fetch") in spack.util.s3.s3_client_cache
+    assert (None, "fetch") in spack.util.s3.S3_CLIENT_CACHE
 
     head_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="head")
     assert head_client is fetch_client
 
     push_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="anything-else")
-    assert (None, "push") in spack.util.s3.s3_client_cache
+    assert (None, "push") in spack.util.s3.S3_CLIENT_CACHE
     assert push_client is not fetch_client
 
 

@@ -31,7 +31,7 @@ def gcs_command(command):
     return _gcs_command_wrapped
 
 
-gcs_client_cache: Optional[Any] = None
+GCS_CLIENT_CACHE: Optional[Any] = None
 
 
 def gcs_client():
@@ -39,9 +39,9 @@ def gcs_client():
     Creates an authenticated GCS client to access GCS buckets and blobs
     """
 
-    global gcs_client_cache
-    if gcs_client_cache is not None:
-        return gcs_client_cache
+    global GCS_CLIENT_CACHE
+    if GCS_CLIENT_CACHE is not None:
+        return GCS_CLIENT_CACHE
 
     try:
         import google.auth
@@ -61,11 +61,11 @@ def gcs_client():
     setattr(storage_client, "NotFound", NotFound)
     setattr(storage_client, "GoogleAPIError", GoogleAPIError)
 
-    gcs_client_cache = storage_client
+    GCS_CLIENT_CACHE = storage_client
     return storage_client
 
 
-gcs_bucket_cache: Dict[str, Any] = {}
+GCS_BUCKET_CACHE: Dict[str, Any] = {}
 
 
 class GCSBucket:
@@ -104,15 +104,15 @@ class GCSBucket:
         if self._bucket is not None:
             return self._bucket
 
-        global gcs_bucket_cache
-        if self.name in gcs_bucket_cache:
-            self._bucket = gcs_bucket_cache[self.name]
+        global GCS_BUCKET_CACHE
+        if self.name in GCS_BUCKET_CACHE:
+            self._bucket = GCS_BUCKET_CACHE[self.name]
             return self._bucket
 
         try:
             self._bucket = self.client.bucket(self.name)
             if self._bucket is not None:
-                gcs_bucket_cache[self.name] = self._bucket
+                GCS_BUCKET_CACHE[self.name] = self._bucket
         except self.client.NotFound as ex:
             tty.error("{0}, Failed to get GCS bucket".format(ex))
 
@@ -124,11 +124,11 @@ class GCSBucket:
 
     @gcs_command
     def create(self):
-        global gcs_bucket_cache
+        global GCS_BUCKET_CACHE
         if not self.bucket:
             self.bucket = self.client.create_bucket(self.name)
             if self.bucket is not None:
-                gcs_bucket_cache[self.name] = self.bucket
+                GCS_BUCKET_CACHE[self.name] = self.bucket
 
     @gcs_command
     def get_blob(self, blob_path):

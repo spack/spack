@@ -18,7 +18,7 @@ import spack.error
 from spack.util import tty
 
 #: Map (mirror name, method) tuples to s3 client instances.
-s3_client_cache: Dict[Tuple[Optional[str], str], Any] = dict()
+S3_CLIENT_CACHE: Dict[Tuple[Optional[str], str], Any] = dict()
 
 #: Allowed HTTP request methods
 S3OpenMethod = Literal["get", "head", "GET", "HEAD"]
@@ -43,7 +43,7 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
     # Circular dependency
     from spack.mirrors.mirror import MirrorCollection
 
-    global s3_client_cache
+    global S3_CLIENT_CACHE
 
     # Parse the URL if not already done.
     if not isinstance(url, urllib.parse.ParseResult):
@@ -74,8 +74,8 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
     key = (name, method)
 
     # Did we already create a client for this? Then return it.
-    if key in s3_client_cache:
-        return s3_client_cache[key], url
+    if key in S3_CLIENT_CACHE:
+        return S3_CLIENT_CACHE[key], url
 
     # Otherwise, create it.
     s3_connection, s3_client_args = get_mirror_s3_connection_info(mirror, method)
@@ -89,7 +89,7 @@ def _get_s3_session(url, method: Literal[S3OpenMethod, MirrorDirection] = "fetch
     client.ClientError = ClientError
 
     # Cache the client.
-    s3_client_cache[key] = client
+    S3_CLIENT_CACHE[key] = client
     return client, url
 
 
