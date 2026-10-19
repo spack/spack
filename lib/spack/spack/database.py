@@ -1180,6 +1180,10 @@ class Database:
         except FileNotFoundError:
             if self.is_upstream:
                 tty.warn(f"upstream not found: {self._index_path}")
+            elif self._state_is_inconsistent:
+                # Without an index, what is in memory is from the failed transaction.
+                self._data, self._installed_prefixes = {}, set()
+                self._state_is_inconsistent = False
             return
 
         with index_file as f:
