@@ -2,12 +2,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import io
 import os
 import pathlib
+import sys
 import time
 
 import pytest
 
+import spack.paths
 import spack.util.gpg
 
 
@@ -113,6 +116,47 @@ def test_gpg_trust_case_insensitive():
         )
 
     assert spack.util.gpg.GpgKeyTrust("v") == spack.util.gpg.GpgKeyTrust.ERROR
+
+
+#: primary key fingerprints of the public keys in the two_keys_file fixture
+EXTERNAL_KEY = "B27095DEEF1787C3C8C85917DCA0241840A5DAE2"
+TUTORIAL_KEY = "2C8DD3224EF3573A42BD221FA8E0CA3C1C2ADA2F"
+
+
+@pytest.fixture
+def two_keys_file(tmp_path: pathlib.Path) -> str:
+    keyfile = tmp_path / "two.keys"
+    keyfile.write_text(
+        pathlib.Path(spack.paths.mock_gpg_keys_path, "external.key").read_text()
+        + pathlib.Path(spack.paths.share_path, "keys", "tutorial.pub").read_text()
+    )
+    return str(keyfile)
+
+
+def test_trust_without_confirmation_does_not_import(two_keys_file, mock_gnupghome, monkeypatch):
+    monkeypatch.setattr(sys, "stdin", io.StringIO(""))
+    with pytest.raises(spack.util.gpg.SpackGPGError, match="-y"):
+        spack.util.gpg.trust(two_keys_file)
+    assert spack.util.gpg.public_keys() == []
+
+
+def test_trust_some_keys_in_file(two_keys_file, mock_gnupghome, monkeypatch):
+    monkeypatch.setattr(
+        spack.util.gpg.tty, "get_yes_or_no", lambda prompt, default=None: TUTORIAL_KEY in prompt
+    )
+    spack.util.gpg.trust(two_keys_file)
+    (key,) = spack.util.gpg.public_keys()
+    assert key.fpr == TUTORIAL_KEY
+    assert key.owner_trust == spack.util.gpg.GpgKeyTrust.ULTIMATE
+
+
+def test_trust_keeps_existing_key_not_trusted(two_keys_file, mock_gnupghome):
+    external_key = os.path.join(spack.paths.mock_gpg_keys_path, "external.key")
+    spack.util.gpg.trust(external_key, yes_to_all=True)
+    spack.util.gpg.trust(two_keys_file, fprs=[TUTORIAL_KEY])
+    keys = {key.fpr: key for key in spack.util.gpg.public_keys()}
+    assert keys.keys() == {EXTERNAL_KEY, TUTORIAL_KEY}
+    assert keys[EXTERNAL_KEY].owner_trust == spack.util.gpg.GpgKeyTrust.ULTIMATE
 
 
 def test_gpg_trust_ownertrust():

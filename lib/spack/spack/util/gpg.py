@@ -9,7 +9,9 @@ import functools
 import os
 import pathlib
 import re
+import shutil
 import sys
+import tempfile
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -17,6 +19,7 @@ import spack.error
 import spack.paths
 import spack.util.executable
 import spack.util.filesystem
+import spack.util.lang
 import spack.util.spack_json as sjson
 import spack.version
 from spack.util import tty
@@ -657,10 +660,12 @@ class Gpg:
         ownertrust: GpgKeyTrust = GpgKeyTrust.ULTIMATE,
         yes_to_all: bool = False,
     ):
-        """Import a key from a file and trust it.
+        """Import keys from a file and trust them.
 
         The keyfile may contain public keys, secret keys (which embed public
-        key material), or both.
+        key material), or both. Keys are imported only after deciding which to
+        trust. Keys that were in the keyring before are left as they are when
+        not trusted.
 
         Args:
             keyfile: file with the public or secret key(s)
@@ -668,41 +673,62 @@ class Gpg:
             ownertrust: level of trust to assign to the key(s)
             yes_to_all: trust all keys in the file if True, otherwise ask for each key
         """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Import the keys that were asked about, also if the keyfile changes meanwhile
+            keyfile_copy = os.path.join(tmpdir, "keyfile")
+            shutil.copyfile(keyfile, keyfile_copy)
 
-        # This global method is safe to use to list keys in a file without importing them
-        imported_keys = self.list_keyfile(keyfile, ktype=[GpgKeyType.PUBLIC, GpgKeyType.SECRET])
-        if not imported_keys:
-            tty.info(f"No keys to trust in {keyfile}")
-            return
+            # A key can be listed twice: as public and as secret key
+            keys_in_file = list(
+                spack.util.lang.dedupe(
+                    self.list_keyfile(keyfile_copy, ktype=[GpgKeyType.PUBLIC, GpgKeyType.SECRET])
+                )
+            )
+            if not keys_in_file:
+                tty.info(f"No keys to trust in {keyfile}")
+                return
 
-        # Import the keys from they keyfile and verify trust for all new keys after.
-        # This avoids TOCTOU errors where the keyfile may change between extracting
-        # the expected keys and trusting the keys.
-        self.gpg("--yes", "--batch", "--import", keyfile)
-
-        # Iterate all of the keys in the keychain and confirm trust
-        for key in self.keys():
-            # Skip keys we had before trusting the keys in the file
-            if key not in imported_keys:
-                continue
             # if fprs is provided, then only trust keys in the file with matching fingerprints
             # yes_to_all is ignored in this case
             if fprs:
-                trusted = key.fpr in fprs
+                trusted = [key for key in keys_in_file if key.fpr in fprs]
+            elif yes_to_all:
+                trusted = keys_in_file
             else:
-                trusted = yes_to_all or bool(tty.get_yes_or_no(f"Trust key: {key}", default=False))
+                try:
+                    trusted = [
+                        key
+                        for key in keys_in_file
+                        if tty.get_yes_or_no(f"Trust key: {key:s}", default=False)
+                    ]
+                except EOFError:
+                    raise SpackGPGError("Use -y to trust all keys non-interactively.")
+
+            not_trusted = [key for key in keys_in_file if key not in trusted]
+            for key in not_trusted:
+                tty.info(f"Spack will not trust key {key}")
 
             if not trusted:
-                tty.info(f"Spack will not trust key {key}")
-                self.untrust([key])
-                continue
+                return
 
-            # Update the owner trust to ultimate
-            r, w = os.pipe()
-            with contextlib.closing(os.fdopen(r, "r")) as rc:
-                with contextlib.closing(os.fdopen(w, "w")) as wc:
-                    wc.write(f"{key.fpr}:{ownertrust.ownertrust}:\n")
-                self.gpg("--import-ownertrust", input=rc)
+            existing = set(self.keys()) if not_trusted else set()
+            new_not_trusted = [key for key in not_trusted if key not in existing]
+            try:
+                self.gpg("--yes", "--batch", "--import", keyfile_copy)
+            finally:
+                # A failed import may have added only some of the keys
+                if new_not_trusted:
+                    imported = set(self.keys())
+                    to_delete = [key.fpr for key in new_not_trusted if key in imported]
+                    if to_delete:
+                        self.gpg("--yes", "--batch", "--delete-secret-and-public-keys", *to_delete)
+
+        # Update the owner trust of all trusted keys at once
+        r, w = os.pipe()
+        with contextlib.closing(os.fdopen(r, "r")) as rc:
+            with contextlib.closing(os.fdopen(w, "w")) as wc:
+                wc.writelines(f"{key.fpr}:{ownertrust.ownertrust}:\n" for key in trusted)
+            self.gpg("--import-ownertrust", input=rc)
 
     def untrust(self, keys: List[GpgKey]):
         """Delete known keys.
