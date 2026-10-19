@@ -99,9 +99,18 @@ class SpackPaths:
 
     @property
     def user_cache_path(self):
+        # Allow tests to override via setter
+        if hasattr(self, "_user_cache_path_override"):
+            return self._user_cache_path_override
+
         import spack.config
 
         return spack.config._resolve_location_var("state") or self.default_state_home
+
+    @user_cache_path.setter
+    def user_cache_path(self, value):
+        """Allow tests to override user_cache_path."""
+        self._user_cache_path_override = value
 
     @property
     def reports_path(self):

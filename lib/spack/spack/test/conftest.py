@@ -2407,7 +2407,7 @@ def inode_cache():
 
 
 @pytest.fixture(autouse=True)
-def mock_user_cache_path(tmp_path: Path, monkeypatch):
+def mock_user_cache_path(tmp_path: Path):
     """Point $user_cache_path-derived locations (misc cache, BINARY_INDEX's persistent
     index cache, etc.) at a per-test temporary directory instead of the real ~/.spack.
 
@@ -2415,10 +2415,17 @@ def mock_user_cache_path(tmp_path: Path, monkeypatch):
     writes the same real, on-disk cache concurrently, since `$user_cache_path` defaults
     to `~/.spack` unless SPACK_USER_CACHE_PATH is set. `spack.config.replacements()`
     resolves `$user_cache_path` lazily via `spack.paths.user_cache_path` on every
-    substitution, so patching that attribute here is picked up correctly regardless of
-    when `spack.paths` was first imported.
+    substitution, so setting it on the locations instance here is picked up correctly.
+
+    Since this sets the override on the current locations instance, tests that create
+    a new SpackPaths instance (e.g., mock_spack_instance) will automatically use the
+    new instance's computed value instead.
     """
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path / "user_cache"))
+    spack.paths.locations.user_cache_path = str(tmp_path / "user_cache")
+    yield
+    # Restore by deleting the override attribute
+    if hasattr(spack.paths.locations, "_user_cache_path_override"):
+        delattr(spack.paths.locations, "_user_cache_path_override")
 
 
 @pytest.fixture(autouse=True)
