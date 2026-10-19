@@ -394,3 +394,37 @@ def test_quoting_shell_cmd_string(shell, dollarsign_expected, spacing_expected):
     shell_cmd = envutil.ShellCmdString(shell)
     assert shell_cmd.spack_append("FOO", "path/with/$dollarsign") == dollarsign_expected
     assert shell_cmd.spack_append("FOO", "path/with/ space") == spacing_expected
+
+
+def test_empty_string_not_normalized_to_dot(working_env):
+    """Test that appending/prepending an empty string is ignored and does NOT get
+    normalized to '.'
+    """
+    if sys.platform == "win32":
+        os.environ["TEST_PATH"] = "C:\\usr\\bin"
+        expected_path = "C:\\usr\\bin"
+    else:
+        os.environ["TEST_PATH"] = "/usr/bin"
+        expected_path = "/usr/bin"
+
+    env = envutil.EnvironmentModifications()
+
+    env.append_path("TEST_PATH", "")
+    env.apply_modifications()
+
+    result = os.environ["TEST_PATH"]
+    assert expected_path == result
+
+    env.prepend_path("TEST_PATH", "")
+    env.apply_modifications()
+
+    result = os.environ["TEST_PATH"]
+    assert expected_path == result
+
+    # set_path with empty string IS allowed to set empty value
+    env.set_path("TEST_PATH", "")
+    env.apply_modifications()
+
+    result = os.environ["TEST_PATH"]
+    assert result != "."
+    assert result == ""
