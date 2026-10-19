@@ -108,9 +108,10 @@ MARKER_FILE = ".spack-view"
 
 
 def env_root_path() -> str:
-    """Override default root path if the user specified it."""
-    config_value = spack.config.CONFIG.get("config:environments_root", default=default_env_path)
-    return spack.config.canonicalize_path(config_value)
+    """Override default root path if the user specified it"""
+    return spack.config.canonicalize_path(
+        spack.config.CONFIG.get("config:environments_root", default=default_env_path)
+    )
 
 
 def environment_name(path: Union[str, pathlib.Path]) -> str:
