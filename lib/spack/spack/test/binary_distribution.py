@@ -24,6 +24,7 @@ import spack.binary_distribution
 import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.error
 import spack.main
 import spack.mirrors.mirror
 import spack.oci.image
@@ -585,6 +586,26 @@ def test_update_sbang(tmp_path: pathlib.Path, temporary_mirror, mock_fetch, inst
 """
         with open(os.path.join(s.prefix.bin, "script.sh"), encoding="utf-8") as f:
             assert f.read() == new_contents
+
+
+def test_install_root_node_checks_sha256(install_mockery, temporary_mirror):
+    install_cmd("--fake", "--no-cache", "libelf")
+    buildcache_cmd("push", "--unsigned", temporary_mirror, "libelf")
+    spec = spack.concretize.concretize_one("libelf")
+    uninstall_cmd("-y", "libelf")
+
+    mirror_url = url_util.path_to_file_url(temporary_mirror)
+    cache_entry = URLBuildcacheEntry(mirror_url, spec, allow_unsigned=True)
+    cache_entry.read_manifest()
+    sha256 = cache_entry.get_blob_record(BuildcacheComponent.TARBALL).checksum
+
+    with pytest.raises(spack.error.NoChecksumException):
+        spack.binary_distribution.install_root_node(spec, unsigned=True, sha256="0" * 64)
+    assert not os.path.exists(spec.prefix)
+    assert not spec.installed
+
+    spack.binary_distribution.install_root_node(spec, unsigned=True, sha256=sha256)
+    assert spec.installed
 
 
 def test_FetchCacheError_only_accepts_lists_of_errors():
