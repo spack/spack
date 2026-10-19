@@ -983,19 +983,20 @@ class EnvironmentModifications:
         shell: str = DEFAULT_SHELL,
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
+        cache: Optional[bool] = False,
     ) -> str:
         """Return shell code to apply the modifications.
 
         Args:
             shell: Target shell type (sh, csh, fish, bat, pwsh)
             explicit: If True, generate resolved export statements for provenance.
-                     If False, generate _spack_env_* function calls for runtime.
             env: Base environment to apply modifications to when explicit=True.
+            cache: If True, generate _spack_env_* function calls (implies explicit=False).
         """
         modifications = self.group_by_name()
-
         shell_cmd = ShellCmdString(shell)
-        if explicit:
+
+        if explicit or not cache:
             env = os.environ if env is None else env
             new_env = dict(env.items())
 
@@ -1009,30 +1010,28 @@ class EnvironmentModifications:
             cmds = ""
             for name in sorted(set(modifications)):
                 new = new_env.get(name, None)
-                if new is None:
-                    cmds += shell_cmd.unset(name)
-                else:
-                    value = new_env[name]
-                    # For bat and pwsh, don't quote - format strings handle quoting
-                    # For other shells, quote with shlex.quote
-                    if shell not in ("bat", "pwsh"):
-                        value = shlex.quote(value)
-                    cmds += shell_cmd.set(name, value)
+                old = env.get(name, None)
+                if explicit or new != old:
+                    if new is None:
+                        cmds += shell_cmd.unset(name)
+                    else:
+                        value = new_env[name]
+                        if shell not in ("bat", "pwsh"):
+                            value = shlex.quote(value)
+                        cmds += shell_cmd.set(name, value)
             return cmds
-        else:
-            cache_commands = ""
-            for _, actions in sorted(modifications.items()):
-                for modifier in actions:
-                    cache_commands += modifier.cache_command(shell)
 
-            if "MANPATH" in modifications:
-                fn = shell_cmd.shell_fn("_spack_env_append", shell)
-                empty = shell_cmd.shell_quote("", shell)
-                cache_commands += (
-                    f"{fn} MANPATH {empty} {shell_cmd.shell_quote(os.pathsep, shell)}\n"
-                )
+        # Generate _spack_env_* function calls for caching
+        cache_commands = ""
+        for _, actions in sorted(modifications.items()):
+            for modifier in actions:
+                cache_commands += modifier.cache_command(shell)
 
-            return cache_commands
+        if "MANPATH" in modifications:
+            fn = shell_cmd.shell_fn("_spack_env_append", shell)
+            empty = shell_cmd.shell_quote("", shell)
+            cache_commands += f"{fn} MANPATH {empty} {shell_cmd.shell_quote(os.pathsep, shell)}\n"
+        return cache_commands
 
     @staticmethod
     def from_sourcing_file(

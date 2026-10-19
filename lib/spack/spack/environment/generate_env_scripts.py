@@ -24,7 +24,7 @@ def get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") ->
 
     cmds = ""
     cmds += spack.environment.shell.activate_commands(env, shell, view)
-    cmds += env_mods.shell_modifications(shell)
+    cmds += env_mods.shell_modifications(shell, cache=True)
 
     return cmds
 
@@ -43,7 +43,7 @@ def get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh") 
 
     cmds = ""
     cmds += spack.environment.shell.deactivate_commands(shell)
-    cmds += env_mods.shell_modifications(shell)
+    cmds += env_mods.shell_modifications(shell, cache=True)
 
     return cmds
 

@@ -134,5 +134,5 @@ def load(parser, args):
             commands = spec_script.source_script(load_script_path, shell)
 
         env_mods = uenv.environment_modifications_from_prefix_inspections([spec])
-        commands += env_mods.shell_modifications(shell)
+        commands += env_mods.shell_modifications(shell, cache=True)
         sys.stdout.write(commands)

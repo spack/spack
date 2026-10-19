@@ -88,10 +88,10 @@ def get_environment_modifications(spec, shell, repo=None) -> Tuple[str, str]:
     unload_env_mod = load_env_mod.reversed()
 
     load_env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-    load_mods = load_env_mod.shell_modifications(shell)
+    load_mods = load_env_mod.shell_modifications(shell, cache=True)
 
     unload_env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-    unload_mods = unload_env_mod.shell_modifications(shell)
+    unload_mods = unload_env_mod.shell_modifications(shell, cache=True)
 
     return load_mods, unload_mods
 

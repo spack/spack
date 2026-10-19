@@ -172,7 +172,7 @@ def test_shell_modifications_are_properly_escaped(shell):
         changes.append_path("VAR", "$ANOTHER_PATH")
         changes.set("RM_RF", "$(rm -rf /)")
 
-    shell_mods = changes.shell_modifications(shell)
+    shell_mods = changes.shell_modifications(shell, cache=True)
 
     append_cmd = "_spack_env_append"
     set_cmd = "_spack_env_set"
