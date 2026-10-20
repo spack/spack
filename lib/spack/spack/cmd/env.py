@@ -282,6 +282,12 @@ def env_activate_setup_parser(subparser):
         default=None,
         help=("name or directory of the environment being activated"),
     )
+    subparser.add_argument(
+        "--dev",
+        action="store_true",
+        default=False,
+        help="bypass the cached script and repo and generate environment modifications",
+    )
 
 
 def create_temp_env_directory():
@@ -372,7 +378,7 @@ def env_activate(args):
             env_script.write_env_deactivate_script(active_env, current_view)
         except Exception as e:
             env_cmds = env_script.get_deactivate_commands(
-                active_env, view=current_view, shell=args.shell
+                active_env, view=current_view, shell=args.shell, get_cache=True
             )
             tty.debug(f"Error writing to deactivation environment scripts: {e}")
 
@@ -397,6 +403,12 @@ def env_activate(args):
 
     active_env.manifest.prepare_config_scope()
 
+    if args.dev:
+        cmds = env_script.get_activate_commands(active_env, view=view, shell=args.shell, get_cache=False)
+
+        sys.stdout.write(cmds)
+        return
+
     env_activate_script = env_script.path_to_env_script(
         active_env, shell=args.shell, script_type="activate", view=view
     )
@@ -409,7 +421,7 @@ def env_activate(args):
         env_script.write_env_deactivate_script(active_env, view)
     except Exception as e:
         tty.debug(f"Error writing to environment scripts: {e}")
-        env_cmds = env_script.get_activate_commands(active_env, view=view, shell=args.shell)
+        env_cmds = env_script.get_activate_commands(active_env, view=view, shell=args.shell, get_cache=True)
 
     # Validate that the environment view is accessible.
     spack.environment.shell.validate_view(active_env, view)
@@ -420,6 +432,7 @@ def env_activate(args):
         active_env, args.shell, prompt=args.prompt
     ).strip("\n")
     env_cmds += f"{despacktivate_cmds}\n"
+
     sys.stdout.write(env_cmds)
 
 
@@ -464,6 +477,12 @@ def env_deactivate_setup_parser(subparser):
         const="pwsh",
         help="print pwsh commands to activate the environment",
     )
+    subparser.add_argument(
+        "--dev",
+        action="store_true",
+        default=False,
+        help="bypass the cached script and repo and generate environment modifications",
+    )
 
 
 def env_deactivate(args):
@@ -481,6 +500,13 @@ def env_deactivate(args):
         tty.die("No environment is currently active.")
 
     view = os.environ.get("SPACK_ENV_VIEW", None)
+
+    if args.dev:
+        cmds = env_script.get_deactivate_commands(active_environment(), view, args.shell, False)
+
+        sys.stdout.write(cmds)
+        return
+
     env_deactivate_script_path = env_script.path_to_env_script(
         active_environment(), shell=args.shell, script_type="deactivate", view=view
     )
@@ -491,7 +517,7 @@ def env_deactivate(args):
         env_script.write_env_deactivate_script(active_environment(), view)
     except Exception as e:
         env_cmds = env_script.get_deactivate_commands(
-            active_environment(), view=view, shell=args.shell
+            active_environment(), view=view, shell=args.shell, get_cache=True
         )
         tty.debug(f"Error writing to deactivation environment scripts: {e}")
 

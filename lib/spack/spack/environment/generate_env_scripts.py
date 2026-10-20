@@ -9,7 +9,7 @@ import spack.environment.shell
 import spack.user_environment as uenv
 
 
-def get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
+def get_activate_commands(env, view: Optional[str] = None, shell: str = "sh", get_cache: bool = True) -> str:
     """Get the commands to activate an environment.
 
     Args:
@@ -24,12 +24,12 @@ def get_activate_commands(env, view: Optional[str] = None, shell: str = "sh") ->
 
     cmds = ""
     cmds += spack.environment.shell.activate_commands(env, shell, view)
-    cmds += env_mods.shell_modifications(shell, cache=True)
+    cmds += env_mods.shell_modifications(shell, cache=get_cache)
 
     return cmds
 
 
-def get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh") -> str:
+def get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh", get_cache: bool = True) -> str:
     """Get the commands to deactivate an environment.
 
     Args:
@@ -43,7 +43,7 @@ def get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh") 
 
     cmds = ""
     cmds += spack.environment.shell.deactivate_commands(shell)
-    cmds += env_mods.shell_modifications(shell, cache=True)
+    cmds += env_mods.shell_modifications(shell, cache=get_cache)
 
     return cmds
 
@@ -119,9 +119,9 @@ def _write_env_script(
             yaml_mtime, lockfile_mtime, script_path
         ) or not _script_matches_env(env, script_path):
             if activate:
-                cmds = get_activate_commands(env, view=view, shell=shell)
+                cmds = get_activate_commands(env, view=view, shell=shell, get_cache=True)
             else:
-                cmds = get_deactivate_commands(env, view=view, shell=shell)
+                cmds = get_deactivate_commands(env, view=view, shell=shell, get_cache=True)
             uenv.write_shell_script(script_path, cmds, shell)
 
 
