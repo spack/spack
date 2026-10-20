@@ -126,15 +126,15 @@ mirror_entry = {
                 {
                     "type": "boolean",
                     "default": False,
-                    "description": "Automatically push packages to this build cache immediately after "
-                    "they are installed locally",
+                    "description": "Automatically push packages to this build cache immediately "
+                    "after they are installed locally",
                 },
                 {
                     "type": "object",
                     "description": "Detailed configuration for autopush.",
                     "properties": {
                         "binaries": {"type": "boolean", "description": "Push installed binaries."},
-                        "keys": {"type": "boolean", "description": "Push signing keys." },
+                        "keys": {"type": "boolean", "description": "Push signing keys."},
                     },
                 },
             ]

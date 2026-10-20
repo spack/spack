@@ -155,13 +155,23 @@ class Mirror:
     def autopush(self) -> bool:
         if isinstance(self._data, str):
             return False
-        return self._data.get("autopush", {}).get("binaries", False)
+
+        autopush_conf = self._data.get("autopush", False)
+        if isinstance(autopush_conf, dict):
+            return autopush_conf.get("binaries", False)
+        else:
+            return autopush_conf
 
     @property
     def autopush_keys(self) -> bool:
         if isinstance(self._data, str):
             return False
-        return self._data.get("autopush", {}).get("keys", False)
+
+        autopush_conf = self._data.get("autopush", False)
+        if isinstance(autopush_conf, dict):
+            return autopush_conf.get("keys", False)
+        else:
+            return autopush_conf
 
     def include_binary(self, direction: str) -> List[str]:
         return self._get_value("include_binary", direction) or []
@@ -266,13 +276,6 @@ class Mirror:
             keys += ["binary", "source", "signed", "autopush"]
         changed = False
         for key in keys:
-            if key == "autopush":
-                if isinstance(new_data[key], bool):
-                    new_data[key] = {
-                        "binaries": new_data[key],
-                        "keys": new_data[key],
-                    }
-
             if key in new_data and current_data.get(key) != new_data[key]:
                 current_data[key] = new_data[key]
                 changed = True
