@@ -373,12 +373,13 @@ def env_activate(args):
         )
 
         env_cmds = env_script.source_env_script(env_deactivate_script, args.shell)
+        prefix_cmds = ""
         try:
             # Will only write the deactivation script if it doesn't exist
             env_script.write_env_deactivate_script(active_env, current_view)
         except Exception as e:
-            env_cmds = env_script.get_deactivate_commands(
-                active_env, view=current_view, shell=args.shell, get_cache=True
+            prefix_cmds, env_cmds = env_script.get_deactivate_commands(
+                active_env, view=current_view, shell=args.shell, use_cache=True
             )
             tty.debug(f"Error writing to deactivation environment scripts: {e}")
 
@@ -387,6 +388,8 @@ def env_activate(args):
         )
         env_cmds += f"{despacktivate_cmds}\n"
 
+        if prefix_cmds:
+            sys.stdout.write(prefix_cmds)
         sys.stdout.write(env_cmds)
 
     # Activate new environment
@@ -404,10 +407,12 @@ def env_activate(args):
     active_env.manifest.prepare_config_scope()
 
     if args.dev:
-        cmds = env_script.get_activate_commands(
-            active_env, view=view, shell=args.shell, get_cache=False
+        prefix_cmds, cmds = env_script.get_activate_commands(
+            active_env, view=view, shell=args.shell, use_cache=False
         )
 
+        if prefix_cmds:
+            sys.stdout.write(prefix_cmds)
         sys.stdout.write(cmds)
         return
 
@@ -416,6 +421,7 @@ def env_activate(args):
     )
 
     env_cmds = env_script.source_env_script(env_activate_script, args.shell)
+    prefix_env_cmds = ""
 
     try:
         # Will only write the activation/deactivation scripts if they don't exist
@@ -423,8 +429,8 @@ def env_activate(args):
         env_script.write_env_deactivate_script(active_env, view)
     except Exception as e:
         tty.debug(f"Error writing to environment scripts: {e}")
-        env_cmds = env_script.get_activate_commands(
-            active_env, view=view, shell=args.shell, get_cache=True
+        prefix_env_cmds, env_cmds = env_script.get_activate_commands(
+            active_env, view=view, shell=args.shell, use_cache=True
         )
 
     # Validate that the environment view is accessible.
@@ -437,6 +443,12 @@ def env_activate(args):
     ).strip("\n")
     env_cmds += f"{despacktivate_cmds}\n"
 
+    if not prefix_env_cmds and active_env.user_specs:
+        prefix_env_cmds, _ = env_script.get_activate_commands(
+            active_env, view=view, shell=args.shell, use_cache=True
+        )
+
+    env_cmds += prefix_env_cmds
     sys.stdout.write(env_cmds)
 
 
@@ -503,25 +515,31 @@ def env_deactivate(args):
     if active_environment() is None:
         tty.die("No environment is currently active.")
 
+    current_env = active_environment()
     view = os.environ.get("SPACK_ENV_VIEW", None)
 
     if args.dev:
-        cmds = env_script.get_deactivate_commands(active_environment(), view, args.shell, False)
+        prefix_cmds, cmds = env_script.get_deactivate_commands(
+            current_env, view, args.shell, False
+        )
 
+        if prefix_cmds:
+            sys.stdout.write(prefix_cmds)
         sys.stdout.write(cmds)
         return
 
     env_deactivate_script_path = env_script.path_to_env_script(
-        active_environment(), shell=args.shell, script_type="deactivate", view=view
+        current_env, shell=args.shell, script_type="deactivate", view=view
     )
 
     env_cmds = env_script.source_env_script(env_deactivate_script_path, args.shell)
+    prefix_env_cmds = ""
     try:
         # Will only write the deactivation script if it doesn't exist
         env_script.write_env_deactivate_script(active_environment(), view)
     except Exception as e:
-        env_cmds = env_script.get_deactivate_commands(
-            active_environment(), view=view, shell=args.shell, get_cache=True
+        prefix_env_cmds, env_cmds = env_script.get_deactivate_commands(
+            current_env, view=view, shell=args.shell, use_cache=True
         )
         tty.debug(f"Error writing to deactivation environment scripts: {e}")
 
@@ -529,6 +547,13 @@ def env_deactivate(args):
 
     despacktivate_cmds = env_script.remove_despacktivate_and_prompt_cmds(args.shell).strip("\n")
     env_cmds += f"{despacktivate_cmds}\n"
+
+    if not prefix_env_cmds and current_env.user_specs:
+        prefix_env_cmds, _ = env_script.get_activate_commands(
+            current_env, view=view, shell=args.shell, use_cache=True
+        )
+
+    env_cmds += prefix_env_cmds
     sys.stdout.write(env_cmds)
 
 

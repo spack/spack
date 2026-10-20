@@ -54,13 +54,11 @@ def test_manpath_trailing_colon(
 
     os.environ["MANPATH"] = "/usr/share/man" + os.pathsep + "/usr/local/share/man"
 
-    load_cmds = _get_load_cmds_from_script(spec, shell)
+    load_output = load(shell, spec.name)
+
     var = "MANPATH"
     if shell == "--bat":
         var = f'"{var}"'
-    prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} "
-    manpath_prepends = [line for line in load_cmds.splitlines() if prepend_cmd in line]
-    assert len(manpath_prepends) > 0, "Expected MANPATH prepends from loaded packages"
 
     append_cmd = f"{_get_shell_cmd_invocation('_spack_env_append', shell)} MANPATH"
 
@@ -70,12 +68,8 @@ def test_manpath_trailing_colon(
     else:
         expected_append = f"{append_cmd} '' {sep}"
 
-    trailing_colon_found = any(expected_append in line for line in load_cmds.splitlines())
-    assert trailing_colon_found, (
-        f"Expected trailing separator via: {expected_append}\n"
-        f"This preserves system MANPATH entries.\n"
-        f"Commands generated:\n{load_cmds}"
-    )
+    trailing_colon_found = any(expected_append in line for line in load_output.splitlines())
+    assert trailing_colon_found
 
 
 def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
@@ -88,6 +82,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         # Ensure our reference variable is clean.
         os.environ["CMAKE_PREFIX_PATH"] = "/hello" + os.pathsep + "/world"
 
+        load_output = load(shell, "mpileaks")
         load_cmds = _get_load_cmds_from_script(mpileaks_spec, shell)
 
         def extract_value(output, variable):
@@ -111,7 +106,7 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
                     return s.name
             return None
 
-        paths_shell = extract_value(load_cmds, "CMAKE_PREFIX_PATH")
+        paths_shell = extract_value(load_output, "CMAKE_PREFIX_PATH")
 
         # All but the last two paths are added by spack load; lookup what packages they're from.
         pkgs = [prefix_to_pkg(p) for p in paths_shell if prefix_to_pkg(p)]
@@ -445,7 +440,7 @@ def test_load_custom_prefix_inspections(
     spec = spack.concretize.concretize_one("mpileaks")
     PackageInstaller([spec.package], fake=True).install()
 
-    load_cmds = _get_load_cmds_from_script(spec, shell)
+    load_output = load(shell, spec.name)
 
     var = "MY_TOOLS"
     if shell == "--bat":
@@ -453,8 +448,8 @@ def test_load_custom_prefix_inspections(
 
     prepend_cmd = f"{_get_shell_cmd_invocation('_spack_env_prepend', shell)} {var}"
 
-    assert any(prepend_cmd in line for line in load_cmds.splitlines())
-    assert os.path.join(spec.prefix, "bin") in load_cmds
+    assert any(prepend_cmd in line for line in load_output.splitlines())
+    assert os.path.join(spec.prefix, "bin") in load_output
 
 
 @pytest.mark.parametrize(

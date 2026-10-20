@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import textwrap
-from typing import Optional
+from typing import Optional, Tuple
 
 import spack.config
 import spack.repo
@@ -157,7 +157,9 @@ def alias_despacktivate_cmds(shell):
     return shell_cmd.alias("despacktivate", "spack env deactivate")
 
 
-def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
+def activate(
+    env, view: Optional[str] = "default"
+) -> Tuple[EnvironmentModifications, EnvironmentModifications]:
     """Compute environment modifications for activating an environment.
 
     Arguments:
@@ -169,6 +171,7 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
         modifications to activate environment."""
 
     env_mods = EnvironmentModifications()
+    prefix_mods = EnvironmentModifications()
 
     #
     # NOTE in the fish-shell: Path variables are a special kind of variable
@@ -184,7 +187,8 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
     try:
         if view and env.has_view(view):
             with spack.store.STORE.db.read_transaction():
-                env.add_view_to_env(env_mods, view)
+                prefix_mods, spec_mods = env.add_view_to_env(env_mods, view)
+                env_mods.extend(spec_mods)
     except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
         tty.error(e)
         tty.die(
@@ -195,7 +199,7 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
             "    spack -e {0} concretize --force".format(env.name),
         )
 
-    return env_mods
+    return prefix_mods, env_mods
 
 
 def validate_view(env, view: Optional[str] = "default") -> None:
@@ -210,10 +214,10 @@ def validate_view(env, view: Optional[str] = "default") -> None:
         view: the view name to validate
     """
     # Call activate() and discard the result to trigger validation and error handling
-    _ = activate(env, view)
+    _, _ = activate(env, view)
 
 
-def deactivate(active_env, view) -> EnvironmentModifications:
+def deactivate(active_env, view) -> Tuple[EnvironmentModifications, EnvironmentModifications]:
     """Deactivate an environment and collect corresponding environment modifications.
 
     Note: unloads the environment in its current state, not in the state it was
@@ -228,9 +232,10 @@ def deactivate(active_env, view) -> EnvironmentModifications:
         Environment variables modifications to activate environment.
     """
     env_mods = EnvironmentModifications()
+    prefix_mods = EnvironmentModifications()
 
     if active_env is None:
-        return env_mods
+        return prefix_mods, env_mods
 
     with active_env.manifest.use_config():
         env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
@@ -240,7 +245,8 @@ def deactivate(active_env, view) -> EnvironmentModifications:
     if view:
         try:
             with spack.store.STORE.db.read_transaction():
-                active_env.rm_view_from_env(env_mods, view)
+                prefix_mods, spec_mods = active_env.rm_view_from_env(env_mods, view)
+                env_mods.extend(spec_mods)
         except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)
             tty.warn(
@@ -248,4 +254,4 @@ def deactivate(active_env, view) -> EnvironmentModifications:
                 "or repo, shell environment may be corrupt."
             )
 
-    return env_mods
+    return prefix_mods, env_mods

@@ -470,9 +470,6 @@ def test_env_activate_readonly_outputs_env_modifications(
 ):
     """Test that if the .spack-env directory is read-only, when activating an environment
     spack outputs the environment modifications to stdout instead of writing to a script.
-
-    Similar to test_load_readonly_prefix_should_succeed in test/cmd/load.py, this tests
-    the command-line behavior when scripts cannot be cached due to permission issues.
     """
 
     env_name = f"test_readonly_{shell[2:]}"
@@ -647,6 +644,51 @@ def test_add_requires_active_env():
     """Test that spack add exits with code 2 when no environment is active."""
     add("hdf5", fail_on_error=False)
     assert add.returncode == 2
+
+
+@pytest.mark.parametrize("shell", ["sh", "csh", "fish"])
+def test_env_activate_includes_prefix_inspections(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
+):
+    """Test that environment activation outputs prefix inspections from the view."""
+
+    env_name = "test_prefix_inspections"
+    env("create", env_name)
+
+    e = ev.read(env_name)
+    with e:
+        add("libelf")
+        e.concretize()
+        e.write()
+        install("--fake")
+
+    activate_output = env("activate", f"--{shell}", env_name)
+
+    e = ev.read(env_name)
+    libelf_spec = None
+    for spec in e.concrete_roots():
+        if spec.name == "libelf":
+            libelf_spec = spec
+            break
+    assert libelf_spec is not None
+
+    libelf_prefix = str(libelf_spec.prefix)
+    libelf_bin = os.path.join(libelf_prefix, "bin")
+
+    if shell == "bat":
+        expected_path_prepend = f'%_spack_env_prepend% "PATH" "{libelf_bin}" ";"'
+    else:
+        expected_path_prepend = f"_spack_env_prepend PATH {libelf_bin} :"
+
+    assert expected_path_prepend in activate_output
+
+    # Check that CMAKE_PREFIX_PATH is prepended with libelf prefix
+    if shell == "bat":
+        expected_cmake_prepend = f'%_spack_env_prepend% "CMAKE_PREFIX_PATH" "{libelf_prefix}" ";"'
+    else:
+        expected_cmake_prepend = f"_spack_env_prepend CMAKE_PREFIX_PATH {libelf_prefix} :"
+
+    assert expected_cmake_prepend in activate_output
 
 
 def test_add():
@@ -1028,7 +1070,8 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
         install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
-    ev.shell.activate(e).apply_modifications(env_variables)
+    _, env_mod = ev.shell.activate(e)
+    env_mod.apply_modifications(env_variables)
     assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
 
 

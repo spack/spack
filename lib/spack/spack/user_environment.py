@@ -81,13 +81,25 @@ def project_env_mods(
             mod.value = prefix_regex.sub(lambda m: prefix_to_prefix[m.group(0)], mod.value)
 
 
-def environment_modifications_from_prefix_inspections(
+def prefix_inspections_environment_modifications(
     specs: List[spack.spec.Spec], topo_ordered: Optional[List] = None
 ):
-    """Generate environment modifications based on prefix inspections."""
+    """Generate environment modifications based on prefix inspections.
+    Args:
+        specs: List of specs to generate modifications for
+        topo_ordered: Optional pre-computed topologically ordered list of specs.
+            If not provided, will be computed from specs.
+
+    Returns:
+        EnvironmentModifications object containing all prefix inspection modifications
+    """
     env = environment.EnvironmentModifications()
 
-    spec_list = topo_ordered if topo_ordered else specs
+    spec_list = (
+        topo_ordered
+        if topo_ordered
+        else list(traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo"))
+    )
 
     # Static environment changes (prefix inspections)
     for s in reversed(spec_list):
@@ -96,6 +108,45 @@ def environment_modifications_from_prefix_inspections(
         )
         env.extend(static)
     return env
+
+
+def spec_environment_modifications(
+    specs: List[spack.spec.Spec],
+    view=None,
+    set_package_py_globals: bool = True,
+    repo=None,
+    topo_ordered: Optional[List] = None,
+):
+    """Generate environment modifications from specs' package.py setup methods.
+    Args:
+        specs: List of specs to generate modifications for
+        view: Optional view to apply projections from
+        set_package_py_globals: Whether to set package.py global variables
+        repo: Optional cached repository to use
+        topo_ordered: Optional pre-computed topologically ordered list of specs.
+            If not provided, will be computed from specs.
+    Returns:
+        EnvironmentModifications object containing all spec modifications
+    """
+    env_mods = environment.EnvironmentModifications()
+
+    topo_ordered = (
+        topo_ordered
+        if topo_ordered
+        else list(traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo"))
+    )
+
+    # Dynamic environment changes (setup_run_environment etc)
+    setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)
+    if set_package_py_globals:
+        setup_context.set_all_package_py_globals()
+    env_mods.extend(setup_context.get_env_modifications(cached_repo=repo))
+
+    # Apply view projections if any.
+    if view:
+        project_env_mods(*topo_ordered, view=view, env=env_mods)
+
+    return env_mods
 
 
 def environment_modifications_for_specs(
@@ -117,19 +168,18 @@ def environment_modifications_for_specs(
     topo_ordered = list(
         traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
     )
-    env = environment_modifications_from_prefix_inspections(
+    env = prefix_inspections_environment_modifications(
         specs=list(specs), topo_ordered=topo_ordered
     )
 
-    # Dynamic environment changes (setup_run_environment etc)
-    setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)
-    if set_package_py_globals:
-        setup_context.set_all_package_py_globals()
-    env.extend(setup_context.get_env_modifications(cached_repo=repo))
-
-    # Apply view projections if any.
-    if view:
-        project_env_mods(*topo_ordered, view=view, env=env)
+    env_mods = spec_environment_modifications(
+        list(specs),
+        view=view,
+        set_package_py_globals=set_package_py_globals,
+        repo=repo,
+        topo_ordered=topo_ordered,
+    )
+    env.extend(env_mods)
 
     return env
 
