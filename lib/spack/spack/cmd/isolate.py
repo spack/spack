@@ -19,19 +19,13 @@ level = "long"
 
 def _isolate_include_config(new_user_path):
     """Write include.yaml with include:: override to redirect user scope."""
-    user_scope_dict = {
-        "name": "user",
-        "path": new_user_path,
-        "optional": True,
-        "prefer_modify": True,
-    }
-
-    # Keep the layout scope visible because it contains old-resource redirects
-    # and may be updated later by commands such as `spack migrate undo`.
-    # Earlier entries have higher priority
     include_list = [
-        user_scope_dict,
-        {"name": "layout", "path": "$spack/etc/spack/layout", "optional": True},
+        {"name": "user", "path": new_user_path, "optional": True, "prefer_modify": True},
+        {
+            "name": "layout",
+            "path": os.path.join(spack.paths.isolate_scope_path, "layout"),
+            "optional": True,
+        },
     ]
 
     include_key = syaml.syaml_str("include")
@@ -87,11 +81,8 @@ def _setup_isolate_scope(
     else:
         final_user_path = new_user_path
 
-    # Determine where to write generated config (isolation locations + old resources)
-    # If reusing an existing target config, write to layout scope to avoid overwriting it
-    # Otherwise, write to the isolate target's config.yaml
     config_path = (
-        os.path.join(spack.paths.layout_scope_path, "config.yaml")
+        os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
         if target_config_existed and reuse_old
         else os.path.join(new_user_path, "config.yaml")
     )
@@ -166,21 +157,11 @@ def _do_isolate(args):
         destination, args.overwrite, target_config_existed, args.reuse_old
     )
 
-    # If writing to layout scope (because we're reusing existing target config),
-    # ensure layout scope doesn't already exist to avoid conflicts
-    layout_config = os.path.join(spack.paths.layout_scope_path, "config.yaml")
-    if config_path == layout_config and os.path.exists(config_path):
-        tty.die(
-            f"Layout scope config already exists at {config_path}. "
-            "Cannot write isolation config without overwriting it."
-        )
-
     # Build config with isolation locations
     scope_config = {
         "config": {
             "build_stage:": ["$tempdir/$user/spack-stage", os.path.join(destination, "stage")],
             "test_stage:": os.path.join(destination, "test-stage"),
-            "misc_cache:": os.path.join(destination, "cache"),
             "locations": _isolate_locations_config(destination),
         }
     }
@@ -194,48 +175,13 @@ def _do_isolate(args):
     with open(config_path, "w", encoding="utf-8") as f:
         syaml.dump(scope_config, f)
 
-    # Write migration completion marker to prevent migration after isolation
-    # Only needed if there are old resources that migration would otherwise handle
-    has_old_resources = any(old_resources.values())
-    if has_old_resources:
-        marker_path = spack.config._migration_done_marker_path()
-        if os.path.exists(marker_path):
-            tty.warn(
-                "Prior migration was performed. There may be resources in $HOME,"
-                " but as of now this Spack instance will not write anything into $HOME."
-            )
-        else:
-            try:
-                with open(marker_path, "w", encoding="utf-8") as f:
-                    f.write("Migration completed\n")
-                tty.debug(f"Wrote migration completion marker: {marker_path}")
-            except OSError as e:
-                tty.warn(
-                    "Isolation incomplete for older spack instance. Migration may move "
-                    "resources into $HOME for future invocations that are not `spack isolate`. "
-                    f"Could not write {marker_path}: {e}"
-                )
-
 
 def _undo_isolate():
     if not os.path.exists(spack.paths.isolate_scope_path):
         tty.die("Cannot find isolation to undo")
 
-    # Remove the isolate scope directory
     shutil.rmtree(spack.paths.isolate_scope_path)
     tty.msg(f"Removed isolate scope: {spack.paths.isolate_scope_path}")
-
-    # Remove layout scope if it exists (from --reuse-old writing isolation config there)
-    if os.path.exists(spack.paths.layout_scope_path):
-        shutil.rmtree(spack.paths.layout_scope_path)
-        tty.msg(f"Removed layout scope: {spack.paths.layout_scope_path}")
-
-    # Remove migration marker and run migration to set up layout scope
-    # with old resource pointers
-    marker_path = spack.config._migration_done_marker_path()
-    if os.path.exists(marker_path):
-        os.remove(marker_path)
-        tty.debug("Removed migration marker")
 
     spack.config._perform_migration()
 

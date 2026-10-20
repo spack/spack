@@ -2903,7 +2903,7 @@ def _do_migrate_spack_prefix(old_resources):
     # retain them simply by never deleting that entry
 
     # Write layout scope for resources that didn't migrate
-    retained_resources = _force_old_layout(old_resources, print_message=False)
+    retained_resources = _force_old_layout(old_resources)
 
     # Write migration completion marker as the last step
     # This allows other processes to detect that migration finished
@@ -3037,7 +3037,7 @@ def _detect_invoked_command():
     _invoked_command = _extract_command_from_argv()
 
 
-def _force_old_layout(to_move, print_message=True) -> List[str]:
+def _force_old_layout(to_move) -> List[str]:
     config_path = os.path.join(spack.paths.layout_scope_path, "config.yaml")
     filesystem.mkdirp(spack.paths.layout_scope_path, default_perms="parents")
 
@@ -3075,19 +3075,21 @@ def _force_old_layout(to_move, print_message=True) -> List[str]:
 
     tty.debug(f"Created layout scope pointing to old locations {spack.paths.layout_scope_path}")
 
+    return retained_resources
+
+
+def force_old_layout(to_move, print_message=True):
+    retained_resources = _force_old_layout(to_move)
+
     marker_path = _migration_done_marker_path()
     with open(marker_path, "w", encoding="utf-8") as f:
         f.write("Migration completed\n")
     tty.debug(f"Wrote migration completion marker: {marker_path}")
 
-    # Print message about retained resources only if requested
-    if print_message:
-        parts = ["No Spack-internal resources were migrated"]
-        if retained_resources:
-            parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
-        sys.stderr.write("\n".join(parts) + "\n")
-
-    return retained_resources
+    parts = ["No Spack-internal resources were migrated"]
+    if retained_resources:
+        parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
+    sys.stderr.write("\n".join(parts) + "\n")
 
 
 def generate_old_layout_config(old_resources, scope_config):
@@ -3129,18 +3131,35 @@ def _perform_migration():
     # Because this rewrites config, it should either run first thing (before config
     # is loaded) or last (right before termination of the process)
     marker_path = _migration_done_marker_path()
-
-    if not os.path.exists(marker_path):
-        # Migrate user config scope and package repos. An entirely-new spack
-        # instance can do this (and needs to in order to access user config
-        # in new location). This occurs whether or not there are resources in
-        # the spack prefix that need to be migrated, but not if the
-        # `spack isolate` command has been run (in which case it will write
-        # the same migration marker)
-        _do_migrate_home()
+    if os.path.exists(marker_path):
+        return
 
     old_resources = _detect_old_resources()
-    if any(old_resources.values()) and not os.path.exists(marker_path):
+
+    if os.path.exists(spack.paths.isolate_scope_path):
+        if any(old_resources.values()):
+            if not os.path.exists(os.path.join(spack.paths.isolate_scope_path, "layout")):
+                # TODO: could automate logic in the `spack isolate`` command to run here:
+                # - generate layout config in etc/spack/isolate/
+                # - infer whether user ran with --self or --path (and in the latter case,
+                #   infer what --path was)
+                # - set up writable user scope
+                # As it is, if we proceeded without doing this, installs would be
+                # automatically written to $HOME in some cases.
+                raise RuntimeError(
+                    "Detected that Spack was previously isolated:"
+                    " run `spack isolate --reuse-old...` or delete etc/spack/isolate"
+                )
+        return
+
+    # Migrate user config scope and package repos. An entirely-new spack
+    # instance can do this (and needs to in order to access user config
+    # in new location). This occurs whether or not there are resources in
+    # the spack prefix that need to be migrated, but not if the
+    # `spack isolate` command has been run
+    _do_migrate_home()
+
+    if any(old_resources.values()):
         lock_path = _migration_lock_path()
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
         try:
@@ -3154,7 +3173,7 @@ def _perform_migration():
                     if user_allows_it:
                         _do_migrate_spack_prefix(old_resources)
                     else:
-                        _force_old_layout(old_resources)
+                        force_old_layout(old_resources)
         except spack.util.lock.LockPermissionError:
             # Read-only prefix: skip migration entirely, print nothing
             pass
