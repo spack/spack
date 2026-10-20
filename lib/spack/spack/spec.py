@@ -3248,9 +3248,7 @@ class Spec:
         not_existing.difference_update(pkg_variants, vt.RESERVED_NAMES)
 
         if not_existing:
-            raise vt.UnknownVariantError(
-                f"No such variant {not_existing} for spec: '{spec}'", list(not_existing)
-            )
+            raise vt.UnknownVariantError(f"No such variant {not_existing} for spec: '{spec}'")
 
     def constrain(self, other, deps=True) -> bool:
         """Constrains self with other, and returns True if self changed, False otherwise.
@@ -5240,8 +5238,7 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
         variants = spack.util.string.plural(len(unknown), "variant")
         raise vt.UnknownVariantError(
             f"Tried to set {variants} {spack.util.string.comma_and(unknown)}. "
-            f"{spec.name} has no such {variants}",
-            unknown_variants=unknown,
+            f"{spec.name} has no such {variants}"
         )
 
 
