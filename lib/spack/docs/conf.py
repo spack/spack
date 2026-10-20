@@ -102,6 +102,7 @@ sphinx_apidoc(
         "_spack_root/lib/spack/spack/package.py",
         "_spack_root/lib/spack/spack/installer/windows.py",
         "_spack_root/lib/spack/spack/util/win_acl.py",
+        "_spack_root/lib/spack/spack/util/win_links.py",
     ]
 )
 sphinx_apidoc(
