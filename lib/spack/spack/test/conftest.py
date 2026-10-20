@@ -147,10 +147,8 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
         "include:\n"
         '  - path: "isolate"\n'
         "    optional: true\n"
-        "    prefer_modify: true\n"
         "    when: '\"SPACK_DISABLE_ISOLATION\" not in env'\n"
-        '  - path: "standard_scopes"\n'
-        "    prefer_modify: true\n",
+        '  - path: "standard_scopes"\n',
         encoding="utf-8",
     )
 

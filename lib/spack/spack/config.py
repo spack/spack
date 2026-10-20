@@ -675,6 +675,11 @@ class Configuration:
                     # This scope is marked prefer_modify, but check if it delegates further
                     deeper = find_preferred(included)
                     return deeper if deeper else included
+                elif included.writable:
+                    # Not prefer_modify itself, but might have prefer_modify descendants
+                    deeper = find_preferred(included)
+                    if deeper:
+                        return deeper
             return None
 
         preferred = find_preferred(scope)
