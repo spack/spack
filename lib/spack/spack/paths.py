@@ -126,7 +126,15 @@ class SpackPaths:
 
     @property
     def user_repos_cache_path(self):
+        # Allow tests to override via setter
+        if hasattr(self, "_user_repos_cache_path_override"):
+            return self._user_repos_cache_path_override
         return os.path.join(self.user_cache_path, "git_repos")
+
+    @user_repos_cache_path.setter
+    def user_repos_cache_path(self, value):
+        """Allow tests to override user_repos_cache_path."""
+        self._user_repos_cache_path_override = value
 
     @property
     def package_repos_path(self):
@@ -264,15 +272,10 @@ class _PathsModule(types.ModuleType):
             raise AttributeError(f"module 'spack.paths' has no attribute '{name}'")
 
         # Mutable module-level attributes - look them up in the original module
-        if name in ["spack_working_dir", "user_repos_cache_path"]:
+        if name in ["spack_working_dir"]:
             original_module = module_dict.get("_original_module")
             if original_module is not None:
                 val = original_module.__dict__.get(name)
-                # For user_repos_cache_path, if not set as module var, compute from locations
-                if name == "user_repos_cache_path" and val is None:
-                    locs = module_dict.get("locations")
-                    if locs:
-                        return getattr(locs, name)
                 return val
             return module_dict.get(name)
 
@@ -289,7 +292,7 @@ class _PathsModule(types.ModuleType):
             return
 
         # Mutable module-level attributes - allow setting them
-        if name in ("spack_working_dir", "user_repos_cache_path"):
+        if name in ("spack_working_dir",):
             module_dict = object.__getattribute__(self, "__dict__")
             original_module = module_dict.get("_original_module")
             if original_module is not None:

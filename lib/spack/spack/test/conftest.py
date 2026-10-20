@@ -283,12 +283,13 @@ def write_file(filename, contents):
 
 @pytest.fixture
 def override_git_repos_cache_path(tmp_path: Path):
-    saved = spack.paths.user_repos_cache_path
     tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
     tmp_git_path.mkdir()
-    spack.paths.user_repos_cache_path = str(tmp_git_path)
+    spack.paths.locations.user_repos_cache_path = str(tmp_git_path)
     yield
-    spack.paths.user_repos_cache_path = saved
+    # Restore by deleting the override attribute
+    if hasattr(spack.paths.locations, "_user_repos_cache_path_override"):
+        delattr(spack.paths.locations, "_user_repos_cache_path_override")
 
 
 @pytest.fixture(scope="session")
