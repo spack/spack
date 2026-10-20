@@ -1585,7 +1585,7 @@ complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
 # spack env activate
-set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp create envfile= keep-relative d/dir
+set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp create envfile= keep-relative d/dir dev
 complete -c spack -n '__fish_spack_using_command_pos 0 env activate' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -d 'show this help message and exit'
@@ -1615,9 +1615,11 @@ complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative 
 complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative -d 'copy envfile'"'"'s relative develop paths verbatim when create'
 complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -f -a dir
 complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -d 'activate environment based on the directory supplied'
+complete -c spack -n '__fish_spack_using_command env activate' -l dev -f -a dev
+complete -c spack -n '__fish_spack_using_command env activate' -l dev -d 'bypass the cached script and repo and generate environment modifications'
 
 # spack env deactivate
-set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish bat pwsh
+set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish bat pwsh dev
 complete -c spack -n '__fish_spack_using_command env deactivate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env deactivate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env deactivate' -l sh -f -a shell
@@ -1630,6 +1632,8 @@ complete -c spack -n '__fish_spack_using_command env deactivate' -l bat -f -a sh
 complete -c spack -n '__fish_spack_using_command env deactivate' -l bat -d 'print bat commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -f -a shell
 complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -d 'print pwsh commands to activate the environment'
+complete -c spack -n '__fish_spack_using_command env deactivate' -l dev -f -a dev
+complete -c spack -n '__fish_spack_using_command env deactivate' -l dev -d 'bypass the cached script and repo and generate environment modifications'
 
 # spack env create
 set -g __fish_spack_optspecs_spack_env_create h/help d/dir keep-relative without-view with-view= include-concrete=
