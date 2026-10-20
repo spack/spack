@@ -2611,11 +2611,21 @@ compiler_penalty(PackageNode, C-1) :-
       opt_priority(Priority, _, _, _, "providers on edges")
 }.
 
-% Try to use latest versions of nodes as much as possible
+% Binary digits of version weights: weight_digits(Weight, Q, I) holds for Q = Weight / 2**I
+weight_digits(Weight, Weight, 0) :- pkg_fact(_, version_declared(_, Weight)).
+weight_digits(Weight, Q / 2, I + 1) :- weight_digits(Weight, Q, I), Q > 1.
+weight_bit(Weight, I) :- weight_digits(Weight, Q, I), Q \ 2 = 1.
+
+version_weight_bit(node(X, Package), I)
+  :- version_weight(node(X, Package), Weight),
+     multiple_unification_sets(Package),
+     weight_bit(Weight, I).
+
+% Try to use latest versions of nodes as much as possible. Weights are summed bit by bit, which
+% grounds one element per bit and possible edge.
 #minimize{
-    Weight@Priority, ParentNode,node(X, Package)
-    : version_weight(node(X, Package), Weight),
-      multiple_unification_sets(Package),
+    2 ** I@Priority, ParentNode,node(X, Package),I
+    : version_weight_bit(node(X, Package), I),
       not attr("root", node(X, Package)),
       depends_on(ParentNode, node(X, Package)),
       opt_priority(Priority, _, _, _, "version badness on edges")
