@@ -3059,7 +3059,7 @@ def _windows_is_hardlink(path: str) -> bool:
 
     This method cannot determine the source and target link files,
     it only has a sense of whether this file and another share a file id
-    in the file table. 
+    in the file table.
 
     Args:
         path (str): Windows path to check for a hard link
