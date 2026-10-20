@@ -9,7 +9,9 @@ import spack.environment.shell
 import spack.user_environment as uenv
 
 
-def get_activate_commands(env, view: Optional[str] = None, shell: str = "sh", get_cache: bool = True) -> str:
+def get_activate_commands(
+    env, view: Optional[str] = None, shell: str = "sh", get_cache: bool = True
+) -> str:
     """Get the commands to activate an environment.
 
     Args:
@@ -29,7 +31,9 @@ def get_activate_commands(env, view: Optional[str] = None, shell: str = "sh", ge
     return cmds
 
 
-def get_deactivate_commands(env, view: Optional[str] = None, shell: str = "sh", get_cache: bool = True) -> str:
+def get_deactivate_commands(
+    env, view: Optional[str] = None, shell: str = "sh", get_cache: bool = True
+) -> str:
     """Get the commands to deactivate an environment.
 
     Args:

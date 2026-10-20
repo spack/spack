@@ -404,7 +404,9 @@ def env_activate(args):
     active_env.manifest.prepare_config_scope()
 
     if args.dev:
-        cmds = env_script.get_activate_commands(active_env, view=view, shell=args.shell, get_cache=False)
+        cmds = env_script.get_activate_commands(
+            active_env, view=view, shell=args.shell, get_cache=False
+        )
 
         sys.stdout.write(cmds)
         return
@@ -421,7 +423,9 @@ def env_activate(args):
         env_script.write_env_deactivate_script(active_env, view)
     except Exception as e:
         tty.debug(f"Error writing to environment scripts: {e}")
-        env_cmds = env_script.get_activate_commands(active_env, view=view, shell=args.shell, get_cache=True)
+        env_cmds = env_script.get_activate_commands(
+            active_env, view=view, shell=args.shell, get_cache=True
+        )
 
     # Validate that the environment view is accessible.
     spack.environment.shell.validate_view(active_env, view)
