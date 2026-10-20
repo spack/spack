@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 
 import spack.cmd
 import spack.environment as ev
+import spack.hooks
 import spack.package_base
 import spack.spec
 import spack.store
@@ -219,11 +220,16 @@ def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
     # so that we don't have to do a dance of list -> set -> list -> set
     hashes_to_remove = {s.dag_hash() for s in specs}
 
-    for s in traverse.traverse_nodes(
-        specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
-    ):
-        if s.dag_hash() in hashes_to_remove:
-            spack.package_base.PackageBase.uninstall_by_spec(s, force=force)
+    removed: List[spack.spec.Spec] = []
+    try:
+        for s in traverse.traverse_nodes(
+            specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
+        ):
+            if s.dag_hash() in hashes_to_remove:
+                spack.package_base.PackageBase.uninstall_by_spec(s, force=force)
+                removed.append(s)
+    finally:
+        spack.hooks.post_database_remove(removed)
 
 
 def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Environment]):

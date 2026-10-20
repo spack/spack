@@ -9,6 +9,7 @@ import sys
 import pytest
 
 import spack.error
+import spack.modules.tcl
 import spack.spec
 from spack.config import Configuration
 from spack.installer.base import ExitCode
@@ -404,3 +405,65 @@ def test_change_jobs_commands_adjust_parallelism(temporary_store, mock_packages)
     initial = jobs_events[0][2]
     assert ("jobs_changed", initial + 1, initial + 1) in jobs_events
     assert jobs_events[-1][2] == initial  # target restored after the decrease
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted and failed installs keep their log files
+@pytest.mark.parametrize(
+    "root_script,expected_error",
+    [
+        (Script(), None),
+        (Script(hang=True), KeyboardInterrupt),
+        (Script(exitcode=ExitCode.BUILD_ERROR), spack.error.InstallError),
+    ],
+)
+def test_module_files_written_for_recorded_specs(
+    root_script, expected_error, temporary_store, mock_packages, mutable_config, tmp_path
+):
+    """Tests that every spec recorded in the database gets its module file, also when the
+    installation is interrupted or a build fails.
+    """
+    mutable_config.set("modules:default:enable", ["tcl"])
+    mutable_config.set("modules:default:roots:tcl", str(tmp_path / "modules"))
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: root_script})
+
+    def tick():
+        if launcher.hanging:  # the dep finished and the root build is now running
+            raise KeyboardInterrupt
+
+    if expected_error is None:
+        _install(launcher, root, ui=DrivingUI(tick))
+    else:
+        with pytest.raises(expected_error):
+            _install(launcher, root, ui=DrivingUI(tick))
+
+    assert _record(temporary_store, dep) is not None
+    assert (_record(temporary_store, root) is None) == (expected_error is not None)
+    for spec in (dep, root):
+        writer = spack.modules.tcl.TclModulefileWriter.from_spec(spec, "default")
+        recorded = _record(temporary_store, spec) is not None
+        assert os.path.exists(writer.layout.filename) == recorded
+
+
+def test_module_file_errors_are_warnings(temporary_store, mock_packages, mutable_config, tmp_path):
+    """Tests that an installation succeeds when its module files cannot be written, and that
+    one warning is emitted for each spec.
+    """
+    not_a_directory = tmp_path / "file"
+    not_a_directory.write_text("")
+    mutable_config.set("modules:default:enable", ["tcl"])
+    mutable_config.set("modules:default:roots:tcl", str(not_a_directory / "modules"))
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: Script()})
+
+    with pytest.warns(UserWarning, match="cannot write the tcl module file") as warned:
+        _install(launcher, root)
+
+    messages = [str(w.message) for w in warned]
+    assert len(messages) == 2
+    assert any(dep.name + "@" in m for m in messages)
+    assert any(root.name + "@" in m for m in messages)
+    assert _record(temporary_store, dep) is not None
+    assert _record(temporary_store, root) is not None

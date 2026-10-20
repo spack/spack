@@ -85,7 +85,7 @@ def test_modules_default_symlink(
     assert os.path.islink(link_path)
     assert readlink(link_path) == mock_module_filename
 
-    generator.remove()
+    generator.remove_installation()
     assert not os.path.lexists(link_path)
 
 

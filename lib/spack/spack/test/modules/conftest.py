@@ -23,7 +23,7 @@ def modulefile_content(request):
         generator.write(overwrite=True)
         written_module = pathlib.Path(generator.layout.filename)
         content = written_module.read_text(encoding="utf-8").splitlines()
-        generator.remove()
+        generator.remove_installation()
         return content
 
     return _impl
