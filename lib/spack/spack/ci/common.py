@@ -472,6 +472,25 @@ class PipelineDag:
         of the given node."""
         return [self.nodes[k] for k in node.children]
 
+    def to_dict(self):
+        """Return a JSON-serializable representation of the pipeline graph."""
+        roots = sorted(key for key, node in self.nodes.items() if not node.parents)
+
+        return {
+            "schema": "spack-ci-build-graph",
+            "schema_version": 1,
+            "roots": roots,
+            "nodes": [
+                {
+                    "id": key,
+                    "name": self.nodes[key].spec.name,
+                    "spec": self.nodes[key].spec.format(),
+                    "dependencies": sorted(self.nodes[key].children),
+                }
+                for key in sorted(self.nodes)
+            ],
+        }
+
 
 class SpackCIConfig:
     """Spack CI object used to generate intermediate representation
