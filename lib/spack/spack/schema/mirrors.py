@@ -122,9 +122,22 @@ mirror_entry = {
             "build cache creation",
         },
         "autopush": {
-            "type": "boolean",
-            "description": "Automatically push packages to this build cache immediately after "
-            "they are installed locally",
+            "oneOf": [
+                {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Automatically push packages to this build cache immediately after "
+                    "they are installed locally",
+                },
+                {
+                    "type": "object",
+                    "description": "Detailed configuration for autopush.",
+                    "properties": {
+                        "binaries": {"type": "boolean", "description": "Push installed binaries."},
+                        "keys": {"type": "boolean", "description": "Push signing keys." },
+                    },
+                },
+            ]
         },
         **overridable_per_direction,
     },
