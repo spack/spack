@@ -13,14 +13,15 @@ import spack.main
 import spack.util.spack_yaml as s_yaml
 from spack.main import SpackCommand
 from spack.old_installer import PackageInstaller
-from spack.util.filesystem import _windows_can_symlink
 
 extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
 
 if sys.platform == "win32":
-    if not _windows_can_symlink():
+    from spack.util.win_links import can_symlink
+
+    if not can_symlink():
         pytest.skip(
             "Windows must be able to create symlinks to run tests.", allow_module_level=True
         )

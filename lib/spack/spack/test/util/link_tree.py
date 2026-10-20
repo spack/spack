@@ -8,7 +8,6 @@ import sys
 
 import pytest
 
-import spack.util.filesystem
 from spack.test.conftest import FsTree
 from spack.util.filesystem import (
     islink,
@@ -20,6 +19,9 @@ from spack.util.filesystem import (
     working_dir,
 )
 from spack.util.link_tree import DestinationMergeVisitor, LinkTree, MultiPrefixMerger
+
+if sys.platform == "win32":
+    from spack.util import win_links
 
 
 @pytest.fixture
@@ -37,17 +39,17 @@ def stage(tmp_path: pathlib.Path):
 def check_file_link(filename: str, expected_target: str):
     assert os.path.isfile(filename)
     assert islink(filename)
-    if sys.platform != "win32" or spack.util.filesystem._windows_can_symlink():
+    if sys.platform != "win32" or win_links.can_symlink():
         assert os.path.abspath(os.path.realpath(filename)) == os.path.abspath(expected_target)
 
 
 @pytest.mark.parametrize("run_as_root", [True, False] if sys.platform == "win32" else [False])
 def test_merge_to_new_directory(stage: str, monkeypatch, run_as_root: bool):
     if sys.platform == "win32":
-        if run_as_root and not spack.util.filesystem._windows_can_symlink():
+        if run_as_root and not win_links.can_symlink():
             pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-        monkeypatch.setattr(spack.util.filesystem, "_windows_can_symlink", lambda: run_as_root)
+        monkeypatch.setattr(win_links, "can_symlink", lambda: run_as_root)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
 
@@ -76,10 +78,10 @@ def test_merge_to_new_directory(stage: str, monkeypatch, run_as_root: bool):
 @pytest.mark.parametrize("run_as_root", [True, False] if sys.platform == "win32" else [False])
 def test_merge_to_new_directory_relative(stage: str, monkeypatch, run_as_root: bool):
     if sys.platform == "win32":
-        if run_as_root and not spack.util.filesystem._windows_can_symlink():
+        if run_as_root and not win_links.can_symlink():
             pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-        monkeypatch.setattr(spack.util.filesystem, "_windows_can_symlink", lambda: run_as_root)
+        monkeypatch.setattr(win_links, "can_symlink", lambda: run_as_root)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
     with working_dir(stage):
@@ -109,10 +111,10 @@ def test_merge_to_new_directory_relative(stage: str, monkeypatch, run_as_root: b
 @pytest.mark.parametrize("run_as_root", [True, False] if sys.platform == "win32" else [False])
 def test_merge_to_existing_directory(stage: str, monkeypatch, run_as_root):
     if sys.platform == "win32":
-        if run_as_root and not spack.util.filesystem._windows_can_symlink():
+        if run_as_root and not win_links.can_symlink():
             pytest.skip("Skipping portion of test which required dev-mode privileges.")
 
-        monkeypatch.setattr(spack.util.filesystem, "_windows_can_symlink", lambda: run_as_root)
+        monkeypatch.setattr(win_links, "can_symlink", lambda: run_as_root)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
 

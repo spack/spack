@@ -17,6 +17,9 @@ import pytest
 import spack.paths
 import spack.util.filesystem as fs
 
+if sys.platform == "win32":
+    from spack.util import win_links
+
 
 @pytest.fixture()
 def stage(tmp_path_factory: pytest.TempPathFactory):
@@ -1281,7 +1284,7 @@ def complex_dir_structure(request, tmp_path_factory: pytest.TempPathFactory):
         l1-s4 -> l2-s3 # a link to a link to a dir
     """
     use_junctions = request.param
-    if sys.platform == "win32" and not use_junctions and not fs._windows_can_symlink():
+    if sys.platform == "win32" and not use_junctions and not win_links.can_symlink():
         pytest.skip("This Windows instance is not configured with symlink support")
     elif sys.platform != "win32" and use_junctions:
         pytest.skip("Junctions are a Windows-only feature")
@@ -1301,7 +1304,7 @@ def complex_dir_structure(request, tmp_path_factory: pytest.TempPathFactory):
     l2_d2.mkdir()
 
     if sys.platform == "win32" and use_junctions:
-        link_fn = fs._windows_create_junction
+        link_fn = win_links.create_junction
     else:
         link_fn = os.symlink
 
