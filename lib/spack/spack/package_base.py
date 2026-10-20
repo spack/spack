@@ -802,7 +802,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         for v in spec.variants:
             if v not in names:
                 raise spack.variant.UnknownVariantError(
-                    f"No such variant '{v}' in package {self.name}", [v]
+                    f"No such variant '{v}' in package {self.name}"
                 )
 
     @classproperty
