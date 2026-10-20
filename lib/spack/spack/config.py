@@ -162,10 +162,6 @@ CONFIGURABLE_VARS = ("state_home", "cache_home", "data_home", "user_cache_path")
 _CVARS_RE = "|".join(CONFIGURABLE_VARS)
 CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
 
-#: The command being invoked (extracted from sys.argv at module load)
-#: Used to decide whether to skip migration prompt (e.g., for 'isolate')
-_invoked_command = None
-
 
 def substitute_include_path(path, context):
     """Substitute path variables in include paths, with validation.
@@ -3031,12 +3027,6 @@ def _extract_command_from_argv(argv=None):
         return None
 
 
-def _detect_invoked_command():
-    """Detect what command is being invoked at module load time."""
-    global _invoked_command
-    _invoked_command = _extract_command_from_argv()
-
-
 def _force_old_layout(to_move) -> List[str]:
     config_path = os.path.join(spack.paths.layout_scope_path, "config.yaml")
     filesystem.mkdirp(spack.paths.layout_scope_path, default_perms="parents")
@@ -3121,7 +3111,9 @@ def _perform_migration_at_module_load():
     This runs before the CONFIG singleton is created, so migration functions
     cannot rely on CONFIG being available.
     """
-    if _invoked_command == "isolate":
+    invoked_command = _extract_command_from_argv()
+
+    if invoked_command == "isolate":
         return
 
     _perform_migration()
@@ -3183,7 +3175,6 @@ def _perform_migration():
 
 
 # Detect command and check for migration at module load time (before CONFIG is created)
-_detect_invoked_command()
 _perform_migration_at_module_load()
 
 
