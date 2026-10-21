@@ -422,6 +422,9 @@ def _mock_remove(spec, db):
 
 
 def test_default_queries(database):
+    # Executables carry a .exe extension on Windows
+    exe_suffix = ".exe" if sys.platform == "win32" else ""
+
     # Testing a package whose name *doesn't* start with 'lib'
     # to ensure the library has 'lib' prepended to the name
     rec = database.get_record("zmpi")
@@ -438,7 +441,7 @@ def test_default_queries(database):
 
     command = spec["zmpi"].command
     assert isinstance(command, Executable)
-    assert command.name == "zmpi"
+    assert command.name == "zmpi" + exe_suffix
     assert os.path.exists(command.path)
 
     # Testing a package whose name *does* start with 'lib'
@@ -457,7 +460,7 @@ def test_default_queries(database):
 
     command = spec["libelf"].command
     assert isinstance(command, Executable)
-    assert command.name == "libelf"
+    assert command.name == "libelf" + exe_suffix
     assert os.path.exists(command.path)
 
 
@@ -582,6 +585,26 @@ def test_try_write_transaction_does_not_flush_on_exception(mutable_database: Dat
 
     with db.read_transaction():
         assert db.query("mpileaks")
+
+
+def test_failed_write_transaction_without_index_is_not_written_later(
+    tmp_path: pathlib.Path, mock_packages, config
+):
+    """Tests that a failed transaction on a database without an index is dropped, instead of
+    being written by the next transaction."""
+    db = Database(str(tmp_path))
+    spec = spack.concretize.concretize_one("pkg-a")
+
+    with pytest.raises(ValueError):
+        with db.write_transaction():
+            db._add(spec, explicit=True, allow_missing=True)
+            raise ValueError("interrupted transaction")
+
+    with db.write_transaction():
+        pass
+
+    with db.read_transaction():
+        assert not db.query()
 
 
 def test_try_read_transaction(mutable_database: Database, monkeypatch):

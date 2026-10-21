@@ -480,7 +480,7 @@ def optimization_flags(compiler, target):
     return result
 
 
-def link_dirs_of(query: spack.spec.SpecBuildInterface) -> List[str]:
+def link_dirs_of(query: spack.spec.Spec) -> List[str]:
     """Return the library directories a build uses to link against ``query``, as returned by
     ``spec[name]``: those of its libraries, followed by its ``lib`` and ``lib64`` subdirectories
     that exist."""

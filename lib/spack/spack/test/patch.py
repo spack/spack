@@ -25,7 +25,7 @@ from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import stage_from_config
 from spack.test.conftest import MockStageRoot
-from spack.util.executable import Executable
+from spack.util.executable import Executable, ProcessError
 from spack.util.filesystem import mkdirp, touch, working_dir
 
 # various sha256 sums (using variables for legibility)
@@ -589,3 +589,32 @@ def test_patch_lookup_for_shadowed_package(mock_packages, config, repo_builder):
         # raises SpecError if the lookup uses the bare name: the shadowing
         # class's patch index has no such sha256
         assert {p.sha256 for p in spec.patches} == {foo_sha256, baz_sha256}
+
+
+def test_patch_reversed_patch_no_prompt(mock_packages, config, tmp_path, capfd):
+    """Test that re-applying an already applied patch fails without prompting the user
+    and without silently applying the patch in reverse"""
+    spec = spack.concretize.concretize_one("reversed-patch")
+    (patch,) = spec.patches
+    message = tmp_path / "message.txt"
+    message.write_text("broken\n", encoding="utf-8")
+
+    def apply():
+        spack.patch.apply_patch(
+            str(tmp_path), patch.path, patch.level, patch.working_dir, patch.reverse
+        )
+
+    # the patch applies cleanly to the original contents
+    apply()
+    assert message.read_text(encoding="utf-8") == "fixed\n"
+
+    capfd.readouterr()
+    # applying it again must fail rather than prompt or apply the patch in reverse
+    with pytest.raises(ProcessError):
+        apply()
+    assert message.read_text(encoding="utf-8") == "fixed\n"
+    out = capfd.readouterr().out
+    # gnu patch: "Reversed (or previously applied) patch detected"
+    # bsd patch: "Ignoring previously applied (or reversed) patch"
+    assert "previously applied" in out
+    assert "Assume -R?" not in out

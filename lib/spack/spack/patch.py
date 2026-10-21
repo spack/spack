@@ -50,7 +50,13 @@ def apply_patch(
             git_root = git_root / "usr" / "bin"
             git_utils_path = os.pathsep.join([str(git_root), git_utils_path])
 
-    args = ["-s", "-p", str(level), "-i", patch_path, "-d", working_dir]
+    # -t is required here to prevent patch from attempting to prompt the user
+    # -N is required to avoid assumption of reverse patch (when it looks
+    # like a patch has already been applied)
+    # Both are required: if -N is missing, there will be no prompt, but the patch
+    # utility will decide to automatically apply the patch in reverse;
+    # If -t is missing, the patch utility will still prompt in some other cases
+    args = ["-s", "-t", "-N", "-p", str(level), "-i", patch_path, "-d", working_dir]
     if reverse:
         args.append("-R")
 
@@ -86,6 +92,8 @@ class Patch:
         working_dir: str,
         reverse: bool = False,
         ordering_key: Optional[Tuple[str, int]] = None,
+        *,
+        fixes: Tuple[str, ...] = (),
     ) -> None:
         """Initialize a new Patch instance.
 
@@ -96,6 +104,7 @@ class Patch:
             working_dir: relative path *within* the stage to change to
             reverse: reverse the patch
             ordering_key: key used to ensure patches are applied in a consistent order
+            fixes: labels of the ``deprecated()`` directives this patch fixes
         """
         # validate level (must be an integer >= 0)
         if not isinstance(level, int) or not level >= 0:
@@ -108,6 +117,7 @@ class Patch:
         self.level = level
         self.working_dir = working_dir
         self.reverse = reverse
+        self.fixes = fixes
 
         # The ordering key is passed when executing package.py directives, and is only relevant
         # after a solve to build concrete specs with consistently ordered patches. For concrete
@@ -123,13 +133,16 @@ class Patch:
         Returns:
             A dictionary representation.
         """
-        return {
+        data: Dict[str, Any] = {
             "owner": self.owner,
             "sha256": self.sha256,
             "level": self.level,
             "working_dir": self.working_dir,
             "reverse": self.reverse,
         }
+        if self.fixes:
+            data["fixes"] = list(self.fixes)
+        return data
 
     def __eq__(self, other: object) -> bool:
         """Equality check.
@@ -166,6 +179,8 @@ class FilePatch(Patch):
         working_dir: str,
         reverse: bool = False,
         ordering_key: Optional[Tuple[str, int]] = None,
+        *,
+        fixes: Tuple[str, ...] = (),
     ) -> None:
         """Initialize a new FilePatch instance.
 
@@ -176,6 +191,7 @@ class FilePatch(Patch):
             working_dir: path within the source directory where patch should be applied
             reverse: reverse the patch
             ordering_key: key used to ensure patches are applied in a consistent order
+            fixes: labels of the ``deprecated()`` directives this patch fixes
         """
         self.relative_path = relative_path
 
@@ -202,7 +218,7 @@ class FilePatch(Patch):
             msg += "package %s.%s does not exist." % (pkg.namespace, pkg.name)
             raise ValueError(msg)
 
-        super().__init__(pkg, abs_path, level, working_dir, reverse, ordering_key)
+        super().__init__(pkg, abs_path, level, working_dir, reverse, ordering_key, fixes=fixes)
         self.path = abs_path
 
     @property
@@ -251,6 +267,7 @@ class UrlPatch(Patch):
         sha256: str,  # This is required for UrlPatch
         ordering_key: Optional[Tuple[str, int]] = None,
         archive_sha256: Optional[str] = None,
+        fixes: Tuple[str, ...] = (),
     ) -> None:
         """Initialize a new UrlPatch instance.
 
@@ -264,8 +281,9 @@ class UrlPatch(Patch):
             sha256: sha256 sum of the patch, used to verify the patch
             archive_sha256: sha256 sum of the *archive*, if the patch is compressed
                 (only required for compressed URL patches)
+            fixes: labels of the ``deprecated()`` directives this patch fixes
         """
-        super().__init__(pkg, url, level, working_dir, reverse, ordering_key)
+        super().__init__(pkg, url, level, working_dir, reverse, ordering_key, fixes=fixes)
 
         self.url = url
 
@@ -334,6 +352,7 @@ def from_dict(dictionary: Dict[str, Any], repository: "spack.repo.RepoPath") -> 
             reverse=dictionary.get("reverse", False),
             sha256=dictionary["sha256"],
             archive_sha256=dictionary.get("archive_sha256"),
+            fixes=tuple(dictionary.get("fixes", ())),
         )
 
     elif "relative_path" in dictionary:
@@ -344,6 +363,7 @@ def from_dict(dictionary: Dict[str, Any], repository: "spack.repo.RepoPath") -> 
             dictionary["working_dir"],
             # Added in v0.22, fallback required for backwards compatibility
             dictionary.get("reverse", False),
+            fixes=tuple(dictionary.get("fixes", ())),
         )
 
         # If the patch in the repo changes, we cannot get it back, so we
