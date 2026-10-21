@@ -106,7 +106,7 @@ class SpackPaths:
 
         import spack.config
 
-        return spack.config._resolve_location_var("cache") or self.default_cache_home
+        return spack.config._resolve_location_var("cache")
 
     @user_cache_path.setter
     def user_cache_path(self, value):
@@ -139,7 +139,9 @@ class SpackPaths:
 
     @property
     def package_repos_path(self):
-        return os.path.join(self.user_cache_path, "package_repos")
+        import spack.config
+
+        return os.path.join(spack.config._resolve_location_var("data"), "package_repos")
 
     @property
     def old_package_repos_path(self):

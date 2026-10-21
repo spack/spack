@@ -740,8 +740,10 @@ With default config and environment variables
 .. code-block:: console
 
   $ export SPACK_DISABLE_LOCAL_CONFIG=true
-  $ export SPACK_CACHE_HOME=/path1
-  $ export SPACK_DATA_HOME=/path2
+  $ export SPACK_DATA_HOME=/path1
+  $ export SPACK_STATE_HOME=/path2
+  $ export SPACK_CACHE_HOME=/path3
+  # path1/2/3 can all be the same
 
 With config
 ^^^^^^^^^^^
@@ -751,8 +753,10 @@ With config
    $ spack config get config
    config:
      locations:
-       data: ...
-       cache: ...
+       data: path1
+       state: path2
+       cache: path3
+       # path1/2/3 can all be the same
 
    $ cat etc/spack/include.yaml
    # Override this list to remove the isolate scope

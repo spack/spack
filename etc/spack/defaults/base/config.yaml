@@ -79,7 +79,7 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - $cache_home/stage
+    - $state_home/stage
 
   # Naming format for individual stage directories
   stage_name: "spack-stage-{name}-{version}-{hash}"
@@ -87,7 +87,7 @@ config:
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
   # name/hash.
-  test_stage: $cache_home/test-stage
+  test_stage: $state_home/test-stage
 
 
   # Cache directory for already downloaded source tarballs and archived

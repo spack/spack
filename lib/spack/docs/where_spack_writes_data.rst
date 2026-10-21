@@ -68,7 +68,7 @@ The location table
 +================+===========+============+============+====================+
 | installs       | x         |            |            |                    |
 +----------------+-----------+------------+------------+--------------------+
-| build stages   |           |            |            | x [#wheretable-1]_ |
+| build stages   |           | x          |            | x [#wheretable-1]_ |
 +----------------+-----------+------------+------------+--------------------+
 | download cache | x         |            |            |                    |
 +----------------+-----------+------------+------------+--------------------+
@@ -80,14 +80,16 @@ The location table
 +----------------+-----------+------------+------------+--------------------+
 | misc cache     |           |            | x          |                    |
 +----------------+-----------+------------+------------+--------------------+
-| test stages    |           |            | x          |                    |
+| test stages    |           | x          |            |                    |
 +----------------+-----------+------------+------------+--------------------+
 | licenses       | x         |            |            |                    |
 +----------------+-----------+------------+------------+--------------------+
 | config files   |           |            |            | x [#wheretable-3]_ |
 +----------------+-----------+------------+------------+--------------------+
+| package repos  | x         |            |            |                    |
++----------------+-----------+------------+------------+--------------------+
 
-.. [#wheretable-1] ``cache_home`` is used as a backup, but Spack prefers to write into the user's temp dir if it's available.
+.. [#wheretable-1] ``state_home`` is used as a backup, but Spack prefers to write into the user's temp dir if it's available.
 .. [#wheretable-2] Spack does not provide a default module root; module roots must be configured explicitly in ``modules.yaml``.
 .. [#wheretable-3] User-scope config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>` to avoid recursion issues with configurable locations.
 

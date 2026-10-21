@@ -2314,11 +2314,10 @@ def _migrate_user_config() -> bool:
 
 
 def _migrate_package_repositories() -> bool:
-    """Copy legacy package repositories to the new default cache location."""
+    """Copy legacy package repositories to the new default location."""
     old_path = spack.paths.old_package_repos_path
-    # Use XDG fallback chain without triggering config resolution
-    cache_home = _migration_cache_home()
-    new_path = os.path.join(cache_home, "package_repos")
+    data_home = _migration_data_home()
+    new_path = os.path.join(data_home, "package_repos")
 
     return _migrate_with_staging(
         old_path=old_path,
@@ -2743,25 +2742,6 @@ def _migration_data_home() -> str:
         return os.path.join(xdg_data, "spack")
 
     return os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
-
-
-def _migration_cache_home() -> str:
-    """Compute migration target for cache_home with XDG fallback chain.
-
-    Uses (in order of precedence):
-    1. SPACK_CACHE_HOME environment variable
-    2. SPACK_USER_CACHE_PATH environment variable
-    3. XDG_CACHE_HOME environment variable
-    4. Default XDG_CACHE_HOME location: ~/.cache/spack
-
-    This does not use config, since migration happens before config is fully loaded.
-    """
-    for vname in ["SPACK_CACHE_HOME", "SPACK_USER_CACHE_PATH", "XDG_CACHE_HOME"]:
-        vdef = os.getenv(vname, None)
-        if vdef:
-            return vdef
-
-    return os.path.join(os.path.expanduser("~"), ".cache", "spack")
 
 
 def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float = 60) -> bool:
