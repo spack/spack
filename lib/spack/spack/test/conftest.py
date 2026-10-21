@@ -144,11 +144,7 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
     # Replicate include.yaml structure (don't copy to avoid user modifications)
     include_yaml = simulated_etc / "include.yaml"
     include_yaml.write_text(
-        "include:\n"
-        '  - path: "isolate"\n'
-        "    optional: true\n"
-        "    when: '\"SPACK_DISABLE_ISOLATION\" not in env'\n"
-        '  - path: "standard_scopes"\n',
+        'include:\n  - path: "isolate"\n    optional: true\n  - path: "standard_scopes"\n',
         encoding="utf-8",
     )
 

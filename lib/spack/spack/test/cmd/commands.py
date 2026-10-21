@@ -281,9 +281,9 @@ def test_update_completion_arg(shell, tmp_path: pathlib.Path, monkeypatch):
 def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, monkeypatch):
     """Make sure our shell tab completion scripts remain up-to-date."""
 
-    # Completion generation should use the normal scope graph, even when this
-    # test runs from an isolated Spack instance or inside an active environment.
-    monkeypatch.setenv("SPACK_DISABLE_ISOLATION", "1")
+    # TODO: if the user is developing inside an instance they used `spack isolate`
+    # on, `spack commands --update-completion` will add scopes that will not
+    # match the CI instance
 
     width = 72
     lines = textwrap.wrap(
@@ -292,7 +292,7 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, monkeypatch):
         "update Spack's shell tab completion scripts by running:",
         width,
     )
-    lines.append("\n    SPACK_DISABLE_ISOLATION=1 spack -E commands --update-completion\n")
+    lines.append("\n    spack -E commands --update-completion\n")
     lines.extend(
         textwrap.wrap(
             "and adding the changed files (minus your global 'include:' scopes) "
