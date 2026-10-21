@@ -222,7 +222,7 @@ After a migration attempt completes (marked by `.migration-done`):
 
 ## 3.8 Home directory migration
 
-User configuration and package repositories in `~/.spack` are automatically migrated to the new XDG locations (`~/.config/spack` and `~/.local/state/spack/package_repos`). Home directory migration is tied to `$spack` prefix migration: both are skipped if `$spack/.migration-done` exists. This means that any prior call to `spack isolate` (which writes the marker) disables home directory migration.
+User configuration and package repositories in `~/.spack` are automatically migrated to the new XDG locations (`~/.config/spack` and `~/.cache/spack/package_repos`). Home directory migration is tied to `$spack` prefix migration: both are skipped if `$spack/.migration-done` exists. This means that any prior call to `spack isolate` (which writes the marker) disables home directory migration.
 
 This migration runs at config module load time (before the CONFIG singleton exists) when:
 
@@ -234,7 +234,7 @@ This migration runs at config module load time (before the CONFIG singleton exis
 For package repositories:
 
 - The old location is `~/.spack/package_repos`.
-- The new location is `~/.local/state/spack/package_repos` (using the default state home).
+- The new location is `~/.cache/spack/package_repos` (using the default cache home).
 - Migration only occurs if the new location does not exist and the old location exists.
 
 This allows users who:
@@ -265,15 +265,15 @@ The migration target is determined by the following precedence (checked in order
 
 3. **Default**: If neither variable is set, config is migrated to `~/.config/spack` (the XDG default for config home).
 
-**Package repositories migration** (`~/.spack/package_repos` → state location):
+**Package repositories migration** (`~/.spack/package_repos` → cache location):
 
 The migration target is determined by:
 
-1. **`SPACK_STATE_HOME`**: If set, repositories are migrated to `$SPACK_STATE_HOME/package_repos`.
+1. **`SPACK_CACHE_HOME`**: If set, repositories are migrated to `$SPACK_CACHE_HOME/package_repos`.
 
-2. **`XDG_STATE_HOME`**: If set and `SPACK_STATE_HOME` is not, repositories are migrated to `$XDG_STATE_HOME/spack/package_repos`.
+2. **`XDG_CACHE_HOME`**: If set and `SPACK_CACHE_HOME` is not, repositories are migrated to `$XDG_CACHE_HOME/spack/package_repos`.
 
-3. **Default**: If neither variable is set, repositories are migrated to `~/.local/state/spack/package_repos` (the XDG default for state home).
+3. **Default**: If neither variable is set, repositories are migrated to `~/.cache/spack/package_repos` (the XDG default for cache home).
 
 **Runtime path resolution**: At runtime (after config is loaded), Spack's user config path is determined by the `path_override_env_var` setting in `etc/spack/standard_scopes/include.yaml`:
 
@@ -470,7 +470,7 @@ User config and package repositories are migrated from `~/.spack` independently 
   - Stages all config files to `.spack-config-staging` before atomically renaming to `spack`.
   - Another Spack instance will never see partial config files; the directory appears atomically.
 
-- **Package repositories** (`~/.spack/package_repos` → `~/.local/state/spack/package_repos`):
+- **Package repositories** (`~/.spack/package_repos` → `~/.cache/spack/package_repos`):
   - Uses a sibling lock (`.spack-package-repos-migration-lock`) to serialize concurrent migrations.
   - Stages the entire tree to `.package-repos-migration` before atomically renaming.
   - Another Spack instance will never see a partial repository tree.

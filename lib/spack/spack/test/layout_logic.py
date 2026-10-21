@@ -171,18 +171,18 @@ def test_user_cache_path_is_default_when_env_var_is_empty(
 
     # Create fresh config after mock_spack_instance sets up paths
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    assert os.path.join(home_dir, ".local", "state", "spack") == spack.paths.user_cache_path
+    assert os.path.join(home_dir, ".cache", "spack") == spack.paths.user_cache_path
 
 
 @pytest.mark.parametrize(
-    "env_var", ["SPACK_STATE_HOME", "SPACK_USER_CACHE_PATH", "XDG_STATE_HOME"]
+    "env_var", ["SPACK_CACHE_HOME", "SPACK_USER_CACHE_PATH", "XDG_CACHE_HOME"]
 )
 def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkeypatch, env_var):
     home_dir, base_prefix = mock_spack_instance
     p = str(Path("some") / "path")
 
     # For XDG_STATE_HOME, append /spack since that's the convention
-    if env_var == "XDG_STATE_HOME":
+    if env_var == "XDG_CACHE_HOME":
         os.environ[env_var] = p
         expected = os.path.join(p, "spack")
     else:

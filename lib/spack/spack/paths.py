@@ -96,6 +96,7 @@ class SpackPaths:
         self.spack_instance_id = hash.b32_hash(self.spack_root)[:7]
 
         self.default_state_home = os.path.join(expanded_home, ".local", "state", "spack")
+        self.default_cache_home = os.path.join(expanded_home, ".cache", "spack")
 
     @property
     def user_cache_path(self):
@@ -105,7 +106,7 @@ class SpackPaths:
 
         import spack.config
 
-        return spack.config._resolve_location_var("state") or self.default_state_home
+        return spack.config._resolve_location_var("cache") or self.default_cache_home
 
     @user_cache_path.setter
     def user_cache_path(self, value):
@@ -237,6 +238,7 @@ if TYPE_CHECKING:
     old_licenses_path: str
     old_default_dot_spack: str
     default_state_home: str
+    default_cache_home: str
     user_config_path: str
     system_config_path: str
     spack_instance_id: str

@@ -19,11 +19,11 @@ config:
     - "~/.local/share/spack"  # XDG default
     state:
     - "$SPACK_STATE_HOME"
-    - "$SPACK_USER_CACHE_PATH"
     - "$XDG_STATE_HOME/spack"
     - "~/.local/state/spack"  # XDG default
     cache:
     - "$SPACK_CACHE_HOME"
+    - "$SPACK_USER_CACHE_PATH"
     - "$XDG_CACHE_HOME/spack"
     - "~/.cache/spack"        # XDG default
 
@@ -87,7 +87,7 @@ config:
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
   # name/hash.
-  test_stage: $state_home/test
+  test_stage: $cache_home/test-stage
 
 
   # Cache directory for already downloaded source tarballs and archived
@@ -105,7 +105,7 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: $state_home/$spack_instance_id/cache
+  misc_cache: $cache_home/$spack_instance_id/cache
 
   # Abort downloads after this many seconds if not data is received.
   # Setting this to 0 will disable the timeout.

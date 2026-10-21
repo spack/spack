@@ -546,7 +546,7 @@ These are:
 * ``$cache_home``: the selected ``config:locations:cache`` path
 * ``$tempdir``: default system temporary directory (as specified in Python's `tempfile.tempdir <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_ variable.
 * ``$user``: name of the current user
-* ``$user_cache_path``: legacy alias for ``$state_home``
+* ``$user_cache_path``: legacy alias for ``$cache_home``
 * ``$architecture``: the architecture triple of the current host, as detected by Spack.
 * ``$arch``: alias for ``$architecture``.
 * ``$platform``: the platform of the current host, as detected by Spack.
@@ -637,7 +637,7 @@ For example, to see the fully merged ``config.yaml``, you can type:
      - $tempdir/$user/spack-stage
      - $cache_home/stage
      source_cache: $data_home/downloads
-     misc_cache: $state_home/$spack_instance_id/cache
+     misc_cache: $cache_home/$spack_instance_id/cache
      locks: true
 
 Likewise, this will show the fully merged ``packages.yaml``:
@@ -679,7 +679,7 @@ If you do not know why Spack is behaving a certain way, this command can help yo
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $cache_home/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $data_home/downloads
-   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $state_home/$spack_instance_id/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $cache_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
 You can see above that the ``build_jobs`` and ``debug`` settings are built-in and are not overridden by a configuration file.
@@ -740,7 +740,7 @@ With default config and environment variables
 .. code-block:: console
 
   $ export SPACK_DISABLE_LOCAL_CONFIG=true
-  $ export SPACK_STATE_HOME=/path1
+  $ export SPACK_CACHE_HOME=/path1
   $ export SPACK_DATA_HOME=/path2
 
 With config
@@ -752,7 +752,7 @@ With config
    config:
      locations:
        data: ...
-       state: ...
+       cache: ...
 
    $ cat etc/spack/include.yaml
    # Override this list to remove the isolate scope

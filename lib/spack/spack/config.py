@@ -2314,11 +2314,11 @@ def _migrate_user_config() -> bool:
 
 
 def _migrate_package_repositories() -> bool:
-    """Copy legacy package repositories to the new default state location."""
+    """Copy legacy package repositories to the new default cache location."""
     old_path = spack.paths.old_package_repos_path
     # Use XDG fallback chain without triggering config resolution
-    state_home = _migration_state_home()
-    new_path = os.path.join(state_home, "package_repos")
+    cache_home = _migration_cache_home()
+    new_path = os.path.join(cache_home, "package_repos")
 
     return _migrate_with_staging(
         old_path=old_path,
@@ -2745,25 +2745,25 @@ def _migration_data_home() -> str:
     return os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
 
 
-def _migration_state_home() -> str:
-    """Compute migration target for state_home with XDG fallback chain.
+def _migration_cache_home() -> str:
+    """Compute migration target for cache_home with XDG fallback chain.
 
     Uses (in order of precedence):
-    1. SPACK_STATE_HOME environment variable
-    2. XDG_STATE_HOME environment variable
-    3. Default XDG_STATE_HOME location: ~/.local/state/spack
+    1. SPACK_CACHE_HOME environment variable
+    2. XDG_CACHE_HOME environment variable
+    3. Default XDG_CACHE_HOME location: ~/.cache/spack
 
     This does not use config, since migration happens before config is fully loaded.
     """
-    spack_state = os.getenv("SPACK_STATE_HOME")
+    spack_state = os.getenv("SPACK_CACHE_HOME")
     if spack_state:
         return spack_state
 
-    xdg_state = os.getenv("XDG_STATE_HOME")
+    xdg_state = os.getenv("XDG_CACHE_HOME")
     if xdg_state:
         return os.path.join(xdg_state, "spack")
 
-    return os.path.join(os.path.expanduser("~"), ".local", "state", "spack")
+    return os.path.join(os.path.expanduser("~"), ".cache", "spack")
 
 
 def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float = 60) -> bool:

@@ -37,7 +37,7 @@ Config values can reference these in any string field:
 * ``$data_home``         - ``config:locations:data``, defaults to ``~/.local/share/spack``.
 * ``$state_home``        - ``config:locations:state``, defaults to ``~/.local/state/spack``.
 * ``$cache_home``        - ``config:locations:cache``, defaults to ``~/.cache/spack``
-* ``$user_cache_path``   - alias for ``$state_home`` (legacy)
+* ``$user_cache_path``   - alias for ``$cache_home`` (legacy)
 * ``$spack``             - the Spack instance's prefix
 * ``$spack_instance_id`` - hash distinguishing individual Spack instances
 
@@ -58,42 +58,38 @@ Using ``spack isolate`` to avoid migration prompts
 
 If the first spack command you run after a ``git pull`` is ``spack isolate``, spack will not prompt for migration of any resources that are in legacy locations (e.g. will not attempt to move environments out of ``$spack/var/spack/environments``).
 
-
-
 .. _location-table:
 
 The location table
 ------------------
 
-+----------------+-----------+--------------------+------------+--------------------+
-|                | data_home | state_home         | cache_home | somewhere_else     |
-+================+===========+====================+============+====================+
-| installs       | x         |                    |            |                    |
-+----------------+-----------+--------------------+------------+--------------------+
-| build stages   |           |                    |            | x [#wheretable-1]_ |
-+----------------+-----------+--------------------+------------+--------------------+
-| download cache | x         |                    |            |                    |
-+----------------+-----------+--------------------+------------+--------------------+
-| gpg keys       | x         |                    |            |                    |
-+----------------+-----------+--------------------+------------+--------------------+
-| modules        |           |                    |            | x [#wheretable-4]_ |
-+----------------+-----------+--------------------+------------+--------------------+
-| environments   | x         |                    |            |                    |
-+----------------+-----------+--------------------+------------+--------------------+
-| misc cache     |           | x [#wheretable-2]_ |            |                    |
-+----------------+-----------+--------------------+------------+--------------------+
-| test stages    |           | x                  |            |                    |
-+----------------+-----------+--------------------+------------+--------------------+
-| licenses       | x         |                    |            |                    |
-+----------------+-----------+--------------------+------------+--------------------+
-| config files   |           |                    |            | x [#wheretable-3]_ |
-+----------------+-----------+--------------------+------------+--------------------+
++----------------+-----------+------------+------------+--------------------+
+|                | data_home | state_home | cache_home | somewhere_else     |
++================+===========+============+============+====================+
+| installs       | x         |            |            |                    |
++----------------+-----------+------------+------------+--------------------+
+| build stages   |           |            |            | x [#wheretable-1]_ |
++----------------+-----------+------------+------------+--------------------+
+| download cache | x         |            |            |                    |
++----------------+-----------+------------+------------+--------------------+
+| gpg keys       | x         |            |            |                    |
++----------------+-----------+------------+------------+--------------------+
+| modules        |           |            |            | x [#wheretable-2]_ |
++----------------+-----------+------------+------------+--------------------+
+| environments   | x         |            |            |                    |
++----------------+-----------+------------+------------+--------------------+
+| misc cache     |           |            | x          |                    |
++----------------+-----------+------------+------------+--------------------+
+| test stages    |           |            | x          |                    |
++----------------+-----------+------------+------------+--------------------+
+| licenses       | x         |            |            |                    |
++----------------+-----------+------------+------------+--------------------+
+| config files   |           |            |            | x [#wheretable-3]_ |
++----------------+-----------+------------+------------+--------------------+
 
 .. [#wheretable-1] ``cache_home`` is used as a backup, but Spack prefers to write into the user's temp dir if it's available.
-.. [#wheretable-2] ``cache_home`` is modeled after ``$XDG_CACHE_HOME``.
-                   Spack assumes that ``$XDG_CACHE_HOME`` can be removed on user log-out; misc cache is intended to be longer-lived, so it lives in ``state_home`` instead.
+.. [#wheretable-2] Spack does not provide a default module root; module roots must be configured explicitly in ``modules.yaml``.
 .. [#wheretable-3] User-scope config is controlled with :ref:`environment variables <local-config-overrides>` or with :ref:`include.yaml <include-yaml>` to avoid recursion issues with configurable locations.
-.. [#wheretable-4] Spack does not provide a default module root; module roots must be configured explicitly in ``modules.yaml``.
 
 References
 ----------
