@@ -145,7 +145,7 @@ def deactivate_prompt_cmds(shell, use_cache: bool):
                 cmds += shell_cmd.spack_unset("SPACK_OLD_PROMPT")
             else:
                 cmds += shell_cmd.set("PROMPT", old_prompt)
-                cmds += shell_cmd.nset("SPACK_OLD_PROMPT")
+                cmds += shell_cmd.unset("SPACK_OLD_PROMPT")
     elif shell == "pwsh":
         cmds += (
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
