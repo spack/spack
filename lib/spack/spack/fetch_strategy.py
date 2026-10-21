@@ -39,7 +39,7 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import PurePath
-from typing import Callable, List, Mapping, Optional, Type
+from typing import TYPE_CHECKING, Callable, List, Mapping, Optional, Type
 
 import spack.config
 import spack.error
@@ -57,6 +57,9 @@ from spack.util.compression import decompressor_for
 from spack.util.executable import CommandNotFoundError, Executable, which
 from spack.util.filesystem import get_single_file, mkdirp, symlink, temp_cwd, working_dir
 
+if TYPE_CHECKING:
+    import spack.stage
+
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies: List[Type["FetchStrategy"]] = []
 
@@ -67,8 +70,8 @@ def _needs_stage(fun):
 
     @functools.wraps(fun)
     def wrapper(self, *args, **kwargs):
-        if not self.stage:
-            raise NoStageError(fun)
+        if self._stage is None:
+            raise NoStageError(fun.__name__)
         return fun(self, *args, **kwargs)
 
     return wrapper
@@ -93,7 +96,7 @@ class FetchStrategy:
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
-    url_attr: Optional[str] = None
+    url_attr: str = ""
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
@@ -104,12 +107,23 @@ class FetchStrategy:
         # The stage is initialized late, so that fetch strategies can be
         # constructed at package construction time.  This is where things
         # will be fetched.
-        self.stage = None
+        self._stage: Optional["spack.stage.Stage"] = None
         # Enable or disable caching for this strategy based on
         # 'no_cache' option from version directive.
         self.cache_enabled = not kwargs.pop("no_cache", False)
 
         self.package = None
+
+    @property
+    def stage(self) -> "spack.stage.Stage":
+        """The stage this strategy fetches into. Raises ``NoStageError`` if not yet set."""
+        if self._stage is None:
+            raise NoStageError("stage")
+        return self._stage
+
+    @stage.setter
+    def stage(self, value: Optional["spack.stage.Stage"]) -> None:
+        self._stage = value
 
     def set_package(self, package):
         self.package = package
@@ -530,7 +544,7 @@ class URLFetchStrategy(FetchStrategy):
         if save_file and (partial_file is not None):
             fs.rename(partial_file, save_file)
 
-    @property  # type: ignore # decorated properties unsupported in mypy
+    @property
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""
@@ -698,9 +712,10 @@ class VCSFetchStrategy(FetchStrategy):
         super().__init__(**kwargs)
 
         # Set a URL based on the type of fetch strategy.
-        self.url = kwargs.get(self.url_attr, None)
-        if not self.url:
+        url = kwargs.get(self.url_attr, None)
+        if not url:
             raise ValueError(f"{self.__class__} requires {self.url_attr} argument.")
+        self.url: str = url
 
         for attr in self.optional_attrs:
             setattr(self, attr, kwargs.get(attr, None))
@@ -861,6 +876,14 @@ class GitFetchStrategy(VCSFetchStrategy):
         # see https://bhupesh.me/minimalist-guide-git-clone/
         self.skip_checkout = kwargs.get("skip_checkout", False)
 
+    def _sparse_paths(self) -> List[str]:
+        """Sparse checkout paths, resolving ``git_sparse_paths`` if it is a callable."""
+        if not self.git_sparse_paths:
+            return []
+        if callable(self.git_sparse_paths):
+            return list(self.git_sparse_paths())
+        return list(self.git_sparse_paths)
+
     @property
     def git_version(self):
         return GitFetchStrategy.version_from_git(self.git)
@@ -912,12 +935,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         if self.commit:
             provenance_id = self.commit
             repo_path = urllib.parse.urlparse(self.url).path
-            if self.git_sparse_paths:
-                sparse_paths = []
-                if callable(self.git_sparse_paths):
-                    sparse_paths.extend(self.git_sparse_paths())
-                else:
-                    sparse_paths.extend(self.git_sparse_paths)
+            sparse_paths = self._sparse_paths()
+            if sparse_paths:
                 sparse_string = "_".join(sparse_paths)
                 sparse_hash = hashlib.sha1(sparse_string.encode("utf-8")).hexdigest()
                 provenance_id = f"{provenance_id}_{sparse_hash}"
@@ -999,10 +1018,10 @@ class GitFetchStrategy(VCSFetchStrategy):
             repo_name = get_single_file(".")
             kwargs["dest"] = repo_name
             if not self.skip_checkout:
-                spack.util.git.git_checkout(checkout_ref, self.git_sparse_paths, **kwargs)
+                spack.util.git.git_checkout(checkout_ref, self._sparse_paths(), **kwargs)
 
-            if self.stage:
-                self.stage.srcdir = repo_name
+            if self._stage is not None:
+                self._stage.srcdir = repo_name
             shutil.copytree(repo_name, dest, symlinks=True)
         return
 
@@ -1292,6 +1311,9 @@ class HgFetchStrategy(VCSFetchStrategy):
     url_attr = "hg"
     optional_attrs = ["revision"]
 
+    #: Set from ``optional_attrs`` by ``VCSFetchStrategy.__init__``
+    revision: Optional[str]
+
     def __init__(self, **kwargs):
         # Discards the keywords in kwargs that may conflict with the next call
         # to __init__
@@ -1445,7 +1467,7 @@ class FetchAndVerifyExpandedFile(URLFetchStrategy):
         files = os.listdir(src_dir)
 
         if len(files) != 1:
-            raise ChecksumError(self, f"Expected a single file in {src_dir}.")
+            raise ChecksumError(f"Expected a single file in {src_dir}.")
 
         verify_checksum(
             os.path.join(src_dir, files[0]), self.expanded_sha256, self.url, self._effective_url
@@ -1658,5 +1680,5 @@ class ChecksumError(spack.error.FetchError):
 class NoStageError(spack.error.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
-    def __init__(self, method):
-        super().__init__("Must call FetchStrategy.set_stage() before calling %s" % method.__name__)
+    def __init__(self, method_name: str):
+        super().__init__(f"Must call FetchStrategy.set_stage() before calling {method_name}")

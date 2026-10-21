@@ -91,6 +91,7 @@ from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
     ModificationList,
+    NameValueModifier,
     PrependPath,
     env_flag,
     filter_system_paths,
@@ -847,11 +848,10 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
 
 
 def _extract_dtags_arg(env_by_name: Dict[str, ModificationList], *, var_name: str) -> str:
-    try:
-        enable_new_dtags = env_by_name[var_name][0].value  # type: ignore[union-attr]
-    except (KeyError, IndexError, AttributeError):
-        enable_new_dtags = ""
-    return enable_new_dtags
+    modifications = env_by_name.get(var_name)
+    if not modifications or not isinstance(modifications[0], NameValueModifier):
+        return ""
+    return modifications[0].value
 
 
 class EnvironmentVisitor:
@@ -1239,11 +1239,8 @@ def _setup_pkg_and_run(
             except NameError:
                 # 'pkg' is not defined yet
                 pass
-        elif context == "test":
-            logfile = os.path.join(
-                pkg.test_suite.stage,  # type: ignore[union-attr]
-                pkg.test_suite.test_log_name(pkg.spec),  # type: ignore[union-attr]
-            )
+        elif context == "test" and pkg.test_suite is not None:
+            logfile = os.path.join(pkg.test_suite.stage, pkg.test_suite.test_log_name(pkg.spec))
 
         error_msg = str(e)
         if isinstance(e, (spack.multimethod.NoSuchMethodError, AttributeError)):

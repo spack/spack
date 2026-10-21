@@ -1160,7 +1160,7 @@ def _exists_in_buildcache(
 
 
 def prefixes_to_relocate(spec):
-    prefixes = [s.prefix for s in specs_to_relocate(spec)]
+    prefixes: List[str] = [s.prefix for s in specs_to_relocate(spec)]
     prefixes.append(spack.hooks.sbang.sbang_install_path())
     prefixes.append(str(spack.store.STORE.layout.root))
     return prefixes
@@ -2385,7 +2385,7 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
             for e in tar.getmembers()
             if e.isfile() and e.name.endswith(".spack/binary_distribution")
         ),
-        key=len,
+        key=lambda name: len(name),
         default=None,
     )
 
@@ -2954,7 +2954,7 @@ class DefaultIndexHandlerV2(IndexHandler):
         self.url = mirror_metadata.url
         self.local_hash = local_hash
         self.urlopen = urlopen
-        self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
+        self.headers: Dict[str, str] = {"User-Agent": web_util.SPACK_USER_AGENT}
 
     def get_remote_hash(self):
         # Failure to fetch index.json.hash is not fatal
@@ -3036,7 +3036,7 @@ class EtagIndexHandlerV2(IndexHandler):
         try:
             response = self.urlopen(urllib.request.Request(url, headers=headers))
         except urllib.error.HTTPError as e:
-            if e.getcode() == 304:
+            if e.code == 304:
                 # Not modified; that means fresh.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
             raise FetchIndexError(f"Could not fetch index {url}", e) from e
@@ -3128,7 +3128,7 @@ class DefaultIndexHandler(IndexHandler):
         self.layout_version = mirror_metadata.version
         self.local_hash = local_hash
         self.urlopen = urlopen
-        self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
+        self.headers: Dict[str, str] = {"User-Agent": web_util.SPACK_USER_AGENT}
 
     def conditional_fetch(self, force: bool = False) -> FetchIndexResult:
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
@@ -3203,7 +3203,7 @@ class EtagIndexHandler(IndexHandler):
         try:
             response = self.urlopen(urllib.request.Request(manifest_url, headers=headers))
         except urllib.error.HTTPError as e:
-            if e.getcode() == 304:
+            if e.code == 304:
                 # The remote manifest has not been modified, i.e. the index we
                 # already have is the freshest there is.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)

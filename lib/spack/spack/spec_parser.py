@@ -74,14 +74,14 @@ expansion when it is the first character in an id typed on the command line.
 import os
 import re
 import sys
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Dict, List, NoReturn, Optional, Tuple, Type
 
 import spack.deptypes
 import spack.error
 import spack.version
 from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.enums import PropagationPolicy
-from spack.tokenize import fast_regex
+from spack.tokenize import fast_regex, regex_scanner
 from spack.util.tty import color
 
 if TYPE_CHECKING:
@@ -146,7 +146,7 @@ class SpecTokenizationError(spack.error.SpecSyntaxError):
         message = f"unexpected characters in the spec string\n{text}\n"
 
         # collect all tokens, and underline those that are unexpected
-        scanner = FAST_SPEC_REGEX.scanner(text)  # type: ignore[attr-defined]
+        scanner = regex_scanner(FAST_SPEC_REGEX, text)
 
         # offset of unexpected token. unexpect tokens always have length 1.
         unexpected_indices: List[int] = []
@@ -359,20 +359,21 @@ class SpecParser:
     def __init__(self, literal_str: str, spec_cls: Type["spack.spec.Spec"]):
         self.literal_str = literal_str.rstrip()
         self.spec_cls = spec_cls
-        self.scanner = FAST_SPEC_REGEX.scanner(self.literal_str)  # type: ignore[attr-defined]
+        self.scanner = regex_scanner(FAST_SPEC_REGEX, self.literal_str)
         self.curr = self.scanner.match()
         self.next = self.scanner.match()
 
     def tokens(self, with_subgroups: bool = False) -> List[Tuple[str, str, Dict[str, str]]]:
         """Tokenize the spec string into a list of (kind, match, subgroups) tuples."""
         tokens: List[Tuple[str, str, Dict[str, str]]] = []
-        scanner = FAST_SPEC_REGEX.scanner(self.literal_str)  # type: ignore[attr-defined]
+        scanner = regex_scanner(FAST_SPEC_REGEX, self.literal_str)
         match = scanner.match()
         while match:
             kind = match.lastgroup
+            assert kind is not None  # every alternative of the token regex is a named group
             if kind == _UNEXPECTED:
                 self._raise_tokenization_error()
-            full_match = match.group(match.lastgroup)
+            full_match = match.group(kind)
             if with_subgroups:
                 subgroups = {
                     k: v for k, v in match.groupdict().items() if v is not None and k != kind
@@ -383,7 +384,7 @@ class SpecParser:
             match = scanner.match()
         return tokens
 
-    def _raise_tokenization_error(self) -> None:
+    def _raise_tokenization_error(self) -> NoReturn:
         # A virtual assignment outside a dependency, `zlib c,cxx=gcc`, fails at the comma: point
         # out the mistake instead of underlining the comma
         if self.curr is not None and self.curr.group(_UNEXPECTED) == ",":
@@ -398,7 +399,7 @@ class SpecParser:
                     )
         raise SpecTokenizationError(self.literal_str)
 
-    def _raise_parsing_error(self, message: str) -> None:
+    def _raise_parsing_error(self, message: str) -> NoReturn:
         raise SpecParsingError(message, self.curr, self.literal_str)
 
     def next_spec(
@@ -597,7 +598,7 @@ class SpecParser:
 
     def _rescan(self, pos: int) -> None:
         """Restart the scanner at ``pos`` in the input, the value of an unquoted when= condition"""
-        self.scanner = FAST_SPEC_REGEX.scanner(self.literal_str, pos)  # type: ignore[attr-defined]
+        self.scanner = regex_scanner(FAST_SPEC_REGEX, self.literal_str, pos)
         self.curr = self.scanner.match()
         self.next = self.scanner.match()
 
@@ -635,6 +636,7 @@ class SpecParser:
                 spec.name = initial_name
         elif curr:
             kind = curr.lastgroup
+            assert kind is not None  # every alternative of the token regex is a named group
             value = curr.group(kind)
             if kind == _UNQUALIFIED_PACKAGE_NAME:
                 if value != "*":  # `*` is an anonymous node, as in `%*+shared`

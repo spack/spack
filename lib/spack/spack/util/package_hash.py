@@ -365,8 +365,9 @@ def package_hash(
         source: Optionally provide a string to read python code from.
         repo: repositories the package.py is read from, when ``source`` is not given.
     """
-    source = canonical_source(spec, filter_multimethods=True, source=source, repo=repo)
-    return spack.util.hash.b32_hash(source)
+    return spack.util.hash.b32_hash(
+        canonical_source(spec, filter_multimethods=True, source=source, repo=repo)
+    )
 
 
 def package_ast(

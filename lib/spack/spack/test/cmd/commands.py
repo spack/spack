@@ -8,6 +8,7 @@ import pathlib
 import shutil
 import sys
 import textwrap
+from typing import Any, Dict
 
 import pytest
 
@@ -245,7 +246,7 @@ def test_update_completion_arg(shell, tmp_path: pathlib.Path, monkeypatch):
     mock_infile = tmp_path / shell / f"spack-completion.{shell}"
     mock_outfile = tmp_path / f"spack-completion.{shell}"
 
-    mock_args = {
+    mock_args: Dict[str, Dict[str, Any]] = {
         shell: {
             "aliases": True,
             "format": shell,

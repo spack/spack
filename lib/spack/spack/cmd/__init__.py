@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 import textwrap
-from typing import Callable, Container, Generator, List, Optional, Sequence, Union
+from typing import Callable, Container, Generator, Iterable, List, Optional, Union
 
 import spack.concretize
 import spack.config
@@ -515,7 +515,7 @@ def display_specs(specs, args=None, **kwargs):
         # all spec.prefix calls are in one transaction.
         with spack.store.STORE.db.read_transaction():
             for string, spec in formatted:
-                if not string:
+                if not string or spec is None:
                     # print newline from above
                     out += "\n"
                     continue
@@ -620,7 +620,7 @@ def extant_file(f):
     return f
 
 
-def require_active_env(parser):
+def require_active_env(parser: argparse.ArgumentParser) -> ev.Environment:
     """Used by commands to get the active environment.
 
     If an environment is not found, calls ``parser.error()`` which prints usage and exits.
@@ -716,7 +716,7 @@ def converted_arg_length(arg: str):
 
 
 def group_arguments(
-    args: Sequence[str],
+    args: Iterable[str],
     *,
     max_group_size: int = 500,
     prefix_length: int = 0,

@@ -21,11 +21,11 @@ def fake_google_api_core(monkeypatch):
         pass
 
     api_core_exceptions = types.ModuleType("google.api_core.exceptions")
-    api_core_exceptions.GoogleAPIError = GoogleAPIError
+    setattr(api_core_exceptions, "GoogleAPIError", GoogleAPIError)
     api_core = types.ModuleType("google.api_core")
-    api_core.exceptions = api_core_exceptions
+    setattr(api_core, "exceptions", api_core_exceptions)
     google_pkg = types.ModuleType("google")
-    google_pkg.api_core = api_core
+    setattr(google_pkg, "api_core", api_core)
 
     monkeypatch.setitem(sys.modules, "google", google_pkg)
     monkeypatch.setitem(sys.modules, "google.api_core", api_core)

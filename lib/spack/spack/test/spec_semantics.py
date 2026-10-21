@@ -1397,7 +1397,8 @@ class TestSpecSemantics:
             Spec("multivalue-variant foo=*,bar")
 
     def test_errors_in_variant_directive(self):
-        variant = spack.directives.variant.__wrapped__
+        # the directive is wrapped with functools.wraps; its type does not model __wrapped__
+        variant = spack.directives.variant.__wrapped__  # ty: ignore[unresolved-attribute]
 
         class Pkg:
             name = "PKG"
@@ -1437,9 +1438,11 @@ class TestSpecSemantics:
 
         # Check that we can still access each member through
         # the architecture attribute
-        assert "test" in spec.architecture
-        assert "debian" in spec.architecture
-        assert "x86_64" in spec.architecture
+        arch = spec.architecture
+        assert arch is not None
+        assert "test" in arch
+        assert "debian" in arch
+        assert "x86_64" in arch
 
         # Check that we forward the platform and os attribute correctly
         assert spec.platform == "test"

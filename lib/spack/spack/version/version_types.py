@@ -5,7 +5,7 @@
 import copy
 import re
 from bisect import bisect_left
-from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
 
 from spack.util.typing import SupportsRichComparison
 
@@ -192,6 +192,10 @@ class VersionType(SupportsRichComparison):
 
     def union(self, other: "VersionType") -> "VersionType":
         """Return a VersionType containing self and other."""
+        raise NotImplementedError
+
+    def isdevelop(self) -> bool:
+        """Whether this version is a develop-like version (e.g. @develop, @master)."""
         raise NotImplementedError
 
     def __hash__(self) -> int:
@@ -917,7 +921,7 @@ class VersionList(VersionType):
 
     versions: List[VersionType]
 
-    def __init__(self, vlist: Optional[Union[str, VersionType, Iterable]] = None):
+    def __init__(self, vlist: Optional[Union[str, VersionType, Iterable[Any]]] = None):
         if isinstance(vlist, str):
             vlist = from_string(vlist)
             if isinstance(vlist, VersionList):
@@ -934,7 +938,7 @@ class VersionList(VersionType):
         elif isinstance(vlist, (ConcreteVersion, ClosedOpenRange)):
             self.versions = [vlist]
 
-        elif isinstance(vlist, Iterable):
+        elif isinstance(vlist, Iterable) and not isinstance(vlist, VersionType):
             self.versions = []
             for v in vlist:
                 self.add(ver(v))
@@ -1028,8 +1032,12 @@ class VersionList(VersionType):
             raise TypeError("Can't add %s to VersionList" % type(item))
 
     @property
-    def concrete(self) -> Optional[ConcreteVersion]:
-        return self[0] if len(self) == 1 and isinstance(self[0], ConcreteVersion) else None
+    def concrete(self) -> Optional[Union["StandardVersion", "GitVersion"]]:
+        return (
+            self[0]
+            if len(self) == 1 and isinstance(self[0], (StandardVersion, GitVersion))
+            else None
+        )
 
     @property
     def concrete_range_as_version(self) -> Optional[ConcreteVersion]:
