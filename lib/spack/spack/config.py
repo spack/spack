@@ -2667,7 +2667,7 @@ def _do_migrate_home() -> Dict[str, bool]:
             parts.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
         if package_repos_migrated:
             parts.append(
-                "  - Copied package repositories from ~/.spack to the shared state location."
+                "  - Copied package repositories from ~/.spack to the shared data location."
             )
         parts.append("  - ~/.spack was retained because older Spack instances may still use it.")
         sys.stderr.write("\n".join(parts) + "\n")
