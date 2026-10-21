@@ -10,6 +10,7 @@ import itertools
 import os
 import re
 import sys
+import time
 import traceback
 import types
 import typing
@@ -1143,3 +1144,34 @@ class PriorityOrderedMapping(Mapping[KT, VT]):
         self._priorities = [(p, k) for p, k in self._priorities if k != key]
         assert len(self._data) == len(self._priorities)
         return popped_item
+
+
+def readline_with_timeout(timeout: float) -> Optional[str]:
+    """Read a line from stdin, returning ``None`` when the timeout expires."""
+    if sys.platform == "win32":
+        import msvcrt
+
+        deadline = time.monotonic() + timeout
+        characters = []
+        while time.monotonic() < deadline:
+            if not msvcrt.kbhit():
+                time.sleep(0.05)
+                continue
+            character = msvcrt.getwch()
+            if character in ("\r", "\n"):
+                sys.stderr.write("\n")
+                sys.stderr.flush()
+                return "".join(characters)
+            if character == "\003":
+                raise KeyboardInterrupt
+            if character in ("\b", "\x7f"):
+                if characters:
+                    characters.pop()
+                continue
+            characters.append(character)
+        return None
+
+    import select
+
+    ready, _, _ = select.select([sys.stdin], [], [], timeout)
+    return sys.stdin.readline() if ready else None

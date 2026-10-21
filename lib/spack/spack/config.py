@@ -2675,37 +2675,6 @@ def _do_migrate_home() -> Dict[str, bool]:
     return {"user_config": user_config_migrated, "package_repos": package_repos_migrated}
 
 
-def _readline_with_timeout(timeout: float) -> Optional[str]:
-    """Read a line from stdin, returning ``None`` when the timeout expires."""
-    if sys.platform == "win32":
-        import msvcrt
-
-        deadline = time.monotonic() + timeout
-        characters = []
-        while time.monotonic() < deadline:
-            if not msvcrt.kbhit():
-                time.sleep(0.05)
-                continue
-            character = msvcrt.getwch()
-            if character in ("\r", "\n"):
-                sys.stderr.write("\n")
-                sys.stderr.flush()
-                return "".join(characters)
-            if character == "\003":
-                raise KeyboardInterrupt
-            if character in ("\b", "\x7f"):
-                if characters:
-                    characters.pop()
-                continue
-            characters.append(character)
-        return None
-
-    import select
-
-    ready, _, _ = select.select([sys.stdin], [], [], timeout)
-    return sys.stdin.readline() if ready else None
-
-
 def _migration_config_home() -> str:
     """Compute migration target for config_home with XDG fallback chain.
 
@@ -2810,7 +2779,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
             f"\rProceed with copying these resources? [y/N] (timeout in {remaining:.2f}s) "
         )
         sys.stderr.flush()
-        answer = _readline_with_timeout(min(remaining, update_interval))
+        answer = lang.readline_with_timeout(min(remaining, update_interval))
 
         # If no input yet, continue looping to update the countdown
         if answer is None:
