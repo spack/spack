@@ -10,8 +10,8 @@
 #
 # -------------------------------------------------------------------------
 config:
-  # locations variables are set by the first value that does NOT contain
-  # a null environment variable
+  # each location is set to the first value in the list that is defined
+  # (static strings are always considered defined)
   locations:
     data:
     - "$SPACK_DATA_HOME"
