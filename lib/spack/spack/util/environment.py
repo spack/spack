@@ -667,11 +667,7 @@ class RemovePath(NamePathModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
         val = path_to_os_path(value).pop()
-        directories = [
-            path_to_os_path(os.path.normpath(x)).pop()
-            for x in directories
-            if x != val
-        ]
+        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories if x != val]
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
