@@ -397,15 +397,17 @@ def test_quoting_shell_cmd_string(shell, dollarsign_expected, spacing_expected):
 
 
 def test_empty_string_not_normalized_to_dot(working_env):
-    """Test that appending/prepending an empty string is ignored and does NOT get
-    normalized to '.'
+    """Test that appending/prepending an empty string does NOT get normalized to '.'
+    but DOES append/prepend an empty path element (trailing/leading separator).
     """
     if sys.platform == "win32":
         os.environ["TEST_PATH"] = "C:\\usr\\bin"
-        expected_path = "C:\\usr\\bin"
+        expected_after_append = "C:\\usr\\bin;"
+        expected_after_prepend = "C:;\\usr\\bin;;"
     else:
         os.environ["TEST_PATH"] = "/usr/bin"
-        expected_path = "/usr/bin"
+        expected_after_append = "/usr/bin:"
+        expected_after_prepend = ":/usr/bin::"
 
     env = envutil.EnvironmentModifications()
 
@@ -413,15 +415,16 @@ def test_empty_string_not_normalized_to_dot(working_env):
     env.apply_modifications()
 
     result = os.environ["TEST_PATH"]
-    assert expected_path == result
+    assert expected_after_append == result
+    assert "." not in result
 
     env.prepend_path("TEST_PATH", "")
     env.apply_modifications()
 
     result = os.environ["TEST_PATH"]
-    assert expected_path == result
+    assert expected_after_prepend == result
+    assert "." not in result
 
-    # set_path with empty string IS allowed to set empty value
     env.set_path("TEST_PATH", "")
     env.apply_modifications()
 
