@@ -2008,7 +2008,6 @@ class Environment:
                 ]
             prefix_mods = uenv.prefix_inspections_environment_modifications([*installed_roots])
             env_mods = uenv.spec_environment_modifications([*installed_roots], view=view)
-            # mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
             tty.warn(
@@ -2069,7 +2068,7 @@ class Environment:
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
 
-        prefix_mods, spec_env_mods = self._env_modifications_for_view(descriptor)
+        prefix_mods, spec_env_mods = self._env_modifications_for_view(descriptor, reverse=True)
         env_mod.extend(spec_env_mods)
 
         return prefix_mods, env_mod

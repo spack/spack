@@ -388,6 +388,11 @@ def env_activate(args):
         ).strip("\n")
         env_cmds += f"{despacktivate_cmds}\n"
 
+        if not prefix_cmds and current_view:
+            prefix_cmds, _ = env_script.get_deactivate_commands(
+                active_env, view=current_view, shell=args.shell, use_cache=True
+            )
+
         if prefix_cmds:
             sys.stdout.write(prefix_cmds)
         sys.stdout.write(env_cmds)
@@ -516,7 +521,7 @@ def env_deactivate(args):
         tty.die("No environment is currently active.")
 
     current_env = active_environment()
-    view = os.environ.get("SPACK_ENV_VIEW", None)
+    view = os.environ.get("SPACK_ENV_VIEW", "default")
 
     if args.fresh:
         prefix_cmds, cmds = env_script.get_deactivate_commands(
@@ -550,12 +555,13 @@ def env_deactivate(args):
     ).strip("\n")
     env_cmds += f"{despacktivate_cmds}\n"
 
-    if not prefix_env_cmds and current_env.user_specs:
-        prefix_env_cmds, _ = env_script.get_activate_commands(
+    if not prefix_env_cmds and view:
+        prefix_env_cmds, _ = env_script.get_deactivate_commands(
             current_env, view=view, shell=args.shell, use_cache=True
         )
 
-    env_cmds += prefix_env_cmds
+    if prefix_env_cmds:
+        sys.stdout.write(prefix_env_cmds)
     sys.stdout.write(env_cmds)
 
 
