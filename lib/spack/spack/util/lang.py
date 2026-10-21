@@ -1146,7 +1146,9 @@ class PriorityOrderedMapping(Mapping[KT, VT]):
         return popped_item
 
 
-def readline_with_timeout(prompt_format: str, timeout: float, update_interval: float = 1.0) -> Optional[str]:
+def readline_with_timeout(
+    prompt_format: str, timeout: float, update_interval: float = 1.0
+) -> Optional[str]:
     """Read a line from stdin with a countdown timer in the prompt.
 
     Args:
@@ -1203,7 +1205,7 @@ def readline_with_timeout(prompt_format: str, timeout: float, update_interval: f
             tty.setraw(fd)
 
         deadline = time.monotonic() + timeout
-        characters = []
+        characters: List[str] = []
         last_update = 0.0
 
         # Main input loop
