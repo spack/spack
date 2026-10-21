@@ -2883,6 +2883,20 @@ packages:
         assert len(result.specs) == 1
         assert result.specs[0] == snd
 
+    def test_reuse_compiler_from_unknown_namespace(self):
+        """Test that a reusable compiler from a repo that is not configured does not halt
+        concretization."""
+        externals = reusable_external_specs(spack.context.default())
+        gcc = spack.concretize.concretize_one("gcc@14.0.1")
+        gcc._mark_concrete(False)
+        gcc.namespace = "not_a_repo"
+        gcc._mark_concrete(True)
+
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
+        result, _, _ = solver.driver.solve(setup, [Spec("pkg-b")], reuse=externals + [gcc])
+        assert len(result.specs) == 1
+
     @pytest.mark.regression("45321")
     @pytest.mark.parametrize(
         "corrupted_str",
