@@ -4033,11 +4033,15 @@ def test_env_deactivate_sh_script_output():
     env("create", "test")
     env("activate", "--sh", "test")
 
+    # Simulate SPACK_ENV_VIEW being set
+    os.environ["SPACK_ENV_VIEW"] = "default"
+
     deactivate_output = env("deactivate", "--sh")
+    print(deactivate_output)
 
     assert "unalias despacktivate" in deactivate_output
     assert "SPACK_OLD_PS1" in deactivate_output
-    assert "noview_deactivate" in deactivate_output
+    assert "default_deactivate" in deactivate_output
 
 
 def test_env_deactivate_csh_script_output():
@@ -4045,22 +4049,27 @@ def test_env_deactivate_csh_script_output():
     env("create", "test")
     env("activate", "--csh", "test")
 
+    # Simulate SPACK_ENV_VIEW being set
+    os.environ["SPACK_ENV_VIEW"] = "default"
+
     deactivate_output = env("deactivate", "--csh")
 
     assert "unalias despacktivate" in deactivate_output
     assert "SPACK_OLD_PROMPT" in deactivate_output
-    assert "noview_deactivate" in deactivate_output
+    assert "default_deactivate" in deactivate_output
 
 
 def test_env_deactivate_fish_script_output():
     """Check the shell commands output by ``spack env deactivate --fish``."""
     env("create", "test")
     env("activate", "--fish", "test")
+    # Simulate SPACK_ENV_VIEW being set
+    os.environ["SPACK_ENV_VIEW"] = "default"
 
     deactivate_output = env("deactivate", "--fish")
 
     assert "functions -e despacktivate" in deactivate_output
-    assert "noview_deactivate" in deactivate_output
+    assert "default_deactivate" in deactivate_output
 
 
 @pytest.mark.regression("12719")
