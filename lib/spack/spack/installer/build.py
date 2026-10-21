@@ -630,7 +630,7 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
 
 def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> None:
     enable = config.get("enable", False)
-    if enable is False:
+    if not enable:
         return
 
     try:
