@@ -123,10 +123,15 @@ def test_landlock_sandbox_network_args():
 
 
 class MockSandbox(spack.sandbox.Sandbox):
-    def __init__(self):
+    def __init__(self, supports_network_blocking: bool = True):
         self.read_calls: List[Tuple[pathlib.Path, pathlib.Path]] = []
         self.write_calls: List[Tuple[pathlib.Path, pathlib.Path]] = []
         self.apply_calls: List[bool] = []
+        self._supports_network_blocking = supports_network_blocking
+
+    @property
+    def supports_network_blocking(self) -> bool:
+        return self._supports_network_blocking
 
     def _allow_read(self, original: pathlib.Path, resolved: pathlib.Path):
         self.read_calls.append((original, resolved))
@@ -209,6 +214,17 @@ def test_enable_sandbox_unsupported(monkeypatch, capfd):
     assert "Building without sandbox: unsupported" in capfd.readouterr().out
     with pytest.raises(spack.error.InstallError, match="unsupported"):
         _enable_sandbox({"enable": True}, spack.spec.Spec(), "")
+
+
+@pytest.mark.parametrize("supported", [True, False])
+def test_enable_sandbox_auto_network(supported, config, mock_packages, monkeypatch, capfd):
+    """Test that enable: auto blocks network access only when the sandbox supports it."""
+    mock_sandbox = MockSandbox(supports_network_blocking=supported)
+    monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: mock_sandbox)
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    _enable_sandbox({"enable": "auto", "allow_network": False}, spec, "")
+    assert mock_sandbox.apply_calls == [supported]
+    assert ("Building without network sandbox" in capfd.readouterr().out) is not supported
 
 
 def test_sandbox_network_blocking_requires_abi_v4():
