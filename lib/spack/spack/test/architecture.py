@@ -203,6 +203,7 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
     assert spec.target == spec["pkg-b"].target == result
 
 
+@pytest.mark.usefixtures("config")
 def test_instantiate_non_default_macos(mock_packages):
     darwin = spack.platforms.Darwin()
 
