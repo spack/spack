@@ -88,9 +88,6 @@ def _script_matches_env(env, script_path: str, view: Optional[str] = None) -> bo
     if env.path not in script_content:
         return False
 
-    if view and (view not in env.views or env.views[view].root not in script_content):
-        return False
-
     return True
 
 

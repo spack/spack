@@ -506,9 +506,6 @@ class SetEnv(NameValueModifier):
 
 class AppendFlagsEnv(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
-        if not self.value:
-            return
-
         tty.debug(f"AppendFlagsEnv: {self.name}={self.value}", level=3)
         if self.name in env and env[self.name]:
             env[self.name] += self.separator + self.value
@@ -516,9 +513,6 @@ class AppendFlagsEnv(NameValueModifier):
             env[self.name] = self.value
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        if not self.value:
-            return ""
-
         shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.spack_append(self.name, str(self.value))
 
@@ -536,9 +530,6 @@ class UnsetEnv(NameModifier):
 
 class RemoveFlagsEnv(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
-        if not self.value:
-            return
-
         tty.debug(f"RemoveFlagsEnv: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         flags = environment_value.split(self.separator) if environment_value else []
@@ -546,9 +537,6 @@ class RemoveFlagsEnv(NameValueModifier):
         env[self.name] = self.separator.join(flags)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        if not self.value:
-            return ""
-
         shell_cmd = ShellCmdString(shell, self.separator)
         return shell_cmd.spack_remove_value(self.name, str(self.value))
 
@@ -577,116 +565,122 @@ class SetPath(NameValueModifier):
 
 class AppendPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
-        if not self.value:
-            return
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         tty.debug(f"AppendPath: {self.name}+{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
+        directories.append(path_to_os_path(value).pop())
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        if not self.value:
-            return ""
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_append(self.name, value)
 
 
 class PrependPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
-        if not self.value:
-            return
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         tty.debug(f"PrependPath: {self.name}+{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = [path_to_os_path(os.path.normpath(self.value)).pop()] + directories
+        directories = [path_to_os_path(value).pop()] + directories
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        if not self.value:
-            return ""
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_prepend(self.name, value)
 
 
 class RemoveFirstPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
-        if not self.value:
-            return
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         tty.debug(f"RemoveFirstPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
         directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        val = path_to_os_path(value).pop()
         if val in directories:
             directories.remove(val)
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        if not self.value:
-            return ""
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_remove_first(self.name, value)
 
 
 class RemoveLastPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
-        if not self.value:
-            return
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         tty.debug(f"RemoveLastPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)[::-1]
         directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        val = path_to_os_path(value).pop()
         if val in directories:
             directories.remove(val)
         env[self.name] = self.separator.join(directories[::-1])
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        if not self.value:
-            return ""
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_remove_last(self.name, value)
 
 
 class RemovePath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
-        if not self.value:
-            return
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         tty.debug(f"RemovePath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
+        val = path_to_os_path(value).pop()
         directories = [
             path_to_os_path(os.path.normpath(x)).pop()
             for x in directories
-            if x != path_to_os_path(os.path.normpath(self.value)).pop()
+            if x != val
         ]
-        result = self.separator.join(directories)
-
-        if result:
-            env[self.name] = result
-        else:
-            env.pop(self.name, None)
+        env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
-        if not self.value:
-            return ""
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
 
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_remove_value(self.name, value)
 
 

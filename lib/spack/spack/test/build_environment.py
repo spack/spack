@@ -250,7 +250,7 @@ def test_setup_dependent_package_inherited_modules(
         (
             {"EMPTY_PATH_LIST": prep_and_join("only", "path")},
             {"remove_path": {"EMPTY_PATH_LIST": prep_and_join("only", "path")}},
-            {"EMPTY_PATH_LIST": None},
+            {"EMPTY_PATH_LIST": ""},
         ),
     ],
 )

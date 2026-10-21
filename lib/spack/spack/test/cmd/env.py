@@ -367,7 +367,7 @@ def test_env_scripts_path_after_relocation_with_external_view(
     new_env_path = mutable_mock_env_path / "new"
     shutil.move(str(orig_env_path), str(new_env_path))
 
-    new_activate_output = env("activate", f"--{shell}", str(new_env_path))
+    new_activate_output = env("activate", f"--{shell}", "new")
     new_activate_content = _get_cmds_from_script(new_activate_output, shell)
 
     assert prepend_cmake in new_activate_content
