@@ -381,7 +381,7 @@ def env_activate(args):
             prefix_cmds, env_cmds = env_script.get_deactivate_commands(
                 active_env, view=current_view, shell=args.shell, use_cache=True
             )
-            tty.debug(f"Error writing to deactivation environment scripts: {e}")
+            tty.msg(f"Error writing to deactivation environment scripts: {e}")
 
         despacktivate_cmds = env_script.remove_despacktivate_and_prompt_cmds(
             args.shell, use_cache=True
@@ -433,7 +433,7 @@ def env_activate(args):
         env_script.write_env_activate_script(active_env, view)
         env_script.write_env_deactivate_script(active_env, view)
     except Exception as e:
-        tty.debug(f"Error writing to environment scripts: {e}")
+        tty.msg(f"Error writing to environment scripts: {e}")
         prefix_env_cmds, env_cmds = env_script.get_activate_commands(
             active_env, view=view, shell=args.shell, use_cache=True
         )
@@ -546,7 +546,7 @@ def env_deactivate(args):
         prefix_env_cmds, env_cmds = env_script.get_deactivate_commands(
             current_env, view=view, shell=args.shell, use_cache=True
         )
-        tty.debug(f"Error writing to deactivation environment scripts: {e}")
+        tty.msg(f"Error writing to deactivation environment scripts: {e}")
 
     ev.deactivate()
 
