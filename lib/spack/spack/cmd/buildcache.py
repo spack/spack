@@ -88,14 +88,15 @@ def setup_parser(subparser: argparse.ArgumentParser):
     push_sign.add_argument(
         "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
     )
-    push.add_argument(
+    push_keys = push.add_mutually_exclusive_group()
+    push_keys.add_argument(
         "--upload-key",
         action="store_true",
         default=True,
         dest="upload_key",
         help="Upload the public part of the signing key to to the build cache",
     )
-    push.add_argument(
+    push_keys.add_argument(
         "--no-upload-key",
         action="store_false",
         dest="upload_key",

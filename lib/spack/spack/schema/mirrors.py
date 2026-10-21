@@ -132,6 +132,7 @@ mirror_entry = {
                 {
                     "type": "object",
                     "description": "Detailed configuration for autopush.",
+                    "additionalProperties": False,
                     "properties": {
                         "binaries": {"type": "boolean", "description": "Push installed binaries."},
                         "keys": {"type": "boolean", "description": "Push signing keys."},
