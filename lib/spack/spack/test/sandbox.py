@@ -16,7 +16,9 @@ import tempfile
 from typing import List, Tuple
 
 import spack.concretize
+import spack.error
 import spack.sandbox
+import spack.spec
 import spack.store
 from spack.installer.build import _enable_sandbox
 
@@ -193,6 +195,20 @@ def test_enable_sandbox_paths(
     assert pathlib.Path(tempfile.gettempdir()).resolve() in allow_write_resolved
 
     assert mock_sandbox.apply_calls == [False]
+
+
+def test_enable_sandbox_unsupported(monkeypatch, capfd):
+    """Test that only enable: true fails when the kernel does not support the sandbox, and that
+    enable: auto reports building without it."""
+
+    def unsupported():
+        raise spack.sandbox.SandboxError("unsupported")
+
+    monkeypatch.setattr(spack.sandbox, "get_sandbox", unsupported)
+    _enable_sandbox({"enable": "auto"}, spack.spec.Spec(), "")
+    assert "Building without sandbox: unsupported" in capfd.readouterr().out
+    with pytest.raises(spack.error.InstallError, match="unsupported"):
+        _enable_sandbox({"enable": True}, spack.spec.Spec(), "")
 
 
 def test_sandbox_network_blocking_requires_abi_v4():
