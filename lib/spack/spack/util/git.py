@@ -92,7 +92,7 @@ FILTER_BLOB_NONE = VersionConditionalOption("--filter=blob:none", min_version=(2
 NO_CHECKOUT = VersionConditionalOption("--no-checkout", min_version=(2, 34, 0))
 # technically sparse-checkout was added in 2.25, but we go forward since the model we use only
 # works with the `--cone` option
-SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version=(2, 34, 0))
+SPARSE_CHECKOUT = VersionConditionalOption("sparse-checkout", "set", min_version=(2, 35, 0))
 
 
 @overload
@@ -372,6 +372,7 @@ def git_checkout(
         checkout.append("--quiet")
     if ref:
         checkout.append(ref)
+
 
     cmds = []
     if sparse_paths and sparse_checkout:
