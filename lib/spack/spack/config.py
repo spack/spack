@@ -2750,18 +2750,16 @@ def _migration_cache_home() -> str:
 
     Uses (in order of precedence):
     1. SPACK_CACHE_HOME environment variable
-    2. XDG_CACHE_HOME environment variable
-    3. Default XDG_CACHE_HOME location: ~/.cache/spack
+    2. SPACK_USER_CACHE_PATH environment variable
+    3. XDG_CACHE_HOME environment variable
+    4. Default XDG_CACHE_HOME location: ~/.cache/spack
 
     This does not use config, since migration happens before config is fully loaded.
     """
-    spack_state = os.getenv("SPACK_CACHE_HOME")
-    if spack_state:
-        return spack_state
-
-    xdg_state = os.getenv("XDG_CACHE_HOME")
-    if xdg_state:
-        return os.path.join(xdg_state, "spack")
+    for vname in ["SPACK_CACHE_HOME", "SPACK_USER_CACHE_PATH", "XDG_CACHE_HOME"]:
+        vdef = os.getenv(vname, None)
+        if vdef:
+            return vdef
 
     return os.path.join(os.path.expanduser("~"), ".cache", "spack")
 
