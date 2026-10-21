@@ -1585,7 +1585,7 @@ complete -c spack -n '__fish_spack_using_command env' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env' -s h -l help -d 'show this help message and exit'
 
 # spack env activate
-set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp create envfile= keep-relative d/dir dev
+set -g __fish_spack_optspecs_spack_env_activate h/help sh csh fish bat pwsh v/with-view= V/without-view p/prompt temp create envfile= keep-relative d/dir fresh
 complete -c spack -n '__fish_spack_using_command_pos 0 env activate' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env activate' -s h -l help -d 'show this help message and exit'
@@ -1615,11 +1615,11 @@ complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative 
 complete -c spack -n '__fish_spack_using_command env activate' -l keep-relative -d 'copy envfile'"'"'s relative develop paths verbatim when create'
 complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -f -a dir
 complete -c spack -n '__fish_spack_using_command env activate' -s d -l dir -d 'activate environment based on the directory supplied'
-complete -c spack -n '__fish_spack_using_command env activate' -l dev -f -a dev
-complete -c spack -n '__fish_spack_using_command env activate' -l dev -d 'bypass the cached script and repo and generate environment modifications'
+complete -c spack -n '__fish_spack_using_command env activate' -l fresh -f -a fresh
+complete -c spack -n '__fish_spack_using_command env activate' -l fresh -d 'bypass the cached script and repo and generate environment modifications'
 
 # spack env deactivate
-set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish bat pwsh dev
+set -g __fish_spack_optspecs_spack_env_deactivate h/help sh csh fish bat pwsh fresh
 complete -c spack -n '__fish_spack_using_command env deactivate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env deactivate' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command env deactivate' -l sh -f -a shell
@@ -1632,8 +1632,8 @@ complete -c spack -n '__fish_spack_using_command env deactivate' -l bat -f -a sh
 complete -c spack -n '__fish_spack_using_command env deactivate' -l bat -d 'print bat commands to activate the environment'
 complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -f -a shell
 complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -d 'print pwsh commands to activate the environment'
-complete -c spack -n '__fish_spack_using_command env deactivate' -l dev -f -a dev
-complete -c spack -n '__fish_spack_using_command env deactivate' -l dev -d 'bypass the cached script and repo and generate environment modifications'
+complete -c spack -n '__fish_spack_using_command env deactivate' -l fresh -f -a fresh
+complete -c spack -n '__fish_spack_using_command env deactivate' -l fresh -d 'bypass the cached script and repo and generate environment modifications'
 
 # spack env create
 set -g __fish_spack_optspecs_spack_env_create h/help d/dir keep-relative without-view with-view= include-concrete=
@@ -2255,7 +2255,7 @@ complete -c spack -n '__fish_spack_using_command list' -l update -r -f -a update
 complete -c spack -n '__fish_spack_using_command list' -l update -r -d 'write output to the specified file, if any package is newer'
 
 # spack load
-set -g __fish_spack_optspecs_spack_load h/help sh csh fish bat pwsh first list dev
+set -g __fish_spack_optspecs_spack_load h/help sh csh fish bat pwsh first list fresh
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 load' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command load' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command load' -s h -l help -d 'show this help message and exit'
@@ -2273,8 +2273,8 @@ complete -c spack -n '__fish_spack_using_command load' -l first -f -a load_first
 complete -c spack -n '__fish_spack_using_command load' -l first -d 'load the first match if multiple packages match the spec'
 complete -c spack -n '__fish_spack_using_command load' -l list -f -a list
 complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as ``spack find --loaded``'
-complete -c spack -n '__fish_spack_using_command load' -l dev -f -a dev
-complete -c spack -n '__fish_spack_using_command load' -l dev -d 'bypass the cached script and repo and generate environment modifications'
+complete -c spack -n '__fish_spack_using_command load' -l fresh -f -a fresh
+complete -c spack -n '__fish_spack_using_command load' -l fresh -d 'bypass the cached script and repo and generate environment modifications'
 
 # spack location
 set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= v/view= first
@@ -3326,7 +3326,7 @@ complete -c spack -n '__fish_spack_using_command unit-test' -l showlocals -f -a 
 complete -c spack -n '__fish_spack_using_command unit-test' -l showlocals -d 'show local variable values in tracebacks'
 
 # spack unload
-set -g __fish_spack_optspecs_spack_unload h/help sh csh fish bat pwsh a/all dev
+set -g __fish_spack_optspecs_spack_unload h/help sh csh fish bat pwsh a/all fresh
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 unload' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command unload' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command unload' -s h -l help -d 'show this help message and exit'
@@ -3342,8 +3342,8 @@ complete -c spack -n '__fish_spack_using_command unload' -l pwsh -f -a shell
 complete -c spack -n '__fish_spack_using_command unload' -l pwsh -d 'print pwsh commands to load the package'
 complete -c spack -n '__fish_spack_using_command unload' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command unload' -s a -l all -d 'unload all loaded Spack packages'
-complete -c spack -n '__fish_spack_using_command unload' -l dev -f -a dev
-complete -c spack -n '__fish_spack_using_command unload' -l dev -d 'bypass the cached script and repo and generate environment modifications'
+complete -c spack -n '__fish_spack_using_command unload' -l fresh -f -a fresh
+complete -c spack -n '__fish_spack_using_command unload' -l fresh -d 'bypass the cached script and repo and generate environment modifications'
 
 # spack url
 set -g __fish_spack_optspecs_spack_url h/help

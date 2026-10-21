@@ -32,7 +32,7 @@ def get_activate_commands(
     cmds = ""
     prefix_cmds = ""
 
-    cmds += spack.environment.shell.activate_commands(env, shell, view)
+    cmds += spack.environment.shell.activate_commands(env, shell, use_cache, view)
     cmds += env_mods.shell_modifications(shell, cache=use_cache)
 
     if prefix_mods:
@@ -63,7 +63,7 @@ def get_deactivate_commands(
     cmds = ""
     prefix_cmds = ""
 
-    cmds += spack.environment.shell.deactivate_commands(shell)
+    cmds += spack.environment.shell.deactivate_commands(shell, use_cache)
     cmds += env_mods.shell_modifications(shell, cache=use_cache)
 
     if prefix_mods:
@@ -219,7 +219,9 @@ def write_env_deactivate_script(env, view: Optional[str] = None):
     _write_env_script(env, view, activate=False)
 
 
-def set_despacktivate_and_prompt_cmds(env, shell, prompt: Optional[str] = None) -> str:
+def set_despacktivate_and_prompt_cmds(
+    env, shell: str, use_cache: bool, prompt: Optional[str] = None
+) -> str:
     """Returns the set prompt and alias despacktivate commands which are unique to each shell.
 
     Args:
@@ -227,19 +229,19 @@ def set_despacktivate_and_prompt_cmds(env, shell, prompt: Optional[str] = None) 
         prompt: name of user's prompt
     """
     despactivate_cmd = spack.environment.shell.alias_despacktivate_cmds(shell)
-    prompt_cmds = spack.environment.shell.activate_prompt_cmds(env, shell, prompt)
+    prompt_cmds = spack.environment.shell.activate_prompt_cmds(env, shell, prompt, use_cache)
 
     return despactivate_cmd + prompt_cmds
 
 
-def remove_despacktivate_and_prompt_cmds(shell) -> str:
+def remove_despacktivate_and_prompt_cmds(shell: str, use_cache: bool) -> str:
     """Returns the unset prompt and unalias despacktivate commands which are unique to each shell.
 
     Args:
         shell: the shell that the user is running
     """
     despactivate_cmd = spack.environment.shell.unalias_despacktivate_cmds(shell)
-    prompt_cmds = spack.environment.shell.deactivate_prompt_cmds(shell)
+    prompt_cmds = spack.environment.shell.deactivate_prompt_cmds(shell, use_cache)
 
     return despactivate_cmd + prompt_cmds
 

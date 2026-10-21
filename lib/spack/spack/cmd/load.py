@@ -78,7 +78,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     subparser.add_argument(
-        "--dev",
+        "--fresh",
         action="store_true",
         default=False,
         help="bypass the cached script and repo and generate environment modifications",
@@ -111,7 +111,7 @@ def load(parser, args):
     for spec in specs:
         commands = ""
 
-        if args.dev or spec.external:
+        if args.fresh or spec.external:
             commands, _ = spec_script.get_environment_modifications(spec, shell)
             sys.stdout.write(commands)
             return

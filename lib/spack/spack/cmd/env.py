@@ -283,7 +283,7 @@ def env_activate_setup_parser(subparser):
         help=("name or directory of the environment being activated"),
     )
     subparser.add_argument(
-        "--dev",
+        "--fresh",
         action="store_true",
         default=False,
         help="bypass the cached script and repo and generate environment modifications",
@@ -383,9 +383,9 @@ def env_activate(args):
             )
             tty.debug(f"Error writing to deactivation environment scripts: {e}")
 
-        despacktivate_cmds = env_script.remove_despacktivate_and_prompt_cmds(args.shell).strip(
-            "\n"
-        )
+        despacktivate_cmds = env_script.remove_despacktivate_and_prompt_cmds(
+            args.shell, use_cache=True
+        ).strip("\n")
         env_cmds += f"{despacktivate_cmds}\n"
 
         if prefix_cmds:
@@ -406,7 +406,7 @@ def env_activate(args):
 
     active_env.manifest.prepare_config_scope()
 
-    if args.dev:
+    if args.fresh:
         prefix_cmds, cmds = env_script.get_activate_commands(
             active_env, view=view, shell=args.shell, use_cache=False
         )
@@ -439,7 +439,7 @@ def env_activate(args):
     ev.activate(active_env, use_env_repo=True)
 
     despacktivate_cmds = env_script.set_despacktivate_and_prompt_cmds(
-        active_env, args.shell, prompt=args.prompt
+        active_env, args.shell, use_cache=True, prompt=args.prompt
     ).strip("\n")
     env_cmds += f"{despacktivate_cmds}\n"
 
@@ -494,7 +494,7 @@ def env_deactivate_setup_parser(subparser):
         help="print pwsh commands to activate the environment",
     )
     subparser.add_argument(
-        "--dev",
+        "--fresh",
         action="store_true",
         default=False,
         help="bypass the cached script and repo and generate environment modifications",
@@ -518,9 +518,9 @@ def env_deactivate(args):
     current_env = active_environment()
     view = os.environ.get("SPACK_ENV_VIEW", None)
 
-    if args.dev:
+    if args.fresh:
         prefix_cmds, cmds = env_script.get_deactivate_commands(
-            current_env, view, args.shell, False
+            current_env, view, args.shell, use_cache=False
         )
 
         if prefix_cmds:
@@ -545,7 +545,9 @@ def env_deactivate(args):
 
     ev.deactivate()
 
-    despacktivate_cmds = env_script.remove_despacktivate_and_prompt_cmds(args.shell).strip("\n")
+    despacktivate_cmds = env_script.remove_despacktivate_and_prompt_cmds(
+        args.shell, use_cache=True
+    ).strip("\n")
     env_cmds += f"{despacktivate_cmds}\n"
 
     if not prefix_env_cmds and current_env.user_specs:

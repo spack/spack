@@ -14,14 +14,18 @@ from spack.util.environment import EnvironmentModifications, ShellCmdString
 from spack.util.tty.color import colorize
 
 
-def _make_spack_prompt(shell: str, prompt: str) -> str:
+def _make_spack_prompt(shell: str, prompt: str, use_cache: bool) -> str:
     shell_cmd = ShellCmdString(shell)
     cmds = ""
     if shell == "csh":
         # TODO: figure out how to make color work for csh
         cmds += "if (! $?SPACK_OLD_PROMPT ) "
-        cmds += shell_cmd.spack_set("SPACK_OLD_PROMPT", prompt)
-        cmds += shell_cmd.spack_set("prompt", f"{prompt} $prompt")
+        if use_cache:
+            cmds += shell_cmd.spack_set("SPACK_OLD_PROMPT", prompt)
+            cmds += shell_cmd.spack_set("prompt", f"{prompt} $prompt")
+        else:
+            cmds += shell_cmd.set("SPACK_OLD_PROMPT", prompt)
+            cmds += shell_cmd.set("prompt", f"{prompt} $prompt")
     elif shell == "fish":
         # NOTE: We're not changing the fish_prompt function (which is fish's
         # solution to the PS1 variable) here. This is a bit fiddly, and easy to
@@ -32,8 +36,12 @@ def _make_spack_prompt(shell: str, prompt: str) -> str:
         old_prompt = os.environ.get("SPACK_OLD_PROMPT")
         if not old_prompt:
             old_prompt = os.environ.get("PROMPT")
-        cmds += shell_cmd.spack_set("SPACK_OLD_PROMPT", str(old_prompt))
-        cmds += shell_cmd.spack_set("PROMPT", f"{prompt} $P$G")
+        if use_cache:
+            cmds += shell_cmd.spack_set("SPACK_OLD_PROMPT", str(old_prompt))
+            cmds += shell_cmd.spack_set("PROMPT", f"{prompt} $P$G")
+        else:
+            cmds += shell_cmd.set("SPACK_OLD_PROMPT", str(old_prompt))
+            cmds += shell_cmd.set("PROMPT", f"{prompt} $P$G")
     elif shell == "pwsh":
         cmds += (
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
@@ -68,39 +76,53 @@ def _make_spack_prompt(shell: str, prompt: str) -> str:
     return cmds
 
 
-def activate_commands(env, shell, view: Optional[str] = None):
+def activate_commands(env, shell, use_cache: bool, view: Optional[str] = None):
     # Construct the commands to run
     shell_cmd = ShellCmdString(shell)
-    cmds = shell_cmd.spack_set("SPACK_ENV", env.path)
+    if use_cache:
+        cmds = shell_cmd.spack_set("SPACK_ENV", env.path)
+    else:
+        cmds = shell_cmd.set("SPACK_ENV", env.path)
 
     if view:
-        cmds += shell_cmd.spack_set("SPACK_ENV_VIEW", view)
+        if use_cache:
+            cmds += shell_cmd.spack_set("SPACK_ENV_VIEW", view)
+        else:
+            cmds += shell_cmd.set("SPACK_ENV_VIEW", view)
     return cmds
 
 
-def activate_prompt_cmds(env, shell, prompt):
+def activate_prompt_cmds(env, shell, prompt, use_cache: bool):
     short_name = env.name
     if short_name == env.path:
         short_name = os.path.basename(short_name)
 
     shell_cmd = ShellCmdString(shell)
-    cmds = shell_cmd.spack_set("VIRTUAL_ENV_PROMPT", short_name)
+    if use_cache:
+        cmds = shell_cmd.spack_set("VIRTUAL_ENV_PROMPT", short_name)
+    else:
+        cmds = shell_cmd.set("VIRTUAL_ENV_PROMPT", short_name)
 
     if prompt:
-        cmds += _make_spack_prompt(shell, f"[{short_name}]")
+        cmds += _make_spack_prompt(shell, f"[{short_name}]", use_cache=use_cache)
     return cmds
 
 
-def deactivate_commands(shell):
+def deactivate_commands(shell, use_cache: bool):
     shell_cmd = ShellCmdString(shell)
-    cmds = shell_cmd.spack_unset("SPACK_ENV")
-    cmds += shell_cmd.spack_unset("SPACK_ENV_VIEW")
-    cmds += shell_cmd.spack_unset("VIRTUAL_ENV_PROMPT")
+    if use_cache:
+        cmds = shell_cmd.spack_unset("SPACK_ENV")
+        cmds += shell_cmd.spack_unset("SPACK_ENV_VIEW")
+        cmds += shell_cmd.spack_unset("VIRTUAL_ENV_PROMPT")
+    else:
+        cmds = shell_cmd.unset("SPACK_ENV")
+        cmds += shell_cmd.unset("SPACK_ENV_VIEW")
+        cmds += shell_cmd.unset("VIRTUAL_ENV_PROMPT")
 
     return cmds
 
 
-def deactivate_prompt_cmds(shell):
+def deactivate_prompt_cmds(shell, use_cache: bool):
     shell_cmd = ShellCmdString(shell)
     cmds = ""
     if shell == "csh":
@@ -118,8 +140,12 @@ def deactivate_prompt_cmds(shell):
         # TODO: despacktivate
         old_prompt = os.environ.get("SPACK_OLD_PROMPT")
         if old_prompt:
-            cmds += shell_cmd.spack_set("PROMPT", old_prompt)
-            cmds += shell_cmd.spack_unset("SPACK_OLD_PROMPT")
+            if use_cache:
+                cmds += shell_cmd.spack_set("PROMPT", old_prompt)
+                cmds += shell_cmd.spack_unset("SPACK_OLD_PROMPT")
+            else:
+                cmds += shell_cmd.set("PROMPT", old_prompt)
+                cmds += shell_cmd.nset("SPACK_OLD_PROMPT")
     elif shell == "pwsh":
         cmds += (
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"

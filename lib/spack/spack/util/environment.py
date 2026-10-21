@@ -191,7 +191,7 @@ class ShellCmdString:
         return f"{cmd} {name} {value} {sep}\n"
 
     def spack_set(self, name: str, value: str) -> str:
-        """Returns the command to set an environment variable using _spack_env_set function."""
+        """Returns the command to set an environment variable"""
         cmd = self.shell_fn("_spack_env_set", self.shell)
         value = self.shell_quote(value, self.shell)
         name = self.shell_quote(name)

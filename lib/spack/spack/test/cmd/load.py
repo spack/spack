@@ -555,10 +555,10 @@ def test_load_preserves_custom_path_separator(
         ]
     ),
 )
-def test_load_dev_bypasses_cached_script(
+def test_load_fresh_bypasses_cached_script(
     shell, set_cmake, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
-    """Test that --dev flag bypasses cached scripts and generates fresh environment
+    """Test that --fresh flag bypasses cached scripts and generates fresh environment
     modifications.
     """
     spec = spack.concretize.concretize_one("mpileaks")
@@ -569,7 +569,7 @@ def test_load_dev_bypasses_cached_script(
 
     os.remove(load_script_path)
 
-    output = load(shell, "--dev", "mpileaks")
+    output = load(shell, "--fresh", "mpileaks")
 
     assert not os.path.exists(load_script_path)
     assert set_cmake in output
@@ -587,10 +587,10 @@ def test_load_dev_bypasses_cached_script(
         ]
     ),
 )
-def test_load_dev_bypasses_cached_repo(
+def test_load_fresh_bypasses_cached_repo(
     shell, set_cmake, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
-    """Test that --dev flag bypasses cached repo and uses builtin package repo."""
+    """Test that --fresh flag bypasses cached repo and uses builtin package repo."""
     spec = spack.concretize.concretize_one("mpileaks")
     PackageInstaller([spec.package], fake=True).install()
 
@@ -599,7 +599,7 @@ def test_load_dev_bypasses_cached_repo(
     for repo_path in cached_repo_paths:
         os.remove(repo_path)
 
-    output = load(shell, "--dev", "mpileaks")
+    output = load(shell, "--fresh", "mpileaks")
 
     assert spec.prefix in output
     assert set_cmake in output
@@ -620,10 +620,10 @@ def test_load_dev_bypasses_cached_repo(
         ]
     ),
 )
-def test_unload_dev_bypasses_cached_script(
+def test_unload_fresh_bypasses_cached_script(
     shell, unset_hash, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
-    """Test that --dev flag bypasses cached scripts for unload and generates fresh
+    """Test that --fresh flag bypasses cached scripts for unload and generates fresh
     environment modifications."""
     spec = spack.concretize.concretize_one("mpileaks")
     PackageInstaller([spec.package], fake=True).install()
@@ -635,7 +635,7 @@ def test_unload_dev_bypasses_cached_script(
 
     os.remove(unload_script_path)
 
-    output = unload(shell, "--dev", "mpileaks")
+    output = unload(shell, "--fresh", "mpileaks")
 
     assert not os.path.exists(unload_script_path)
     assert unset_hash in output
@@ -656,10 +656,10 @@ def test_unload_dev_bypasses_cached_script(
         ]
     ),
 )
-def test_unload_dev_bypasses_cached_repo(
+def test_unload_fresh_bypasses_cached_repo(
     shell, unset_hash, install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
-    """Test that --dev flag bypasses cached repo for unload and uses builtin package
+    """Test that --fresh flag bypasses cached repo for unload and uses builtin package
     repo."""
     spec = spack.concretize.concretize_one("mpileaks")
     PackageInstaller([spec.package], fake=True).install()
@@ -671,6 +671,6 @@ def test_unload_dev_bypasses_cached_repo(
     for repo_path in cached_repo_paths:
         os.remove(repo_path)
 
-    output = unload(shell, "--dev", "mpileaks")
+    output = unload(shell, "--fresh", "mpileaks")
 
     assert unset_hash in output
