@@ -126,6 +126,7 @@ Migration of Spack prefix resources is skipped when:
 
 - The old resource location doesn't exist;
 - The command being invoked is `spack isolate` (detected from raw `sys.argv`);
+- The isolate scope directory `$spack/etc/spack/isolate` exists (indicating a prior `spack isolate` call);
 - Migration has already completed (`.migration-done` marker exists);
 - The user declines migration when prompted (interactive);
 - The process is non-interactive and has no explicit approval.
@@ -222,19 +223,20 @@ After a migration attempt completes (marked by `.migration-done`):
 
 ## 3.8 Home directory migration
 
-User configuration and package repositories in `~/.spack` are automatically migrated to the new XDG locations (`~/.config/spack` and `~/.cache/spack/package_repos`). Home directory migration is tied to `$spack` prefix migration: both are skipped if `$spack/.migration-done` exists. This means that any prior call to `spack isolate` (which writes the marker) disables home directory migration.
+User configuration and package repositories in `~/.spack` are automatically migrated to the new XDG locations (`~/.config/spack` and `~/.local/share/spack/package_repos`). Home directory migration is tied to `$spack` prefix migration: both are skipped if `$spack/etc/spack/isolate` exists (created by `spack isolate`) or if `$spack/.migration-done` exists.
 
 This migration runs at config module load time (before the CONFIG singleton exists) when:
 
 - The `.migration-done` marker does not exist in the Spack prefix. Home migration alone does not create that marker or any other migration-related file in the Spack prefix.
 - The command being invoked is not `spack isolate` (detected from raw `sys.argv`).
+- The isolate scope directory `$spack/etc/spack/isolate` does not exist (which would indicate a prior `spack isolate` call).
 - `~/.spack` exists and contains configuration files.
 - `~/.config/spack` either does not exist or is empty.
 
 For package repositories:
 
 - The old location is `~/.spack/package_repos`.
-- The new location is `~/.cache/spack/package_repos` (using the default cache home).
+- The new location is `~/.local/share/spack/package_repos` (using the default data home).
 - Migration only occurs if the new location does not exist and the old location exists.
 
 This allows users who:
@@ -265,15 +267,15 @@ The migration target is determined by the following precedence (checked in order
 
 3. **Default**: If neither variable is set, config is migrated to `~/.config/spack` (the XDG default for config home).
 
-**Package repositories migration** (`~/.spack/package_repos` → cache location):
+**Package repositories migration** (`~/.spack/package_repos` → data location):
 
 The migration target is determined by:
 
-1. **`SPACK_CACHE_HOME`**: If set, repositories are migrated to `$SPACK_CACHE_HOME/package_repos`.
+1. **`SPACK_DATA_HOME`**: If set, repositories are migrated to `$SPACK_DATA_HOME/package_repos`.
 
-2. **`XDG_CACHE_HOME`**: If set and `SPACK_CACHE_HOME` is not, repositories are migrated to `$XDG_CACHE_HOME/spack/package_repos`.
+2. **`XDG_DATA_HOME`**: If set and `SPACK_DATA_HOME` is not, repositories are migrated to `$XDG_DATA_HOME/spack/package_repos`.
 
-3. **Default**: If neither variable is set, repositories are migrated to `~/.cache/spack/package_repos` (the XDG default for cache home).
+3. **Default**: If neither variable is set, repositories are migrated to `~/.local/share/spack/package_repos` (the XDG default for data home).
 
 **Runtime path resolution**: At runtime (after config is loaded), Spack's user config path is determined by the `path_override_env_var` setting in `etc/spack/standard_scopes/include.yaml`:
 
@@ -470,7 +472,7 @@ User config and package repositories are migrated from `~/.spack` independently 
   - Stages all config files to `.spack-config-staging` before atomically renaming to `spack`.
   - Another Spack instance will never see partial config files; the directory appears atomically.
 
-- **Package repositories** (`~/.spack/package_repos` → `~/.cache/spack/package_repos`):
+- **Package repositories** (`~/.spack/package_repos` → `~/.local/share/spack/package_repos`):
   - Uses a sibling lock (`.spack-package-repos-migration-lock`) to serialize concurrent migrations.
   - Stages the entire tree to `.package-repos-migration` before atomically renaming.
   - Another Spack instance will never see a partial repository tree.
@@ -495,7 +497,6 @@ This section provides implementation-level details of the locking algorithm and 
 7. If approved, Spack copies old resources from old default locations to fixed new default locations, regardless of effective `config:locations` or resource-specific configuration. Even if the copy is successful, the old resources are kept in place. GPG is the exception when `SPACK_GNUPGHOME` is set: Spack preserves the selected GPG home and old import-keys directory rather than copying them.
 8. Layout scope is updated to point at old locations for: installs (never migrated) or resources whose copy operation fails (e.g. gpg keys already exist at destination)
 9. Migration writes a `$spack/.migration-done` file
-10. `spack isolate` writes `$spack/.migration-done` only when it detects old `$spack` resources; fresh isolation does not create migration state
 
 ## 7.2 Rationale and invariants
 
