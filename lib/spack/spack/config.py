@@ -2762,7 +2762,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
     )
 
     deadline = time.monotonic() + timeout
-    update_interval = 1  # Update countdown every second
+    prompt = "Proceed with copying these resources? [y/N]"
 
     while True:
         remaining = deadline - time.monotonic()
@@ -2775,15 +2775,17 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
             )
             return False
 
-        sys.stderr.write(
-            f"\rProceed with copying these resources? [y/N] (timeout in {remaining:.2f}s) "
-        )
-        sys.stderr.flush()
-        answer = lang.readline_with_timeout(min(remaining, update_interval))
+        answer = lang.readline_with_timeout(prompt, remaining, update_interval=1.0)
 
-        # If no input yet, continue looping to update the countdown
         if answer is None:
-            continue
+            # Timeout expired
+            sys.stderr.write("\r" + " " * 80 + "\r")  # Clear the line
+            sys.stderr.flush()
+            tty.info(
+                "No response received; keeping resources in their old locations.",
+                stream=sys.stderr,
+            )
+            return False
 
         answer = answer.strip().lower()
         if answer in ("y", "yes"):
@@ -2793,8 +2795,9 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
             return False
         else:
             sys.stderr.write(
-                f'Must enter (y)es or (n)o or newline (implied "no")," got: "{answer}"\n'
+                f'Must enter (y)es or (n)o or newline (implied "no"), got: "{answer}"\n'
             )
+            # Loop back and ask again with remaining time
 
 
 def _do_migrate_spack_prefix(old_resources):
