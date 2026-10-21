@@ -22,26 +22,23 @@ How to override
 
 In order of priority (highest first):
 
-1. **Specific config keys** for individual paths - set ``config:install_tree:root``, ``config:environments_root``, ``config:license_dir``, ``config:source_cache``, ``config:gpg_path``, or ``config:gpg_keys_path`` in any user/site/system scope.
+1. Specific config keys for individual paths: set ``config:install_tree:root``, ``config:environments_root``, ``config:license_dir``, ``config:source_cache``, ``config:gpg_path``, or ``config:gpg_keys_path`` in any user/site/system scope.
 
-2. **Layout roots** - set ``config:locations:{data,state,cache}`` to redirect everything that uses the corresponding substitution.
+2. Data-category config keys: set ``config:locations:{data,state,cache}`` to redirect everything that uses the corresponding substitution.
 
-3. **Env vars** for individual homes - ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, or ``SPACK_CACHE_HOME``.
+3. Env vars for individual homes: - ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, or ``SPACK_CACHE_HOME``.
    The default configuration allows these environment variables to influence the associated config variable.
-
-Config locations themselves - ``user_config_path``, ``system_config_path``, the entry-point ``include.yaml`` - are NOT in config (they bootstrap config).
-Override them with ``SPACK_USER_CONFIG_PATH``, ``SPACK_SYSTEM_CONFIG_PATH``, or ``SPACK_DISABLE_LOCAL_CONFIG``.
 
 Path substitutions
 ------------------
 
 Config values can reference these in any string field:
 
-* ``$data_home``        - ``config:locations:data``, defaults to ``~/.local/share/spack``.
-* ``$state_home``       - ``config:locations:state``, defaults to ``~/.local/state/spack``.
-* ``$cache_home``       - ``config:locations:cache``, defaults to ``~/.cache/spack``
-* ``$user_cache_path``  - alias for ``$state_home`` (legacy)
-* ``$spack``            - the Spack instance's prefix
+* ``$data_home``         - ``config:locations:data``, defaults to ``~/.local/share/spack``.
+* ``$state_home``        - ``config:locations:state``, defaults to ``~/.local/state/spack``.
+* ``$cache_home``        - ``config:locations:cache``, defaults to ``~/.cache/spack``
+* ``$user_cache_path``   - alias for ``$state_home`` (legacy)
+* ``$spack``             - the Spack instance's prefix
 * ``$spack_instance_id`` - hash distinguishing individual Spack instances
 
 Migration of ``$spack``-internal data for older instances
