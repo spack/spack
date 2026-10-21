@@ -521,7 +521,7 @@ def env_deactivate(args):
         tty.die("No environment is currently active.")
 
     current_env = active_environment()
-    view = os.environ.get("SPACK_ENV_VIEW", "default")
+    view = os.environ.get("SPACK_ENV_VIEW", None)
 
     if args.fresh:
         prefix_cmds, cmds = env_script.get_deactivate_commands(

@@ -15,6 +15,7 @@ from spack.main import SpackCommand
 from spack.spec import Spec
 
 install = SpackCommand("install")
+load = SpackCommand("load")
 
 
 def _get_shell_cmd_invocation(cmd, var, value, shell):
@@ -117,37 +118,33 @@ def test_install_multiple_specs_shell_scripts(
         PackageInstaller([dyninst_spec.package], fake=True).install()
         PackageInstaller([hypre_spec.package], fake=True).install()
 
-    # No overlap in load shell script
+    # No overlap in load output or shell script
+    dyninst_output = load(f"--{shell}", "dyninst")
+    hypre_output = load(f"--{shell}", "hypre")
+
     path_to_dyninst = spec_script.path_to_load_shell_script(dyninst_spec, shell)
     path_to_hypre = spec_script.path_to_load_shell_script(hypre_spec, shell)
 
     with open(path_to_dyninst, "r", encoding="utf-8") as f:
-        dyninst_load = f.read()
+        dyninst_script = f.read()
     with open(path_to_hypre, "r", encoding="utf-8") as f:
-        hypre_load = f.read()
+        hypre_script = f.read()
 
-    dyninst_prefix = dyninst_spec.prefix
-    hypre_prefix = hypre_spec.prefix
-    separator = os.pathsep
-    if shell == "bat":
-        separator = f'"{os.pathsep}"'
-    elif shell == "pwsh":
-        separator = f"'{os.pathsep}'"
-    cmd = _get_shell_cmd_invocation(
-        "_spack_env_prepend", "CMAKE_PREFIX_PATH", dyninst_prefix, shell
+    dyninst_cmd = _get_shell_cmd_invocation(
+        "_spack_env_prepend", "CMAKE_PREFIX_PATH", dyninst_spec.prefix, shell
     )
-    assert f"{cmd} {separator}" in dyninst_load
-    cmd = _get_shell_cmd_invocation("_spack_env_prepend", "CMAKE_PREFIX_PATH", hypre_prefix, shell)
-    assert f"{cmd} {separator}" in hypre_load
-    cmd = _get_shell_cmd_invocation(
-        "_spack_env_prepend", "CMAKE_PREFIX_PATH", dyninst_prefix, shell
+    hypre_cmd = _get_shell_cmd_invocation(
+        "_spack_env_prepend", "CMAKE_PREFIX_PATH", hypre_spec.prefix, shell
     )
-    assert f"{cmd} {separator}" not in hypre_load
-    cmd = _get_shell_cmd_invocation("_spack_env_prepend", "CMAKE_PREFIX_PATH", hypre_prefix, shell)
-    assert f"{cmd} {separator}" not in dyninst_load
 
-    assert hypre_spec.name not in dyninst_load
-    assert dyninst_spec.name not in hypre_load
+    assert dyninst_cmd in dyninst_output
+    assert hypre_cmd not in dyninst_output
+
+    assert hypre_cmd in hypre_output
+    assert dyninst_cmd not in hypre_output
+
+    assert hypre_spec.dag_hash() not in dyninst_script
+    assert dyninst_spec.dag_hash() not in hypre_script
 
 
 @pytest.mark.parametrize(

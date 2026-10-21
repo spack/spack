@@ -351,6 +351,8 @@ def test_env_scripts_path_after_relocation_with_external_view(
     activate_output = env("activate", f"--{shell}", "orig")
     activate_content = _get_cmds_from_script(activate_output, shell)
 
+    os.environ["SPACK_ENV_VIEW"] = "default"
+
     if "bat" == shell:
         prepend_cmake = f'%_spack_env_prepend% "CMAKE_PREFIX_PATH" {external_view_dir} ;'
     else:
