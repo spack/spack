@@ -3080,9 +3080,6 @@ def _perform_migration_at_module_load():
 def _perform_migration():
     # Because this rewrites config, it should either run first thing (before config
     # is loaded) or last (right before termination of the process)
-    marker_path = _migration_done_marker_path()
-    if os.path.exists(marker_path):
-        return
 
     old_resources = _detect_old_resources()
 
@@ -3108,6 +3105,10 @@ def _perform_migration():
     # the spack prefix that need to be migrated, but not if the
     # `spack isolate` command has been run
     _do_migrate_home()
+
+    marker_path = _migration_done_marker_path()
+    if os.path.exists(marker_path):
+        return
 
     if any(old_resources.values()):
         lock_path = _migration_lock_path()

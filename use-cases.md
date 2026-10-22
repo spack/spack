@@ -223,15 +223,18 @@ After a migration attempt completes (marked by `.migration-done`):
 
 ## 3.8 Home directory migration
 
-User configuration and package repositories in `~/.spack` are automatically migrated to the new XDG locations (`~/.config/spack` and `~/.local/share/spack/package_repos`). Home directory migration is tied to `$spack` prefix migration: both are skipped if `$spack/etc/spack/isolate` exists (created by `spack isolate`) or if `$spack/.migration-done` exists.
+User configuration and package repositories in `~/.spack` are automatically migrated to the new XDG locations (`~/.config/spack` and `~/.local/share/spack/package_repos`). Home directory migration is independent of `$spack` prefix migration: the `.migration-done` marker only prevents re-evaluation of `$spack` prefix resources, not home directory resources. This allows multiple users sharing the same Spack instance to each migrate their own home configurations when they first use the shared instance.
+
+Home directory migration is skipped if `$spack/etc/spack/isolate` exists (created by `spack isolate`), since isolation establishes a separate configuration baseline.
 
 This migration runs at config module load time (before the CONFIG singleton exists) when:
 
-- The `.migration-done` marker does not exist in the Spack prefix. Home migration alone does not create that marker or any other migration-related file in the Spack prefix.
 - The command being invoked is not `spack isolate` (detected from raw `sys.argv`).
 - The isolate scope directory `$spack/etc/spack/isolate` does not exist (which would indicate a prior `spack isolate` call).
 - `~/.spack` exists and contains configuration files.
 - `~/.config/spack` either does not exist or is empty.
+
+Home migration runs independently of whether the `.migration-done` marker exists, and home migration alone does not create that marker or any other migration-related file in the Spack prefix.
 
 For package repositories:
 
@@ -488,15 +491,16 @@ This section provides implementation-level details of the locking algorithm and 
 ## 7.1 Algorithm steps
 
 0. Migration happens at config module load time, before the CONFIG singleton exists. This means migration cannot check user configuration.
-1. If `.migration-done` marker exists, all migration logic is skipped
-2. If the command is `spack isolate` (detected from raw `sys.argv`), migration is skipped
-3. If no old `$spack` resources are present, prefix migration is skipped without creating a migration lock, layout scope, or `.migration-done` marker; independently eligible home-directory migration may still run without writing into the Spack prefix
-4. Otherwise, Spack holds a global `$spack/.migration-lock` before checking whether to migrate
-5. Spack prompts the user to approve migration (interactive sessions) or checks for explicit approval (non-interactive). If the user declines or the process is non-interactive without explicit approval, migration proceeds to step 8 (write layout scope for retained resources) and step 9 (write marker).
-6. Destinations for individual components are locked while migrating those components (e.g. envs)
-7. If approved, Spack copies old resources from old default locations to fixed new default locations, regardless of effective `config:locations` or resource-specific configuration. Even if the copy is successful, the old resources are kept in place. GPG is the exception when `SPACK_GNUPGHOME` is set: Spack preserves the selected GPG home and old import-keys directory rather than copying them.
-8. Layout scope is updated to point at old locations for: installs (never migrated) or resources whose copy operation fails (e.g. gpg keys already exist at destination)
-9. Migration writes a `$spack/.migration-done` file
+1. Home directory migration (`~/.spack` → XDG locations) is evaluated independently of the `.migration-done` marker and runs if eligible (see section 3.8). Home migration does not create any files in the Spack prefix.
+2. If `.migration-done` marker exists, `$spack` prefix migration logic is skipped (but home migration from step 1 may have run)
+3. If the command is `spack isolate` (detected from raw `sys.argv`), both prefix and home migration are skipped
+4. If no old `$spack` resources are present, prefix migration is skipped without creating a migration lock, layout scope, or `.migration-done` marker
+5. Otherwise, Spack holds a global `$spack/.migration-lock` before checking whether to migrate prefix resources
+6. Spack prompts the user to approve migration (interactive sessions) or checks for explicit approval (non-interactive). If the user declines or the process is non-interactive without explicit approval, migration proceeds to step 9 (write layout scope for retained resources) and step 10 (write marker).
+7. Destinations for individual components are locked while migrating those components (e.g. envs)
+8. If approved, Spack copies old resources from old default locations to fixed new default locations, regardless of effective `config:locations` or resource-specific configuration. Even if the copy is successful, the old resources are kept in place. GPG is the exception when `SPACK_GNUPGHOME` is set: Spack preserves the selected GPG home and old import-keys directory rather than copying them.
+9. Layout scope is updated to point at old locations for: installs (never migrated) or resources whose copy operation fails (e.g. gpg keys already exist at destination)
+10. Migration writes a `$spack/.migration-done` file to prevent re-evaluation of `$spack` prefix resources on subsequent invocations
 
 ## 7.2 Rationale and invariants
 
@@ -531,6 +535,7 @@ If a migration process succeeds in copying a resource but crashes before writing
 ### The migration-done marker
 
 - Migration happens at config module load time, before CONFIG exists
-- The marker is checked at the start of module load to determine if migration should be skipped
+- The marker is checked at the start of module load to determine if `$spack` prefix migration should be skipped
+- The marker does NOT prevent home directory migration, allowing multiple users sharing the same Spack instance to each migrate their own `~/.spack` configurations
 - `spack isolate` detection happens by parsing raw `sys.argv` (before CONFIG exists) to avoid migrating when isolation is being set up
-- Once the marker exists, migration is never re-evaluated on subsequent invocations
+- Once the marker exists, `$spack` prefix migration is never re-evaluated on subsequent invocations
