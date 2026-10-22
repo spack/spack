@@ -19,7 +19,7 @@ permissions:
 jobs:
   distros-clingo-sources:
     if: github.repository == 'spack/spack'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     strategy:
       matrix:
@@ -58,10 +58,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ["macos-15-intel", "macos-latest", "ubuntu-24.04"]
+        runner: ["macos-15-intel", "macos-latest", "ubuntu-latest"]
     steps:
       - name: Setup macOS
-        if: ${{ matrix.runner != 'ubuntu-24.04' }}
+        if: ${{ matrix.runner != 'ubuntu-latest' }}
         run: brew install bison tree
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
@@ -84,10 +84,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ["macos-15-intel", "macos-latest", "ubuntu-24.04"]
+        runner: ["macos-15-intel", "macos-latest", "ubuntu-latest"]
     steps:
       - name: Setup macOS
-        if: ${{ matrix.runner != 'ubuntu-24.04' }}
+        if: ${{ matrix.runner != 'ubuntu-latest' }}
         run: brew install tree gawk
       - name: Remove system executables
         run: |
@@ -191,7 +191,7 @@ jobs:
           tree $env:userprofile/.spack/bootstrap/store/
 
   dev-bootstrap:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     container: registry.access.redhat.com/ubi8/ubi
     steps:
     - name: Install dependencies
