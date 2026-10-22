@@ -2232,12 +2232,19 @@ def _migrate_with_staging(
         tty.debug(f"{description.capitalize()} migrated from {old_path} to {new_path}")
         return True
 
+    except MigrationStagingError as e:
+        tty.debug(f"Cannot migrate {description}: {e}")
+        return False
+
     except (OSError, shutil.Error) as e:
         tty.warn(f"Failed to migrate {description}: {e}")
+        return False
+
+    finally:
+        # Clean up staging directory if it still exists
         if os.path.exists(staging_path):
             shutil.rmtree(staging_path, ignore_errors=True)
-        return False
-    finally:
+
         if lock_acquired and lock is not None:
             lock.release_write()
 
@@ -2473,8 +2480,52 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
 
     # Define staging callback for environment migration
     def prepare_env_staging(old_path, staging_path, new_path):
-        """Copy environment and rewrite paths."""
-        shutil.copytree(old_path, staging_path, ignore=ignore_views)
+        """Copy environment and rewrite paths.
+
+        Raises:
+            MigrationStagingError: If the environment cannot be safely migrated due to:
+                - The env directory itself being a symlink
+                - Symlinks inside the env pointing to absolute paths within the old env
+                - Symlinks inside the env pointing outside the staging directory
+        """
+        # Check if the env directory itself is a symlink
+        if os.path.islink(old_path):
+            raise MigrationStagingError(f"Environment directory {old_path} is a symlink")
+
+        shutil.copytree(old_path, staging_path, symlinks=True, ignore=ignore_views)
+
+        # Check all symlinks in the copied tree
+        for root, dirs, files in os.walk(staging_path):
+            for name in dirs + files:
+                path = os.path.join(root, name)
+                if os.path.islink(path):
+                    # Resolve symlink target to absolute path
+                    abs_target = os.path.normpath(
+                        filesystem.resolve_link_target_relative_to_the_link(path)
+                    )
+
+                    old_path_norm = os.path.normpath(old_path)
+                    staging_norm = os.path.normpath(staging_path)
+
+                    # Check if target points into the old environment
+                    if (
+                        abs_target.startswith(old_path_norm + os.sep)
+                        or abs_target == old_path_norm
+                    ):
+                        raise MigrationStagingError(
+                            f"Environment {old_path} contains symlink "
+                            f"{path} -> {os.readlink(path)} pointing into old environment"
+                        )
+
+                    # Check if target points outside the staging dir
+                    if (
+                        not abs_target.startswith(staging_norm + os.sep)
+                        and abs_target != staging_norm
+                    ):
+                        raise MigrationStagingError(
+                            f"Environment {old_path} contains symlink "
+                            f"{path} -> {os.readlink(path)} pointing outside environment"
+                        )
 
         # Rewrite paths in environment config files
         yaml_files = filesystem.find(staging_path, ["*.yaml", "*.yml"], recursive=True)
@@ -3901,6 +3952,10 @@ class ConfigSectionError(spack.error.ConfigError):
 
 class ConfigFileError(spack.error.ConfigError):
     """Issue reading or accessing a configuration file."""
+
+
+class MigrationStagingError(spack.error.SpackError):
+    """Raised when a resource cannot be safely staged for migration."""
 
 
 class ConfigFormatError(spack.error.ConfigError):
