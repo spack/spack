@@ -2224,3 +2224,67 @@ def test_parser_constructs_nodes_of_given_class():
     edges = list(spec.traverse_edges(root=False))
     assert [type(e.spec) for e in edges] == [SpecSubclass] * 3
     assert [type(e.when) for e in edges if e.when is not EMPTY_SPEC] == [SpecSubclass] * 2
+
+
+@pytest.fixture
+def host_gpus(monkeypatch):
+    """Patches GPU detection to return the archspec nodes with the given names."""
+    import spack.vendor.archspec.gpu as archspec_gpu
+
+    import spack.gpus
+
+    def _set(*names):
+        monkeypatch.setattr(spack.gpus, "host", lambda: [archspec_gpu.TARGETS[n] for n in names])
+        spack.gpus.host_variants.cache_clear()
+
+    yield _set
+    spack.gpus.host_variants.cache_clear()
+
+
+@pytest.mark.parametrize(
+    "detected,text,expected",
+    [
+        # the reserved value is replaced by the detected GPUs of the variant's vendor
+        (["80"], "x cuda_arch=host_default", "x cuda_arch=80"),
+        (["80", "gfx942"], "x cuda_arch=host_default", "x cuda_arch=80"),
+        (["80", "gfx942"], "x amdgpu_target=host_default", "x amdgpu_target=gfx942"),
+        # several GPUs of the vendor become a fat binary, each one once; multi-valued variants
+        # sort their values, so detection order does not leak into the spec
+        (["90", "80", "90"], "x cuda_arch=host_default", "x cuda_arch=80,90"),
+        # it also works for propagated variants
+        (["80"], "x cuda_arch==host_default", "x cuda_arch==80"),
+        # literal values are never touched by detection
+        (["80"], "x cuda_arch=86", "x cuda_arch=86"),
+        (["80"], "x +cuda", "x+cuda"),
+    ],
+)
+def test_host_default_gpu_variants_are_resolved_at_parse_time(
+    host_gpus, detected, text, expected
+):
+    host_gpus(*detected)
+    spec = SpecParser(text, Spec).next_spec()
+    assert str(spec) == expected
+    # the reserved value never reaches the variant
+    assert "host_default" not in str(spec.variants) + str(spec.propagated_variants)
+
+
+@pytest.mark.parametrize(
+    "detected,text,match_string",
+    [
+        ([], "x cuda_arch=host_default", "requires a nvidia GPU"),
+        (["gfx942"], "x cuda_arch=host_default", "requires a nvidia GPU"),
+        (["80"], "x amdgpu_target=host_default", "requires a amd GPU"),
+    ],
+)
+def test_host_default_without_a_matching_gpu_is_a_parse_error(
+    host_gpus, detected, text, match_string
+):
+    host_gpus(*detected)
+    with pytest.raises(SpecParsingError, match=match_string):
+        SpecParser(text, Spec).all_specs()
+
+
+def test_host_default_is_only_reserved_for_gpu_variants(host_gpus):
+    """Other variants may use the word as a plain value."""
+    host_gpus("80")
+    assert str(SpecParser("x foo=host_default", Spec).next_spec()) == "x foo=host_default"
