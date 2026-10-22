@@ -2429,33 +2429,30 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         """Exclude view directories during environment copy.
 
         Skips:
-        - .spack-env directories (default location for views, both old and new format)
-        - Directories named "view" or "._view" (common view names/containers)
-        - Directories with .spack-view marker (custom-location views created after June 2026)
-
-        This handles both old-format views (symlinks to ._view/<hash>/) and new-format views
-        (directories with .spack-view marker), whether in default or custom locations.
+        - .spack-env directories (always - contains default views at .spack-env/view)
+        - ._view at environment root only (old format pre-June 2026: symlinks to ._view/<hash>/)
+        - Directories with .spack-view marker anywhere (custom-location views, June 2026+)
 
         Note: Skipping .spack-env also excludes cached repos and locks as a side effect.
         """
         ignored = []
+        is_env_root = os.path.normpath(directory) == os.path.normpath(src_dir)
+
         for name in names:
-            # Skip .spack-env directory which contains views by default
+            path = os.path.join(directory, name)
+
+            # Always skip .spack-env directory (contains default views)
             if name == ".spack-env":
-                path = os.path.join(directory, name)
                 ignored.append(name)
                 tty.debug(f"Excluding .spack-env directory: {path}")
-            # Skip directories with common view names (both default and old-format container)
-            elif name in ("view", "._view"):
-                path = os.path.join(directory, name)
+            # Skip ._view ONLY at environment root (old format container)
+            elif is_env_root and name == "._view":
                 ignored.append(name)
-                tty.debug(f"Excluding view directory: {path}")
-            # Also skip custom-location views identified by marker file
-            else:
-                path = os.path.join(directory, name)
-                if os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
-                    ignored.append(name)
-                    tty.debug(f"Excluding view directory: {path}")
+                tty.debug(f"Excluding root-level ._view directory: {path}")
+            # Skip custom-location views with marker file (anywhere in tree)
+            elif os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
+                ignored.append(name)
+                tty.debug(f"Excluding view directory with marker: {path}")
         return ignored
 
     # Define staging callback for environment migration
