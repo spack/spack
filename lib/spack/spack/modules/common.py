@@ -1368,8 +1368,10 @@ class BaseModuleFileWriter:
             # symlinks do not cause an error.
             default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
             default_tmp = os.path.join(os.path.dirname(self.layout.filename), ".tmp_spack_default")
-            os.symlink(self.layout.filename, default_tmp)
-            os.rename(default_tmp, default_path)
+            spack.util.filesystem.symlink(self.layout.filename, default_tmp)
+            # same function as rename, but on Windows replace gets the desired
+            # overwrite existing file behavior
+            os.replace(default_tmp, default_path)
 
     def update_module_hiddenness(self, remove: bool = False) -> None:
         """Update modulerc file corresponding to module to add or remove
