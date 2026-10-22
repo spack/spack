@@ -2868,9 +2868,13 @@ def _do_migrate_spack_prefix(old_resources):
         parts.append("Spack migrated old resources.")
         parts.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
         if "environments" in migrated_resources:
-            parts.append(
-                "  - Environment views were not copied. Activate each environment and run "
-                "`spack env view regenerate` to recreate them."
+            parts.extend(
+                [
+                    "  - Environment views were not copied. Activate each environment and run "
+                    "`spack env view regenerate` to recreate them.",
+                    "  - If you have an environment activated by a prior command (not this one) "
+                    "you will need to deactivate and then reactivate it.",
+                ]
             )
     else:
         parts.append("No Spack-internal resources were migrated")
