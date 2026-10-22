@@ -265,7 +265,7 @@ def display_env(env, args, decorator, results, status_fn=None):
     tty.msg(f"In environment {env.name} ({root_spec_str})")
 
     concrete_specs = {x.root: env.specs_by_hash[x.hash] for x in env.concretized_roots}
-    _status_fn = status_fn if status_fn is not None else spack.store.STORE.db.install_status
+    _status_fn = ev.install_status_fn(status_fn)
 
     def root_decorator(spec, string):
         """Decorate root specs with their install status if needed"""
@@ -413,7 +413,9 @@ def find(parser, args):
 
     if args.install_status or args.show_concretized:
         spack.binary_distribution.load_buildcache_index()
-        status_fn = cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+        status_fn = ev.install_status_fn(
+            cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+        )
     else:
         status_fn = None
 

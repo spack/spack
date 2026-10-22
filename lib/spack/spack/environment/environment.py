@@ -2279,6 +2279,15 @@ class Environment:
         )
         return result
 
+    def not_installable_hashes(self) -> Set[str]:
+        """Hashes of the specs that are not installed because of ``install: false``."""
+        marked = self._install_false_hashes()
+        installable = {s.dag_hash() for s in self.installable_roots()}
+        blocked = {
+            s.dag_hash() for s in self._unmarked_roots() if _install_false_dependencies(s, marked)
+        }
+        return (marked | blocked) - installable
+
     def installable_roots(self) -> List[Spec]:
         """Same as concrete_roots(), but excludes roots marked ``install: false``, and roots that
         depend on them."""
@@ -3082,6 +3091,31 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
+def install_status_fn(
+    status_fn: Optional[Callable[[Spec], spack.spec.InstallStatus]] = None,
+) -> Callable[[Spec], spack.spec.InstallStatus]:
+    """Status for specs that aren't installed because of ``install:false``."""
+    base = status_fn if status_fn is not None else spack.store.STORE.db.install_status
+    env = active_environment()
+    if env is None:
+        return base
+
+    not_installable = env.not_installable_hashes()
+    if not not_installable:
+        return base
+
+    def _status_fn(spec: Spec) -> spack.spec.InstallStatus:
+        status = base(spec)
+        if (
+            status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
+            and spec.dag_hash() in not_installable
+        ):
+            return spack.spec.InstallStatus.not_installable
+        return status
+
+    return _status_fn
+
+
 def display_specs(
     specs: List[spack.spec.Spec],
     *,
@@ -3102,7 +3136,7 @@ def display_specs(
         format=spack.spec.DISPLAY_FORMAT,
         hashes=True,
         hashlen=7,
-        status_fn=status_fn if status_fn is not None else spack.store.STORE.db.install_status,
+        status_fn=install_status_fn(status_fn),
         version_style_fn=(
             spack.package_base.non_preferred_version if highlight_non_defaults else None
         ),

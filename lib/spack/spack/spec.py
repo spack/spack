@@ -201,6 +201,7 @@ class InstallStatus(enum.Enum):
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
     buildcache = "@g{[b]}  "
+    not_installable = "@y{[x]}  "
 
 
 # regexes used in spec formatting
