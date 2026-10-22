@@ -2278,8 +2278,19 @@ def _prepare_config_staging(old_location, staging_path, new_location):
 
 
 def _prepare_package_repos_staging(old_path, staging_path, new_path):
-    """Callback for package repos migration - simple copytree."""
-    shutil.copytree(old_path, staging_path, symlinks=True)
+    """Callback for package repos migration - copy while holding old repo lock.
+
+    Acquires the old package-repository.lock to prevent copying a repo that's
+    currently being cloned by another Spack instance using the old locations.
+    """
+    # Acquire the old lock to prevent copying a half-cloned repo
+    # The old lock was in ~/.spack (parent of old package_repos location)
+    old_lock_dir = os.path.dirname(old_path)
+    old_lock_path = os.path.join(old_lock_dir, "package-repository.lock")
+
+    old_repo_lock = spack.util.lock.Lock(old_lock_path)
+    with spack.util.lock.ReadTransaction(old_repo_lock):
+        shutil.copytree(old_path, staging_path, symlinks=True)
 
 
 def _prepare_gpg_staging(old_path, staging_path, marker_name):
