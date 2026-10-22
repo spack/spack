@@ -81,7 +81,7 @@ jobs:
       run: |
           sudo apt-get -y update
           # Needed for shell tests
-          sudo apt-get install -y coreutils csh zsh tcsh fish dash bash subversion mercurial
+          sudo apt-get install -y coreutils csh zsh tcsh fish dash bash subversion
     # On ubuntu 24.04, kcov was removed. It may come back in some future Ubuntu
     - name: Set up Homebrew
       id: set-up-homebrew
