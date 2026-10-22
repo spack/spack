@@ -33,6 +33,14 @@ duplicate_penalty(node(ID1, Package), 1, "version")
    ID2 = ID1 + 1, Weight2 < Weight1,
    max_dupes(Virtual, X), X > 1, ID2 < X.
 
+% Symmetry-breaking rule. Two nodes of a language virtual, each with one provider
+% of the same package, are numbered like their providers
+:- provider(node(ProviderID1, Provider), node(ID1, Language)),
+   provider(node(ProviderID2, Provider), node(ID2, Language)),
+   language(Language), ID1 < ID2, ProviderID2 < ProviderID1,
+   not multiple_providers(node(ID1, Language)),
+   not multiple_providers(node(ID2, Language)).
+
 % Anonymous variables that appear only in negative body literals like `not
 % foo(..., _, ...)` are projected implicitly by clingo v5, but not in clingo
 % v6. Each predicate below is the explicit projection of an existing predicate
@@ -1179,9 +1187,11 @@ error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
      not has_provider(node(X, Virtual)).
 
+multiple_providers(VirtualNode) :- has_provider(VirtualNode), 2 { provider(P, VirtualNode) }.
+
 error(100, "Multiple providers are required for the same '{0}' virtual", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
-     2 { provider(P, node(X, Virtual)) }.
+     multiple_providers(node(X, Virtual)).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).
@@ -2362,8 +2372,9 @@ opt_criterion(5, "low", "", 0, "target mismatches (reused nodes)").
 opt_criterion(4, "low", "", 0, "version badness (runtimes)").
 opt_criterion(3, "low", "", 0, "non-preferred targets (runtimes)").
 opt_criterion(2, "low", "", 0, "providers on edges").
-opt_criterion(1, "low", "", 0, "version badness on edges").
-opt_criterion(0, "low", "", 0, "penalty on symmetric duplicates").
+% Before "version badness on edges", whose cost does not depend on how duplicates are numbered
+opt_criterion(1, "low", "", 0, "penalty on symmetric duplicates").
+opt_criterion(0, "low", "", 0, "version badness on edges").
 
 %----------------------------------------------------------------------------
 % Show optimization criteria
