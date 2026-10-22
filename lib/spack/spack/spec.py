@@ -80,6 +80,7 @@ from typing import (
 )
 
 import spack.vendor.archspec.cpu
+import spack.vendor.archspec.gpu
 from spack.vendor.typing_extensions import Literal
 
 import spack
@@ -229,6 +230,20 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
     return spack.vendor.archspec.cpu.TARGETS.get(
         name, spack.vendor.archspec.cpu.generic_microarchitecture(name)
     )
+
+
+def _make_gpu_microarch(
+    name: Union[str, spack.vendor.archspec.gpu.GPUMicroarch]
+) -> spack.vendor.archspec.gpu.GPUMicroarch:
+    """Create a GPU Microarch object from archspec's GPU TARGETS dict."""
+    if isinstance(name, spack.vendor.archspec.gpu.GPUMicroarch):
+        return name
+
+    target = spack.vendor.archspec.gpu.TARGETS.get(name)
+    if target is not None:
+        return target
+
+    return spack.vendor.archspec.gpu.GPUMicroarch(name=name, vendor="generic")
 
 
 def _closed_interval_targets(
@@ -540,6 +555,68 @@ class ArchSpec:
                             results.append(n_min.name)
                         elif n_min.family == n_max.family and n_min <= n_max:
                             results.append(f"{n_min}:{n_max}")
+
+        return results
+
+    @staticmethod
+    def _gpu_satisfies(
+        lhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+        rhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+    ) -> bool:
+        """Determines whether the right list (what was requested) is satisfied by the left list
+
+        So long as every node in the rhs list matches with (i.e. is equal to or a descendant of)
+        at least one node in the lhs list, the lhs list satisfies the rhs list."""
+
+        if not rhs:
+            return True
+
+        if not lhs:
+            return False
+
+        for right_node in rhs:
+            covered = False
+            for left_node in lhs:
+                if left_node <= right_node:
+                    covered = True
+                    break
+            if not covered:
+                return False
+
+        return True
+
+    @staticmethod
+    def _gpu_intersects(
+        lhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+        rhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+    ) -> bool:
+        """Whether there is a GPU micro-architecture that code can be built for to run on both
+        sides: a node on one side that is equal to, or an ancestor of, a node on the other. An
+        empty side places no constraint, so it intersects anything."""
+        if not lhs or not rhs:
+            return True
+
+        return bool(ArchSpec._gpu_intersection(lhs, rhs))
+
+    @staticmethod
+    def _gpu_intersection(
+        lhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+        rhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+    ) -> List[spack.vendor.archspec.gpu.GPUMicroarch]:
+        """Computes full intersection between GPU Microarchitectures"""
+        results: List[spack.vendor.archspec.gpu.GPUMicroarch] = []
+
+        if not lhs or not rhs:
+            return results
+
+        for left_node in lhs:
+            for right_node in rhs:
+                if left_node <= right_node:
+                    if left_node not in results:
+                        results.append(left_node)
+                elif right_node < left_node:
+                    if right_node not in results:
+                        results.append(right_node)
 
         return results
 
