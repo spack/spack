@@ -396,6 +396,20 @@ class StandardVersion(ConcreteVersion):
             return self if self == other else VersionList()
         return other.intersection(self)
 
+    def complement(self) -> "VersionList":
+        """Everything except this exact version, i.e. ``[typemin, self)`` and
+        ``(self, typemax]``. Mirrors :meth:`ClosedOpenRange.complement` for the degenerate
+        case of a single version (``@=x``), which appears as a bare ``StandardVersion`` in a
+        ``VersionList``. Needed so that ``drop_*`` directives with a ``when="@=x"`` clause can
+        compute the complement of the removal range (see PR #48947)."""
+        below = ClosedOpenRange(StandardVersion.typemin(), self)
+        above = ClosedOpenRange(_next_version(self), StandardVersion.typemax())
+        if self <= StandardVersion.typemin():
+            return VersionList([above])
+        if self >= StandardVersion.typemax():
+            return VersionList([below])
+        return VersionList([below, above])
+
     def isdevelop(self) -> bool:
         """Triggers on the special case of the ``@develop-like`` version."""
         return any(
@@ -900,6 +914,23 @@ class ClosedOpenRange(VersionType):
 
         raise TypeError(f"'intersection()' not supported for instances of {type(other)}")
 
+    def complement(self):
+        def above():
+            return ClosedOpenRange(self.hi, StandardVersion.typemax())
+
+        def below():
+            return ClosedOpenRange(StandardVersion.typemin(), self.lo)
+
+        if self.lo <= StandardVersion.typemin():
+            if self.hi >= StandardVersion.typemax():
+                return VersionList()
+            else:
+                return above()
+        elif self.hi >= StandardVersion.typemax():
+            return below()
+        else:
+            return below().union(above())
+
 
 def _is_ranged_ref(v: VersionType) -> bool:
     """Whether ``v`` is a git ref constrained to a range, rather than assigned a version."""
@@ -1163,6 +1194,16 @@ class VersionList(VersionType):
         changed = isection.versions != self.versions
         self.versions = isection.versions
         return changed
+
+    def complement(self) -> "VersionList":
+        """Find the complement of this VersionList.
+
+        Return a new VersionList that contains all versions not in this list.
+        """
+        result = VersionList(ver(":"))
+        for val in self:
+            result.intersect(val.complement())  # Using De Morgan's Laws
+        return result
 
     def __getitem__(self, index):
         return self.versions[index]
