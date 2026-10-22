@@ -88,6 +88,7 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.enums
 import spack.error
+import spack.gpus
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -2149,6 +2150,9 @@ class Spec:
             pattern = _NAMESPACE_VALUE if name == "namespace" else _BARE_VALUE
             if not pattern.fullmatch(value):
                 raise ValueError(f"invalid value {value!r} for {name}")
+
+        if name in spack.gpus.VENDOR_BY_VARIANT and value == spack.gpus.HOST_DEFAULT:
+            value = ",".join(spack.gpus.resolve_host_default(name))  # flatten GPUs to CSV string
 
         if name == "arch" or name == "architecture":
             assert isinstance(value, str)  # checked above, for mypy
