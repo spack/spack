@@ -2611,11 +2611,31 @@ compiler_penalty(PackageNode, C-1) :-
       opt_priority(Priority, _, _, _, "providers on edges")
 }.
 
-% Try to use latest versions of nodes as much as possible
+% weight_shifted(Weight, Shifted, I) holds for Shifted = Weight / 2**I, with integer division
+weight_shifted(Weight, Weight, 0) :- pkg_fact(_, version_declared(_, Weight)).
+weight_shifted(Weight, Shifted / 2, I + 1) :- weight_shifted(Weight, Shifted, I), Shifted > 1.
+
+% weight_bit(Weight, I) holds if bit I of Weight is set
+weight_bit(Weight, I) :- weight_shifted(Weight, Shifted, I), Shifted \ 2 = 1.
+
+version_weight_bit(node(X, Package), I)
+  :- version_weight(node(X, Package), Weight),
+     multiple_unification_sets(Package),
+     weight_bit(Weight, I).
+
+% Try to use latest versions of nodes as much as possible.
+%
+% A node has a single version weight, so summing 2**I over its bits gives
+% the same cost as summing the weight. The weights are encoded as bits to
+% reduce the size of the grounded program.
+%
+% For a node with V possible versions and P possible parents:
+% - Minimizing the weight grounds V * P elements.
+% - Minimizing the bits grounds about log2(V) * P elements
+% because all the versions with bit I set map to the same version_weight_bit/2 atom.
 #minimize{
-    Weight@Priority, ParentNode,node(X, Package)
-    : version_weight(node(X, Package), Weight),
-      multiple_unification_sets(Package),
+    2 ** I@Priority, ParentNode,node(X, Package),I
+    : version_weight_bit(node(X, Package), I),
       not attr("root", node(X, Package)),
       depends_on(ParentNode, node(X, Package)),
       opt_priority(Priority, _, _, _, "version badness on edges")
