@@ -206,7 +206,7 @@ function get_sp_flags -d "return leading flags"
         end
 
         # increment argument counter: used in place of bash's `shift` command
-        set i (math $i+1)
+        set -l i (math $i+1)
 
     end
 
