@@ -490,6 +490,8 @@ In those cases, the build system could use some help, for which we give a few ex
    single: phase; before and after callbacks
    single: run_before (decorator)
    single: run_after (decorator)
+   single: run_before_dependent (decorator)
+   single: run_after_dependent (decorator)
    :name: before_after_build_phases
 
 Before and after build phases
@@ -520,6 +522,40 @@ Instead of overriding the entire phase, you can use ``@run_before`` and ``@run_a
 Then ``when="+extras"`` will ensure that the custom post-install phase is only run conditionally.
 
 The function body should contain the actual instructions you want to run before or after the build phase, which can involve :ref:`running executables <running_build_executables>` and creating or copying files to the ``prefix`` directory using convenience functions from :ref:`Spack's Python Package API <python-package-api>`.
+
+Callbacks on dependent phases
+-----------------------------
+
+A dependency can also register code to run before the first phase or after the last phase of
+packages that directly depend on it. Use ``@run_before_dependent`` and
+``@run_after_dependent`` on a method of the dependency package or builder. The required argument
+is a spec constraint selecting dependents, and the callback receives the dependent package
+instance:
+
+.. code-block:: python
+
+   class MyCompiler(CompilerPackage):
+       ...
+
+       @run_before_dependent("my-package")
+       def prepare_dependent_build(self, dependent_pkg):
+           # prepare files owned by the dependent before its first phase
+           ...
+
+       @run_after_dependent("my-package@2:", when="@2:")
+       def collect_dependent_artifacts(self, dependent_pkg):
+           # run after the dependent's final phase
+           ...
+
+The optional ``when`` argument applies to the dependency package, not the dependent.
+Dependency ``run_before_dependent`` callbacks run before the dependent's ``run_before`` callbacks
+on its first phase. Dependency ``run_after_dependent`` callbacks run before the dependent's
+``run_after`` callbacks on its final phase.
+
+Dependency callbacks are considered only for direct dependency nodes and run once per dependency node, even if parallel edges connect the same two nodes.
+Their order follows the direct dependency edge iteration order; there is no guarantee of any ordering relative to dependency relationships among the direct dependencies.
+These callbacks run as part of the dependent's source build, so they should modify only the dependent's build tree or installation prefix.
+They must not modify the already-installed dependency prefix.
 
 .. _overriding-phases:
 
