@@ -2868,6 +2868,9 @@ def _do_migrate_spack_prefix(old_resources):
         parts.append("Spack migrated old resources.")
         parts.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
         if "environments" in migrated_resources:
+            # TODO: we could reinterpret SPACK_ENV if we performed a migration in this
+            # instance, which means that if someone did `spack add ...` that it could be
+            # redirected to the migrated env
             parts.extend(
                 [
                     "  - Environment views were not copied. Activate each environment and run "
