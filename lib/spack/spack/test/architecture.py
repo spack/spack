@@ -11,7 +11,7 @@ import spack.concretize
 import spack.error
 import spack.operating_systems
 import spack.platforms
-from spack.spec import ArchSpec, Spec
+from spack.spec import ArchSpec, Spec, _make_gpu_microarch
 
 
 @pytest.fixture(scope="module")
@@ -107,6 +107,92 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     architecture = ArchSpec(architecture_tuple)
     constraint = ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint)
+
+
+def _gpus(names):
+    """The archspec nodes for a list of GPU names, as the ArchSpec GPU helpers expect them."""
+    return [_make_gpu_microarch(name) for name in names]
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        # a device runs code built for its ancestors: the pair meets at the more generic node
+        (["86"], ["80"], ["80"]),
+        (["80"], ["86"], ["80"]),
+        (["80"], ["80"], ["80"]),
+        (["90a"], ["90"], ["90"]),
+        (["100a"], ["100f"], ["100f"]),
+        (["gfx90a:xnack-"], ["gfx90a"], ["gfx90a"]),
+        # lists meet pairwise, each survivor once, in order of first appearance
+        (["80", "90"], ["86", "90a"], ["80", "90"]),
+        (["80"], ["80", "86"], ["80"]),
+        # no path between the two sides
+        (["89"], ["90"], []),
+        (["gfx90a:xnack-"], ["gfx90a:xnack+"], []),
+        (["gfx90a"], ["gfx942"], []),
+        (["80"], ["gfx90a"], []),
+        # names outside the archspec graph, the ``none`` sentinel included, match only themselves
+        (["none"], ["none"], ["none"]),
+        (["none"], ["80"], []),
+        (["gfx999"], ["gfx999"], ["gfx999"]),
+        # an empty side has nothing to meet
+        ([], ["80"], []),
+        (["80"], [], []),
+    ],
+)
+def test_gpu_intersection(lhs, rhs, expected):
+    result = ArchSpec._gpu_intersection(_gpus(lhs), _gpus(rhs))
+    assert [node.name for node in result] == expected
+    # the operation is symmetric
+    result = ArchSpec._gpu_intersection(_gpus(rhs), _gpus(lhs))
+    assert sorted(node.name for node in result) == sorted(expected)
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        (["86"], ["80"], True),
+        (["80", "90"], ["86", "90a"], True),
+        (["89"], ["90"], False),
+        (["none"], ["80"], False),
+        # an empty side places no constraint
+        ([], ["80"], True),
+        (["80"], [], True),
+        ([], [], True),
+    ],
+)
+def test_gpu_intersects(lhs, rhs, expected):
+    assert ArchSpec._gpu_intersects(_gpus(lhs), _gpus(rhs)) is expected
+    assert ArchSpec._gpu_intersects(_gpus(rhs), _gpus(lhs)) is expected
+
+
+@pytest.mark.parametrize(
+    "built,requested,expected",
+    [
+        # the binary runs on the device
+        (["80"], ["86"], True),
+        (["80"], ["80"], True),
+        (["100f"], ["100a"], True),
+        # but not the other way around
+        (["86"], ["80"], False),
+        (["100a"], ["100f"], False),
+        # a fat binary serves a device if any of its targets does
+        (["80", "90"], ["86", "90a"], True),
+        # every requested device must be served
+        (["80"], ["86", "90"], False),
+        # unrelated nodes and names outside the graph
+        (["89"], ["90"], False),
+        (["none"], ["none"], True),
+        (["none"], ["80"], False),
+        # a request without GPUs is always met, a build without GPUs meets no request
+        (["80"], [], True),
+        ([], ["80"], False),
+        ([], [], True),
+    ],
+)
+def test_gpu_satisfies(built, requested, expected):
+    assert ArchSpec._gpu_satisfies(_gpus(built), _gpus(requested)) is expected
 
 
 @pytest.mark.parametrize(
