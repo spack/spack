@@ -683,8 +683,8 @@ def test_env_install_false_on_duplicate(environment_from_manifest):
 spack:
   definitions:
   - tools:
-    - libelf
-    - spec: libdwarf
+    - cmake
+    - spec: zlib
       install: false
   specs:
   - group: apps
@@ -695,19 +695,19 @@ spack:
     - spec: mpileaks+debug
       install: false
     - $tools
-    - spec: libelf
+    - spec: cmake
       install: false
   - group: extra
     specs:
     - $tools
-    - libdwarf
+    - zlib
 """
     )
     with e:
         e.concretize()
 
     installable = e.installable_roots()
-    assert sorted(s.name for s in installable) == ["libelf", "mpileaks"]
+    assert sorted(s.name for s in installable) == ["cmake", "mpileaks"]
     assert not any(s.satisfies("+debug") for s in installable if s.name == "mpileaks")
 
 
@@ -720,37 +720,37 @@ spack:
   - group: apps
     specs:
     - mpileaks
-    - spec: libelf
+    - spec: cmake
       install: false
 """
     )
     with e:
         e.concretize()
 
-    assert {s.name for s in e.concrete_roots()} == {"mpileaks", "libelf"}
+    assert {s.name for s in e.concrete_roots()} == {"mpileaks", "cmake"}
     assert {s.name for s in e.installable_roots()} == {"mpileaks"}
 
 
-def test_env_install_false_warns_when_needed_as_dependency(
-    installed_environment, temporary_store: Store, capfd
-):
-    """A root with install: false that another root depends on is installed, with a warning."""
+def test_env_install_false_skips_dependents(installed_environment, temporary_store: Store, capfd):
+    """Roots that depend on a root with install: false are not installable."""
     with installed_environment(
         """\
 spack:
   specs:
   - mpileaks
+  - libelf
   - spec: callpath
     install: false
 """
     ) as test:
-        assert temporary_store.db.query("callpath")
-        warning = "callpath is marked install: false, but other specs depend on it"
-        assert warning in capfd.readouterr()[1]
+        assert {s.name for s in test.concrete_roots()} == {"mpileaks", "libelf", "callpath"}
+        assert {s.name for s in test.installable_roots()} == {"libelf"}
 
-        # No warning once it is installed
-        test.install_all(fake=True)
-        assert warning not in capfd.readouterr()[1]
+        assert temporary_store.db.query("libelf")
+        assert not temporary_store.db.query("callpath")
+        assert not temporary_store.db.query("mpileaks")
+        warning = "not installing mpileaks: it depends on callpath, which is marked install: false"
+        assert warning in capfd.readouterr()[1]
 
 
 def test_env_install_false_needs_no_concretization(environment_from_manifest):
@@ -5293,7 +5293,8 @@ def test_exists_consistent_with_all_environment_names(
 
 def test_concretization_reports_groups(environment_from_manifest):
     """Tests that each group of user specs is reported to the frontend."""
-    e = environment_from_manifest("""
+    e = environment_from_manifest(
+        """
 spack:
   specs:
   - libelf
@@ -5303,7 +5304,8 @@ spack:
   - group: apps2
     specs:
     - pkg-b
-""")
+"""
+    )
     ui = RecordingUI()
     with e:
         e.concretize(ui=ui)
@@ -5322,14 +5324,16 @@ def test_concretization_reports_a_group_with_nothing_to_do(environment_from_mani
     """Tests that re-concretizing an environment still reports each group, including the ones
     that are solved already.
     """
-    e = environment_from_manifest("""
+    e = environment_from_manifest(
+        """
 spack:
   specs:
   - libelf
   - group: apps1
     specs:
     - pkg-a
-""")
+"""
+    )
     with e:
         e.concretize()
         e.write()

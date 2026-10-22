@@ -1110,6 +1110,17 @@ class ConcretizedRootInfo:
         )
 
 
+def _install_false_dependencies(spec: Spec, marked: Set[str]) -> List[str]:
+    """Names of the dependencies of ``spec`` whose hash is a root marked ``install:false``"""
+    return sorted(
+        {
+            d.name
+            for d in traverse.traverse_nodes([spec], root=False, key=traverse.by_dag_hash)
+            if d.dag_hash() in marked
+        }
+    )
+
+
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
@@ -2124,14 +2135,21 @@ class Environment:
         self.install_specs(None, **install_args)
 
     def install_specs(self, specs: Optional[List[Spec]] = None, **install_args):
-        roots = self.installable_roots()
-        specs = specs if specs is not None else roots
+        specs = specs if specs is not None else self._unmarked_roots()
 
-        # Roots marked install: false are still installed when other specs depend on them
-        skipped = {x.hash for x in self.concretized_roots} - {s.dag_hash() for s in roots}
-        for s in traverse.traverse_nodes(specs, key=traverse.by_dag_hash):
-            if s.dag_hash() in skipped and not s.installed:
-                tty.warn(f"{s.name} is marked install: false, but other specs depend on it")
+        # Specs that depend on a root marked install: false are not installed either
+        marked = self._install_false_hashes()
+        installable_specs = []
+        for spec in specs:
+            blockers = _install_false_dependencies(spec, marked)
+            if blockers:
+                tty.warn(
+                    f"not installing {spec.name}: it depends on {', '.join(blockers)}, "
+                    "which is marked install: false"
+                )
+            else:
+                installable_specs.append(spec)
+        specs = installable_specs
 
         # Extract reporter arguments
         reporter = install_args.pop("reporter", None)
@@ -2231,8 +2249,11 @@ class Environment:
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
 
-    def installable_roots(self) -> List[Spec]:
-        """Same as concrete_roots(), but excludes roots marked ``install: false``"""
+    def _install_false_hashes(self) -> Set[str]:
+        """Hashes of the concrete roots marked ``install: false``"""
+        return {x.hash for x in self._marked_roots()}
+
+    def _marked_roots(self) -> List[ConcretizedRootInfo]:
         not_installable: Set[Tuple[str, Spec]] = set()
         for group in self.manifest.groups():
             speclist = self.user_specs_by(group=group)
@@ -2241,11 +2262,15 @@ class Environment:
                 for spec, install in zip(speclist.specs, speclist.install_flags)
                 if not install
             )
+        return [x for x in self.concretized_roots if (x.group, x.root) in not_installable]
 
+    def _unmarked_roots(self) -> List[Spec]:
+        """Same as concrete_roots(), but excludes roots marked ``install: false``"""
+        marked = {(x.group, x.root) for x in self._marked_roots()}
         result = [
             self.specs_by_hash[x.hash]
             for x in self.concretized_roots
-            if (x.group, x.root) not in not_installable
+            if (x.group, x.root) not in marked
         ]
         result.extend(
             concrete
@@ -2253,6 +2278,12 @@ class Environment:
             for _, concrete in self.concretized_specs_from_included_environment(included_env)
         )
         return result
+
+    def installable_roots(self) -> List[Spec]:
+        """Same as concrete_roots(), but excludes roots marked ``install: false``, and roots that
+        depend on them."""
+        marked = self._install_false_hashes()
+        return [s for s in self._unmarked_roots() if not _install_false_dependencies(s, marked)]
 
     def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
         """Generates all the (abstract, concrete) spec pairs for a given group"""
