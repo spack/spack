@@ -2437,12 +2437,13 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
     VIEW_MARKER_FILE = ".spack-view"
 
     def ignore_views(directory, names):
-        """Exclude view directories during environment copy.
+        """Exclude view directories and lock file during environment copy.
 
         Skips:
         - .spack-env directories (always - contains default views at .spack-env/view)
         - ._view at environment root only (old format pre-June 2026: symlinks to ._view/<hash>/)
         - Directories with .spack-view marker anywhere (custom-location views, June 2026+)
+        - spack.lock at environment root (users should reconcretize after migration)
 
         Note: Skipping .spack-env also excludes cached repos and locks as a side effect.
         """
@@ -2460,6 +2461,10 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
             elif is_env_root and name == "._view":
                 ignored.append(name)
                 tty.debug(f"Excluding root-level ._view directory: {path}")
+            # Skip spack.lock at environment root (user should reconcretize)
+            elif is_env_root and name == "spack.lock":
+                ignored.append(name)
+                tty.debug(f"Excluding environment lock file: {path}")
             # Skip custom-location views with marker file (anywhere in tree)
             elif os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
                 ignored.append(name)
