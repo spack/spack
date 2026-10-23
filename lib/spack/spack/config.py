@@ -2254,42 +2254,92 @@ def _migrate_with_staging(
 
 
 def _prepare_config_staging(old_location, staging_path, new_location):
-    """Callback for config migration - processes and copies config files."""
-    # Find config files to migrate
-    found = filesystem.find(old_location, ["*.yaml", "*.yml"], recursive=True)
+    """Callback for config migration - processes and copies config files.
+
+    Uses a two-pass approach to handle symlinked directory aliases:
+    1. Walk without following symlinks to find and copy real config files
+    2. Copy symlinks that point to copied files/directories (preserve aliases)
+    """
     package_repos_dir = os.path.join(old_location, "package_repos")
-    config_files = [
-        os.path.relpath(f, old_location)
-        for f in found
-        if not filesystem.path_contains_subdirectory(f, package_repos_dir)
-    ]
+    copied_files = set()
 
-    for config_file in config_files:
-        old_path = os.path.join(old_location, config_file)
-        staging_file_path = os.path.join(staging_path, config_file)
-
-        try:
-            # Process paths using migrate command logic (handles the 4 path rewriting
-            # rules). Pass new_location (not staging_path) so paths are rewritten for
-            # final destination
-            modified_data = process_config_file_paths(old_path, old_location, new_location)
-
-            # Ensure parent directory exists in staging
-            os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
-
-            if modified_data is not None:
-                # Get original file permissions before rewriting
-                old_mode = os.stat(old_path).st_mode & 0o777
-                with open(staging_file_path, "w", encoding="utf-8") as f:
-                    syaml.dump(modified_data, f)
-                # Restore original permissions
-                os.chmod(staging_file_path, old_mode)
-            else:
-                shutil.copy2(old_path, staging_file_path)
-        except (syaml.SpackYAMLError, OSError) as e:
-            # Skip files that can't be parsed or read (e.g., backup dirs with broken YAML)
-            tty.debug(f"Skipping {config_file} during migration: {e}")
+    # First pass: find and copy real config files (don't follow symlinks)
+    for root, dirs, files in os.walk(old_location, followlinks=False):
+        # Skip package_repos
+        if filesystem.path_contains_subdirectory(root, package_repos_dir):
+            dirs[:] = []  # Don't recurse into subdirectories
             continue
+
+        for filename in files:
+            # Only process .yaml and .yml files
+            if not (filename.endswith(".yaml") or filename.endswith(".yml")):
+                continue
+
+            old_path = os.path.join(root, filename)
+
+            # Skip symlinks in first pass
+            if os.path.islink(old_path):
+                continue
+
+            rel_path = os.path.relpath(old_path, old_location)
+            staging_file_path = os.path.join(staging_path, rel_path)
+
+            try:
+                modified_data = process_config_file_paths(old_path, old_location, new_location)
+
+                os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
+
+                if modified_data is not None:
+                    old_mode = os.stat(old_path).st_mode & 0o777
+                    with open(staging_file_path, "w", encoding="utf-8") as f:
+                        syaml.dump(modified_data, f)
+                    os.chmod(staging_file_path, old_mode)
+                else:
+                    shutil.copy2(old_path, staging_file_path)
+
+                copied_files.add(os.path.normpath(os.path.join(staging_path, rel_path)))
+            except (syaml.SpackYAMLError, OSError) as e:
+                tty.debug(f"Skipping {rel_path} during migration: {e}")
+
+    # Second pass: copy symlinks that point to copied files/directories
+    for root, dirs, files in os.walk(old_location, followlinks=False):
+        if filesystem.path_contains_subdirectory(root, package_repos_dir):
+            dirs[:] = []
+            continue
+
+        for name in files + dirs:
+            path = os.path.join(root, name)
+            if not os.path.islink(path):
+                continue
+
+            target = os.readlink(path)
+
+            # Resolve target relative to symlink location
+            if os.path.isabs(target):
+                abs_target = os.path.normpath(target)
+            else:
+                link_dir = os.path.dirname(path)
+                abs_target = os.path.normpath(os.path.join(link_dir, target))
+
+            # Check if target is inside old_location
+            try:
+                rel_target = os.path.relpath(abs_target, old_location)
+                if rel_target.startswith(".."):
+                    continue  # Target outside old_location, skip
+            except ValueError:
+                continue  # Different drives on Windows
+
+            # Check if we copied the target or a file under it
+            staging_target = os.path.normpath(os.path.join(staging_path, rel_target))
+            target_copied = staging_target in copied_files or any(
+                f.startswith(staging_target + os.sep) for f in copied_files
+            )
+
+            if target_copied:
+                rel_path = os.path.relpath(path, old_location)
+                staging_link = os.path.join(staging_path, rel_path)
+                os.makedirs(os.path.dirname(staging_link), exist_ok=True)
+                os.symlink(target, staging_link)
 
 
 def _prepare_package_repos_staging(old_path, staging_path, new_path):
