@@ -27,7 +27,6 @@ import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.detection
-import spack.enums
 import spack.environment
 import spack.error
 import spack.externals
@@ -140,9 +139,8 @@ def _mirror_scope(source: ConfigDictionary) -> spack.config.InternalConfigScope:
         "mirrors:": {source["name"]: spack.mirrors.mirror.Mirror(url).fetch_url}
     }
     if source["type"] == "buildcache":
-        # Pinned binaries can be of versions that were deprecated after they were built
-        allow = [{"labels": [spack.enums.LEGACY_DEPRECATION_LABEL]}]
-        data["packages"] = {"all": {"deprecation": {"allow": allow}}}
+        # Allow any deprecation, since a pinned binary may be of a version deprecated later
+        data["packages"] = {"all": {"deprecation": {"allow": [{"severity": "critical"}]}}}
     return spack.config.InternalConfigScope(f"bootstrap-{source['name']}-{uuid.uuid4()}", data)
 
 
