@@ -51,7 +51,10 @@ Running a command that concretizes a spec, like:
 .. code-block:: console
 
    % spack solve zlib
-   ==> Installing "clingo-bootstrap@spack%apple-clang@12.0.0~docs~ipo+python build_type=Release arch=darwin-catalina-x86_64" from a buildcache
+   ==> Bootstrapping clingo-bootstrap from pre-built binaries
+   [e] cqy5gwu python@3.9 /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9 (0s)
+   [+] 7xm6itd python-venv@1.0 /Users/spack/.spack/bootstrap/store/darwin-aarch64/python-venv-1.0-7xm6itd35g5wfwebvwffsmpx5ekpdfnm (0s)
+   [+] sttzv6g clingo-bootstrap@spack /Users/spack/.spack/bootstrap/store/darwin-aarch64/clingo-bootstrap-spack-sttzv6ggizrkss7mjeln7pigo52i2oi4 (1s)
    [ ... ]
 
 automatically triggers the bootstrapping of clingo from pre-built binaries as expected.
@@ -61,8 +64,11 @@ Users can also bootstrap all Spack's dependencies in a single command, which is 
 .. code-block:: console
 
    $ spack bootstrap now
-   ==> Installing "clingo-bootstrap@spack%gcc@10.2.1~docs~ipo+python+static_libstdcpp build_type=Release arch=linux-centos7-x86_64" from a buildcache
-   ==> Installing "patchelf@0.15.0%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  arch=linux-centos7-x86_64" from a buildcache
+   ==> Bootstrapping patchelf from pre-built binaries
+   [e] 7s7rcbh glibc@2.39 /usr (0s)
+   [+] zif26uy gcc-runtime@10.2.1 /root/.spack/bootstrap/store/linux-aarch64/gcc-runtime-10.2.1-zif26uy22eplr37dqfcjoffkllpayilj (2s)
+   [+] c7jtmhh patchelf@0.17.2 /root/.spack/bootstrap/store/linux-aarch64/patchelf-0.17.2-c7jtmhhiy7tvvissvzlzgti7gpwdskzi (1s)
+   [ ... ]
 
 .. _cmd-spack-bootstrap-root:
 
@@ -103,6 +109,10 @@ If needed, you can remove all the software in the current bootstrapping store wi
    % spack -b find
    ==> Showing internal bootstrap store at "/Users/spack/.spack/bootstrap/store"
    ==> 0 installed packages
+
+Pre-built binaries are verified by the sha256 sums listed, by DAG hash, in the ``metadata.yaml`` file of their bootstrapping source.
+They were built on another host, so Spack splices the python interpreter and the libc of the current host into them, and it creates a venv for the current interpreter instead of using a pre-built one.
+The specs installed for each interpreter are recorded in an environment, in the ``environments`` directory of the bootstrapping root.
 
 .. _cmd-spack-bootstrap-list:
 .. _cmd-spack-bootstrap-disable:
@@ -165,15 +175,17 @@ To help in these situations, Spack provides a command to create a local mirror c
 .. code-block:: console
 
    % spack bootstrap mirror --binary-packages /opt/bootstrap
-   ==> Adding "clingo-bootstrap@spack+python %apple-clang target=x86_64" and dependencies to the mirror at /opt/bootstrap/local-mirror
-   ==> Adding "gnupg@2.3: %apple-clang target=x86_64" and dependencies to the mirror at /opt/bootstrap/local-mirror
-   ==> Adding "patchelf@0.13.1:0.13.99 %apple-clang target=x86_64" and dependencies to the mirror at /opt/bootstrap/local-mirror
-   ==> Adding binary packages from "https://github.com/alalazo/spack-bootstrap-mirrors/releases/download/v0.1-rc.2/bootstrap-buildcache.tar.gz" to the mirror at /opt/bootstrap/local-mirror
+   ==> Adding "clingo-bootstrap@spack+python platform=linux target=x86_64" and dependencies to the mirror at /opt/bootstrap/bootstrap_cache
+   ==> Adding "gnupg@2.3: platform=linux target=x86_64" and dependencies to the mirror at /opt/bootstrap/bootstrap_cache
+   ==> Adding "patchelf@0.13.1: platform=linux target=x86_64" and dependencies to the mirror at /opt/bootstrap/bootstrap_cache
+   ==> Adding "gnuconfig" and dependencies to the mirror at /opt/bootstrap/bootstrap_cache
+   ==> Adding binary packages from "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v2.2/bootstrap-buildcache.tar.gz" to the mirror at /opt/bootstrap/bootstrap_cache
 
-   To register the mirror on the platform where it's supposed to be used run the following command(s):
-     % spack bootstrap add --trust local-sources /opt/bootstrap/metadata/sources
-     % spack bootstrap add --trust local-binaries /opt/bootstrap/metadata/binaries
-     % spack buildcache update-index /opt/bootstrap/bootstrap_cache
+   To register the mirror on the platform where it's supposed to be used, move "/opt/bootstrap" to its final location and run the following command(s):
+
+     % spack bootstrap add --trust local-sources <final-path>/metadata/sources
+     % spack bootstrap add --trust local-binaries <final-path>/metadata/binaries
 
 Run this command on a machine with internet access, then move the resulting folder to the air-gapped system.
+The metadata of the local binaries lists the same sha256 sums as the default binary source, so the binaries are verified in the same way.
 Once the local sources are added using the commands suggested at the prompt, they can be used to bootstrap Spack.

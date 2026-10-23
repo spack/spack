@@ -8,11 +8,15 @@ import pytest
 
 import spack.bootstrap
 import spack.bootstrap.core
+import spack.cmd.bootstrap
 import spack.cmd.mirror
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.main
 import spack.spec
+import spack.stage
+import spack.util.spack_yaml
 from spack.config import Configuration
 
 _bootstrap = spack.main.SpackCommand("bootstrap")
@@ -193,3 +197,40 @@ def test_bootstrap_mirror_metadata(
 
     assert _bootstrap.returncode == 0
     assert any(m["name"] == "test-mirror" for m in spack.bootstrap.core.bootstrapping_sources())
+
+
+class _ExpandedTarball:
+    """Stand-in for the stage of the tarball with binaries, which expands to nothing."""
+
+    def __init__(self, source_path: pathlib.Path) -> None:
+        self.source_path = str(source_path)
+
+    def create(self):
+        pass
+
+    def fetch(self):
+        pass
+
+    def expand_archive(self):
+        pass
+
+
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
+def test_bootstrap_mirror_pins_the_binaries_of_the_tarball(
+    mutable_config: Configuration, monkeypatch, tmp_path: pathlib.Path
+):
+    monkeypatch.setattr(spack.cmd.mirror, "create", lambda p, s: None)
+    monkeypatch.setattr(spack.concretize, "concretize_one", lambda p: spack.spec.Spec(p))
+    (tmp_path / "tarball").mkdir()
+    tarball = _ExpandedTarball(tmp_path / "tarball")
+    monkeypatch.setattr(spack.stage, "stage_from_config", lambda *args, **kwargs: tarball)
+
+    _bootstrap("mirror", "--binary-packages", str(tmp_path / "mirror"))
+
+    def load(path):
+        return spack.util.spack_yaml.load(pathlib.Path(path).read_text(encoding="utf-8"))
+
+    metadata = load(tmp_path / "mirror" / "metadata" / "binaries" / "metadata.yaml")
+    shipped = load(spack.config.canonicalize_path(spack.cmd.bootstrap.BINARY_METADATA))
+    assert metadata["info"]["url"] == os.path.join("..", "..", "bootstrap_cache")
+    assert metadata["sha256"] == shipped["sha256"]

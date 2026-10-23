@@ -200,6 +200,7 @@ class PackageInstaller:
         ui: Optional[InstallerUI] = None,
         launcher: Callable[[BuildRequest, JobServerBase], ChildInfo] = start_build,
         store: Optional[spack.store.Store] = None,
+        binary_checksums: Optional[Dict[str, str]] = None,
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
@@ -223,6 +224,9 @@ class PackageInstaller:
         self.overwrite_time: float = time.time()
         self.keep_prefix = keep_prefix
         self.fail_fast = fail_fast
+        #: Expected sha256 of binary tarballs by DAG hash. These binaries are trusted without
+        #: signature. When the map is not empty, nodes without a checksum are built from sources.
+        self.binary_checksums = binary_checksums or {}
 
         if explicit is True:
             self.explicit = {spec.dag_hash() for spec in specs}
@@ -230,6 +234,14 @@ class PackageInstaller:
             self.explicit = set()
         else:
             self.explicit = explicit
+
+        force_source = None
+        if self.binary_checksums:
+            force_source = {
+                s.dag_hash()
+                for s in spack.traverse.traverse_nodes(specs)
+                if not s.external and s.build_spec.dag_hash() not in self.binary_checksums
+            }
 
         # Build the dependency graph
         self.build_graph = BuildGraph(
@@ -244,6 +256,7 @@ class PackageInstaller:
             tests,
             self.explicit,
             self.has_mirrors,
+            force_source,
         )
 
         #: Per-spec buildcache mirrors; populated in install() from the binary index.
@@ -770,6 +783,7 @@ class PackageInstaller:
             explicit=explicit,
             mirrors=self.binary_cache_for_spec[dag_hash],
             unsigned=self.unsigned,
+            sha256=self.binary_checksums.get(spec.build_spec.dag_hash()),
             install_policy=self._effective_install_policy(dag_hash, is_root),
             dirty=self.dirty,
             # keep_stage/restage logic taken from installer.py

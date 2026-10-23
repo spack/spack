@@ -120,6 +120,8 @@ If you forget, you can always see the available configuration scopes in order of
     defaults:base    /home/username/spack/etc/spack/defaults/base/
     _builtin
 
+Scope names that start with an underscore, like ``_builtin``, are reserved for Spack.
+
 Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``, ``spack external find``, etc.) take a ``--scope=<name>`` parameter that you can use to control which scope is modified.
 By default, they modify the highest-precedence available scope that is not read-only (like `defaults`).
 

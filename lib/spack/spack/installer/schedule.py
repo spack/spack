@@ -89,10 +89,11 @@ class BuildGraph:
         tests: Union[bool, List[str], Set[str]] = False,
         explicit_set: Optional[Set[str]] = None,
         has_mirrors: bool = True,
+        force_source: Optional[Set[str]] = None,
     ):
         """Construct a build graph from the given specs. This includes only packages that need to
         be installed. Installed packages are pruned from the graph, and build dependencies are only
-        included when necessary."""
+        included when necessary. Specs in ``force_source`` are built from sources."""
         database = store.db
         self.roots = {s.dag_hash() for s in specs}
         if not install_package:
@@ -106,7 +107,7 @@ class BuildGraph:
         explicit_set = explicit_set or set()
         self.pruned: Set[str] = set()
         self.done: Set[str] = set()
-        self.force_source: Set[str] = set()
+        self.force_source: Set[str] = set(force_source) if force_source else set()
         stack: List[Tuple[spack.spec.Spec, InstallPolicy]] = [
             (s, root_policy) for s in self.nodes.values()
         ]
@@ -137,6 +138,7 @@ class BuildGraph:
                         self.pruned.add(key)
                 elif (
                     install_policy == "source_only"
+                    or key in self.force_source
                     or include_build_deps
                     or (install_policy == "auto" and not has_mirrors)
                 ):

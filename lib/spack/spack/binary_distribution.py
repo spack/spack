@@ -112,7 +112,6 @@ from .url_buildcache import (
     get_entries_from_cache,
     get_url_buildcache_class,
     get_valid_spec_file,
-    validate_checksum,
 )
 from .vendor.jsonschema.exceptions import ValidationError
 from .vendor.typing_extensions import TypedDict
@@ -2334,17 +2333,14 @@ def extract_buildcache_tarball(tarfile_path: str, destination: str) -> None:
         )
 
 
-def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=timer.NULL_TIMER):
+def extract_tarball(spec, tarball_stage: spack.stage.Stage, timer=timer.NULL_TIMER):
     """
     extract binary tarball for given package into install area
     """
     timer.start("extract")
 
     if os.path.exists(spec.prefix):
-        if force:
-            shutil.rmtree(spec.prefix)
-        else:
-            raise NoOverwriteException(str(spec.prefix))
+        raise NoOverwriteException(str(spec.prefix))
 
     # Create the install prefix
     fsys.mkdirp(
@@ -2419,68 +2415,6 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
         raise ValueError(f"Tarball does not contain a common prefix {pkg_prefix}")
 
     return pkg_prefix
-
-
-def install_root_node(
-    spec: spack.spec.Spec,
-    unsigned=False,
-    force: bool = False,
-    sha256: Optional[str] = None,
-    allow_missing: bool = False,
-) -> None:
-    """Install the root node of a concrete spec from a buildcache.
-
-    Checking the sha256 sum of a node before installation is usually needed only
-    for software installed during Spack's bootstrapping (since we might not have
-    a proper signature verification mechanism available).
-
-    Args:
-        spec: spec to be installed (note that only the root node will be installed)
-        unsigned: if True allows installing unsigned binaries
-        force: force installation if the spec is already present in the local store
-        sha256: optional sha256 of the binary package, to be checked before installation
-        allow_missing: when true, allows installing a node with missing dependencies
-    """
-    # Early termination
-    if spec.external or not spec.concrete:
-        warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
-        return
-    elif spack.store.STORE.db.installed(spec) and not force:
-        warnings.warn("Package for spec {0} already installed.".format(spec.format()))
-        return
-
-    tarball_stage = download_tarball(spec.build_spec, unsigned)
-    if not tarball_stage:
-        msg = 'download of binary cache file for spec "{0}" failed'
-        raise RuntimeError(msg.format(spec.build_spec.format()))
-
-    if sha256:
-        try:
-            validate_checksum(tarball_stage.save_filename, "sha256", sha256)
-        except spack.error.NoChecksumException:
-            tarball_stage.destroy()
-            raise
-
-    # don't print long padded paths while extracting/relocating binaries
-    with spack.store.filter_padding():
-        tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
-        extract_tarball(spec, tarball_stage, force)
-        spec.package.windows_establish_runtime_linkage()
-        spack.hooks.post_install(spec, False)
-        spack.store.STORE.db.add(spec, allow_missing=allow_missing)
-
-
-def install_single_spec(spec, unsigned=False, force=False):
-    """Install a single concrete spec from a buildcache.
-
-    Args:
-        spec (spack.spec.Spec): spec to be installed
-        unsigned (bool): if True allows installing unsigned binaries
-        force (bool): force installation if the spec is already present in the
-            local store
-    """
-    for node in spec.traverse(root=True, order="post", deptype=("link", "run")):
-        install_root_node(node, unsigned=unsigned, force=force)
 
 
 def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorMetadata]:
