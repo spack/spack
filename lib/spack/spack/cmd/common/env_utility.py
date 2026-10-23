@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import os
-import shutil
 import subprocess
 import sys
 
@@ -16,6 +15,7 @@ from spack.cmd.common import arguments
 from spack.enums import Context
 from spack.util import tty
 from spack.util.environment import dump_environment, pickle_environment
+from spack.util.executable import which_string
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
@@ -138,10 +138,15 @@ def emulate_env_utility(cmd_name, context: Context, args):
     if cmd:
         # Execute the command with the new environment
         if sys.platform == "win32":
-            # execvp handles Windows paths with spaces poorly by joining the 
+            # execvp handles Windows paths with spaces poorly by joining the
             # string with spaces and does not quote
             # subprocess does not do this
-            sys.exit(subprocess.call([shutil.which(cmd[0]) or cmd[0], *cmd[1:]]))
+            # execvp looks up the command on the path
+            # subprocess needs the path to the command
+            exe = which_string(cmd[0])
+            if not exe:
+                tty.die(f"{cmd[0]}: command not found")
+            sys.exit(subprocess.call([exe, *cmd[1:]]))
         os.execvp(cmd[0], cmd)
 
     elif not bool(args.pickle or args.dump):
