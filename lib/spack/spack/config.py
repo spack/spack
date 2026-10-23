@@ -209,6 +209,9 @@ class ConfigScope:
     def _write_section(self, section: str) -> None:
         raise NotImplementedError
 
+    def _remove_section(self, section: str) -> None:
+        raise NotImplementedError
+
     def clear(self) -> None:
         """Empty cached config information."""
         self.sections = syaml.syaml_dict()
@@ -276,6 +279,19 @@ class DirectoryConfigScope(ConfigScope):
                 syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
+
+    def _remove_section(self, section: str) -> None:
+        if not self.writable:
+            raise spack.error.ConfigError(f"Cannot write to immutable scope {self}")
+
+        filename = self.get_section_filename(section)
+        try:
+            os.unlink(filename)
+        except FileNotFoundError:
+            pass
+        except OSError as e:
+            raise ConfigFileError(f"cannot remove '{filename}'") from e
+        self.sections.pop(section, None)
 
 
 class SingleFileScope(ConfigScope):
@@ -418,6 +434,71 @@ class SingleFileScope(ConfigScope):
     def __repr__(self) -> str:
         return f"<SingleFileScope: {self.name}: {self.path}>"
 
+    def _remove_section(self, section: str) -> None:
+        if not self.writable:
+            raise spack.error.ConfigError(f"Cannot write to immutable scope {self}")
+        if not self.get_section(section):
+            return
+
+        # Do not change cached data until the validated manifest has been written.
+        data = copy.deepcopy(self._raw_data)
+        assert data is not None
+        section_data = data
+        for key in self.yaml_path:
+            section_data = section_data[key]
+        # ruamel can attach a comment preceding the next section to the last
+        # value of this section. Keep comments at the section's indentation.
+        keys = list(section_data)
+        index = keys.index(section)
+        if index + 1 < len(keys):
+            key = keys[index]
+            indent = getattr(getattr(key, "_start_mark", None), "column", 0)
+            start_line = getattr(getattr(key, "_start_mark", None), "line", 0)
+            value: Any = section_data
+            last_key: Any = key
+            trailing_comments = []
+            seen_comments: Set[int] = set()
+            while isinstance(value, (dict, list)) and value:
+                comments = syaml.extract_comments(value)
+                tokens = (
+                    comments.items.get(last_key, [])
+                    + (comments.end if value is not section_data else [])
+                    if comments
+                    else []
+                )
+                for token in tokens:
+                    if token is None or isinstance(token, list) or id(token) in seen_comments:
+                        continue
+                    seen_comments.add(id(token))
+                    # A YAML alias may refer to comments from an earlier section.
+                    if token.start_mark.line < start_line:
+                        continue
+                    for i, line in enumerate(token.value.splitlines()):
+                        column = (
+                            token.start_mark.column if i == 0 else len(line) - len(line.lstrip())
+                        )
+                        if column <= indent and line.lstrip().startswith("#"):
+                            trailing_comments.append(line.lstrip()[1:].lstrip())
+                value = value[last_key]
+                if isinstance(value, dict):
+                    last_key = next(reversed(list(value)), None)
+                elif isinstance(value, list):
+                    last_key = len(value) - 1
+            if trailing_comments:
+                getattr(section_data, "yaml_set_comment_before_after_key")(
+                    keys[index + 1], before="\n".join(trailing_comments), indent=indent
+                )
+        section_data.pop(section, None)
+        validate(data, self.schema)
+        try:
+            with filesystem.write_tmp_and_move(self.path, encoding="utf-8") as f:
+                syaml.dump_config(data, stream=f, default_flow_style=False)
+        except (syaml.SpackYAMLError, OSError) as e:
+            raise ConfigFileError(f"cannot write to config file {str(e)}") from e
+
+        self._raw_data = data
+        self.sections.pop(section, None)
+
 
 class InternalConfigScope(ConfigScope):
     """An internal configuration scope that is not persisted to a file.
@@ -450,6 +531,9 @@ class InternalConfigScope(ConfigScope):
         if data is not None:
             validate(data, SECTION_SCHEMAS[section])
         self.sections[section] = _mark_internal(data, self.name)
+
+    def _remove_section(self, section: str) -> None:
+        self.sections.pop(section, None)
 
     def __repr__(self) -> str:
         return f"<InternalConfigScope: {self.name}>"
@@ -722,6 +806,19 @@ class Configuration:
             syaml.set_comments(scope.sections[section][section], data_comments=comments)
 
         scope._write_section(section)
+
+    @_config_mutator
+    def remove_section(self, section: str, scope: Optional[str] = None) -> None:
+        """Remove a whole section from one scope, exposing lower-precedence settings.
+
+        Missing sections are a no-op. Immutable file scopes reject modifications.
+        """
+        _validate_section_name(section)
+        config_scope = self._validate_scope(scope)
+        config_scope._remove_section(section)
+        self.updated_scopes_by_section[section] = [
+            s for s in self.updated_scopes_by_section.get(section, []) if s is not config_scope
+        ]
 
     def get_config(
         self, section: str, scope: Optional[str] = None, _merged_scope: Optional[str] = None
