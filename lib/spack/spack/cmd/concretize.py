@@ -48,7 +48,9 @@ def concretize(parser, args):
             if concretized_specs:
                 tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}:")
                 spack.binary_distribution.load_buildcache_index()
-                status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+                status_fn = ev.install_status_fn(
+                    spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+                )
                 ev.display_specs(
                     [concrete for _, concrete in concretized_specs],
                     highlight_non_defaults=args.non_defaults,
