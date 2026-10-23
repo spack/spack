@@ -202,6 +202,10 @@ function get_sp_flags -d "return leading flags"
             set __sp_remaining_args (stream_args $argv[$i..-1])
             return
         end
+
+        # increment argument counter: used in place of bash's `shift` command
+        set i (math $i+1)
+
     end
 
     # if all elements in `argv` are matched, make sure that `__sp_remaining_args`

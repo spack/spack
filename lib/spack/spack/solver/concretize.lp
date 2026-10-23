@@ -33,6 +33,14 @@ duplicate_penalty(node(ID1, Package), 1, "version")
    ID2 = ID1 + 1, Weight2 < Weight1,
    max_dupes(Virtual, X), X > 1, ID2 < X.
 
+% Symmetry-breaking rule. Two nodes of a language virtual, each with one provider
+% of the same package, are numbered like their providers
+:- provider(node(ProviderID1, Provider), node(ID1, Language)),
+   provider(node(ProviderID2, Provider), node(ID2, Language)),
+   language(Language), ID1 < ID2, ProviderID2 < ProviderID1,
+   not multiple_providers(node(ID1, Language)),
+   not multiple_providers(node(ID2, Language)).
+
 % Anonymous variables that appear only in negative body literals like `not
 % foo(..., _, ...)` are projected implicitly by clingo v5, but not in clingo
 % v6. Each predicate below is the explicit projection of an existing predicate
@@ -1179,9 +1187,11 @@ error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
      not has_provider(node(X, Virtual)).
 
+multiple_providers(VirtualNode) :- has_provider(VirtualNode), 2 { provider(P, VirtualNode) }.
+
 error(100, "Multiple providers are required for the same '{0}' virtual", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
-     2 { provider(P, node(X, Virtual)) }.
+     multiple_providers(node(X, Virtual)).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).
@@ -2362,8 +2372,9 @@ opt_criterion(5, "low", "", 0, "target mismatches (reused nodes)").
 opt_criterion(4, "low", "", 0, "version badness (runtimes)").
 opt_criterion(3, "low", "", 0, "non-preferred targets (runtimes)").
 opt_criterion(2, "low", "", 0, "providers on edges").
-opt_criterion(1, "low", "", 0, "version badness on edges").
-opt_criterion(0, "low", "", 0, "penalty on symmetric duplicates").
+% Before "version badness on edges", whose cost does not depend on how duplicates are numbered
+opt_criterion(1, "low", "", 0, "penalty on symmetric duplicates").
+opt_criterion(0, "low", "", 0, "version badness on edges").
 
 %----------------------------------------------------------------------------
 % Show optimization criteria
@@ -2611,11 +2622,31 @@ compiler_penalty(PackageNode, C-1) :-
       opt_priority(Priority, _, _, _, "providers on edges")
 }.
 
-% Try to use latest versions of nodes as much as possible
+% weight_shifted(Weight, Shifted, I) holds for Shifted = Weight / 2**I, with integer division
+weight_shifted(Weight, Weight, 0) :- pkg_fact(_, version_declared(_, Weight)).
+weight_shifted(Weight, Shifted / 2, I + 1) :- weight_shifted(Weight, Shifted, I), Shifted > 1.
+
+% weight_bit(Weight, I) holds if bit I of Weight is set
+weight_bit(Weight, I) :- weight_shifted(Weight, Shifted, I), Shifted \ 2 = 1.
+
+version_weight_bit(node(X, Package), I)
+  :- version_weight(node(X, Package), Weight),
+     multiple_unification_sets(Package),
+     weight_bit(Weight, I).
+
+% Try to use latest versions of nodes as much as possible.
+%
+% A node has a single version weight, so summing 2**I over its bits gives
+% the same cost as summing the weight. The weights are encoded as bits to
+% reduce the size of the grounded program.
+%
+% For a node with V possible versions and P possible parents:
+% - Minimizing the weight grounds V * P elements.
+% - Minimizing the bits grounds about log2(V) * P elements
+% because all the versions with bit I set map to the same version_weight_bit/2 atom.
 #minimize{
-    Weight@Priority, ParentNode,node(X, Package)
-    : version_weight(node(X, Package), Weight),
-      multiple_unification_sets(Package),
+    2 ** I@Priority, ParentNode,node(X, Package),I
+    : version_weight_bit(node(X, Package), I),
       not attr("root", node(X, Package)),
       depends_on(ParentNode, node(X, Package)),
       opt_priority(Priority, _, _, _, "version badness on edges")
