@@ -129,6 +129,24 @@ def test_cache_miss_falls_back_to_source_build(
     assert record is not None and record.explicit
 
 
+def test_nodes_without_a_pinned_checksum_are_built_from_sources(
+    temporary_store: Store, mock_packages, mutable_config: Configuration, tmp_path
+):
+    """With binary checksums, a node without one is not looked up in the buildcache."""
+    mutable_config.set(
+        "mirrors", {"local": {"url": (tmp_path / "mirror").as_uri(), "binary": True}}
+    )
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: Script()})
+    _install(launcher, root, binary_checksums={dep.dag_hash(): "0" * 64})
+
+    assert [(r.spec.name, r.install_policy, r.sha256) for r in launcher.requests] == [
+        (dep.name, "cache_only", "0" * 64),
+        (root.name, "source_only", None),
+    ]
+
+
 def test_build_output_streams_to_frontend(temporary_store, mock_packages):
     """Output and state messages written by a build arrive at the frontend as log_output and
     state_changed events, byte for byte and in order."""

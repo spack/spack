@@ -218,7 +218,7 @@ def _install_from_source(
     with spack.config.CONFIG.override(_mirror_scope(source)):
         if source["type"] == "buildcache":
             concrete_spec = _pinned_binary(request.abstract_spec, source["sha256"])
-            # The installer builds the nodes without a binary, like the venv for this python
+            # Nodes without a checksum, like the venv for this python, are built from sources
             installer_args: Dict[str, Any] = {"binary_checksums": source["sha256"]}
         else:
             # If we compile code from sources detecting a few build tools

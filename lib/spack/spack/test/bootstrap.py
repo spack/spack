@@ -698,7 +698,7 @@ def test_a_binary_must_be_pinned_and_spliceable(
 
 
 def test_a_pinned_binary_is_installed_with_its_checksums(binary_index, recording_environment):
-    """Tests that the policy is left to the installer, which builds nodes without a binary"""
+    """Tests that the installer gets the checksums, so that it builds the nodes without one"""
     built, _ = binary_index
     source = {
         "name": "binaries",
