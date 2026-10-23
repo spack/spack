@@ -2,95 +2,55 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import io
-import sys
-import types
 import urllib.error
 import urllib.request
 
 import pytest
 
 import spack.util.gcs as gcs
+from spack.test.web import MockGCSBucket, mock_gcs_client  # noqa
 
 
 @pytest.fixture
-def fake_google_api_core(monkeypatch):
-    """Stand in for google.api_core.exceptions.GoogleAPIError."""
+def fake_google_api_error(monkeypatch, mock_gcs_client):
+    """Stand in for google.api_core.exceptions.GoogleAPIError, raised by bucket.get_blob."""
 
     class GoogleAPIError(Exception):
         pass
 
-    api_core_exceptions = types.ModuleType("google.api_core.exceptions")
-    api_core_exceptions.GoogleAPIError = GoogleAPIError
-    api_core = types.ModuleType("google.api_core")
-    api_core.exceptions = api_core_exceptions
-    google_pkg = types.ModuleType("google")
-    google_pkg.api_core = api_core
+    def get_blob(self, blob_path):
+        raise GoogleAPIError("permission denied")
 
-    monkeypatch.setitem(sys.modules, "google", google_pkg)
-    monkeypatch.setitem(sys.modules, "google.api_core", api_core)
-    monkeypatch.setitem(sys.modules, "google.api_core.exceptions", api_core_exceptions)
+    mock_gcs_client.GoogleAPIError = GoogleAPIError
+    monkeypatch.setattr(MockGCSBucket, "get_blob", get_blob)
 
     return GoogleAPIError
 
 
-def test_gcs_open_wraps_google_api_error(monkeypatch, fake_google_api_core):
+def test_gcs_open_wraps_google_api_error(fake_google_api_error):
     """Verify that gcs_open catches GoogleAPIError and re-raises it as URLError."""
+    req = urllib.request.Request("gs://my-bucket/subdirectory/my-file")
 
-    class BoomBlob:
-        def __init__(self, url):
-            pass
-
-        def exists(self):
-            raise fake_google_api_core("permission denied")
-
-    monkeypatch.setattr(gcs, "GCSBlob", BoomBlob)
-
-    req = urllib.request.Request("gs://my-bucket/my-file")
-
-    with pytest.raises(urllib.error.URLError):
+    with pytest.raises(urllib.error.URLError) as e:
         gcs.gcs_open(req)
+    assert not isinstance(e.value, urllib.error.HTTPError)
+    assert isinstance(e.value.__cause__, fake_google_api_error)
 
 
-def test_gcs_open_returns_response_for_existing_blob(monkeypatch, fake_google_api_core):
+def test_gcs_open_returns_response_for_existing_blob(mock_gcs_client):
     """Verify success path: an existing blob gets returned as an addinfourl
     wrapping its byte stream and headers."""
-
-    class ExistingBlob:
-        def __init__(self, url):
-            pass
-
-        def exists(self):
-            return True
-
-        def get_blob_byte_stream(self):
-            return io.BytesIO(b"the-data")
-
-        def get_blob_headers(self):
-            return {"Content-type": "text/plain"}
-
-    monkeypatch.setattr(gcs, "GCSBlob", ExistingBlob)
-
-    req = urllib.request.Request("gs://my-bucket/my-file")
+    req = urllib.request.Request("gs://my-bucket/subdirectory/my-file")
     response = gcs.gcs_open(req)
 
-    assert response.fp.read() == b"the-data"
-    assert response.headers == {"Content-type": "text/plain"}
+    assert response.fp.read() == b"stream of bytes"
+    assert response.headers["Content-type"] == "application/octet-stream"
 
 
-def test_gcs_open_raises_url_error_for_missing_blob(monkeypatch, fake_google_api_core):
-    """Verify that gcs_open raises URLError for "blob does not exist"."""
+def test_gcs_open_raises_http_404_for_missing_blob(mock_gcs_client):
+    """Verify that gcs_open raises a 404 HTTPError for "blob does not exist"."""
+    req = urllib.request.Request("gs://my-bucket/subdirectory/my-notfound-file")
 
-    class MissingBlob:
-        def __init__(self, url):
-            self.blob_path = "my-file"
-
-        def exists(self):
-            return False
-
-    monkeypatch.setattr(gcs, "GCSBlob", MissingBlob)
-
-    req = urllib.request.Request("gs://my-bucket/my-file")
-
-    with pytest.raises(urllib.error.URLError):
+    with pytest.raises(urllib.error.HTTPError) as e:
         gcs.gcs_open(req)
+    assert e.value.code == 404
