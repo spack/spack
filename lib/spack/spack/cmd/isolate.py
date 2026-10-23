@@ -135,7 +135,7 @@ def _do_isolate(args):
     if os.path.exists(args.path) and not os.path.isdir(args.path):
         tty.die(f"Isolation path {args.path} exists but is not a directory")
 
-    # Check write permissions if directory exists, or create it if it doesn't
+    # Check write permissions if directory exists
     if os.path.exists(args.path):
         test_file = os.path.join(args.path, ".spack-write-test")
         try:
@@ -145,11 +145,10 @@ def _do_isolate(args):
         except (OSError, PermissionError) as e:
             tty.die(f"Isolation path {args.path} is not writable: {e}")
     else:
-        # Try creating the directory to verify we have permissions
-        try:
-            os.makedirs(args.path)
-        except (OSError, PermissionError) as e:
-            tty.die(f"Cannot create isolation path {args.path}: {e}")
+        # Verify we have permissions to create the directory by checking parent
+        parent = os.path.dirname(args.path) or "."
+        if not os.access(parent, os.W_OK):
+            tty.die(f"Cannot create isolation path {args.path}: parent directory is not writable")
 
     target_config_existed = os.path.isfile(os.path.join(args.path, "config.yaml"))
     if os.path.exists(args.path):
