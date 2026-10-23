@@ -330,8 +330,9 @@ def install_from_buildcache(
     if tarball_stage is None:
         return False
 
-    # Verify a pinned checksum instead of a signature. A mismatch raises, so that a tampered
-    # binary stops the install
+    # If a SHA256 checksum is provided, validate the downloaded tarball against it. This is used
+    # during bootstrapping when GPG verification is not possible. The shasums are part of Spack's
+    # own sources and part of git history.
     if sha256:
         try:
             spack.url_buildcache.validate_checksum(tarball_stage.save_filename, "sha256", sha256)
