@@ -214,9 +214,19 @@ def _install_from_source(
     Return:
         What the probe of the request returned, or None if the software is not usable
     """
-    tty.debug(f"Bootstrapping {request.abstract_spec.name} from {source['name']}")
+    from_binaries = source["type"] == "buildcache"
+    if from_binaries and "sha256" not in source:
+        raise RuntimeError(
+            f"the metadata in {source['metadata']} does not list the sha256 sums of the binaries. "
+            "If it was created by `spack bootstrap mirror` of an older Spack, run that command "
+            "again to regenerate the mirror."
+        )
+
+    kind = "pre-built binaries" if from_binaries else "sources"
+    tty.msg(f"Bootstrapping {request.abstract_spec.name} from {kind}")
+    tty.debug(f"[BOOTSTRAP] Using the source {source['name']}")
     with spack.config.CONFIG.override(_mirror_scope(source)):
-        if source["type"] == "buildcache":
+        if from_binaries:
             concrete_spec = _pinned_binary(request.abstract_spec, source["sha256"])
             # Nodes without a checksum, like the venv for this python, are built from sources
             installer_args: Dict[str, Any] = {"binary_checksums": source["sha256"]}
