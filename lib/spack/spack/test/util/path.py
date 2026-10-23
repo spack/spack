@@ -31,6 +31,22 @@ fixed_lines = [
 ]
 
 
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        (r"\\?\C:\spack\opt", r"C:\spack\opt"),
+        (r"\\?\UNC\server\share\spack", r"\\server\share\spack"),
+        # paths without the extended-length prefix are returned unchanged
+        (r"\\server\share\spack", r"\\server\share\spack"),
+        (r"C:\spack\opt", r"C:\spack\opt"),
+        (r"?dir\file", r"?dir\file"),
+        ("", ""),
+    ],
+)
+def test_sanitize_win_longpath(path, expected):
+    assert sup.sanitize_win_longpath(path) == expected
+
+
 def test_sanitize_filename():
     """Test filtering illegal characters out of potential filenames"""
     sanitized = sup.sanitize_filename("""a<b>cd/?e:f"g|h*i.\0txt""")

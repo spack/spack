@@ -126,7 +126,13 @@ def sanitize_win_longpath(path: str) -> str:
     """Strip Windows extended path prefix from strings
     Returns sanitized string.
     no-op if extended path prefix is not present"""
-    return path.lstrip("\\\\?\\")
+    # Compare prefixes rather than using str.lstrip, which removes any leading
+    # backslashes and question marks and so would also mangle UNC paths.
+    if path.startswith("\\\\?\\UNC\\"):
+        return "\\\\" + path[len("\\\\?\\UNC\\") :]
+    if path.startswith("\\\\?\\"):
+        return path[len("\\\\?\\") :]
+    return path
 
 
 # This is intended to be longer than the part of the install path
