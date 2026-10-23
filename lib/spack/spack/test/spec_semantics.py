@@ -1754,6 +1754,30 @@ class TestSpecSemantics:
         s = Spec(spec)
         assert s.intersects(constraint) is expected_result
 
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected",
+        [
+            # bare GPU values keep their exact, set-based semantics
+            ("vtk-m cuda_arch=89", "vtk-m cuda_arch=90", "vtk-m cuda_arch=89,90"),
+            ("vtk-m cuda_arch=80", "vtk-m cuda_arch=86", "vtk-m cuda_arch=80,86"),
+            # different vendors are different variants
+            (
+                "vtk-m cuda_arch=80",
+                "vtk-m amdgpu_target=gfx942",
+                "vtk-m amdgpu_target=gfx942 cuda_arch=80",
+            ),
+        ],
+    )
+    def test_bare_gpu_variants_compare_as_before(self, lhs, rhs, expected):
+        lhs, rhs = Spec(lhs), Spec(rhs)
+        assert lhs.intersects(rhs) and rhs.intersects(lhs)
+        lhs.constrain(rhs)
+        assert str(lhs) == expected
+        # the architecture mirror follows the variant
+        gpu_variants = [v for n, v in lhs.variants.items() if n in ("cuda_arch", "amdgpu_target")]
+        names = sorted(v for variant in gpu_variants for v in variant.values)
+        assert sorted(n.name for n in lhs.architecture.gpus) == names
+
     @pytest.mark.regression("13124")
     def test_error_message_unknown_variant(self):
         s = Spec("mpileaks +unknown")

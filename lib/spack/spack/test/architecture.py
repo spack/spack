@@ -216,32 +216,28 @@ def test_gpus_are_part_of_identity_but_not_of_the_dict():
     "lhs,rhs,expected",
     [(None, ["80"], "80"), (["80"], None, "80"), (["86"], ["80"], "80"), (["80"], ["86"], "80")],
 )
-def test_constrain_gpus(lhs, rhs, expected):
+def test_gpu_constrain(lhs, rhs, expected):
     arch = ArchSpec((None, "debian6", None), gpus=lhs)
     other = ArchSpec((None, None, None), gpus=rhs)
-    assert arch.constrain(other) is (lhs != [expected])
+    assert arch._gpu_constrain(other) is (lhs != [expected])
     assert [n.name for n in arch.gpus] == [expected]
-    assert arch.constrain(other) is False
+    assert arch._gpu_constrain(other) is False
 
 
-def test_constrain_is_atomic_when_gpus_are_disjoint():
+def test_gpu_constrain_is_atomic_when_gpus_are_disjoint():
     arch = ArchSpec((None, None, None), gpus=["89"])
     with pytest.raises(spack.error.UnsatisfiableSpecError):
-        arch.constrain(ArchSpec((None, "debian6", None), gpus=["90"]))
+        arch._gpu_constrain(ArchSpec((None, "debian6", None), gpus=["90"]))
     assert repr(arch) == "ArchSpec((None, None, 'None'), gpus='89')"
 
 
-@pytest.mark.parametrize(
-    "built,requested,satisfies",
-    [(["80"], ["86"], True), (["86"], ["80"], False), (None, ["80"], False), (["80"], None, True)],
-)
-def test_satisfies_and_intersects_with_gpus(built, requested, satisfies):
-    lhs = ArchSpec(("linux", None, "x86_64"), gpus=built)
-    rhs = ArchSpec(("linux", None, "x86_64:"), gpus=requested)
-    assert lhs.satisfies(rhs) is satisfies
-    assert lhs.intersects(rhs) and rhs.intersects(lhs)
-    # a GPU match does not rescue a mismatch elsewhere
-    assert not lhs.intersects(ArchSpec(("darwin", None, None), gpus=built))
+def test_bare_gpus_do_not_take_part_in_arch_spec_comparison():
+    """Bare GPU values are compared exactly, by the variant that holds them."""
+    lhs = ArchSpec(("linux", None, "x86_64"), gpus=["89"])
+    rhs = ArchSpec(("linux", None, "x86_64:"), gpus=["90"])
+    assert lhs.satisfies(rhs) and lhs.intersects(rhs)
+    assert lhs.constrain(rhs) is False
+    assert [n.name for n in lhs.gpus] == ["89"]
 
 
 @pytest.mark.parametrize(
