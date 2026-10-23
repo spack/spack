@@ -330,7 +330,8 @@ def install_from_buildcache(
     if tarball_stage is None:
         return False
 
-    # A pinned checksum replaces the signature, and a mismatch is an error, not a cache miss
+    # Verify a pinned checksum instead of a signature. A mismatch raises, so that a tampered
+    # binary stops the install
     if sha256:
         try:
             spack.url_buildcache.validate_checksum(tarball_stage.save_filename, "sha256", sha256)
