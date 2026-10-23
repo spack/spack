@@ -68,9 +68,11 @@ def project_env_mods(
 ) -> None:
     """Given a list of environment modifications, project paths changes to the view."""
     prefix_to_prefix = {
-        str(s.prefix): view.get_projection_for_spec(s) for s in specs if not s.external
+        str(s.prefix): view.get_projection_for_spec(s)
+        for s in specs
+        if not s.external and s in view
     }
-    # Avoid empty regex if all external
+    # Avoid empty regex if mapping empty
     if not prefix_to_prefix:
         return
     prefix_regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
