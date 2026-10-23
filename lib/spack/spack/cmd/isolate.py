@@ -5,7 +5,7 @@ import os
 import shutil
 import sys
 from argparse import ArgumentParser
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import spack.config
 import spack.paths
@@ -45,7 +45,7 @@ def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
 
 def _setup_isolate_scope(
     new_user_path, overwrite: bool, target_config_existed: bool, reuse_old: bool
-) -> Tuple[str, str]:
+) -> str:
     """Set up the isolate scope directories and include.yaml.
 
     Returns:
@@ -81,18 +81,12 @@ def _setup_isolate_scope(
     else:
         final_user_path = new_user_path
 
-    config_path = (
-        os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
-        if target_config_existed and reuse_old
-        else os.path.join(new_user_path, "config.yaml")
-    )
-
     # Write include.yaml with include:: override to redirect user scope
     # For --self, this points to user-redirect/
     # For --path, this points to the external path
     _isolate_include_config(final_user_path)
 
-    return config_path, final_user_path
+    return final_user_path
 
 
 def _ensure_destination_setup(destination: str, overwrite: bool):
@@ -153,7 +147,7 @@ def _do_isolate(args):
     else:
         destination = _ensure_destination_setup(args.path, overwrite=False)
 
-    config_path, final_user_path = _setup_isolate_scope(
+    final_user_path = _setup_isolate_scope(
         destination, args.overwrite, target_config_existed, args.reuse_old
     )
 
@@ -166,10 +160,15 @@ def _do_isolate(args):
         }
     }
 
-    # Add old resource pointers if they exist
     old_resources = spack.config._detect_old_resources()
 
-    spack.config.generate_old_layout_config(old_resources, scope_config)
+    if any(old_resources.values()):
+        spack.config.generate_old_layout_config(old_resources, scope_config)
+        config_path = os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
+    elif target_config_existed:
+        config_path = os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
+    else:
+        config_path = os.path.join(final_user_path, "config.yaml")
 
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
     with open(config_path, "w", encoding="utf-8") as f:

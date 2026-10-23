@@ -178,6 +178,9 @@ def test_isolate_keeps_existing_resources_in_place(isolate_paths, tmp_path):
     assert cfg.get("config:license_dir") == str(old_licenses)
     assert cfg.get("config:locations:data")[0] == str(target)
 
+    # This should be a noop: make sure no exceptions are raised
+    spack.config._perform_migration()
+
 
 def test_isolate_reuse_old_target(isolate_paths, tmp_path):
     """Reuse an old target after restoring tracked include.yaml before pulling.
@@ -306,9 +309,8 @@ def test_self_isolate(isolate_paths, tmp_path):
     sp_isolate("--self")
     assert isolate_scope_path.exists()
     assert not (isolate_scope_path / "bootstrap.yaml").exists()
-    assert (isolate_scope_path / "config.yaml").exists()
+    assert (isolate_scope_path / "user" / "config.yaml").exists()
     assert (isolate_scope_path / "include.yaml").exists()
-    assert (isolate_scope_path / "user").exists()
 
     # Reload config to pick up isolate scope
     spack.config.CONFIG = spack.config.create()
