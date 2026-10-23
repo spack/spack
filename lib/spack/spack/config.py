@@ -1804,11 +1804,16 @@ def walk_yaml_for_paths(
     config_file_dir: str,
     key_path: Optional[List[Union[str, Index]]] = None,
     in_include: bool = False,
+    callback: Optional[Callable[[str], None]] = None,
 ) -> List[Tuple[List[Union[str, Index]], str, str, bool]]:
     """Walk YAML data and find string values that exist as filesystem paths.
 
     Only checks strings under known path-containing keys to avoid false positives
     (e.g., spec strings that happen to match directory names).
+
+    Args:
+        callback: Optional function called with each path value before processing.
+                 Can raise an exception to reject problematic paths.
     """
     if key_path is None:
         key_path = []
@@ -1850,12 +1855,14 @@ def walk_yaml_for_paths(
 
             if isinstance(value, (dict, list)):
                 nested = walk_yaml_for_paths(
-                    value, config_file_dir, key_path + [key], child_in_include
+                    value, config_file_dir, key_path + [key], child_in_include, callback
                 )
                 results.extend(nested)
             elif isinstance(value, str):
                 # Only treat as path if parent key is in PATH_KEYS
                 if key in PATH_KEYS:
+                    if callback:
+                        callback(value)
                     abs_path = resolve_and_check_path(value, config_file_dir)
                     if abs_path:
                         results.append((key_path + [key], value, abs_path, child_in_include))
@@ -1871,12 +1878,14 @@ def walk_yaml_for_paths(
         for idx, item in enumerate(data):
             if isinstance(item, (dict, list)):
                 nested = walk_yaml_for_paths(
-                    item, config_file_dir, key_path + [Index(idx)], in_include
+                    item, config_file_dir, key_path + [Index(idx)], in_include, callback
                 )
                 results.extend(nested)
             elif isinstance(item, str):
                 # Only treat list item as path if parent key is in PATH_KEYS
                 if parent_key in PATH_KEYS:
+                    if callback:
+                        callback(item)
                     abs_path = resolve_and_check_path(item, config_file_dir)
                     if abs_path:
                         results.append((key_path + [Index(idx)], item, abs_path, in_include))
@@ -1885,15 +1894,18 @@ def walk_yaml_for_paths(
 
 
 def resolve_and_check_path(value: str, config_file_dir: str) -> str:
-    """Resolve a potential path and return it if it exists."""
+    """Resolve a potential path string to an absolute path.
+
+    Used by walk_yaml_for_paths which only examines known path keys,
+    so we can assume these are meant to be path references.
+    """
     if not value or value.startswith("$"):
         return ""
 
     if os.path.isabs(value):
-        return value if os.path.exists(value) else ""
+        return value
 
-    candidate = os.path.normpath(os.path.join(config_file_dir, value))
-    return candidate if os.path.exists(candidate) else ""
+    return os.path.normpath(os.path.join(config_file_dir, value))
 
 
 def absolutize_path_in_yaml(
@@ -1915,38 +1927,6 @@ def absolutize_path_in_yaml(
         current[final_key] = new_value
 
 
-def _rewrite_sibling_env_path(
-    abs_path: str, old_envs_root: Optional[str], new_envs_root: Optional[str]
-) -> str:
-    """Rewrite path to sibling environment if under old envs root.
-
-    Args:
-        abs_path: Absolute path to check
-        old_envs_root: Root directory of old environments
-        new_envs_root: Root directory of new environments
-
-    Returns:
-        Path rewritten to new envs root if under old envs root, otherwise unchanged
-    """
-    if not (old_envs_root and new_envs_root):
-        return abs_path
-
-    abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
-    old_envs_root_norm = os.path.normpath(os.path.abspath(old_envs_root))
-    new_envs_root_norm = os.path.normpath(os.path.abspath(new_envs_root))
-
-    try:
-        rel_to_envs_root = os.path.relpath(abs_path_norm, old_envs_root_norm)
-        if not rel_to_envs_root.startswith(".."):
-            # Path is under old envs root (sibling env), rewrite to new location
-            return os.path.join(new_envs_root_norm, rel_to_envs_root)
-    except ValueError:
-        # Different drives on Windows
-        pass
-
-    return abs_path
-
-
 def process_env_file_paths(
     file_path: str,
     old_env_dir: str,
@@ -1959,11 +1939,12 @@ def process_env_file_paths(
     Applies environment-specific path rewriting rules:
 
     1. Absolute path inside old env -> rewrite to new env location
-       (1a. If outside this env but inside envs root (sibling env), rewrite to new root)
-    2. Relative path pointing outside env -> make absolute (preserve target)
-       (2a. If pointing to sibling env (under same envs root), rewrite to new root)
-    3. Relative path staying inside env -> keep relative (works in new location)
-    4. Absolute path outside env (and outside envs root) -> unchanged
+    2. Relative path staying inside env -> keep relative (works in new location)
+    3. Absolute path outside env and outside envs root -> unchanged
+
+    BLOCKED (migration fails if these are found):
+    4. Relative path pointing outside env -> BLOCKS MIGRATION
+    5. Absolute path in envs root but outside this env (sibling) -> BLOCKS MIGRATION
 
     Args:
         file_path: Path to the yaml file to process
@@ -1974,6 +1955,9 @@ def process_env_file_paths(
 
     Returns:
         Modified data if any paths were changed, None otherwise
+
+    Raises:
+        spack.error.SpackError: If environment has external references that prevent migration
     """
     with open(file_path, "r", encoding="utf-8") as f:
         data = syaml.load(f)
@@ -1991,46 +1975,69 @@ def process_env_file_paths(
     rel_to_new_env = os.path.relpath(new_config_dir, new_env_norm)
     old_config_dir = os.path.join(old_env_norm, rel_to_new_env)
 
-    found_paths = walk_yaml_for_paths(data, old_config_dir)
+    # Callback to reject paths with $env/.. that escape the environment
+    def reject_env_variable(value: str):
+        if "$env" in value and "/.." in value:
+            rel_file = os.path.relpath(file_path, new_env_norm)
+            raise spack.error.SpackError(
+                f"Environment cannot be migrated: path '{value}' in {rel_file} "
+                f"contains $env/.. which would reference outside the environment. "
+                f"Expand the variable or use an absolute path."
+            )
+
+    found_paths = walk_yaml_for_paths(data, old_config_dir, callback=reject_env_variable)
     modified = False
 
     for key_path, original_value, abs_path, in_include in found_paths:
         abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
 
-        if os.path.isabs(original_value):
-            # Rule 1: Absolute path inside old env: rewrite to new env
-            try:
-                rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
-                if not rel_to_old_env.startswith(".."):
-                    # Path is inside old env, rewrite it
-                    new_path = os.path.join(new_env_norm, rel_to_old_env)
-                    absolutize_path_in_yaml(data, key_path, new_path)
-                    modified = True
-                else:
-                    # Rule 1a: Absolute path outside this env but inside envs root (sibling)
-                    rewritten = _rewrite_sibling_env_path(abs_path, old_envs_root, new_envs_root)
-                    if rewritten != abs_path:
-                        absolutize_path_in_yaml(data, key_path, rewritten)
-                        modified = True
-                    # else: Rule 4: Absolute path outside envs root: unchanged
-            except ValueError:
-                # Different drives on Windows: outside env, unchanged
-                pass
-        else:
-            # Relative path - check if it points inside or outside the env
-            try:
-                rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
-                if rel_to_old_env.startswith(".."):
-                    # Rule 2: Relative path pointing outside env: make absolute
-                    # But: if pointing to sibling env, rewrite to new location (Rule 2a)
-                    target_path = _rewrite_sibling_env_path(abs_path, old_envs_root, new_envs_root)
-                    absolutize_path_in_yaml(data, key_path, target_path)
-                    modified = True
-                # else: Rule 3: Relative path inside env: keep relative (no change)
-            except ValueError:
-                # Different drives on Windows: outside env, make absolute
-                absolutize_path_in_yaml(data, key_path, abs_path)
+        # Check if path is inside the env being moved
+        try:
+            rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
+            inside_env = not rel_to_old_env.startswith("..")
+        except ValueError:
+            # Different drives on Windows
+            inside_env = False
+
+        if inside_env:
+            # Rule 1: Path inside env - rewrite if absolute, keep relative if relative
+            if os.path.isabs(original_value):
+                new_path = os.path.join(new_env_norm, rel_to_old_env)
+                absolutize_path_in_yaml(data, key_path, new_path)
                 modified = True
+            # else: Rule 2: Relative path inside env: keep as-is
+        else:
+            # Path is outside the env
+            if not os.path.isabs(original_value):
+                # Rule 4: Relative path outside env -> BLOCK MIGRATION
+                rel_file = os.path.relpath(file_path, new_env_norm)
+                raise spack.error.SpackError(
+                    f"Environment cannot be migrated: relative path '{original_value}' "
+                    f"in {rel_file} points outside the environment to {abs_path}. "
+                    f"Either make this an absolute path or move the target inside the environment."
+                )
+
+            # Absolute path outside env - check if it's in envs root (sibling reference)
+            if old_envs_root:
+                try:
+                    envs_root_norm = os.path.normpath(os.path.abspath(old_envs_root))
+                    rel_to_envs_root = os.path.relpath(abs_path_norm, envs_root_norm)
+                    inside_envs_root = not rel_to_envs_root.startswith("..")
+                except ValueError:
+                    # Different drives
+                    inside_envs_root = False
+
+                if inside_envs_root:
+                    # Rule 5: Absolute path to sibling in envs root -> BLOCK MIGRATION
+                    rel_file = os.path.relpath(file_path, new_env_norm)
+                    raise spack.error.SpackError(
+                        f"Environment cannot be migrated: absolute path '{original_value}' "
+                        f"in {rel_file} points to a sibling location in the environments root. "
+                        f"Move the target outside the environments root or inside this "
+                        f"environment."
+                    )
+
+            # Rule 3: Absolute path outside env and outside envs root -> OK, unchanged
 
     return data if modified else None
 

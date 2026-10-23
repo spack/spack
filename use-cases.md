@@ -174,16 +174,28 @@ After copying each environment directory, Spack rewrites paths in the environmen
 
 **Environment path rewriting rules:**
 
-1. **Absolute path inside old env** → rewrite to new env location (e.g., view at `$old_env/view` becomes `$new_env/view`)
-2. **Relative path pointing outside env** → make absolute to preserve the original target (e.g., `../../some/dir` becomes `/absolute/path/to/some/dir`)
-3. **Relative path staying inside env** → keep relative (e.g., `./subdir` remains `./subdir`, will work in new location)
-4. **Absolute path outside env** → unchanged (e.g., `/some/external/path` stays `/some/external/path`)
+1. **Absolute path inside env** → rewrite to new env location (e.g., view at `$old_env/view` becomes `$new_env/view`)
+2. **Relative path inside env** → keep relative (e.g., `./subdir` remains `./subdir`, will work in new location)
+3. **Absolute path outside env AND outside envs root** → unchanged (e.g., `/some/external/path` stays `/some/external/path`)
+
+**Migration is blocked if the environment has:**
+
+4. **Relative path outside env** → migration fails (e.g., `../common.yaml` would break after move)
+5. **Absolute path to sibling in envs root** → migration fails (e.g., `/var/spack/environments/other_env/config.yaml`)
+6. **Path with `$env/..` escaping env** → migration fails (e.g., `$env/../common.yaml` would reference outside env after migration)
+
+These references cannot be safely migrated because:
+- The target files/directories are not copied during migration (only environment directories are migrated)
+- Making them absolute to the old location couples the migrated environment to the old installation
+- Rewriting them to the new envs root would create broken references
+
+**Solution:** Either move the referenced files inside the environment, or move them outside the environments root entirely (e.g., to `/opt/shared/spack/common.yaml`).
 
 **Why environment rules differ from user config migration:**
 
 User config migration (section 3.8) relocates only config files while other resources (repos, caches) may remain at the old location. Therefore, absolute paths into `~/.spack` only make sense to rewrite when they appear in `include:` sections (referencing other config files being moved).
 
-Environment migration relocates the entire environment directory as a unit. Any path pointing inside the environment should be rewritten to the new location, regardless of context. Relative paths escaping the environment are made absolute to preserve their original targets, since the environment's position in the filesystem hierarchy changes.
+Environment migration relocates the entire environment directory as a unit and blocks migration if there are external references that would break. Paths inside the environment are rewritten; paths outside the environment are only allowed if they're also outside the environments root.
 
 ### Develop spec dev_path rewriting
 

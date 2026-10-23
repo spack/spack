@@ -315,12 +315,11 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
 
 
 def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
-    """Environment migration applies the four path-handling scenarios.
+    """Environment migration applies the path-handling scenarios.
 
     1. Absolute path inside old env: rewrite to new env location
-    2. Relative path pointing outside env: make absolute (preserve target)
-    3. Relative path staying inside env: keep relative (works in new location)
-    4. Absolute path outside env: unchanged
+    2. Relative path staying inside env: keep relative (works in new location)
+    3. Absolute path outside env and outside envs root: unchanged
     """
     old_envs = tmp_path / "old_envs"
     new_envs = tmp_path / "new_envs"
@@ -339,10 +338,6 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
     subdir_file = subdir / "nested.yaml"
     subdir_file.write_text("config: {}\n", encoding="utf-8")
 
-    # Shared config outside the environment
-    shared_cfg = old_envs / "shared.yaml"
-    shared_cfg.write_text("packages: {}\n", encoding="utf-8")
-
     external_dir = tmp_path / "external"
     external_dir.mkdir()
 
@@ -356,14 +351,12 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
                     "config": {
                         # Rule 1: Absolute path inside env → rewrite to new location
                         "source_cache": str(local_file),
-                        # Rule 4: Absolute path outside env → unchanged
+                        # Rule 3: Absolute path outside env and envs root → unchanged
                         "misc_cache": str(external_dir),
                     },
                     "include": [
-                        # Rule 2: Relative path pointing outside env → make absolute
-                        "../shared.yaml",
-                        # Rule 3: Relative path inside env → keep relative
-                        "local.yaml",
+                        # Rule 2: Relative path inside env → keep relative
+                        "local.yaml"
                     ],
                 }
             }
@@ -384,14 +377,52 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
     # Rule 1: Absolute path inside old env gets rewritten to new location
     assert migrated["spack"]["config"]["source_cache"] == str(staging / "local.yaml")
 
-    # Rule 4: Absolute path outside env stays unchanged
+    # Rule 3: Absolute path outside env and envs root stays unchanged
     assert migrated["spack"]["config"]["misc_cache"] == str(external_dir)
 
-    # Rule 2: Relative path outside env becomes absolute (preserves original target)
-    assert migrated["spack"]["include"][0] == str(shared_cfg)
+    # Rule 2: Relative path inside env stays relative
+    assert migrated["spack"]["include"][0] == "local.yaml"
 
-    # Rule 3: Relative path inside env stays relative
-    assert migrated["spack"]["include"][1] == "local.yaml"
+
+@pytest.mark.parametrize(
+    "path_factory,expected_error",
+    [
+        (lambda old_envs: "../shared.yaml", "relative path.*outside the environment"),
+        (
+            lambda old_envs: str(old_envs / "sibling/config.yaml"),
+            "absolute path.*sibling location.*environments root",
+        ),
+        (
+            lambda old_envs: "$env/../shared.yaml",
+            r"contains \$env/\.\. which would reference outside",
+        ),
+    ],
+)
+def test_env_migration_blocks_external_references(tmp_path, path_factory, expected_error):
+    """Environment migration blocks if there are external path references."""
+    old_envs = tmp_path / "old_envs"
+    old_envs.mkdir()
+    old_env = old_envs / "myenv"
+    old_env.mkdir()
+
+    include_path = path_factory(old_envs)
+
+    spack_yaml = old_env / "spack.yaml"
+    spack_yaml.write_text(
+        syaml.dump({"spack": {"specs": ["zlib"], "include": [include_path]}}), encoding="utf-8"
+    )
+
+    staging = tmp_path / "staging"
+    shutil.copytree(old_env, staging)
+
+    with pytest.raises(spack.error.SpackError, match=expected_error):
+        spack.config.process_env_file_paths(
+            str(staging / "spack.yaml"),
+            str(old_env),
+            str(staging),
+            str(old_envs),
+            tmp_path / "new",
+        )
 
 
 @pytest.mark.parametrize("conflict", ["environments", "gpg"])
@@ -553,22 +584,14 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     old_envs.mkdir(parents=True)
 
     # Create old environments with spack.yaml files
-    # test-env-1 has a shared config file
     env1_dir = old_envs / "test-env-1"
     env1_dir.mkdir()
-    (env1_dir / "common.yaml").write_text(
-        "packages:\n  all:\n    compiler: [gcc]\n", encoding="utf-8"
-    )
     (env1_dir / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
 
-    # test-env-2 includes from test-env-1 with both relative and absolute paths
+    # test-env-2 is a simple env with no external references
     env2_dir = old_envs / "test-env-2"
     env2_dir.mkdir()
-    abs_include = str(env1_dir / "common.yaml")
-    (env2_dir / "spack.yaml").write_text(
-        f"spack:\n  specs: []\n  include:\n  - ../test-env-1/common.yaml\n  - {abs_include}\n",
-        encoding="utf-8",
-    )
+    (env2_dir / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
 
     # Create fresh config and run migration
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
@@ -591,16 +614,6 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     # Old location still exists (migration copies, doesn't move)
     assert old_envs.exists()
     assert (old_envs / "test-env-1" / "spack.yaml").exists()
-
-    # Verify sibling environment references were rewritten to new location
-    env2_yaml = new_envs / "test-env-2" / "spack.yaml"
-    with open(env2_yaml, "r", encoding="utf-8") as f:
-        env2_data = syaml.load(f)
-
-    # Both relative and absolute includes should point to new location of test-env-1
-    expected_include = str(new_envs / "test-env-1" / "common.yaml")
-    assert env2_data["spack"]["include"][0] == expected_include  # was relative
-    assert env2_data["spack"]["include"][1] == expected_include  # was absolute
 
 
 def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
