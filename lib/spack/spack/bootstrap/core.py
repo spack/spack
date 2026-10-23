@@ -202,7 +202,7 @@ def _pinned_binary(abstract_spec: spack.spec.Spec, sha256: Dict[str, str]) -> sp
 
 def _core_environment() -> spack.environment.Environment:
     """Return the environment recording the core dependencies installed for this interpreter"""
-    path = environment_path(prefix="core-")
+    path = environment_path(label="core")
     if spack.environment.is_env_dir(path):
         return spack.environment.Environment(path)
     return spack.environment.create_in_dir(path, with_view=False)
