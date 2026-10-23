@@ -840,7 +840,6 @@ class ArchSpec:
             self._attr_satisfies(self.platform, other.platform)
             and self._attr_satisfies(self.os, other.os)
             and self._target_satisfies(self.target, other.target)
-            and self._gpu_satisfies(self.gpus, other.gpus)
         )
 
     def intersects(self, other: "ArchSpec") -> bool:
@@ -859,7 +858,6 @@ class ArchSpec:
             self._attr_intersects(self.platform, other.platform)
             and self._attr_intersects(self.os, other.os)
             and self._target_intersects(self.target, other.target)
-            and self._gpu_intersects(self.gpus, other.gpus)
         )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
@@ -887,9 +885,10 @@ class ArchSpec:
         return True
 
     def _gpu_constrain(self, other: "ArchSpec") -> bool:
-        """
-        Works out constrain logic for GPU uarchs based on intersection.
-        """
+        """Constrains ``self.gpus`` to the targets whose code runs on both sides.
+
+        Not called from ``constrain`` yet: bare GPU values are compared exactly, by the
+        variant, and only a range form (to come) defers to the architecture."""
         if other.gpus is None:
             return False  # no constraints to apply
         if self.gpus is None:
@@ -935,7 +934,6 @@ class ArchSpec:
                 constrained = True
 
         constrained |= self._target_constrain(other)
-        constrained |= self._gpu_constrain(other)
 
         return constrained
 
@@ -3510,6 +3508,7 @@ class Spec:
 
         changed |= self.versions.intersect(other.versions)
         changed |= self._constrain_variants(other)
+        self._sync_gpu_data_from_variants()
 
         changed |= self.compiler_flags.constrain(other.compiler_flags)
 
