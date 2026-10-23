@@ -235,15 +235,21 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
 def _make_gpu_microarch(
     name: Union[str, spack.vendor.archspec.gpu.GPUMicroarch]
 ) -> spack.vendor.archspec.gpu.GPUMicroarch:
-    """Create a GPU Microarch object from archspec's GPU TARGETS dict."""
+    """The archspec node for a GPU micro-architecture name.
+
+    Raises:
+        ValueError: if archspec does not know the name. Unlike CPU targets, there is no generic
+            fallback: a node outside the archspec graph has no ancestors and no compiler data,
+            so nothing could be built or compared correctly for it. Support for a new
+            micro-architecture is added to the archspec data, not worked around here.
+    """
     if isinstance(name, spack.vendor.archspec.gpu.GPUMicroarch):
         return name
 
     target = spack.vendor.archspec.gpu.TARGETS.get(name)
-    if target is not None:
-        return target
-
-    return spack.vendor.archspec.gpu.GPUMicroarch(name=name, vendor="generic")
+    if target is None:
+        raise ValueError(f"'{name}' is not a GPU micro-architecture known to archspec")
+    return target
 
 
 def _closed_interval_targets(
@@ -2276,8 +2282,28 @@ class Spec:
 
         return result
 
-    def _get_gpu_data_from_variant(self) -> None:
-        pass
+    def _sync_gpu_data_from_variants(self) -> None:
+        """Mirrors the GPU variants into ``architecture.gpus``. Values archspec does not know,
+        ``none`` included, are left out: they get no archspec features."""
+        gpus: List[spack.vendor.archspec.gpu.GPUMicroarch] = []
+
+        for name in spack.gpus.VENDOR_BY_VARIANT:
+            variant_value = self.variants.get(name)
+            if variant_value is None:
+                continue
+            for value in variant_value.values:
+                try:
+                    gpus.append(_make_gpu_microarch(str(value)))
+                except ValueError:
+                    continue
+
+        if not gpus:
+            return
+
+        if self.architecture is None:
+            self.architecture = ArchSpec()
+
+        self.architecture.gpus = gpus
 
     def _add_flag(
         self, name: str, value: Union[str, bool], propagate: bool, concrete: bool
@@ -2331,6 +2357,8 @@ class Spec:
                 reason = _propagated_bool_conflict(self.variants, self.propagated_variants)
                 if reason is not None:
                     raise reason
+            if name in spack.gpus.VENDOR_BY_VARIANT:
+                self._sync_gpu_data_from_variants()
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -5576,6 +5604,8 @@ class SpecfileReaderBase(abc.ABC):
                 spec.propagated_variants[name] = vt.VariantValue.from_node_dict(
                     name, values, abstract=name in propagated_abstract
                 )
+
+        spec._sync_gpu_data_from_variants()
 
         spec.external_path = None
         spec.external_modules = None
