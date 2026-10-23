@@ -11,7 +11,7 @@ import spack.concretize
 import spack.error
 import spack.operating_systems
 import spack.platforms
-from spack.spec import ArchSpec, Spec
+from spack.spec import ArchSpec, Spec, _make_gpu_target
 
 
 @pytest.fixture(scope="module")
@@ -107,6 +107,157 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     architecture = ArchSpec(architecture_tuple)
     constraint = ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint)
+
+
+def _gpus(names):
+    """GPU targets from names, ``:name`` being the compatible form."""
+    return [_make_gpu_target(name) for name in names]
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        # exact targets only meet themselves
+        (["80"], ["80"], ["80"]),
+        (["86"], ["80"], []),
+        # an exact target meets a compatible one it is accepted by, and stays exact
+        (["80"], [":86"], ["80"]),
+        ([":86"], ["80"], ["80"]),
+        (["86"], [":80"], []),
+        # two compatible targets meet at the most specific common ancestors
+        ([":86"], [":80"], [":80"]),
+        ([":80"], [":86"], [":80"]),
+        ([":90a"], [":90"], [":90"]),
+        ([":103f"], [":100a"], [":100f"]),
+        ([":gfx90a:xnack-"], [":gfx90a"], [":gfx90a"]),
+        # the two xnack modes both run code built without an xnack setting
+        ([":gfx90a:xnack-"], [":gfx90a:xnack+"], [":gfx90a"]),
+        # no common target but the vendor root, which is not buildable
+        ([":89"], [":90"], []),
+        # vendors are independent: one side only passes through, both sides must meet
+        ([":80"], [":gfx90a"], [":80", ":gfx90a"]),
+        (["80", "gfx942"], [":86"], ["80", "gfx942"]),
+        (["80", "gfx942"], ["86"], []),
+        # lists meet pairwise, each survivor once
+        (["80", "90"], [":86", ":90a"], ["80", "90"]),
+        ([], ["80"], []),
+        (["80"], [], []),
+    ],
+)
+def test_gpu_intersection(lhs, rhs, expected):
+    assert [str(t) for t in ArchSpec._gpu_intersection(_gpus(lhs), _gpus(rhs))] == expected
+    result = ArchSpec._gpu_intersection(_gpus(rhs), _gpus(lhs))
+    assert sorted(str(t) for t in result) == sorted(expected)
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        ([":86"], [":80"], True),
+        (["86"], ["80"], False),
+        (["89"], [":90"], False),
+        ([":80"], [":gfx90a"], True),
+        ([], ["80"], True),
+        ([], [], True),
+    ],
+)
+def test_gpu_intersects(lhs, rhs, expected):
+    assert ArchSpec._gpu_intersects(_gpus(lhs), _gpus(rhs)) is expected
+    assert ArchSpec._gpu_intersects(_gpus(rhs), _gpus(lhs)) is expected
+
+
+@pytest.mark.parametrize(
+    "built,requested,expected",
+    [
+        # a build for 80 runs on an 86 device, not the other way around
+        (["80"], [":86"], True),
+        (["86"], [":80"], False),
+        (["100f"], [":100a"], True),
+        # exact requests need the exact target
+        (["80"], ["80"], True),
+        (["80"], ["86"], False),
+        # a compatible build satisfies a compatible request it is contained in
+        ([":80"], [":86"], True),
+        ([":86"], [":80"], False),
+        # a fat binary serves a device if any of its targets does; every device must be served
+        (["80", "90"], [":86", ":90a"], True),
+        (["80"], [":86", ":90"], False),
+        (["89"], [":90"], False),
+        (["80"], [":gfx942"], False),
+        (["80"], [], True),
+        ([], ["80"], False),
+        ([], [], True),
+    ],
+)
+def test_gpu_satisfies(built, requested, expected):
+    assert ArchSpec._gpu_satisfies(_gpus(built), _gpus(requested)) is expected
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (None, None),
+        ([], None),
+        (["90", "80", "90"], "90,80"),
+        # a leading colon marks a compatible target, distinct from the exact one
+        ([":86"], ":86"),
+        (["80", ":80", ":gfx90a:xnack-"], "80,:80,:gfx90a:xnack-"),
+    ],
+)
+def test_gpus_setter(value, expected):
+    arch = ArchSpec((None, None, None), gpus=value)
+    assert (arch.gpus is None) if expected is None else ",".join(map(str, arch.gpus)) == expected
+    assert ArchSpec(arch).gpus == arch.gpus
+
+
+@pytest.mark.parametrize("name", ["none", "gfx999", "99", ":none", ":99"])
+def test_gpus_unknown_to_archspec_are_rejected(name):
+    with pytest.raises(ValueError, match="not a GPU micro-architecture known to archspec"):
+        ArchSpec((None, None, None), gpus=[name])
+
+
+def test_gpus_are_part_of_identity_but_not_of_the_dict():
+    arch = ArchSpec(("linux", "ubuntu22.04", "x86_64"), gpus=["80"])
+    assert arch != ArchSpec(("linux", "ubuntu22.04", "x86_64"))
+    assert arch != ArchSpec(arch, gpus=["86"])
+    assert "gpu" not in arch.to_dict()["arch"]
+    assert repr(arch) == "ArchSpec(('linux', 'ubuntu22.04', 'x86_64'), gpus='80')"
+    assert arch != ArchSpec(arch, gpus=[":80"])
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        (None, ["80"], "80"),
+        (["80"], None, "80"),
+        ([":86"], [":80"], ":80"),
+        (["80"], [":86"], "80"),
+        ([":86"], ["80"], "80"),
+        (["80", ":gfx90a"], [":86"], "80,:gfx90a"),
+    ],
+)
+def test_gpu_constrain(lhs, rhs, expected):
+    arch = ArchSpec((None, "debian6", None), gpus=lhs)
+    other = ArchSpec((None, None, None), gpus=rhs)
+    assert arch._gpu_constrain(other) is (lhs != expected.split(","))
+    assert ",".join(map(str, arch.gpus)) == expected
+    assert arch._gpu_constrain(other) is False
+
+
+def test_gpu_constrain_is_atomic_when_gpus_are_disjoint():
+    arch = ArchSpec((None, None, None), gpus=["89"])
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        arch._gpu_constrain(ArchSpec((None, "debian6", None), gpus=[":90"]))
+    assert repr(arch) == "ArchSpec((None, None, 'None'), gpus='89')"
+
+
+def test_bare_gpus_do_not_take_part_in_arch_spec_comparison():
+    """Bare GPU values are compared exactly, by the variant that holds them."""
+    lhs = ArchSpec(("linux", None, "x86_64"), gpus=["89"])
+    rhs = ArchSpec(("linux", None, "x86_64:"), gpus=["90"])
+    assert lhs.satisfies(rhs) and lhs.intersects(rhs)
+    assert lhs.constrain(rhs) is False
+    assert [n.name for n in lhs.gpus] == ["89"]
 
 
 @pytest.mark.parametrize(

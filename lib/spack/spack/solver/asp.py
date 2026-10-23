@@ -3273,6 +3273,9 @@ class SpecBuilder:
 
             action(*args)
 
+        for spec in self._specs.values():
+            spec._sync_gpu_data_from_variants()
+
         # apply post-solve concretization steps to specs in the result
         post_process_fresh_solve(self._specs, self._splices)
 
