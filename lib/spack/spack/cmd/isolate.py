@@ -139,7 +139,7 @@ def _do_isolate(args):
     if os.path.exists(args.path):
         test_file = os.path.join(args.path, ".spack-write-test")
         try:
-            with open(test_file, "w") as f:
+            with open(test_file, "w", encoding="utf-8") as f:
                 pass
             os.remove(test_file)
         except (OSError, PermissionError) as e:
