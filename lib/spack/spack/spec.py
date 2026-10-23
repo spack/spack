@@ -4712,7 +4712,8 @@ class Spec:
 
         Other is a splice match for self if it shares a name, or if self is a virtual provider
         and other provides a superset of the virtuals provided by self. Virtuals provided are
-        evaluated in the context of a root spec (self_root for self, other_root for other).
+        evaluated in the context of a root spec (self_root for self, other_root for other). If
+        self_root has a node with the name of other, only that node is a match.
 
         This is a slight oversimplification. Other could be a match for self in the context of
         one edge in self_root and not in the context of another edge. This method could be
@@ -4720,6 +4721,9 @@ class Spec:
         """
         if other.name == self.name:
             return True
+
+        if any(s.name == other.name for s in self_root.traverse(deptype=dt.LINK | dt.RUN)):
+            return False
 
         return bool(
             bool(self._virtuals_provided(self_root))
@@ -4938,6 +4942,11 @@ class Spec:
             else:
                 for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
                     copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
+
+        # Spec comparisons while splicing cache hashes of nodes that are changed afterwards
+        for node in spec.traverse():
+            if node._build_spec:
+                node.clear_caches(keep_package_hash=True)
 
         return spec
 

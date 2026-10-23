@@ -1685,6 +1685,12 @@ class TestSpecSemantics:
         assert out2["splice-t"].build_spec.dag_hash() == spec["splice-t"].dag_hash()
         assert out2.spliced
 
+        # Cached hashes are those of the spliced DAG
+        fresh = out2.copy()
+        for node in fresh.traverse():
+            node.clear_caches(keep_package_hash=True)
+        assert [x.dag_hash() for x in fresh.traverse()] == [x.dag_hash() for x in out2.traverse()]
+
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_dict(self, transitive):
         spec = spack.concretize.concretize_one("splice-t")
@@ -1783,6 +1789,17 @@ class TestSpecSemantics:
         out = spec.splice(dep, transitive)
         assert dep.name in out
         assert transitive == ("+foo" in out["splice-z"])
+
+    @pytest.mark.parametrize("transitive", [True, False])
+    def test_splice_replaces_node_with_same_name_only(self, transitive):
+        """A replacement replaces only the node with its name, also when other nodes provide its
+        virtuals"""
+        spec = spack.concretize.concretize_one("splice-t")
+        provider = spack.concretize.concretize_one("splice-a")
+        spec._add_dependency(provider, depflag=dt.LINK, virtuals=("something",))
+        spack.spec.rehash_mutated([provider], repo=spack.repo.PATH)
+        out = spec.splice(spack.concretize.concretize_one("splice-h+foo"), transitive)
+        assert out["something"].name == "splice-a"
 
     @pytest.mark.parametrize("transitive", [True, False])
     def test_splice_swap_names_mismatch_virtuals(self, transitive):
