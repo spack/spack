@@ -185,6 +185,41 @@ User config migration (section 3.8) relocates only config files while other reso
 
 Environment migration relocates the entire environment directory as a unit. Any path pointing inside the environment should be rewritten to the new location, regardless of context. Relative paths escaping the environment are made absolute to preserve their original targets, since the environment's position in the filesystem hierarchy changes.
 
+### Develop spec dev_path rewriting
+
+Environments may contain concrete specs with `dev_path` variants (from `spack develop`). These paths are stored in the lock file (`spack.lock`) and include the spec's DAG hash, which depends on the `dev_path` value. During migration, lock files are skipped because rewriting them would require rehashing specs, which in turn requires loading the package repository—infrastructure that isn't available during config module load.
+
+Instead, migration uses a deferred fix-up approach:
+
+**During migration:**
+- After copying an environment, migration writes a marker file `.spack-needs-dev-path-migration` containing:
+  - `old_env_path`: The original environment directory path
+  - `new_env_path`: The destination environment directory path
+  - `migrated_at`: ISO timestamp
+
+**On first environment load after migration:**
+- When `Environment._read()` loads the environment, it checks for the marker file
+- If present, `_fix_dev_paths_after_migration()`:
+  1. Reads the old environment path from the marker
+  2. Iterates through all develop specs in `spack.yaml`
+  3. For each develop spec whose path is inside the old environment directory:
+     - Computes the equivalent path in the new environment location
+     - Finds the corresponding concrete spec with the `dev_path` variant
+  4. Calls `apply_develop()` with the new paths, which:
+     - Mutates the concrete specs with new `dev_path` variants
+     - Calls `spack.spec.rehash_mutated()` to recompute DAG hashes for modified specs and their dependents
+     - Updates `specs_by_hash` with the new hashes
+  5. Writes the environment (persisting changes to `spack.lock`)
+  6. Removes the marker file (ensuring this only happens once)
+
+This approach:
+- Preserves the existing concrete solve (no full reconcretization required)
+- Correctly updates all DAG hashes using the existing `apply_develop()` machinery
+- Happens automatically and transparently on first environment activation
+- Only affects develop specs with paths inside the relocated environment directory
+
+Develop specs with paths outside the environment directory are not modified.
+
 ## 3.5 GPG data
 
 If the user approves migration, Spack migrates both the GPG keyring and the GPG keys directory together from their old default locations to the new default locations. Both must succeed for migration to be considered successful.

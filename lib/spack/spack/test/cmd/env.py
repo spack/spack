@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
+import datetime
 import filecmp
 import glob
 import io
@@ -3629,6 +3630,71 @@ def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmp_path: pathl
     with ev.read("named_env") as e:
         assert e.dev_specs["mypkg1"]["path"] == "../build_folder"
         assert e.dev_specs["mypkg2"]["path"] == "/some/other/path"
+
+
+def test_dev_path_migration_rewrite(
+    tmp_path: pathlib.Path, mutable_config, mock_packages, mutable_database
+):
+    """Test that dev_path variants are rewritten after migration when
+    the .spack-needs-dev-path-migration marker is present"""
+    # Create an environment with a develop spec inside the environment directory
+    orig_env = tmp_path / "original_env"
+    orig_env.mkdir()
+    build_folder = orig_env / "build_folder"
+    build_folder.mkdir()
+
+    spack_yaml = orig_env / "spack.yaml"
+    spack_yaml.write_text(f"""
+spack:
+  specs:
+  - mpileaks
+  develop:
+    mpileaks:
+      spec: mpileaks@2.3
+      path: {build_folder}
+""")
+
+    # Create and concretize the environment
+    with ev.Environment(str(orig_env)) as e:
+        e.concretize()
+        e.write()
+
+        # Verify the spec has dev_path variant
+        spec = e.matching_spec("mpileaks")
+        assert "dev_path" in spec.variants
+        assert spec.variants["dev_path"].value == str(build_folder)
+        original_hash = spec.dag_hash()
+
+    # Simulate migration: physically move the environment to a new location
+    new_env = tmp_path / "migrated_env"
+    shutil.copytree(orig_env, new_env)
+
+    # The build_folder gets copied along with the environment
+    new_build = new_env / "build_folder"
+
+    # Write the migration marker file
+    marker_path = new_env / ".spack-needs-dev-path-migration"
+    marker_data = {
+        "old_env_path": str(orig_env),
+        "new_env_path": str(new_env),
+        "migrated_at": datetime.datetime.now().isoformat(),
+    }
+    with open(marker_path, "w", encoding="utf-8") as f:
+        json.dump(marker_data, f, indent=2)
+
+    # Load the migrated environment - should trigger dev_path rewrite
+    with ev.Environment(str(new_env)) as e:
+        # The marker should be gone
+        assert not marker_path.exists()
+
+        # The spec should have been rehashed with the new dev_path
+        spec = e.matching_spec("mpileaks")
+        assert "dev_path" in spec.variants
+        assert spec.variants["dev_path"].value == str(new_build)
+
+        # The hash should be different from the original
+        new_hash = spec.dag_hash()
+        assert new_hash != original_hash, "Hash should change when dev_path changes"
 
 
 @pytest.mark.regression("23440")

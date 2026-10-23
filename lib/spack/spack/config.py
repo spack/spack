@@ -30,7 +30,9 @@ schemas are in submodules of :py:mod:`spack.schema`.
 import argparse
 import contextlib
 import copy
+import datetime
 import functools
+import json
 import os
 import os.path
 import pathlib
@@ -2502,13 +2504,15 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
     VIEW_MARKER_FILE = ".spack-view"
 
     def ignore_views(directory, names):
-        """Exclude view directories and lock file during environment copy.
+        """Exclude view directories during environment copy.
 
         Skips:
         - .spack-env directories (always - contains default views at .spack-env/view)
         - ._view at environment root only (old format pre-June 2026: symlinks to ._view/<hash>/)
         - Directories with .spack-view marker anywhere (custom-location views, June 2026+)
-        - spack.lock at environment root (users should reconcretize after migration)
+
+        spack.lock is copied and will be fixed up on first environment load to rewrite
+        any dev_path variants that pointed into the old environment directory.
 
         Note: Skipping .spack-env also excludes cached repos and locks as a side effect.
         """
@@ -2526,10 +2530,6 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
             elif is_env_root and name == "._view":
                 ignored.append(name)
                 tty.debug(f"Excluding root-level ._view directory: {path}")
-            # Skip spack.lock at environment root (user should reconcretize)
-            elif is_env_root and name == "spack.lock":
-                ignored.append(name)
-                tty.debug(f"Excluding environment lock file: {path}")
             # Skip custom-location views with marker file (anywhere in tree)
             elif os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
                 ignored.append(name)
@@ -2601,6 +2601,16 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         # Add migration marker to identify this source
         with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
             f.write(f"Migrated from {spack.paths.prefix}\n")
+
+        # Add marker for post-migration dev_path rewriting
+        dev_path_marker = os.path.join(staging_path, ".spack-needs-dev-path-migration")
+        marker_data = {
+            "old_env_path": old_path,
+            "new_env_path": new_path,
+            "migrated_at": datetime.datetime.now().isoformat(),
+        }
+        with open(dev_path_marker, "w", encoding="utf-8") as f:
+            json.dump(marker_data, f, indent=2)
 
     # Acquire lock for all environments
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
