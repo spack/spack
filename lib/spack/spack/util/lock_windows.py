@@ -2,8 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""LockFileEx-based lock backend for Windows, and the ctypes kernel32 bindings it needs.
-"""
+"""LockFileEx-based lock backend for Windows, and the ctypes kernel32 bindings it needs."""
 
 import sys
 
@@ -13,14 +12,12 @@ if sys.platform != "win32":
 
 import ctypes
 import msvcrt
-import os
 from ctypes import wintypes
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from spack.util import tty
-
-from .lock_common import FILE_TRACKER, DevIno, GenericLockBackend
-from .lock_common import LockType as _LockType
+from spack.util.lock_common import FILE_TRACKER, DevIno, GenericLockBackend, LockError
+from spack.util.lock_common import LockType as _LockType
 
 
 class LockType(_LockType):
@@ -114,51 +111,57 @@ def _win_unlock_file_ex(handle: int, low: int, high: int, overlapped) -> None:
         raise ctypes.WinError(ctypes.get_last_error())
 
 
+#: Spack lock ranges must lie in ``[0, GATE_OFFSET)``. The upgrade "gate" for the range
+#: ``[start, start + length)`` is ``[GATE_OFFSET + start, GATE_OFFSET + start + length)`` of the
+#: same file, so the gates of two ranges overlap exactly when the ranges themselves do, and no
+#: extra file is needed (Windows allows locking byte ranges beyond the end of a file).
+GATE_OFFSET = 1 << 63
+
+
 class WindowsRangeLock:
-    """The one real ``LockFileEx`` lock for a given byte range in this process, shared by every
-    ``WindowsBackend`` that requests an overlapping range while it's held. See
-    ``WindowsRangeLockTracker`` for why this is needed.
+    """The one real ``LockFileEx`` lock this process holds on a given byte range, shared by every
+    ``WindowsBackend`` for that exact range. See ``WindowsRangeLockTracker``.
     """
 
-    __slots__ = ("start", "length", "mode", "refs")
+    __slots__ = ("start", "length", "mode", "refs", "writers")
 
     def __init__(self, start: int, length: int, mode: int):
         self.start = start
         self.length = length
-        #: LockType.READ or LockType.WRITE: the real mode currently held, via whichever handle
-        #: any attached backend happens to have open
+        #: LockType.READ or LockType.WRITE: the mode of the real OS lock currently held
         self.mode = mode
+        #: number of backends attached to this lock
         self.refs = 1
+        #: number of attached backends that hold it in WRITE mode
+        self.writers = 1 if mode == LockType.WRITE else 0
 
 
 class WindowsRangeLockTracker:
     """Tracks byte ranges the current process holds real Windows locks on, so that a second
-    ``Lock`` in the same process requesting an exactly overlapping range shares the *same*
-    real lock state instead of contending with its own process.
+    ``Lock`` in the same process requesting the same range shares the *same* real lock state
+    instead of contending with its own process.
 
-    Windows ``LockFileEx`` locks are scoped to the specific *handle* that acquired them: two
-    different handles regardless of process will compete for lock acquisition.
-    Spack's locking code (e.g. ``FailureTracker``/``SpecLocker`` re-checking a lock it
-    itself holds via a second, independent ``Lock`` object, or a plain upgrade/downgrade)
-    will cause same-process lock contention for the same lock, even with the same handle.
+    Windows ``LockFileEx`` locks are scoped to the specific *handle* that acquired them, and a
+    handle cannot take an exclusive lock on a range that is already locked, even by itself.
+    Spack's locking code (e.g. ``FailureTracker``/``SpecLocker`` re-checking a lock it itself
+    holds via a second, independent ``Lock`` object, or a plain upgrade/downgrade) would
+    otherwise contend with itself.
 
-    Every ``WindowsBackend`` for a given range shares the exact same open file handle for the
-    underlying file, and this tracker records the one real lock ``mode`` currently held on
-    a range in addition to a ref count, so we can accurately track lock usages and update/change
-    the lock state for this handle/lock range as needed without contention.
+    Every ``WindowsBackend`` for a given file shares the same open handle (via ``FILE_TRACKER``),
+    and this tracker records the one real lock ``mode`` held on a range, with reference and
+    writer counts, so the lock state for a range can be updated without contention.
+
+    Only identical ranges are shared: as with ``fcntl`` (see ``Lock``), a process must not hold
+    locks on overlapping but different byte ranges of the same file.
     """
 
     def __init__(self):
         self._groups: Dict[DevIno, List[WindowsRangeLock]] = {}
 
-    @staticmethod
-    def _contains(outer_start: int, outer_length: int, start: int, length: int) -> bool:
-        return outer_start <= start and start + length <= outer_start + outer_length
-
     def find(self, key: DevIno, start: int, length: int) -> Optional[WindowsRangeLock]:
-        """Return the group already covering [start, start+length) in this process, if any."""
+        """Return the lock this process holds on exactly [start, start+length), if any."""
         for group in self._groups.get(key, []):
-            if self._contains(group.start, group.length, start, length):
+            if group.start == start and group.length == length:
                 return group
         return None
 
@@ -184,114 +187,121 @@ class WindowsBackend(GenericLockBackend):
     """LockFileEx-based lock backend for Windows.
 
     Like ``PosixBackend``, every ``WindowsBackend`` for a given file shares one open handle via
-    the process-wide ``FILE_TRACKER`` (see ``GenericLockBackend._ensure_valid_handle``)
-    That alone would be unsafe for Windows locking: unlike ``fcntl``,
-    ``LockFileEx``/``UnlockFileEx`` calls apply to whichever handle makes them, so two unrelated
-    ``Lock`` objects sharing a handle will compete for the "same" lock, and potentially deadlock.
-    ``WINDOWS_RANGE_LOCK_TRACKER`` tracks locks themselves, not FH like FILE_TRACKER, including the
-    handle, locking style, and ref counts, so multiple lock attempts from the same process on the
-    same range behavemore closely to posix locks.
+    the process-wide ``FILE_TRACKER`` (see ``GenericLockBackend._ensure_valid_handle``). Unlike
+    ``fcntl``, ``LockFileEx``/``UnlockFileEx`` calls apply to whichever handle makes them, so
+    unrelated ``Lock`` objects sharing a handle would compete for the "same" lock.
+    ``WINDOWS_RANGE_LOCK_TRACKER`` tracks the locks themselves (mode, references and writers) so
+    that multiple lock requests from the same process on the same range behave like POSIX locks.
 
-    There are two other contexts in which Windows diverges from posix
+    ``LockFileEx`` also cannot convert a held lock between shared and exclusive in place.
+    ``poll()`` handles mode transitions internally: downgrading stacks a shared lock on the
+    exclusive one before removing it (see ``_downgrade_to_read``), and upgrading briefly releases
+    the range behind a "gate" lock that every writer must take first (see ``_upgrade_to_write``).
 
-    * *Atomic mode transitions.* ``fcntl`` can convert an already-held lock to a different mode
-      (shared <-> exclusive) in place, in a single call. ``LockFileEx`` cannot: there is no
-      "convert" operation. ``poll()`` detects a mode transition on an already-held range and
-      handles it internally: downgrading a held exclusive lock uses a stack-then-unlock-once
-      trick (see ``_downgrade_to_read``); upgrading a held shared lock uses a dedicated per-range
-      "gate" lock file to serialize against every other write attempt while the range is briefly,
-      fully released and retaken (see ``_upgrade_to_write``).
+    A zero ``length`` means "to the end of the file" on POSIX; here it means everything from
+    ``start`` up to ``GATE_OFFSET``.
 
-    * *Per-process (not per-handle) lock scoping.* ``fcntl`` locks are scoped to (process,
-      inode): a process can always freely take another lock, in any mode, on a range it already
-      holds, via any file descriptor. Because every same-process backend for a range shares the
-      same real handle and the same ``WindowsRangeLock``, a mode change made by any one of them
-      is immediately visible to all of them, matching that semantics exactly, with no separate
-      "anchor" handle to reason about.
-
-    ``release()`` closes this backend's handle reference (via ``FILE_TRACKER``, closing the
-    underlying handle only once every backend sharing it has released) -- needed so a later
-    ``cleanup()``/``os.unlink()`` doesn't fail with WinError 32, "used by another process".
+    The file handle is released whenever the lock is released or an attempt to acquire it fails,
+    since an open handle prevents other processes from deleting the file (WinError 32).
     """
 
     def __init__(self, path: str, start: int, length: int, debug: bool = False) -> None:
+        length = length or GATE_OFFSET - start
+        if start < 0 or length <= 0 or start + length > GATE_OFFSET:
+            raise ValueError(
+                f"lock range [{start}:{start + length}] of {path} must lie within "
+                f"[0:{GATE_OFFSET}]"
+            )
         super().__init__(path, start, length, debug=debug)
-        #: the WindowsRangeLock this backend belongs to while it holds a lock, None otherwise.
+        #: the WindowsRangeLock this backend is attached to while it holds a lock, else None
         self._lock_group: Optional[WindowsRangeLock] = None
-        #: lazily-created backend for this range's gate file, used only for upgrades.
-        self._gate: Optional["WindowsBackend"] = None
+        #: the mode (LockType.READ or LockType.WRITE) this backend holds while attached
+        self._mode: Optional[int] = None
 
     def __getstate__(self):
         state = super().__getstate__()
         del state["_lock_group"]
-        del state["_gate"]
+        del state["_mode"]
         return state
 
     def __setstate__(self, state):
         super().__setstate__(state)
         self._lock_group = None
-        self._gate = None
+        self._mode = None
 
     def __del__(self) -> None:
-        # Guard against a Lock being dropped without an explicit release
-        # release properly (respecting shared-group bookkeeping) so a
-        # later cleanup()/unlink() doesn't fail with WinError 32, and so we don't leave a
-        # same-process WindowsRangeLock group permanently over-referenced.
-        if self._file_ref is None:
-            return
+        # Guard against a Lock being dropped without an explicit release: release properly
+        # (respecting shared-group bookkeeping) so a later unlink doesn't fail with WinError 32,
+        # and so we don't leave a WindowsRangeLock permanently over-referenced.
         try:
             self.release()
         except Exception:
-            try:
-                FILE_TRACKER.release(self._file_ref)
-            except Exception:
-                pass
-            self._file_ref = None
-            self._cached_key = None
+            pass
 
     def poll(self, op: int) -> bool:
         """Attempt to acquire the lock in ``op`` mode in a non-blocking manner. Return whether
         the attempt succeeds.
         """
-        assert self._file_ref is not None, "cannot poll a lock without the file being set"
-
         if self._lock_group is not None:
-            if op == LockType.READ and self._lock_group.mode == LockType.WRITE:
-                self._downgrade_to_read()
-                return True
-            if op == self._lock_group.mode:
-                return True  # already holding at least as much as requested
-            return self._upgrade_to_write()  # op == WRITE, mode == READ
+            return self._change_mode(op)
+
+        if self._file_ref is None:  # released after a previous failed attempt
+            self._ensure_valid_handle()
+        assert self._file_ref is not None
 
         key = self._file_ref.key
         group = WINDOWS_RANGE_LOCK_TRACKER.find(key, self._start, self._length)
-        if group is not None:
+        if group is None:
+            acquired = self._acquire_new(key, op)
+        elif op == LockType.READ or group.mode == LockType.WRITE or self._upgrade_to_write(group):
+            group.refs += 1
+            if op == LockType.WRITE:
+                group.writers += 1
             self._lock_group = group
-            if op == LockType.READ or group.mode == LockType.WRITE:
-                group.refs += 1
-                return True
-            if self._upgrade_to_write():
-                group.refs += 1
-                return True
-            self._lock_group = None
-            return False
+            self._mode = op
+            acquired = True
+        else:
+            acquired = False
 
-        return self._acquire_new(key, op)
+        if not acquired:
+            self._release_handle()
+        return acquired
+
+    def _change_mode(self, op: int) -> bool:
+        """Switch the mode this (attached) backend holds its range's lock in."""
+        group = self._lock_group
+        assert group is not None
+        if op == self._mode:
+            return True
+
+        if op == LockType.READ:
+            group.writers -= 1
+            if group.writers == 0:
+                self._downgrade_to_read(group)
+            self._mode = op
+            return True
+
+        if group.mode == LockType.READ and not self._upgrade_to_write(group):
+            return False
+        group.writers += 1
+        self._mode = op
+        return True
 
     def _acquire_new(self, key: DevIno, op: int) -> bool:
-        """Non-blocking attempt to take a fresh real OS f-lock on this range: no backend in this
-        process currently holds anything overlapping it.
+        """Non-blocking attempt to take a fresh real OS lock on this range: no backend in this
+        process currently holds it.
         """
-        assert self._file_ref is not None
+        if op == LockType.WRITE:
+            if not self._lock_range(LockType.LOCK_EX, gate=True):
+                return False
+            try:
+                acquired = self._lock_range(LockType.LOCK_EX)
+            finally:
+                self._unlock_range(gate=True)
+        else:
+            acquired = self._lock_range(LockType.LOCK_SH)
 
-        handle = _win_handle(self._file_ref.fh.fileno())
-        module_op = LockType.to_module(op)
-        overlapped = _setup_overlapped(self._start)
-        range_low, range_high = _low_high(self._length)
-
-        if not _win_lock_file_ex(
-            handle, module_op | LockType.LOCK_NB, range_low, range_high, overlapped
-        ):
+        if not acquired:
             return False
 
         # help for debugging distributed locking
@@ -310,129 +320,97 @@ class WindowsBackend(GenericLockBackend):
                 self._write_log_debug_data()
 
         self._lock_group = WindowsRangeLock(self._start, self._length, op)
+        self._mode = op
         WINDOWS_RANGE_LOCK_TRACKER.register(key, self._lock_group)
         return True
 
-    def _gate_backend(self) -> "WindowsBackend":
-        """The backend for this range's dedicated upgrade "gate" file (see
-        ``_upgrade_to_write``), created and opened lazily on first use.
-        """
-        if self._gate is None:
-            self._gate = WindowsBackend(
-                self.path + ".gate_lock", self._start, self._length, debug=self.debug
-            )
-        return self._gate
-
-    def _upgrade_to_write(self) -> bool:
+    def _upgrade_to_write(self, group: WindowsRangeLock) -> bool:
         """Single non-blocking attempt to upgrade this range's currently-held real read lock to
         a write lock.
 
-        ``LockFileEx`` has no atomic convert, and naively dropping the read and retaking
-        exclusive would subject spack to races.
-        Instead, take a "gate" lock first. Every write acquisition on this
-        range takes the same gate first, so while we hold the gate, no other same-process writer
-        can be mid-attempt, and only after actually dropping the read do we retake exclusive.
-        If that fails, restore the read, which we can guaruntee as we are still behind the gate.
-
-        Note: on Windows the effective timeout for a blocking caller is up to 2x their requested
-        timeout, because ``Lock._lock``'s retry loop calls this once per attempt, and each
-        attempt both polls the gate and (if granted) polls the primary range.
-
-        Note: the ``.gate_lock`` sidecar file this creates is cleaned up the same way as the
-        primary lock file, see ``WindowsBackend.cleanup``.
+        ``LockFileEx`` has no atomic convert, so the read lock has to be dropped before the
+        write lock can be taken. To make sure no other writer can take the range in between,
+        every write acquisition (fresh or upgrade) first takes this range's gate. While we hold
+        the gate only readers can take the range, so if the write lock fails our read lock can
+        always be restored.
         """
-        assert self._file_ref is not None
-        group = self._lock_group
-        assert group is not None and group.mode == LockType.READ
-
-        gate = self._gate_backend()
-        gate.prepare(LockType.WRITE)
-        if not gate.poll(LockType.WRITE):
+        assert group.mode == LockType.READ
+        if not self._lock_range(LockType.LOCK_EX, gate=True):
             return False
 
         try:
-            handle = _win_handle(self._file_ref.fh.fileno())
-            range_low, range_high = _low_high(self._length)
-
-            _win_unlock_file_ex(handle, range_low, range_high, _setup_overlapped(self._start))
-            if _win_lock_file_ex(
-                handle,
-                LockType.LOCK_EX | LockType.LOCK_NB,
-                range_low,
-                range_high,
-                _setup_overlapped(self._start),
-            ):
+            self._unlock_range()
+            if self._lock_range(LockType.LOCK_EX):
                 group.mode = LockType.WRITE
                 return True
 
-            # A plain reader (no gate needed) raced in during the drop: restore our read.
-            _win_lock_file_ex(
-                handle,
-                LockType.LOCK_SH | LockType.LOCK_NB,
-                range_low,
-                range_high,
-                _setup_overlapped(self._start),
-            )
+            # Another reader holds the range: restore our read lock.
+            if not self._lock_range(LockType.LOCK_SH):
+                raise LockError(f"Lost the read lock on {self.path} while upgrading it")
             return False
         finally:
-            gate.release()
+            self._unlock_range(gate=True)
 
-    def _downgrade_to_read(self) -> None:
-        """Convert this range's held real exclusive lock to a shared lock, without ever fully
-        releasing it (so no other process can grab exclusive access in the gap caused by a
-        lack of atomic lock transitions).
+    def _downgrade_to_read(self, group: WindowsRangeLock) -> None:
+        """Convert this range's held real exclusive lock to a shared lock without ever releasing
+        it.
 
-        The win32 locking API has no atomic "convert" operation. But overlapping locks are allowed
-        on the same range from the same handle if the exclusive lock is taken first,
-        and Windows removes locks in FIFO order. So, stack a shared lock on top of the exclusive
-        one already held (this blocking call returns immediately, the handle already owns the
-        range, so there's nothing to wait for), then remove one lock, which drops the older
-        exclusive lock and leaves the shared one in place. Always succeeds immediately: no gate
-        is needed here, unlike upgrading, because the range is never actually unlocked.
+        A handle may stack a shared lock on a range it holds exclusively, and when the same range
+        is locked both ways, the first unlock removes the exclusive lock. So take the shared lock
+        (granted immediately, as this handle owns the range) and unlock once.
         """
-        assert self._file_ref is not None
-        group = self._lock_group
-        assert group is not None and group.mode == LockType.WRITE
-
-        handle = _win_handle(self._file_ref.fh.fileno())
-        range_low, range_high = _low_high(self._length)
-        _win_lock_file_ex(
-            handle, LockType.LOCK_SH, range_low, range_high, _setup_overlapped(self._start)
-        )
-        _win_unlock_file_ex(handle, range_low, range_high, _setup_overlapped(self._start))
+        assert group.mode == LockType.WRITE
+        if not self._lock_range(LockType.LOCK_SH):
+            raise LockError(f"Could not downgrade the write lock on {self.path}")
+        self._unlock_range()
         group.mode = LockType.READ
 
     def release(self) -> None:
         """Release this backend's interest in the lock, and its ``FILE_TRACKER`` handle
-        reference so a later ``cleanup()`` can unlink (closing the underlying handle only once
-        every backend sharing it has released it).
+        reference (closing the underlying handle once no backend uses it).
 
-        If this was the last backend relying on this range's ``WindowsRangeLock``, performs the
-        real OS-level unlock.
+        If this was the last backend attached to this range's ``WindowsRangeLock``, performs the
+        real OS-level unlock; if it was the last writer, downgrades it to a read lock.
         """
-        assert self._file_ref is not None, "cannot unlock without the file being set"
-        key = self._file_ref.key
         group = self._lock_group
-        self._lock_group = None
+        try:
+            if group is not None:
+                assert self._file_ref is not None
+                self._lock_group = None
+                group.refs -= 1
+                if self._mode == LockType.WRITE:
+                    group.writers -= 1
+                self._mode = None
+                if group.refs == 0:
+                    WINDOWS_RANGE_LOCK_TRACKER.forget(self._file_ref.key, group)
+                    self._unlock_range()
+                elif group.writers == 0 and group.mode == LockType.WRITE:
+                    self._downgrade_to_read(group)
+        finally:
+            self._release_handle()
 
-        if group is not None:
-            group.refs -= 1
-            if group.refs <= 0:
-                WINDOWS_RANGE_LOCK_TRACKER.forget(key, group)
-                handle = _win_handle(self._file_ref.fh.fileno())
-                range_low, range_high = _low_high(self._length)
-                _win_unlock_file_ex(handle, range_low, range_high, _setup_overlapped(self._start))
-
-        FILE_TRACKER.release(self._file_ref)
+    def _release_handle(self) -> None:
+        if self._file_ref is not None:
+            FILE_TRACKER.release(self._file_ref)
         self._file_ref = None
         self._cached_key = None
 
-    def cleanup(self, path: str) -> None:
-        """Remove the lock file, and its ``.gate_lock`` sidecar (see ``_upgrade_to_write``) if
-        one was ever created for it.
+    def _handle(self) -> int:
+        assert self._file_ref is not None, "cannot lock without the file being set"
+        return _win_handle(self._file_ref.fh.fileno())
+
+    def _range(self, gate: bool) -> Tuple[_OVERLAPPED, int, int]:
+        offset = self._start + (GATE_OFFSET if gate else 0)
+        low, high = _low_high(self._length)
+        return _setup_overlapped(offset), low, high
+
+    def _lock_range(self, flags: int, gate: bool = False) -> bool:
+        """Non-blocking ``LockFileEx`` on this range (or its gate). Returns whether it was
+        acquired.
         """
-        super().cleanup(path)
-        try:
-            os.unlink(path + ".gate_lock")
-        except FileNotFoundError:
-            pass
+        overlapped, low, high = self._range(gate)
+        return _win_lock_file_ex(self._handle(), flags | LockType.LOCK_NB, low, high, overlapped)
+
+    def _unlock_range(self, gate: bool = False) -> None:
+        overlapped, low, high = self._range(gate)
+        _win_unlock_file_ex(self._handle(), low, high, overlapped)

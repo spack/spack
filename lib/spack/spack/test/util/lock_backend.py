@@ -1307,7 +1307,7 @@ def test_attempts_str():
 def test_lock_str():
     lock = lk.Lock("lockfile")
     lockstr = str(lock)
-    assert f"lockfile[0:{lk.WHOLE_FILE_RANGE}]" in lockstr
+    assert "lockfile[0:0]" in lockstr
     assert "timeout=None" in lockstr
     assert "#reads=0, #writes=0" in lockstr
 

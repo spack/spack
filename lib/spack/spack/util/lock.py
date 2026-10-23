@@ -8,7 +8,7 @@ import sys
 import time
 from datetime import datetime
 from types import TracebackType
-from typing import Callable, Generator, Optional, Tuple, Type  # novm
+from typing import Callable, Generator, Optional, Tuple, Type
 
 import spack.error
 from spack.util import lang, tty
@@ -21,7 +21,6 @@ from spack.util.lock_common import (
     LockROFileError,
 )
 from spack.util.string import plural
-
 
 if sys.platform == "win32":
     from spack.util.lock_windows import LockType, WindowsBackend
@@ -49,9 +48,6 @@ __all__ = [
     "DummyBackend",
     "FILE_TRACKER",
 ]
-
-WHOLE_FILE_RANGE = 0xFFFFFFFF if sys.platform == "win32" else 0
-
 
 ExitFnType = Callable[
     [Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]],
@@ -179,11 +175,9 @@ class Lock:
         self._reads = 0
         self._writes = 0
 
-        # byte range parameters. A zero length means "lock to the end of the file" on POSIX,
-        # but Windows has no such convention -- LockFileEx always needs an explicit range -- so
-        # a length of 0 is normalized to WHOLE_FILE_RANGE there.
+        # byte range parameters (a zero length means "lock to the end of the file")
         self._start = start
-        self._length = length or WHOLE_FILE_RANGE
+        self._length = length
 
         # enable debug mode
         self.debug = debug
@@ -197,9 +191,7 @@ class Lock:
         self.default_timeout = default_timeout or None
 
         if enable:
-            self.backend: BackendType = platform_lock_backend(
-                path, start, self._length, debug=debug
-            )
+            self.backend: BackendType = platform_lock_backend(path, start, length, debug=debug)
         else:
             self.backend = DummyBackend()
 
@@ -265,10 +257,6 @@ class Lock:
         self.__dict__.update(state)
         self._reads = 0
         self._writes = 0
-
-    def _poll_lock(self, op: int) -> bool:
-        """Direct pass-through to the backend's single non-blocking lock attempt."""
-        return self.backend.poll(op)
 
     def _lock(self, op: int, timeout: Optional[float] = None) -> Tuple[float, int]:
         """This takes a lock using POSIX locks (``fcntl.lockf``).
@@ -365,11 +353,7 @@ class Lock:
         process, re-locking an already-held byte range succeeds instantly (POSIX). In a forked
         child that doesn't own the POSIX lock, the call fails immediately and we raise. Use WRITE
         if we hold an exclusive lock so we don't accidentally downgrade it.
-
-        No-op on Windows (Spawn only)
         """
-        if sys.platform == "win32":
-            return
         if self._writes > 0:
             op = LockType.WRITE
         elif self._reads > 0:

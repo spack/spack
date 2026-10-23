@@ -115,8 +115,7 @@ FILE_TRACKER = OpenFileTracker()
 
 
 class LockType:
-    """Platform-neutral lock operation identifiers.
-    """
+    """Platform-neutral lock operation identifiers."""
 
     READ = 0
     WRITE = 1
