@@ -2832,6 +2832,16 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
     if not sys.stdin.isatty():
         return False
 
+    # On Unix, also check if we're in the foreground process group
+    # (Windows doesn't have process groups, so skip this check there)
+    if sys.platform != "win32":
+        try:
+            if os.getpgrp() != os.tcgetpgrp(sys.stdin.fileno()):
+                return False
+        except OSError:
+            # Can't determine process group - assume we can't prompt
+            return False
+
     tty.info(
         "Spack found resources in its legacy internal layout.",
         "Spack can copy the following resources to the new user data location",
