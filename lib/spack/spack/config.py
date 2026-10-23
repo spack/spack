@@ -2227,6 +2227,10 @@ def _migrate_with_staging(
         tty.debug(f"Migrating {description} from {old_path} to {new_path}")
         prepare_staging_callback(old_path, staging_path, new_path)
 
+        # Set staging directory permissions to 0700 before rename
+        # (migrating to home directory, only user should access)
+        os.chmod(staging_path, 0o700)
+
         # Atomically rename staging to final destination
         os.rename(staging_path, new_path)
         tty.debug(f"{description.capitalize()} migrated from {old_path} to {new_path}")
@@ -2274,8 +2278,12 @@ def _prepare_config_staging(old_location, staging_path, new_location):
             os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
 
             if modified_data is not None:
+                # Get original file permissions before rewriting
+                old_mode = os.stat(old_path).st_mode & 0o777
                 with open(staging_file_path, "w", encoding="utf-8") as f:
                     syaml.dump(modified_data, f)
+                # Restore original permissions
+                os.chmod(staging_file_path, old_mode)
             else:
                 shutil.copy2(old_path, staging_file_path)
         except (syaml.SpackYAMLError, OSError) as e:
@@ -2532,8 +2540,12 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         for yaml_file in yaml_files:
             processed = process_env_file_paths(yaml_file, old_path, new_path, src_dir, dst_dir)
             if processed:
+                # Get original file permissions before rewriting
+                old_mode = os.stat(yaml_file).st_mode & 0o777
                 with open(yaml_file, "w", encoding="utf-8") as f:
                     syaml.dump(processed, f)
+                # Restore original permissions
+                os.chmod(yaml_file, old_mode)
                 tty.debug(f"Rewrote paths in {yaml_file}")
 
         # Add migration marker to identify this source
