@@ -85,8 +85,8 @@ def _is_reusable(
     1. Externals in build caches: avoid installing an external on the build machine not
        available on the target machine
     2. Local externals: avoid reusing an external if the local config changes. This helps in
-       particular when a user removes an external from packages.yaml, and expects that that
-       takes effect immediately.
+       particular when a user removes an external from packages.yaml, or changes its extra
+       attributes (e.g. its ``environment``), and expects that that takes effect immediately.
 
     Arguments:
         spec: the spec to check
@@ -122,6 +122,7 @@ def _is_reusable(
                 spec.satisfies(entry["spec"])
                 and spec.external_path == expected_prefix
                 and spec.external_modules == entry.get("modules")
+                and spec.extra_attributes == (entry.get("extra_attributes") or {})
             ):
                 return True
 
