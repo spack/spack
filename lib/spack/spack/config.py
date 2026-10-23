@@ -2617,7 +2617,10 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
 
 
 def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
-    """Check if two directory trees have identical structure and content."""
+    """Check if two directory trees have identical structure and content.
+
+    Uses deep comparison (actual file content), not shallow (size/mtime only).
+    """
     import filecmp
 
     cmp = filecmp.dircmp(src_dir, dst_dir)
@@ -2625,9 +2628,14 @@ def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
     if cmp.left_only or cmp.right_only:
         return False
 
-    if cmp.diff_files:
-        return False
+    # Check common files with deep comparison (content, not just size/mtime)
+    for common_file in cmp.common_files:
+        src_file = os.path.join(src_dir, common_file)
+        dst_file = os.path.join(dst_dir, common_file)
+        if not filecmp.cmp(src_file, dst_file, shallow=False):
+            return False
 
+    # Recursively check subdirectories
     for subdir in cmp.common_dirs:
         if not _dirs_identical(os.path.join(src_dir, subdir), os.path.join(dst_dir, subdir)):
             return False
