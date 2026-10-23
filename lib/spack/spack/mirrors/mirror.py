@@ -152,10 +152,26 @@ class Mirror:
         return isinstance(self._data, str) or self._data.get("signed", True)
 
     @property
-    def autopush(self) -> bool:
+    def autopush(self) -> Dict[str, bool]:
+        """Get the autopush configuration."""
         if isinstance(self._data, str):
-            return False
-        return self._data.get("autopush", False)
+            return {"binaries": False, "keys": False}
+
+        autopush_conf = self._data.get("autopush", False)
+        if isinstance(autopush_conf, bool):
+            return {"binaries": autopush_conf, "keys": autopush_conf}
+        else:
+            return {"binaries": True, "keys": True}.update(autopush_conf)
+
+    @property
+    def autopush_binaries(self) -> bool:
+        """Get the autopush configuration for binaries."""
+        return self.autopush["binaries"]
+
+    @property
+    def autopush_keys(self) -> bool:
+        """Get the autopush configuration for keys."""
+        return self.autopush["keys"]
 
     def include_binary(self, direction: str) -> List[str]:
         return self._get_value("include_binary", direction) or []
@@ -465,7 +481,7 @@ class MirrorCollection(Mapping[str, Mirror]):
                 return False
             if binary is not None and m.binary != binary:
                 return False
-            if autopush is not None and m.autopush != autopush:
+            if autopush is not None and m.autopush_binaries != autopush:
                 return False
             return True
 
