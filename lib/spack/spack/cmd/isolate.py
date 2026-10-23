@@ -43,13 +43,11 @@ def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
     return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
 
 
-def _setup_isolate_scope(
-    new_user_path, overwrite: bool, target_config_existed: bool, reuse_old: bool
-) -> str:
+def _setup_isolate_scope(new_user_path, overwrite: bool, reuse_old: bool) -> str:
     """Set up the isolate scope directories and include.yaml.
 
     Returns:
-        (config_path, final_user_path) - where to write config, and the user redirect path
+        final_user_path - the user redirect path
     """
     # Check if this is --self (isolate scope IS the user path)
     is_self = os.path.exists(spack.paths.isolate_scope_path) and os.path.samefile(
@@ -133,6 +131,26 @@ def _do_isolate(args):
     if args.overwrite and args.reuse_old:
         tty.die("Cannot combine --overwrite and --reuse-old")
 
+    # Validate that path is (or can be) a directory
+    if os.path.exists(args.path) and not os.path.isdir(args.path):
+        tty.die(f"Isolation path {args.path} exists but is not a directory")
+
+    # Check write permissions if directory exists, or create it if it doesn't
+    if os.path.exists(args.path):
+        test_file = os.path.join(args.path, ".spack-write-test")
+        try:
+            with open(test_file, "w") as f:
+                pass
+            os.remove(test_file)
+        except (OSError, PermissionError) as e:
+            tty.die(f"Isolation path {args.path} is not writable: {e}")
+    else:
+        # Try creating the directory to verify we have permissions
+        try:
+            os.makedirs(args.path)
+        except (OSError, PermissionError) as e:
+            tty.die(f"Cannot create isolation path {args.path}: {e}")
+
     target_config_existed = os.path.isfile(os.path.join(args.path, "config.yaml"))
     if os.path.exists(args.path):
         if args.overwrite:
@@ -147,9 +165,7 @@ def _do_isolate(args):
     else:
         destination = _ensure_destination_setup(args.path, overwrite=False)
 
-    final_user_path = _setup_isolate_scope(
-        destination, args.overwrite, target_config_existed, args.reuse_old
-    )
+    final_user_path = _setup_isolate_scope(destination, args.overwrite, args.reuse_old)
 
     # Build config with isolation locations
     scope_config = {
