@@ -1844,6 +1844,7 @@ def walk_yaml_for_paths(
         "ccache",
         "concretization_cache",
         "cache",
+        "view",
     }
 
     results = []
