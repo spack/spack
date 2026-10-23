@@ -72,6 +72,11 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
+from .generate_env_scripts import (
+    regenerate_env_scripts,
+    write_env_activate_script,
+    write_env_deactivate_script,
+)
 from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = Tuple[Spec, Spec]
@@ -460,6 +465,10 @@ def create_in_dir(
                 # relative paths outside of env
                 _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=copied)
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
+
+    view = default_view_name if with_view is not False else None
+    write_env_activate_script(env, view=view)
+    write_env_deactivate_script(env, view=view)
 
     return env
 
@@ -1965,6 +1974,7 @@ class Environment:
 
         for view in self.views.values():
             view.regenerate(self)
+        regenerate_env_scripts(self)
 
     def check_views(self):
         """Checks if the environments default view can be activated."""
@@ -1987,25 +1997,38 @@ class Environment:
 
     def _env_modifications_for_view(
         self, view: ViewDescriptor, reverse: bool = False
-    ) -> spack.util.environment.EnvironmentModifications:
+    ) -> Tuple[
+        spack.util.environment.EnvironmentModifications,
+        spack.util.environment.EnvironmentModifications,
+    ]:
         try:
             with spack.store.STORE.db.read_transaction():
                 installed_roots = [
                     s for s in self.concrete_roots() if spack.store.STORE.db.installed(s)
                 ]
-            mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
+            prefix_mods = uenv.prefix_inspections_environment_modifications([*installed_roots])
+            env_mods = uenv.spec_environment_modifications([*installed_roots], view=view)
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
             tty.warn(
                 f"could not {'unload' if reverse else 'load'} runtime environment due "
                 f"to {e.__class__.__name__}: {e}"
             )
-            return spack.util.environment.EnvironmentModifications()
-        return mods.reversed() if reverse else mods
+            return (
+                spack.util.environment.EnvironmentModifications(),
+                spack.util.environment.EnvironmentModifications(),
+            )
+        return (
+            prefix_mods.reversed() if reverse else prefix_mods,
+            env_mods.reversed() if reverse else env_mods,
+        )
 
     def add_view_to_env(
         self, env_mod: spack.util.environment.EnvironmentModifications, view: str
-    ) -> spack.util.environment.EnvironmentModifications:
+    ) -> Tuple[
+        spack.util.environment.EnvironmentModifications,
+        spack.util.environment.EnvironmentModifications,
+    ]:
         """Collect the environment modifications to activate an environment using the provided
         view. Removes duplicate paths.
 
@@ -2014,20 +2037,25 @@ class Environment:
             view: the name of the view to activate."""
         descriptor = self.views.get(view)
         if not descriptor:
-            return env_mod
+            return spack.util.environment.EnvironmentModifications(), env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor))
-        env_mod.extend(self._env_modifications_for_view(descriptor))
+
+        prefix_mods, spec_env_mods = self._env_modifications_for_view(descriptor)
+        env_mod.extend(spec_env_mods)
 
         # deduplicate paths from specs mapped to the same location
         for env_var in env_mod.group_by_name():
             env_mod.prune_duplicate_paths(env_var)
 
-        return env_mod
+        return prefix_mods, env_mod
 
     def rm_view_from_env(
         self, env_mod: spack.util.environment.EnvironmentModifications, view: str
-    ) -> spack.util.environment.EnvironmentModifications:
+    ) -> Tuple[
+        spack.util.environment.EnvironmentModifications,
+        spack.util.environment.EnvironmentModifications,
+    ]:
         """Collect the environment modifications to deactivate an environment using the provided
         view. Reverses the action of ``add_view_to_env``.
 
@@ -2036,12 +2064,14 @@ class Environment:
             view: the name of the view to deactivate."""
         descriptor = self.views.get(view)
         if not descriptor:
-            return env_mod
+            return spack.util.environment.EnvironmentModifications(), env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
-        env_mod.extend(self._env_modifications_for_view(descriptor, reverse=True))
 
-        return env_mod
+        prefix_mods, spec_env_mods = self._env_modifications_for_view(descriptor, reverse=True)
+        env_mod.extend(spec_env_mods)
+
+        return prefix_mods, env_mod
 
     def add_concrete_spec(
         self,
