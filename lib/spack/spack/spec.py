@@ -560,8 +560,8 @@ class ArchSpec:
 
     @staticmethod
     def _gpu_satisfies(
-        lhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
-        rhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+        lhs: Optional[Sequence[spack.vendor.archspec.gpu.GPUMicroarch]],
+        rhs: Optional[Sequence[spack.vendor.archspec.gpu.GPUMicroarch]],
     ) -> bool:
         """Determines whether the right list (what was requested) is satisfied by the left list
 
@@ -587,8 +587,8 @@ class ArchSpec:
 
     @staticmethod
     def _gpu_intersects(
-        lhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
-        rhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+        lhs: Optional[Sequence[spack.vendor.archspec.gpu.GPUMicroarch]],
+        rhs: Optional[Sequence[spack.vendor.archspec.gpu.GPUMicroarch]],
     ) -> bool:
         """Whether there is a GPU micro-architecture that code can be built for to run on both
         sides: a node on one side that is equal to, or an ancestor of, a node on the other. An
@@ -600,8 +600,8 @@ class ArchSpec:
 
     @staticmethod
     def _gpu_intersection(
-        lhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
-        rhs: List[spack.vendor.archspec.gpu.GPUMicroarch],
+        lhs: Optional[Sequence[spack.vendor.archspec.gpu.GPUMicroarch]],
+        rhs: Optional[Sequence[spack.vendor.archspec.gpu.GPUMicroarch]],
     ) -> List[spack.vendor.archspec.gpu.GPUMicroarch]:
         """Computes full intersection between GPU Microarchitectures"""
         results: List[spack.vendor.archspec.gpu.GPUMicroarch] = []
@@ -629,19 +629,27 @@ class ArchSpec:
         arch_tuple = str(platform), str(default_os), str(default_target)
         return ArchSpec(arch_tuple)
 
-    __slots__ = "_platform", "_os", "_target"
+    __slots__ = "_platform", "_os", "_target", "_gpus"
 
-    def __init__(self, spec_or_platform_tuple=(None, None, None)):
+    def __init__(self, spec_or_platform_tuple=(None, None, None), gpus=None):
         """Architecture specification a package should be built with.
 
         Each ArchSpec is comprised of three elements: a platform (e.g. Linux),
         an OS (e.g. RHEL6), and a target (e.g. x86_64).
+
+        Builds with device code also carry the GPU micro-architectures they
+        target (e.g. 80,90a or gfx942). These mirror the ``cuda_arch`` or
+        ``amdgpu_target`` variant of the owning spec, which remains the source
+        of truth: the spec copies the variant in, and the logic for satisfies,
+        intersects and constrain lives here. The field is never serialized.
 
         Args:
             spec_or_platform_tuple (ArchSpec or str or tuple): if an ArchSpec
                 is passed it will be duplicated into the new instance.
                 Otherwise information on platform, OS and target should be
                 passed in either as a spec string or as a tuple.
+            gpus (list or None): GPU micro-architectures, as names or archspec
+                nodes. Replaces those of a duplicated ArchSpec when given.
         """
 
         # If the argument to __init__ is a spec string, parse it
@@ -655,6 +663,8 @@ class ArchSpec:
         if isinstance(spec_or_platform_tuple, ArchSpec):
             other = spec_or_platform_tuple
             platform_tuple = other.platform, other.os, other.target
+            if gpus is None:
+                gpus = other.gpus
 
         elif isinstance(spec_or_platform_tuple, (str, tuple)):
             spec_fields = spec_or_platform_tuple
@@ -670,6 +680,7 @@ class ArchSpec:
             platform_tuple = (_string_or_none(platform), _string_or_none(operating_system), target)
 
         self.platform, self.os, self.target = platform_tuple
+        self.gpus = gpus
 
     @staticmethod
     def override(init_spec, change_spec):
@@ -685,6 +696,8 @@ class ArchSpec:
             new_spec.os = change_spec.os
         if change_spec.target:
             new_spec.target = change_spec.target
+        if change_spec.gpus:
+            new_spec.gpus = change_spec.gpus
         return new_spec
 
     def _autospec(self, spec_like):
@@ -699,6 +712,7 @@ class ArchSpec:
             yield self.target
         else:
             yield self.target.name
+        yield None if self.gpus is None else ",".join(node.name for node in self.gpus)
 
     @property
     def platform(self):
@@ -781,6 +795,33 @@ class ArchSpec:
 
         self._target = value
 
+    @property
+    def gpus(self) -> Optional[Tuple[spack.vendor.archspec.gpu.GPUMicroarch, ...]]:
+        """The GPU micro-architectures the build targets, or None when it has none.
+
+        A mirror of the ``cuda_arch`` / ``amdgpu_target`` variant of the owning spec, kept in
+        memory only: it is never serialized, and the variant remains the source of truth.
+        """
+        return self._gpus
+
+    @gpus.setter
+    def gpus(
+        self, value: Optional[Sequence[Union[str, spack.vendor.archspec.gpu.GPUMicroarch]]]
+    ) -> None:
+        """Stores the GPU micro-architectures as archspec nodes, resolving names through
+        ``_make_gpu_microarch`` and dropping duplicates. An empty value means none."""
+        if not value:
+            self._gpus = None
+            return
+
+        gpus: List[spack.vendor.archspec.gpu.GPUMicroarch] = []
+        for name in value:
+            gpu_uarch = _make_gpu_microarch(name)
+            if gpu_uarch not in gpus:
+                gpus.append(gpu_uarch)
+
+        self._gpus = tuple(gpus)
+
     def satisfies(self, other: "ArchSpec") -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
@@ -793,6 +834,7 @@ class ArchSpec:
             self._attr_satisfies(self.platform, other.platform)
             and self._attr_satisfies(self.os, other.os)
             and self._target_satisfies(self.target, other.target)
+            and self._gpu_satisfies(self.gpus, other.gpus)
         )
 
     def intersects(self, other: "ArchSpec") -> bool:
@@ -811,6 +853,7 @@ class ArchSpec:
             self._attr_intersects(self.platform, other.platform)
             and self._attr_intersects(self.os, other.os)
             and self._target_intersects(self.target, other.target)
+            and self._gpu_intersects(self.gpus, other.gpus)
         )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
@@ -835,6 +878,27 @@ class ArchSpec:
             return False
 
         self.target = intersection_target
+        return True
+
+    def _gpu_constrain(self, other: "ArchSpec") -> bool:
+        """
+        Works out constrain logic for GPU uarchs based on intersection.
+        """
+        if other.gpus is None:
+            return False  # no constraints to apply
+        if self.gpus is None:
+            self.gpus = other.gpus
+            return True
+
+        results = self._gpu_intersection(self.gpus, other.gpus)
+        if not results:
+            raise UnsatisfiableArchitectureSpecError(self, other)
+
+        intersection_gpus = [_make_gpu_microarch(result) for result in results]
+        if self.gpus == tuple(intersection_gpus):
+            return False
+
+        self.gpus = tuple(intersection_gpus)
         return True
 
     def constrain(self, other: "ArchSpec") -> bool:
@@ -865,6 +929,7 @@ class ArchSpec:
                 constrained = True
 
         constrained |= self._target_constrain(other)
+        constrained |= self._gpu_constrain(other)
 
         return constrained
 
@@ -914,8 +979,9 @@ class ArchSpec:
         return "%s-%s-%s" % (self.platform, self.os, self.target)
 
     def __repr__(self):
-        fmt = "ArchSpec(({0.platform!r}, {0.os!r}, {1!r}))"
-        return fmt.format(self, str(self.target))
+        gpus = "" if self.gpus is None else f", gpus={','.join(n.name for n in self.gpus)!r}"
+        fmt = "ArchSpec(({0.platform!r}, {0.os!r}, {1!r}){2})"
+        return fmt.format(self, str(self.target), gpus)
 
     def __contains__(self, string):
         return string in str(self) or string in self.target
@@ -2209,6 +2275,9 @@ class Spec:
                 edges.sort()
 
         return result
+
+    def _get_gpu_data_from_variant(self) -> None:
+        pass
 
     def _add_flag(
         self, name: str, value: Union[str, bool], propagate: bool, concrete: bool

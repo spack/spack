@@ -196,6 +196,56 @@ def test_gpu_satisfies(built, requested, expected):
 
 
 @pytest.mark.parametrize(
+    "value,expected",
+    [(None, None), ([], None), (["90", "80", "90"], ("90", "80")), (["none"], ("none",))],
+)
+def test_gpus_setter(value, expected):
+    arch = ArchSpec((None, None, None), gpus=value)
+    assert arch.gpus is None if expected is None else tuple(n.name for n in arch.gpus) == expected
+    assert ArchSpec(arch).gpus == arch.gpus
+
+
+def test_gpus_are_part_of_identity_but_not_of_the_dict():
+    arch = ArchSpec(("linux", "ubuntu22.04", "x86_64"), gpus=["80"])
+    assert arch != ArchSpec(("linux", "ubuntu22.04", "x86_64"))
+    assert arch != ArchSpec(arch, gpus=["86"])
+    assert "gpu" not in arch.to_dict()["arch"]
+    assert repr(arch) == "ArchSpec(('linux', 'ubuntu22.04', 'x86_64'), gpus='80')"
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [(None, ["80"], "80"), (["80"], None, "80"), (["86"], ["80"], "80"), (["80"], ["86"], "80")],
+)
+def test_constrain_gpus(lhs, rhs, expected):
+    arch = ArchSpec((None, "debian6", None), gpus=lhs)
+    other = ArchSpec((None, None, None), gpus=rhs)
+    assert arch.constrain(other) is (lhs != [expected])
+    assert [n.name for n in arch.gpus] == [expected]
+    assert arch.constrain(other) is False
+
+
+def test_constrain_is_atomic_when_gpus_are_disjoint():
+    arch = ArchSpec((None, None, None), gpus=["89"])
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
+        arch.constrain(ArchSpec((None, "debian6", None), gpus=["90"]))
+    assert repr(arch) == "ArchSpec((None, None, 'None'), gpus='89')"
+
+
+@pytest.mark.parametrize(
+    "built,requested,satisfies",
+    [(["80"], ["86"], True), (["86"], ["80"], False), (None, ["80"], False), (["80"], None, True)],
+)
+def test_satisfies_and_intersects_with_gpus(built, requested, satisfies):
+    lhs = ArchSpec(("linux", None, "x86_64"), gpus=built)
+    rhs = ArchSpec(("linux", None, "x86_64:"), gpus=requested)
+    assert lhs.satisfies(rhs) is satisfies
+    assert lhs.intersects(rhs) and rhs.intersects(lhs)
+    # a GPU match does not rescue a mismatch elsewhere
+    assert not lhs.intersects(ArchSpec(("darwin", None, None), gpus=built))
+
+
+@pytest.mark.parametrize(
     "lhs_tuple,rhs_tuple,expected_target",
     [
         ((None, "debian6", None), (None, None, "x86_64:"), "x86_64:"),
