@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import os
+import shutil
+import subprocess
+import sys
 
 import spack.cmd
 import spack.deptypes as dt
@@ -134,6 +137,11 @@ def emulate_env_utility(cmd_name, context: Context, args):
 
     if cmd:
         # Execute the command with the new environment
+        if sys.platform == "win32":
+            # execvp handles Windows paths with spaces poorly by joining the 
+            # string with spaces and does not quote
+            # subprocess does not do this
+            sys.exit(subprocess.call([shutil.which(cmd[0]) or cmd[0], *cmd[1:]]))
         os.execvp(cmd[0], cmd)
 
     elif not bool(args.pickle or args.dump):
