@@ -1199,6 +1199,28 @@ def readline_with_timeout(
             """Restore terminal settings (Unix)."""
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
+    # Install signal handlers to ensure cleanup on SIGTERM/SIGINT/SIGHUP
+    # Note: SIGKILL (kill -9) cannot be caught and will leave terminal in raw mode
+    original_sigterm = None
+    original_sigint = None
+    original_sighup = None
+    if sys.platform != "win32":
+        import signal
+
+        def signal_handler(signum, frame):
+            """Clean up terminal before exit."""
+            cleanup()
+            if signum == signal.SIGINT:
+                # SIGINT (Ctrl+C) - raise to let caller handle
+                raise KeyboardInterrupt
+            else:
+                # SIGTERM/SIGHUP - exit cleanly after cleanup
+                sys.exit(128 + signum)
+
+        original_sigterm = signal.signal(signal.SIGTERM, signal_handler)
+        original_sigint = signal.signal(signal.SIGINT, signal_handler)
+        original_sighup = signal.signal(signal.SIGHUP, signal_handler)
+
     try:
         if sys.platform != "win32":
             # Put terminal in raw mode to read character-by-character
@@ -1251,3 +1273,8 @@ def readline_with_timeout(
                 sys.stderr.flush()
     finally:
         cleanup()
+        # Restore original signal handlers
+        if sys.platform != "win32":
+            signal.signal(signal.SIGTERM, original_sigterm)
+            signal.signal(signal.SIGINT, original_sigint)
+            signal.signal(signal.SIGHUP, original_sighup)
