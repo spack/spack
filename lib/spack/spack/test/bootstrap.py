@@ -289,6 +289,11 @@ def test_bootstrapping_state_is_part_of_the_configuration(mutable_config, monkey
     assert spack.bootstrap.is_bootstrapping()
 
 
+def test_a_user_scope_named_bootstrap_is_not_the_bootstrapping_configuration(mutable_config):
+    mutable_config.push_scope(spack.config.InternalConfigScope("bootstrap", {}))
+    assert not spack.bootstrap.is_bootstrapping()
+
+
 @pytest.mark.parametrize("expected_missing", [False, True])
 def test_status_function_find_files(
     mutable_config, mock_executable, tmp_path: pathlib.Path, monkeypatch, expected_missing

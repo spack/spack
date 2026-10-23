@@ -53,7 +53,7 @@ from ._common import (
     _try_import_from_store,
 )
 from .clingo import ClingoBootstrapConcretizer
-from .config import environment_path, spec_for_current_python
+from .config import SCOPE_NAME, environment_path, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -415,10 +415,10 @@ def _add_externals_if_missing() -> None:
     # System git is typically deprecated, so mark as non-buildable to force it as external
     non_buildable_externals = {k: externals.pop(k) for k in ("git",) if k in externals}
     spack.detection.update_configuration(
-        externals, config=spack.config.CONFIG, scope="bootstrap", buildable=True
+        externals, config=spack.config.CONFIG, scope=SCOPE_NAME, buildable=True
     )
     spack.detection.update_configuration(
-        non_buildable_externals, config=spack.config.CONFIG, scope="bootstrap", buildable=False
+        non_buildable_externals, config=spack.config.CONFIG, scope=SCOPE_NAME, buildable=False
     )
 
 
