@@ -132,10 +132,6 @@ def _gpus(names):
         (["gfx90a:xnack-"], ["gfx90a:xnack+"], []),
         (["gfx90a"], ["gfx942"], []),
         (["80"], ["gfx90a"], []),
-        # names outside the archspec graph, the ``none`` sentinel included, match only themselves
-        (["none"], ["none"], ["none"]),
-        (["none"], ["80"], []),
-        (["gfx999"], ["gfx999"], ["gfx999"]),
         # an empty side has nothing to meet
         ([], ["80"], []),
         (["80"], [], []),
@@ -155,7 +151,6 @@ def test_gpu_intersection(lhs, rhs, expected):
         (["86"], ["80"], True),
         (["80", "90"], ["86", "90a"], True),
         (["89"], ["90"], False),
-        (["none"], ["80"], False),
         # an empty side places no constraint
         ([], ["80"], True),
         (["80"], [], True),
@@ -181,10 +176,8 @@ def test_gpu_intersects(lhs, rhs, expected):
         (["80", "90"], ["86", "90a"], True),
         # every requested device must be served
         (["80"], ["86", "90"], False),
-        # unrelated nodes and names outside the graph
+        # unrelated nodes
         (["89"], ["90"], False),
-        (["none"], ["none"], True),
-        (["none"], ["80"], False),
         # a request without GPUs is always met, a build without GPUs meets no request
         (["80"], [], True),
         ([], ["80"], False),
@@ -197,12 +190,18 @@ def test_gpu_satisfies(built, requested, expected):
 
 @pytest.mark.parametrize(
     "value,expected",
-    [(None, None), ([], None), (["90", "80", "90"], ("90", "80")), (["none"], ("none",))],
+    [(None, None), ([], None), (["90", "80", "90"], ("90", "80"))],
 )
 def test_gpus_setter(value, expected):
     arch = ArchSpec((None, None, None), gpus=value)
     assert arch.gpus is None if expected is None else tuple(n.name for n in arch.gpus) == expected
     assert ArchSpec(arch).gpus == arch.gpus
+
+
+@pytest.mark.parametrize("name", ["none", "gfx999", "99"])
+def test_gpus_unknown_to_archspec_are_rejected(name):
+    with pytest.raises(ValueError, match="not a GPU micro-architecture known to archspec"):
+        ArchSpec((None, None, None), gpus=[name])
 
 
 def test_gpus_are_part_of_identity_but_not_of_the_dict():
