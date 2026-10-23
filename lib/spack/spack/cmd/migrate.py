@@ -71,8 +71,9 @@ def _under_old_dotspack(path: str) -> bool:
         return False
 
 
-def _cleanup_old() -> None:
+def _cleanup_old(args) -> None:
     old_path = os.path.expanduser("~/.spack")
+
     if not os.path.isdir(old_path):
         tty.msg(f"No old user directory found at {old_path}")
         return
@@ -97,13 +98,21 @@ def _cleanup_old() -> None:
             references.append(f"{config_var} ({value})")
 
     if references:
-        tty.die(
+        message = (
             "Cannot remove ~/.spack because the active configuration still refers to it:\n"
             + "\n".join(f"  - {reference}" for reference in references)
         )
+        if args.dry_run:
+            tty.msg(message)
+        else:
+            tty.die(message)
+        return
 
-    shutil.rmtree(old_path)
-    tty.msg(f"Removed old user directory: {old_path}")
+    if args.dry_run:
+        tty.msg(f"Would remove old user directory: {old_path}")
+    else:
+        shutil.rmtree(old_path)
+        tty.msg(f"Removed old user directory: {old_path}")
 
 
 def _use_new_layout(args):
@@ -181,7 +190,7 @@ def _undo(args):
 
 def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     if args.action == "cleanup-old":
-        _cleanup_old()
+        _cleanup_old(args)
     elif args.action == "undo":
         _undo(args)
     elif args.action == "use-new-layout":
