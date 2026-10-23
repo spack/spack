@@ -156,6 +156,13 @@ class NullReportData(ReportData):
         pass
 
 
+#: Signals that end an install like Ctrl-C does
+if sys.platform == "win32":
+    _TERMINATION_SIGNALS = [signal.SIGTERM]
+else:
+    _TERMINATION_SIGNALS = [signal.SIGTERM, signal.SIGHUP]
+
+
 def _signal_children(running_builds: Dict[str, ChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
@@ -345,6 +352,13 @@ class PackageInstaller:
         failures: List[spack.spec.Spec] = []
         finished_builds: List[str] = []
 
+        # Unwind on SIGTERM and SIGHUP like on Ctrl-C, so that the cleanup below runs. Signals
+        # that are already ignored or handled (e.g. nohup) are left alone.
+        old_signal_handlers = {}
+        for sig in _TERMINATION_SIGNALS:
+            if signal.getsignal(sig) is signal.SIG_DFL:
+                old_signal_handlers[sig] = signal.signal(sig, signal.default_int_handler)
+
         try:
             # Try to schedule builds immediately. The first job does not require a token.
             blocked = False
@@ -518,6 +532,8 @@ class PackageInstaller:
                 jobserver.close()
             except Exception:
                 pass
+            for sig, handler in old_signal_handlers.items():
+                signal.signal(sig, handler)
 
             # Restore output settings. On Linux this is a no-op. On Windows this disables
             # VT100 processing and must happen after the final render.
