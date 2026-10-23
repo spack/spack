@@ -101,3 +101,7 @@ PackageLicenseDeclared: MIT
 PackageName: typing_extensions
 PackageHomePage: https://pypi.org/project/typing-extensions/
 PackageLicenseDeclared: Python-2.0
+
+PackageName: untar
+PackageHomePage: https://pypi.org/project/untar/
+PackageLicenseDeclared: MIT

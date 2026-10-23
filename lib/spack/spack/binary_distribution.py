@@ -13,7 +13,6 @@ import io
 import itertools
 import json
 import os
-import pathlib
 import re
 import shutil
 import sys
@@ -26,7 +25,6 @@ import urllib.parse
 import urllib.request
 import warnings
 from collections import defaultdict
-from contextlib import closing
 from typing import (
     IO,
     Any,
@@ -114,6 +112,7 @@ from .url_buildcache import (
     get_valid_spec_file,
     validate_checksum,
 )
+from .vendor import untar
 from .vendor.jsonschema.exceptions import ValidationError
 from .vendor.typing_extensions import TypedDict
 
@@ -2300,38 +2299,12 @@ def relocate_package(spec: spack.spec.Spec) -> None:
             os.unlink(install_manifest)
 
 
-def _tar_strip_component(tar: tarfile.TarFile, prefix: str):
-    """Yield all members of tarfile that start with given prefix, and strip that prefix (including
-    symlinks)"""
-    # Including trailing /, otherwise we end up with absolute paths.
-    regex = re.compile(re.escape(prefix) + "/*")
-
-    # Only yield members in the package prefix.
-    # Note: when a tarfile is created, relative in-prefix symlinks are
-    # expanded to matching member names of tarfile entries. So, we have
-    # to ensure that those are updated too.
-    # Absolute symlinks are copied verbatim -- relocation should take care of
-    # them.
-    for m in tar.getmembers():
-        result = regex.match(m.name)
-        if not result:
-            continue
-        m.name = m.name[result.end() :]
-        if m.linkname:
-            result = regex.match(m.linkname)
-            if result:
-                m.linkname = m.linkname[result.end() :]
-        yield m
-
-
 def extract_buildcache_tarball(tarfile_path: str, destination: str) -> None:
-    with closing(tarfile.open(tarfile_path, "r")) as tar:
-        # For consistent behavior across all supported Python versions
-        tar.extraction_filter = lambda member, path: member
-        # Remove common prefix from tarball entries and directly extract them to the install dir.
-        tar.extractall(
-            path=destination, members=_tar_strip_component(tar, prefix=_ensure_common_prefix(tar))
-        )
+    """Extract the package prefix in a build cache tarball into destination. The prefix is the
+    parent of the shallowest .spack dir, since tarballs contain the full prefix at build time."""
+    untar.extract(tarfile_path, destination, root_marker=".spack")
+    if not os.path.isfile(buildinfo_file_name(destination)):
+        raise ValueError("Tarball is not a Spack package, missing binary_distribution file")
 
 
 def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=timer.NULL_TIMER):
@@ -2375,50 +2348,6 @@ def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=t
         tarball_stage.destroy()
 
     timer.stop("relocate")
-
-
-def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
-    # Find the lowest `binary_distribution` file (hard-coded forward slash is on purpose).
-    binary_distribution = min(
-        (
-            e.name
-            for e in tar.getmembers()
-            if e.isfile() and e.name.endswith(".spack/binary_distribution")
-        ),
-        key=len,
-        default=None,
-    )
-
-    if binary_distribution is None:
-        raise ValueError("Tarball is not a Spack package, missing binary_distribution file")
-
-    pkg_path = pathlib.PurePosixPath(binary_distribution).parent.parent
-
-    # Even the most ancient Spack version has required to list the dir of the package itself, so
-    # guard against broken tarballs where `path.parent.parent` is empty.
-    if pkg_path == pathlib.PurePosixPath():
-        raise ValueError("Invalid tarball, missing package prefix dir")
-
-    pkg_prefix = str(pkg_path)
-
-    # Ensure all tar entries are in the pkg_prefix dir, and if they're not, they should be parent
-    # dirs of it.
-    has_prefix = False
-    for member in tar.getmembers():
-        stripped = member.name.rstrip("/")
-        if not (
-            stripped.startswith(pkg_prefix) or member.isdir() and pkg_prefix.startswith(stripped)
-        ):
-            raise ValueError(f"Tarball contains file {stripped} outside of prefix {pkg_prefix}")
-        if member.isdir() and stripped == pkg_prefix:
-            has_prefix = True
-
-    # This is technically not required, but let's be defensive about the existence of the package
-    # prefix dir.
-    if not has_prefix:
-        raise ValueError(f"Tarball does not contain a common prefix {pkg_prefix}")
-
-    return pkg_prefix
 
 
 def install_root_node(
