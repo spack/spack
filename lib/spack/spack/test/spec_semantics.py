@@ -1778,6 +1778,18 @@ class TestSpecSemantics:
         names = sorted(v for variant in gpu_variants for v in variant.values)
         assert sorted(n.name for n in lhs.architecture.gpus) == names
 
+    @pytest.mark.parametrize(
+        "text,expected",
+        [
+            ("vtk-m cuda_arch=80,:86", "80,:86"),
+            ("vtk-m cuda_arch=:86 amdgpu_target=:gfx90a:xnack-", ":86,:gfx90a:xnack-"),
+            # values archspec does not know are left out, with or without the colon
+            ("vtk-m cuda_arch=none,:none,:99,80", "80"),
+        ],
+    )
+    def test_gpu_variants_are_mirrored_into_the_architecture(self, text, expected):
+        assert ",".join(map(str, Spec(text).architecture.gpus)) == expected
+
     @pytest.mark.regression("13124")
     def test_error_message_unknown_variant(self):
         s = Spec("mpileaks +unknown")
