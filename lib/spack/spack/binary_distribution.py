@@ -1005,52 +1005,6 @@ def generate_key_index(mirror_url: str, tmpdir: str) -> None:
         ) from e
 
 
-class FileTypes:
-    BINARY = 0
-    TEXT = 1
-    UNKNOWN = 2
-
-
-NOT_ISO8859_1_TEXT = re.compile(b"[\x00\x7f-\x9f]")
-
-
-def file_type(f: IO[bytes]) -> int:
-    try:
-        # first check if this is an ELF or mach-o binary.
-        magic = f.read(8)
-        if len(magic) < 8:
-            return FileTypes.UNKNOWN
-        elif relocate.is_elf_magic(magic) or relocate.is_macho_magic(magic):
-            return FileTypes.BINARY
-
-        f.seek(0)
-
-        # Then try utf-8, which has a fast exponential decay in false positive rate with file size.
-        # Use chunked reads for fast early exit.
-        f_txt = io.TextIOWrapper(f, encoding="utf-8", errors="strict")
-        try:
-            while f_txt.read(1024):
-                pass
-            return FileTypes.TEXT
-        except UnicodeError:
-            f_txt.seek(0)
-            pass
-        finally:
-            f_txt.detach()
-        # Finally try iso-8859-1 heuristically. In Python, all possible 256 byte values are valid.
-        # We classify it as text if it does not contain any control characters / null bytes.
-        data = f.read(1024)
-        while data:
-            if NOT_ISO8859_1_TEXT.search(data):
-                break
-            data = f.read(1024)
-        else:
-            return FileTypes.TEXT
-        return FileTypes.UNKNOWN
-    finally:
-        f.seek(0)
-
-
 def tarfile_of_spec_prefix(
     tar: tarfile.TarFile, prefix: str, prefixes_to_relocate: List[str]
 ) -> dict:
@@ -1084,10 +1038,10 @@ def tarfile_of_spec_prefix(
             if relpath.split(os.sep, 1)[0] == ".spack":
                 tar.addfile(info, f)
                 return
-            f_type = file_type(f)
-            if f_type == FileTypes.BINARY:
+            f_type = relocate.file_type(f)
+            if f_type == relocate.FileTypes.BINARY:
                 relocate_binaries.append(os.path.relpath(path, prefix))
-            elif f_type == FileTypes.TEXT and file_matches(f, binary_regex):
+            elif f_type == relocate.FileTypes.TEXT and file_matches(f, binary_regex):
                 relocate_textfiles.append(os.path.relpath(path, prefix))
             tar.addfile(info, f)
 
