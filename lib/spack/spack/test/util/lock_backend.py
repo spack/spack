@@ -34,6 +34,7 @@ import glob
 import multiprocessing
 import os
 import pathlib
+import pickle
 import shutil
 import socket
 import stat
@@ -1479,3 +1480,13 @@ def test_read_after_write_does_not_accidentally_downgrade(tmp_path: pathlib.Path
     finally:
         lock.release_read()
         lock.release_write()
+
+
+@pytest.mark.parametrize(
+    "make_lock",
+    [lambda path: lk.Lock(path, enable=False), lambda path: lk.Lock.forbidden(path, "forbidden")],
+)
+def test_pickle_lock_without_file_backend(tmp_path: pathlib.Path, make_lock):
+    """Locks whose backend never tracks a file must still be picklable (spawned subprocesses)."""
+    lock = make_lock(str(tmp_path / "lockfile"))
+    assert type(pickle.loads(pickle.dumps(lock)).backend) is type(lock.backend)

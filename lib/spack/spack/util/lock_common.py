@@ -155,9 +155,10 @@ class GenericLockBackend:
         self.old_host: Optional[str] = None
 
     def __getstate__(self):
+        # Subclasses that don't track a file (e.g. DummyBackend) never set these.
         state = self.__dict__.copy()
-        del state["_file_ref"]
-        del state["_cached_key"]
+        state.pop("_file_ref", None)
+        state.pop("_cached_key", None)
         return state
 
     def __setstate__(self, state):
