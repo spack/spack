@@ -373,7 +373,6 @@ def git_checkout(
     if ref:
         checkout.append(ref)
 
-
     cmds = []
     if sparse_paths and sparse_checkout:
         sparse_checkout.extend([*sparse_paths, "--cone"])
