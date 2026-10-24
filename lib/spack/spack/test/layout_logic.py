@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 import spack.config
+import spack.error
 import spack.paths
 import spack.util.spack_yaml as syaml
 
