@@ -1846,6 +1846,7 @@ def walk_yaml_for_paths(
         "cache",
         "view",
         "destination",
+        "template",
     }
 
     results = []
@@ -1862,12 +1863,16 @@ def walk_yaml_for_paths(
                 results.extend(nested)
             elif isinstance(value, str):
                 # Treat as path if key is in PATH_KEYS, or if we're directly inside repos/mirrors
-                # (to handle flat form where user-chosen keys map to paths)
+                # (to handle flat form where user-chosen keys map to paths), or if we're tcl/lmod
+                # under roots (module root directories)
                 parent_is_repos_or_mirrors = len(key_path) > 0 and key_path[-1] in (
                     "repos",
                     "mirrors",
                 )
-                if key in PATH_KEYS or parent_is_repos_or_mirrors:
+                is_module_root = (
+                    len(key_path) > 0 and key_path[-1] == "roots" and key in ("tcl", "lmod")
+                )
+                if key in PATH_KEYS or parent_is_repos_or_mirrors or is_module_root:
                     if callback:
                         callback(value)
                     abs_path = resolve_and_check_path(value, config_file_dir)
