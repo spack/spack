@@ -308,10 +308,15 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
     )
 
     assert migrated is not None
+    # Absolute path outside config dir: unchanged
     assert migrated["config"]["source_cache"] == str(absolute_external)
-    assert migrated["config"]["repos"] == str(relative_local)
+    # Relative path (no ../): stays relative (file will be copied)
+    assert migrated["config"]["repos"] == "local.yaml"
+    # Absolute path inside old config: rewritten to new config location
     assert migrated["include"][0]["path"] == str(new_config_dir / "included-absolute")
+    # Relative include inside config: stays relative
     assert migrated["include"][1]["path"] == "included-relative.yaml"
+    # Relative path with ../: made absolute
     assert migrated["include"][2]["path"] == str(shared_cfg)
 
 

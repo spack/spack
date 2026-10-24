@@ -1799,108 +1799,76 @@ class Index:
         return f"Index({self.idx})"
 
 
-def walk_yaml_for_paths(
-    data: Any,
-    config_file_dir: str,
-    key_path: Optional[List[Union[str, Index]]] = None,
-    in_include: bool = False,
-    callback: Optional[Callable[[str], None]] = None,
-) -> List[Tuple[List[Union[str, Index]], str, str, bool]]:
-    """Walk YAML data and find string values that exist as filesystem paths.
-
-    Only checks strings under known path-containing keys to avoid false positives
-    (e.g., spec strings that happen to match directory names).
+def check_for_escaping_env_variables(data: Any, file_context: str = "") -> None:
+    """Check YAML data for $env/.. patterns that escape the environment.
 
     Args:
-        callback: Optional function called with each path value before processing.
-                 Can raise an exception to reject problematic paths.
+        data: YAML data structure to check
+        file_context: Description of the file being checked (for error messages)
+
+    Raises:
+        spack.error.SpackError: If $env/.. pattern found
+    """
+    if isinstance(data, dict):
+        for value in data.values():
+            check_for_escaping_env_variables(value, file_context)
+    elif isinstance(data, list):
+        for item in data:
+            check_for_escaping_env_variables(item, file_context)
+    elif isinstance(data, str):
+        if "$env" in data and "/.." in data:
+            context = f" in {file_context}" if file_context else ""
+            raise spack.error.SpackError(
+                f"Cannot migrate: path '{data}'{context} contains $env/.. which would "
+                f"reference outside the environment. Expand the variable or use an absolute path."
+            )
+
+
+def walk_yaml_for_paths(
+    data: Any, config_file_dir: str, key_path: Optional[List[Union[str, Index]]] = None
+) -> List[Tuple[List[Union[str, Index]], str, str]]:
+    """Walk YAML data and find strings that look like paths.
+
+    Identifies paths as:
+    - Absolute paths (os.path.isabs() - handles / on Unix and C:\\ on Windows)
+    - Relative paths starting with ../
+
+    Args:
+        data: YAML data structure to walk
+        config_file_dir: Directory containing the config file (for resolving relative paths)
+        key_path: Current position in the YAML structure
+
+    Returns:
+        List of (key_path, original_value, absolute_path) tuples
     """
     if key_path is None:
         key_path = []
-
-    # Keys whose string values should be treated as paths
-    PATH_KEYS = {
-        "include",
-        "include_concrete",
-        "build_stage",
-        "test_stage",
-        "source_cache",
-        "misc_cache",
-        "license_dir",
-        "template_dirs",
-        "environments_root",
-        "gpg_path",
-        "gpg_keys_path",
-        "root",
-        "prefix",
-        "path",
-        "dev_path",
-        "install_tree",
-        "prepend_path",
-        "append_path",
-        "remove_path",
-        "repos",
-        "additional_external_search_paths",
-        "ccache",
-        "concretization_cache",
-        "cache",
-        "view",
-        "destination",
-        "template",
-    }
 
     results = []
 
     if isinstance(data, dict):
         for key, value in data.items():
-            is_include_section = key == "include"
-            child_in_include = in_include or is_include_section
-
             if isinstance(value, (dict, list)):
-                nested = walk_yaml_for_paths(
-                    value, config_file_dir, key_path + [key], child_in_include, callback
-                )
+                nested = walk_yaml_for_paths(value, config_file_dir, key_path + [key])
                 results.extend(nested)
             elif isinstance(value, str):
-                # Treat as path if key is in PATH_KEYS, or if we're directly inside repos/mirrors
-                # (to handle flat form where user-chosen keys map to paths), or if we're tcl/lmod
-                # under roots (module root directories)
-                parent_is_repos_or_mirrors = len(key_path) > 0 and key_path[-1] in (
-                    "repos",
-                    "mirrors",
-                )
-                is_module_root = (
-                    len(key_path) > 0 and key_path[-1] == "roots" and key in ("tcl", "lmod")
-                )
-                if key in PATH_KEYS or parent_is_repos_or_mirrors or is_module_root:
-                    if callback:
-                        callback(value)
+                # Check if string looks like a path
+                if os.path.isabs(value) or value.startswith("../"):
                     abs_path = resolve_and_check_path(value, config_file_dir)
                     if abs_path:
-                        results.append((key_path + [key], value, abs_path, child_in_include))
+                        results.append((key_path + [key], value, abs_path))
 
     elif isinstance(data, list):
-        # For list items, check if the parent key (last non-Index in key_path) is in PATH_KEYS
-        parent_key = None
-        for elem in reversed(key_path):
-            if not isinstance(elem, Index):
-                parent_key = elem
-                break
-
         for idx, item in enumerate(data):
             if isinstance(item, (dict, list)):
-                nested = walk_yaml_for_paths(
-                    item, config_file_dir, key_path + [Index(idx)], in_include, callback
-                )
+                nested = walk_yaml_for_paths(item, config_file_dir, key_path + [Index(idx)])
                 results.extend(nested)
             elif isinstance(item, str):
-                # Only treat list item as path if parent key is in PATH_KEYS
-                if parent_key in PATH_KEYS:
-                    if callback:
-                        callback(item)
+                # Check if string looks like a path
+                if os.path.isabs(item) or item.startswith("../"):
                     abs_path = resolve_and_check_path(item, config_file_dir)
                     if abs_path:
-                        results.append((key_path + [Index(idx)], item, abs_path, in_include))
+                        results.append((key_path + [Index(idx)], item, abs_path))
 
     return results
 
@@ -1908,8 +1876,8 @@ def walk_yaml_for_paths(
 def resolve_and_check_path(value: str, config_file_dir: str) -> str:
     """Resolve a potential path string to an absolute path.
 
-    Used by walk_yaml_for_paths which only examines known path keys,
-    so we can assume these are meant to be path references.
+    Used by walk_yaml_for_paths which examines strings that look like paths
+    (absolute or starting with ../), so we can assume these are meant to be path references.
     """
     if not value or value.startswith("$"):
         return ""
@@ -1977,6 +1945,10 @@ def process_env_file_paths(
     if not data:
         return None
 
+    # Check for $env/.. patterns that escape the environment
+    rel_file = os.path.relpath(file_path, os.path.abspath(new_env_dir))
+    check_for_escaping_env_variables(data, rel_file)
+
     # file_path is in the new location (staging), but we need to resolve relative paths
     # as they would have been in the old location
     new_config_dir = os.path.dirname(file_path)
@@ -1987,20 +1959,10 @@ def process_env_file_paths(
     rel_to_new_env = os.path.relpath(new_config_dir, new_env_norm)
     old_config_dir = os.path.join(old_env_norm, rel_to_new_env)
 
-    # Callback to reject paths with $env/.. that escape the environment
-    def reject_env_variable(value: str):
-        if "$env" in value and "/.." in value:
-            rel_file = os.path.relpath(file_path, new_env_norm)
-            raise spack.error.SpackError(
-                f"Environment cannot be migrated: path '{value}' in {rel_file} "
-                f"contains $env/.. which would reference outside the environment. "
-                f"Expand the variable or use an absolute path."
-            )
-
-    found_paths = walk_yaml_for_paths(data, old_config_dir, callback=reject_env_variable)
+    found_paths = walk_yaml_for_paths(data, old_config_dir)
     modified = False
 
-    for key_path, original_value, abs_path, in_include in found_paths:
+    for key_path, original_value, abs_path in found_paths:
         abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
 
         # Check if path is inside the env being moved
@@ -2054,10 +2016,62 @@ def process_env_file_paths(
     return data if modified else None
 
 
+def process_yaml_files_in_directory(
+    old_dir: str,
+    staging_dir: str,
+    processor_func: Callable[[str, str, str], Optional[Dict[str, Any]]],
+    new_dir: str,
+    excluded_toplevel_dirs: Optional[Set[str]] = None,
+) -> None:
+    """Walk directory tree, find YAML files, and process them.
+
+    Args:
+        old_dir: Source directory to walk
+        staging_dir: Staging directory where processed files are written
+        processor_func: Function(yaml_file_path, old_dir, new_dir) -> modified_data or None
+        new_dir: Target directory (passed to processor_func)
+        excluded_toplevel_dirs: Set of directory names to skip at the first level
+    """
+    if excluded_toplevel_dirs is None:
+        excluded_toplevel_dirs = set()
+
+    for root, dirs, files in os.walk(old_dir, followlinks=False):
+        # Skip excluded toplevel directories
+        if root == old_dir:
+            dirs[:] = [d for d in dirs if d not in excluded_toplevel_dirs]
+
+        for filename in files:
+            if not (filename.endswith(".yaml") or filename.endswith(".yml")):
+                continue
+
+            old_path = os.path.join(root, filename)
+            rel_path = os.path.relpath(old_path, old_dir)
+            staging_file_path = os.path.join(staging_dir, rel_path)
+
+            try:
+                modified_data = processor_func(old_path, old_dir, new_dir)
+
+                os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
+
+                if modified_data is not None:
+                    old_mode = os.stat(old_path).st_mode & 0o777
+                    with open(staging_file_path, "w", encoding="utf-8") as f:
+                        syaml.dump(modified_data, f)
+                    os.chmod(staging_file_path, old_mode)
+                else:
+                    shutil.copy2(old_path, staging_file_path)
+            except (syaml.SpackYAMLError, OSError) as e:
+                tty.debug(f"Skipping {rel_path} during migration: {e}")
+
+
 def process_config_file_paths(
     file_path: str, old_location: str, new_config_location: str
 ) -> Optional[Dict[str, Any]]:
-    """Absolutize config paths and rewrite paths under an old include root.
+    """Rewrite paths in config files for relocation.
+
+    - Absolute paths inside old_location: rewrite to new_location
+    - Relative paths starting with ../: make absolute
+    - Other paths: leave as-is (files copied to new location)
 
     Returns the modified data if any paths were changed, None otherwise.
     """
@@ -2074,39 +2088,24 @@ def process_config_file_paths(
     old_location_norm = os.path.normpath(os.path.abspath(old_location))
     new_config_location_norm = os.path.normpath(os.path.abspath(new_config_location))
 
-    for key_path, original_value, abs_path, in_include in found_paths:
+    for key_path, original_value, abs_path in found_paths:
         if os.path.isabs(original_value):
-            if in_include:
-                abs_path_norm = os.path.normpath(os.path.abspath(original_value))
-                try:
-                    rel_path = os.path.relpath(abs_path_norm, old_location_norm)
-                    if not os.path.normpath(rel_path).startswith(".."):
-                        new_path = os.path.join(new_config_location_norm, rel_path)
-                        absolutize_path_in_yaml(data, key_path, new_path)
-                        modified = True
-                except ValueError:
-                    pass
-        else:
-            # Relative path
-            if in_include:
-                # For relative include paths, check if they point outside the old config dir
-                abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
-                try:
-                    rel_to_old = os.path.relpath(abs_path_norm, old_location_norm)
-                    points_outside = os.path.normpath(rel_to_old).startswith("..")
-                except ValueError:
-                    # Different drives on Windows
-                    points_outside = True
-
-                if points_outside:
-                    # Points outside old config dir - make absolute to preserve target
-                    absolutize_path_in_yaml(data, key_path, abs_path)
+            # Absolute path - rewrite if inside old_location
+            abs_path_norm = os.path.normpath(abs_path)
+            try:
+                rel_to_old = os.path.relpath(abs_path_norm, old_location_norm)
+                if not rel_to_old.startswith(".."):
+                    # Inside old_location - rewrite to new location
+                    new_path = os.path.join(new_config_location_norm, rel_to_old)
+                    absolutize_path_in_yaml(data, key_path, new_path)
                     modified = True
-                # else: points inside old config dir - keep relative (will work in new location)
-            else:
-                # Relative path outside include - always make absolute
-                absolutize_path_in_yaml(data, key_path, abs_path)
-                modified = True
+            except ValueError:
+                # Different drives on Windows - not inside old_location
+                pass
+        else:
+            # Relative path starting with ../ - make absolute
+            absolutize_path_in_yaml(data, key_path, abs_path)
+            modified = True
 
     return data if modified else None
 
@@ -2275,92 +2274,49 @@ def _migrate_with_staging(
 
 
 def _prepare_config_staging(old_location, staging_path, new_location):
-    """Callback for config migration - processes and copies config files.
+    """Callback for config migration - copies files and processes config files.
 
-    Uses a two-pass approach to handle symlinked directory aliases:
-    1. Walk without following symlinks to find and copy real config files
-    2. Copy symlinks that point to copied files/directories (preserve aliases)
+    Strategy:
+    1. Copy all non-YAML files/dirs from ~/.spack to staging (excluding certain cache dirs)
+    2. Process and copy YAML files with path rewriting
     """
-    package_repos_dir = os.path.join(old_location, "package_repos")
-    copied_files = set()
+    # Directories to exclude at the first level (cache/temporary data)
+    EXCLUDED_TOPLEVEL_DIRS = {"reports", "test", "git_repos", "package_repos", "bootstrap"}
 
-    # First pass: find and copy real config files (don't follow symlinks)
-    for root, dirs, files in os.walk(old_location, followlinks=False):
-        # Skip package_repos
-        if filesystem.path_contains_subdirectory(root, package_repos_dir):
-            dirs[:] = []  # Don't recurse into subdirectories
+    # Helper to skip YAML files during directory copy
+    def ignore_yaml_files(directory, contents):
+        return [name for name in contents if name.endswith(".yaml") or name.endswith(".yml")]
+
+    # First pass: copy non-YAML files and directories
+    for item in os.listdir(old_location):
+        old_item_path = os.path.join(old_location, item)
+        staging_item_path = os.path.join(staging_path, item)
+
+        # Skip excluded toplevel directories
+        if os.path.isdir(old_item_path) and item in EXCLUDED_TOPLEVEL_DIRS:
+            tty.debug(f"Skipping excluded directory: {item}")
             continue
 
-        for filename in files:
-            # Only process .yaml and .yml files
-            if not (filename.endswith(".yaml") or filename.endswith(".yml")):
-                continue
-
-            old_path = os.path.join(root, filename)
-
-            # Skip symlinks in first pass
-            if os.path.islink(old_path):
-                continue
-
-            rel_path = os.path.relpath(old_path, old_location)
-            staging_file_path = os.path.join(staging_path, rel_path)
-
-            try:
-                modified_data = process_config_file_paths(old_path, old_location, new_location)
-
-                os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
-
-                if modified_data is not None:
-                    old_mode = os.stat(old_path).st_mode & 0o777
-                    with open(staging_file_path, "w", encoding="utf-8") as f:
-                        syaml.dump(modified_data, f)
-                    os.chmod(staging_file_path, old_mode)
-                else:
-                    shutil.copy2(old_path, staging_file_path)
-
-                copied_files.add(os.path.normpath(os.path.join(staging_path, rel_path)))
-            except (syaml.SpackYAMLError, OSError) as e:
-                tty.debug(f"Skipping {rel_path} during migration: {e}")
-
-    # Second pass: copy symlinks that point to copied files/directories
-    for root, dirs, files in os.walk(old_location, followlinks=False):
-        if filesystem.path_contains_subdirectory(root, package_repos_dir):
-            dirs[:] = []
+        # Skip YAML files (process separately)
+        if item.endswith(".yaml") or item.endswith(".yml"):
             continue
 
-        for name in files + dirs:
-            path = os.path.join(root, name)
-            if not os.path.islink(path):
-                continue
-
-            target = os.readlink(path)
-
-            # Resolve target relative to symlink location
-            if os.path.isabs(target):
-                abs_target = os.path.normpath(target)
+        # Copy everything else
+        try:
+            if os.path.isdir(old_item_path):
+                # Copy directory but ignore YAML files inside
+                shutil.copytree(
+                    old_item_path, staging_item_path, symlinks=True, ignore=ignore_yaml_files
+                )
             else:
-                link_dir = os.path.dirname(path)
-                abs_target = os.path.normpath(os.path.join(link_dir, target))
+                shutil.copy2(old_item_path, staging_item_path)
+        except OSError as e:
+            tty.debug(f"Skipping {item} during migration: {e}")
 
-            # Check if target is inside old_location
-            try:
-                rel_target = os.path.relpath(abs_target, old_location)
-                if rel_target.startswith(".."):
-                    continue  # Target outside old_location, skip
-            except ValueError:
-                continue  # Different drives on Windows
-
-            # Check if we copied the target or a file under it
-            staging_target = os.path.normpath(os.path.join(staging_path, rel_target))
-            target_copied = staging_target in copied_files or any(
-                f.startswith(staging_target + os.sep) for f in copied_files
-            )
-
-            if target_copied:
-                rel_path = os.path.relpath(path, old_location)
-                staging_link = os.path.join(staging_path, rel_path)
-                os.makedirs(os.path.dirname(staging_link), exist_ok=True)
-                os.symlink(target, staging_link)
+    # Second pass: process and copy YAML files
+    process_yaml_files_in_directory(
+        old_location, staging_path, process_config_file_paths, new_location, EXCLUDED_TOPLEVEL_DIRS
+    )
 
 
 def _prepare_package_repos_staging(old_path, staging_path, new_path):

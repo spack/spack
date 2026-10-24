@@ -122,6 +122,23 @@ If the old install tree was configured explicitly at a custom location, that con
 
 Migration happens at config module load time, before the CONFIG singleton exists. This means migration cannot check user configuration to decide whether to migrate resources. When the user approves migration, Spack copies resources from old default locations to the fixed new default locations, regardless of effective `config:locations` or resource-specific configuration. Existing custom configuration remains authoritative after migration.
 
+### Path detection and rewriting strategy
+
+Configuration migration uses a simplified path detection approach:
+
+1. **Path detection**: Identifies paths by their form rather than by config key:
+   - Absolute paths (detected with `os.path.isabs()` - works for Unix `/...` and Windows `C:\...`)
+   - Relative paths starting with `../`
+
+2. **File copying**: Copies all non-YAML files and directories from source to destination (excluding cache directories: `reports`, `test`, `git_repos`, `package_repos`, `bootstrap`). This preserves any files referenced by simple relative paths (like `repos: local-repo`).
+
+3. **Path rewriting**: Processes YAML files:
+   - Absolute paths inside old location: rewrite to new location
+   - Relative paths with `../`: make absolute
+   - Other paths: leave as-is (files were copied)
+
+This approach avoids false positives (strings that aren't paths) and handles user-chosen keys (like custom repo or mirror names) without needing to maintain a whitelist of config keys.
+
 Migration of Spack prefix resources is skipped when:
 
 - The old resource location doesn't exist;
@@ -158,7 +175,7 @@ The existence of `.migration-done` marker means that migration evaluation has co
 ## 3.4 Managed environments
 
 - If the user approves migration, Spack attempts to copy old managed environments from the old default location (`$spack/var/spack/environments`) to the fixed new default location (`~/.local/share/spack/environments`), regardless of effective `config:locations` or `config:environments_root` settings.
-- Before attempting migration, Spack checks each environment's `spack.yaml` to see if `install_tree:root` contains `$env`. If any environment uses `$env` in its install tree configuration, all environment migration is skipped because those environments have their installations inside the environment directory and are not relocatable.
+- Before attempting migration, Spack searches each environment directory for `.spack-db/index.json` (the database file that indicates installed packages). If any environment has installs inside it (indicated by the presence of this database), all environment migration is skipped because those environments are not relocatable—the database contains absolute paths to install prefixes that would break after moving.
 - Migration uses a lock shared with managed environment creation.
 - Migration processes source environments whose destination already exists before copying environments with unoccupied destinations. `_migrate_with_staging` verifies each occupied destination, so a conflict is detected before any new environment is copied.
 - Occupied destinations and remaining source environments are each processed in sorted (alphabetical) order.
@@ -193,9 +210,9 @@ These references cannot be safely migrated because:
 
 **Why environment rules differ from user config migration:**
 
-User config migration (section 3.8) relocates only config files while other resources (repos, caches) may remain at the old location. Therefore, absolute paths into `~/.spack` only make sense to rewrite when they appear in `include:` sections (referencing other config files being moved).
+User config migration (section 3.8) copies entire directory contents (excluding cache directories and YAML files initially), then processes YAML files with path rewriting. Simple relative paths continue to work because the referenced files were copied. Only absolute paths and `../` paths need rewriting.
 
-Environment migration relocates the entire environment directory as a unit and blocks migration if there are external references that would break. Paths inside the environment are rewritten; paths outside the environment are only allowed if they're also outside the environments root.
+Environment migration relocates the entire environment directory as a unit and blocks migration if there are external references that would break. Paths inside the environment are rewritten; paths outside the environment are only allowed if they're also outside the environments root. Environment migration must be more conservative because it doesn't copy the entire environments root—only individual environment directories.
 
 ### Develop spec dev_path rewriting
 
