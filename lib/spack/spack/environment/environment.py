@@ -38,7 +38,6 @@ import spack.error
 import spack.filesystem_view as fsv
 import spack.installer_dispatch
 import spack.package_base
-import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.schema.spec_list
@@ -87,9 +86,8 @@ spack_env_view_var = "SPACK_ENV_VIEW"
 #: Validation error for a currently activate environment that failed to parse
 _active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
-#: default path where environments are stored in the spack tree
-default_env_path = os.path.join(spack.paths.var_path, "environments")
-
+#: default path where environments are stored (XDG-compliant location)
+default_env_path = f"$data_home{os.sep}environments"
 
 #: Name of the input yaml file for an environment
 manifest_name = "spack.yaml"
@@ -381,13 +379,20 @@ def create(
         include_concrete: concrete environment names/paths to be included
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
-    return create_in_dir(
-        environment_dir,
-        init_file=init_file,
-        with_view=with_view,
-        keep_relative=keep_relative,
-        include_concrete=include_concrete,
-    )
+    env_root = env_root_path()
+    fs.mkdirp(env_root)
+    lock = lk.Lock(os.path.join(env_root, ".lock"), default_timeout=120)
+    try:
+        lock.acquire_write()
+        return create_in_dir(
+            environment_dir,
+            init_file=init_file,
+            with_view=with_view,
+            keep_relative=keep_relative,
+            include_concrete=include_concrete,
+        )
+    finally:
+        lock.release_write()
 
 
 def create_in_dir(
@@ -1225,6 +1230,72 @@ class Environment:
             if read_lock_version == 1:
                 tty.debug(f"Storing backup of {self.lock_path} at {self._lock_backup_v1_path}")
                 shutil.copy(self.lock_path, self._lock_backup_v1_path)
+
+        # Handle post-migration dev_path rewriting
+        self._fix_dev_paths_after_migration()
+
+    def _fix_dev_paths_after_migration(self):
+        """Check for and handle post-migration dev_path rewriting.
+
+        After environment migration, dev paths that pointed inside the old environment
+        directory need to be rewritten to point to the new location. This is done
+        automatically on first environment load after migration by checking for a
+        marker file left by the migration process.
+        """
+        import json
+
+        marker_path = os.path.join(self.path, ".spack-needs-dev-path-migration")
+        if not os.path.exists(marker_path):
+            return
+
+        try:
+            with open(marker_path, encoding="utf-8") as f:
+                marker_data = json.load(f)
+        except (IOError, json.JSONDecodeError) as e:
+            tty.warn(f"Could not read dev_path migration marker: {e}")
+            return
+
+        old_env_path = os.path.realpath(marker_data["old_env_path"])
+
+        # Find all dev specs that need rewriting
+        specs_to_fix = []
+        paths_to_fix = []
+
+        for name, entry in self.dev_specs.items():
+            dev_path = entry.get("path", name)
+            abs_path = spack.config.canonicalize_path(dev_path, default_wd=self.path)
+            abs_path_real = os.path.realpath(abs_path)
+
+            # Check if this dev path is under the old environment directory
+            if abs_path_real.startswith(old_env_path + os.sep) or abs_path_real == old_env_path:
+                # Compute new path relative to new environment
+                rel_to_old = os.path.relpath(abs_path_real, old_env_path)
+                new_abs_path = os.path.join(self.path, rel_to_old)
+
+                tty.debug(f"Rewriting dev path for {name}: {abs_path_real} -> {new_abs_path}")
+
+                # Find the concrete spec for this package
+                for spec in self.all_specs():
+                    if spec.name == name and spec.satisfies("dev_path=*"):
+                        specs_to_fix.append(spec)
+                        paths_to_fix.append(new_abs_path)
+                        break
+
+        if specs_to_fix:
+            tty.msg(
+                f"Updating {len(specs_to_fix)} develop spec(s) in environment "
+                f"after migration from {old_env_path}"
+            )
+            # Use apply_develop to properly rehash and update the lock file
+            self.apply_develop(specs_to_fix, paths_to_fix)
+            self.write()
+
+        # Remove the marker file
+        try:
+            os.remove(marker_path)
+            tty.debug("Removed dev_path migration marker")
+        except OSError as e:
+            tty.warn(f"Could not remove dev_path migration marker: {e}")
 
     def write_transaction(self):
         """Get a write lock context manager for use in a ``with`` block."""

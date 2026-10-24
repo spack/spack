@@ -37,8 +37,8 @@ import spack.util.path
 from spack.util import filesystem as fs
 from spack.util import tty
 
-#: default installation root, relative to the Spack install path
-DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
+#: default installation root, uses $data_home which expands to XDG data location
+DEFAULT_INSTALL_TREE_ROOT = "$data_home/installs"
 
 
 def parse_install_tree(config: spack.config.Configuration) -> Tuple[str, str, Dict[str, str]]:
