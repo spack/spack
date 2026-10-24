@@ -415,7 +415,7 @@ def repo_list(args):
         if repo["status"] == "installed":
             status = "@g{[+]}"
         elif repo["status"] == "uninitialized":
-            status = "@K{ - }"
+            status = "@#{ - }"
         else:  # error
             status = "@r{[-]}"
 
