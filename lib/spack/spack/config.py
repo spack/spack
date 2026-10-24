@@ -1845,6 +1845,7 @@ def walk_yaml_for_paths(
         "concretization_cache",
         "cache",
         "view",
+        "destination",
     }
 
     results = []
@@ -1860,8 +1861,13 @@ def walk_yaml_for_paths(
                 )
                 results.extend(nested)
             elif isinstance(value, str):
-                # Only treat as path if parent key is in PATH_KEYS
-                if key in PATH_KEYS:
+                # Treat as path if key is in PATH_KEYS, or if we're directly inside repos/mirrors
+                # (to handle flat form where user-chosen keys map to paths)
+                parent_is_repos_or_mirrors = len(key_path) > 0 and key_path[-1] in (
+                    "repos",
+                    "mirrors",
+                )
+                if key in PATH_KEYS or parent_is_repos_or_mirrors:
                     if callback:
                         callback(value)
                     abs_path = resolve_and_check_path(value, config_file_dir)
