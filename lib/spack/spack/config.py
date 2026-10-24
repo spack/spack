@@ -2273,12 +2273,101 @@ def _migrate_with_staging(
             lock.release_write()
 
 
+def _rewrite_symlinks_after_copy(staging_path, old_location, new_location, error_on_rewrite=False):
+    """Rewrite or detect problematic symlinks in staging directory after copying.
+
+    Rules:
+    - Relative symlinks pointing outside old_location: make absolute (or error)
+    - Absolute symlinks pointing inside old_location: rewrite to new_location (or error)
+    - Other symlinks: leave as-is
+
+    Args:
+        staging_path: Directory where files were copied to
+        old_location: Original source directory
+        new_location: Target directory for migration
+        error_on_rewrite: If True, raise MigrationStagingError instead of rewriting
+
+    Returns:
+        A list of (link_path, old_target, new_target) tuples for reporting.
+
+    Raises:
+        MigrationStagingError: If error_on_rewrite=True and problematic symlinks found
+    """
+    rewrites = []
+    old_location_real = os.path.realpath(old_location)
+
+    for root, dirs, files in os.walk(staging_path, followlinks=False):
+        for name in list(dirs) + list(files):
+            path = os.path.join(root, name)
+
+            if not os.path.islink(path):
+                continue
+
+            target = os.readlink(path)
+            new_target = None
+
+            if os.path.isabs(target):
+                # Absolute symlink - check if it points into old_location
+                target_real = os.path.realpath(target)
+                try:
+                    if os.path.commonpath([target_real, old_location_real]) == old_location_real:
+                        # Points inside old location - would need rewriting
+                        rel_path = os.path.relpath(target_real, old_location_real)
+                        new_target = os.path.join(new_location, rel_path)
+                except (ValueError, OSError):
+                    # Different drives on Windows, or path doesn't exist - leave as-is
+                    pass
+            else:
+                # Relative symlink - check if resolved target is outside old_location
+                # Resolve relative to the ORIGINAL link location (in old_location)
+                rel_path_in_staging = os.path.relpath(path, staging_path)
+                original_link = os.path.join(old_location, rel_path_in_staging)
+                original_link_dir = os.path.dirname(original_link)
+
+                try:
+                    # Resolve the target relative to original link directory
+                    # (target was read from staging, but we resolve as if from original location)
+                    resolved = os.path.normpath(os.path.join(original_link_dir, target))
+                    resolved_real = (
+                        os.path.realpath(resolved) if os.path.exists(resolved) else resolved
+                    )
+
+                    # Check if resolved target is outside old_location
+                    try:
+                        common = os.path.commonpath([resolved_real, old_location_real])
+                        if common != old_location_real:
+                            # Points outside - would need to make absolute
+                            new_target = resolved_real
+                    except ValueError:
+                        # Different drives or no common path - definitely outside
+                        new_target = resolved_real
+                except (OSError, ValueError):
+                    # Can't resolve - leave as-is
+                    pass
+
+            if new_target:
+                rewrites.append((path, target, new_target))
+                if error_on_rewrite:
+                    rel_path = os.path.relpath(path, staging_path)
+                    raise MigrationStagingError(
+                        f"Cannot migrate: symlink '{rel_path}' points to '{target}' which would "
+                        f"require rewriting to '{new_target}'. Environment migration does not "
+                        f"support symlink rewriting."
+                    )
+                # Rewrite mode: update the symlink
+                os.unlink(path)
+                os.symlink(new_target, path)
+
+    return rewrites
+
+
 def _prepare_config_staging(old_location, staging_path, new_location):
     """Callback for config migration - copies files and processes config files.
 
     Strategy:
     1. Copy all non-YAML files/dirs from ~/.spack to staging (excluding certain cache dirs)
     2. Process and copy YAML files with path rewriting
+    3. Rewrite symlinks as needed
     """
     # Directories to exclude at the first level (cache/temporary data)
     EXCLUDED_TOPLEVEL_DIRS = {"reports", "test", "git_repos", "package_repos", "bootstrap"}
@@ -2317,6 +2406,14 @@ def _prepare_config_staging(old_location, staging_path, new_location):
     process_yaml_files_in_directory(
         old_location, staging_path, process_config_file_paths, new_location, EXCLUDED_TOPLEVEL_DIRS
     )
+
+    # Third pass: rewrite symlinks
+    symlink_rewrites = _rewrite_symlinks_after_copy(staging_path, old_location, new_location)
+    if symlink_rewrites:
+        tty.warn("Rewrote symlinks during migration:")
+        for link_path, old_target, new_target in symlink_rewrites:
+            rel_link = os.path.relpath(link_path, staging_path)
+            tty.warn(f"  {rel_link}: {old_target} -> {new_target}")
 
 
 def _prepare_package_repos_staging(old_path, staging_path, new_path):
@@ -2527,38 +2624,8 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
 
         shutil.copytree(old_path, staging_path, symlinks=True, ignore=ignore_views)
 
-        # Check all symlinks in the copied tree
-        for root, dirs, files in os.walk(staging_path):
-            for name in dirs + files:
-                path = os.path.join(root, name)
-                if os.path.islink(path):
-                    # Resolve symlink target to absolute path
-                    abs_target = os.path.normpath(
-                        filesystem.resolve_link_target_relative_to_the_link(path)
-                    )
-
-                    old_path_norm = os.path.normpath(old_path)
-                    staging_norm = os.path.normpath(staging_path)
-
-                    # Check if target points into the old environment
-                    if (
-                        abs_target.startswith(old_path_norm + os.sep)
-                        or abs_target == old_path_norm
-                    ):
-                        raise MigrationStagingError(
-                            f"Environment {old_path} contains symlink "
-                            f"{path} -> {os.readlink(path)} pointing into old environment"
-                        )
-
-                    # Check if target points outside the staging dir
-                    if (
-                        not abs_target.startswith(staging_norm + os.sep)
-                        and abs_target != staging_norm
-                    ):
-                        raise MigrationStagingError(
-                            f"Environment {old_path} contains symlink "
-                            f"{path} -> {os.readlink(path)} pointing outside environment"
-                        )
+        # Check for problematic symlinks (raises MigrationStagingError if found)
+        _rewrite_symlinks_after_copy(staging_path, old_path, new_path, error_on_rewrite=True)
 
         # Rewrite paths in environment config files
         yaml_files = filesystem.find(staging_path, ["*.yaml", "*.yml"], recursive=True)
