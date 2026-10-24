@@ -2646,32 +2646,18 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         intersection = sorted(source_entries & destination_entries)
         remainder = sorted(source_entries - destination_entries)
 
-        # Check if any environments in remainder are non-relocatable
-        # (i.e., have install_tree:root pointing to $env)
+        # Check if any environments in remainder have installs inside them
+        # (indicated by .spack-db/index.json - these are non-relocatable)
         for entry in remainder:
             env_path = os.path.join(src_dir, entry)
-            spack_yaml = os.path.join(env_path, "spack.yaml")
-            if os.path.isfile(spack_yaml):
-                try:
-                    with open(spack_yaml, "r", encoding="utf-8") as f:
-                        env_config = syaml.load(f)
-
-                    # Check if install_tree:root contains $env
-                    install_tree_root = (
-                        env_config.get("spack", {})
-                        .get("config", {})
-                        .get("install_tree", {})
-                        .get("root", "")
+            if os.path.isdir(env_path):
+                # Look for database index file anywhere under the environment directory
+                db_index = filesystem.find_first(env_path, ".spack-db/index.json")
+                if db_index:
+                    tty.debug(
+                        f"Environment {entry} has installs inside it "
+                        f"(found {db_index}); skipping migration of all environments"
                     )
-                    if "$env" in install_tree_root:
-                        tty.debug(
-                            f"Environment {entry} has install_tree:root={install_tree_root} "
-                            f"which uses $env; skipping migration of all environments"
-                        )
-                        return False
-                except (OSError, syaml.SpackYAMLError, AttributeError) as e:
-                    # If we can't read/parse the file, be conservative and skip migration
-                    tty.debug(f"Failed to read {spack_yaml}: {e}; skipping environment migration")
                     return False
 
         for entry in intersection + remainder:
