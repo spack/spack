@@ -1887,6 +1887,7 @@ unification_set_compiler("root", CompilerNode, Language) :-
     node_compiler(node(ID, Package), CompilerNode, Language),
     no_compiler_mixing(Language),
     not allow_mixing(Package),
+    not external(node(ID, Package)),
     unification_set("root", node(ID, Package)).
 
 % Compiler for a reused node
@@ -1916,6 +1917,7 @@ unification_set_compiler("root", CompilerNode, Language) :-
     attr("hash", CompilerNode, CompilerHash),
     no_compiler_mixing(Language),
     not allow_mixing(Package),
+    not external(node(ID, Package)),
     unification_set("root", node(ID, Package)).
 
 % Compiler-unmixing: 3rd rule
@@ -1927,6 +1929,7 @@ unification_set_compiler("root", node(CompilerHash, Compiler), Language) :-
     not hash_is_assigned(CompilerHash),
     no_compiler_mixing(Language),
     not allow_mixing(Package),
+    not external(node(ID, Package)),
     unification_set("root", node(ID, Package)).
 
 #defined no_compiler_mixing/1.
