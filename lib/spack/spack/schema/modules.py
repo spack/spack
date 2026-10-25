@@ -27,8 +27,7 @@ module_file_configuration = {
         "filter": {
             "type": "object",
             "default": {},
-            "description": "Filter out specific environment variable modifications from "
-            "module files",
+            "description": "Filter out specific definitions from module files",
             "additionalProperties": False,
             "properties": {
                 "exclude_env_vars": {
@@ -37,7 +36,13 @@ module_file_configuration = {
                     "items": {"type": "string"},
                     "description": "List of environment variable names to exclude from module "
                     "file modifications",
-                }
+                },
+                "exclude_variants": {
+                    "type": "array",
+                    "default": [],
+                    "items": {"type": "string"},
+                    "description": "List of package variants to exclude from module file",
+                },
             },
         },
         "template": {
@@ -69,6 +74,11 @@ module_file_configuration = {
             "additionalProperties": {"type": "string"},  # key
         },
         "environment": spack.schema.environment.ref_env_modifications,
+        "variant_defaults": {
+            "type": "object",
+            "description": "Define default value for module variants",
+            "additionalProperties": {"anyOf": [{"type": "string"}, {"type": "boolean"}]},
+        },
     },
 }
 
@@ -159,7 +169,14 @@ tcl_configuration = {
     "description": "Configuration for Tcl module files compatible with Environment Modules and "
     "Lmod",
     "additionalKeysAreSpecs": True,
-    "properties": {**common_props},
+    "properties": {
+        **common_props,
+        "variants": {
+            "type": "string",
+            "enum": ["none", "all", "varying"],
+            "description": "Define variants in module files",
+        },
+    },
     "additionalProperties": ref_module_file_configuration,
 }
 
