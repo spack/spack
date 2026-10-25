@@ -249,6 +249,7 @@ def test_cache_store_atomic_on_failure(tmp_path: pathlib.Path):
         with pytest.raises(RuntimeError, match="simulated failure"):
             cache.store(FailingFetcher(), "pkg/pkg-1.0.tar.gz")
         assert not (tmp_path / "pkg" / "pkg-1.0.tar.gz").exists()
+        assert os.listdir(tmp_path / "pkg") == []
 
 
 @pytest.mark.regression("14067")
