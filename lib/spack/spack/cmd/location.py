@@ -175,7 +175,7 @@ def location(parser, args):
 
     # Package dir just needs the spec name
     if args.package_dir:
-        print(spack.repo.PATH.dirname_for_package_name(spec.name))
+        print(spack.repo.PATH.dirname_for_package_name(spec.fullname))
         return
 
     # Either concretize or filter from already concretized environment

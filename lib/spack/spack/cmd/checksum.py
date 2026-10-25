@@ -88,7 +88,7 @@ def checksum(parser, args):
     spec = spack.spec.Spec(args.package)
 
     # Get the package we're going to generate checksums for
-    pkg: PackageBase = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    pkg: PackageBase = spack.repo.PATH.get_pkg_class(spec.fullname)(spec)
 
     # Skip manually downloaded packages
     if pkg.manual_download:
@@ -186,7 +186,7 @@ def checksum(parser, args):
     print()
 
     if args.add_to_package:
-        path = spack.repo.PATH.filename_for_package_name(pkg.name)
+        path = spack.repo.PATH.filename_for_package_name(pkg.fullname)
         num_versions_added = add_versions_to_pkg(path, version_lines)
         tty.msg(f"Added {num_versions_added} new versions to {pkg.name} in {path}")
         if not args.batch and sys.stdin.isatty():

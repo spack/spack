@@ -198,6 +198,19 @@ def test_location_package_dir(mock_spec):
     assert location("--package-dir", spec.name).strip() == pkg.package_dir
 
 
+@pytest.mark.regression("51440")
+def test_location_package_dir_respects_namespace(mock_packages, repo_builder):
+    """A namespace selects the package's repo even when a higher-precedence repo shadows it."""
+    builtin_dir = spack.repo.PATH.dirname_for_package_name("externaltest")
+    repo_builder.add_package("externaltest")
+
+    with spack.repo.use_repositories(repo_builder.root, override=False) as repos:
+        shadowing_dir = repos.dirname_for_package_name("externaltest")
+        assert shadowing_dir != builtin_dir
+        assert location("--package-dir", "externaltest").strip() == shadowing_dir
+        assert location("--package-dir", "builtin_mock.externaltest").strip() == builtin_dir
+
+
 @pytest.mark.db
 @pytest.mark.parametrize(
     "option,expected",

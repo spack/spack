@@ -11,6 +11,7 @@ import spack.cmd.checksum
 import spack.concretize
 import spack.error
 import spack.package_base
+import spack.repo
 import spack.stage
 import spack.util.web
 from spack.main import SpackCommand
@@ -401,3 +402,33 @@ class Zlib(Package):
 
 
 # ruff: enable[E501]
+
+
+@pytest.mark.regression("51440")
+def test_checksum_add_to_package_respects_namespace(mock_packages, repo_builder, monkeypatch):
+    """--add-to-package writes to the recipe of the requested namespace, not to a same-named
+    package in a higher-precedence repo."""
+    builtin_file = mock_packages.filename_for_package_name("zlib")
+    repo_builder.add_package("zlib")
+    written_to = []
+
+    monkeypatch.setattr(
+        spack.package_base.PackageBase,
+        "fetch_remote_versions",
+        lambda pkg, concurrency: {Version("9.9"): "https://www.example.com/zlib-9.9.tar.gz"},
+    )
+    monkeypatch.setattr(
+        spack.stage,
+        "get_checksums_for_versions",
+        lambda url_by_version, package_name, **kwargs: {v: "a" * 64 for v in url_by_version},
+    )
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url, curl=None: True)
+    monkeypatch.setattr(
+        spack.cmd.checksum,
+        "add_versions_to_pkg",
+        lambda path, version_lines, *args, **kwargs: written_to.append(path) or 1,
+    )
+
+    with spack.repo.use_repositories(repo_builder.root, override=False):
+        spack_checksum("--add-to-package", "--batch", "builtin_mock.zlib", "9.9")
+    assert written_to == [builtin_file]
