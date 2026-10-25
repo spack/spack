@@ -580,6 +580,34 @@ The ``setdefault`` subcommand marks a specific module version as the default, cr
 
 .. command-output:: spack module lmod setdefault --help
 
+.. _modules-tcl-module-cache:
+
+Module cache
+^^^^^^^^^^^^
+
+Environment Modules can build a per-directory cache to speed up the resolution of ``module avail`` and ``module load`` commands.
+Spack can keep this cache in sync with the Tcl module files it generates, when the ``update_cache`` option is set in the ``tcl`` section of the configuration:
+
+.. code-block:: yaml
+
+   modules:
+     default:
+       tcl:
+         update_cache: true
+
+With this option enabled, every Spack command that creates, removes, or regenerates Tcl module files (``spack install``, ``spack uninstall``, ``spack module tcl refresh``, etc.) ends with a single module cache update of the modulepath directories it has changed.
+The cache of these directories is cleared then built again.
+
+The cache can also be managed explicitly with the ``cachebuild`` and ``cacheclear`` subcommands, which respectively build and clear the module cache of every modulepath directory managed by Spack:
+
+.. command-output:: spack module tcl cachebuild --help
+
+.. command-output:: spack module tcl cacheclear --help
+
+.. note::
+
+   The module cache is specific to Tcl module files and requires Environment Modules >= 5.3, which introduced the ``module cachebuild`` and ``module cacheclear`` commands used underneath.
+
 
 .. _modules-in-shell-scripts:
 
