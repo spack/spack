@@ -118,6 +118,20 @@ def test_bad_cache_permissions(file_cache, request):
             pass
 
 
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
+@pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
+def test_read_only_lock_file(file_cache, request):
+    """A lock file that cannot be write-locked results in a CacheError"""
+    lock_path = str(file_cache.lock_path)
+    fs.touch(lock_path)
+    os.chmod(lock_path, 0o444)
+    request.addfinalizer(lambda p=lock_path: os.chmod(p, 0o644))
+
+    with pytest.raises(CacheError, match="Cannot write to file cache"):
+        with file_cache.write_transaction("test.yaml") as _:
+            pass
+
+
 @pytest.mark.regression("31475")
 def test_delete_is_idempotent(file_cache):
     """Deleting a non-existent key should be idempotent, to simplify life when
