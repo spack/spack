@@ -2089,6 +2089,30 @@ def test_env_include_concrete_env_yaml(env_name):
     assert test.path in combined_yaml[ev.lockfile_include_key]
 
 
+@pytest.mark.regression("52014")
+def test_env_include_concrete_package_compiler_constraints(mutable_config, install_mockery):
+    """Test that include_concrete works when sharing package compiler
+    constraints like %c,cxx=gcc."""
+    mutable_config.set("packages:mpileaks:require", ["%c,cxx=gcc"])
+    env("create", "base_env")
+    base = ev.read("base_env")
+
+    with base:
+        add("mpileaks")
+        base.concretize()
+        base.write()
+
+    env("create", "--include-concrete", "base_env", "overlay_env")
+    overlay = ev.read("overlay_env")
+
+    with overlay:
+        add("callpath")
+        overlay.concretize()
+        overlay.write()
+
+    assert len(overlay.all_specs()) > 0
+
+
 @pytest.mark.regression("45766")
 @pytest.mark.parametrize("format", ["v1", "v2", "v3"])
 def test_env_include_concrete_old_env(format):
