@@ -2,6 +2,7 @@
 # Spack-specific ignores #
 ##########################
 
+/var/spack/bootstrap
 /var/spack/stage
 /var/spack/cache
 /var/spack/environments
