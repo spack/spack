@@ -17,8 +17,18 @@ class Callbacks(Package):
     version("2.0", md5="abcdef0123456789abcdef0123456789")
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
+    depends_on("builderdependentcallback")
+    depends_on("dependentcallback")
+
 
 class GenericBuilder(GenericBuilder):
+    phases = ("configure", "install")
+
+    def configure(self, pkg, spec, prefix):
+        os.environ["DEPENDENT_CALLBACK_RAN_BEFORE_FIRST_PHASE"] = os.environ.get(
+            "BEFORE_DEPENDENT_INSTALL_CALLED", "unset"
+        )
+
     def install(self, pkg, spec, prefix):
         os.environ["CALLBACKS_INSTALL_CALLED"] = "1"
         os.environ["INSTALL_VALUE"] = "CALLBACKS"
