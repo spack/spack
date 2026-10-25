@@ -5,13 +5,16 @@ import collections
 import itertools
 import os
 import re
+import struct
 import sys
-from typing import Dict, Iterable, List, Optional
+from typing import IO, Dict, Iterable, List, Optional
 
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
 import spack.store
+import spack.util.elf as elf
+import spack.util.executable as executable
 import spack.util.filesystem as fs
 import spack.util.lang
 from spack.util import elf, executable, tty
@@ -31,6 +34,17 @@ def _patchelf() -> Optional[executable.Executable]:
 
     with spack.bootstrap.ensure_bootstrap_configuration():
         return spack.bootstrap.ensure_patchelf_in_path_or_raise()
+
+
+def bootstrap_relocate() -> executable.Executable:
+    """Bootstraps and returns an executable reference to the Windows compiler
+    wrappers relocate utility, with the wrapper's run environment attached.
+
+    Bootstrapping relies on the buildcache machinery, which in turn relocates binaries,
+    so this has to import :mod:`spack.bootstrap` lazily, like :func:`_patchelf` does."""
+    import spack.bootstrap as bootstrapper
+
+    return bootstrapper.ensure_msvc_relocate_executable()
 
 
 def _decode_macho_data(bytestring):
@@ -318,6 +332,30 @@ def is_macho_magic(magic: bytes) -> bool:
 
 def is_elf_magic(magic: bytes) -> bool:
     return magic.startswith(b"\x7fELF")
+
+
+def is_msvc_magic(f: IO[bytes]) -> bool:
+    f.seek(0)
+    magic = f.read(8)
+    if magic.startswith(b"!<arch>\n"):
+        return True
+    # sanity check for minimal required size
+    # need at least 64 bytes for e_lfanew header
+    # which gives us the PE signature
+    f.seek(0, 2)
+    fsize = f.tell()
+    if fsize < 0x40:
+        return False
+    # wasn't a coff file, check PE
+    f.seek(0x3C)
+    pe_offset_bytes = f.read(4)
+    pe_offset = struct.unpack("<I", pe_offset_bytes)[0]
+    if pe_offset > fsize:
+        return False
+    f.seek(pe_offset)
+    is_pe = f.read(4) == b"PE\x00\x00"
+    f.seek(0)
+    return is_pe
 
 
 def is_binary(filename: str) -> bool:
