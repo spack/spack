@@ -11,6 +11,7 @@ from spack.vendor import jsonschema
 
 import spack.schema
 import spack.schema.env
+import spack.schema.modules
 import spack.util.spack_yaml as syaml
 from spack.util.lang import list_modules
 
@@ -186,6 +187,23 @@ def test_module_suffixes(module_suffixes_schema):
 
     with pytest.raises(jsonschema.ValidationError, match="is not a valid spec"):
         v.validate(data)
+
+
+def test_conflict_on_name_is_tcl_only():
+    """Tests that the 'conflict_on_name' option is accepted for tcl module files
+    and rejected for lmod ones, both in modules.yaml and in spack.yaml."""
+    v = spack.schema.Validator(spack.schema.modules.schema)
+    for scope in ("all", "mpileaks"):
+        v.validate({"modules": {"default": {"tcl": {scope: {"conflict_on_name": False}}}}})
+        with pytest.raises(jsonschema.ValidationError):
+            v.validate({"modules": {"default": {"lmod": {scope: {"conflict_on_name": False}}}}})
+
+    v = spack.schema.Validator(spack.schema.env.schema)
+    v.validate({"spack": {"modules": {"default": {"tcl": {"all": {"conflict_on_name": False}}}}}})
+    with pytest.raises(jsonschema.ValidationError):
+        v.validate(
+            {"spack": {"modules": {"default": {"lmod": {"all": {"conflict_on_name": False}}}}}}
+        )
 
 
 def test_deprecated_properties(module_suffixes_schema):
