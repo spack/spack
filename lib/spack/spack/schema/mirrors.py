@@ -126,6 +126,11 @@ mirror_entry = {
             "description": "Automatically push packages to this build cache immediately after "
             "they are installed locally",
         },
+        "private": {
+            "type": "boolean",
+            "description": "Whether this mirror is private; non-redistributable packages may "
+            "be pushed to private mirrors",
+        },
         **overridable_per_direction,
     },
 }
