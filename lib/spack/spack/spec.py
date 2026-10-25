@@ -201,6 +201,10 @@ class InstallStatus(enum.Enum):
     absent = "@K{ - }  "
     missing = "@r{[-]}  "
     buildcache = "@g{[b]}  "
+    # spliced, and its build spec is installed or in a buildcache
+    spliced = "@g{[s]}  "
+    # spliced, and its build spec has to be built from source
+    spliced_from_source = "@y{[S]}  "
 
 
 # regexes used in spec formatting
