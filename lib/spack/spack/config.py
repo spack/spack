@@ -3851,6 +3851,7 @@ NOMATCH = object()
 
 
 _frozen_home = {}
+_resolving_location_vars = set()
 
 
 def freeze(home_vars):
@@ -3885,6 +3886,22 @@ def _resolve_location_var(location_key):
     if _frozen_home and location_key in _frozen_home:
         return _frozen_home[location_key]
 
+    # Detect recursion early before it accumulates nested paths.
+    # Must use global state because recursion happens through lambda callbacks:
+    # substitute_config_variables -> re.sub -> lambda in replacements() -> _resolve_location_var
+    # The lambda is called by re.sub with no way to pass a recursion-tracking parameter.
+    if location_key in _resolving_location_vars:
+        raise RecursionError(f"Recursive reference to ${location_key}_home")
+
+    _resolving_location_vars.add(location_key)
+    try:
+        return _resolve_location_var_impl(location_key)
+    finally:
+        _resolving_location_vars.discard(location_key)
+
+
+def _resolve_location_var_impl(location_key):
+    """Implementation of _resolve_location_var without recursion tracking."""
     location_list = CONFIG.get(f"config:locations:{location_key}", default=[])
 
     if isinstance(location_list, str):
@@ -3896,19 +3913,26 @@ def _resolve_location_var(location_key):
         try:
             candidate = os.path.normpath(substitute_path_variables(item))
         except RecursionError:
-            # Catch recursion error in case someone tries `data: $data_home` or
-            # a cycle among the three
+            # RecursionError is raised early by _resolve_location_var's tracking
             tty.warn(f"Skipping recursive definition in locations config: {item}.")
             continue
         # Skip empty or whitespace-only paths (e.g., from empty env vars)
         if not candidate or not candidate.strip():
             continue
-        # Look for unresolved env var or config vars in candidate
+
+        # Look for unresolved env var or config vars in candidate (skip before other checks)
         var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
         unresolved_vars = re.search(var_pattern, candidate)
 
         if unresolved_vars:
             continue
+
+        # Reject relative paths in locations - they resolve inconsistently
+        if not os.path.isabs(candidate):
+            raise spack.error.ConfigError(
+                f"config:locations:{location_key} entry '{item}' resolved to relative path "
+                f"'{candidate}'. All location entries must resolve to absolute paths."
+            )
         return candidate
 
     # Fallback to XDG defaults if nothing in config matched (e.g. if a user set

@@ -8,7 +8,6 @@ import os
 import pathlib
 import shutil
 import sys
-from pathlib import Path
 
 import pytest
 
@@ -180,9 +179,10 @@ def test_user_cache_path_is_default_when_env_var_is_empty(
 )
 def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkeypatch, env_var):
     home_dir, base_prefix = mock_spack_instance
-    p = str(Path("some") / "path")
+    # Use absolute path - relative paths in config:locations are now rejected
+    p = os.path.join(home_dir, "some", "path")
 
-    # For XDG_STATE_HOME, append /spack since that's the convention
+    # For XDG_CACHE_HOME, append /spack since that's the convention
     if env_var == "XDG_CACHE_HOME":
         os.environ[env_var] = p
         expected = os.path.join(p, "spack")
