@@ -8,6 +8,7 @@ import pytest
 import spack
 import spack.config
 import spack.main
+import spack.paths
 
 sp_isolate = spack.main.SpackCommand("isolate")
 sp_config = spack.main.SpackCommand("config")
