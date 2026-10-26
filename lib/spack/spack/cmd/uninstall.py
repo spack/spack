@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Tuple
 
 import spack.cmd
 import spack.environment as ev
-import spack.hooks
+import spack.modules
 import spack.package_base
 import spack.spec
 import spack.store
@@ -229,7 +229,7 @@ def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
                 spack.package_base.PackageBase.uninstall_by_spec(s, force=force)
                 removed.append(s)
     finally:
-        spack.hooks.post_database_remove(removed)
+        spack.modules.remove_module_files(removed)
 
 
 def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Environment]):

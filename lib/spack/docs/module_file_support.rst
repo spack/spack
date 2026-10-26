@@ -132,7 +132,7 @@ You can define one or more **module sets**, each of which can be configured sepa
 The default module set is aptly named ``default``.
 All :ref:`Spack commands that operate on modules <maintaining-module-files>` apply to the ``default`` module set, unless another module set is specified explicitly (with the ``--name`` flag).
 
-To automatically generate module files during package installation, add the desired module systems to the ``enable`` list:
+To automatically generate module files when packages are installed, add the desired module systems to the ``enable`` list:
 
 .. code-block:: yaml
 
@@ -141,6 +141,10 @@ To automatically generate module files during package installation, add the desi
        enable:
        - tcl
        - lmod
+
+The module files of the packages that a Spack command installs are written when that command ends.
+While a command is still running, a package it has already installed may not have a module file yet, also when another command uses that package as a dependency.
+If a command is killed before it ends, generate the missing module files with ``spack module tcl refresh`` or ``spack module lmod refresh``.
 
 You can configure the behavior of either module system separately, under a key corresponding to the generator being customized:
 
@@ -410,7 +414,7 @@ Only one installation of a module file can be loaded at a time.
 
 .. rubric:: Maintaining the module files
 
-Spack writes a module file again whenever an installation is added to it or removed from it, and deletes it when none remain.
+Spack writes a module file again when a command installs or uninstalls one of its installations, and deletes it when none remain.
 
 To leave an installation out of a module file, use the ``exclude`` option.
 ``spack module tcl rm`` does not last: the installation is still in the database, and is written back the next time the module file is.

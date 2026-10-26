@@ -486,3 +486,22 @@ spack:
             output = install()
 
     assert f"Installing {test_spec}" in output
+
+
+def test_dev_build_writes_module_file(
+    tmp_path: pathlib.Path, install_mockery, installer_variant, tcl_module_filename
+):
+    """Tests that dev-build writes the module file of the spec it installs."""
+    source = tmp_path / "source"
+    source.mkdir()
+    spec = spack.concretize.concretize_one(
+        spack.spec.Spec(f"dev-build-test-install@0.0.0 dev_path={source}")
+    )
+
+    with fs.working_dir(str(source)):
+        with open(spec.package.filename, "w", encoding="utf-8") as f:  # type: ignore
+            f.write(spec.package.original_string)  # type: ignore
+
+        dev_build("dev-build-test-install@0.0.0")
+
+    assert os.path.exists(tcl_module_filename(spec))

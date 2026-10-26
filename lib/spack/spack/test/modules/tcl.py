@@ -16,8 +16,8 @@ import spack.vendor.archspec.cpu
 import spack.concretize
 import spack.config
 import spack.error
-import spack.hooks
 import spack.main
+import spack.modules
 import spack.modules.common
 import spack.modules.error
 import spack.modules.tcl
@@ -1615,7 +1615,7 @@ class TestTcl:
     def test_fold_variants_single_install_command(
         self, install_mockery, module_configuration, installer_variant
     ):
-        """Test the module file written by the install hooks holds every installation folded
+        """Test the module file written by the install command holds every installation folded
         into it when they are installed by the same command.
         """
         module_configuration("fold_variants_all")
@@ -1632,11 +1632,11 @@ class TestTcl:
         assert concrete_a.dag_hash(7) in content
         assert concrete_b.dag_hash(7) in content
 
-    def test_fold_variants_hook_writes_shared_file_once(
+    def test_fold_variants_shared_file_written_once(
         self, install_mockery, module_configuration, monkeypatch
     ):
-        """Test the hook run once installations are recorded writes a module file folding
-        several of them once, and writes every other module file of the batch."""
+        """Test writing the module files of a batch of installations writes a module file
+        folding several of them once, and writes every other module file of the batch."""
         module_configuration("fold_variants_all")
         spec_a = "mpileaks@2.3 ~debug ^zmpi"
         spec_b = "mpileaks@2.3 +debug ^zmpi"
@@ -1649,7 +1649,7 @@ class TestTcl:
         monkeypatch.setattr(
             writer_cls, "write", lambda self, overwrite=False: written.append(self.spec)
         )
-        spack.hooks.post_database_add([concrete_a, concrete_dep, concrete_b])
+        spack.modules.write_module_files([concrete_a, concrete_dep, concrete_b])
         assert written == [concrete_a, concrete_dep]
 
     def test_fold_variants_default_link_removed_with_all_installations(
@@ -1668,7 +1668,7 @@ class TestTcl:
         assert os.readlink(default_link) == module_file
 
         removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
-        spack.hooks.post_database_remove(removed)
+        spack.modules.remove_module_files(removed)
         assert not os.path.exists(module_file)
         assert not os.path.lexists(default_link)
 
@@ -1689,6 +1689,6 @@ class TestTcl:
         assert os.readlink(default_link) == module_file
 
         removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
-        spack.hooks.post_database_remove(removed)
+        spack.modules.remove_module_files(removed)
         assert os.path.exists(module_file)
         assert not os.path.lexists(default_link)

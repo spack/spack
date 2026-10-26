@@ -222,21 +222,21 @@ def _check_last_phase(pkg: "spack.package_base.PackageBase") -> None:
         raise BadInstallPhase(pkg.name, pkg.last_phase)  # type: ignore[attr-defined]
 
 
-def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explicit: bool) -> bool:
+def _handle_external_and_upstream(task: "Task") -> bool:
     """
-    Determine if the package is external or upstream and register it in the
+    Determine if the package of a task is external or upstream and register it in the
     database if it is external package.
 
     Args:
-        pkg: the package whose installation is under consideration
-        explicit: the package was explicitly requested by the user
+        task: the task of the package whose installation is under consideration
     Return:
         ``True`` if the package is not to be installed locally, otherwise ``False``
     """
+    pkg = task.pkg
     # For external packages the workflow is simplified, and basically
-    # consists in module file generation and registration in the DB.
+    # consists in registration in the DB.
     if pkg.spec.external:
-        _process_external_package(pkg, explicit)
+        task.recorded = _process_external_package(pkg, task.explicit)
         _print_installed_pkg(f"{pkg.prefix} (external {package_id(pkg.spec)})")
         return True
 
@@ -247,9 +247,8 @@ def _handle_external_and_upstream(pkg: "spack.package_base.PackageBase", explici
         )
         _print_installed_pkg(pkg.prefix)
 
-        # This will result in skipping all post-install hooks. In the case
-        # of modules this is considered correct because we want to retrieve
-        # the module from the upstream Spack instance.
+        # Upstream installations run no post-install hook and are not recorded, so their module
+        # files are the ones of the upstream Spack instance.
         return True
 
     return False
@@ -346,7 +345,7 @@ def _install_from_cache(
     return True
 
 
-def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: bool) -> None:
+def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: bool) -> bool:
     """
     Helper function to run post install hooks and register external packages.
 
@@ -355,6 +354,9 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
         explicit: if the package was requested explicitly by the user,
             ``False`` if it was pulled in as a dependency of an explicit
             package.
+
+    Return:
+        ``True`` if the package was added to the database, ``False`` if it was already there
     """
     assert pkg.spec.external, "Expected to post-install/register an external package."
 
@@ -374,16 +376,16 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
         record = spack.store.STORE.db.get_record(spec)
         if explicit and not record.explicit:
             spack.store.STORE.db.mark(spec, "explicit", True)
+        return False
 
     except KeyError:
-        # If not, run the post-install hooks, register it and generate the module file
+        # If not, run the post-install hooks and register it
         spack.hooks.post_install(spec, explicit)
 
         # Add to the DB
         tty.debug(f"{pre} registering into DB")
         spack.store.STORE.db.add(spec, explicit=explicit)
-        tty.debug(f"{pre} generating module file")
-        spack.hooks.post_database_add([spec])
+        return True
 
 
 def _process_binary_cache_tarball(
@@ -431,7 +433,6 @@ def _process_binary_cache_tarball(
 
         pkg.installed_from_binary_cache = True
         spack.store.STORE.db.add(pkg.spec, explicit=explicit)
-        spack.hooks.post_database_add([pkg.spec])
         return True
 
 
@@ -776,6 +777,8 @@ class Task:
     success_result: Optional[ExecuteResult] = None
     error_result: Optional[BaseException] = None
     no_op: bool = False
+    #: Whether the task added its spec to the database
+    recorded: bool = False
 
     def __init__(
         self,
@@ -1153,6 +1156,7 @@ class BuildTask(Task):
         policy = self.install_policy
         if policy != "source_only":
             if _install_from_cache(pkg, self.explicit, unsigned):
+                self.recorded = True
                 self.success_result = ExecuteResult.SUCCESS
                 return
             elif policy == "cache_only":
@@ -1259,7 +1263,7 @@ class BuildTask(Task):
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.STORE.db.add(pkg.spec, explicit=self.explicit)
-            spack.hooks.post_database_add([pkg.spec])
+            self.recorded = True
         except spack.error.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
@@ -1327,6 +1331,7 @@ class RewireTask(Task):
                     self.pkg, explicit=self.explicit, unsigned=unsigned
                 )
 
+                self.recorded = success
                 if not success:
                     tty.msg(
                         "Failed to find binary for build spec, requeuing {self.pkg.spec} with"
@@ -1344,6 +1349,7 @@ class RewireTask(Task):
                 return ExecuteResult.MISSING_BUILD_SPEC
         try:
             spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
+            self.recorded = True
             _print_installed_pkg(self.pkg.prefix)
             self.record.succeed()
             return ExecuteResult.SUCCESS
@@ -1490,6 +1496,9 @@ class PackageInstaller:
 
         # Maximum number of concurrent packages to build
         self.max_active_tasks = self.concurrent_packages
+
+        #: Specs added to the database by ``install()``, also when it raises
+        self.recorded_specs: List["spack.spec.Spec"] = []
 
         # Reports on install success/failure
         if create_reports:
@@ -1900,6 +1909,9 @@ class PackageInstaller:
         except BaseException:
             self.reports[task.request.pkg_id].append_record(task.record)
             raise
+        finally:
+            if task.recorded:
+                self.recorded_specs.append(task.pkg.spec)
         if rc == ExecuteResult.MISSING_BUILD_SPEC:
             self._requeue_with_build_spec_tasks(task)
         elif rc == ExecuteResult.NO_OP:
@@ -2166,7 +2178,7 @@ class PackageInstaller:
         # Skip the installation if the spec is not being installed locally
         # (i.e., if external or upstream) BUT flag it as installed since
         # some package likely depends on it.
-        if _handle_external_and_upstream(pkg, task.explicit):
+        if _handle_external_and_upstream(task):
             term_status.clear()
             self._flag_installed(pkg, task.dependents)
             task.no_op = True
@@ -2698,8 +2710,21 @@ def build_process(pkg: "spack.package_base.PackageBase", install_args: dict) -> 
         return installer.run()
 
 
-def deprecate(spec: "spack.spec.Spec", deprecator: "spack.spec.Spec", link_fn) -> None:
-    """Deprecate this package in favor of deprecator spec"""
+def deprecate(
+    spec: "spack.spec.Spec",
+    deprecator: "spack.spec.Spec",
+    link_fn,
+    recorded_specs: List["spack.spec.Spec"],
+) -> None:
+    """Deprecate this package in favor of deprecator spec
+
+    Args:
+        spec: spec to deprecate
+        deprecator: spec replacing it, installed first if it is not installed
+        link_fn: function linking the prefix of the deprecator to the prefix of the spec
+        recorded_specs: extended with the specs added to the database when installing the
+            deprecator, also when the installation raises
+    """
     # Here we assume we don't deprecate across different stores, and that same hash
     # means same binary artifacts
     if spec.dag_hash() == deprecator.dag_hash():
@@ -2711,7 +2736,11 @@ def deprecate(spec: "spack.spec.Spec", deprecator: "spack.spec.Spec", link_fn) -
 
     # Install deprecator if it isn't installed already
     if not spack.store.STORE.db.query(deprecator):
-        PackageInstaller([deprecator.package], explicit=True).install()
+        installer = PackageInstaller([deprecator.package], explicit=True)
+        try:
+            installer.install()
+        finally:
+            recorded_specs.extend(installer.recorded_specs)
 
     old_deprecator = spack.store.STORE.db.deprecator(spec)
     if old_deprecator:
@@ -2727,11 +2756,10 @@ def deprecate(spec: "spack.spec.Spec", deprecator: "spack.spec.Spec", link_fn) -
 
     # Any specs deprecated in favor of this spec are re-deprecated in favor of its new deprecator
     for deprecated in spack.store.STORE.db.specs_deprecated_by(spec):
-        deprecate(deprecated, deprecator, link_fn)
+        deprecate(deprecated, deprecator, link_fn, recorded_specs)
 
     # Now that we've handled metadata, uninstall and replace with link
     spack.package_base.PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
-    spack.hooks.post_database_remove([spec])
     link_fn(deprecator.prefix, spec.prefix)
 
 

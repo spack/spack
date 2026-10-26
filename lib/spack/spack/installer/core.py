@@ -20,7 +20,6 @@ import spack.binary_distribution
 import spack.config
 import spack.deprecation
 import spack.error
-import spack.hooks
 import spack.mirrors.mirror
 import spack.report
 import spack.spec
@@ -301,6 +300,9 @@ class PackageInstaller:
 
         self.next_database_write = 0.0
 
+        #: Specs added to the database by ``install()``, also when it raises
+        self.recorded_specs: List[spack.spec.Spec] = []
+
     def install(self) -> None:
         # Refuse disallowed deprecations before updating any index, so an install that cannot
         # succeed does no work first
@@ -342,8 +344,6 @@ class PackageInstaller:
         database_actions: List[DatabaseAction] = []
         # Prefix read locks retained after DB flush (downgraded from write locks in _save_to_db).
         retained_read_locks: List[spack.util.lock.Lock] = []
-        # Specs this run added to the database, passed to the post_database_add hook on exit.
-        recorded_specs: List[spack.spec.Spec] = []
 
         failures: List[spack.spec.Spec] = []
         finished_builds: List[str] = []
@@ -356,9 +356,7 @@ class PackageInstaller:
                     selector, jobserver, retained_read_locks, database_actions
                 )
                 self._run_ui_commands(jobserver)
-                self._flush_db_if_due(
-                    time.monotonic(), database_actions, retained_read_locks, recorded_specs
-                )
+                self._flush_db_if_due(time.monotonic(), database_actions, retained_read_locks)
 
             while (
                 self.pending_builds
@@ -454,9 +452,7 @@ class PackageInstaller:
                 # Flush finished builds to the database if a write is due. This runs after
                 # scheduling so that a final mark-explicit action does not wait for the next
                 # select() timeout.
-                self._flush_db_if_due(
-                    current_time, database_actions, retained_read_locks, recorded_specs
-                )
+                self._flush_db_if_due(current_time, database_actions, retained_read_locks)
 
                 # Execute commands produced by the UI ahead of rendering.
                 self._run_ui_commands(jobserver)
@@ -479,9 +475,7 @@ class PackageInstaller:
                     with db.write_transaction():
                         for action in database_actions:
                             action.save_to_db(db)
-                    recorded_specs.extend(
-                        a.spec for a in database_actions if isinstance(a, AddSpecAction)
-                    )
+                    self._extend_recorded_specs(database_actions)
                 except Exception as e:
                     db_exc = e
 
@@ -503,20 +497,6 @@ class PackageInstaller:
                 except Exception:
                     pass
 
-            try:
-                self.ui.render(finalize=True)
-            except Exception:
-                pass
-
-            # Run before the prefix locks are released, so a concurrent uninstall waits for the
-            # module files to be written. An exception is re-raised after cleanup.
-            hook_exc: Optional[BaseException] = None
-            if recorded_specs:
-                try:
-                    spack.hooks.post_database_add(recorded_specs)
-                except BaseException as e:
-                    hook_exc = e
-
             # Release all held locks best-effort, so that one failure does not prevent the others
             # from being released.
             for child in self.running_builds.values():
@@ -531,6 +511,10 @@ class PackageInstaller:
                 action.release_prefix_lock()
 
             try:
+                self.ui.render(finalize=True)
+            except Exception:
+                pass
+            try:
                 selector.close()
             except Exception:
                 pass
@@ -544,11 +528,9 @@ class PackageInstaller:
             if terminal is not None:
                 terminal.teardown_output()
 
-            # Re-raise the DB or hook exception if any.
+            # Re-raise the DB exception if any.
             if db_exc is not None:
                 raise db_exc
-            if hook_exc is not None:
-                raise hook_exc
 
         try:
             self.report_data.finalize(self.reports, build_graph=self.build_graph)
@@ -658,12 +640,10 @@ class PackageInstaller:
         current_time: float,
         database_actions: List[DatabaseAction],
         retained_read_locks: List[spack.util.lock.Lock],
-        recorded_specs: List[spack.spec.Spec],
     ) -> None:
         """Write finished builds to the database if the write interval has passed, or if all
         builds are done. The write is not guaranteed; it fails if another process holds the lock,
-        in which case it is retried in a later iteration of the event loop. The specs added to the
-        database are appended to ``recorded_specs``."""
+        in which case it is retried in a later iteration of the event loop."""
         if (
             database_actions
             and (
@@ -672,8 +652,13 @@ class PackageInstaller:
             )
             and self._save_to_db(database_actions, retained_read_locks)
         ):
-            recorded_specs.extend(a.spec for a in database_actions if isinstance(a, AddSpecAction))
+            self._extend_recorded_specs(database_actions)
             database_actions.clear()
+
+    def _extend_recorded_specs(self, database_actions: List[DatabaseAction]) -> None:
+        self.recorded_specs.extend(
+            a.spec for a in database_actions if isinstance(a, AddSpecAction)
+        )
 
     def _save_to_db(
         self,

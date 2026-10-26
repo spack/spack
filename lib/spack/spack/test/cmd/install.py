@@ -25,6 +25,7 @@ import spack.hooks.sbom_generate
 import spack.old_installer
 import spack.package_base
 import spack.reporters.cdash
+import spack.store
 import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.error import SpackError, SpecSyntaxError
@@ -1203,3 +1204,24 @@ def test_concurrent_packages_set_in_config(mutable_config: Configuration, mock_p
     spec = spack.concretize.concretize_one("pkg-a")
     installer = spack.old_installer.PackageInstaller([spec.package])
     assert installer.concurrent_packages == 3
+
+
+def test_install_succeeds_when_module_files_cannot_be_written(
+    install_mockery, mutable_config, tmp_path, installer_variant
+):
+    """Tests that an installation succeeds when its module files cannot be written, and that
+    one warning is emitted for each installed spec.
+    """
+    not_a_directory = tmp_path / "file"
+    not_a_directory.write_text("")
+    mutable_config.set("modules:default:enable", ["tcl"])
+    mutable_config.set("modules:default:roots:tcl", str(not_a_directory / "modules"))
+
+    with pytest.warns(UserWarning, match="cannot write the tcl module file") as warned:
+        install("--fake", "dependent-install")
+
+    messages = [str(w.message) for w in warned if "module file" in str(w.message)]
+    installed = spack.store.STORE.db.query()
+    assert len(messages) == len(installed)
+    for spec in installed:
+        assert any(spec.format("{name}{@version}{/hash:7}") in m for m in messages)

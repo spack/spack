@@ -2427,7 +2427,7 @@ def install_root_node(
     force: bool = False,
     sha256: Optional[str] = None,
     allow_missing: bool = False,
-) -> None:
+) -> bool:
     """Install the root node of a concrete spec from a buildcache.
 
     Checking the sha256 sum of a node before installation is usually needed only
@@ -2440,14 +2440,17 @@ def install_root_node(
         force: force installation if the spec is already present in the local store
         sha256: optional sha256 of the binary package, to be checked before installation
         allow_missing: when true, allows installing a node with missing dependencies
+
+    Returns:
+        ``True`` if the node was installed, ``False`` if it was skipped
     """
     # Early termination
     if spec.external or not spec.concrete:
         warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
-        return
+        return False
     elif spack.store.STORE.db.installed(spec) and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
-        return
+        return False
 
     tarball_stage = download_tarball(spec.build_spec, unsigned)
     if not tarball_stage:
@@ -2468,20 +2471,7 @@ def install_root_node(
         spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, allow_missing=allow_missing)
-        spack.hooks.post_database_add([spec])
-
-
-def install_single_spec(spec, unsigned=False, force=False):
-    """Install a single concrete spec from a buildcache.
-
-    Args:
-        spec (spack.spec.Spec): spec to be installed
-        unsigned (bool): if True allows installing unsigned binaries
-        force (bool): force installation if the spec is already present in the
-            local store
-    """
-    for node in spec.traverse(root=True, order="post", deptype=("link", "run")):
-        install_root_node(node, unsigned=unsigned, force=force)
+    return True
 
 
 def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorMetadata]:

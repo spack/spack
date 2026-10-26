@@ -1620,6 +1620,18 @@ def modulefile_filename():
 
 
 @pytest.fixture()
+def tcl_module_filename(mutable_config, mock_modules_root):
+    """Enables tcl module files in the "default" module set, under a temporary root, and returns
+    a function that computes the module file name of a spec."""
+    mutable_config.set("modules:default:enable", ["tcl"])
+
+    def _impl(spec):
+        return spack.modules.TclModulefileWriter.from_spec(spec, "default").layout.filename
+
+    return _impl
+
+
+@pytest.fixture()
 def mock_gnupghome(monkeypatch):
     # GNU PGP can't handle paths longer than 108 characters (wtf!@#$) so we
     # have to make our own tmp_path with a shorter name than pytest's.

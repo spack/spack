@@ -347,20 +347,6 @@ It receives the spec as its only argument.
 A ``post_install`` hook runs within the install subprocess after installation finishes, but before the build stage is removed and the spec is registered in the database.
 It receives the spec and an optional boolean indicating whether this spec is an explicit user request, or a dependency.
 
-``post_database_add(specs)``
-""""""""""""""""""""""""""""
-
-A ``post_database_add`` hook runs after specs are added to the database, in the process that added them, and after their ``post_install`` hooks.
-It receives the list of added specs: a command may pass all the specs it added in one call, or split them over several calls.
-It must not raise: report a failure for one spec as a warning, and go on with the other specs.
-
-``post_database_remove(specs)``
-"""""""""""""""""""""""""""""""
-
-A ``post_database_remove`` hook runs after specs are uninstalled or deprecated, in the process that removed them.
-It receives the list of removed specs.
-The same rules as for ``post_database_add`` apply.
-
 ``pre_uninstall(spec)``
 """""""""""""""""""""""
 
@@ -402,8 +388,8 @@ To implement a hook, create a Python module in ``lib/spack/spack/hooks/`` with f
 
       class _HookRunner:
           HOOK_ORDER = [
-              "spack.hooks.module_file_generation",
               "spack.hooks.licensing",
+              "spack.hooks.sbang",
               # ...
               "spack.hooks.my_hooks",  # <- Add your module here
           ]

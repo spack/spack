@@ -3676,8 +3676,8 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_modules_exist_after_env_install(installed_environment):
-    with installed_environment(
+def test_modules_exist_after_env_install(environment_from_manifest, install_mockery, mock_fetch):
+    environment_from_manifest(
         """
 spack:
   specs:
@@ -3693,7 +3693,9 @@ spack:
       roots:
         tcl: without_view
 """
-    ) as e:
+    )
+    with ev.read("test") as e:
+        install("--fake")
         specs = e.all_specs()
         for module_set in ("uses_view", "without_view"):
             modules = glob.glob(f"{e.path}/{module_set}/**/*/*")

@@ -6,8 +6,8 @@ import os
 
 import pytest
 
-import spack.hooks
 import spack.main
+import spack.modules
 import spack.modules.tcl
 import spack.store
 import spack.util.tty
@@ -332,7 +332,7 @@ def test_module_file_written_when_first_installation_of_batch_is_excluded(
     module_file = writer_cls.from_spec(first, "default").layout.filename
     os.remove(module_file)
 
-    spack.hooks.post_database_add([excluded, first, second])
+    spack.modules.write_module_files([excluded, first, second])
     assert _folded_hashes(module_file, excluded, first, second) == [False, True, True]
 
 

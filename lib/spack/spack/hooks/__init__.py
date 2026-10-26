@@ -12,14 +12,8 @@ Currently the following hooks are supported:
 
 * ``pre_install(spec)``
 * ``post_install(spec, explicit)``
-* ``post_database_add(specs)``
-* ``post_database_remove(specs)``
 * ``pre_uninstall(spec)``
 * ``post_uninstall(spec)``
-
-This can be used to implement support for things like module
-systems (e.g. modules, lmod, etc.) or to add other custom
-features.
 """
 
 import importlib
@@ -30,7 +24,6 @@ from typing import List, Optional
 class _HookRunner:
     #: Order in which hooks are executed
     HOOK_ORDER = [
-        "spack.hooks.module_file_generation",
         "spack.hooks.licensing",
         "spack.hooks.sbang",
         "spack.hooks.windows_runtime_linkage",
@@ -68,12 +61,6 @@ class _HookRunner:
 # pre/post install and run by the install subprocess
 pre_install = _HookRunner("pre_install")
 post_install = _HookRunner("post_install")
-
-# run by the process that records a batch of specs in the database, once they are recorded
-post_database_add = _HookRunner("post_database_add")
-
-# run by the process that removes a batch of specs from the database, once they are removed
-post_database_remove = _HookRunner("post_database_remove")
 
 pre_uninstall = _HookRunner("pre_uninstall")
 post_uninstall = _HookRunner("post_uninstall")

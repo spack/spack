@@ -6,8 +6,10 @@
 include Tcl or Lua modules, and others.
 """
 
-from typing import Dict, Optional, Type
+import warnings
+from typing import Dict, Iterator, Optional, Sequence, Set, Tuple, Type
 
+import spack.config
 import spack.repo
 import spack.spec
 import spack.store
@@ -96,3 +98,67 @@ def get_module(
             return writer.layout.filename
         else:
             return writer.layout.use_name
+
+
+def _enabled_module_types() -> Iterator[Tuple[str, str]]:
+    """Yields the (module set name, module type) pairs enabled by the configuration."""
+    for name, module_set in spack.config.CONFIG.get("modules", {}).items():
+        for module_type in module_set.get("enable") or []:
+            yield name, module_type
+
+
+def write_module_files(specs: Sequence[spack.spec.Spec]) -> None:
+    """Writes the module files of installations recorded in the database, for every module set
+    and type enabled by the configuration.
+
+    A module file folding several of them is written once, since writing it for any one of
+    them lists them all.
+    """
+    for name, module_type in _enabled_module_types():
+        cache = common.ModuleConfigurationCache()
+        written_filenames: Set[str] = set()
+        for spec in specs:
+            try:
+                writer = module_types[module_type].from_spec(spec, name, cache=cache)
+                # An excluded installation does not write the module file of its siblings
+                if writer.conf.excluded:
+                    continue
+                filename = writer.layout.filename
+                if filename in written_filenames and writer.has_other_installations:
+                    continue
+                writer.write()
+                written_filenames.add(filename)
+            except Exception as e:
+                warnings.warn(
+                    f"cannot write the {module_type} module file of "
+                    f"{spec.format('{name}{@version}{/hash:7}')} in module set '{name}' "
+                    f"[{type(e).__name__}: {e}]"
+                )
+
+
+def remove_module_files(specs: Sequence[spack.spec.Spec]) -> None:
+    """Removes installations removed from the database from their module files, for every
+    module set and type enabled by the configuration.
+
+    A module file holding several of them is updated once.
+    """
+    removed_specs = frozenset(specs)
+    for name, module_type in _enabled_module_types():
+        cache = common.ModuleConfigurationCache()
+        updated_filenames: Set[str] = set()
+        for spec in specs:
+            try:
+                writer = module_types[module_type].from_spec(
+                    spec, name, removed_specs=removed_specs, cache=cache
+                )
+                filename = writer.layout.filename
+                if filename in updated_filenames:
+                    continue
+                writer.remove_installation()
+                updated_filenames.add(filename)
+            except Exception as e:
+                warnings.warn(
+                    f"cannot remove {spec.format('{name}{@version}{/hash:7}')} from its "
+                    f"{module_type} module file in module set '{name}' "
+                    f"[{type(e).__name__}: {e}]"
+                )
