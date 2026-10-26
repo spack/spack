@@ -37,10 +37,12 @@ class OpenFileTracker:
     reference-count it. The descriptor is only closed when the reference count reaches zero (i.e.
     no ``Lock`` in this process still needs it).
 
-    Descriptors are *not* released on unlock; they are kept alive across lock/unlock cycles so that
-    the next lock operation can skip re-opening the file. ``PosixBackend._ensure_valid_handle``
-    re-validates the on-disk inode before each lock operation and drops a stale descriptor when
-    the file was deleted and replaced.
+    Whether a backend keeps its reference across lock/unlock cycles is up to the backend.
+    ``PosixBackend`` does, so that the next lock operation can skip re-opening the file, and
+    ``GenericLockBackend._ensure_valid_handle`` re-validates the on-disk inode before each lock
+    operation and drops a stale descriptor when the file was deleted and replaced.
+    ``WindowsBackend`` releases its reference whenever it doesn't hold the lock, because an open
+    handle prevents other processes from deleting the file.
     """
 
     def __init__(self):

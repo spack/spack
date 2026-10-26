@@ -53,6 +53,16 @@ def gate(start, length):
     return lkw.GATE_OFFSET + start, length
 
 
+def is_gate(overlapped) -> bool:
+    return overlapped.OffsetHigh >= lkw.GATE_OFFSET >> 32
+
+
+def held_ranges(path: str):
+    """The ranges of ``path`` this process holds locks on, according to the tracker."""
+    st = os.stat(path)
+    return lkw.WINDOWS_RANGE_LOCK_TRACKER._groups.get((st.st_dev, st.st_ino), [])
+
+
 @pytest.fixture
 def lock_path(tmp_path: pathlib.Path):
     return str(tmp_path / "lockfile")
@@ -88,6 +98,8 @@ def test_poll_lock_unexpected_error_win(lock_path, monkeypatch):
     monkeypatch.setattr(lkw._kernel32, "LockFileEx", fake_lock_file_ex)
     with pytest.raises(OSError):
         lock.backend.poll(lk.LockType.READ)
+    # the handle is not kept open after an error either
+    assert lock.backend._file_ref is None
 
 
 def test_whole_file_range():
@@ -226,7 +238,7 @@ def test_same_process_locks_on_different_ranges(lock_path):
     assert whole.backend._lock_group is not byte.backend._lock_group
     whole.release_read()
     byte.release_read()
-    assert not lkw.WINDOWS_RANGE_LOCK_TRACKER._groups
+    assert not held_ranges(lock_path)
 
 
 def test_same_process_locks_share_range(lock_path):
@@ -238,7 +250,7 @@ def test_same_process_locks_share_range(lock_path):
     assert a.backend._lock_group is b.backend._lock_group
     b.release_read()
     a.release_write()
-    assert not lkw.WINDOWS_RANGE_LOCK_TRACKER._groups
+    assert not held_ranges(lock_path)
 
 
 def test_same_process_write_not_demoted_by_other_lock(lock_path):
@@ -271,3 +283,107 @@ def test_last_writer_release_downgrades_shared_range(lock_path):
         unlock(h, *WHOLE)
         assert not try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
     a.release_read()
+
+
+def test_failed_downgrade_changes_nothing(lock_path, monkeypatch):
+    """If downgrading fails, the write lock is still held and its bookkeeping is unchanged."""
+    real_lock = lkw._win_lock_file_ex
+
+    def no_shared(handle, flags, low, high, overlapped):
+        if not flags & lkw.LockType.LOCK_EX:
+            return False
+        return real_lock(handle, flags, low, high, overlapped)
+
+    lock = lk.Lock(lock_path)
+    lock.acquire_write()
+    group = lock.backend._lock_group
+    monkeypatch.setattr(lkw, "_win_lock_file_ex", no_shared)
+    with pytest.raises(lk.LockError):
+        lock.downgrade_write_to_read()
+    monkeypatch.undo()
+
+    assert lock._writes == 1 and lock._reads == 0
+    assert lock.backend._mode == lk.LockType.WRITE
+    assert group.mode == lk.LockType.WRITE and group.writers == 1 and group.refs == 1
+
+    lock.release_write()
+    assert not held_ranges(lock_path)
+    with other_process(lock_path) as h:
+        assert try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+        unlock(h, *WHOLE)
+
+
+def test_lost_read_lock_during_upgrade(lock_path, monkeypatch):
+    """If the read lock can't be restored after a failed upgrade, the range is marked as lost:
+    every Lock sharing it fails on its next mode change, and releasing it doesn't try to unlock
+    a range that is no longer locked."""
+    real_lock = lkw._win_lock_file_ex
+
+    def only_gates(handle, flags, low, high, overlapped):
+        if not is_gate(overlapped):
+            return False
+        return real_lock(handle, flags, low, high, overlapped)
+
+    a = lk.Lock(lock_path)
+    b = lk.Lock(lock_path)
+    a.acquire_read()
+    b.acquire_read()
+
+    monkeypatch.setattr(lkw, "_win_lock_file_ex", only_gates)
+    with pytest.raises(lk.LockError, match="Lost the read lock"):
+        a.acquire_write()
+    monkeypatch.undo()
+
+    assert not held_ranges(lock_path)
+    with pytest.raises(lk.LockError, match="was lost"):
+        b.acquire_write()
+
+    a.release_read()
+    b.release_read()
+    with other_process(lock_path) as h:
+        assert try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+        unlock(h, *WHOLE)
+
+
+@pytest.mark.parametrize("first,second", [((0, 0), (5, 1)), ((5, 1), (0, 0))])
+def test_write_lock_on_overlapping_range_fails(lock_path, first, second):
+    """A handle can't take an exclusive lock overlapping a range it holds, so instead of waiting
+    on its own process forever, a write lock on an overlapping range raises."""
+    held = lk.Lock(lock_path, start=first[0], length=first[1])
+    other = lk.Lock(lock_path, start=second[0], length=second[1])
+    held.acquire_read()
+
+    with pytest.raises(lk.LockError, match="overlapping byte range"):
+        other.acquire_write()
+    assert other.backend._file_ref is None
+
+    # reads on overlapping ranges are fine
+    other.acquire_read()
+    with pytest.raises(lk.LockError, match="overlapping byte range"):
+        other.acquire_write()
+    other.release_read()
+    held.release_read()
+
+
+def test_failed_gate_release_drops_range_lock(lock_path, monkeypatch):
+    """If the gate can't be released after taking a fresh write lock, the write lock is dropped
+    rather than held without being tracked."""
+    real_unlock = lkw._win_unlock_file_ex
+
+    def fail_on_gate(handle, low, high, overlapped):
+        if is_gate(overlapped):
+            raise OSError("fake UnlockFileEx failure")
+        real_unlock(handle, low, high, overlapped)
+
+    lock = lk.Lock(lock_path)
+    monkeypatch.setattr(lkw, "_win_unlock_file_ex", fail_on_gate)
+    with pytest.raises(OSError, match="fake"):
+        lock.try_acquire_write()
+    monkeypatch.undo()
+
+    assert lock._writes == 0
+    assert lock.backend._file_ref is None
+    assert not held_ranges(lock_path)
+    with other_process(lock_path) as h:
+        assert try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+        unlock(h, *WHOLE)
