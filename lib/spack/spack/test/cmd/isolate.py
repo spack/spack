@@ -278,7 +278,11 @@ def test_isolate_reuse_old_self_target(isolate_paths, tmp_path, args):
     cfg = spack.config.create()
     # Config in the old isolate scope is preserved
     assert cfg.get("config:build_jobs") == 3
-    assert cfg.get("config:locations:data")[0] == str(isolate_scope_path)
+    # With --self, data goes to .isolate at spack root, not etc/spack/isolate
+    expected_data_location = (
+        str(base_prefix / ".isolate") if args == ["--self"] else str(isolate_scope_path)
+    )
+    assert cfg.get("config:locations:data")[0] == expected_data_location
     # ... and old install dir is used
     assert str(cfg.get("config:install_tree:root")) == str(old_install)
     # ... and new isolation user redirect scope is available (and is highest-precedence
@@ -376,3 +380,25 @@ def test_isolate_undo(isolate_paths, tmp_path):
 
     sp_isolate("--undo")
     assert not isolate_scope_path.exists()
+
+
+def test_isolate_undo_preserves_data(isolate_paths, tmp_path):
+    """Test that --undo with --self removes config but preserves data (installs)."""
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
+
+    # Use --self so data goes to self_isolation_prefix
+    sp_isolate("--self")
+    assert isolate_scope_path.exists()
+
+    # Create a fake install in the data location
+    data_location = Path(spack.paths.self_isolation_prefix)
+    fake_install = data_location / "linux-ubuntu22.04-x86_64" / "gcc-11.2.0" / "zlib-1.2.13"
+    fake_install_bin = fake_install / "bin"
+    fake_install_bin.mkdir(parents=True)
+    (fake_install_bin / "zlib").write_text("fake install", encoding="utf-8")
+
+    # Undo should remove config but keep data
+    sp_isolate("--undo")
+    assert not isolate_scope_path.exists(), "Config scope should be removed"
+    assert data_location.exists(), "Data location should be preserved"
+    assert (fake_install / "bin" / "zlib").exists(), "Installs should be preserved"

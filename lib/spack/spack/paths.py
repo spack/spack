@@ -75,6 +75,8 @@ class SpackPaths:
         self.old_gpg_keys_path = os.path.join(self.var_path, "gpg")
         self.old_licenses_path = os.path.join(self.etc_path, "licenses")
 
+        self.self_isolation_prefix = os.path.join(self.prefix, ".isolate")
+
         expanded_home = os.path.expanduser("~")
 
         # If this exists, this was the location for configs and for the package repository
@@ -254,6 +256,7 @@ if TYPE_CHECKING:
     user_repos_cache_path: str
     package_repos_path: str
     old_package_repos_path: str
+    self_isolation_prefix: str
 
 
 # Module shim: lets callers keep using `spack.paths.X` for any attribute on

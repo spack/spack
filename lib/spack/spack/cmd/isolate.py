@@ -164,14 +164,23 @@ def _do_isolate(args):
     else:
         destination = _ensure_destination_setup(args.path, overwrite=False)
 
-    final_user_path = _setup_isolate_scope(destination, args.overwrite, args.reuse_old)
+    cfg_destination = destination
+    if args.use_self:
+        data_destination = spack.paths.self_isolation_prefix
+    else:
+        data_destination = destination
+
+    cfg_destination = _setup_isolate_scope(cfg_destination, args.overwrite, args.reuse_old)
 
     # Build config with isolation locations
     scope_config = {
         "config": {
-            "build_stage:": ["$tempdir/$user/spack-stage", os.path.join(destination, "stage")],
-            "test_stage:": os.path.join(destination, "test-stage"),
-            "locations": _isolate_locations_config(destination),
+            "build_stage:": [
+                "$tempdir/$user/spack-stage",
+                os.path.join(data_destination, "stage"),
+            ],
+            "test_stage:": os.path.join(data_destination, "test-stage"),
+            "locations": _isolate_locations_config(data_destination),
         }
     }
 
@@ -183,7 +192,7 @@ def _do_isolate(args):
     elif target_config_existed:
         config_path = os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
     else:
-        config_path = os.path.join(final_user_path, "config.yaml")
+        config_path = os.path.join(cfg_destination, "config.yaml")
 
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
     with open(config_path, "w", encoding="utf-8") as f:
