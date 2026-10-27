@@ -86,6 +86,11 @@ from spack.util.spack_yaml import get_mark_from_yaml_data
 from .enums import ConfigScopePriority
 
 
+# Must be defined before callers that are run at import time
+class MigrationStagingError(spack.error.SpackError):
+    """Raised when a resource cannot be safely staged for migration."""
+
+
 class DestinationCheck(Enum):
     """Actions for destination verification callback in migration."""
 
@@ -1783,11 +1788,6 @@ def _detect_old_resources() -> Dict[str, bool]:
                 "old storage locations to migrate data. Fix the permissions or contact an admin "
                 "of this Spack instance to run `spack migrate`."
             )
-        except Exception:
-            tty.die(
-                "Spack encountered an error while attempting to migrate. Please report a bug at "
-                "github.com/spack/spack/issues."
-            )
 
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
 
@@ -2268,6 +2268,10 @@ def _migrate_with_staging(
         return True
 
     except MigrationStagingError as e:
+        tty.debug(f"Cannot migrate {description}: {e}")
+        return False
+
+    except spack.error.SpackError as e:
         tty.debug(f"Cannot migrate {description}: {e}")
         return False
 
@@ -4150,10 +4154,6 @@ class ConfigSectionError(spack.error.ConfigError):
 
 class ConfigFileError(spack.error.ConfigError):
     """Issue reading or accessing a configuration file."""
-
-
-class MigrationStagingError(spack.error.SpackError):
-    """Raised when a resource cannot be safely staged for migration."""
 
 
 class ConfigFormatError(spack.error.ConfigError):
