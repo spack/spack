@@ -137,7 +137,7 @@ CONFIG_DEFAULTS = {
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
         "license_dir": "$data_home/licenses",
-        "misc_cache": "$state_home/$spack_instance_id/cache",
+        "misc_cache": "$cache_home/$spack_instance_id/cache",
     },
     "concretizer": {"externals": {"completion": "default_variants"}},
 }
