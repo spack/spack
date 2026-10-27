@@ -1465,19 +1465,18 @@ class IncludePath(OptionalInclude):
         elif isinstance(path_override_env_var, list):
             path_candidates = path_override_env_var
 
-        # Try each candidate in order, use first one that resolves
+        # Try each candidate in order, use first one that resolves to non-empty string
         path = None
         for candidate in path_candidates:
             if "$" in candidate:
                 # Contains variable syntax like $XDG_CONFIG_HOME/spack
-                resolved = os.path.expandvars(candidate)
-                if "$" not in resolved:
-                    # All variables resolved successfully
-                    path = resolved
+                if _check_all_vars_resolve(candidate, spack_vars=False):
+                    path = os.path.expandvars(candidate)
+                    assert "$" not in path
                     break
             else:
                 # Simple env var name like SPACK_USER_CONFIG_PATH
-                if candidate in os.environ:
+                if candidate in os.environ and os.environ[candidate]:
                     path = os.environ[candidate]
                     break
 
@@ -3903,7 +3902,9 @@ def _resolve_location_var(location_key, config: Optional["Configuration"] = None
         _resolving_location_vars.discard(location_key)
 
 
-def _check_all_vars_resolve(path: str, config: Optional["Configuration"] = None):
+def _check_all_vars_resolve(
+    path: str, config: Optional["Configuration"] = None, spack_vars: bool = True
+):
     """Returns true iff all variables in path are set to non-empty."""
     env_vars_regex = r'\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)'
     if sys.platform == "win32":
@@ -3913,18 +3914,21 @@ def _check_all_vars_resolve(path: str, config: Optional["Configuration"] = None)
     if not matches:
         return True
 
-    config = config if config is not None else CONFIG
-    repl = replacements(config)
+    if spack_vars:
+        config = config if config is not None else CONFIG
+        repl = replacements(config)
+
     for group in matches:
         for var in group:
             # The groups that didn't match will return ""
             if not var:
                 continue
 
-            # If it's a spack variable, check replacements for it
+            # If it's a spack variable and we're checking spack variables,
+            # check replacements for it.
             # spack variables are case-insensitive
             key = var.lower()
-            if key in repl:
+            if spack_vars and key in repl:
                 value = repl[key]
                 if value is NOMATCH or not str(value)
                     return False
@@ -3934,7 +3938,7 @@ def _check_all_vars_resolve(path: str, config: Optional["Configuration"] = None)
 
     return True
 
-def _resolve_location_var_impl(location_key, config = None):
+def _resolve_location_var_impl(location_key, config=None):
     """Implementation of _resolve_location_var without recursion tracking."""
     config = config if config is not None else CONFIG
     location_list = config.get(f"config:locations:{location_key}", default=[])
