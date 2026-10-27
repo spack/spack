@@ -3309,8 +3309,12 @@ def _perform_migration():
                     else:
                         force_old_layout(old_resources)
         except spack.util.lock.LockPermissionError:
-            # Read-only prefix: skip migration entirely, print nothing
-            pass
+            # Read-only prefix
+            tty.die(
+                "The spack prefix is not writable. "
+                "Writing to the Spack prefix is required to migrate to new data storage locations."
+                " Contact an admin of the Spack instance for help.")
+            )
         except spack.util.lock.LockTimeoutError as e:
             # Some other migration process is taking too long, bail vs. hang
             tty.die(f"Timed out waiting for migration lock: {e}")
