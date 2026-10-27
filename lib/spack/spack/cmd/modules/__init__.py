@@ -21,7 +21,7 @@ import spack.spec
 import spack.store
 from spack.cmd import MultipleSpecsMatch, NoSpecMatches
 from spack.cmd.common import arguments
-from spack.util import filesystem, tty
+from spack.util import tty
 from spack.util.lang import dedupe, stable_partition
 from spack.util.tty import color
 
@@ -200,14 +200,13 @@ def loads(module_type, specs, args, out=None):
                 spec.format()
             )
         else:
-            d["exclude"] = "## " if spec.name in exclude_set else ""
+            excluded = spec.name in exclude_set or spec in shares_file_with
+            d["exclude"] = "## " if excluded else ""
             d["comment"] = "" if not args.shell else "# {0}\n".format(spec.format())
-            if spec in shares_file_with:
-                d["exclude"] = "## "
-                if args.shell:
-                    d["comment"] += "# shares its module file with {0}\n".format(
-                        shares_file_with[spec].format()
-                    )
+            if spec in shares_file_with and args.shell:
+                d["comment"] += "# shares its module file with {0}\n".format(
+                    shares_file_with[spec].format()
+                )
             d["name"] = mod
             module_output_for_spec = load_template.format(**d)
         out.write(module_output_for_spec)
@@ -228,37 +227,27 @@ def fold_into_one_file(writers) -> bool:
     return all(x.spec in specs_in_file for x in writers)
 
 
-def shared_module_name(module_type, specs, args, cache):
-    """Returns the name, or path with ``--full-path``, of the module file folding every
-    installation of ``specs``, or None when they do not all share one."""
-    module_cls = spack.modules.module_types[module_type]
-    writers = [module_cls.from_spec(spec, args.module_set_name, cache=cache) for spec in specs]
-    first = writers[0]
-    if not fold_into_one_file(writers) or not first.has_installation:
-        return None
-    return first.layout.filename if args.full_path else first.layout.name
-
-
 def find(module_type, specs, args):
     """Retrieve paths or use names of module files"""
     check_module_set_name(args.module_set_name)
 
     cache = spack.modules.common.ModuleConfigurationCache()
     if len(specs) > 1:
-        # An installation excluded from module files does not make the constraint ambiguous
         module_cls = spack.modules.module_types[module_type]
-        included = [
-            spec
-            for spec in specs
-            if not module_cls.from_spec(spec, args.module_set_name, cache=cache).conf.excluded
-        ]
-        specs = included or specs
+        writers = [module_cls.from_spec(s, args.module_set_name, cache=cache) for s in specs]
+        # An installation excluded from module files does not make the constraint ambiguous
+        writers = [w for w in writers if not w.conf.excluded] or writers
+        specs = [w.spec for w in writers]
 
-    if len(specs) > 1 and not args.recurse_dependencies:
         # Installations folded into one module file are found by the name of the file
-        module_name = shared_module_name(module_type, specs, args, cache)
-        if module_name:
-            print(module_name)
+        first = writers[0]
+        if (
+            len(writers) > 1
+            and not args.recurse_dependencies
+            and fold_into_one_file(writers)
+            and first.has_installation
+        ):
+            print(first.layout.filename if args.full_path else first.layout.name)
             return
 
     single_spec = one_spec_or_raise(specs)
@@ -302,10 +291,16 @@ def find(module_type, specs, args):
     print(" ".join(modules))
 
 
+def _show_specs(message: str, specs: List[spack.spec.Spec]) -> None:
+    """Prints a message followed by a long listing of specs, for a confirmation prompt."""
+    tty.msg(message)
+    spack.cmd.display_specs(specs, long=True)
+    print("")
+
+
 def rm(module_type, specs, args):
-    """Deletes the module files associated with every spec in specs, for every
-    module type in module types.
-    """
+    """Removes the installations of specs from their module files, deleting the files that
+    hold no other installation."""
     check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
@@ -332,23 +327,20 @@ def rm(module_type, specs, args):
     # Ask for confirmation
     if not args.yes_to_all:
         if deleted:
-            msg = "You are about to remove {0} module files for:\n"
-            tty.msg(msg.format(module_type))
-            spack.cmd.display_specs([s for x in deleted for s in x.conf.removed_specs], long=True)
-            print("")
+            _show_specs(
+                f"You are about to remove {module_type} module files for:\n",
+                [s for x in deleted for s in x.conf.removed_specs],
+            )
         if rewritten:
-            msg = "You are about to remove the following installations from {0} module files"
-            msg += " shared with other installations:\n"
-            tty.msg(msg.format(module_type))
-            spack.cmd.display_specs(
-                [s for x in rewritten for s in x.conf.removed_specs], long=True
+            _show_specs(
+                f"You are about to remove the following installations from {module_type} "
+                "module files shared with other installations:\n",
+                [s for x in rewritten for s in x.conf.removed_specs],
             )
-            print("")
-            tty.msg("These module files are written again for the installations they keep:\n")
-            spack.cmd.display_specs(
-                [s for x in rewritten for s in x.conf.specs_in_file], long=True
+            _show_specs(
+                "These module files are written again for the installations they keep:\n",
+                [s for x in rewritten for s in x.conf.specs_in_file],
             )
-            print("")
         answer = tty.get_yes_or_no("Do you want to proceed?")
         if not answer:
             tty.die("Will not remove any module files")
@@ -385,20 +377,18 @@ def refresh(module_type, specs, args):
     writers = [x for x in writers if not x.conf.excluded]
 
     if not args.yes_to_all:
-        msg = "You are about to regenerate {types} module files for:\n"
-        tty.msg(msg.format(types=module_type))
-        spack.cmd.display_specs(specs, long=True)
-        print("")
+        _show_specs(f"You are about to regenerate {module_type} module files for:\n", specs)
         # A module file folding several installations is written for all of them
         selected = set(specs)
-        folded = [s for x in writers for s in x.conf.other_specs_in_file if s not in selected]
-        folded = list(dedupe(folded))
+        folded = list(
+            dedupe(s for x in writers for s in x.conf.other_specs_in_file if s not in selected)
+        )
         if folded:
-            msg = "The following installations share a module file with them and are written"
-            msg += " again too:\n"
-            tty.msg(msg)
-            spack.cmd.display_specs(folded, long=True)
-            print("")
+            _show_specs(
+                "The following installations share a module file with them and are written "
+                "again too:\n",
+                folded,
+            )
         answer = tty.get_yes_or_no("Do you want to proceed?")
         if not answer:
             tty.die("Module file regeneration aborted.")
@@ -436,7 +426,7 @@ def refresh(module_type, specs, args):
     tty.msg("Regenerating {name} module files".format(name=module_type))
     if os.path.isdir(module_type_root) and args.delete_tree:
         shutil.rmtree(module_type_root, ignore_errors=False)
-    filesystem.mkdirp(module_type_root)
+    spack.modules.common.make_module_directory(module_type_root)
 
     # Dump module index after potentially removing module tree
     spack.modules.common.generate_module_index(

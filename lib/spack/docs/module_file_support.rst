@@ -146,6 +146,10 @@ The module files of the packages that a Spack command installs are written when 
 While a command is still running, a package it has already installed may not have a module file yet, also when another command uses that package as a dependency.
 If a command is killed before it ends, generate the missing module files with ``spack module tcl refresh`` or ``spack module lmod refresh``.
 
+Spack writes each module file to a temporary file in the same directory, then renames it over the previous version, so a module system never reads a partially written file.
+Creating, rewriting or removing a module file therefore requires write permission on the directory that contains it.
+The directories that Spack creates for module files follow the umask, and get in addition the group and the write access that the :ref:`package permissions <package_permissions>` set for ``all``.
+
 You can configure the behavior of either module system separately, under a key corresponding to the generator being customized:
 
 .. code-block:: yaml
@@ -342,6 +346,9 @@ If the stated variants do not match any installation, the error lists the instal
        * "build_system=makefile +optimize +pic ~shared hash=ickxcoy"
        * "build_system=makefile +optimize +pic +shared hash=vzg6net"
      ERROR: Module evaluation aborted
+
+After setting or unsetting ``variants`` on an existing module tree, regenerate it with ``spack module tcl refresh --delete-tree -y``.
+A plain ``refresh`` leaves the module files written with the previous setting in place, and ``module load`` may pick one of them.
 
 .. rubric:: Hashes and dependencies
 

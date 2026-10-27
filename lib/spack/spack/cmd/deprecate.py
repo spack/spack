@@ -153,4 +153,6 @@ def deprecate(parser, args):
         spack.modules.write_module_files(recorded_specs)
         # deprecate() skips specs it cannot deprecate, and they keep their module files
         db = spack.store.STORE.db
-        spack.modules.remove_module_files([s for s in all_deprecate if db.deprecator(s)])
+        with db.read_transaction():
+            deprecated = [s for s in all_deprecate if db.deprecator(s)]
+        spack.modules.remove_module_files(deprecated)

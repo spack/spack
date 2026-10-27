@@ -21,6 +21,7 @@ import itertools
 import os
 import pathlib
 import re
+import stat
 import string
 import warnings
 from typing import (
@@ -49,6 +50,7 @@ import spack.database
 import spack.deptypes as dt
 import spack.environment
 import spack.error
+import spack.package_prefs
 import spack.paths
 import spack.projections as proj
 import spack.repo
@@ -65,7 +67,7 @@ import spack.util.spack_yaml as syaml
 from spack import tengine
 from spack.active_environment import active_environment
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
-from spack.enums import Context
+from spack.enums import Context, InstallRecordStatus
 from spack.util import tty
 from spack.util.lang import Singleton, dedupe
 
@@ -87,21 +89,45 @@ class ModuleConfigurationCache:
     """Objects computed once for a batch of specs, and shared by their configurations."""
 
     def __init__(self) -> None:
-        #: Configuration objects, keyed by (dag_hash, module_set_name, explicit, removed_specs)
+        #: Configuration objects, keyed by (configuration class, dag_hash, module_set_name,
+        #: explicit, removed_specs)
         self.configurations: Dict[
-            Tuple[str, str, bool, FrozenSet[spack.spec.Spec]], "BaseConfiguration"
+            Tuple[Type["BaseConfiguration"], str, str, bool, FrozenSet[spack.spec.Spec]],
+            "BaseConfiguration",
         ] = {}
-        self._local_installations: Optional[Dict[str, List[spack.spec.Spec]]] = None
-        self._records: Dict[str, Optional[spack.database.InstallRecord]] = {}
+        self._local_installations: Dict[str, List[spack.spec.Spec]] = {}
+        self._records: Dict[str, spack.database.InstallRecord] = {}
+        self._database_read = False
+
+    def read_database(self) -> None:
+        """Reads the records and the local installations from the database, in a single read
+        transaction. Only the first call reads the database, later calls do nothing.
+        """
+        if self._database_read:
+            return
+
+        db = spack.store.STORE.db
+        by_name: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
+        records: Dict[str, spack.database.InstallRecord] = {}
+        # Transactions nested in this one neither lock nor read the database again
+        with db.read_transaction():
+            for spec in db.query(installed=InstallRecordStatus.ANY, sort=False):
+                dag_hash = spec.dag_hash()
+                upstream, record = db.query_by_spec_hash(dag_hash)
+                if record is None:
+                    continue
+                records[dag_hash] = record
+                if not upstream and record.installed:
+                    by_name[spec.name].append(spec)
+        self._local_installations, self._records = by_name, records
+        self._database_read = True
 
     def record(self, spec: spack.spec.Spec) -> Optional[spack.database.InstallRecord]:
         """Returns the database record of the spec, or None if it has none. The database is
-        read on the first call for a spec, later calls return what was read then.
+        read on the first call, later calls return what was read then.
         """
-        dag_hash = spec.dag_hash()
-        if dag_hash not in self._records:
-            _, self._records[dag_hash] = spack.store.STORE.db.query_by_spec_hash(dag_hash)
-        return self._records[dag_hash]
+        self.read_database()
+        return self._records.get(spec.dag_hash())
 
     def explicit(self, spec: spack.spec.Spec) -> bool:
         """Returns whether the spec is recorded as explicitly installed."""
@@ -110,14 +136,8 @@ class ModuleConfigurationCache:
 
     def local_installations(self, name: str) -> List[spack.spec.Spec]:
         """Returns the specs of a package installed in the local store. The database is read
-        on the first call, later calls return what was recorded then."""
-        if self._local_installations is None:
-            by_name: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
-            for spec in spack.store.STORE.db.query(
-                installed=True, install_tree="local", sort=False
-            ):
-                by_name[spec.name].append(spec)
-            self._local_installations = by_name
+        on the first call, later calls return what was read then."""
+        self.read_database()
         return self._local_installations.get(name, [])
 
 
@@ -268,7 +288,7 @@ def generate_module_index(
     for m in modules:
         entries[m.spec.dag_hash()] = {"path": m.layout.filename, "use_name": m.layout.use_name}
 
-    spack.util.filesystem.mkdirp(root)
+    make_module_directory(root)
     with open(index_path, "w", encoding="utf-8") as index_file:
         syaml.dump({"module_index": entries}, default_flow_style=False, stream=index_file)
 
@@ -403,7 +423,7 @@ class BaseConfiguration:
         if explicit is None:
             explicit = cache.explicit(spec)
 
-        key = (spec.dag_hash(), module_set_name, explicit, removed_specs)
+        key = (cls, spec.dag_hash(), module_set_name, explicit, removed_specs)
         configuration = cache.configurations.get(key)
         if configuration is None:
             configuration = cls(
@@ -523,7 +543,11 @@ class BaseConfiguration:
     @property
     def matches_default(self) -> bool:
         """Whether this spec matches a configured default."""
-        return any(self.spec.satisfies(default) for default in self.defaults)
+        if "matches_default" not in self._cache:
+            self._cache["matches_default"] = any(
+                self.spec.satisfies(default) for default in self.defaults
+            )
+        return self._cache["matches_default"]
 
     @property
     def projection(self) -> str:
@@ -550,7 +574,11 @@ class BaseConfiguration:
     @property
     def excluded(self) -> bool:
         """Returns True if the module has been excluded, False otherwise."""
+        if "excluded" not in self._cache:
+            self._cache["excluded"] = self._compute_excluded()
+        return self._cache["excluded"]
 
+    def _compute_excluded(self) -> bool:
         # A few variables for convenience of writing the method
         spec = self.spec
         conf = self._config
@@ -805,6 +833,30 @@ class BaseConfiguration:
     def other_specs_in_file(self) -> List[spack.spec.Spec]:
         """Returns the other specs the module file holds."""
         return [spec for spec in self.specs_in_file if spec != self.spec]
+
+    def sibling_configuration(self, spec: spack.spec.Spec) -> "BaseConfiguration":
+        """Returns the configuration of an installation that may share this module file, which
+        is this one for its own spec. For another spec, explicitness is read from the database,
+        as it may differ from this one's, and the installations being removed are handed over.
+        """
+        if spec == self.spec:
+            return self
+        return self.make_configuration(
+            spec, self.name, removed_specs=self.removed_specs, cache=self._configuration_cache
+        )
+
+    @property
+    def has_clashing_installation(self) -> bool:
+        """Whether another local installation of this package has a module file with the same
+        name as this one, without being held by it."""
+        held = set(self.specs_in_file)
+        for spec in self._configuration_cache.local_installations(self.spec.name):
+            if spec == self.spec or spec in held or spec in self.removed_specs:
+                continue
+            conf = self.sibling_configuration(spec)
+            if not conf.excluded and conf.layout.filename == self.layout.filename:
+                return True
+        return False
 
     @property
     def file_matches_default(self) -> bool:
@@ -1326,6 +1378,37 @@ class ModuleContext(tengine.Context):
         return value
 
 
+def make_module_directory(path: str) -> None:
+    """Creates a directory of module files and its missing parents according to the umask, then
+    adds to them the group and the write access configured for all packages.
+
+    The settings of a single package are not used, since a directory can hold the module files
+    of several packages. Does nothing if the directory exists.
+    """
+    if os.path.exists(path):
+        return
+
+    missing = [path, *spack.util.filesystem.longest_existing_parent(path)[1]]
+    spack.util.filesystem.mkdirp(path)
+
+    all_spec = spack.spec.Spec("all")
+    configured = spack.package_prefs.get_package_dir_permissions(all_spec)
+    group = spack.package_prefs.get_package_group(all_spec)
+
+    added = 0
+    if configured & stat.S_IWGRP:
+        added |= stat.S_IRWXG
+    if configured & stat.S_IWOTH:
+        added |= stat.S_IRWXO
+    if group and configured & stat.S_ISGID:
+        added |= stat.S_ISGID
+    for directory in reversed(missing):
+        if group:
+            spack.util.filesystem.chgrp(directory, group)
+        if added:
+            os.chmod(directory, stat.S_IMODE(os.stat(directory).st_mode) | added)
+
+
 class BaseModuleFileWriter:
     default_template: str
     hide_cmd_format: str
@@ -1403,8 +1486,9 @@ class BaseModuleFileWriter:
 
         Args:
             overwrite (bool): if True it is fine to overwrite an already
-                existing file. If False the operation is skipped an we print
-                a warning to the user.
+                existing file. If False an existing file is overwritten only if no other
+                installation clashes with this one on its name, otherwise the operation is
+                skipped with a warning.
         """
         # Return immediately if the module is excluded
         if self.conf.excluded:
@@ -1412,9 +1496,12 @@ class BaseModuleFileWriter:
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 
-        # Print a warning in case I am accidentally overwriting
-        # a module file that is already there (name clash)
-        if not overwrite and os.path.exists(self.layout.filename):
+        # An existing file is kept when another installation has a module file of the same name
+        if (
+            not overwrite
+            and os.path.exists(self.layout.filename)
+            and self.conf.has_clashing_installation
+        ):
             message = "Module file {0.filename} exists and will not be overwritten"
             warnings.warn(message.format(self.layout))
             return
@@ -1423,11 +1510,7 @@ class BaseModuleFileWriter:
         msg = "\tWRITE: {0} [{1}]"
         tty.debug(msg.format(self.spec.cshort_spec, self.layout.filename))
 
-        # If the directory where the module should reside does not exist
-        # create it
-        module_dir = os.path.dirname(self.layout.filename)
-        if not os.path.exists(module_dir):
-            spack.util.filesystem.mkdirp(module_dir)
+        make_module_directory(os.path.dirname(self.layout.filename))
 
         # Get the template for the module
         template_name = self._get_template()
@@ -1496,8 +1579,7 @@ class BaseModuleFileWriter:
         modulerc_path = self.layout.modulerc
         hide_module_cmd = self.hide_cmd_format % self.layout.name
         # A module file is hidden when every spec it holds is hidden
-        confs_in_file = self.conf.configurations_in_file
-        hidden = not remove and all(conf.hidden for conf in confs_in_file)
+        hidden = not remove and all(conf.hidden for conf in self.conf.configurations_in_file)
         modulerc_exists = os.path.exists(modulerc_path)
         updated = False
 
@@ -1557,7 +1639,11 @@ class BaseModuleFileWriter:
         """Removes the default symlink, if it targets this module file."""
         default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
         try:
-            if spack.util.filesystem.readlink(default_symlink) == self.layout.filename:
+            # The link may spell the module root differently, e.g. through a symlinked root
+            target = spack.util.filesystem.resolve_link_target_relative_to_the_link(
+                default_symlink
+            )
+            if os.path.realpath(target) == os.path.realpath(self.layout.filename):
                 os.unlink(default_symlink)
         except OSError:
             pass

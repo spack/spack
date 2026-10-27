@@ -1,4 +1,3 @@
-{% set variants_enabled = variants_mode != "none" %}
 {# Content relative to an installation is written once, indented, in a block selecting #}
 {# this installation when variants are defined, and unchanged otherwise #}
 {% set pad = "    " if variants_enabled else "" %}

@@ -21,6 +21,7 @@ import spack.modules
 import spack.modules.common
 import spack.modules.error
 import spack.modules.tcl
+import spack.package_base
 import spack.spec
 import spack.store
 import spack.util.environment
@@ -1537,9 +1538,7 @@ class TestTcl:
             assert status, stderr
             assert module_command.env == initial_env
 
-    def test_fold_variants_explicit_from_database(
-        self, install_mockery, module_configuration, modulefile_filename
-    ):
+    def test_fold_variants_explicit_from_database(self, install_mockery, module_configuration):
         """Test the explicitness of the other folded installations is read from the database,
         so an implicit installation written alongside an explicit one does not hide the
         module file."""
@@ -1692,3 +1691,46 @@ class TestTcl:
         spack.modules.remove_module_files(removed)
         assert os.path.exists(module_file)
         assert not os.path.lexists(default_link)
+
+    def test_overwrite_rewrites_module_file(self, install_mockery, module_configuration):
+        """Test reinstalling a spec with --overwrite writes its module file again, without
+        warning, when no other installation has a module file of the same name.
+        """
+        module_configuration("fold_variants_none")
+        install("--fake", "mpileaks@2.3 ~debug ^zmpi")
+        concrete = spack.store.STORE.db.query_one("mpileaks@2.3 ~debug ^zmpi")
+        module_file = writer_cls.from_spec(concrete, "default").layout.filename
+        with open(module_file, "a", encoding="utf-8") as f:
+            f.write("## stale content\n")
+
+        with warnings.catch_warnings(record=True) as recorded:
+            warnings.simplefilter("always")
+            install("--fake", "--overwrite", "-y", "mpileaks@2.3 ~debug ^zmpi")
+        assert not [w for w in recorded if "will not be overwritten" in str(w.message)]
+        with open(module_file, encoding="utf-8") as f:
+            assert "## stale content" not in f.read()
+
+    def test_fold_variants_stale_module_file_rewritten(
+        self, install_mockery, module_configuration
+    ):
+        """Test a module file still listing an installation removed without updating module
+        files is written again for the next installation folded into it.
+        """
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", spec_a)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        module_file = writer_cls.from_spec(concrete_a, "default").layout.filename
+        spack.package_base.PackageBase.uninstall_by_spec(concrete_a)
+        assert os.path.exists(module_file)
+
+        with warnings.catch_warnings(record=True) as recorded:
+            warnings.simplefilter("always")
+            install("--fake", spec_b)
+        assert not [w for w in recorded if "will not be overwritten" in str(w.message)]
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = f.read()
+        assert concrete_a.dag_hash(7) not in content
+        assert concrete_b.dag_hash(7) in content

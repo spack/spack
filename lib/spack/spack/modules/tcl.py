@@ -8,16 +8,21 @@ import math
 import os
 import re
 import warnings
-from typing import Any, Dict, List, Optional, Set, Tuple, cast
+from typing import Any, Dict, FrozenSet, List, Optional, Set, Tuple, cast
 
 import spack.config
 import spack.error
 import spack.spec
-import spack.store
 from spack import tengine
 from spack.variant import RESERVED_NAMES, VariantType, VariantValue
 
-from .common import BaseConfiguration, BaseModuleFileWriter, FileLayout, ModuleContext
+from .common import (
+    BaseConfiguration,
+    BaseModuleFileWriter,
+    FileLayout,
+    ModuleConfigurationCache,
+    ModuleContext,
+)
 
 #: Words the module command reads as booleans, any prefix of them included
 _MODULE_BOOLEAN_WORDS = ("true", "false", "yes", "no", "on", "off")
@@ -58,9 +63,17 @@ class TclConfiguration(BaseConfiguration):
     def join_path(self, parts: Tuple[str, ...]) -> str:
         return " ".join([self.manipulate_path(token) for token in parts])
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        if self.variants_mode != "none":
+    def __init__(
+        self,
+        spec: spack.spec.Spec,
+        module_set_name: str,
+        explicit: bool,
+        *,
+        removed_specs: FrozenSet[spack.spec.Spec] = frozenset(),
+        cache: Optional[ModuleConfigurationCache] = None,
+    ) -> None:
+        super().__init__(spec, module_set_name, explicit, removed_specs=removed_specs, cache=cache)
+        if self.variants_enabled:
             self._warn_hash_length_ignored()
 
     @property
@@ -69,10 +82,15 @@ class TclConfiguration(BaseConfiguration):
         return self._config.get("variants", "none")
 
     @property
+    def variants_enabled(self) -> bool:
+        """Whether variants are defined in module files."""
+        return self.variants_mode != "none"
+
+    @property
     def hash(self) -> Optional[str]:
         """Hash appended to the module file name, or None when variants are defined, as the
         hash variant then replaces the hash in module names."""
-        if self.variants_mode != "none":
+        if self.variants_enabled:
             return None
         return super().hash
 
@@ -101,7 +119,8 @@ class TclConfiguration(BaseConfiguration):
                 return scope.name
         return None
 
-    def _variant_to_str_dict(self, v: VariantValue) -> Dict[str, str]:
+    @staticmethod
+    def _variant_to_str_dict(v: VariantValue) -> Dict[str, str]:
         """Returns a dictionary entry representing variant object passed as argument.
         A boolean value is written 1 or 0, as the module file expects it. Any other value
         is written in the form the module command reads back, see :func:`module_variant_value`,
@@ -118,7 +137,7 @@ class TclConfiguration(BaseConfiguration):
         the hash, as different installations of the same package version then map to the same
         file name.
         """
-        if self.variants_mode == "none":
+        if not self.variants_enabled:
             return False
         tokens = spack.spec.SPEC_FORMAT_RE.finditer(self.projection)
         return not any(token.group(4) for token in tokens)
@@ -139,7 +158,7 @@ class TclConfiguration(BaseConfiguration):
         return self._cache["variants"]
 
     def _compute_variants(self) -> Dict[str, Dict[str, Any]]:
-        if self.variants_mode == "none":
+        if not self.variants_enabled:
             return {}
 
         # Variants reserved by Spack (like patches or dev_path) are not defined
@@ -186,28 +205,26 @@ class TclConfiguration(BaseConfiguration):
         if not self.folds_installations:
             return cast(List[TclConfiguration], super().configurations_in_file)
 
-        # One read transaction for the query and the records read for each installation
-        with spack.store.STORE.db.read_transaction():
-            # Upstream installations are left out: their module files belong to the upstream
-            name_version_spec = spack.spec.Spec(f"{self.spec.name}@={self.spec.version}")
-            spec_list = {
-                x
-                for x in self._configuration_cache.local_installations(self.spec.name)
-                if x.satisfies(name_version_spec)
-            }
+        # Upstream installations are left out: their module files belong to the upstream
+        name_version_spec = spack.spec.Spec(f"{self.spec.name}@={self.spec.version}")
+        spec_list = {
+            x
+            for x in self._configuration_cache.local_installations(self.spec.name)
+            if x.satisfies(name_version_spec)
+        }
 
-            # This spec may not be recorded yet, the ones being removed still are
-            spec_list = (spec_list | {self.spec}) - self.removed_specs
+        # This spec may not be recorded yet, the ones being removed still are
+        spec_list = (spec_list | {self.spec}) - self.removed_specs
 
-            # Sorted as the module file selects the first installation matching a request
-            confs_in_file = []
-            for spec in spec_list:
-                conf = self.sibling_configuration(spec)
-                if conf.excluded:
-                    continue
-                if conf.layout.filename == self.layout.filename:
-                    confs_in_file.append(conf)
-            confs_in_file.sort(key=self._installation_order_key)
+        # Sorted as the module file selects the first installation matching a request
+        confs_in_file = []
+        for spec in spec_list:
+            conf = cast(TclConfiguration, self.sibling_configuration(spec))
+            if conf.excluded:
+                continue
+            if conf.layout.filename == self.layout.filename:
+                confs_in_file.append(conf)
+        confs_in_file.sort(key=self._installation_order_key)
 
         # The other installations compute the same list, hand it over
         for conf in confs_in_file:
@@ -216,27 +233,14 @@ class TclConfiguration(BaseConfiguration):
 
         return confs_in_file
 
-    def sibling_configuration(self, spec: spack.spec.Spec) -> "TclConfiguration":
-        """Returns the configuration of an installation held by the same module file, which is
-        this one for its own spec. For another spec, explicitness is read from the database,
-        as it may differ from this one's, and the installations being removed are handed over.
-        """
-        if spec == self.spec:
-            return self
-        conf = self.make_configuration(
-            spec, self.name, removed_specs=self.removed_specs, cache=self._configuration_cache
-        )
-        return cast(TclConfiguration, conf)
-
-    @staticmethod
-    def _installation_order_key(conf: BaseConfiguration) -> Tuple[bool, float, str]:
+    def _installation_order_key(self, conf: BaseConfiguration) -> Tuple[bool, float, str]:
         """Sort key listing the installations matching a configured default first, then the
         others in installation order, then by hash.
 
         A new installation is listed after the existing ones, unless it matches a default.
         """
         # An installation not recorded yet is being added, it comes after the recorded ones
-        record = conf._configuration_cache.record(conf.spec)
+        record = self._configuration_cache.record(conf.spec)
         installation_time = record.installation_time if record else math.inf
         return (not conf.matches_default, installation_time, conf.spec.dag_hash())
 
@@ -322,10 +326,9 @@ class TclModuleContext(ModuleContext):
         return self.spec.dag_hash(7)
 
     @tengine.context_property
-    def variants_mode(self) -> str:
-        """Returns the module file variants definition mode, "none" when variants are not
-        defined in module files."""
-        return self.conf.variants_mode
+    def variants_enabled(self) -> bool:
+        """Whether variants are defined in module files."""
+        return self.conf.variants_enabled
 
     @tengine.context_property
     def installations(self) -> List["TclModuleContext"]:
