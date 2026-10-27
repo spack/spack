@@ -15,7 +15,7 @@ import urllib.request
 import urllib.response
 import warnings
 from datetime import datetime
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Any, Callable, Dict, NamedTuple, Optional
 
 import pytest
@@ -1112,26 +1112,13 @@ def test_tarball_common_prefix(dummy_prefix, tmp_path: pathlib.Path):
     # When creating a tarball, Python (and tar) use relative paths,
     # Absolute paths become relative to `/`, so drop the leading `/`.
     assert os.path.isabs(dummy_prefix)
-    expected_prefix = PurePath(dummy_prefix).as_posix().lstrip("/")
 
     with working_dir(str(tmp_path)):
         # Create a tarball (using absolute path for prefix dir)
         with tarfile.open("example.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
 
-        # Open, verify common prefix, and extract it.
-        with tarfile.open("example.tar", mode="r") as tar:
-            common_prefix = spack.binary_distribution._ensure_common_prefix(tar)
-            assert common_prefix == expected_prefix
-
-            # For consistent behavior across all supported Python versions
-            tar.extraction_filter = lambda member, path: member
-
-            # Extract into prefix2
-            tar.extractall(
-                path="prefix2",
-                members=spack.binary_distribution._tar_strip_component(tar, common_prefix),
-            )
+        spack.binary_distribution.extract_buildcache_tarball("example.tar", "prefix2")
 
         # Verify files are all there at the correct level.
         assert set(os.listdir("prefix2")) == {"bin", "share", ".spack"}
@@ -1162,7 +1149,7 @@ def test_tarfile_missing_binary_distribution_file(tmp_path: pathlib.Path):
             tar.addfile(tarinfo)
 
         with pytest.raises(ValueError, match="missing binary_distribution file"):
-            spack.binary_distribution._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+            spack.binary_distribution.extract_buildcache_tarball("empty.tar", "prefix")
 
 
 def test_tarfile_without_common_directory_prefix_fails(tmp_path: pathlib.Path):
@@ -1176,8 +1163,8 @@ def test_tarfile_without_common_directory_prefix_fails(tmp_path: pathlib.Path):
                 fileobj=io.BytesIO(b"hello"),
             )
 
-        with pytest.raises(ValueError, match="Tarball does not contain a common prefix"):
-            spack.binary_distribution._ensure_common_prefix(tarfile.open("empty.tar", mode="r"))
+        with pytest.raises(ValueError, match="no member named .spack"):
+            spack.binary_distribution.extract_buildcache_tarball("empty.tar", "prefix")
 
 
 def test_tarfile_with_files_outside_common_prefix(tmp_path: pathlib.Path, dummy_prefix):
@@ -1185,12 +1172,11 @@ def test_tarfile_with_files_outside_common_prefix(tmp_path: pathlib.Path, dummy_
     with working_dir(str(tmp_path)):
         with tarfile.open("broken.tar", mode="w") as tar:
             tar.add(name=dummy_prefix)
-            tar.addfile(tarfile.TarInfo(name="/etc/config_file"), fileobj=io.BytesIO(b"hello"))
+            tar.addfile(tarfile.TarInfo(name="etc/config_file"), fileobj=io.BytesIO(b"hello"))
 
-        with pytest.raises(
-            ValueError, match="Tarball contains file /etc/config_file outside of prefix"
-        ):
-            spack.binary_distribution._ensure_common_prefix(tarfile.open("broken.tar", mode="r"))
+        with pytest.raises(ValueError, match="outside of"):
+            spack.binary_distribution.extract_buildcache_tarball("broken.tar", "dest")
+        assert os.listdir("dest") == []
 
 
 def test_tarfile_of_spec_prefix(tmp_path: pathlib.Path):
