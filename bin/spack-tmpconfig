@@ -14,11 +14,9 @@ trap clean_up ERR
 
 [[ -n "$TMPCONFIG_DEBUG" ]] && printf "Redirecting TMP_DIR and spack directories to $TMP_DIR\n"
 
-export BOOTSTRAP="${SPACK_USER_CACHE_PATH:=$HOME/.spack}/bootstrap"
-export SPACK_USER_CACHE_PATH="$TMP_DIR/user_cache"
-mkdir -p "$SPACK_USER_CACHE_PATH"
+export BOOTSTRAP="$(spack bootstrap root)"
+private_bootstrap="$TMP_DIR/bootstrap"
 
-private_bootstrap="$SPACK_USER_CACHE_PATH/bootstrap"
 use_spack=''
 use_bwrap=''
 # argument handling
@@ -66,14 +64,22 @@ mkdir -p "$BOOTSTRAP"
 export SPACK_SYSTEM_CONFIG_PATH="$TMP_DIR/sys_conf"
 export SPACK_USER_CONFIG_PATH="$TMP_DIR/user_conf"
 mkdir -p "$SPACK_USER_CONFIG_PATH"
+# We redirect the default locations and we explicitly redirect the individual entries
+# This ensures new locations are moved by default, and specific entries are moved even
+# if the user has overridden them.
 cat >"$SPACK_USER_CONFIG_PATH/config.yaml" <<EOF
 config:
+  locations:
+    data: $TMP_DIR/data
+    state: $TMP_DIR/state
+    cache: $TMP_DIR/cache
   install_tree:
-    root: $TMP_DIR/install
-  misc_cache: $$user_cache_path/cache
-  source_cache: $$user_cache_path/source
-  environments_root: $TMP_DIR/envs
+    root: $$data_home/install
+  misc_cache: $$cache_home/cache
+  source_cache: $$data_home/source
+  environments_root: $$data_home/envs
 EOF
+# Bootstrap is redirected back to the original location unless using `-b/-B`.
 cat >"$SPACK_USER_CONFIG_PATH/bootstrap.yaml" <<EOF
 bootstrap:
   root: $BOOTSTRAP
