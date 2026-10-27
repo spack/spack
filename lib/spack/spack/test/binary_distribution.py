@@ -2009,8 +2009,8 @@ def test_url_update_index_retries_on_push_failure(tmp_path, create_mock_index):
                     "https://dummy.io/v3/manifest/index/index.manifest.json",
                     412,
                     "Precondition Failed",
-                    hdrs={},  # type: ignore[arg-type]
-                    fp=None,  # type: ignore[arg-type]
+                    hdrs=_http_headers(),
+                    fp=None,
                 )
 
     mock_index, retry = create_mock_index(_Handler())
@@ -2058,8 +2058,8 @@ def test_url_update_index_raises_after_retries_exhausted(tmp_path, create_mock_i
                 "https://dummy.io/v3/manifest/index/index.manifest.json",
                 412,
                 "Precondition Failed",
-                hdrs={},  # type: ignore[arg-type]
-                fp=None,  # type: ignore[arg-type]
+                hdrs=_http_headers(),
+                fp=None,
             )
 
     metadata = MirrorMetadata("s3://mybucket/prefix", 3)

@@ -2207,7 +2207,9 @@ class SpackSolverSetup:
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
             try:
-                archspec_name = self.context.repo.get(compiler).archspec_name()
+                # defined by CompilerPackage, in the package repository's build systems
+                pkg = self.context.repo.get(compiler)
+                archspec_name = pkg.archspec_name()  # ty: ignore[unresolved-attribute]
             except spack.repo.UnknownEntityError:
                 # Reusable compilers may come from a repo that is no longer configured
                 archspec_name = compiler.name

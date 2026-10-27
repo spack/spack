@@ -413,7 +413,10 @@ class TestDeprecatedDirective:
         """Tests that a bare string is refused, since iterating it would yield characters."""
         with pytest.raises(DirectiveError, match="must be a list of strings"):
             spack.directives._Deprecated(
-                spec="@1.0", reason="vuln", severity="high", labels="CVE-1"
+                spec="@1.0",
+                reason="vuln",
+                severity="high",
+                labels="CVE-1",  # ty: ignore[invalid-argument-type]
             )(mock_pkg)
 
 

@@ -172,19 +172,19 @@ def _s3_open(url, method: S3OpenMethod = "GET", extra_args={}):
     if key.startswith("/"):
         key = key[1:]
 
-    method = method.upper()
-    if method not in ("GET", "HEAD"):
+    verb = method.upper()
+    if verb not in ("GET", "HEAD"):
         raise urllib.error.URLError(
             "Only GET and HEAD verbs are currently supported for the s3:// scheme"
         )
 
     stream: IOBase
     try:
-        if method == "GET":
+        if verb == "GET":
             obj = s3.get_object(Bucket=bucket, Key=key, **extra_args)
             # NOTE(opadron): Apply workaround here (see above)
             stream = WrapStream(obj["Body"])
-        elif method == "HEAD":
+        elif verb == "HEAD":
             obj = s3.head_object(Bucket=bucket, Key=key, **extra_args)
             stream = BytesIO()
     except s3.ClientError as e:
