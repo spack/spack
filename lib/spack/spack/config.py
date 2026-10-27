@@ -3892,7 +3892,9 @@ def _resolve_location_var(location_key, config: Optional["Configuration"] = None
     # substitute_config_variables -> re.sub -> lambda in replacements() -> _resolve_location_var
     # The lambda is called by re.sub with no way to pass a recursion-tracking parameter.
     if location_key in _resolving_location_vars:
-        raise RecursionError(f"Recursive reference to ${location_key}_home")
+        raise spack.error.ConfigError(
+            f"Recursive reference to ${location_key}_home"
+        )
 
     _resolving_location_vars.add(location_key)
     try:
@@ -3900,6 +3902,33 @@ def _resolve_location_var(location_key, config: Optional["Configuration"] = None
     finally:
         _resolving_location_vars.discard(location_key)
 
+
+def _check_all_vars_resolve(path: str, config: Optional["Configuration"] = None):
+    """Returns true iff all variables in path are set to non-empty."""
+    env_vars_regex = r'\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)'
+    if sys.platform = "win32":
+        env_vars_regex = r'\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)|%([^%]+)%'
+
+    matches = re.findall(env_vars_regex, path)
+    if not matches:
+        return True
+
+    config = config if config is not None else CONFIG
+    for group in matches:
+        for var in group:
+            # The groups that didn't match will return ""
+            if not var:
+                continue
+
+            # If it's a spack variable, check replacements for it
+            if var in replacements(config):
+                if not str(replacements[var]):
+                    return False
+
+            # Otherwise treat as an env var
+            if not os.environ.get(var, None):
+                return False
+    return True
 
 def _resolve_location_var_impl(location_key, config = None):
     """Implementation of _resolve_location_var without recursion tracking."""
@@ -3911,23 +3940,12 @@ def _resolve_location_var_impl(location_key, config = None):
         location_list = [location_list]
 
     for item in location_list:
+        # If the entry is empty or doesn't resolve, skip it
+        if not item or not item.strip() or not _check_all_vars_resolve(item, config):
+            continue
+
         # Attempt to resolve all variables in the entry
-        try:
-            candidate = os.path.normpath(substitute_path_variables(item))
-        except RecursionError:
-            # RecursionError is raised early by _resolve_location_var's tracking
-            tty.warn(f"Skipping recursive definition in locations config: {item}.")
-            continue
-        # Skip empty or whitespace-only paths (e.g., from empty env vars)
-        if not candidate or not candidate.strip():
-            continue
-
-        # Look for unresolved env var or config vars in candidate (skip before other checks)
-        var_pattern = r"\$\{?([a-zA-Z_][a-zA-Z0-9_]*)\}?"
-        unresolved_vars = re.search(var_pattern, candidate)
-
-        if unresolved_vars:
-            continue
+        candidate = os.path.normpath(substitute_path_variables(item))
 
         # Reject relative paths in locations - they resolve inconsistently
         if not os.path.isabs(candidate):
