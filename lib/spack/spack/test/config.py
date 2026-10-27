@@ -2159,41 +2159,16 @@ def test_locations_relative_path_rejected(mutable_config):
     "locations,expected",
     [
         # Basic self-reference: data: ["$data_home"]
-        (["$data_home"], None),
+        ["$data_home"],
         # Self-reference with fallback: data: ["$data_home/x", "~/after"]
-        (["$data_home/x", "~/after"], "~/after"),
+        ["$data_home/x", "$HOME/after"],
         # Cycle between location vars would also be caught
         # (but harder to test since we'd need to set multiple locations)
     ],
 )
-def test_locations_self_referential_skipped(mutable_config, capfd, locations, expected):
-    """Test that self-referential locations entries are skipped with warning."""
-    import os
+def test_locations_self_referential_raise(mutable_config, locations):
+    """Test that self-referential locations entries are failures."""
+    mutable_config.set("config:locations:data", locations)
 
-    # Expand ~ in expected value if present and normalize path separators
-    if expected and expected.startswith("~/"):
-        expected = os.path.normpath(os.path.expanduser(expected))
-
-    # Expand ~ in locations list and normalize path separators
-    expanded_locations = [
-        os.path.normpath(os.path.expanduser(loc)) if loc.startswith("~/") else loc
-        for loc in locations
-    ]
-
-    mutable_config.set("config:locations:data", expanded_locations)
-
-    result = spack.config._resolve_location_var("data")
-
-    if expected is None:
-        # Should fall back to XDG default
-        assert result == os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
-    else:
-        # Should return the expected fallback
-        assert result == expected
-
-    # Should have warned about skipping recursive definition
-    captured = capfd.readouterr()
-    assert (
-        "Skipping recursive definition" in captured.err
-        or "Skipping recursive definition" in captured.out
-    )
+    with pytest.raises(spack.error.ConfigError, match="recursive reference"):
+        _ = spack.config._resolve_location_var("data")

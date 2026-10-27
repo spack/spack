@@ -3906,7 +3906,7 @@ def _resolve_location_var(location_key, config: Optional["Configuration"] = None
 def _check_all_vars_resolve(path: str, config: Optional["Configuration"] = None):
     """Returns true iff all variables in path are set to non-empty."""
     env_vars_regex = r'\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)'
-    if sys.platform = "win32":
+    if sys.platform == "win32":
         env_vars_regex = r'\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)|%([^%]+)%'
 
     matches = re.findall(env_vars_regex, path)
@@ -3914,6 +3914,7 @@ def _check_all_vars_resolve(path: str, config: Optional["Configuration"] = None)
         return True
 
     config = config if config is not None else CONFIG
+    repl = replacements(config)
     for group in matches:
         for var in group:
             # The groups that didn't match will return ""
@@ -3921,13 +3922,16 @@ def _check_all_vars_resolve(path: str, config: Optional["Configuration"] = None)
                 continue
 
             # If it's a spack variable, check replacements for it
-            if var in replacements(config):
-                if not str(replacements[var]):
+            # spack variables are case-insensitive
+            key = var.lower()
+            if key in repl:
+                value = repl[key]
+                if value is NOMATCH or not str(value)
                     return False
-
             # Otherwise treat as an env var
-            if not os.environ.get(var, None):
+            elif not os.environ.get(var, None):
                 return False
+
     return True
 
 def _resolve_location_var_impl(location_key, config = None):
