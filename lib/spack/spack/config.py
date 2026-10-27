@@ -2684,44 +2684,40 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         intersection = sorted(source_entries & destination_entries)
         remainder = sorted(source_entries - destination_entries)
 
-        try:
-            # Check if any environments in remainder have installs inside them
-            # (indicated by .spack-db/index.json - these are non-relocatable)
-            for entry in remainder:
-                env_path = os.path.join(src_dir, entry)
-                if os.path.isdir(env_path):
-                    # Look for database index file anywhere under the environment directory
-                    db_index = filesystem.find_first(env_path, ".spack-db/index.json")
-                    if db_index:
-                        tty.debug(
-                            f"Environment {entry} has installs inside it "
-                            f"(found {db_index}); skipping migration of all environments"
-                        )
-                        return False
-
-            for entry in intersection + remainder:
-                src_path = os.path.join(src_dir, entry)
-                dst_path = os.path.join(dst_dir, entry)
-                success = _migrate_with_staging(
-                    old_path=src_path,
-                    new_path=dst_path,
-                    prepare_staging_callback=prepare_env_staging,
-                    lock_name=None,  # Parent holds the lock
-                    staging_name=f".spack-env-{entry}-staging",
-                    description=f"environment {entry}",
-                    verify_destination_callback=verify_with_marker,
-                )
-                if not success:
+        # Check if any environments in remainder have installs inside them
+        # (indicated by .spack-db/index.json - these are non-relocatable)
+        for entry in remainder:
+            env_path = os.path.join(src_dir, entry)
+            if os.path.isdir(env_path):
+                # Look for database index file anywhere under the environment directory
+                db_index = filesystem.find_first(env_path, ".spack-db/index.json")
+                if db_index:
+                    tty.debug(
+                        f"Environment {entry} has installs inside it "
+                        f"(found {db_index}); skipping migration of all environments"
+                    )
                     return False
-        except Exception:
-            # Try to remove any envs we moved before the error
-            try:
-                moved_before_exception = set(os.lisdir(dst_dir)) - destination_entries
-                for entry in moved_before_exception:
-                    os.unlink(os.path.join(dst_dir, entry))
-            except Exception:
-                # If we can't clean up, that's ok
-                pass
+
+        copied = []
+        for entry in intersection + remainder:
+            src_path = os.path.join(src_dir, entry)
+            dst_path = os.path.join(dst_dir, entry)
+            success = _migrate_with_staging(
+                old_path=src_path,
+                new_path=dst_path,
+                prepare_staging_callback=prepare_env_staging,
+                lock_name=None,  # Parent holds the lock
+                staging_name=f".spack-env-{entry}-staging",
+                description=f"environment {entry}",
+                verify_destination_callback=verify_with_marker,
+            )
+            if success:
+                if entry not in destination_entries:
+                    copied.append(entry)
+            else:
+                for done in copied:
+                    shutil.rmtree(os.path.join(dst_dir, done), ignore_errors=True)
+                return False
 
         # All environments copied successfully - old environments remain in place
         return True
