@@ -74,10 +74,10 @@ config:
     state: $TMP_DIR/state
     cache: $TMP_DIR/cache
   install_tree:
-    root: $$data_home/install
-  misc_cache: $$cache_home/cache
-  source_cache: $$data_home/source
-  environments_root: $$data_home/envs
+    root: \$data_home/install
+  misc_cache: \$cache_home/cache
+  source_cache: \$data_home/source
+  environments_root: \$data_home/envs
 EOF
 # Bootstrap is redirected back to the original location unless using `-b/-B`.
 cat >"$SPACK_USER_CONFIG_PATH/bootstrap.yaml" <<EOF
