@@ -2610,8 +2610,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         - ._view at environment root only (old format pre-June 2026: symlinks to ._view/<hash>/)
         - Directories with .spack-view marker anywhere (custom-location views, June 2026+)
 
-        spack.lock is copied and will be fixed up on first environment load to rewrite
-        any dev_path variants that pointed into the old environment directory.
+        spack.lock is copied
 
         Note: Skipping .spack-env also excludes cached repos and locks as a side effect.
         """
@@ -2671,16 +2670,6 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
             f.write(f"Migrated from {spack.paths.prefix}\n")
 
-        # Add marker for post-migration dev_path rewriting
-        dev_path_marker = os.path.join(staging_path, ".spack-needs-dev-path-migration")
-        marker_data = {
-            "old_env_path": old_path,
-            "new_env_path": new_path,
-            "migrated_at": datetime.datetime.now().isoformat(),
-        }
-        with open(dev_path_marker, "w", encoding="utf-8") as f:
-            json.dump(marker_data, f, indent=2)
-
     # Acquire lock for all environments
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
     try:
@@ -2698,6 +2687,8 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
 
         # Check if any environments in remainder have installs inside them
         # (indicated by .spack-db/index.json - these are non-relocatable)
+        # Also check whether they have specs with dev_path in the lockfile,
+        # we do not currently relocate those.
         for entry in remainder:
             env_path = os.path.join(src_dir, entry)
             if os.path.isdir(env_path):
@@ -2714,6 +2705,15 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                         f"(found {db_index}); skipping migration of all environments"
                     )
                     return False
+
+                # Read the lockfile and look for dev_path variants
+                # Technically, we could also read the yaml file and only return False if the
+                # dev_path comes from a relative path in the yaml, but we are conservative here
+                lock_path = os.path.join(env_path, "spack.lock")
+                if os.path.exists(lock_path):
+                    with open(lock_path, "r", encoding="utf-8") as f:
+                        if "dev_path=" in f.read():
+                            return False
 
         copied = []
         for entry in intersection + remainder:
