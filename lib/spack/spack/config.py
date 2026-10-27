@@ -1775,7 +1775,19 @@ def _detect_old_resources() -> Dict[str, bool]:
                 return True
             return False
         except NotADirectoryError:
+            # catch TOCTOU issue from path removed after check
             return False
+        except PermissionError as e:
+            tty.die(
+                f"Spack encountered a permission error at {e.filename} while attempting to read "
+                "old storage locations to migrate data. Fix the permissions or contact an admin "
+                "of this Spack instance to run `spack migrate`."
+            )
+        except Exception:
+            tty.die(
+                "Spack encountered an error while attempting to migrate. Please report a bug at "
+                "github.com/spack/spack/issues."
+            )
 
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
 
@@ -3303,17 +3315,24 @@ def _perform_migration():
                     # instances from progressing, but prevents a scenario where
                     # user says "Y" and then a separate non-tty process subverts
                     # that
-                    user_allows_it = _prompt_for_prefix_migration(old_resources)
-                    if user_allows_it:
-                        _do_migrate_spack_prefix(old_resources)
-                    else:
-                        force_old_layout(old_resources)
+                    try:
+                        user_allows_it = _prompt_for_prefix_migration(old_resources)
+                        if user_allows_it:
+                            _do_migrate_spack_prefix(old_resources)
+                        else:
+                            force_old_layout(old_resources)
+                    except PermissionError as e:
+                        tty.die(
+                            f"PermissionError accessing {e.filename}. Writing to the Spack prefix "
+                            "is required to migrate your Spack data. Fix the permissions or "
+                            "contact someone with permissions to run `spack migrate`."
+                        )
         except spack.util.lock.LockPermissionError:
             # Read-only prefix
             tty.die(
                 "The spack prefix is not writable. "
                 "Writing to the Spack prefix is required to migrate to new data storage locations."
-                " Contact an admin of the Spack instance for help.")
+                " Contact an admin of the Spack instance to run `spack migrate`."
             )
         except spack.util.lock.LockTimeoutError as e:
             # Some other migration process is taking too long, bail vs. hang
@@ -3895,9 +3914,7 @@ def _resolve_location_var(location_key, config: Optional["Configuration"] = None
     # substitute_config_variables -> re.sub -> lambda in replacements() -> _resolve_location_var
     # The lambda is called by re.sub with no way to pass a recursion-tracking parameter.
     if location_key in _resolving_location_vars:
-        raise spack.error.ConfigError(
-            f"Recursive reference to ${location_key}_home"
-        )
+        raise spack.error.ConfigError(f"Recursive reference to ${location_key}_home")
 
     _resolving_location_vars.add(location_key)
     try:
@@ -3910,9 +3927,9 @@ def _check_all_vars_resolve(
     path: str, config: Optional["Configuration"] = None, spack_vars: bool = True
 ):
     """Returns true iff all variables in path are set to non-empty."""
-    env_vars_regex = r'\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)'
+    env_vars_regex = r"\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)"
     if sys.platform == "win32":
-        env_vars_regex = r'\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)|%([^%]+)%'
+        env_vars_regex = r"\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)|%([^%]+)%"
 
     matches = re.findall(env_vars_regex, path)
     if not matches:
@@ -3941,6 +3958,7 @@ def _check_all_vars_resolve(
                 return False
 
     return True
+
 
 def _resolve_location_var_impl(location_key, config=None):
     """Implementation of _resolve_location_var without recursion tracking."""
