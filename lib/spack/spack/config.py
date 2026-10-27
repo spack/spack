@@ -3929,8 +3929,8 @@ def _check_all_vars_resolve(
             # spack variables are case-insensitive
             key = var.lower()
             if spack_vars and key in repl:
-                value = repl[key]
-                if value is NOMATCH or not str(value)
+                value = repl[key]()
+                if value is NOMATCH or not str(value):
                     return False
             # Otherwise treat as an env var
             elif not os.environ.get(var, None):
