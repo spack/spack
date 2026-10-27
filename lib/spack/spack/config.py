@@ -1774,7 +1774,7 @@ def _detect_old_resources() -> Dict[str, bool]:
                     continue
                 return True
             return False
-        except OSError:
+        except NotADirectoryError:
             return False
 
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
