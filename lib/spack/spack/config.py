@@ -3874,11 +3874,12 @@ def collect():
     }
 
 
-def _resolve_location_var(location_key):
+def _resolve_location_var(location_key, config: Optional["Configuration"] = None):
     """Resolve a config:locations entry to a concrete path.
 
     Args:
         location_key: one of 'data', 'cache', or 'state'
+        config: Configuration to use. Defaults to CONFIG
 
     Returns:
         A resolved path string or None
@@ -3895,14 +3896,15 @@ def _resolve_location_var(location_key):
 
     _resolving_location_vars.add(location_key)
     try:
-        return _resolve_location_var_impl(location_key)
+        return _resolve_location_var_impl(location_key, config=config)
     finally:
         _resolving_location_vars.discard(location_key)
 
 
-def _resolve_location_var_impl(location_key):
+def _resolve_location_var_impl(location_key, config = None):
     """Implementation of _resolve_location_var without recursion tracking."""
-    location_list = CONFIG.get(f"config:locations:{location_key}", default=[])
+    config = config if config is not None else CONFIG
+    location_list = config.get(f"config:locations:{location_key}", default=[])
 
     if isinstance(location_list, str):
         # Schema allows specifying a single item as a string in place of list
@@ -3951,6 +3953,7 @@ def _resolve_location_var_impl(location_key):
 # Substitutions to perform
 def replacements(config: Optional["Configuration"] = None):
     arch = architecture()
+    config = config if config is not None else CONFIG
 
     return {
         "spack": lambda: spack.paths.prefix,
@@ -3966,11 +3969,11 @@ def replacements(config: Optional["Configuration"] = None):
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.family,
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
-        "env": lambda: (config if config is not None else CONFIG).env_path or NOMATCH,
+        "env": lambda: config.env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
-        "data_home": lambda: _resolve_location_var("data"),
-        "cache_home": lambda: _resolve_location_var("cache"),
-        "state_home": lambda: _resolve_location_var("state"),
+        "data_home": lambda: _resolve_location_var("data", config=config),
+        "cache_home": lambda: _resolve_location_var("cache", config=config),
+        "state_home": lambda: _resolve_location_var("state", config=config),
     }
 
 
