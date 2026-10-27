@@ -31,12 +31,14 @@ See :ref:`configuration-scopes` for details.
 ``locations``
 -------------
 
-This section contains sub-keys ``data``, ``state``, and ``home``.
+This section contains sub-keys ``data``, ``state``, and ``cache``.
 These settings are used to change where Spack writes data.
 See :ref:`where-spack-writes-data`.
 
 Each of these settings accepts a list of values.
 Variable substitution is run on each entry in the list, and if all variables resolve and result in an absolute path, the entry is used.
+Entries that resolve to a relative path raise an error, while entries with unset variables fall through to the next entry.
+If you want an unset variable to be treated as an error, use ``::`` to ensure no default entries are used.
 
 ``install_tree:root``
 ---------------------
