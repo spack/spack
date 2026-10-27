@@ -32,7 +32,6 @@ import contextlib
 import copy
 import datetime
 import functools
-import json
 import os
 import os.path
 import pathlib
@@ -2409,10 +2408,6 @@ def _prepare_config_staging(old_location, staging_path, new_location):
             tty.debug(f"Skipping excluded directory: {item}")
             continue
 
-        if os.path.isdir(old_item_path) and re.match(item, rf"[a-z1-9]{{7}}{os.sep}cache"):
-            tty.debug(f"Skipping excluded directory: {item}")
-            continue
-
         # Skip YAML files (process separately)
         if item.endswith(".yaml") or item.endswith(".yml"):
             continue
@@ -2712,7 +2707,11 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                 lock_path = os.path.join(env_path, "spack.lock")
                 if os.path.exists(lock_path):
                     with open(lock_path, "r", encoding="utf-8") as f:
-                        if "dev_path=" in f.read():
+                        if '"dev_path":' in f.read():
+                            tty.debug(
+                                f"environment {entry} has develop specs in it. "
+                                "Skipping migration of all environments"
+                            )
                             return False
 
         copied = []
