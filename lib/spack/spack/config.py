@@ -2272,7 +2272,7 @@ def _migrate_with_staging(
         return False
 
     except spack.error.SpackError as e:
-        tty.debug(f"Cannot migrate {description}: {e}")
+        tty.warn(f"Cannot migrate {description}: {e}")
         return False
 
     except (OSError, shutil.Error) as e:
