@@ -115,3 +115,49 @@ def test_remove_python_cache(tmp_path: pathlib.Path, monkeypatch):
 
     for d in [source_dir, var_dir]:
         _check_files(d)
+
+
+@pytest.mark.not_on_windows("Creating symlinks requires extra privileges on Windows")
+def test_remove_python_cache_skips_symlinked_pycache(tmp_path: pathlib.Path, monkeypatch):
+    """A __pycache__ that is a symlink (as in an environment view) must not make
+    `spack clean --python-cache` fail, and what it points to is left alone."""
+    target = tmp_path / "opt" / "prefix" / "lib" / "__pycache__"
+    target.mkdir(parents=True)
+    (target / "module.cpython-312.pyc").touch()
+
+    view_dir = tmp_path / "var" / "spack" / "environments" / "env" / "view" / "lib"
+    view_dir.mkdir(parents=True)
+    (view_dir / "__pycache__").symlink_to(target, target_is_directory=True)
+    real_cache = tmp_path / "var" / "spack" / "stuff" / "__pycache__"
+    real_cache.mkdir(parents=True)
+
+    monkeypatch.setattr(spack.cmd.clean, "lib_path", str(tmp_path / "lib"))
+    monkeypatch.setattr(spack.cmd.clean, "var_path", str(tmp_path / "var"))
+
+    spack.cmd.clean.remove_python_cache()
+
+    assert (view_dir / "__pycache__").is_symlink()
+    assert (target / "module.cpython-312.pyc").exists()
+    assert not real_cache.exists()
+
+
+def test_remove_python_cache_tolerates_concurrent_removal(tmp_path: pathlib.Path, monkeypatch):
+    """Files and directories removed by another process while walking are not an error."""
+    cache = tmp_path / "var" / "__pycache__"
+    cache.mkdir(parents=True)
+    (tmp_path / "var" / "stale.pyc").touch()
+
+    real_remove = os.remove
+
+    def remove_twice(path, *args, **kwargs):
+        real_remove(path)
+        real_remove(path)  # raises FileNotFoundError, as if another process got there first
+
+    monkeypatch.setattr(spack.cmd.clean.os, "remove", remove_twice)
+    monkeypatch.setattr(spack.cmd.clean, "lib_path", str(tmp_path / "lib"))
+    monkeypatch.setattr(spack.cmd.clean, "var_path", str(tmp_path / "var"))
+
+    spack.cmd.clean.remove_python_cache()
+
+    assert not (tmp_path / "var" / "stale.pyc").exists()
+    assert not cache.exists()
