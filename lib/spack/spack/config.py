@@ -3941,6 +3941,7 @@ def _resolve_location_var_impl(location_key, config = None):
     if location_list:
         raise spack.error.ConfigError(
             f"config:locations:{location_key} is defined but all entries failed to resolve."
+        )
 
     # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
     # config::)
