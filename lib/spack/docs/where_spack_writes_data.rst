@@ -25,6 +25,7 @@ In order of priority (highest first):
 1. Specific config keys for individual paths: set ``config:install_tree:root``, ``config:environments_root``, ``config:license_dir``, ``config:source_cache``, ``config:gpg_path``, or ``config:gpg_keys_path`` in any user/site/system scope.
 
 2. Data-category config keys: set ``config:locations:{data,state,cache}`` to redirect everything that uses the corresponding substitution.
+   See :ref:`locations config <locations_config>` for details.
 
 3. Env vars for individual homes: - ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, or ``SPACK_CACHE_HOME``.
    The default configuration allows these environment variables to influence the associated config variable.

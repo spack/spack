@@ -26,6 +26,18 @@ See :ref:`configuration-scopes` for details.
 .. index::
    single: install_tree (config.yaml)
 
+.. _locations_config:
+
+``locations``
+-------------
+
+This section contains sub-keys ``data``, ``state``, and ``home``.
+These settings are used to change where Spack writes data.
+See :ref:`where-spack-writes-data`.
+
+Each of these settings accepts a list of values.
+Variable substitution is run on each entry in the list, and if all variables resolve and result in an absolute path, the entry is used.
+
 ``install_tree:root``
 ---------------------
 
