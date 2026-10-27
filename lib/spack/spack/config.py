@@ -2385,7 +2385,15 @@ def _prepare_config_staging(old_location, staging_path, new_location):
     3. Rewrite symlinks as needed
     """
     # Directories to exclude at the first level (cache/temporary data)
-    EXCLUDED_TOPLEVEL_DIRS = {"reports", "test", "git_repos", "package_repos", "bootstrap"}
+    EXCLUDED_TOPLEVEL_DIRS = {
+        "bootstrap",
+        "cache",
+        "git_repos",
+        "package_repos",
+        "reports",
+        "test",
+        "stage",
+    }
 
     # Helper to skip YAML files during directory copy
     def ignore_yaml_files(directory, contents):
@@ -2398,6 +2406,10 @@ def _prepare_config_staging(old_location, staging_path, new_location):
 
         # Skip excluded toplevel directories
         if os.path.isdir(old_item_path) and item in EXCLUDED_TOPLEVEL_DIRS:
+            tty.debug(f"Skipping excluded directory: {item}")
+            continue
+
+        if os.path.isdir(old_item_path) and re.match(item, rf"[a-z1-9]{{7}}{os.sep}cache"):
             tty.debug(f"Skipping excluded directory: {item}")
             continue
 
@@ -2690,7 +2702,12 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
             env_path = os.path.join(src_dir, entry)
             if os.path.isdir(env_path):
                 # Look for database index file anywhere under the environment directory
-                db_index = filesystem.find_first(env_path, ".spack-db/index.json")
+                db_index = None
+                for root, _, files in os.walk(env_path):
+                    if os.path.basename(root) == ".spack-db" and "index.json" in files:
+                        db_index = os.path.join(env_path, root, "index.json")
+                        break
+
                 if db_index:
                     tty.debug(
                         f"Environment {entry} has installs inside it "
