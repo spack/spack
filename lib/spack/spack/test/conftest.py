@@ -1024,10 +1024,9 @@ def configuration_dir(request, tmp_path_factory: pytest.TempPathFactory, linux_o
     (tmp_path / "user").mkdir()
 
     # Fill out config.yaml, packages.yaml and modules.yaml templates.
-    locks = sys.platform != "win32"
     config = tmp_path / "site" / "config.yaml"
     config_template = test_config / "config.yaml"
-    config.write_text(config_template.read_text().format(install_tree_root, locks))
+    config.write_text(config_template.read_text().format(install_tree_root, True))
 
     target = str(spack.vendor.archspec.cpu.host().family)
     compilers = tmp_path / "site" / "packages.yaml"
@@ -1471,6 +1470,9 @@ def temporary_store(tmp_path: Path, request):
     temporary_store_path = tmp_path / "opt"
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
+    # Close lock files the test left locked (e.g. by an interrupted install): Windows can't
+    # delete files that are open.
+    spack.util.lock.FILE_TRACKER.purge()
     if temporary_store_path.exists():
         shutil.rmtree(temporary_store_path)
 
