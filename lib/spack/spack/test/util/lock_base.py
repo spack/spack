@@ -34,6 +34,7 @@ def test_disable_locking(tmp_path: pathlib.Path):
 
 # "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
 @pytest.mark.nomockstage
+@pytest.mark.not_on_windows("uses POSIX permission bits; see lock_windows.py")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_lock_checks_user(tmp_path: pathlib.Path):
     """Ensure lock checks work with a self-owned, self-group repo."""
@@ -69,6 +70,7 @@ def test_lock_checks_user(tmp_path: pathlib.Path):
 
 # "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
 @pytest.mark.nomockstage
+@pytest.mark.not_on_windows("uses POSIX permission bits; see lock_windows.py")
 def test_lock_checks_group(tmp_path: pathlib.Path):
     """Ensure lock checks work with a self-owned, non-self-group repo."""
     uid = getuid()

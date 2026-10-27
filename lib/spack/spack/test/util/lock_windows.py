@@ -9,21 +9,24 @@ handle on the same file behaves exactly like another process. Several tests belo
 stand in for a competing process.
 """
 
+import ctypes
+import gc
 import os
 import pathlib
-import sys
+import signal
 from contextlib import contextmanager
 
 import pytest
 
-if sys.platform != "win32":
-    pytest.skip("Windows-only tests", allow_module_level=True)
-
-import ctypes
-import msvcrt
-
+import spack.error
 import spack.util.lock as lk
-import spack.util.lock_windows as lkw
+from spack.util.filesystem import working_dir
+from spack.util.lock_common import FILE_TRACKER, file_key
+
+# Windows-only modules: this skips the whole file on other platforms
+msvcrt = pytest.importorskip("msvcrt")
+lkw = pytest.importorskip("spack.util.lock_windows")
+win_acl = pytest.importorskip("spack.util.win_acl")
 
 WHOLE = (0, lkw.GATE_OFFSET)
 
@@ -59,8 +62,10 @@ def is_gate(overlapped) -> bool:
 
 def held_ranges(path: str):
     """The ranges of ``path`` this process holds locks on, according to the tracker."""
-    st = os.stat(path)
-    return lkw.WINDOWS_RANGE_LOCK_TRACKER._groups.get((st.st_dev, st.st_ino), [])
+    open_file = FILE_TRACKER.get_ref_for_inode(file_key(os.stat(path), path))
+    if open_file is None:
+        return []
+    return lkw.WINDOWS_RANGE_LOCK_TRACKER._groups.get(open_file, [])
 
 
 @pytest.fixture
@@ -387,3 +392,190 @@ def test_failed_gate_release_drops_range_lock(lock_path, monkeypatch):
     with other_process(lock_path) as h:
         assert try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
         unlock(h, *WHOLE)
+
+
+def test_ctrl_c_waits_until_lock_state_is_consistent(lock_path, monkeypatch):
+    """Ctrl-C in the middle of an upgrade is held off until the lock and its bookkeeping are
+    consistent again, so releasing afterwards works and frees the range."""
+    real_unlock = lkw._win_unlock_file_ex
+    interrupted = []
+
+    def unlock_then_interrupt(*args):
+        real_unlock(*args)
+        if not interrupted:  # right after the read lock was dropped
+            interrupted.append(True)
+            signal.raise_signal(signal.SIGINT)
+
+    lock = lk.Lock(lock_path)
+    lock.acquire_read()
+    monkeypatch.setattr(lkw, "_win_unlock_file_ex", unlock_then_interrupt)
+    with pytest.raises(KeyboardInterrupt):
+        lock.acquire_write()
+    monkeypatch.undo()
+
+    # the upgrade finished before the interrupt was raised
+    assert lock.backend._mode == lk.LockType.WRITE
+    lock.release_read()
+    assert not held_ranges(lock_path)
+    with other_process(lock_path) as h:
+        assert try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+        unlock(h, *WHOLE)
+
+
+@contextmanager
+def opened_by_another_program(path: str):
+    """Open ``path`` the way e.g. a virus scanner might: reading, and not sharing write access."""
+    kernel32 = lkw._kernel32
+    handle = kernel32.CreateFileW(
+        path, lkw._GENERIC_READ, lkw._FILE_SHARE_READ, None, lkw._OPEN_EXISTING, 0, None
+    )
+    assert handle not in (None, lkw._INVALID_HANDLE_VALUE)
+    try:
+        yield
+    finally:
+        kernel32.CloseHandle(handle)
+
+
+def test_file_in_use_by_another_program_is_not_read_only(lock_path):
+    """A lock file another program has open can't be locked for now, but it must not be
+    mistaken for a read-only file."""
+    lock = lk.Lock(lock_path)
+    with lk.ReadTransaction(lock):
+        pass  # create the file
+
+    with opened_by_another_program(lock_path):
+        assert not lock.try_acquire_write()
+        assert not lock.try_acquire_read()
+        with pytest.raises(lk.LockTimeoutError):
+            lock.acquire_write(timeout=0.05)
+        assert lock.backend._file_ref is None
+
+    assert lock.try_acquire_write()
+    assert lock.backend._file_ref.fh.mode == "rb+"
+    lock.release_write()
+
+
+def test_held_lock_survives_cwd_change(tmp_path: pathlib.Path):
+    """Checking the file again while a lock is held must not swap (and so close) the handle that
+    holds the lock, even if a relative path now names a different file."""
+    first, second = tmp_path / "first", tmp_path / "second"
+    first.mkdir()
+    second.mkdir()
+    (second / "lockfile").write_text("")
+
+    with working_dir(str(first)):
+        lock = lk.Lock("lockfile")
+        lock.acquire_read()
+    with working_dir(str(second)):
+        lock.acquire_read()  # nested: re-checks the lock
+        with other_process(str(first / "lockfile")) as h:
+            assert not try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+        lock.release_read()
+        lock.release_read()
+    with other_process(str(first / "lockfile")) as h:
+        assert try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+        unlock(h, *WHOLE)
+
+
+def test_debug_owner_info_is_best_effort(lock_path):
+    """Windows locks are mandatory, so the owner info at the start of the file can't be read or
+    written while another process locks those bytes. That must not make locking fail."""
+    with other_process(lock_path) as h:
+        assert try_lock(h, lkw.LockType.LOCK_EX, 3, 1)
+        lock = lk.Lock(lock_path, start=40, length=1, debug=True)
+        lock.acquire_write()
+        lock.release_write()
+        lock.acquire_read()
+        lock.release_read()
+        unlock(h, 3, 1)
+
+
+def test_closing_files_drops_lock_records(lock_path):
+    """Closing all lock files (as the test suite does between tests) drops their OS locks, so it
+    must drop their records too: a new lock on the same file has to take a real lock."""
+    leaked = lk.Lock(lock_path)
+    leaked.acquire_read()
+    FILE_TRACKER.purge()
+
+    lock = lk.Lock(lock_path)
+    lock.acquire_read()
+    assert lock.backend._lock_group is not leaked.backend._lock_group
+    with other_process(lock_path) as h:
+        assert not try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+    lock.release_read()
+
+    leaked.release_read()  # its file was closed: nothing to unlock
+    with other_process(lock_path) as h:
+        assert try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+        unlock(h, *WHOLE)
+
+
+def test_dropped_lock_keeps_holding(lock_path):
+    """As on POSIX, a Lock that is garbage collected while holding the lock keeps holding it."""
+    lock = lk.Lock(lock_path)
+    lock.acquire_write()
+    del lock
+    gc.collect()
+    with other_process(lock_path) as h:
+        assert not try_lock(h, lkw.LockType.LOCK_SH, *WHOLE)
+    FILE_TRACKER.purge()
+
+
+def test_write_on_held_write_range_is_not_an_overlap(lock_path):
+    """Joining a write lock this process already holds needs no new OS lock, so an overlapping
+    read lock on another range doesn't get in the way."""
+    byte = lk.Lock(lock_path, start=5, length=1)
+    whole = lk.Lock(lock_path)
+    same_byte = lk.Lock(lock_path, start=5, length=1)
+    byte.acquire_write()
+    whole.acquire_read()
+    same_byte.acquire_write()
+    assert same_byte.backend._lock_group is byte.backend._lock_group
+    same_byte.release_write()
+    whole.release_read()
+    byte.release_write()
+    with other_process(lock_path) as h:
+        assert try_lock(h, lkw.LockType.LOCK_EX, *WHOLE)
+        unlock(h, *WHOLE)
+
+
+def test_check_lock_safety(tmp_path: pathlib.Path):
+    """Disabling locks is refused when users other than the owner can write to the prefix."""
+    path = str(tmp_path)
+    win_acl.set_exclusive_owner_control(path)
+    lk.check_lock_safety(path)
+
+    # an entry that only applies to the directory's contents doesn't make it writable
+    sd = win_acl.SecurityDescriptor.from_file(path)
+    sd.add_ace(
+        win_acl.AccessControlEntry(
+            win_acl.AceType.SDDL_ACCESS_ALLOWED,
+            flags=[win_acl.AceFlags.SDDL_INHERIT_ONLY, win_acl.AceFlags.SDDL_CONTAINER_INHERIT],
+            rights=win_acl.FileAccessRights.FILE_GENERIC_WRITE,
+            sid="AU",
+        )
+    )
+    sd.apply(path)
+    lk.check_lock_safety(path)
+
+    # read access for everyone is fine
+    sd.add_ace(
+        win_acl.AccessControlEntry(
+            win_acl.AceType.SDDL_ACCESS_ALLOWED,
+            rights=win_acl.FileAccessRights.FILE_GENERIC_READ,
+            sid="WD",
+        )
+    )
+    sd.apply(path)
+    lk.check_lock_safety(path)
+
+    sd.add_ace(
+        win_acl.AccessControlEntry(
+            win_acl.AceType.SDDL_ACCESS_ALLOWED,
+            rights=win_acl.FileAccessRights.FILE_GENERIC_WRITE,
+            sid="AU",
+        )
+    )
+    sd.apply(path)
+    with pytest.raises(spack.error.SpackError, match="writable by Authenticated Users"):
+        lk.check_lock_safety(path)

@@ -2,31 +2,25 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import stat
 import sys
 import time
 from datetime import datetime
 from types import TracebackType
 from typing import Callable, Generator, Optional, Tuple, Type
 
-import spack.error
 from spack.util import lang, tty
-from spack.util.lock_common import (
+from spack.util.lock_common import (  # noqa: F401
     FILE_TRACKER,
     CantCreateLockError,
+    DevIno,
     GenericLockBackend,
     LockError,
     LockPermissionError,
     LockROFileError,
+    OpenFile,
+    OpenFileTracker,
 )
 from spack.util.string import plural
-
-if sys.platform == "win32":
-    from spack.util.lock_windows import LockType, WindowsBackend
-else:
-    from spack.util.lock_posix import LockType, PosixBackend
-
 
 __all__ = [
     "check_lock_safety",
@@ -48,6 +42,15 @@ __all__ = [
     "DummyBackend",
     "FILE_TRACKER",
 ]
+
+if sys.platform == "win32":
+    from spack.util.lock_windows import LockType, WindowsBackend, check_lock_safety
+
+    __all__.append("WindowsBackend")
+else:
+    from spack.util.lock_posix import LockType, PosixBackend, check_lock_safety
+
+    __all__.append("PosixBackend")
 
 ExitFnType = Callable[
     [Optional[Type[BaseException]], Optional[BaseException], Optional[TracebackType]],
@@ -126,11 +129,12 @@ def platform_lock_backend(path, start, length, debug) -> BackendType:
 
 
 class Lock:
-    """This is an implementation of a filesystem lock using Python's lockf.
+    """A reader-writer lock on a byte range of a file, shared between processes.
 
-    In Python, ``lockf`` actually calls ``fcntl``, so this should work with any filesystem
-    implementation that supports locking through the fcntl calls. This includes distributed
-    filesystems like Lustre (when flock is enabled) and recent NFS versions.
+    The locking itself is done by a platform backend: ``PosixBackend`` uses ``fcntl.lockf``,
+    which works with any filesystem that supports fcntl locks, including distributed
+    filesystems like Lustre (when flock is enabled) and recent NFS versions. ``WindowsBackend``
+    uses ``LockFileEx``.
 
     Note that this is for managing contention over resources *between* processes and not for
     managing contention between threads in a process: the functions of this object are not
@@ -259,9 +263,9 @@ class Lock:
         self._writes = 0
 
     def _lock(self, op: int, timeout: Optional[float] = None) -> Tuple[float, int]:
-        """This takes a lock using POSIX locks (``fcntl.lockf``).
+        """Takes the lock in ``op`` mode.
 
-        The lock is implemented as a spin lock using a nonblocking call to ``lockf()``.
+        The lock is implemented as a spin lock using the backend's nonblocking ``poll()``.
 
         If the lock times out, it raises a ``LockError``. If the lock is successfully acquired, the
         total wait time and the number of attempts is returned.
@@ -385,16 +389,12 @@ class Lock:
         """Non-blocking attempt to acquire an exclusive write lock.
 
         Returns True if the lock was acquired, False if it would block.
-        Handles three cases: no lock held (fresh acquire), read held (upgrade -- fully replaces
-        the read with a write, unlike the nested behavior of ``acquire_write``), or write already
-        held (nested).
         """
         if self._writes == 0:
             self.backend.prepare(LockType.WRITE)
             if not self.backend.poll(LockType.WRITE):
                 return False
-            self._reads = 0
-            self._writes = 1
+            self._writes += 1
             self._log_acquired("WRITE LOCK", 0, 1)
             return True
         else:
@@ -403,16 +403,14 @@ class Lock:
             return True
 
     def is_write_locked(self) -> bool:
-        """Returns ``True`` if the path is write locked, otherwise, ``False``"""
-        try:
-            self.acquire_read()
-
-            # If we have a read lock then no other process has a write lock.
-            self.release_read()
-        except LockTimeoutError:
+        """Returns ``True`` if another process holds a write lock on the path, otherwise
+        ``False``. Never waits for the lock."""
+        if not self.try_acquire_read():
             # Another process is holding a write lock on the file
             return True
 
+        # If we have a read lock then no other process has a write lock.
+        self.release_read()
         return False
 
     def downgrade_write_to_read(self, timeout: Optional[float] = None) -> None:
@@ -441,7 +439,7 @@ class Lock:
         """
         timeout = timeout or self.default_timeout
 
-        if self._reads >= 1 and self._writes == 0:
+        if self._reads == 1 and self._writes == 0:
             self._log_upgrading()
             # can raise LockError.
             wait_time, nattempts = self._lock(LockType.WRITE, timeout=timeout)
@@ -630,38 +628,6 @@ class LockTransaction:
 
     def _exit(self, release_fn: ReleaseFnType) -> bool:
         raise NotImplementedError
-
-
-def check_lock_safety(path: str) -> None:
-    """Do some extra checks to ensure disabling locks is safe.
-
-    This will raise an error if ``path`` can is group- or world-writable
-    AND the current user can write to the directory (i.e., if this user
-    AND others could write to the path).
-
-    This is intended to run on the Spack prefix, but can be run on any
-    path for testing.
-    """
-    if os.access(path, os.W_OK):
-        stat_result = os.stat(path)
-        uid, gid = stat_result.st_uid, stat_result.st_gid
-        mode = stat_result[stat.ST_MODE]
-
-        writable = None
-        if (mode & stat.S_IWGRP) and (uid != gid):
-            # spack is group-writeable and the group is not the owner
-            writable = "group"
-        elif mode & stat.S_IWOTH:
-            # spack is world-writeable
-            writable = "world"
-
-        if writable:
-            msg = f"Refusing to disable locks: spack is {writable}-writable."
-            long_msg = (
-                f"Running a shared spack without locks is unsafe. You must "
-                f"restrict permissions on {path} or enable locks."
-            )
-            raise spack.error.SpackError(msg, long_msg)
 
 
 class ReadTransaction(LockTransaction):

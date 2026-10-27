@@ -10,15 +10,27 @@ itself needs to raise.
 import errno
 import os
 import socket
-from typing import IO, Dict, Optional, Tuple
+from typing import IO, Callable, Dict, Optional, Tuple, Union
 
-DevIno = Tuple[int, int]  # (st_dev, st_ino) from os.stat_result
+#: (st_dev, st_ino) from os.stat_result, or (st_dev, path) where the filesystem has no inodes
+DevIno = Tuple[int, Union[int, str]]
+
+
+def file_key(stat_result: os.stat_result, path: str) -> DevIno:
+    """The key identifying the file at ``path``, given its stat result.
+
+    Some filesystems (e.g. some network and FUSE drives on Windows) report an inode number of 0
+    for every file, so the resolved path identifies the file there instead.
+    """
+    if stat_result.st_ino == 0:
+        return (stat_result.st_dev, os.path.normcase(os.path.realpath(path)))
+    return (stat_result.st_dev, stat_result.st_ino)
 
 
 class OpenFile:
     """Record for keeping track of open lockfiles (with reference counting)."""
 
-    __slots__ = ("fh", "key", "refs")
+    __slots__ = ("fh", "key", "refs", "__weakref__")
 
     def __init__(self, fh: IO[bytes], key: DevIno):
         self.fh = fh
@@ -52,31 +64,42 @@ class OpenFileTracker:
         """Fast lookup: do we already have this inode open?"""
         return self._descriptors.get(key)
 
-    def create_and_track(self, path: str) -> OpenFile:
-        """Slow path: Open file, handle directory creation, track it."""
+    def create_and_track(
+        self,
+        path: str,
+        open_fn: Callable[[str, int], int] = os.open,
+        is_transient: Optional[Callable[[OSError], bool]] = None,
+    ) -> OpenFile:
+        """Slow path: Open file, handle directory creation, track it.
+
+        ``open_fn`` opens the file like ``os.open``. If ``is_transient`` returns True for the
+        error from opening the file read/write, the error is raised instead of falling back to
+        a read-only handle, since the file isn't actually read-only.
+        """
         try:
-            fd = os.open(path, os.O_RDWR | os.O_CREAT)
+            fd = open_fn(path, os.O_RDWR | os.O_CREAT)
             mode = "rb+"
         except FileNotFoundError as e:
             # A parent directory is missing: create it and retry.
             try:
                 os.makedirs(os.path.dirname(path), exist_ok=True)
-                fd = os.open(path, os.O_RDWR | os.O_CREAT)
+                fd = open_fn(path, os.O_RDWR | os.O_CREAT)
             except OSError as retry_error:
                 raise CantCreateLockError(path, retry_error) from e
             mode = "rb+"
         except OSError as e:
+            if is_transient is not None and is_transient(e):
+                raise
             # The directory exists but the file cannot be opened read/write: try read-only.
             try:
-                fd = os.open(path, os.O_RDONLY)
+                fd = open_fn(path, os.O_RDONLY)
             except FileNotFoundError:
                 # The lock file does not exist and we are not allowed to create it.
                 raise CantCreateLockError(path, e) from e
             mode = "rb"
 
         # Get file identifier (device, inode) for tracking.
-        stat = os.fstat(fd)
-        key = (stat.st_dev, stat.st_ino)
+        key = file_key(os.fstat(fd), path)
 
         # Did we open a file we already track, e.g. a symlink to existing tracker file.
         if key in self._descriptors:
@@ -112,7 +135,7 @@ class OpenFileTracker:
 
 
 #: Open file descriptors for locks in this process. Used to prevent one process
-#: from opening the sam file many times for different byte range locks
+#: from opening the same file many times for different byte range locks
 FILE_TRACKER = OpenFileTracker()
 
 
@@ -179,8 +202,7 @@ class GenericLockBackend:
         """
         try:
             # Check what is currently on disk. This is the only syscall in the happy path.
-            stat_res = os.stat(self.path)
-            current_key = (stat_res.st_dev, stat_res.st_ino)
+            current_key = file_key(os.stat(self.path), self.path)
 
             # Double-check that our cache corresponds the file on disk.
             if self._file_ref and not self._file_ref.fh.closed:
@@ -198,7 +220,7 @@ class GenericLockBackend:
                 self._file_ref.refs += 1
             else:
                 # We don't have it tracked, so we need to open and track it ourselves.
-                self._file_ref = FILE_TRACKER.create_and_track(self.path)
+                self._file_ref = self._create_and_track()
         except OSError as e:
             # Re-raise all errors except for "file not found".
             if e.errno != errno.ENOENT:
@@ -209,12 +231,26 @@ class GenericLockBackend:
                 FILE_TRACKER.release(self._file_ref)
                 self._file_ref = None
 
-            self._file_ref = FILE_TRACKER.create_and_track(self.path)
+            self._file_ref = self._create_and_track()
 
         # Update our local cache of what we hold
         self._cached_key = self._file_ref.key
 
         return self._file_ref.fh
+
+    def _create_and_track(self) -> OpenFile:
+        return FILE_TRACKER.create_and_track(
+            self.path, open_fn=self._open, is_transient=self._is_transient_open_error
+        )
+
+    def _open(self, path: str, flags: int) -> int:
+        """Open the lock file like ``os.open``."""
+        return os.open(path, flags)
+
+    def _is_transient_open_error(self, error: OSError) -> bool:
+        """Whether an error opening the lock file read/write is temporary, so it shouldn't be
+        taken to mean the file is read-only."""
+        return False
 
     def prepare(self, op: int) -> None:
         """Ensure the lock file is open; raise if a write lock is requested on a read-only file."""

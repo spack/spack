@@ -15,11 +15,12 @@ if sys.platform == "win32":
 import errno
 import fcntl
 import os
+import stat
 
+import spack.error
 from spack.util import tty
-
-from .lock_common import GenericLockBackend
-from .lock_common import LockType as _LockType
+from spack.util.lock_common import GenericLockBackend
+from spack.util.lock_common import LockType as _LockType
 
 
 class LockType(_LockType):
@@ -27,7 +28,6 @@ class LockType(_LockType):
     LOCK_EX = fcntl.LOCK_EX
     LOCK_NB = fcntl.LOCK_NB
     LOCK_UN = fcntl.LOCK_UN
-    LOCK_CATCH = OSError
 
     @staticmethod
     def to_module(tid):
@@ -69,15 +69,12 @@ class PosixBackend(GenericLockBackend):
 
             return True
 
-        except LockType.LOCK_CATCH as e:
+        except OSError as e:
             # EAGAIN and EACCES == locked by another process (so try again)
-            if self._lock_fail_condition(e):
+            if e.errno not in (errno.EAGAIN, errno.EACCES):
                 raise
 
         return False
-
-    def _lock_fail_condition(self, e) -> bool:
-        return e.errno not in (errno.EAGAIN, errno.EACCES)
 
     def release(self) -> None:
         """Releases a lock using POSIX locks (``fcntl.lockf``)
@@ -89,3 +86,35 @@ class PosixBackend(GenericLockBackend):
         fcntl.lockf(
             self._file_ref.fh.fileno(), LockType.LOCK_UN, self._length, self._start, os.SEEK_SET
         )
+
+
+def check_lock_safety(path: str) -> None:
+    """Do some extra checks to ensure disabling locks is safe.
+
+    This will raise an error if ``path`` can is group- or world-writable
+    AND the current user can write to the directory (i.e., if this user
+    AND others could write to the path).
+
+    This is intended to run on the Spack prefix, but can be run on any
+    path for testing.
+    """
+    if os.access(path, os.W_OK):
+        stat_result = os.stat(path)
+        uid, gid = stat_result.st_uid, stat_result.st_gid
+        mode = stat_result[stat.ST_MODE]
+
+        writable = None
+        if (mode & stat.S_IWGRP) and (uid != gid):
+            # spack is group-writeable and the group is not the owner
+            writable = "group"
+        elif mode & stat.S_IWOTH:
+            # spack is world-writeable
+            writable = "world"
+
+        if writable:
+            msg = f"Refusing to disable locks: spack is {writable}-writable."
+            long_msg = (
+                f"Running a shared spack without locks is unsafe. You must "
+                f"restrict permissions on {path} or enable locks."
+            )
+            raise spack.error.SpackError(msg, long_msg)

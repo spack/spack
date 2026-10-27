@@ -275,7 +275,7 @@ multiproc_test = mpi_multiproc_test if mpi else local_multiproc_test
 # Process snippets below can be composed into tests.
 #
 class AcquireWrite:
-    def __init__(self, lock_path, start=0, length=1):
+    def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
         self.length = length
@@ -292,7 +292,7 @@ class AcquireWrite:
 
 
 class AcquireRead:
-    def __init__(self, lock_path, start=0, length=1):
+    def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
         self.length = length
@@ -309,7 +309,7 @@ class AcquireRead:
 
 
 class TimeoutWrite:
-    def __init__(self, lock_path, start=0, length=1):
+    def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
         self.length = length
@@ -327,7 +327,7 @@ class TimeoutWrite:
 
 
 class TimeoutRead:
-    def __init__(self, lock_path, start=0, length=1):
+    def __init__(self, lock_path, start=0, length=0):
         self.lock_path = lock_path
         self.start = start
         self.length = length
@@ -1434,16 +1434,16 @@ def test_try_acquire_write(tmp_path: pathlib.Path):
 
 
 def test_try_acquire_write_from_read(tmp_path: pathlib.Path):
-    """try_acquire_write must properly upgrade an existing read to a write."""
-    lock = lk.Lock(str(tmp_path / "lockfile"))
+    """try_acquire_write inside a read nests like acquire_write: releasing the write goes back
+    to the read lock, which is still held."""
+    lock_path = str(tmp_path / "lockfile")
+    lock = lk.Lock(lock_path)
+    ctx = multiprocessing.get_context()
 
-    # Acquire a read, then non-blockingly upgrade to write
+    # Acquire a read, then non-blockingly take a write inside it
     lock.acquire_read()
-    assert lock._reads == 1
-    assert lock._writes == 0
-
     assert lock.try_acquire_write() is True
-    assert lock._reads == 0
+    assert lock._reads == 1
     assert lock._writes == 1
 
     # Nested try_acquire_write while holding write
@@ -1453,8 +1453,55 @@ def test_try_acquire_write_from_read(tmp_path: pathlib.Path):
     lock.release_write()
     assert lock._writes == 1
     lock.release_write()
+    assert lock._reads == 1
+    assert lock._writes == 0
+
+    # The read lock is still held: another process can't take a write lock
+    q = ctx.Queue()
+    p = ctx.Process(target=_child_try_acquire_write, args=(lock_path, q))
+    p.start()
+    p.join()
+    assert q.get() is False
+
+    lock.release_read()
     assert lock._reads == 0
     assert lock._writes == 0
+
+
+def test_upgrade_with_nested_reads_fails(tmp_path: pathlib.Path):
+    """Upgrading is only allowed from a single, non-nested read lock."""
+    lock = lk.Lock(str(tmp_path / "lockfile"))
+    lock.acquire_read()
+    lock.acquire_read()
+    with pytest.raises(lk.LockUpgradeError):
+        lock.upgrade_read_to_write()
+    lock.release_read()
+    lock.release_read()
+
+
+def test_is_write_locked_does_not_wait(tmp_path: pathlib.Path):
+    """is_write_locked must answer immediately, even for a lock with no timeout."""
+    lock_path = str(tmp_path / "lockfile")
+    lock = lk.Lock(lock_path)
+    assert lock.is_write_locked() is False
+
+    ctx = multiprocessing.get_context()
+    q = ctx.Queue()
+    p = ctx.Process(target=_child_is_write_locked, args=(lock_path, q))
+    lock.acquire_write()
+    try:
+        p.start()
+        p.join(timeout=60)
+        assert p.exitcode == 0
+        assert q.get() is True
+    finally:
+        if p.is_alive():
+            p.kill()
+        lock.release_write()
+
+
+def _child_is_write_locked(lock_path: str, result_queue):
+    result_queue.put(lk.Lock(lock_path).is_write_locked())
 
 
 def _child_fails_to_acquire_read(_lock: lk.Lock):
