@@ -1193,7 +1193,7 @@ def readline_with_timeout(
 
         def read_char():
             """Read one character (Unix)."""
-            return sys.stdin.read(1)
+            return os.read(fd, 1).decode(errors="replace")
 
         def cleanup():
             """Restore terminal settings (Unix)."""
