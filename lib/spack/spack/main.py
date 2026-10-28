@@ -837,7 +837,11 @@ def _main(argv=None):
     # The next two sections after this one set up config properly.
     # Nothing can touch config before here
     # -------------------------------------------------------------------------
-    assert spack.config.CONFIG._instance is None
+    # If a test or script overrides with a non-singleton, allow that
+    assert (
+        spack.config.CONFIG._instance is None
+        or not isinstance(spack.config.CONFIG, lang.Singleton)
+    )
 
     # ------------------------------------------------------------------------------------
     # This part of `main()` handles migration from the old configs (Spack 1.2 and earlier)
