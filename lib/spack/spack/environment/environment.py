@@ -382,8 +382,7 @@ def create(
     env_root = env_root_path()
     fs.mkdirp(env_root)
     lock = lk.Lock(os.path.join(env_root, ".lock"), default_timeout=120)
-    try:
-        lock.acquire_write()
+    with lk.WriteTransaction(lock):
         return create_in_dir(
             environment_dir,
             init_file=init_file,
@@ -391,8 +390,6 @@ def create(
             keep_relative=keep_relative,
             include_concrete=include_concrete,
         )
-    finally:
-        lock.release_write()
 
 
 def create_in_dir(
