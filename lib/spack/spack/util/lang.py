@@ -1224,7 +1224,7 @@ def readline_with_timeout(
     try:
         if sys.platform != "win32":
             # Put terminal in raw mode to read character-by-character
-            tty.setraw(fd)
+            tty.setraw(fd, when=termios.TCSANOW)
 
         deadline = time.monotonic() + timeout
         characters: List[str] = []
