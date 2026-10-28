@@ -8,6 +8,7 @@ import pytest
 import spack
 import spack.config
 import spack.main
+import spack.migrate
 import spack.paths
 
 sp_isolate = spack.main.SpackCommand("isolate")
@@ -180,7 +181,7 @@ def test_isolate_keeps_existing_resources_in_place(isolate_paths, tmp_path):
     assert cfg.get("config:locations:data")[0] == str(target)
 
     # This should be a noop: make sure no exceptions are raised
-    spack.config._perform_migration()
+    spack.migrate.perform_migration()
 
 
 def test_isolate_reuse_old_target(isolate_paths, tmp_path):

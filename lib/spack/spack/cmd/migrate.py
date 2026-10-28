@@ -7,6 +7,7 @@ import os
 import shutil
 
 import spack.config
+import spack.migrate
 import spack.paths
 import spack.util.spack_yaml as syaml
 from spack.util import tty
@@ -118,9 +119,9 @@ def _cleanup_old(args) -> None:
 def _use_new_layout(args):
     """Remove layout scope and trigger migration to new XDG locations."""
     layout_scope_path = spack.paths.layout_scope_path
-    marker_path = spack.config._migration_done_marker_path()
+    marker_path = spack.migrate.migration_done_marker_path()
 
-    old_resources = spack.config._detect_old_resources()
+    old_resources = spack.migrate.detect_old_resources()
 
     if not any(old_resources.values()):
         tty.msg("No old resources: nothing to migrate")
@@ -139,13 +140,13 @@ def _use_new_layout(args):
         if os.path.exists(marker_path):
             os.remove(marker_path)
 
-    spack.config._do_migrate_spack_prefix(old_resources)
+    spack.migrate.migrate_spack_prefix(old_resources)
 
 
 def _undo(args):
     """Undo migration by pointing all resources back to their old locations."""
 
-    old_resources = spack.config._detect_old_resources()
+    old_resources = spack.migrate.detect_old_resources()
 
     if not any(old_resources.values()):
         tty.die(
@@ -174,7 +175,7 @@ def _undo(args):
     # does not hold .migration-lock because all other spack commands would
     # have to hold it for their entire duration to safely interact (which
     # seems expensive for something that would be used rarely).
-    spack.config.force_old_layout(old_resources)
+    spack.migrate.force_old_layout(old_resources)
 
     tty.msg("  Updated layout scope to point to old locations")
 

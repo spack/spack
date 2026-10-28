@@ -7,7 +7,7 @@ import sys
 from argparse import ArgumentParser
 from typing import Dict, List
 
-import spack.config
+import spack.migrate
 import spack.paths
 import spack.util.spack_yaml as syaml
 from spack.util import tty
@@ -184,10 +184,10 @@ def _do_isolate(args):
         }
     }
 
-    old_resources = spack.config._detect_old_resources()
+    old_resources = spack.migrate.detect_old_resources()
 
     if any(old_resources.values()):
-        spack.config.generate_old_layout_config(old_resources, scope_config)
+        spack.migrate.generate_old_layout_config(old_resources, scope_config)
         config_path = os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
     elif target_config_existed:
         config_path = os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
@@ -206,7 +206,7 @@ def _undo_isolate():
     shutil.rmtree(spack.paths.isolate_scope_path)
     tty.msg(f"Removed isolate scope: {spack.paths.isolate_scope_path}")
 
-    spack.config._perform_migration()
+    spack.migrate.perform_migration()
 
 
 def isolate(parser, args):

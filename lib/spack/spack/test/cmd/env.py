@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import contextlib
-import datetime
 import filecmp
 import glob
 import io

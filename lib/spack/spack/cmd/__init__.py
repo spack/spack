@@ -17,6 +17,7 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.migrate
 import spack.paths
 import spack.spec
 import spack.spec_parser
@@ -673,7 +674,7 @@ def _maybe_rewrite_spack_env_after_migration() -> None:
     new_envs_real = os.path.realpath(spack.config.substitute_path_variables(new_envs_path))
     spack_env_real = os.path.realpath(os.path.expanduser(spack_env))
 
-    new_default = os.path.join(spack.config._migration_data_home(), "environments")
+    new_default = os.path.join(spack.migrate.migration_data_home(), "environments")
 
     try:
         if not os.path.samefile(new_envs_real, new_default):

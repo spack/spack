@@ -177,7 +177,7 @@ The existence of `.migration-done` marker means that migration evaluation has co
 - If the user approves migration, Spack attempts to copy old managed environments from the old default location (`$spack/var/spack/environments`) to the fixed new default location (`~/.local/share/spack/environments`), regardless of effective `config:locations` or `config:environments_root` settings.
 - Before attempting migration, Spack searches each environment directory for `.spack-db/index.json` (the database file that indicates installed packages). If any environment has installs inside it (indicated by the presence of this database), all environment migration is skipped because those environments are not relocatable—the database contains absolute paths to install prefixes that would break after moving.
 - Migration uses a lock shared with managed environment creation.
-- Migration processes source environments whose destination already exists before copying environments with unoccupied destinations. `_migrate_with_staging` verifies each occupied destination, so a conflict is detected before any new environment is copied.
+- Migration processes source environments whose destination already exists before copying environments with unoccupied destinations. `migrate_with_staging` verifies each occupied destination, so a conflict is detected before any new environment is copied.
 - Occupied destinations and remaining source environments are each processed in sorted (alphabetical) order.
 - Views are excluded from the copy.
 - If a copy operation fails despite passing upfront checks and holding the lock, migration stops and leaves partial state for investigation rather than attempting cleanup.
@@ -506,7 +506,7 @@ Auto-migration is designed to be safe when multiple Spack instances run concurre
 Auto-migration of `$spack` prefix resources uses a per-prefix migration lock (`$spack/.migration-lock`) to coordinate concurrent Spack instances using that prefix:
 
 - **Migration lock acquisition**: Each Spack process attempts to acquire the lock before migration. If the lock cannot be acquired because the prefix is not writable, that process skips migration and proceeds with existing configuration. If the prefix is writable but lock acquisition times out, Spack terminates the command rather than waiting indefinitely or proceeding while another migration may still be active.
-  
+
 - **Double-check after lock**: After acquiring the lock, the process re-checks whether `.migration-done` exists because another process may have completed migration while this one waited for the lock.
 
 - **User prompt under lock**: When migration requires user approval, the process holds the migration lock while prompting the user (with a timeout). This ensures that only one process prompts the user and that the user's decision applies to all concurrent processes.
@@ -516,7 +516,7 @@ Auto-migration of `$spack` prefix resources uses a per-prefix migration lock (`$
 - **Config reload decision**: A process reloads config if:
   - It performed migration itself (copied resources, wrote layout scope), OR
   - The marker didn't exist when config loaded but exists now (another process migrated while this one waited for the lock)
-  
+
   This ensures all processes see the new layout scope configuration, whether they performed the migration or arrived while/after another process did.
 
 - **Individual resource safety**:

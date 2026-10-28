@@ -13,6 +13,7 @@ import pytest
 
 import spack.config
 import spack.error
+import spack.migrate
 import spack.paths
 import spack.util.spack_yaml as syaml
 
@@ -214,7 +215,7 @@ def test_migration_copies_user_config(mock_spack_instance, monkeypatch):
     (old_config / "config.yaml").write_text("config:\n  build_jobs: 3\n", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    result = spack.config._do_migrate_home()
+    result = spack.migrate.migrate_home()
 
     # Check if migration happened
     assert result["user_config"] is True, "User config migration should have succeeded"
@@ -239,7 +240,7 @@ def test_migration_skips_user_config_when_spack_user_config_path_set(
     monkeypatch.setenv("SPACK_USER_CONFIG_PATH", str(custom_path))
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    result = spack.config._do_migrate_home()
+    result = spack.migrate.migrate_home()
 
     # Migration should be skipped
     assert result["user_config"] is False, "User config migration should be skipped"
@@ -303,7 +304,7 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
         encoding="utf-8",
     )
 
-    migrated = spack.config.process_config_file_paths(
+    migrated = spack.migrate.process_config_file_paths(
         str(config_path), str(old_config_dir), str(new_config_dir)
     )
 
@@ -376,7 +377,7 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
 
     # Process the file (this is what happens during migration)
     staging_yaml = staging / "spack.yaml"
-    migrated = spack.config.process_env_file_paths(str(staging_yaml), str(old_env), str(staging))
+    migrated = spack.migrate.process_env_file_paths(str(staging_yaml), str(old_env), str(staging))
 
     assert migrated is not None
 
@@ -422,7 +423,7 @@ def test_env_migration_blocks_external_references(tmp_path, path_factory, expect
     shutil.copytree(old_env, staging)
 
     with pytest.raises(spack.error.SpackError, match=expected_error):
-        spack.config.process_env_file_paths(
+        spack.migrate.process_env_file_paths(
             str(staging / "spack.yaml"),
             str(old_env),
             str(staging),
@@ -468,7 +469,7 @@ def test_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch
         new_gpg.mkdir(parents=True)
         (new_gpg / "new-keyring-file").write_text("new", encoding="utf-8")
 
-    spack.config._do_migrate_spack_prefix(spack.config._detect_old_resources())
+    spack.migrate.migrate_spack_prefix(spack.migrate.detect_old_resources())
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     config = spack.config.CONFIG
@@ -513,7 +514,7 @@ def test_migration_copies_package_repositories(mock_spack_instance, monkeypatch)
     (old_repos / "second" / "root.txt").write_text("second root", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate_home()
+    spack.migrate.migrate_home()
 
     new_repos = pathlib.Path(spack.paths.package_repos_path)
     assert (new_repos / "first" / "root.txt").read_text(encoding="utf-8") == "first root"
@@ -543,7 +544,7 @@ def test_migration_skips_existing_package_repository_destination(mock_spack_inst
     (new_repo / "source").write_text("new", encoding="utf-8")
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate_home()
+    spack.migrate.migrate_home()
 
     assert (new_repo / "source").read_text(encoding="utf-8") == "new"
     assert not (new_repos / "second").exists()
@@ -568,7 +569,7 @@ def test_config_migration_skips_unparseable_yaml(mock_spack_instance, monkeypatc
 
     # Migration should succeed, skipping the broken file
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    result = spack.config._do_migrate_home()
+    result = spack.migrate.migrate_home()
 
     # Should have migrated successfully (skipping the broken file)
     assert result["user_config"] is True
@@ -601,7 +602,7 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
 
     # Create fresh config and run migration
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.config._do_migrate_spack_prefix(spack.config._detect_old_resources())
+    spack.migrate.migrate_spack_prefix(spack.migrate.detect_old_resources())
 
     # Reload config to pick up layout scope (which may point to old environments_root if conflict)
     # or the default new location
@@ -629,7 +630,7 @@ def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     - No files are written to $spack when no old resources exist
     - No locks are attempted in $spack (not even temporarily)
     - .migration-done marker is NOT created
-    - _do_migrate_home is still called to check $HOME
+    - migrate_home is still called to check $HOME
     - No layout scope is created
     """
     import spack.util.lock
@@ -664,18 +665,18 @@ def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     monkeypatch.setattr(spack.util.lock, "Lock", TrackingLock)
 
     home_migrate_called = []
-    original_migrate_home = spack.config._do_migrate_home
+    original_migrate_home = spack.migrate.migrate_home
 
     def track_home_migrate():
         home_migrate_called.append(True)
         return original_migrate_home()
 
-    monkeypatch.setattr(spack.config, "_do_migrate_home", track_home_migrate)
+    monkeypatch.setattr(spack.migrate, "migrate_home", track_home_migrate)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    spack.config._perform_migration()
+    spack.migrate.perform_migration()
 
-    assert home_migrate_called, "_do_migrate_home should be called even with no old resources"
+    assert home_migrate_called, "migrate_home should be called even with no old resources"
 
     files_after = set()
     for item in spack_prefix.rglob("*"):
@@ -719,14 +720,14 @@ def test_migrate_with_staging_skips_occupied_destination(tmp_path, monkeypatch):
 
     monkeypatch.setattr(spack.util.lock, "Lock", unexpected_lock)
 
-    result = spack.config._migrate_with_staging(
+    result = spack.migrate.migrate_with_staging(
         old_path=str(old_path),
         new_path=str(new_path),
         prepare_staging_callback=unexpected_staging,
         lock_name=".test-lock",
         staging_name=".test-staging",
         description="test resource",
-        verify_destination_callback=spack.config._can_migrate_to_location,
+        verify_destination_callback=spack.migrate.can_migrate_to_location,
     )
 
     assert not result
@@ -754,7 +755,7 @@ def test_layout_scope_fallback_for_old_installs(mock_spack_instance, monkeypatch
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     # Trigger migration
-    spack.config._perform_migration()
+    spack.migrate.perform_migration()
 
     # Reload config to pick up layout scope
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
@@ -771,7 +772,7 @@ def test_layout_scope_fallback_for_old_installs(mock_spack_instance, monkeypatch
 
 
 def test_migrate_with_staging_handles_lock_permission_error(tmp_path, monkeypatch):
-    """Test that _migrate_with_staging handles lock acquisition failures gracefully
+    """Test that migrate_with_staging handles lock acquisition failures gracefully
     (reports a failed migration).
     """
     import spack.util.lock
@@ -800,14 +801,14 @@ def test_migrate_with_staging_handles_lock_permission_error(tmp_path, monkeypatc
         shutil.copytree(old, staging)
 
     # This should return False due to permission error, but not crash
-    result = spack.config._migrate_with_staging(
+    result = spack.migrate.migrate_with_staging(
         old_path=str(old_path),
         new_path=str(new_path),
         prepare_staging_callback=prepare_staging,
         lock_name=".test-lock",
         staging_name=".test-staging",
         description="test resource",
-        verify_destination_callback=spack.config._can_migrate_to_location,
+        verify_destination_callback=spack.migrate.can_migrate_to_location,
     )
 
     # Migration should fail gracefully

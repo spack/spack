@@ -36,6 +36,7 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
+import spack.migrate
 import spack.paths
 import spack.platforms
 import spack.solver.asp
@@ -857,9 +858,12 @@ def _main(argv=None):
     # This part of `main()` handles migration from the old configs (Spack 1.2 and earlier)
     # ------------------------------------------------------------------------------------
 
-    config_migrated = spack.config._perform_migration_at_module_load()
-    if config_migrated:
-        reload_modules_with_config_derived_globals()
+    # We do not use the command found here, in case aliases found after config are relevant
+    cmd_string = args.command or ""
+    if cmd_string != "isolate":
+        config_migrated = spack.migrate.perform_migration()
+        if config_migrated:
+            reload_modules_with_config_derived_globals()
 
     # ------------------------------------------------------------------------
     # This part of the `main()` sets up Spack's configuration.
