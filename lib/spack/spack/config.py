@@ -3295,10 +3295,11 @@ def _perform_migration_at_module_load():
     if invoked_command == "isolate":
         return
 
-    _perform_migration()
+    return _perform_migration()
 
 
 def _perform_migration():
+    # Returns True iff config was migrated
     # Because this rewrites config, it should either run first thing (before config
     # is loaded) or last (right before termination of the process)
 
@@ -3318,18 +3319,21 @@ def _perform_migration():
                     "Detected that Spack was previously isolated:"
                     " run `spack isolate --reuse-old...` or delete etc/spack/isolate"
                 )
-        return
+        return False
 
     # Migrate user config scope and package repos. An entirely-new spack
     # instance can do this (and needs to in order to access user config
     # in new location). This occurs whether or not there are resources in
     # the spack prefix that need to be migrated, but not if the
     # `spack isolate` command has been run
-    _do_migrate_home()
+    #
+    # The method returns a dict with keys "user_config" and "package_repos", and
+    # values whether they were migrated
+    config_migrated = _do_migrate_home()["user_config"]
 
     marker_path = _migration_done_marker_path()
     if os.path.exists(marker_path):
-        return
+        return config_migrated
 
     if any(old_resources.values()):
         lock_path = _migration_lock_path()
@@ -3364,9 +3368,11 @@ def _perform_migration():
             # Some other migration process is taking too long, bail vs. hang
             tty.die(f"Timed out waiting for migration lock: {e}")
 
+    return config_migrated
+
 
 # Detect command and check for migration at module load time (before CONFIG is created)
-_perform_migration_at_module_load()
+# _perform_migration_at_module_load()
 
 
 def writable_scopes() -> List[ConfigScope]:
