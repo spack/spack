@@ -1411,6 +1411,12 @@ class PackageInstaller:
             dependencies_policy: ``"auto"``, ``"cache_only"``, ``"source_only"``.
             create_reports: whether to generate reports for each install
         """
+        if sys.platform == "win32":
+            # No locks on Windows, we should always use 1 process
+            # TODO: perhaps raise an error instead and update cmd-line interface
+            # to omit this option on Windows for now
+            concurrent_packages = 1
+
         if isinstance(explicit, bool):
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 

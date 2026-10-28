@@ -2,20 +2,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""These tests exercise ``spack.util.lock.Lock`` against whichever real backend
-(``PosixBackend``/``WindowsBackend``) the current platform dispatches to. Every test here is
-written to run identically -- and hold the same guarantees -- on POSIX and Windows; anything
-that only makes sense on one platform belongs in ``lock_unix.py``/``lock_windows.py`` instead.
+"""These tests ensure that our lock works correctly.
 
 Run with pytest::
 
-    pytest lib/spack/spack/test/util/lock_backend.py
+    pytest lib/spack/spack/test/util/lock.py
 
-You can use this to test whether your shared filesystem properly supports reader-writer locking
-with byte ranges.
+You can use this to test whether your shared filesystem properly supports
+POSIX reader-writer locking with byte ranges through fcntl.
 
-If you want to test on multiple filesystems, you can modify the ``locations`` list below.  By
-default it looks like this::
+If you want to test on multiple filesystems, you can modify the
+``locations`` list below.  By default it looks like this::
 
     locations = [
         tempfile.gettempdir(),  # standard tmp directory (potentially local)
@@ -23,18 +20,19 @@ default it looks like this::
         '/p/lscratch*/%u'       # Lustre scratch mount
     ]
 
-Add names and paths for your preferred filesystem mounts to test on them; the tests are
-parametrized to run on all the filesystems listed in this dict.
+Add names and paths for your preferred filesystem mounts to test on them;
+the tests are parametrized to run on all the filesystems listed in this
+dict.
 
 """
 
 import collections
+import errno
 import getpass
 import glob
 import multiprocessing
 import os
 import pathlib
-import pickle
 import shutil
 import socket
 import stat
@@ -48,6 +46,10 @@ import pytest
 
 import spack.util.lock as lk
 from spack.util.filesystem import getuid, touch, working_dir
+
+if sys.platform != "win32":
+    import fcntl
+
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import
@@ -565,6 +567,49 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
     )
 
 
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
+def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
+    """read-only directory, read-only lockfile."""
+    touch(lock_path)
+    with read_only(lock_path, lock_dir):
+        lock = lk.Lock(lock_path)
+
+        with lk.ReadTransaction(lock):
+            pass
+
+        with pytest.raises(lk.LockROFileError):
+            with lk.WriteTransaction(lock):
+                pass
+
+
+@pytest.mark.not_on_windows("EROFS and fcntl are POSIX-only")
+def test_read_lock_on_read_only_filesystem(tmp_path: pathlib.Path, monkeypatch):
+    """A read lock still succeeds when open() fails with EROFS (read-only filesystem)."""
+    lockfile = tmp_path / "lockfile"
+    touch(str(lockfile))
+
+    real_open = os.open
+
+    def _open(path, flags, *args, **kwargs):
+        if path == str(lockfile) and (flags & os.O_RDWR):
+            raise OSError(errno.EROFS, "Read-only file system")
+        return real_open(path, flags, *args, **kwargs)
+
+    monkeypatch.setattr(os, "open", _open)
+
+    lock = lk.Lock(str(lockfile))
+
+    with lk.ReadTransaction(lock):
+        pass
+    assert isinstance(lock.backend, lk.PosixBackend)
+    assert lock.backend._file_ref is not None
+    assert lock.backend._file_ref.fh.mode == "rb"
+
+    with pytest.raises(lk.LockROFileError):
+        with lk.WriteTransaction(lock):
+            pass
+
+
 def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
     """read-only directory, writable lockfile."""
     touch(lock_path)
@@ -576,6 +621,22 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
 
         with lk.WriteTransaction(lock):
             pass
+
+
+@pytest.mark.not_on_windows("Windows directories can't be made read-only")
+@pytest.mark.skipif(False if sys.platform == "win32" else getuid() == 0, reason="user is root")
+def test_read_lock_no_lockfile(lock_dir, lock_path):
+    """read-only directory, no lockfile (so can't create)."""
+    with read_only(lock_dir):
+        lock = lk.Lock(lock_path)
+
+        with pytest.raises(lk.CantCreateLockError):
+            with lk.ReadTransaction(lock):
+                pass
+
+        with pytest.raises(lk.CantCreateLockError):
+            with lk.WriteTransaction(lock):
+                pass
 
 
 def test_upgrade_read_to_write(private_lock_path):
@@ -612,9 +673,7 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.release_read()
     assert lock._reads == 0
     assert lock._writes == 0
-    # On Windows, _unlock() closes the file handle so the file can be deleted
-    # (Windows raises WinError 32 on unlink if any process has the file open).
-    if sys.platform != "win32":
+    if sys.platform != "win32":  # Windows closes the file so that it can be deleted
         assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
 
 
@@ -1334,6 +1393,38 @@ def test_downgrade_write_fails(tmp_path: pathlib.Path):
         lock.release_read()
 
 
+@pytest.mark.not_on_windows("fcntl is POSIX-only")
+@pytest.mark.parametrize(
+    "err_num,err_msg",
+    [
+        (errno.EACCES, "Fake EACCES error"),
+        (errno.EAGAIN, "Fake EAGAIN error"),
+        (errno.ENOENT, "Fake ENOENT error"),
+    ],
+)
+def test_poll_lock_exception(tmp_path: pathlib.Path, monkeypatch, err_num, err_msg):
+    """Test poll lock exception handling."""
+
+    def _lockf(fd, cmd, len, start, whence):
+        raise OSError(err_num, err_msg)
+
+    with working_dir(str(tmp_path)):
+        lockfile = "lockfile"
+        lock = lk.Lock(lockfile)
+        lock.acquire_read()
+
+        monkeypatch.setattr(fcntl, "lockf", _lockf)
+
+        if err_num in [errno.EAGAIN, errno.EACCES]:
+            assert not lock.backend.poll(fcntl.LOCK_EX)
+        else:
+            with pytest.raises(OSError, match=err_msg):
+                lock.backend.poll(fcntl.LOCK_EX)
+
+        monkeypatch.undo()
+        lock.release_read()
+
+
 def test_upgrade_read_okay(tmp_path: pathlib.Path):
     """Test the lock read-to-write upgrade operation."""
     with working_dir(str(tmp_path)):
@@ -1353,6 +1444,41 @@ def test_upgrade_read_fails(tmp_path: pathlib.Path):
         msg = "Cannot upgrade lock from read to write on file: lockfile"
         with pytest.raises(lk.LockUpgradeError, match=msg):
             lock.upgrade_read_to_write()
+        lock.release_write()
+
+
+@pytest.mark.parametrize("acquire", ["acquire_write", "acquire_read"])
+def test_acquire_after_fork(tmp_path: pathlib.Path, acquire: str):
+    """After fork, acquire_write/read must not silently succeed due to inherited counters."""
+    try:
+        ctx = multiprocessing.get_context("fork")
+    except ValueError:
+        pytest.skip("fork start method not available on this platform")
+
+    lockfile = str(tmp_path / "lockfile")
+    lock = lk.Lock(lockfile)
+    result = ctx.Queue()
+
+    def child():
+        assert lock._writes == 1  # due to forking, but POSIX lock is NOT held by this process
+        try:
+            if acquire == "acquire_write":
+                lock.acquire_write(lock_fail_timeout)
+            elif acquire == "acquire_read":
+                lock.acquire_read(lock_fail_timeout)
+            else:
+                assert False  # should never get here
+            result.put("no_error")
+        except lk.LockTimeoutError:
+            result.put("timed_out")
+
+    lock.acquire_write()
+    try:
+        p = ctx.Process(target=child)
+        p.start()
+        p.join()
+        assert result.get() == "timed_out"
+    finally:
         lock.release_write()
 
 
@@ -1433,77 +1559,6 @@ def test_try_acquire_write(tmp_path: pathlib.Path):
         lock.release_read()
 
 
-def test_try_acquire_write_from_read(tmp_path: pathlib.Path):
-    """try_acquire_write inside a read nests like acquire_write: releasing the write goes back
-    to the read lock, which is still held."""
-    lock_path = str(tmp_path / "lockfile")
-    lock = lk.Lock(lock_path)
-    ctx = multiprocessing.get_context()
-
-    # Acquire a read, then non-blockingly take a write inside it
-    lock.acquire_read()
-    assert lock.try_acquire_write() is True
-    assert lock._reads == 1
-    assert lock._writes == 1
-
-    # Nested try_acquire_write while holding write
-    assert lock.try_acquire_write() is True
-    assert lock._writes == 2
-
-    lock.release_write()
-    assert lock._writes == 1
-    lock.release_write()
-    assert lock._reads == 1
-    assert lock._writes == 0
-
-    # The read lock is still held: another process can't take a write lock
-    q = ctx.Queue()
-    p = ctx.Process(target=_child_try_acquire_write, args=(lock_path, q))
-    p.start()
-    p.join()
-    assert q.get() is False
-
-    lock.release_read()
-    assert lock._reads == 0
-    assert lock._writes == 0
-
-
-def test_upgrade_with_nested_reads_fails(tmp_path: pathlib.Path):
-    """Upgrading is only allowed from a single, non-nested read lock."""
-    lock = lk.Lock(str(tmp_path / "lockfile"))
-    lock.acquire_read()
-    lock.acquire_read()
-    with pytest.raises(lk.LockUpgradeError):
-        lock.upgrade_read_to_write()
-    lock.release_read()
-    lock.release_read()
-
-
-def test_is_write_locked_does_not_wait(tmp_path: pathlib.Path):
-    """is_write_locked must answer immediately, even for a lock with no timeout."""
-    lock_path = str(tmp_path / "lockfile")
-    lock = lk.Lock(lock_path)
-    assert lock.is_write_locked() is False
-
-    ctx = multiprocessing.get_context()
-    q = ctx.Queue()
-    p = ctx.Process(target=_child_is_write_locked, args=(lock_path, q))
-    lock.acquire_write()
-    try:
-        p.start()
-        p.join(timeout=60)
-        assert p.exitcode == 0
-        assert q.get() is True
-    finally:
-        if p.is_alive():
-            p.kill()
-        lock.release_write()
-
-
-def _child_is_write_locked(lock_path: str, result_queue):
-    result_queue.put(lk.Lock(lock_path).is_write_locked())
-
-
 def _child_fails_to_acquire_read(_lock: lk.Lock):
     try:
         _lock.acquire_read(timeout=1e-9)
@@ -1527,13 +1582,3 @@ def test_read_after_write_does_not_accidentally_downgrade(tmp_path: pathlib.Path
     finally:
         lock.release_read()
         lock.release_write()
-
-
-@pytest.mark.parametrize(
-    "make_lock",
-    [lambda path: lk.Lock(path, enable=False), lambda path: lk.Lock.forbidden(path, "forbidden")],
-)
-def test_pickle_lock_without_file_backend(tmp_path: pathlib.Path, make_lock):
-    """Locks whose backend never tracks a file must still be picklable (spawned subprocesses)."""
-    lock = make_lock(str(tmp_path / "lockfile"))
-    assert type(pickle.loads(pickle.dumps(lock)).backend) is type(lock.backend)
