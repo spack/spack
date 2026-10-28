@@ -8,7 +8,10 @@ import io
 import os
 import shutil
 import sys
-from typing import Any, BinaryIO, Callable, Dict, List, Optional
+import tempfile
+from typing import Any, BinaryIO, Callable, Dict, List, Optional, Type
+
+import spack.vendor.untar as untar
 
 import spack.util.url
 from spack.error import SpackError
@@ -35,8 +38,10 @@ try:
     import lzma  # noqa # novermin
 
     LZMA_SUPPORTED = True
+    _LZMAError: Type[Exception] = lzma.LZMAError
 except ImportError:
     LZMA_SUPPORTED = False
+    _LZMAError = OSError
 
 
 def _system_untar(archive_file: str, remove_archive_file: bool = False) -> str:
@@ -595,3 +600,32 @@ def extension_from_magic_numbers(path: str, decompress: bool = False) -> Optiona
 
     # Otherwise, use the extension from the file name.
     return spack.util.url.extension_from_path(path)
+
+
+class InvalidTarballError(SpackError):
+    """Raised for a tarball that tar implementations may extract differently, or not at all."""
+
+
+def validate_tarball(path: str) -> None:
+    """Extract the tarball at ``path`` with untar, a strict extractor, into a temporary directory
+    next to it, and raise :py:class:`InvalidTarballError` if it rejects it: if tar
+    implementations may extract it differently, or it is truncated. Files that are not tarballs
+    are not checked, nor are compressions that this Python cannot decompress."""
+    ext = extension_from_magic_numbers(path, decompress=True)
+    ext = spack.util.url.expand_contracted_extension(ext) if ext else None
+    opener: Callable[..., Any]
+    if ext in ("tar", "tar.gz"):
+        # untar decompresses gzip itself, and verifies its checksum
+        opener = open
+    elif ext == "tar.bz2" and BZ2_SUPPORTED:
+        opener = bz2.open
+    elif ext == "tar.xz" and LZMA_SUPPORTED:
+        opener = lzma.open
+    else:
+        return
+    try:
+        with tempfile.TemporaryDirectory(dir=os.path.dirname(path)) as tmp:
+            with opener(path, "rb") as f:
+                untar.extract(f, os.path.join(tmp, "src"))
+    except (untar.Error, OSError, EOFError, _LZMAError) as e:
+        raise InvalidTarballError(f"{os.path.basename(path)} is not a valid tarball: {e}") from e

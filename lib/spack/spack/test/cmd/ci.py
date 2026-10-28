@@ -2097,6 +2097,29 @@ def test_ci_validate_standard_versions_invalid(
         assert f"Invalid checksum found diff-test@{version}" in err
 
 
+def test_ci_validate_standard_versions_invalid_tarball(
+    capfd, mock_packages, fetch_url_exists, fetch_versions_match, monkeypatch
+):
+    """A tarball with the right checksum fails if untar rejects it."""
+    matching_checksums = spack.stage.get_checksums_for_versions
+
+    def get_checksums_for_versions(url_by_version, package_name, *, invalid_tarballs, **kwargs):
+        invalid_tarballs[spack.version.Version("2.1.5")] = "data after the end-of-archive marker"
+        return matching_checksums(url_by_version, package_name, **kwargs)
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+    spec = spack.spec.Spec("diff-test")
+    pkg = mock_packages.get_pkg_class(spec.name)(spec)
+    versions = [spack.version.Version("2.1.4"), spack.version.Version("2.1.5")]
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, versions) is False
+
+    out, err = capfd.readouterr()
+    assert "Validated diff-test@2.1.4" in out
+    assert "Invalid tarball found diff-test@2.1.5" in err
+    assert "data after the end-of-archive marker" in err
+
+
 @pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
 def test_ci_validate_standard_versions_invalid_url(
     capfd, mock_packages, fetch_url_maybe_exists, fetch_versions_match, versions

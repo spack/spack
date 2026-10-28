@@ -7,11 +7,13 @@
 import collections
 import errno
 import getpass
+import io
 import os
 import pathlib
 import shutil
 import stat
 import sys
+import tarfile
 
 import pytest
 
@@ -30,6 +32,7 @@ from spack.stage import (
     stage_from_config,
 )
 from spack.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
+from spack.version import Version
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -977,3 +980,26 @@ def test_override_keep_in_composite_stage(config):
     assert not stage_1.keep
     assert not stage_2.keep
     assert not stage_3.keep
+
+
+def test_get_checksums_for_versions_invalid_tarballs(tmp_build_stage_dir, mutable_config):
+    """An invalid tarball is reported by version, and still checksummed."""
+    tmp_path, _ = tmp_build_stage_dir
+    member = tarfile.TarInfo("pkg/a")
+    member.size = 2
+    data = io.BytesIO()
+    with tarfile.open(fileobj=data, mode="w", format=tarfile.USTAR_FORMAT) as tar:
+        tar.addfile(member, io.BytesIO(b"a\n"))
+    archives = {}
+    for version, contents in (("1.0", data.getvalue()), ("2.0", data.getvalue() * 2)):
+        path = tmp_path / f"pkg-{version}.tar"
+        path.write_bytes(contents)
+        archives[Version(version)] = url_util.path_to_file_url(str(path))
+
+    invalid_tarballs = {}
+    hashes = spack.stage.get_checksums_for_versions(
+        archives, "pkg", invalid_tarballs=invalid_tarballs, config=mutable_config
+    )
+    assert set(hashes) == set(archives)
+    assert list(invalid_tarballs) == [Version("2.0")]
+    assert "end-of-archive marker" in invalid_tarballs[Version("2.0")]

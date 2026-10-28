@@ -167,13 +167,17 @@ def checksum(parser, args):
     else:
         tty.info(f"Found {spack.util.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
+    invalid_tarballs: Dict[StandardVersion, str] = {}
     version_hashes = spack.stage.get_checksums_for_versions(
         url_dict,
         pkg.name,
         keep_stage=args.keep_stage,
         fetch_options=pkg.fetch_options,
+        invalid_tarballs=invalid_tarballs,
         config=spack.config.CONFIG,
     )
+    for version, error in sorted(invalid_tarballs.items(), reverse=True):
+        tty.warn(f"Invalid tarball found {pkg.name}@{version}: {error}")
 
     if args.verify:
         print_checksum_status(pkg, version_hashes)
