@@ -399,6 +399,10 @@ def can_migrate_to_location(location: str):
         tty.debug(f"{location} already has files, skipping migration")
         return DestinationCheck.FAIL
 
+    if not os.access(dir_path, os.W_OK):
+        tty.debug(f"{location} is not writable, skipping migration")
+        return DestinationCheck.FAIL
+
     # Empty directory - safe to migrate
     return DestinationCheck.PROCEED
 
