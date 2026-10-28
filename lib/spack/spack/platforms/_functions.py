@@ -13,10 +13,17 @@ from .windows import Windows
 platforms = [Darwin, Linux, Windows, FreeBSD, Test]
 
 
+def _priority(platform_cls) -> int:
+    """Sort key for platform classes. Every platform sets a priority; only the base class has
+    none."""
+    assert platform_cls.priority is not None, f"{platform_cls.__name__} has no priority"
+    return platform_cls.priority
+
+
 @spack.util.lang.memoized
 def _host():
     """Detect and return the platform for this machine or None if detection fails."""
-    for platform_cls in sorted(platforms, key=lambda plt: plt.priority):
+    for platform_cls in sorted(platforms, key=_priority):
         if platform_cls.detect():
             return platform_cls()
     assert False, "No platform detected. Spack cannot run without a platform."
@@ -37,7 +44,7 @@ def cls_by_name(name):
     Args:
         name (str): name of the platform
     """
-    for platform_cls in sorted(platforms, key=lambda plt: plt.priority):
+    for platform_cls in sorted(platforms, key=_priority):
         if name.replace("_", "").lower() == platform_cls.__name__.lower():
             return platform_cls
     return None

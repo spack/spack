@@ -12,7 +12,18 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Optional, Set, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Collection,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Union,
+)
 
 import spack.caches
 import spack.config
@@ -1147,7 +1158,7 @@ def purge(*, config: spack.config.Configuration):
 
 def interactive_version_filter(
     url_dict: Dict[StandardVersion, str],
-    known_versions: Iterable[StandardVersion] = (),
+    known_versions: Collection[StandardVersion] = (),
     *,
     initial_verion_filter: Optional[VersionList] = None,
     url_changes: Set[StandardVersion] = set(),

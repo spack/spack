@@ -1328,7 +1328,7 @@ spack:
 
         for dep, num_patches in patched_deps:
             assert s[dep].satisfies("patches=*")
-            assert len(s[dep].variants["patches"].value) == num_patches
+            assert len(s[dep].variants["patches"].values) == num_patches
 
     @pytest.mark.regression("267,303,1781,2310,2632,3628")
     @pytest.mark.parametrize(
@@ -5743,6 +5743,7 @@ def test_asp_facts_with_config_values():
 def test_target_star_concretizes(mock_packages, config):
     """target=* is not a literal unknown target '*' but rather an unconstrained target"""
     concrete = spack.concretize.concretize_one("pkg-a target=*")
+    assert concrete.architecture is not None
     assert concrete.architecture.target_concrete
 
 

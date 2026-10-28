@@ -410,7 +410,7 @@ class TestVariant:
         assert "'foo'" in string
         assert "default=''" in string
         assert "description=''" in string
-        assert "values=('foo', 'bar', 'baz') in string"
+        assert "values=('bar', 'baz', 'foobar')" in string
 
 
 class TestVariantMapTest:

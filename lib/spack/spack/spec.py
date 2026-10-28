@@ -1567,7 +1567,7 @@ def tree(
     show_types: bool = False,
     depth_first: bool = False,
     recurse_dependencies: bool = True,
-    status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+    status_fn: Optional[Callable[["Spec"], Union[InstallStatus, bool]]] = None,
     prefix: Optional[Callable[["Spec"], str]] = None,
     key: Callable[["Spec"], Any] = id,
     version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
@@ -1630,7 +1630,7 @@ def tree(
 
         if status_fn:
             status = status_fn(node)
-            if status in list(InstallStatus):
+            if isinstance(status, InstallStatus):
                 out += clr.colorize(status.value, color=color)
             elif status:
                 out += clr.colorize("@g{[+]}  ", color=color)
@@ -1904,6 +1904,10 @@ class Spec(lang.Ordered):
         def __le__(self, other: Any) -> bool: ...
         def __gt__(self, other: Any) -> bool: ...
         def __ge__(self, other: Any) -> bool: ...
+
+        #: set on externals read from a Cray manifest, and recorded as the origin of their
+        #: database record (read with ``getattr``, so it is unset on other specs)
+        origin: str
 
     @staticmethod
     def default_arch():
@@ -2732,22 +2736,20 @@ class Spec(lang.Ordered):
             dependencies = []
             for name, edges_for_name in sorted(deps.items()):
                 for dspec in edges_for_name:
-                    dep_attrs: Dict[str, Any] = {
-                        "name": name,
-                        "hash": dspec.spec.dag_hash(),
-                        "parameters": {
-                            "deptypes": dt.flag_to_tuple(dspec.depflag),
-                            "virtuals": dspec.virtuals,
-                        },
+                    parameters: Dict[str, Any] = {
+                        "deptypes": dt.flag_to_tuple(dspec.depflag),
+                        "virtuals": dspec.virtuals,
                     }
                     if dspec.direct:
-                        dep_attrs["parameters"]["direct"] = True
+                        parameters["direct"] = True
                     if not self._concrete:
                         if dspec.when != EMPTY_SPEC:
-                            dep_attrs["parameters"]["when"] = str(dspec.when)
+                            parameters["when"] = str(dspec.when)
                         if dspec.propagation != PropagationPolicy.NONE:
-                            dep_attrs["parameters"]["propagation"] = dspec.propagation.name
-                    dependencies.append(dep_attrs)
+                            parameters["propagation"] = dspec.propagation.name
+                    dependencies.append(
+                        {"name": name, "hash": dspec.spec.dag_hash(), "parameters": parameters}
+                    )
 
             d["dependencies"] = dependencies
 
@@ -4606,7 +4608,7 @@ class Spec(lang.Ordered):
         show_types: bool = False,
         depth_first: bool = False,
         recurse_dependencies: bool = True,
-        status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+        status_fn: Optional[Callable[["Spec"], Union[InstallStatus, bool]]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
         key=id,
         version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
@@ -5954,7 +5956,7 @@ def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:
         )
         variant.set(*(p.sha256 for p in patches))
         # FIXME: Monkey patches variant to store patches order
-        ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches if p.ordering_key]
+        ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches]
         ordered_hashes.sort()
         tty.debug(
             f"Ordered hashes [{spec.name}]: "

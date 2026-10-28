@@ -246,7 +246,7 @@ def test_variants_of_concrete_spec_abbreviate_patches(config, mock_packages):
     a weaker constraint it satisfies; the full checksums remain available through its hash.
     An abstract spec prints its variants exactly, so its string form round-trips."""
     concrete = spack.concretize.concretize_one("patch")
-    checksums = concrete.variants["patches"].values
+    checksums = [str(c) for c in concrete.variants["patches"].values]
     assert checksums
     prefixes = "patches=" + ",".join(c[:7] for c in checksums)
     assert prefixes in concrete.format("{variants}")

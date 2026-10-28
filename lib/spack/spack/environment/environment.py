@@ -793,8 +793,7 @@ class ViewDescriptor:
             ret["select"] = self.select
         if self.exclude:
             ret["exclude"] = self.exclude
-        if self.link_type:
-            ret["link_type"] = self.link_type
+        ret["link_type"] = self.link_type
         if self.link_dirs:
             ret["link_dirs"] = self.link_dirs
         if self.link != default_view_link:

@@ -33,8 +33,8 @@ from typing import (
     Callable,
     Container,
     Dict,
+    Generator,
     Iterable,
-    Iterator,
     List,
     Mapping,
     NamedTuple,
@@ -602,7 +602,9 @@ class BinaryIndexCache:
         return True
 
     @contextlib.contextmanager
-    def read_index(self, mirror_metadata: MirrorMetadata) -> Iterator[Optional[IO[str]]]:
+    def read_index(
+        self, mirror_metadata: MirrorMetadata
+    ) -> Generator[Optional[IO[str]], None, None]:
         self._init_local_index_cache()
         cache_entry = self._local_index_cache.get(str(mirror_metadata), {})
         try:

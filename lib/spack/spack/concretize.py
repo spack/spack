@@ -12,8 +12,8 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
+    Generator,
     Iterable,
-    Iterator,
     List,
     Optional,
     Sequence,
@@ -379,7 +379,7 @@ def _processes_for(kind: SolveKind, total: int) -> int:
 @contextlib.contextmanager
 def solve_group(
     ui: ConcretizerUI, *, group: str, kind: SolveKind, spec_list: Sequence[SpecPairInput]
-) -> Iterator[int]:
+) -> Generator[int, None, None]:
     """Open the group that concretizes ``spec_list`` as ``kind`` prescribes, and yield the size
     of the process pool it announced, so that the pool that runs is the one a frontend was told
     about. A group whose specs need no solve announces a total of zero, and a frontend sees it

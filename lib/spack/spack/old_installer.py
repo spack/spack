@@ -1126,7 +1126,9 @@ def check_db(spec: "spack.spec.Spec") -> Tuple[Optional[spack.database.InstallRe
 class BuildTask(Task):
     """Class for representing a build task for a package."""
 
-    process_handle: Optional["spack.build_environment.BuildProcess"] = None
+    process_handle: Optional[Union["spack.build_environment.BuildProcess", "MockBuildProcess"]] = (
+        None
+    )
     started: bool = False
     no_op: bool = False
     tmpdir: Optional[str] = None
@@ -1293,6 +1295,11 @@ class BuildTask(Task):
 
 
 class MockBuildProcess:
+    """Stands in for the build process of a ``FakeBuildTask``, which builds in this process."""
+
+    def poll(self) -> bool:
+        return True
+
     def complete(self) -> bool:
         return True
 

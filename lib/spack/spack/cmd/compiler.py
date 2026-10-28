@@ -181,9 +181,10 @@ def compiler_info(args):
             print("  extra rpaths:")
             for extra_rpath in extra_attributes["extra_rpaths"]:
                 print(f"    {extra_rpath}")
-        if getattr(c, "external_modules", []):
+        external_modules = getattr(c, "external_modules", None)
+        if external_modules:
             print("  modules: ")
-            for module in c.external_modules:
+            for module in external_modules:
                 print(f"    {module}")
         print()
 

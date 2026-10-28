@@ -708,9 +708,9 @@ def test_monkey_patching_works_across_virtual(config, mock_packages):
     real name or the virtual name.
     """
     s = spack.concretize.concretize_one("mpileaks ^mpich")
-    s["mpich"].foo = "foo"
-    assert s["mpich"].foo == "foo"
-    assert s["mpi"].foo == "foo"
+    setattr(s["mpich"], "foo", "foo")
+    assert getattr(s["mpich"], "foo") == "foo"
+    assert getattr(s["mpi"], "foo") == "foo"
 
 
 def test_clear_compiler_related_runtime_variables_of_build_deps(config, mock_packages):

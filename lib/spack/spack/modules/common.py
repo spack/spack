@@ -28,7 +28,7 @@ from typing import (
     Any,
     ClassVar,
     Dict,
-    Iterator,
+    Generator,
     List,
     NamedTuple,
     Optional,
@@ -1449,7 +1449,7 @@ class BaseModuleFileWriter:
 
 
 @contextlib.contextmanager
-def disable_modules() -> Iterator[None]:
+def disable_modules() -> Generator[None, None, None]:
     """Disable the generation of modulefiles within the context manager."""
     data: Dict[str, object] = {"modules:": {"default": {"enable": []}}}
     disable_scope = spack.config.InternalConfigScope("disable_modules", data=data)

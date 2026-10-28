@@ -1021,7 +1021,7 @@ spack:
     assert "SPACK_VERSION" in global_vars
     assert global_vars["SPACK_VERSION"] == "0.20.0.test0 (blah)"
     assert "SPACK_CHECKOUT_VERSION" in global_vars
-    assert global_vars["SPACK_CHECKOUT_VERSION"] == git_version or "v0.20.0.test0"
+    assert global_vars["SPACK_CHECKOUT_VERSION"] in (git_version, "v0.20.0.test0")
 
     for ci_key in yaml_contents.keys():
         if ci_key.startswith("pkg-a"):
