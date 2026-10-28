@@ -2156,7 +2156,7 @@ def test_locations_relative_path_rejected(mutable_config):
 
 
 @pytest.mark.parametrize(
-    "locations,expected",
+    "locations",
     [
         # Basic self-reference: data: ["$data_home"]
         ["$data_home"],
@@ -2170,5 +2170,5 @@ def test_locations_self_referential_raise(mutable_config, locations):
     """Test that self-referential locations entries are failures."""
     mutable_config.set("config:locations:data", locations)
 
-    with pytest.raises(spack.error.ConfigError, match="recursive reference"):
+    with pytest.raises(spack.error.ConfigError, match="Recursive reference"):
         _ = spack.config._resolve_location_var("data")
