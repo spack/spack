@@ -383,13 +383,14 @@ def create(
     fs.mkdirp(env_root)
     lock = lk.Lock(os.path.join(env_root, ".lock"), default_timeout=120)
     with lk.WriteTransaction(lock):
-        return create_in_dir(
+        env = create_in_dir(
             environment_dir,
             init_file=init_file,
             with_view=with_view,
             keep_relative=keep_relative,
             include_concrete=include_concrete,
         )
+    return env
 
 
 def create_in_dir(
