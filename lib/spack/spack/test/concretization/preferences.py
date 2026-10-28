@@ -477,3 +477,16 @@ def test_package_permissions_error_names_all():
     configuration.push_scope(spack.config.InternalConfigScope("test", {"packages": packages_yaml}))
     with pytest.raises(ConfigError, match="Violating package is all"):
         spack.package_prefs.package_permissions(configuration, None)
+
+
+def test_target_sort_key():
+    """Tests that targets sort in the order of packages:all:target, unlisted targets last."""
+    configuration = Configuration()
+    configuration.push_scope(
+        spack.config.InternalConfigScope(
+            "test", {"packages": {"all": {"target": ["icelake", "x86_64_v3"]}}}
+        )
+    )
+    targets = [Spec(f"target={t}") for t in ("x86_64", "x86_64_v3", "icelake")]
+    targets.sort(key=spack.package_prefs.target_sort_key(configuration))
+    assert [str(s.architecture.target) for s in targets] == ["icelake", "x86_64_v3", "x86_64"]
