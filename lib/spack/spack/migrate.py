@@ -471,10 +471,6 @@ def migrate_with_staging(
 
     # Prepare parent directory and staging path
     parent = os.path.dirname(new_path)
-    if not os.access(parent, os.W_OK):
-        tty.debug(f"Cannot migrate to read-only directory {parent}")
-        return False
-
     staging_path = os.path.join(parent, staging_name)
     filesystem.mkdirp(parent)
 
@@ -748,7 +744,7 @@ def _migrate_user_config() -> bool:
     old_location = os.path.expanduser("~/.spack")
     new_location = migration_config_home()
 
-    return migrate_with_staging(
+    ret = migrate_with_staging(
         old_path=old_location,
         new_path=new_location,
         prepare_staging_callback=_prepare_config_staging,
@@ -757,6 +753,14 @@ def _migrate_user_config() -> bool:
         description="user config",
         verify_destination_callback=can_migrate_to_location,
     )
+
+    if (not ret) and is_nonempty_dir(old_location):
+        tty.die(
+            "Failed to migrate Spack config directory. Fix permissions on ~/.config/spack or "
+            "set SPACK_USER_CONFIG_PATH=~/.spack to use the old location"
+        )
+
+    return ret
 
 
 def _migrate_package_repositories() -> bool:
