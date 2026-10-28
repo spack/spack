@@ -1389,9 +1389,8 @@ def _shared_access() -> Tuple[Optional[str], int]:
     directories of module files for the group and the write access configured for all
     packages.
     """
-    all_spec = spack.spec.Spec("all")
-    configured = spack.package_prefs.get_package_dir_permissions(all_spec)
-    group = spack.package_prefs.get_package_group(all_spec)
+    perms = spack.package_prefs.package_permissions(spack.config.CONFIG, None)
+    configured, group = perms.dir_mode, perms.group
 
     added = 0
     if configured & stat.S_IWGRP:

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import stat
 import warnings
+from typing import Any, Iterable, NamedTuple, Optional
 
 import spack.config
 import spack.repo
@@ -16,6 +17,20 @@ _lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 def _spec_type(component):
     """Map from component name to spec type for package prefs."""
     return _lesser_spec_types.get(component, spack.spec.Spec)
+
+
+def _first_set(packages: dict, names: Iterable[str], *path: str) -> Any:
+    """Return the first non-empty value at ``packages:<name>:<path>`` for ``name`` in ``names``,
+    or None if there is none."""
+    for name in names:
+        value = packages.get(name)
+        for key in path:
+            if not value:
+                break
+            value = value.get(key)
+        if value:
+            return value
+    return None
 
 
 class PackagePrefs:
@@ -97,32 +112,16 @@ class PackagePrefs:
         """Given a package name, sort component (e.g, version, compiler, ...),
         and an optional vpkg, return the list from the packages config.
         """
-        pkglist = [pkgname]
-        if all:
-            pkglist.append("all")
+        pkglist = [pkgname, "all"] if all else [pkgname]
+        path = (component,) if vpkg is None else (component, vpkg)
+        order = _first_set(configuration.get_config("packages"), pkglist, *path)
+        if not order:
+            return []
 
-        packages = configuration.get_config("packages")
-
-        for pkg in pkglist:
-            pkg_entry = packages.get(pkg)
-            if not pkg_entry:
-                continue
-
-            order = pkg_entry.get(component)
-            if not order:
-                continue
-
-            # vpkg is one more level
-            if vpkg is not None:
-                order = order.get(vpkg)
-
-            if order:
-                ret = [str(s).strip() for s in order]
-                if component == "target":
-                    ret = ["target=%s" % tname for tname in ret]
-                return ret
-
-        return []
+        ret = [str(s).strip() for s in order]
+        if component == "target":
+            ret = ["target=%s" % tname for tname in ret]
+        return ret
 
     @classmethod
     def _specs_for_pkg(
@@ -142,10 +141,7 @@ class PackagePrefs:
     ):
         """Return a VariantMap of preferred variants/values for a spec."""
         packages = configuration.get_config("packages")
-        for pkg_cls in (pkg_name, "all"):
-            variants = packages.get(pkg_cls, {}).get("variants", "")
-            if variants:
-                break
+        variants = _first_set(packages, (pkg_name, "all"), "variants") or ""
 
         # allow variants to be list or string
         if not isinstance(variants, str):
@@ -161,46 +157,31 @@ class PackagePrefs:
         }
 
 
-def get_package_dir_permissions(spec):
-    """Return the permissions configured for the spec.
+class Permissions(NamedTuple):
+    """Permissions configured under ``packages:<name>:permissions``."""
 
-    Include the GID bit if group permissions are on. This makes the group
-    attribute sticky for the directory. Package-specific settings take
-    precedent over settings for ``all``"""
-    perms = get_package_permissions(spec)
-    if perms & stat.S_IRWXG and spack.config.CONFIG.get("config:allow_sgid", True):
-        perms |= stat.S_ISGID
-        if spec.concrete and "/afs/" in spec.prefix:
-            warnings.warn(
-                "Directory {0} seems to be located on AFS. If you"
-                " encounter errors, try disabling the allow_sgid option"
-                " using: spack config add 'config:allow_sgid:false'".format(spec.prefix)
-            )
-    return perms
+    #: mode for files
+    file_mode: int
+    #: mode for directories: ``file_mode``, plus ``S_ISGID`` when group bits are set and
+    #: ``config:allow_sgid`` is true
+    dir_mode: int
+    #: name of the group, or empty to leave the group unchanged
+    group: str
 
 
-def get_package_permissions(spec):
-    """Return the permissions configured for the spec.
+def package_permissions(
+    configuration: spack.config.Configuration, pkg_name: Optional[str]
+) -> Permissions:
+    """Return the permissions configured for a package.
 
-    Package-specific settings take precedence over settings for ``all``"""
-
-    # Get read permissions level
-    for name in (spec.name, "all"):
-        try:
-            readable = spack.config.CONFIG.get("packages:%s:permissions:read" % name, "")
-            if readable:
-                break
-        except AttributeError:
-            readable = "world"
-
-    # Get write permissions level
-    for name in (spec.name, "all"):
-        try:
-            writable = spack.config.CONFIG.get("packages:%s:permissions:write" % name, "")
-            if writable:
-                break
-        except AttributeError:
-            writable = "user"
+    Each key of ``packages:<pkg_name>:permissions`` falls back to the same key under
+    ``packages:all:permissions``. With ``pkg_name`` None, only ``packages:all`` is read.
+    """
+    packages = configuration.get_config("packages")
+    names = ("all",) if pkg_name is None else (pkg_name, "all")
+    readable = _first_set(packages, names, "permissions", "read") or ""
+    writable = _first_set(packages, names, "permissions", "write") or ""
+    group = _first_set(packages, names, "permissions", "group") or ""
 
     perms = stat.S_IRWXU
     if readable in ("world", "group"):  # world includes group
@@ -213,7 +194,7 @@ def get_package_permissions(spec):
             raise ConfigError(
                 "Writable permissions may not be more"
                 + " permissive than readable permissions.\n"
-                + "      Violating package is %s" % spec.name
+                + "      Violating package is %s" % (pkg_name or "all")
             )
         perms |= stat.S_IWGRP
     if writable == "world":
@@ -221,22 +202,21 @@ def get_package_permissions(spec):
             raise ConfigError(
                 "Writable permissions may not be more"
                 + " permissive than readable permissions.\n"
-                + "      Violating package is %s" % spec.name
+                + "      Violating package is %s" % (pkg_name or "all")
             )
         perms |= stat.S_IWOTH
 
-    return perms
+    dir_perms = perms
+    if perms & stat.S_IRWXG and configuration.get("config:allow_sgid", True):
+        dir_perms |= stat.S_ISGID
+
+    return Permissions(file_mode=perms, dir_mode=dir_perms, group=group)
 
 
-def get_package_group(spec):
-    """Return the unix group associated with the spec.
-
-    Package-specific settings take precedence over settings for ``all``"""
-    for name in (spec.name, "all"):
-        try:
-            group = spack.config.CONFIG.get("packages:%s:permissions:group" % name, "")
-            if group:
-                break
-        except AttributeError:
-            group = ""
-    return group
+def warn_if_sgid_on_afs(prefix: str, dir_mode: int) -> None:
+    """Warn if ``dir_mode`` sets the sgid bit and ``prefix`` seems to be on AFS."""
+    if dir_mode & stat.S_ISGID and "/afs/" in prefix:
+        warnings.warn(
+            f"Directory {prefix} seems to be located on AFS. If you encounter errors, try "
+            "disabling the allow_sgid option using: spack config add 'config:allow_sgid:false'"
+        )
