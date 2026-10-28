@@ -645,7 +645,9 @@ def test_the_source_bootstrapper_concretizes_with_the_request(
     )
 
     request = spack.bootstrap.core.BootstrapRequest.for_module(
-        "clingo", "clingo-bootstrap", concretize=lambda _: _FakeConcreteSpec("a prototype")
+        "clingo",
+        "clingo-bootstrap",
+        concretize=lambda _: _FakeConcreteSpec("a prototype"),  # ty: ignore[invalid-argument-type]
     )
     request.probe = lambda concrete_spec: concrete_spec.package
 

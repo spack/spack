@@ -208,7 +208,7 @@ def solve(parser, args):
             _process_result(result, show, required_format, kwargs)
     else:
         for spec in specs:
-            tty.msg("SOLVING SPEC:", spec)
+            tty.msg("SOLVING SPEC:", str(spec))
             result = solver.solve(
                 [spec], out=output, timers=args.timers, stats=args.stats, setup_only=setup_only
             )

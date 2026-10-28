@@ -190,7 +190,7 @@ def pkg_grep(args, unknown_args):
     if "GNU" in grep("--version", output=str):
         grep.add_default_arg("--color=auto")
 
-    all_paths = spack.repo.PATH.all_package_paths()
+    all_paths = list(spack.repo.PATH.all_package_paths())
     if not all_paths:
         return 0  # no packages to search
 

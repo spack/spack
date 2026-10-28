@@ -538,7 +538,7 @@ class VariantValueRemoval(VariantValue):
 
     def __init__(self, name):
         # None is a sentinel value: this variant only marks ``name`` for removal
-        super().__init__(VariantType.INDICATOR, name, (None,))
+        super().__init__(VariantType.INDICATOR, name, (None,))  # ty: ignore[invalid-argument-type]
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply

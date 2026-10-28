@@ -1515,22 +1515,22 @@ def test_spec_by_hash(database, monkeypatch, config):
     )
 
     hash_str = f"/{mpileaks.dag_hash()}"
-    parsed_spec = SpecParser(hash_str, Spec).next_spec()
+    parsed_spec = parse_one_or_raise(hash_str, Spec)
     spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     short_hash_str = f"/{mpileaks.dag_hash()[:5]}"
-    parsed_spec = SpecParser(short_hash_str, Spec).next_spec()
+    parsed_spec = parse_one_or_raise(short_hash_str, Spec)
     spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     name_version_and_hash = f"{mpileaks.name}@{mpileaks.version} /{mpileaks.dag_hash()[:5]}"
-    parsed_spec = SpecParser(name_version_and_hash, Spec).next_spec()
+    parsed_spec = parse_one_or_raise(name_version_and_hash, Spec)
     spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == mpileaks
 
     b_hash = f"/{b.dag_hash()}"
-    parsed_spec = SpecParser(b_hash, Spec).next_spec()
+    parsed_spec = parse_one_or_raise(b_hash, Spec)
     spack.hash_lookup.replace_hash(parsed_spec)
     assert parsed_spec == b
 
@@ -1618,12 +1618,12 @@ def test_ambiguous_hash(mutable_database):
     mutable_database.add(x2)
 
     # ambiguity in first hash character
-    s1 = SpecParser("/xxx", Spec).next_spec()
+    s1 = parse_one_or_raise("/xxx", Spec)
     with pytest.raises(spack.spec.AmbiguousHashError):
         spack.hash_lookup.lookup_hash(s1)
 
     # ambiguity in first hash character AND spec name
-    s2 = SpecParser("pkg-a/xxx", Spec).next_spec()
+    s2 = parse_one_or_raise("pkg-a/xxx", Spec)
     with pytest.raises(spack.spec.AmbiguousHashError):
         spack.hash_lookup.lookup_hash(s2)
 
@@ -1635,15 +1635,15 @@ def test_invalid_hash(database, config):
 
     # name + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        parsed_spec = SpecParser(f"zmpi /{mpich.dag_hash()}", Spec).next_spec()
+        parsed_spec = parse_one_or_raise(f"zmpi /{mpich.dag_hash()}", Spec)
         spack.hash_lookup.replace_hash(parsed_spec)
     with pytest.raises(spack.spec.InvalidHashError):
-        parsed_spec = SpecParser(f"mpich /{zmpi.dag_hash()}", Spec).next_spec()
+        parsed_spec = parse_one_or_raise(f"mpich /{zmpi.dag_hash()}", Spec)
         spack.hash_lookup.replace_hash(parsed_spec)
 
     # name + dep + incompatible hash
     with pytest.raises(spack.spec.InvalidHashError):
-        parsed_spec = SpecParser(f"mpileaks ^zmpi /{mpich.dag_hash()}", Spec).next_spec()
+        parsed_spec = parse_one_or_raise(f"mpileaks ^zmpi /{mpich.dag_hash()}", Spec)
         spack.hash_lookup.replace_hash(parsed_spec)
 
 
@@ -1666,7 +1666,7 @@ def test_nonexistent_hash(database, config):
     assert no_such_hash not in [h[: len(no_such_hash)] for h in hashes]
 
     with pytest.raises(spack.spec.InvalidHashError):
-        parsed_spec = SpecParser(f"/{no_such_hash}", Spec).next_spec()
+        parsed_spec = parse_one_or_raise(f"/{no_such_hash}", Spec)
         spack.hash_lookup.replace_hash(parsed_spec)
 
 

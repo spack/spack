@@ -20,7 +20,7 @@ propagates to the caller, which decides how to handle it.
 import contextlib
 import enum
 import sys
-from typing import Iterator
+from typing import Generator
 
 from spack.spec import Spec
 from spack.util import tty
@@ -82,7 +82,7 @@ HeadlessUI = ConcretizerUI
 
 
 @contextlib.contextmanager
-def concretization_span(ui: ConcretizerUI) -> Iterator[None]:
+def concretization_span(ui: ConcretizerUI) -> Generator[None, None, None]:
     """Report the start and the end of a concretization. The end is reported even when the body
     raises, so that a frontend can tear down what it painted. The exception propagates to the
     caller without being passed to the frontend.
@@ -97,7 +97,7 @@ def concretization_span(ui: ConcretizerUI) -> Iterator[None]:
 @contextlib.contextmanager
 def group_span(
     ui: ConcretizerUI, *, group: str, kind: SolveKind, total: int, processes: int
-) -> Iterator[None]:
+) -> Generator[None, None, None]:
     """Report the start and the end of one group of user specs. As for ``concretization_span``,
     the end is reported even when the body raises.
     """

@@ -1237,7 +1237,7 @@ class TestSpecSemantics:
 
     def test_exceptional_paths_for_constructor(self):
         with pytest.raises(TypeError):
-            Spec((1, 2))
+            Spec((1, 2))  # ty: ignore[invalid-argument-type]
 
         with pytest.raises(ValueError):
             Spec("libelf foo")
@@ -2434,6 +2434,7 @@ def test_a_singleton_target_range_is_the_concrete_target(mock_packages, range_st
     ranged, concrete = Spec(f"pkg-a target={range_str}"), Spec(f"pkg-a target={target_str}")
     assert ranged.to_dict() == concrete.to_dict()
     assert ranged.dag_hash() == concrete.dag_hash()
+    assert ranged.architecture is not None
     assert ranged.architecture.target_concrete
 
 
@@ -2483,6 +2484,7 @@ def test_adjacent_target_ranges_fuse_into_one_canonical_state(mock_packages):
     fused into it: the tiling and the interval are one state that satisfies both ways."""
     tiling = Spec("pkg-a target=nocona:nehalem,nehalem:haswell")
     interval = Spec("pkg-a target=nocona:haswell")
+    assert tiling.architecture is not None
     assert str(tiling.architecture.target) == "nocona:haswell"
     assert tiling.to_dict() == interval.to_dict()
     assert tiling.dag_hash() == interval.dag_hash()
@@ -2528,6 +2530,7 @@ def test_target_lists_have_one_canonical_idempotent_form(mock_packages, target_s
     """A target list is stored as a canonical decomposition of the set it denotes: parsing the
     canonical form gives the same state as the original list."""
     spec = Spec(f"pkg-a target={target_str}")
+    assert spec.architecture is not None
     assert str(spec.architecture.target) == canonical
     assert spec.to_dict() == Spec(f"pkg-a target={canonical}").to_dict()
 
@@ -2536,6 +2539,7 @@ def test_unknown_target_names_in_lists_are_kept_verbatim(mock_packages):
     """Bounds outside the microarchitecture table cannot be compared, so their elements are kept
     as they are instead of raising."""
     spec = Spec("pkg-a target=nocona:,foo:")
+    assert spec.architecture is not None
     assert str(spec.architecture.target) == "foo:,nocona:"
 
 

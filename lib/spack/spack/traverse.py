@@ -232,7 +232,16 @@ def with_artificial_edges(specs):
     from spack.spec import DependencySpec
 
     return deque(
-        EdgeAndDepth(edge=DependencySpec(parent=None, spec=s, depflag=0, virtuals=()), depth=0)
+        EdgeAndDepth(
+            # the artificial root has no spec
+            edge=DependencySpec(
+                parent=None,  # ty: ignore[invalid-argument-type]
+                spec=s,
+                depflag=0,
+                virtuals=(),
+            ),
+            depth=0,
+        )
         for s in specs
     )
 

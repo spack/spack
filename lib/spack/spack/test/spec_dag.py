@@ -797,6 +797,7 @@ class TestSpecDag:
         a = s["callpath"]
 
         query = a.last_query
+        assert query is not None
         assert query.name == "callpath"
         assert len(query.extra_parameters) == 0
         assert not query.isvirtual
@@ -805,6 +806,7 @@ class TestSpecDag:
         a = s["mpi"]
 
         query = a.last_query
+        assert query is not None
         assert query.name == "mpi"
         assert len(query.extra_parameters) == 0
         assert query.isvirtual
@@ -814,6 +816,7 @@ class TestSpecDag:
         a = s["mpi:cxx,fortran"]
 
         query = a.last_query
+        assert query is not None
         assert query.name == "mpi"
         assert len(query.extra_parameters) == 2
         assert "cxx" in query.extra_parameters
