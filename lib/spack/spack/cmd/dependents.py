@@ -29,6 +29,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "instead of possible dependents of a package",
     )
     subparser.add_argument(
+        "--format",
+        help="format each installed spec with this format string (requires --installed)",
+    )
+    subparser.add_argument(
         "-t",
         "--transitive",
         action="store_true",
@@ -85,6 +89,9 @@ def get_dependents(pkg_name, ideps, transitive=False, dependents=None):
 
 
 def dependents(parser, args):
+    if args.format is not None and not args.installed:
+        args.subparser.error("--format requires --installed")
+
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         args.subparser.error("takes only one spec")
@@ -94,10 +101,13 @@ def dependents(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = "{name}{@version}{/hash:7}{%compiler}"
-        if sys.stdout.isatty():
+        if sys.stdout.isatty() and args.format is None:
             tty.msg("Dependents of %s" % spec.cformat(format_string))
         deps = spack.store.STORE.db.installed_relatives(spec, "parents", args.transitive)
-        if deps:
+        if deps and args.format is not None:
+            for dep in deps:
+                print(dep.format(args.format))
+        elif deps:
             spack.cmd.display_specs(deps, long=True)
         else:
             print("No dependents")

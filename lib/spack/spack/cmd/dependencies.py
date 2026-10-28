@@ -37,6 +37,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     arguments.add_common_arguments(subparser, ["deptype"])
     subparser.add_argument(
+        "--format",
+        help="format each installed spec with this format string (requires --installed)",
+    )
+    subparser.add_argument(
         "-V",
         "--no-expand-virtuals",
         action="store_false",
@@ -48,6 +52,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def dependencies(parser, args):
+    if args.format is not None and not args.installed:
+        args.subparser.error("--format requires --installed")
+
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         args.subparser.error("takes only one spec")
@@ -57,12 +64,15 @@ def dependencies(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
         format_string = "{name}{@version}{/hash:7}{%compiler}"
-        if sys.stdout.isatty():
+        if sys.stdout.isatty() and args.format is None:
             tty.msg("Dependencies of %s" % spec.format(format_string, color=True))
         deps = spack.store.STORE.db.installed_relatives(
             spec, "children", args.transitive, deptype=args.deptype
         )
-        if deps:
+        if deps and args.format is not None:
+            for dep in deps:
+                print(dep.format(args.format))
+        elif deps:
             spack.cmd.display_specs(deps, long=True)
         else:
             print("No dependencies")
