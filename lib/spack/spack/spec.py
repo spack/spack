@@ -759,7 +759,7 @@ class ArchSpec:
             yield self.target
         else:
             yield self.target.name
-        yield None if self.gpus is None else ",".join(str(gpu) for gpu in self.gpus)
+        # gpus is a mirror of the variants, which already count towards a spec's identity
 
     @property
     def platform(self):
@@ -2867,7 +2867,9 @@ class Spec:
         if self.versions:
             d.update(self.versions.to_dict())
 
-        if self.architecture:
+        if self.architecture and (
+            self.architecture.platform or self.architecture.os or self.architecture.target
+        ):
             d.update(self.architecture.to_dict())
 
         if self.namespace:

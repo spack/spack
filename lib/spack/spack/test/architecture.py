@@ -216,13 +216,14 @@ def test_gpus_unknown_to_archspec_are_rejected(name):
         ArchSpec((None, None, None), gpus=[name])
 
 
-def test_gpus_are_part_of_identity_but_not_of_the_dict():
+def test_gpus_are_a_mirror_outside_identity_and_serialization():
     arch = ArchSpec(("linux", "ubuntu22.04", "x86_64"), gpus=["80"])
-    assert arch != ArchSpec(("linux", "ubuntu22.04", "x86_64"))
-    assert arch != ArchSpec(arch, gpus=["86"])
+    # the variants already carry the GPUs into a spec's identity, so the mirror does not
+    assert arch == ArchSpec(("linux", "ubuntu22.04", "x86_64"))
+    assert arch == ArchSpec(arch, gpus=[":86"])
     assert "gpu" not in arch.to_dict()["arch"]
+    assert ArchSpec.from_dict(arch.to_dict()) == arch
     assert repr(arch) == "ArchSpec(('linux', 'ubuntu22.04', 'x86_64'), gpus='80')"
-    assert arch != ArchSpec(arch, gpus=[":80"])
 
 
 @pytest.mark.parametrize(
