@@ -1790,6 +1790,66 @@ class TestSpecSemantics:
     def test_gpu_variants_are_mirrored_into_the_architecture(self, text, expected):
         assert ",".join(map(str, Spec(text).architecture.gpus)) == expected
 
+    @pytest.mark.parametrize(
+        "lhs,rhs,satisfies,intersects",
+        [
+            # a build for 80 runs on an 86 device, not on a 60
+            ("vtk-m cuda_arch:=80", "vtk-m cuda_arch=:86", True, True),
+            ("vtk-m cuda_arch:=80", "vtk-m cuda_arch=:60", False, False),
+            ("vtk-m cuda_arch=86", "vtk-m cuda_arch=:80", False, False),
+            ("vtk-m cuda_arch=:80", "vtk-m cuda_arch=:86", True, True),
+            ("vtk-m cuda_arch=:86", "vtk-m cuda_arch=:80", False, True),
+            ("vtk-m cuda_arch=:89", "vtk-m cuda_arch=:90", False, False),
+            # a compatible form archspec does not know is still a literal value
+            ("vtk-m cuda_arch=:99", "vtk-m cuda_arch=80", False, True),
+            ("vtk-m", "vtk-m cuda_arch=:86", False, True),
+        ],
+    )
+    def test_compatible_gpu_form_is_compared_by_the_architecture(
+        self, lhs, rhs, satisfies, intersects
+    ):
+        assert Spec(lhs).satisfies(Spec(rhs)) is satisfies
+        assert Spec(lhs).intersects(Spec(rhs)) is intersects
+
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected_gpus",
+        [
+            ("vtk-m cuda_arch=80", "vtk-m cuda_arch=:86", "80"),
+            ("vtk-m", "vtk-m cuda_arch=:86", ":86"),
+            # the AMD pair stays on the variant's set semantics while the NVIDIA pair is deferred
+            (
+                "vtk-m cuda_arch=:86 amdgpu_target=gfx90a",
+                "vtk-m amdgpu_target=gfx942",
+                ":86,gfx90a,gfx942",
+            ),
+        ],
+    )
+    def test_constrain_with_compatible_gpu_form(self, lhs, rhs, expected_gpus):
+        lhs = Spec(lhs)
+        lhs.constrain(Spec(rhs))
+        assert ",".join(map(str, lhs.architecture.gpus)) == expected_gpus
+
+    @pytest.mark.parametrize(
+        "lhs,rhs,expected,changed",
+        [
+            ("vtk-m cuda_arch=:86", "vtk-m cuda_arch=:80", (":80",), True),
+            ("vtk-m cuda_arch=80", "vtk-m cuda_arch=:86", ("80",), False),
+            ("vtk-m cuda_arch:=80", "vtk-m cuda_arch=:86", ("80",), False),
+            ("vtk-m", "vtk-m cuda_arch=:86", (":86",), True),
+        ],
+    )
+    def test_constrained_compatible_gpu_form_is_written_back_to_the_variant(
+        self, lhs, rhs, expected, changed
+    ):
+        lhs = Spec(lhs)
+        assert lhs.constrain(Spec(rhs)) is changed
+        assert lhs.variants["cuda_arch"].values == expected
+        assert lhs.constrain(Spec(rhs)) is False
+
+    def test_constrain_with_disjoint_compatible_gpu_forms_is_an_architecture_error(self):
+        with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
+            Spec("vtk-m cuda_arch=:89").constrain(Spec("vtk-m cuda_arch=:90"))
+
     @pytest.mark.regression("13124")
     def test_error_message_unknown_variant(self):
         s = Spec("mpileaks +unknown")

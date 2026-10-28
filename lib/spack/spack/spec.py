@@ -286,6 +286,18 @@ def _make_gpu_target(
     return GPUTarget(_make_gpu_microarch(value), compatible=False)
 
 
+def has_compatible_gpu_value(variant: vt.VariantValue) -> bool:
+    """Whether a GPU variant carries a compatible form archspec knows, e.g. ``:86``. Such a
+    variant is compared by the architecture, not by the variant's own exact rules."""
+    for value in variant.values:
+        try:
+            if _make_gpu_target(str(value)).compatible:
+                return True
+        except ValueError:
+            continue
+    return False
+
+
 def _closed_interval_targets(
     lower: Optional[spack.vendor.archspec.cpu.Microarchitecture],
     upper: spack.vendor.archspec.cpu.Microarchitecture,
@@ -878,6 +890,7 @@ class ArchSpec:
             self._attr_satisfies(self.platform, other.platform)
             and self._attr_satisfies(self.os, other.os)
             and self._target_satisfies(self.target, other.target)
+            and self._gpu_satisfies(*self._gpu_scope(other))
         )
 
     def intersects(self, other: "ArchSpec") -> bool:
@@ -896,6 +909,7 @@ class ArchSpec:
             self._attr_intersects(self.platform, other.platform)
             and self._attr_intersects(self.os, other.os)
             and self._target_intersects(self.target, other.target)
+            and self._gpu_intersects(*self._gpu_scope(other))
         )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
@@ -922,26 +936,38 @@ class ArchSpec:
         self.target = intersection_target
         return True
 
+    def _gpu_scope(
+        self, other: "ArchSpec"
+    ) -> Tuple[Tuple[GPUTarget, ...], Tuple[GPUTarget, ...]]:
+        """Both sides' targets for the vendors a compatible form is involved in. Bare targets
+        of other vendors are the variant's to compare, so they are left out."""
+        mine, theirs = self.gpus or (), other.gpus or ()
+        vendors = {t.node.vendor for t in (*mine, *theirs) if t.compatible}
+        return (
+            tuple(t for t in mine if t.node.vendor in vendors),
+            tuple(t for t in theirs if t.node.vendor in vendors),
+        )
+
     def _gpu_constrain(self, other: "ArchSpec") -> bool:
-        """Constrains ``self.gpus`` to the targets both sides accept.
-
-        Not called from ``constrain`` yet: bare GPU values are compared exactly, by the
-        variant, and only the compatible form defers to the architecture."""
-        if other.gpus is None:
-            return False  # no constraints to apply
-        if self.gpus is None:
-            self.gpus = other.gpus
-            return True
-
-        results = self._gpu_intersection(self.gpus, other.gpus)
-        if not results:
-            raise UnsatisfiableArchitectureSpecError(self, other)
-
-        intersection = tuple(results)
-        if self.gpus == intersection:
+        mine, theirs = self._gpu_scope(other)
+        if not theirs:
             return False
 
-        self.gpus = intersection
+        if not mine:
+            results = list(theirs)
+        else:
+            results = self._gpu_intersection(mine, theirs)
+            if not results:
+                raise UnsatisfiableArchitectureSpecError(self, other)
+
+        # targets of vendors outside the scope are untouched
+        scoped = {t.node.vendor for t in (*mine, *theirs)}
+        kept = tuple(t for t in self.gpus or () if t.node.vendor not in scoped)
+        new = kept + tuple(results)
+        if new == self.gpus:
+            return False
+
+        self.gpus = new
         return True
 
     def constrain(self, other: "ArchSpec") -> bool:
@@ -972,6 +998,7 @@ class ArchSpec:
                 constrained = True
 
         constrained |= self._target_constrain(other)
+        constrained |= self._gpu_constrain(other)
 
         return constrained
 
@@ -3559,10 +3586,28 @@ class Spec:
             # copy, so that a later constrain on self does not write through into other
             self.architecture = oarch.copy()
             changed = True
+        changed |= self._write_gpus_back_to_variants(other)
 
         if deps:
             changed |= self._constrain_dependencies(other)
 
+        return changed
+
+    def _write_gpus_back_to_variants(self, other: "Spec") -> bool:
+        """After the architecture constrained the compatible GPU forms, the variants that
+        deferred to it take the result; the variant remains the source of truth."""
+        if self.architecture is None or self.architecture.gpus is None:
+            return False
+
+        changed = False
+        for name, vendor in spack.gpus.VENDOR_BY_VARIANT.items():
+            mine, theirs = self.variants.get(name), other.variants.get(name)
+            if mine is None or not VariantMap._compared_by_architecture(name, mine, theirs):
+                continue
+            values = tuple(str(t) for t in self.architecture.gpus if t.node.vendor == vendor)
+            if values and set(values) != set(mine.values):
+                mine.set(*values)
+                changed = True
         return changed
 
     def _constrain_dependencies(self, other: "Spec") -> bool:
@@ -5317,10 +5362,21 @@ class VariantMap(_VariantMapBase):
         """Stores ``vspec`` under its own name, replacing any entry already there."""
         self[vspec.name] = vspec
 
+    @staticmethod
+    def _compared_by_architecture(name: str, *variants: Optional[vt.VariantValue]) -> bool:
+        # a GPU variant with a compatible form (e.g. ``:86``) is compared by the ArchSpec
+        return name in spack.gpus.VENDOR_BY_VARIANT and any(
+            v is not None and has_compatible_gpu_value(v) for v in variants
+        )
+
     def satisfies(self, other: "VariantMap") -> bool:
         for name, variant in other.items():
             mine = self.get(name)
-            if mine is None or not mine.satisfies(variant):
+            if mine is None:
+                return False
+            if self._compared_by_architecture(name, mine, variant):
+                continue
+            if not mine.satisfies(variant):
                 return False
         return True
 
@@ -5328,7 +5384,9 @@ class VariantMap(_VariantMapBase):
         """The first pair of values of the same name that do not intersect, if any."""
         for name, variant in other.items():
             mine = self.get(name)
-            if mine is not None and not mine.intersects(variant):
+            if mine is None or self._compared_by_architecture(name, mine, variant):
+                continue
+            if not mine.intersects(variant):
                 return mine, variant
         return None
 
@@ -5341,7 +5399,7 @@ class VariantMap(_VariantMapBase):
             if mine is None:
                 self[name] = variant.copy()
                 changed = True
-            else:
+            elif not self._compared_by_architecture(name, mine, variant):
                 changed |= mine.constrain(variant)
         return changed
 

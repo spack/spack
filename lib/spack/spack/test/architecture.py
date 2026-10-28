@@ -11,7 +11,8 @@ import spack.concretize
 import spack.error
 import spack.operating_systems
 import spack.platforms
-from spack.spec import ArchSpec, Spec, _make_gpu_target
+import spack.variant as vt
+from spack.spec import ArchSpec, Spec, _make_gpu_target, has_compatible_gpu_value
 
 
 @pytest.fixture(scope="module")
@@ -229,7 +230,9 @@ def test_gpus_are_a_mirror_outside_identity_and_serialization():
 @pytest.mark.parametrize(
     "lhs,rhs,expected",
     [
-        (None, ["80"], "80"),
+        # only the compatible form is the architecture's to constrain
+        (None, [":80"], ":80"),
+        (None, ["80"], None),
         (["80"], None, "80"),
         ([":86"], [":80"], ":80"),
         (["80"], [":86"], "80"),
@@ -240,9 +243,40 @@ def test_gpus_are_a_mirror_outside_identity_and_serialization():
 def test_gpu_constrain(lhs, rhs, expected):
     arch = ArchSpec((None, "debian6", None), gpus=lhs)
     other = ArchSpec((None, None, None), gpus=rhs)
-    assert arch._gpu_constrain(other) is (lhs != expected.split(","))
-    assert ",".join(map(str, arch.gpus)) == expected
+    assert arch._gpu_constrain(other) is (expected is not None and lhs != expected.split(","))
+    assert (arch.gpus is None) if expected is None else ",".join(map(str, arch.gpus)) == expected
     assert arch._gpu_constrain(other) is False
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("80", False),
+        ("none", False),
+        ("*", False),
+        (True, False),
+        (":86", True),
+        ("80,:86", True),
+        (":99", False),
+        (":none", False),
+    ],
+)
+def testhas_compatible_gpu_value(value, expected):
+    variant = vt.VariantValue.from_string_or_bool("cuda_arch", value)
+    assert has_compatible_gpu_value(variant) is expected
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        (["80"], ["86"], ((), ())),
+        ([":86"], ["80", "gfx942"], ((":86",), ("80",))),
+        (None, [":gfx90a"], ((), (":gfx90a",))),
+    ],
+)
+def test_gpu_scope(lhs, rhs, expected):
+    lhs, rhs = ArchSpec((None, None, None), gpus=lhs), ArchSpec((None, None, None), gpus=rhs)
+    assert tuple(tuple(map(str, side)) for side in lhs._gpu_scope(rhs)) == expected
 
 
 def test_gpu_constrain_is_atomic_when_gpus_are_disjoint():

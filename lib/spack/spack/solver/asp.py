@@ -48,6 +48,7 @@ import spack.deprecation
 import spack.deptypes as dt
 import spack.error
 import spack.externals_config
+import spack.gpus
 import spack.hash_lookup
 import spack.package_base
 import spack.package_prefs
@@ -2505,6 +2506,15 @@ class SpackSolverSetup:
                         start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
                         raise UnsatisfiableSpecError(
                             f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
+                        )
+
+                for name in spack.gpus.VENDOR_BY_VARIANT:
+                    variant = s.variants.get(name)
+                    if variant is not None and spack.spec.has_compatible_gpu_value(variant):
+                        raise UnsatisfiableSpecError(
+                            f"cannot concretize '{root}': {variant} selects builds compatible "
+                            f"with that GPU and is for queries only. Build for an exact target, "
+                            f"or for the host's with {name}={spack.gpus.HOST_DEFAULT}"
                         )
 
                 spack.spec.Spec.ensure_valid_variants(s, repo=repo)
