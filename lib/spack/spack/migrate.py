@@ -471,6 +471,10 @@ def migrate_with_staging(
 
     # Prepare parent directory and staging path
     parent = os.path.dirname(new_path)
+    if not os.access(parent, os.W_OK):
+        tty.debug(f"Cannot migrate to read-only directory {parent}")
+        return False
+
     staging_path = os.path.join(parent, staging_name)
     filesystem.mkdirp(parent)
 
