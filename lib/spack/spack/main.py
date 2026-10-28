@@ -833,14 +833,19 @@ def _main(argv=None):
         print(spack.get_version())
         return 0
 
+    # -------------------------------------------------------------------------
+    # The next two sections after this one set up config properly.
+    # Nothing can touch config before here
+    # -------------------------------------------------------------------------
+    assert spack.config.CONFIG._instance is None
+
     # ------------------------------------------------------------------------------------
     # This part of `main()` handles migration from the old configs (Spack 1.2 and earlier)
     # ------------------------------------------------------------------------------------
 
-    # We do not use the command found here, in case aliases found after config are relevant
+    # We do not reuse cmd_string, because aliases are not evaluated here
     cmd_string = args.command or ""
     if cmd_string != "isolate":
-        assert spack.config.CONFIG.instance is None
         spack.migrate.perform_migration()
 
     # ------------------------------------------------------------------------
@@ -893,6 +898,18 @@ def _main(argv=None):
     # ------------------------------------------------------------------------
     # Things that require configuration should go below here
     # ------------------------------------------------------------------------
+    if (
+        sys.platform == "darwin"
+        and multiprocessing.get_start_method(allow_none=True) is None
+        and spack.config.CONFIG.get("config:installer") == "new"
+    ):
+        # Forkserver is significantly faster than spawn. This has to be configured once and early
+        # in the process.
+        multiprocessing.set_start_method("forkserver")
+    # When using the forkserver start method, preload the following modules to improve startup
+    # time of child processes.
+    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
+
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(","))
         return 0
@@ -1001,17 +1018,6 @@ def main(argv=None):
             the executable name. If None, parses from sys.argv.
 
     """
-    if (
-        sys.platform == "darwin"
-        and multiprocessing.get_start_method(allow_none=True) is None
-        and spack.config.CONFIG.get("config:installer") == "new"
-    ):
-        # Forkserver is significantly faster than spawn. This has to be configured once and early
-        # in the process.
-        multiprocessing.set_start_method("forkserver")
-    # When using the forkserver start method, preload the following modules to improve startup
-    # time of child processes.
-    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
     try:
         g0, g1, g2 = gc.get_threshold()
         gc.set_threshold(50 * g0, g1, g2)
