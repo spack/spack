@@ -744,6 +744,12 @@ def _migrate_user_config() -> bool:
     old_location = os.path.expanduser("~/.spack")
     new_location = migration_config_home()
 
+    try:
+        already_exists = os.path.isdir(new_location) and os.scandir(new_location)
+    except OSError:
+        # migration will fail, but it's not a cleanly existing new location
+        already_exists = False
+
     ret = migrate_with_staging(
         old_path=old_location,
         new_path=new_location,
@@ -754,9 +760,10 @@ def _migrate_user_config() -> bool:
         verify_destination_callback=can_migrate_to_location,
     )
 
-    if (not ret) and is_nonempty_dir(old_location):
+
+    if (not ret) and is_nonempty_directory(old_location) and not already_exists:
         tty.die(
-            "Failed to migrate Spack config directory. Fix permissions on ~/.config/spack or "
+            f"Failed to migrate Spack config directory. Fix permissions on {new_location} or "
             "set SPACK_USER_CONFIG_PATH=~/.spack to use the old location"
         )
 
