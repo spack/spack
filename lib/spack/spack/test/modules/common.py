@@ -14,7 +14,6 @@ import spack.modules
 import spack.modules.common
 import spack.modules.tcl
 import spack.package_base
-import spack.package_prefs
 import spack.repo
 import spack.store
 from spack.config import Configuration
@@ -50,15 +49,13 @@ def mock_module_defaults(monkeypatch):
 
 
 @pytest.fixture()
-def mock_package_perms(monkeypatch):
-    perms = stat.S_IRGRP | stat.S_IWGRP
-    monkeypatch.setattr(spack.package_prefs, "get_package_permissions", lambda spec: perms)
-
-    yield perms
+def mock_package_perms(mutable_config):
+    mutable_config.set("packages:all:permissions", {"read": "group", "write": "group"})
+    yield stat.S_IRGRP | stat.S_IWGRP
 
 
 def test_modules_written_with_proper_permissions(
-    mock_module_filename, mock_package_perms, mock_packages, config
+    mock_module_filename, mock_package_perms, mock_packages, mutable_config
 ):
     spec = spack.concretize.concretize_one("mpileaks")
 

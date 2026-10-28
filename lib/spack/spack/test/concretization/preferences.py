@@ -326,46 +326,30 @@ mpi:
         # Make sure we can configure readable and writable
 
         # Test inheriting from 'all'
-        spec = Spec("zmpi")
-        perms = spack.package_prefs.get_package_permissions(spec)
-        assert perms == stat.S_IRWXU | stat.S_IRWXG
-
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
-        assert dir_perms == stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID
-
-        group = spack.package_prefs.get_package_group(spec)
-        assert group == "all"
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, "zmpi")
+        assert perms.file_mode == stat.S_IRWXU | stat.S_IRWXG
+        assert perms.dir_mode == stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID
+        assert perms.group == "all"
 
     def test_config_permissions_from_package(self, configure_permissions):
         # Test overriding 'all'
-        spec = Spec("mpich")
-        perms = spack.package_prefs.get_package_permissions(spec)
-        assert perms == stat.S_IRWXU
-
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
-        assert dir_perms == stat.S_IRWXU
-
-        group = spack.package_prefs.get_package_group(spec)
-        assert group == "all"
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, "mpich")
+        assert perms.file_mode == stat.S_IRWXU
+        assert perms.dir_mode == stat.S_IRWXU
+        assert perms.group == "all"
 
     def test_config_permissions_differ_read_write(self, configure_permissions):
         # Test overriding group from 'all' and different readable/writable
-        spec = Spec("mpileaks")
-        perms = spack.package_prefs.get_package_permissions(spec)
-        assert perms == stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP
-
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, "mpileaks")
+        assert perms.file_mode == stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP
         expected = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_ISGID
-        assert dir_perms == expected
-
-        group = spack.package_prefs.get_package_group(spec)
-        assert group == "mpileaks"
+        assert perms.dir_mode == expected
+        assert perms.group == "mpileaks"
 
     def test_config_perms_fail_write_gt_read(self, configure_permissions):
         # Test failure for writable more permissive than readable
-        spec = Spec("callpath")
         with pytest.raises(ConfigError):
-            spack.package_prefs.get_package_permissions(spec)
+            spack.package_prefs.package_permissions(spack.config.CONFIG, "callpath")
 
     @pytest.mark.regression("20040")
     def test_variant_not_flipped_to_pull_externals(self):
@@ -450,3 +434,46 @@ mpi:
             # Asking for ~debug results in the highest known version being chosen
             mpileaks = spack.concretize.concretize_one("mpileaks~debug")
             assert not mpileaks.external and mpileaks.satisfies("@2.3 ~debug")
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,expected",
+    [
+        # Only packages:all is read, even when a package is configured
+        (
+            """\
+all:
+  permissions:
+    read: group
+    write: group
+    group: all
+mpich:
+  permissions:
+    read: user
+    group: mpich
+""",
+            (stat.S_IRWXU | stat.S_IRWXG, stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID, "all"),
+        ),
+        # Nothing configured
+        ("{}", (stat.S_IRWXU, stat.S_IRWXU, "")),
+    ],
+)
+def test_package_permissions_without_package(packages_yaml, expected):
+    """Tests that a None package name reads only the permissions under packages:all."""
+    configuration = Configuration()
+    configuration.push_scope(
+        spack.config.InternalConfigScope("test", {"packages": syaml.load_config(packages_yaml)})
+    )
+    perms = spack.package_prefs.package_permissions(configuration, None)
+    assert (perms.file_mode, perms.dir_mode, perms.group) == expected
+
+
+def test_package_permissions_error_names_all():
+    """Tests that the error for write wider than read names packages:all when no package is
+    given.
+    """
+    packages_yaml = {"all": {"permissions": {"read": "user", "write": "group"}}}
+    configuration = Configuration()
+    configuration.push_scope(spack.config.InternalConfigScope("test", {"packages": packages_yaml}))
+    with pytest.raises(ConfigError, match="Violating package is all"):
+        spack.package_prefs.package_permissions(configuration, None)

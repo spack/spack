@@ -6,7 +6,8 @@ import os
 import stat as st
 from typing import List, Optional, Union
 
-import spack.package_prefs as pp
+import spack.config
+import spack.package_prefs
 from spack.error import SpackError
 
 #: os.chown sentinel to leave an id unchanged
@@ -15,12 +16,8 @@ _UNCHANGED = -1
 
 def set_permissions_by_spec(path: str, spec) -> None:
     """Recursively set permissions and group of path as configured for spec."""
-    set_permissions(
-        path,
-        dir_perms=pp.get_package_dir_permissions(spec),
-        file_perms=pp.get_package_permissions(spec),
-        group=pp.get_package_group(spec),
-    )
+    perms = spack.package_prefs.package_permissions(spack.config.CONFIG, spec.name)
+    set_permissions(path, dir_perms=perms.dir_mode, file_perms=perms.file_mode, group=perms.group)
 
 
 def set_permissions(

@@ -52,7 +52,7 @@ import spack.error
 import spack.hooks
 import spack.mirrors.mirror
 import spack.package_base
-import spack.package_prefs as prefs
+import spack.package_prefs
 import spack.report
 import spack.rewiring
 import spack.store
@@ -990,21 +990,22 @@ class Task:
             tty.debug(f"Creating the installation directory {path}")
             spack.store.STORE.layout.create_install_directory(pkg.spec)
         else:
+            perms = spack.package_prefs.package_permissions(spack.config.CONFIG, pkg.spec.name)
+            spack.package_prefs.warn_if_sgid_on_afs(pkg.spec.prefix, perms.dir_mode)
+
             # Set the proper group for the prefix
-            group = prefs.get_package_group(pkg.spec)
-            if group:
-                fs.chgrp(pkg.spec.prefix, group)
+            if perms.group:
+                fs.chgrp(pkg.spec.prefix, perms.group)
 
             # Set the proper permissions.
             # This has to be done after group because changing groups blows
             # away the sticky group bit on the directory
             mode = os.stat(pkg.spec.prefix).st_mode
-            perms = prefs.get_package_dir_permissions(pkg.spec)
-            if mode != perms:
-                os.chmod(pkg.spec.prefix, perms)
+            if mode != perms.dir_mode:
+                os.chmod(pkg.spec.prefix, perms.dir_mode)
 
             # Ensure the metadata path exists as well
-            fs.mkdirp(spack.store.STORE.layout.metadata_path(pkg.spec), mode=perms)
+            fs.mkdirp(spack.store.STORE.layout.metadata_path(pkg.spec), mode=perms.dir_mode)
 
         # Always write host environment - we assume this can change
         spack.store.STORE.layout.write_host_environment(pkg.spec)
