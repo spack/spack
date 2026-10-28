@@ -3,20 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import stat
 import warnings
-from typing import Any, Iterable, NamedTuple, Optional
+from typing import Any, Callable, Iterable, NamedTuple, Optional
 
 import spack.config
 import spack.repo
 import spack.spec
 from spack.error import ConfigError
-from spack.version import Version
-
-_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
-
-
-def _spec_type(component):
-    """Map from component name to spec type for package prefs."""
-    return _lesser_spec_types.get(component, spack.spec.Spec)
 
 
 def _first_set(packages: dict, names: Iterable[str], *path: str) -> Any:
@@ -33,128 +25,44 @@ def _first_set(packages: dict, names: Iterable[str], *path: str) -> Any:
     return None
 
 
-class PackagePrefs:
-    """Defines the sort order for a set of specs.
+def target_sort_key(
+    configuration: spack.config.Configuration,
+) -> Callable[[spack.spec.Spec], float]:
+    """Return a key to sort ``target=<name>`` specs in the order of ``packages:all:target``.
 
-    Spack's package preference implementation uses PackagePrefs to
-    define sort order. The PackagePrefs class looks at Spack's
-    packages.yaml configuration and, when called on a spec, returns a key
-    that can be used to sort that spec in order of the user's
-    preferences.
-
-    You can use it like this::
-
-       # key function sorts CompilerSpecs for `mpich` in order of preference
-       kf = PackagePrefs("mpich", "compiler", configuration=spack.config.CONFIG)
-       compiler_list.sort(key=kf)
-
-    Or like this::
-
-       # key function to sort VersionLists for OpenMPI in order of preference.
-       kf = PackagePrefs("openmpi", "version", configuration=spack.config.CONFIG)
-       version_list.sort(key=kf)
-
-    Optionally, you can sort in order of preferred virtual dependency
-    providers.  To do that, provide ``"providers"`` and a third argument
-    denoting the virtual package (e.g., ``mpi``)::
-
-       kf = PackagePrefs("trilinos", "providers", "mpi", configuration=spack.config.CONFIG)
-       provider_spec_list.sort(key=kf)
-
+    The key of a spec is the index of the first preferred target it intersects, minus 0.5 if it is
+    equal to that target, or the number of preferred targets if it intersects none.
     """
+    names = _first_set(configuration.get_config("packages"), ("all",), "target") or []
+    order = [spack.spec.Spec(f"target={str(name).strip()}") for name in names]
 
-    def __init__(
-        self, pkgname, component, vpkg=None, all=True, *, configuration: spack.config.Configuration
-    ):
-        self.pkgname = pkgname
-        self.component = component
-        self.vpkg = vpkg
-        self.all = all
-        self._configuration = configuration
+    def key(spec: spack.spec.Spec) -> float:
+        index = next((i for i, s in enumerate(order) if spec.intersects(s)), len(order))
+        if index < len(order) and order[index] == spec:
+            return index - 0.5
+        return index
 
-        self._spec_order = None
+    return key
 
-    def __call__(self, spec):
-        """Return a key object (an index) that can be used to sort spec.
 
-        Sort is done in package order. We don't cache the result of
-        this function as Python's sort functions already ensure that the
-        key function is called at most once per sorted element.
-        """
-        if self._spec_order is None:
-            self._spec_order = self._specs_for_pkg(
-                self.pkgname,
-                self.component,
-                self.vpkg,
-                self.all,
-                configuration=self._configuration,
-            )
-        spec_order = self._spec_order
+def preferred_variants(
+    pkg_name: str, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath
+):
+    """Return the variants in ``packages:<pkg_name>:variants``, or else in
+    ``packages:all:variants``, that the package defines, by name."""
+    packages = configuration.get_config("packages")
+    variants = _first_set(packages, (pkg_name, "all"), "variants") or ""
 
-        # integer is the index of the first spec in order that satisfies
-        # spec, or it's a number larger than any position in the order.
-        match_index = next(
-            (i for i, s in enumerate(spec_order) if spec.intersects(s)), len(spec_order)
-        )
-        if match_index < len(spec_order) and spec_order[match_index] == spec:
-            # If this is called with multiple specs that all satisfy the same
-            # minimum index in spec_order, the one which matches that element
-            # of spec_order exactly is considered slightly better. Note
-            # that because this decreases the value by less than 1, it is not
-            # better than a match which occurs at an earlier index.
-            match_index -= 0.5
-        return match_index
+    # allow variants to be list or string
+    if not isinstance(variants, str):
+        variants = " ".join(variants)
 
-    @classmethod
-    def order_for_package(
-        cls, pkgname, component, vpkg=None, all=True, *, configuration: spack.config.Configuration
-    ):
-        """Given a package name, sort component (e.g, version, compiler, ...),
-        and an optional vpkg, return the list from the packages config.
-        """
-        pkglist = [pkgname, "all"] if all else [pkgname]
-        path = (component,) if vpkg is None else (component, vpkg)
-        order = _first_set(configuration.get_config("packages"), pkglist, *path)
-        if not order:
-            return []
-
-        ret = [str(s).strip() for s in order]
-        if component == "target":
-            ret = ["target=%s" % tname for tname in ret]
-        return ret
-
-    @classmethod
-    def _specs_for_pkg(
-        cls, pkgname, component, vpkg=None, all=True, *, configuration: spack.config.Configuration
-    ):
-        """Given a sort order specified by the pkgname/component/second_key,
-        return a list of CompilerSpecs, VersionLists, or Specs for
-        that sorting list.
-        """
-        pkglist = cls.order_for_package(pkgname, component, vpkg, all, configuration=configuration)
-        spec_type = _spec_type(component)
-        return [spec_type(s) for s in pkglist]
-
-    @classmethod
-    def preferred_variants(
-        cls, pkg_name, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath
-    ):
-        """Return a VariantMap of preferred variants/values for a spec."""
-        packages = configuration.get_config("packages")
-        variants = _first_set(packages, (pkg_name, "all"), "variants") or ""
-
-        # allow variants to be list or string
-        if not isinstance(variants, str):
-            variants = " ".join(variants)
-
-        # Only return variants that are actually supported by the package
-        pkg_cls = repo.get_pkg_class(pkg_name)
-        spec = spack.spec.Spec(f"{pkg_name} {variants}")
-        return {
-            name: variant
-            for name, variant in spec.variants.items()
-            if name in pkg_cls.variant_names()
-        }
+    # Only return variants that are actually supported by the package
+    pkg_cls = repo.get_pkg_class(pkg_name)
+    spec = spack.spec.Spec(f"{pkg_name} {variants}")
+    return {
+        name: variant for name, variant in spec.variants.items() if name in pkg_cls.variant_names()
+    }
 
 
 class Permissions(NamedTuple):
