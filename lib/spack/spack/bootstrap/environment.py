@@ -148,21 +148,22 @@ def pytest_root_spec() -> str:
 
 def ruff_root_spec() -> str:
     """Return the root spec used to bootstrap ruff"""
-    return "py-ruff@0.15.0"
+    return "py-ruff@0.16.10"
 
 
 def ty_root_spec() -> str:
     """Return the root spec used to bootstrap ty"""
-    return "py-ty@0.0.72"
+    return "py-ty@0.0.85"
 
 
 def dev_bootstrap_mirror_names() -> List[str]:
-    """Return the mirror names used for bootstrapping dev
-    requirements"""
+    """Return the mirror names used for bootstrapping dev requirements. These are the binary
+    caches of the ``developer-bootstrap-*`` stacks in spack-packages, which build the versions
+    of the root specs above."""
     return [
-        "developer-tools-darwin",
-        "developer-tools-x86_64_v3-linux-gnu",
-        "developer-tools-aarch64-linux-gnu",
+        "developer-bootstrap-darwin",
+        "developer-bootstrap-x86_64_v3-linux-gnu",
+        "developer-bootstrap-aarch64-linux-gnu",
     ]
 
 
