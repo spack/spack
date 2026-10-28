@@ -839,8 +839,8 @@ def _main(argv=None):
     # -------------------------------------------------------------------------
     # If a test or script overrides with a non-singleton, allow that
     assert (
-        or not isinstance(spack.config.CONFIG, spack.util.lang.Singleton)
-        spack.config.CONFIG._instance is None
+        not isinstance(spack.config.CONFIG, spack.util.lang.Singleton)
+        or spack.config.CONFIG._instance is None
     )
 
     # ------------------------------------------------------------------------------------
