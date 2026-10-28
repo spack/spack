@@ -10,7 +10,6 @@ after the system path is set up.
 
 import argparse
 import gc
-import importlib
 import inspect
 import multiprocessing
 import operator
@@ -790,26 +789,6 @@ def add_command_line_scopes(
         cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
 
 
-def reload_modules_with_config_derived_globals():
-    """Reload all modules with globals that are derived from spack.config.CONFIG
-
-    These reloads are carefully ordered by the dependencies among the modules, so
-    each module is reloaded after the ones it imports itself."""
-    modules_in_order = [
-        "spack.config",
-        "spack.cache",
-        "spack.repo",
-        "spack.store",
-        "spack.binary_distribution",
-        "spack.compilers.libraries",
-        "spack.modules.common",
-    ]
-    for module in modules_in_order:
-        if module in sys.modules:
-            importlib.reload(sys.modules[module])
-            # do not break, there is branching dependencies among these modules
-
-
 def _main(argv=None):
     """Logic for the main entry point for the Spack command.
 
@@ -861,9 +840,8 @@ def _main(argv=None):
     # We do not use the command found here, in case aliases found after config are relevant
     cmd_string = args.command or ""
     if cmd_string != "isolate":
-        config_migrated = spack.migrate.perform_migration()
-        if config_migrated:
-            reload_modules_with_config_derived_globals()
+        assert spack.config.CONFIG.instance is None
+        spack.migrate.perform_migration()
 
     # ------------------------------------------------------------------------
     # This part of the `main()` sets up Spack's configuration.
