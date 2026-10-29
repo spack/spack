@@ -9,4 +9,4 @@ macholib==1.16.2
   altgraph==0.17.3
 ruamel.yaml==0.17.21
 typing_extensions==4.1.1
-archspec==0.2.7
+archspec @ git+https://github.com/aiden2244/archspec.git@0b1a2e7bdeb87ae05e13743e58bb4ae45333ab35 # detect-gpus: GPU detection (demo pin, not for release)
