@@ -70,8 +70,8 @@ class Permissions(NamedTuple):
 
     #: mode for files
     file_mode: int
-    #: mode for directories: ``file_mode``, plus ``S_ISGID`` when group bits are set and
-    #: ``config:allow_sgid`` is true
+    #: mode for directories, which is ``file_mode`` plus ``S_ISGID`` when group bits are set
+    #: and ``config:allow_sgid`` is true
     dir_mode: int
     #: name of the group, or empty to leave the group unchanged
     group: str
