@@ -14,10 +14,13 @@ installation and its deprecator.
 """
 
 import argparse
+from typing import List
 
 import spack.cmd
 import spack.concretize
+import spack.modules
 import spack.old_installer
+import spack.spec
 import spack.store
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -142,5 +145,14 @@ def deprecate(parser, args):
     # Fail before touching the store if the database cannot be modified.
     spack.store.STORE.db.ensure_latest_db_version()
 
-    for dcate, dcator in zip(all_deprecate, all_deprecators):
-        spack.old_installer.deprecate(dcate, dcator, symlink)
+    recorded_specs: List[spack.spec.Spec] = []
+    try:
+        for dcate, dcator in zip(all_deprecate, all_deprecators):
+            spack.old_installer.deprecate(dcate, dcator, symlink, recorded_specs)
+    finally:
+        spack.modules.write_module_files(recorded_specs)
+        # deprecate() skips specs it cannot deprecate, and they keep their module files
+        db = spack.store.STORE.db
+        with db.read_transaction():
+            deprecated = [s for s in all_deprecate if db.deprecator(s)]
+        spack.modules.remove_module_files(deprecated)

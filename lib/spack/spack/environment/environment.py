@@ -2123,13 +2123,14 @@ class Environment:
         """
         self.install_specs(None, **install_args)
 
-    def install_specs(self, specs: Optional[List[Spec]] = None, **install_args):
-        roots = self.concrete_roots()
-        specs = specs if specs is not None else roots
+    def create_installer(self, specs: Optional[List[Spec]] = None, **install_args):
+        """Returns an installer for the given specs of this environment, or for all its roots.
 
-        # Extract reporter arguments
-        reporter = install_args.pop("reporter", None)
-        report_file = install_args.pop("report_file", None)
+        Args:
+            specs: specs to install, by default the concrete roots
+            install_args: keyword arguments of ``spack.installer_dispatch.create_installer``
+        """
+        specs = specs if specs is not None else self.concrete_roots()
 
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
@@ -2143,20 +2144,12 @@ class Environment:
             *(x.hash for x in self.explicit_roots()),
         }
 
-        builder = spack.installer_dispatch.create_installer(
-            [spec.package for spec in specs], create_reports=reporter is not None, **install_args
+        return spack.installer_dispatch.create_installer(
+            [spec.package for spec in specs], **install_args
         )
 
-        try:
-            builder.install()
-        finally:
-            if reporter:
-                if isinstance(builder.reports, dict):
-                    reporter.build_report(report_file, list(builder.reports.values()))
-                elif isinstance(builder.reports, list):
-                    reporter.build_report(report_file, builder.reports)
-                else:
-                    raise TypeError("builder.reports must be either a dictionary or a list")
+    def install_specs(self, specs: Optional[List[Spec]] = None, **install_args):
+        self.create_installer(specs, **install_args).install()
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""

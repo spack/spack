@@ -21,6 +21,7 @@ import itertools
 import os
 import pathlib
 import re
+import stat
 import string
 import warnings
 from typing import (
@@ -28,10 +29,12 @@ from typing import (
     Any,
     ClassVar,
     Dict,
+    FrozenSet,
     Iterator,
     List,
     NamedTuple,
     Optional,
+    Sequence,
     Tuple,
     Type,
     Union,
@@ -43,9 +46,11 @@ import spack.build_environment
 import spack.compilers
 import spack.compilers.config
 import spack.config
+import spack.database
 import spack.deptypes as dt
 import spack.environment
 import spack.error
+import spack.package_prefs
 import spack.paths
 import spack.projections as proj
 import spack.repo
@@ -62,7 +67,7 @@ import spack.util.spack_yaml as syaml
 from spack import tengine
 from spack.active_environment import active_environment
 from spack.aliases import BUILTIN_TO_LEGACY_COMPILER
-from spack.enums import Context
+from spack.enums import Context, InstallRecordStatus
 from spack.util import tty
 from spack.util.lang import Singleton, dedupe
 
@@ -79,8 +84,62 @@ EnvironmentModification = Tuple[
     str, Union[spack.util.environment.NameModifier, spack.util.environment.NameValueModifier]
 ]
 
-#: Cache of configuration objects, keyed by (dag_hash, module_set_name, explicit)
-ModuleConfigurationCache = Dict[Tuple[str, str, bool], "BaseConfiguration"]
+
+class ModuleConfigurationCache:
+    """Objects computed once for a batch of specs, and shared by their configurations."""
+
+    def __init__(self) -> None:
+        #: Configuration objects, keyed by (configuration class, dag_hash, module_set_name,
+        #: explicit, removed_specs)
+        self.configurations: Dict[
+            Tuple[Type["BaseConfiguration"], str, str, bool, FrozenSet[spack.spec.Spec]],
+            "BaseConfiguration",
+        ] = {}
+        self._local_installations: Dict[str, List[spack.spec.Spec]] = {}
+        self._records: Dict[str, spack.database.InstallRecord] = {}
+        self._database_read = False
+
+    def read_database(self) -> None:
+        """Reads the records and the local installations from the database, in a single read
+        transaction. Only the first call reads the database, later calls do nothing.
+        """
+        if self._database_read:
+            return
+
+        db = spack.store.STORE.db
+        by_name: Dict[str, List[spack.spec.Spec]] = collections.defaultdict(list)
+        records: Dict[str, spack.database.InstallRecord] = {}
+        # Transactions nested in this one neither lock nor read the database again
+        with db.read_transaction():
+            for spec in db.query(installed=InstallRecordStatus.ANY, sort=False):
+                dag_hash = spec.dag_hash()
+                upstream, record = db.query_by_spec_hash(dag_hash)
+                if record is None:
+                    continue
+                records[dag_hash] = record
+                if not upstream and record.installed:
+                    by_name[spec.name].append(spec)
+        self._local_installations, self._records = by_name, records
+        self._database_read = True
+
+    def record(self, spec: spack.spec.Spec) -> Optional[spack.database.InstallRecord]:
+        """Returns the database record of the spec, or None if it has none. The database is
+        read on the first call, later calls return what was read then.
+        """
+        self.read_database()
+        return self._records.get(spec.dag_hash())
+
+    def explicit(self, spec: spack.spec.Spec) -> bool:
+        """Returns whether the spec is recorded as explicitly installed."""
+        record = self.record(spec)
+        return bool(record and record.explicit)
+
+    def local_installations(self, name: str) -> List[spack.spec.Spec]:
+        """Returns the specs of a package installed in the local store. The database is read
+        on the first call, later calls return what was read then."""
+        self.read_database()
+        return self._local_installations.get(name, [])
+
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -229,7 +288,7 @@ def generate_module_index(
     for m in modules:
         entries[m.spec.dag_hash()] = {"path": m.layout.filename, "use_name": m.layout.use_name}
 
-    spack.util.filesystem.mkdirp(root)
+    make_module_directory(root)
     with open(index_path, "w", encoding="utf-8") as index_file:
         syaml.dump({"module_index": entries}, default_flow_style=False, stream=index_file)
 
@@ -346,6 +405,7 @@ class BaseConfiguration:
         module_set_name: str,
         explicit: Optional[bool] = None,
         *,
+        removed_specs: FrozenSet[spack.spec.Spec] = frozenset(),
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseConfiguration":
         """Returns the configuration object for spec, reusing ``cache`` if it already holds one.
@@ -353,33 +413,24 @@ class BaseConfiguration:
         Callers that generate modules for many specs may pass a single shared cache to deduplicate
         work across specs. When ``cache`` is ``None`` a fresh one is created, so the returned
         object always reflects the current configuration.
+
+        ``removed_specs`` are the installations being removed from the module files, which may
+        still be recorded in the database.
         """
         if cache is None:
-            cache = {}
+            cache = ModuleConfigurationCache()
 
         if explicit is None:
-            try:
-                explicit = bool(spack.store.STORE.db.get_record(spec).explicit)
-            except KeyError:
-                explicit = False
+            explicit = cache.explicit(spec)
 
-        key = (spec.dag_hash(), module_set_name, explicit)
-        configuration = cache.get(key)
+        key = (cls, spec.dag_hash(), module_set_name, explicit, removed_specs)
+        configuration = cache.configurations.get(key)
         if configuration is None:
-            configuration = cls(spec, module_set_name, explicit, cache=cache)
-            cache[key] = configuration
+            configuration = cls(
+                spec, module_set_name, explicit, removed_specs=removed_specs, cache=cache
+            )
+            cache.configurations[key] = configuration
         return configuration
-
-    @classmethod
-    def make_layout(
-        cls,
-        spec: spack.spec.Spec,
-        module_set_name: str,
-        explicit: Optional[bool] = None,
-        *,
-        cache: Optional[ModuleConfigurationCache] = None,
-    ) -> "FileLayout":
-        return FileLayout(cls.make_configuration(spec, module_set_name, explicit, cache=cache))
 
     def __init__(
         self,
@@ -387,12 +438,14 @@ class BaseConfiguration:
         module_set_name: str,
         explicit: bool,
         *,
+        removed_specs: FrozenSet[spack.spec.Spec] = frozenset(),
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> None:
         self.spec = spec
         self.name = module_set_name
         self.explicit = explicit
-        self._configuration_cache = {} if cache is None else cache
+        self.removed_specs = removed_specs
+        self._configuration_cache = ModuleConfigurationCache() if cache is None else cache
         self._cache: Dict[str, Any] = {}
         _modules_cfg = spack.config.CONFIG.get_config("modules")
         _set_cfg = _modules_cfg.get(module_set_name, {})
@@ -482,17 +535,32 @@ class BaseConfiguration:
             if self.spec.satisfies(constraint):
                 suffixes.append(suffix)
         suffixes = list(dedupe(suffixes))
-        # For hidden modules we can always add a fixed length hash as suffix, since it guards
-        # against file name clashes, and the module is not exposed to the user anyways.
-        if self.hidden:
-            suffixes.append(self.spec.dag_hash(length=7))
-        elif self.hash:
-            suffixes.append(self.hash)
+        hash_suffix = self.hash
+        if hash_suffix:
+            suffixes.append(hash_suffix)
         return suffixes
 
     @property
+    def matches_default(self) -> bool:
+        """Whether this spec matches a configured default."""
+        if "matches_default" not in self._cache:
+            self._cache["matches_default"] = any(
+                self.spec.satisfies(default) for default in self.defaults
+            )
+        return self._cache["matches_default"]
+
+    @property
+    def projection(self) -> str:
+        """Returns the projection the module file name of this spec is formatted with."""
+        return proj.get_projection(self.projections, self.spec) or self.default_projections["all"]
+
+    @property
     def hash(self) -> Optional[str]:
-        """Hash tag for the module or None"""
+        """Hash appended to the module file name, or None"""
+        # For hidden modules we can always add a fixed length hash as suffix, since it guards
+        # against file name clashes, and the module is not exposed to the user anyways
+        if self.hidden:
+            return self.spec.dag_hash(7)
         hash_length = self.conf.get("hash_length", 7)
         if hash_length != 0:
             return self.spec.dag_hash(length=hash_length)
@@ -506,7 +574,11 @@ class BaseConfiguration:
     @property
     def excluded(self) -> bool:
         """Returns True if the module has been excluded, False otherwise."""
+        if "excluded" not in self._cache:
+            self._cache["excluded"] = self._compute_excluded()
+        return self._cache["excluded"]
 
+    def _compute_excluded(self) -> bool:
         # A few variables for convenience of writing the method
         spec = self.spec
         conf = self._config
@@ -736,6 +808,61 @@ class BaseConfiguration:
     def _compute_missing(self) -> List[str]:
         return [x for x in self.hierarchy_tokens if x not in self.available]
 
+    @property
+    def layout(self) -> "FileLayout":
+        """Returns the layout of the module file of this spec."""
+        if "layout" not in self._cache:
+            self._cache["layout"] = self._make_layout()
+        return self._cache["layout"]
+
+    def _make_layout(self) -> "FileLayout":
+        return FileLayout(self)
+
+    @property
+    def configurations_in_file(self) -> Sequence["BaseConfiguration"]:
+        """Returns the configuration of each spec the module file holds, in the order it lists
+        them. This one is the only one, unless its spec is being removed from the module file."""
+        return [] if self.spec in self.removed_specs else [self]
+
+    @property
+    def specs_in_file(self) -> List[spack.spec.Spec]:
+        """Returns the specs the module file holds, in the order it lists them."""
+        return [conf.spec for conf in self.configurations_in_file]
+
+    @property
+    def other_specs_in_file(self) -> List[spack.spec.Spec]:
+        """Returns the other specs the module file holds."""
+        return [spec for spec in self.specs_in_file if spec != self.spec]
+
+    def sibling_configuration(self, spec: spack.spec.Spec) -> "BaseConfiguration":
+        """Returns the configuration of an installation that may share this module file, which
+        is this one for its own spec. For another spec, explicitness is read from the database,
+        as it may differ from this one's, and the installations being removed are handed over.
+        """
+        if spec == self.spec:
+            return self
+        return self.make_configuration(
+            spec, self.name, removed_specs=self.removed_specs, cache=self._configuration_cache
+        )
+
+    @property
+    def has_clashing_installation(self) -> bool:
+        """Whether another local installation of this package has a module file with the same
+        name as this one, without being held by it."""
+        held = set(self.specs_in_file)
+        for spec in self._configuration_cache.local_installations(self.spec.name):
+            if spec == self.spec or spec in held or spec in self.removed_specs:
+                continue
+            conf = self.sibling_configuration(spec)
+            if not conf.excluded and conf.layout.filename == self.layout.filename:
+                return True
+        return False
+
+    @property
+    def file_matches_default(self) -> bool:
+        """Whether a spec held by the module file matches a configured default."""
+        return any(conf.matches_default for conf in self.configurations_in_file)
+
 
 class FileLayout:
     """Provides information on the layout of module files."""
@@ -745,6 +872,8 @@ class FileLayout:
         self._unlocked_paths: Optional[Dict[Optional[Tuple[str, ...]], List[Tuple[str, ...]]]] = (
             None
         )
+        self._name: Optional[str] = None
+        self._filename: Optional[str] = None
 
     @property
     def modulerc(self) -> str:
@@ -764,13 +893,14 @@ class FileLayout:
         return self.conf.root
 
     @property
-    def use_name(self) -> str:
-        """Returns the name used to load the module (e.g. with ``module load``)."""
-        projection = proj.get_projection(self.conf.projections, self.spec)
-        if not projection:
-            projection = self.conf.default_projections["all"]
+    def name(self) -> str:
+        """Returns the name of the module file in the modulepath directory."""
+        if self._name is None:
+            self._name = self._compute_name()
+        return self._name
 
-        name = self.spec.format_path(projection)
+    def _compute_name(self) -> str:
+        name = self.spec.format_path(self.conf.projection)
         # Not everybody is working on linux...
         parts = name.split("/")
         name = os.path.join(*parts)
@@ -778,6 +908,16 @@ class FileLayout:
         path_elements = [name]
         path_elements.extend(map(self.spec.format, self.conf.suffixes))
         return "-".join(path_elements)
+
+    @property
+    def use_name(self) -> str:
+        """Returns the name used to load the module (e.g. with ``module load``)."""
+        return self.name
+
+    @property
+    def unique_use_name(self) -> str:
+        """Returns the name that selects this installation from a dependent module file."""
+        return self.name
 
     @property
     def arch_dirname(self) -> str:
@@ -795,10 +935,15 @@ class FileLayout:
     @property
     def filename(self) -> str:
         """Absolute path to the module file for the current spec."""
+        if self._filename is None:
+            self._filename = self._compute_filename()
+        return self._filename
+
+    def _compute_filename(self) -> str:
         # Just the name of the file
-        filename = self.use_name
+        filename = self.name
         if self.conf.file_extension:
-            filename = f"{self.use_name}.{self.conf.file_extension}"
+            filename += f".{self.conf.file_extension}"
 
         if self.conf.hierarchical:
             # Get the list of requirements and build an **ordered**
@@ -948,10 +1093,12 @@ class FileLayout:
 class ModuleContext(tengine.Context):
     """Provides the context dictionary used by the template engine to render a module file."""
 
-    def __init__(self, configuration, layout: "FileLayout") -> None:
+    def __init__(self, configuration) -> None:
         self.conf = configuration
-        self.layout = layout
+        self.layout = configuration.layout
         self._environment_modifications: Optional[List[EnvironmentModification]] = None
+        self._autoload: Optional[List[str]] = None
+        self._prerequisites: Optional[List[str]] = None
 
     @tengine.context_property
     def spec(self) -> spack.spec.Spec:
@@ -1013,7 +1160,9 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def prerequisites(self) -> List[str]:
         """List of modules that must be loaded before this one."""
-        return self._create_module_list_of("specs_to_prereq")
+        if self._prerequisites is None:
+            self._prerequisites = self._create_module_list_of("specs_to_prereq")
+        return self._prerequisites
 
     def modification_needs_formatting(
         self,
@@ -1151,17 +1300,19 @@ class ModuleContext(tengine.Context):
     @tengine.context_property
     def autoload(self) -> List[str]:
         """List of modules that need to be loaded automatically."""
-        # From 'autoload' configuration option
-        specs = self._create_module_list_of("specs_to_load")
-        # From 'load' configuration option
-        literals = self.conf.literals_to_load
-        return specs + literals
+        if self._autoload is None:
+            # From the 'autoload' configuration option, then from the 'load' one
+            self._autoload = (
+                self._create_module_list_of("specs_to_load") + self.conf.literals_to_load
+            )
+        return self._autoload
 
     def _create_module_list_of(self, what: str) -> List[str]:
         name = self.conf.name
         cache = self.conf._configuration_cache
         return [
-            self.conf.make_layout(x, name, cache=cache).use_name for x in getattr(self.conf, what)
+            self.conf.make_configuration(x, name, cache=cache).layout.unique_use_name
+            for x in getattr(self.conf, what)
         ]
 
     @tengine.context_property
@@ -1227,12 +1378,46 @@ class ModuleContext(tengine.Context):
         return value
 
 
+def make_module_directory(path: str) -> None:
+    """Creates a directory of module files and its missing parents according to the umask, then
+    adds to them the group and the write access configured for all packages.
+
+    The settings of a single package are not used, since a directory can hold the module files
+    of several packages. Does nothing if the directory exists.
+    """
+    if os.path.exists(path):
+        return
+
+    missing = [path, *spack.util.filesystem.longest_existing_parent(path)[1]]
+    spack.util.filesystem.mkdirp(path)
+
+    all_spec = spack.spec.Spec("all")
+    configured = spack.package_prefs.get_package_dir_permissions(all_spec)
+    group = spack.package_prefs.get_package_group(all_spec)
+
+    added = 0
+    if configured & stat.S_IWGRP:
+        added |= stat.S_IRWXG
+    if configured & stat.S_IWOTH:
+        added |= stat.S_IRWXO
+    if group and configured & stat.S_ISGID:
+        added |= stat.S_ISGID
+    for directory in reversed(missing):
+        if group:
+            spack.util.filesystem.chgrp(directory, group)
+        if added:
+            os.chmod(directory, stat.S_IMODE(os.stat(directory).st_mode) | added)
+
+
 class BaseModuleFileWriter:
     default_template: str
     hide_cmd_format: str
     modulerc_header: List[str]
 
     configuration_class: ClassVar[Type["BaseConfiguration"]]
+
+    #: Class of the template context, subclasses may override it
+    context_class: ClassVar[Type[ModuleContext]] = ModuleContext
 
     _required_attrs = (
         ("default_template", DefaultTemplateNotDefined),
@@ -1251,8 +1436,8 @@ class BaseModuleFileWriter:
 
     def __init__(self, conf: "BaseConfiguration") -> None:
         self.conf = conf
-        self.layout = FileLayout(conf)
-        self.context = ModuleContext(conf, self.layout)
+        self.layout = conf.layout
+        self.context = self.context_class(conf)
 
     @classmethod
     def from_spec(
@@ -1261,10 +1446,11 @@ class BaseModuleFileWriter:
         module_set_name: str,
         explicit: Optional[bool] = None,
         *,
+        removed_specs: FrozenSet[spack.spec.Spec] = frozenset(),
         cache: Optional[ModuleConfigurationCache] = None,
     ) -> "BaseModuleFileWriter":
         conf = cls.configuration_class.make_configuration(
-            spec, module_set_name, explicit, cache=cache
+            spec, module_set_name, explicit, removed_specs=removed_specs, cache=cache
         )
         return cls(conf)
 
@@ -1284,13 +1470,25 @@ class BaseModuleFileWriter:
                 return candidate
         return self.default_template
 
+    @property
+    def has_other_installations(self) -> bool:
+        """Whether the module file holds an installation other than this one."""
+        return bool(self.conf.other_specs_in_file)
+
+    @property
+    def has_installation(self) -> bool:
+        """Whether the module file exists and lists this installation. A module file folding
+        several installations exists without listing this one when it is excluded."""
+        return os.path.isfile(self.layout.filename) and self.spec in self.conf.specs_in_file
+
     def write(self, overwrite: bool = False) -> None:
         """Writes the module file.
 
         Args:
             overwrite (bool): if True it is fine to overwrite an already
-                existing file. If False the operation is skipped an we print
-                a warning to the user.
+                existing file. If False an existing file is overwritten only if no other
+                installation clashes with this one on its name, otherwise the operation is
+                skipped with a warning.
         """
         # Return immediately if the module is excluded
         if self.conf.excluded:
@@ -1298,9 +1496,12 @@ class BaseModuleFileWriter:
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 
-        # Print a warning in case I am accidentally overwriting
-        # a module file that is already there (name clash)
-        if not overwrite and os.path.exists(self.layout.filename):
+        # An existing file is kept when another installation has a module file of the same name
+        if (
+            not overwrite
+            and os.path.exists(self.layout.filename)
+            and self.conf.has_clashing_installation
+        ):
             message = "Module file {0.filename} exists and will not be overwritten"
             warnings.warn(message.format(self.layout))
             return
@@ -1309,11 +1510,7 @@ class BaseModuleFileWriter:
         msg = "\tWRITE: {0} [{1}]"
         tty.debug(msg.format(self.spec.cshort_spec, self.layout.filename))
 
-        # If the directory where the module should reside does not exist
-        # create it
-        module_dir = os.path.dirname(self.layout.filename)
-        if not os.path.exists(module_dir):
-            spack.util.filesystem.mkdirp(module_dir)
+        make_module_directory(os.path.dirname(self.layout.filename))
 
         # Get the template for the module
         template_name = self._get_template()
@@ -1348,7 +1545,7 @@ class BaseModuleFileWriter:
         # Render the template
         text = template.render(context)
         # Write it to file
-        with open(self.layout.filename, "w", encoding="utf-8") as f:
+        with spack.util.filesystem.write_tmp_and_move(self.layout.filename, encoding="utf-8") as f:
             f.write(text)
 
         # Set the file permissions of the module to match that of the package
@@ -1362,8 +1559,8 @@ class BaseModuleFileWriter:
         self.update_module_hiddenness()
 
     def update_module_defaults(self) -> None:
-        if any(self.spec.satisfies(default) for default in self.conf.defaults):
-            # This spec matches a default, it needs to be symlinked to default
+        if self.conf.file_matches_default:
+            # A spec held by the module file matches a default, symlink it to default
             # Symlink to a tmp location first and move, so that existing
             # symlinks do not cause an error.
             default_path = os.path.join(os.path.dirname(self.layout.filename), "default")
@@ -1380,8 +1577,9 @@ class BaseModuleFileWriter:
                 removed from modulerc.
         """
         modulerc_path = self.layout.modulerc
-        hide_module_cmd = self.hide_cmd_format % self.layout.use_name
-        hidden = self.conf.hidden and not remove
+        hide_module_cmd = self.hide_cmd_format % self.layout.name
+        # A module file is hidden when every spec it holds is hidden
+        hidden = not remove and all(conf.hidden for conf in self.conf.configurations_in_file)
         modulerc_exists = os.path.exists(modulerc_path)
         updated = False
 
@@ -1417,11 +1615,13 @@ class BaseModuleFileWriter:
             elif not is_empty:
                 # ensure file ends with a newline character
                 content.append("")
-                with open(modulerc_path, "w", encoding="utf-8") as f:
+                with spack.util.filesystem.write_tmp_and_move(
+                    modulerc_path, encoding="utf-8"
+                ) as f:
                     f.write("\n".join(content))
 
-    def remove(self) -> None:
-        """Deletes the module file."""
+    def remove_installation(self) -> None:
+        """Removes this installation from its module file, which is deleted."""
         mod_file = self.layout.filename
         if os.path.exists(mod_file):
             try:
@@ -1436,14 +1636,15 @@ class BaseModuleFileWriter:
                 pass
 
     def remove_module_defaults(self) -> None:
-        if not any(self.spec.satisfies(default) for default in self.conf.defaults):
-            return
-
-        # This spec matches a default, symlink needs to be removed as we remove the module
-        # file it targets.
+        """Removes the default symlink, if it targets this module file."""
         default_symlink = os.path.join(os.path.dirname(self.layout.filename), "default")
         try:
-            os.unlink(default_symlink)
+            # The link may spell the module root differently, e.g. through a symlinked root
+            target = spack.util.filesystem.resolve_link_target_relative_to_the_link(
+                default_symlink
+            )
+            if os.path.realpath(target) == os.path.realpath(self.layout.filename):
+                os.unlink(default_symlink)
         except OSError:
             pass
 

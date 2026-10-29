@@ -2,14 +2,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 import stat
+import sys
 import types
+import warnings
 
 import pytest
 
 import spack.cmd.modules
 import spack.concretize
+import spack.config
 import spack.error
+import spack.main
 import spack.modules
 import spack.modules.common
 import spack.modules.tcl
@@ -21,6 +26,9 @@ from spack.config import Configuration
 from spack.modules.common import UpstreamModuleIndex
 from spack.old_installer import PackageInstaller
 from spack.util.filesystem import readlink
+
+if sys.platform != "win32":
+    import grp
 
 pytestmark = [
     pytest.mark.not_on_windows("does not run on windows"),
@@ -85,7 +93,7 @@ def test_modules_default_symlink(
     assert os.path.islink(link_path)
     assert readlink(link_path) == mock_module_filename
 
-    generator.remove()
+    generator.remove_installation()
     assert not os.path.lexists(link_path)
 
 
@@ -223,3 +231,119 @@ def test_check_module_set_name(mutable_config: Configuration):
 
     with pytest.raises(spack.error.ConfigError, match=msg):
         spack.cmd.modules.check_module_set_name("third")
+
+
+@pytest.mark.parametrize("module_type", ["tcl", "lmod"])
+def test_modules_default_symlink_removed_with_another_root_spelling(
+    module_type, tmp_path, monkeypatch, mock_packages, mock_module_defaults, config
+):
+    """Tests that removing a module file removes its default link, when the module root was
+    spelled through a symbolic link at the time the default link was made."""
+    real_root = tmp_path / "real"
+    real_root.mkdir()
+    link_root = tmp_path / "link"
+    link_root.symlink_to(real_root)
+    spec = spack.concretize.concretize_one("mpileaks@2.3")
+    mock_module_defaults(spec.format("{name}{@version}"), True)
+    writer_cls = spack.modules.module_types[module_type]
+
+    monkeypatch.setattr(spack.modules.common.FileLayout, "filename", str(link_root / "module"))
+    writer_cls.from_spec(spec, "default").write()
+    default_link = real_root / "default"
+    assert default_link.is_symlink()
+
+    monkeypatch.setattr(spack.modules.common.FileLayout, "filename", str(real_root / "module"))
+    writer_cls.from_spec(spec, "default").remove_installation()
+    assert not os.path.lexists(default_link)
+
+
+def test_invalid_modules_config_warns_on_module_updates(tmp_path, mutable_config, mock_packages):
+    """Tests that an invalid modules configuration turns writing and removing module files into
+    a warning, and that no warning is emitted when there is nothing to update."""
+    spec = spack.concretize.concretize_one("mpileaks")
+    (tmp_path / "modules.yaml").write_text(
+        "modules:\n  default:\n    enable: [tcl]\n    tcl:\n      mpileaks@@1: {}\n"
+    )
+    mutable_config.push_scope(spack.config.DirectoryConfigScope("invalid", str(tmp_path)))
+
+    with pytest.warns(UserWarning, match="modules configuration is not valid"):
+        spack.modules.write_module_files([spec])
+    with pytest.warns(UserWarning, match="modules configuration is not valid"):
+        spack.modules.remove_module_files([spec])
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        spack.modules.write_module_files([])
+        spack.modules.remove_module_files([])
+
+
+def _created_module_directories(writer, root):
+    return [p for p in pathlib.Path(writer.layout.filename).parents if root in p.parents]
+
+
+def _group_for_test() -> int:
+    """Returns a supplementary group of the user with a name, or the primary group if there is
+    none.
+    """
+    for gid in os.getgroups():
+        if gid == os.getgid():
+            continue
+        try:
+            grp.getgrgid(gid)
+        except KeyError:
+            continue
+        return gid
+    return os.getgid()
+
+
+@pytest.mark.parametrize(
+    "write,added", [("group", stat.S_IRWXG), ("world", stat.S_IRWXG | stat.S_IRWXO)]
+)
+def test_module_directories_get_group_and_write_access_for_all_packages(
+    write, added, tmp_path, mutable_config, mock_packages
+):
+    """Tests that the directories created for module files get the group and the write access
+    configured for all packages on top of what the umask gives, also when the package of the
+    module file restricts them.
+    """
+    gid = _group_for_test()
+    mutable_config.set(
+        "packages:all:permissions",
+        {"read": "world", "write": write, "group": grp.getgrgid(gid).gr_name},
+    )
+    mutable_config.set("packages:mpileaks:permissions", {"read": "user", "write": "user"})
+    reference = tmp_path / "reference"
+    reference.mkdir()
+    spec = spack.concretize.concretize_one("mpileaks")
+    writer = spack.modules.tcl.TclModulefileWriter.from_spec(spec, "default")
+    writer.write()
+
+    expected_mode = reference.stat().st_mode | added | stat.S_ISGID
+    created = _created_module_directories(writer, tmp_path)
+    assert created
+    for p in created:
+        assert p.stat().st_mode == expected_mode
+        assert p.stat().st_gid == gid
+
+
+def test_refresh_delete_tree_recreates_root_with_group_and_write_access(
+    tmp_path, mutable_config, database_mutable_config, monkeypatch
+):
+    """Tests that refreshing with ``--delete-tree`` recreates the module root with the group and
+    the write access configured for all packages on top of what the umask gives.
+    """
+    root = tmp_path / "root"
+    root.mkdir()
+    monkeypatch.setattr(spack.modules.common, "root_path", lambda *args: str(root))
+    gid = _group_for_test()
+    mutable_config.set(
+        "packages:all:permissions",
+        {"read": "world", "write": "group", "group": grp.getgrgid(gid).gr_name},
+    )
+    reference = tmp_path / "reference"
+    reference.mkdir()
+
+    spack.main.SpackCommand("module")("tcl", "refresh", "--delete-tree", "-y")
+
+    assert root.stat().st_mode == reference.stat().st_mode | stat.S_IRWXG | stat.S_ISGID
+    assert root.stat().st_gid == gid
