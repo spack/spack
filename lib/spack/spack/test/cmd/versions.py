@@ -4,9 +4,11 @@
 
 import pytest
 
+import spack.spec
 import spack.url
 from spack.main import SpackCommand
 from spack.version import Version
+from spack.version_def import VersionDefinition
 
 versions = SpackCommand("versions")
 
@@ -61,7 +63,14 @@ def test_new_versions_only(monkeypatch):
         Version("3.2"): {},
         Version("1.0.0"): {},
     }
+    mock_when_versions = {
+        spack.spec.Spec(): {
+            Version("3.2"): VersionDefinition(Version("3.2"), 0, {}),
+            Version("1.0.0"): VersionDefinition(Version("1.0.0"), 0, {}),
+        }
+    }
     monkeypatch.setattr(Brillig, "versions", mock_versions)
+    monkeypatch.setattr(Brillig, "when_versions", mock_when_versions)
     monkeypatch.setattr(Brillig, "fetch_remote_versions", mock_fetch_remote_versions)
     v = versions("--new", "brillig")
     assert v.strip(" \n\t") == "99.99.99\n  3.2.1"
