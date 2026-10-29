@@ -8,6 +8,9 @@ import spack.vendor.archspec.gpu as archspec_gpu
 import spack.concretize
 import spack.error
 import spack.gpus
+import spack.repo
+import spack.spec
+import spack.variant as vt
 from spack.spec import Spec
 
 
@@ -44,6 +47,31 @@ def test_compatible_gpu_form_picks_the_best_target(
     spec = spack.concretize.concretize_one(Spec(f"vtk-m +cuda cuda_arch={request_}"))
     assert spec.variants["cuda_arch"].value == expected
     assert spec.satisfies(f"cuda_arch={request_}")
+
+
+@pytest.mark.parametrize(
+    "value,valid",
+    [
+        # the compatible form is checked as the target it is bounded by
+        (":70", True),
+        (":80", False),
+        # a form archspec does not know is a literal, and no list contains it
+        (":99", False),
+    ],
+)
+def test_compatible_gpu_form_validates_as_its_target(mock_packages, config, value, valid):
+    pkg_cls = spack.repo.PATH.get_pkg_class("vtk-m")
+    variant = vt.VariantValue.from_string_or_bool("cuda_arch", value)
+    spec = Spec(f"vtk-m +cuda cuda_arch={value}")
+    if valid:
+        assert vt.prevalidate_variant_value(pkg_cls, variant, spec)
+        spack.spec.substitute_abstract_variants(spec)
+        assert spec.variants["cuda_arch"].value == value
+    else:
+        with pytest.raises(vt.InvalidVariantValueError):
+            vt.prevalidate_variant_value(pkg_cls, variant, spec)
+        with pytest.raises(vt.InvalidVariantValueError):
+            spack.spec.substitute_abstract_variants(spec)
 
 
 def test_compatible_gpu_form_with_an_incompatible_host_is_an_error(

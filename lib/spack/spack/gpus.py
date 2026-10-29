@@ -8,7 +8,7 @@ which Spack variant receives the identifier detected for each GPU vendor, and re
 reserved variant value :data:`HOST_DEFAULT` into the identifiers of the GPUs on the host.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Sequence, Tuple, Union
 
 import spack.vendor.archspec.gpu
 
@@ -25,6 +25,21 @@ VENDOR_BY_VARIANT: Dict[str, str] = {v: k for k, v in VARIANT_BY_VENDOR.items()}
 
 #: Reserved value of the variants above, asking for the GPUs detected on the host
 HOST_DEFAULT: str = "host_default"
+
+
+def validation_values(
+    variant_name: str, values: Sequence[Union[str, bool]]
+) -> Tuple[Union[str, bool], ...]:
+    """The values a package validates for a GPU variant: the compatible form ``:X``, any target
+    an X device runs, is checked as ``X``. A ``:X`` archspec does not know is left as it is."""
+    if variant_name not in VENDOR_BY_VARIANT:
+        return tuple(values)
+    return tuple(
+        v[1:]
+        if isinstance(v, str) and v.startswith(":") and v[1:] in spack.vendor.archspec.gpu.TARGETS
+        else v
+        for v in values
+    )
 
 
 @spack.util.lang.memoized

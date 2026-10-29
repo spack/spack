@@ -5508,7 +5508,9 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
             continue
 
         new_variant = pkg_variant.make_variant(*v.values)
-        pkg_variant.validate_or_raise(new_variant, spec.name)
+        pkg_variant.validate_or_raise(
+            pkg_variant.make_variant(*spack.gpus.validation_values(name, v.values)), spec.name
+        )
         spec.variants.set(new_variant)
 
     if unknown:
