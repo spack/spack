@@ -40,6 +40,7 @@ from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.config import Configuration
 from spack.database import INDEX_JSON_FILE
 from spack.hooks import sbang
+from spack.installer.build import install_from_buildcache
 from spack.old_installer import PackageInstaller
 from spack.spec import Spec
 from spack.url_buildcache import (
@@ -628,7 +629,9 @@ def test_update_sbang(tmp_path: pathlib.Path, temporary_mirror, mock_fetch, inst
             assert f.read() == new_contents
 
 
-def test_install_root_node_checks_sha256(install_mockery, temporary_mirror):
+def test_install_from_buildcache_trusts_pinned_sha256(install_mockery, temporary_mirror):
+    """Unsigned binaries can be installed from a build cache iff a trusted and valid SHA256
+    checksum is provided. This is used for bootstrapping where GPG verification is not possible."""
     install_cmd("--fake", "--no-cache", "libelf")
     buildcache_cmd("push", "--unsigned", temporary_mirror, "libelf")
     spec = spack.concretize.concretize_one("libelf")
@@ -639,13 +642,16 @@ def test_install_root_node_checks_sha256(install_mockery, temporary_mirror):
     cache_entry.read_manifest()
     sha256 = cache_entry.get_blob_record(BuildcacheComponent.TARBALL).checksum
 
-    with pytest.raises(spack.error.NoChecksumException):
-        spack.binary_distribution.install_root_node(spec, unsigned=True, sha256="0" * 64)
-    assert not os.path.exists(spec.prefix)
-    assert not spec.installed
+    def install(sha256: Optional[str]) -> bool:
+        state = io.TextIOWrapper(io.BytesIO())
+        return install_from_buildcache([], spec, False, state, sha256=sha256)
 
-    spack.binary_distribution.install_root_node(spec, unsigned=True, sha256=sha256)
-    assert spec.installed
+    assert not install(None)
+    with pytest.raises(spack.error.NoChecksumException):
+        install("0" * 64)
+    assert not os.path.exists(spec.prefix)
+    assert install(sha256)
+    assert os.path.exists(spec.prefix)
 
 
 def test_FetchCacheError_only_accepts_lists_of_errors():

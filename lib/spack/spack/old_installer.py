@@ -420,7 +420,7 @@ def _process_binary_cache_tarball(
     tty.msg(f"Extracting {package_id(pkg.spec)} from binary cache")
 
     with timer.measure("install"), spack.store.filter_padding():
-        binary_distribution.extract_tarball(pkg.spec, tarball_stage, force=False, timer=timer)
+        binary_distribution.extract_tarball(pkg.spec, tarball_stage, timer=timer)
 
         if pkg.spec.spliced:  # overwrite old metadata with new
             spack.store.STORE.layout.write_spec(

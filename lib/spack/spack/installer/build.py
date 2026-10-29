@@ -309,6 +309,7 @@ def install_from_buildcache(
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
     timer: spack.util.timer.BaseTimer = spack.util.timer.NULL_TIMER,
+    sha256: Optional[str] = None,
 ) -> bool:
     # Skip if no configured mirror accepts this spec (select/exclude filters)
     if not any(
@@ -321,7 +322,7 @@ def install_from_buildcache(
     try:
         with timer.measure("fetch"):
             tarball_stage = spack.binary_distribution.download_tarball(
-                spec.build_spec, unsigned, mirrors
+                spec.build_spec, True if sha256 else unsigned, mirrors
             )
     except spack.binary_distribution.NoConfiguredBinaryMirrors:
         return False
@@ -329,9 +330,19 @@ def install_from_buildcache(
     if tarball_stage is None:
         return False
 
+    # If a SHA256 checksum is provided, validate the downloaded tarball against it. This is used
+    # during bootstrapping when GPG verification is not possible. The shasums are part of Spack's
+    # own sources and part of git history.
+    if sha256:
+        try:
+            spack.url_buildcache.validate_checksum(tarball_stage.save_filename, "sha256", sha256)
+        except spack.error.NoChecksumException:
+            tarball_stage.destroy()
+            raise
+
     send_state("relocating", state_stream)
     with timer.measure("install"):
-        spack.binary_distribution.extract_tarball(spec, tarball_stage, force=False, timer=timer)
+        spack.binary_distribution.extract_tarball(spec, tarball_stage, timer=timer)
 
     if spec.spliced:  # overwrite old metadata with new
         spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
@@ -427,6 +438,7 @@ class BuildRequest(NamedTuple):
     explicit: bool
     mirrors: List[spack.url_buildcache.MirrorMetadata]
     unsigned: Optional[bool]
+    sha256: Optional[str]
     install_policy: InstallPolicy
     dirty: bool
     keep_stage: bool
@@ -706,7 +718,9 @@ def _install(
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
-        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream, timer):
+        if install_from_buildcache(
+            request.mirrors, spec, request.unsigned, state_stream, timer, request.sha256
+        ):
             _post_install(pkg, spec, explicit, timer, cache=True)
             return
         elif install_policy == "cache_only":

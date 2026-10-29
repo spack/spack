@@ -19,6 +19,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.installer_dispatch
 import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
@@ -631,13 +632,14 @@ def install_fn(args):
         all_architectures=args.otherarch, config=spack.config.CONFIG
     )
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
-    if matches:
-        # Fail before extracting anything if the database cannot be modified.
-        spack.store.STORE.db.ensure_latest_db_version()
-    for match in matches:
-        spack.binary_distribution.install_single_spec(
-            match, unsigned=args.unsigned, force=args.force
-        )
+    overwrite = {s.dag_hash() for s in traverse.traverse_nodes(matches, deptype=("link", "run"))}
+    spack.installer_dispatch.create_installer(
+        [s.package for s in matches],
+        overwrite=overwrite if args.force else None,
+        unsigned=args.unsigned,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
+    ).install()
 
 
 def list_fn(args):

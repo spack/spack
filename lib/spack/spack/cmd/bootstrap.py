@@ -27,32 +27,12 @@ section = "admin"
 level = "long"
 
 
-# Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v2.2/bootstrap-buildcache.tar.gz"
-
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
 
-# Metadata for a generated binary mirror
-BINARY_METADATA = {
-    "type": "buildcache",
-    "description": (
-        "Buildcache copied from a public tarball available on Github."
-        "The sha256 checksum of binaries is checked before installation."
-    ),
-    "info": {
-        # This is a mis-nomer since it's not a URL; but file urls cannot
-        # represent relative paths, so we have to live with it for now.
-        "url": os.path.join("..", "..", LOCAL_MIRROR_DIR),
-        "homepage": "https://github.com/spack/spack-bootstrap-mirrors",
-        "releases": "https://github.com/spack/spack-bootstrap-mirrors/releases",
-        "tarball": BINARY_TARBALL,
-    },
-}
-
-CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v2/clingo.json"
-GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v2/gnupg.json"
-PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v2/patchelf.json"
+#: Metadata of the bootstrapping source whose binaries are in a tarball, that can be added to a
+#: local mirror
+BINARY_METADATA = "$spack/share/spack/bootstrap/github-actions-v2/metadata.yaml"
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
@@ -413,11 +393,14 @@ def _mirror(args):
         spack.util.tty.set_msg_enabled(True)
 
     if args.binary_packages:
+        with open(spack.config.canonicalize_path(BINARY_METADATA), encoding="utf-8") as f:
+            metadata = spack.util.spack_yaml.load(f)
+        tarball = metadata["info"]["tarball"]
         msg = 'Adding binary packages from "{0}" to the mirror at {1}'
-        spack.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
+        spack.util.tty.msg(msg.format(tarball, mirror_dir))
         spack.util.tty.set_msg_enabled(False)
         stage = spack.stage.stage_from_config(
-            BINARY_TARBALL, path=tempfile.mkdtemp(), config=spack.config.CONFIG
+            tarball, path=tempfile.mkdtemp(), config=spack.config.CONFIG
         )
         stage.create()
         stage.fetch()
@@ -444,10 +427,11 @@ def _mirror(args):
     _, rel_directory = write_metadata(subdir="sources", metadata=SOURCE_METADATA)
     instructions += cmd.format("local-sources", rel_directory)
     if args.binary_packages:
-        abs_directory, rel_directory = write_metadata(subdir="binaries", metadata=BINARY_METADATA)
-        shutil.copy(spack.config.canonicalize_path(CLINGO_JSON), abs_directory)
-        shutil.copy(spack.config.canonicalize_path(GNUPG_JSON), abs_directory)
-        shutil.copy(spack.config.canonicalize_path(PATCHELF_JSON), abs_directory)
+        metadata["description"] = "Buildcache copied from a public tarball available on GitHub."
+        # This is a misnomer since it's not a URL; but file urls cannot
+        # represent relative paths, so we have to live with it for now.
+        metadata["info"]["url"] = os.path.join("..", "..", LOCAL_MIRROR_DIR)
+        _, rel_directory = write_metadata(subdir="binaries", metadata=metadata)
         instructions += cmd.format("local-binaries", rel_directory)
     print(instructions)
 

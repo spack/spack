@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Bootstrap non-core Spack dependencies from an environment."""
 
-import hashlib
 import os
 import pathlib
 import shutil
@@ -22,7 +21,7 @@ import spack.tengine
 import spack.util.gpg
 from spack.util import tty
 
-from .config import root_path, spec_for_current_python, store_path
+from .config import environment_path, root_path, spec_for_current_python, store_path
 from .core import _add_externals_if_missing
 
 
@@ -47,16 +46,7 @@ class BootstrapEnvironment(spack.environment.Environment):
     @classmethod
     def environment_root(cls) -> pathlib.Path:
         """Environment root directory"""
-        bootstrap_root_path = root_path()
-        python_part = spec_for_current_python().replace("@", "")
-        arch_part = spack.vendor.archspec.cpu.host().family
-        interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
-        environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
-        return pathlib.Path(
-            spack.config.canonicalize_path(
-                os.path.join(bootstrap_root_path, "environments", environment_dir)
-            )
-        )
+        return pathlib.Path(environment_path())
 
     @classmethod
     def bootstrap_gpg_home(cls) -> pathlib.Path:
