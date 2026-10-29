@@ -1065,22 +1065,8 @@ spack:
 
     @pytest.mark.regression("7239")
     def test_regression_issue_7239(self):
-        # Constructing a SpecBuildInterface from another SpecBuildInterface
-        # results in an inconsistent MRO
-
-        # Normal Spec
-        s = Spec("mpileaks")
-        s = spack.concretize.concretize_one(s)
-
-        assert spack.util.lang.ObjectWrapper not in s.__class__.__mro__
-
-        # Spec wrapped in a build interface
-        build_interface = s["mpileaks"]
-        assert spack.util.lang.ObjectWrapper in build_interface.__class__.__mro__
-
-        # Mimics asking the build interface from a build interface
-        build_interface = s["mpileaks"]["mpileaks"]
-        assert spack.util.lang.ObjectWrapper in build_interface.__class__.__mro__
+        s = spack.concretize.concretize_one("mpileaks")
+        assert s["mpileaks"] is s
 
     @pytest.mark.regression("7705")
     def test_regression_issue_7705(self):
@@ -2084,7 +2070,7 @@ spack:
         for s in ["mpileaks ^mpich", "zmpi"]:
             reusable_specs.extend(spack.concretize.concretize_one(s).traverse(root=True))
 
-        root_specs = [Spec("mpileaks"), Spec("zmpi")]
+        root_specs = [Spec("mpileaks ^zmpi"), Spec("zmpi")]
 
         with mutable_config.override("concretizer:reuse", True):
             solver = spack.solver.asp.Solver(context=spack.context.default())
@@ -2896,6 +2882,20 @@ packages:
         result, _, _ = solver.driver.solve(setup, [Spec("pkg-b")], reuse=[fst, snd])
         assert len(result.specs) == 1
         assert result.specs[0] == snd
+
+    def test_reuse_compiler_from_unknown_namespace(self):
+        """Test that a reusable compiler from a repo that is not configured does not halt
+        concretization."""
+        externals = reusable_external_specs(spack.context.default())
+        gcc = spack.concretize.concretize_one("gcc@14.0.1")
+        gcc._mark_concrete(False)
+        gcc.namespace = "not_a_repo"
+        gcc._mark_concrete(True)
+
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
+        result, _, _ = solver.driver.solve(setup, [Spec("pkg-b")], reuse=externals + [gcc])
+        assert len(result.specs) == 1
 
     @pytest.mark.regression("45321")
     @pytest.mark.parametrize(
@@ -5707,6 +5707,19 @@ def test_compiler_dependencies_can_be_excluded_from_reuse(
     assert s["zlib"].satisfies("@1.2.11"), s.tree()
 
 
+@pytest.mark.regression("50809")
+def test_compiler_can_be_reused_as_root(temporary_store, mock_packages, mutable_config):
+    """Tests that an installed compiler can be reused as a root node"""
+    installed = spack.concretize.concretize_one("llvm@18")
+    PackageInstaller([installed.package], fake=True, explicit=True).install()
+
+    mutable_config.set("concretizer:unify", True)
+    llvm, _ = spack.concretize.concretize_spec_pairs(
+        [(Spec(f"llvm/{installed.dag_hash()}"), None), (Spec("pkg-a"), None)]
+    )
+    assert llvm == installed
+
+
 def test_parallel_edges_in_a_literal_reach_the_solver(mock_packages, config):
     """A duplicate ^dep clause parses as parallel edges rather than one merged node. The solver
     still builds one node per name from a literal: compatible constraints are merged onto that
@@ -6172,3 +6185,59 @@ def test_no_available_compiler_error(remove_all_compilers):
     remove_all_compilers()
     with pytest.raises(spack.compilers.config.NoAvailableCompilerError, match="in PATH"):
         spack.concretize.concretize_one("pkg-b")
+
+
+def test_root_provider_is_preferred_over_configured_provider(mock_packages, mutable_config):
+    """Tests that a root providing a virtual is used as the provider by the other roots, even
+    if another provider is preferred in configuration.
+    """
+    mutable_config.set("concretizer:unify", True)
+    mutable_config.set("packages:all:providers:mpi", ["mpich", "zmpi"])
+    mpileaks, zmpi = spack.concretize.concretize_spec_pairs(
+        [(Spec("mpileaks"), None), (Spec("zmpi"), None)]
+    )
+    assert mpileaks.satisfies(f"%mpi=zmpi/{zmpi.dag_hash()}")
+
+
+@pytest.mark.parametrize(
+    "spec_str", ["mpileaks %mpi=mpich", "mpileaks ^mpich", "mpileaks ^[virtuals=mpi] mpich"]
+)
+def test_explicit_provider_with_another_provider_as_root(spec_str, mock_packages, mutable_config):
+    """Tests that a root can request a provider explicitly, when another root is a possible
+    provider of the same virtual.
+    """
+    mutable_config.set("concretizer:unify", True)
+    mpileaks, zmpi = spack.concretize.concretize_spec_pairs(
+        [(Spec(spec_str), None), (Spec("zmpi"), None)]
+    )
+    assert mpileaks.satisfies("%mpi=mpich")
+
+
+def test_required_provider_with_another_provider_as_root(mock_packages, mutable_config):
+    """Tests that a requirement on a virtual is respected, when a root is a possible provider of
+    the same virtual and is not the required one.
+    """
+    mutable_config.set("concretizer:unify", True)
+    mutable_config.set("packages:mpi", {"require": "mpich2"})
+    mpileaks, zmpi = spack.concretize.concretize_spec_pairs(
+        [(Spec("mpileaks"), None), (Spec("zmpi"), None)]
+    )
+    assert mpileaks.satisfies("%mpi=mpich2")
+
+
+@pytest.mark.parametrize("pin_hash", [True, False])
+def test_reused_spec_keeps_provider_with_another_provider_as_root(
+    pin_hash, temporary_store, mock_packages, mutable_config
+):
+    """Tests that an installed spec is reused together with its provider of a virtual, when
+    another root is a possible provider of the same virtual.
+    """
+    installed = spack.concretize.concretize_one("mpileaks ^mpich")
+    PackageInstaller([installed.package], fake=True, explicit=True).install()
+
+    mutable_config.set("concretizer:unify", True)
+    spec_str = f"mpileaks/{installed.dag_hash()}" if pin_hash else "mpileaks"
+    mpileaks, zmpi = spack.concretize.concretize_spec_pairs(
+        [(Spec(spec_str), None), (Spec("zmpi"), None)]
+    )
+    assert mpileaks.satisfies(f"mpileaks/{installed.dag_hash()}")

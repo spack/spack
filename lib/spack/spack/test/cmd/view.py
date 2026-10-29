@@ -19,6 +19,9 @@ extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
 
+#: Fake installs create executables with a .exe extension on Windows
+exe_suffix = ".exe" if sys.platform == "win32" else ""
+
 if sys.platform == "win32":
     if not _windows_can_symlink():
         pytest.skip(
@@ -47,7 +50,7 @@ def test_view_link_type(
     install("--fake", "libdwarf")
     view_dir = tmp_path / f"view_{cmd}"
     view(cmd, str(view_dir), "libdwarf")
-    package_bin = view_dir / "bin" / "libdwarf"
+    package_bin = view_dir / "bin" / f"libdwarf{exe_suffix}"
     assert package_bin.exists()
 
     # Check that we use symlinks for and only for the appropriate subcommands
@@ -81,7 +84,7 @@ def test_view_projections(
     projection_file = create_projection_file(tmp_path, view_projection)
     view(cmd, str(view_dir), f"--projection-file={projection_file}", "libdwarf")
 
-    package_bin = view_dir / "libdwarf-20130207" / "bin" / "libdwarf"
+    package_bin = view_dir / "libdwarf-20130207" / "bin" / f"libdwarf{exe_suffix}"
     assert package_bin.exists()
 
     # Check that we use symlinks for and only for the appropriate subcommands

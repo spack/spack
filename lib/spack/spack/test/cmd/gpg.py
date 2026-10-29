@@ -4,6 +4,7 @@
 
 import os
 import pathlib
+import sys
 
 import pytest
 
@@ -19,8 +20,6 @@ gpg = SpackCommand("gpg")
 bootstrap = SpackCommand("bootstrap")
 mirror = SpackCommand("mirror")
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 # test gpg command detection
 @pytest.mark.parametrize(
@@ -33,12 +32,15 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
     ],
 )
 def test_find_gpg(cmd_name, version, tmp_path: pathlib.Path, mock_gnupghome, monkeypatch):
-    TEMPLATE = '#!/bin/sh\necho "{version}"\n'
+    if sys.platform == "win32":
+        template, ext = "@echo {version}\n", ".bat"
+    else:
+        template, ext = '#!/bin/sh\necho "{version}"\n', ""
 
     with fs.working_dir(str(tmp_path)):
-        for fname in (cmd_name, "gpgconf"):
+        for fname in (cmd_name + ext, "gpgconf" + ext):
             with open(fname, "w", encoding="utf-8") as f:
-                f.write(TEMPLATE.format(version=version))
+                f.write(template.format(version=version))
             fs.set_executable(fname)
 
     monkeypatch.setenv("PATH", str(tmp_path))

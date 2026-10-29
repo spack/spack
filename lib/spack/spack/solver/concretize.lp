@@ -33,6 +33,14 @@ duplicate_penalty(node(ID1, Package), 1, "version")
    ID2 = ID1 + 1, Weight2 < Weight1,
    max_dupes(Virtual, X), X > 1, ID2 < X.
 
+% Symmetry-breaking rule. Two nodes of a language virtual, each with one provider
+% of the same package, are numbered like their providers
+:- provider(node(ProviderID1, Provider), node(ID1, Language)),
+   provider(node(ProviderID2, Provider), node(ID2, Language)),
+   language(Language), ID1 < ID2, ProviderID2 < ProviderID1,
+   not multiple_providers(node(ID1, Language)),
+   not multiple_providers(node(ID2, Language)).
+
 % Anonymous variables that appear only in negative body literals like `not
 % foo(..., _, ...)` are projected implicitly by clingo v5, but not in clingo
 % v6. Each predicate below is the explicit projection of an existing predicate
@@ -62,7 +70,6 @@ has_requirement_message(Package, X) :- requirement_message(Package, X, _).
 
 node_has_any_compiler(PackageNode) :- node_compiler(_, PackageNode).
 pkg_has_any_compiler(PkgName) :- node_compiler(_, node(_, PkgName)).
-compiler_used_as_lib(PkgName, Hash) :- compiler_used_as_a_library(node(_, PkgName), Hash).
 
 has_concrete_build_dep(ParentNode, BuildDep) :- attr("concrete_build_dependency", ParentNode, BuildDep, _).
 is_self_build_req(PackageNode) :- self_build_requirement(_, PackageNode).
@@ -430,17 +437,46 @@ node_in_deprecation_scope(node(ID, Package)) :-
 node_in_deprecation_scope(node(ID, Package)) :-
     build(node(ID, Package)), deprecation_scope("runtime").
 
-% Directives are emitted only when the deprecation policy does not allow them, so a directive
-% matching a selected non-external node in scope is a concretization error. Reason and severity
-% appear in the error term for the message, with severity as an integer:
-% 0=none, 1=low, 2=medium, 3=high, 4=critical.
-error(1, "deprecated_error", Package, CondID, Reason, Severity)
-  :- pkg_fact(Package, deprecation_directive(CondID, Reason, Severity)),
+% Labels fixed on a node by the patches applied to it
+
+deprecation_label_fixed(node(ID, Package), Label) % same recipe patch()
+  :- pkg_fact(Package, deprecation_fix(CondID, Label)),
+     condition_holds(CondID, node(ID, Package)),
+     build(node(ID, Package)).
+
+deprecation_label_fixed(node(ID, Package), Label) % depends_on(..., patches=...)
+  :- pkg_fact(Parent, dependency_deprecation_fix(ParentCondID, Package, CondID, Label)),
+     condition_holds(ParentCondID, node(ParentID, Parent)),
+     depends_on(node(ParentID, Parent), node(ID, Package)),
+     condition_holds(CondID, node(ID, Package)),
+     build(node(ID, Package)).
+
+deprecation_label_fixed(node(ID, Package), Label)  % reused node
+  :- attr("hash", node(ID, Package), Hash),
+     reused_deprecation_fix(Hash, Label).
+
+% Only the directives and labels the policy refuses are emitted.
+% A directive without labels is an error on every node it matches,
+% one with labels is an error for each label not fixed by a patch
+deprecated_node(node(ID, Package), DeprecationID)
+  :- pkg_fact(Package, deprecation_directive(DeprecationID, CondID)),
      condition_holds(CondID, node(ID, Package)),
      not external(node(ID, Package)),
      node_in_deprecation_scope(node(ID, Package)).
 
-#defined deprecation_directive/3.
+deprecation_has_labels(Package, DeprecationID)
+  :- pkg_fact(Package, deprecation_label(DeprecationID, _)).
+
+error(1, "deprecated_error", Package, DeprecationID)
+  :- deprecated_node(node(ID, Package), DeprecationID),
+     not deprecation_has_labels(Package, DeprecationID).
+
+error(1, "deprecated_error", Package, DeprecationID, Label)
+  :- deprecated_node(node(ID, Package), DeprecationID),
+     pkg_fact(Package, deprecation_label(DeprecationID, Label)),
+     not deprecation_label_fixed(node(ID, Package), Label).
+
+#defined reused_deprecation_fix/2.
 #defined deprecation_scope/1.
 
 %-----------------------------------------------------------------------------
@@ -1151,9 +1187,11 @@ error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
      not has_provider(node(X, Virtual)).
 
+multiple_providers(VirtualNode) :- has_provider(VirtualNode), 2 { provider(P, VirtualNode) }.
+
 error(100, "Multiple providers are required for the same '{0}' virtual", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
-     2 { provider(P, node(X, Virtual)) }.
+     multiple_providers(node(X, Virtual)).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).
@@ -1180,14 +1218,15 @@ do_not_impose(EffectID, node(X, Package))
      pkg_fact(Package, condition_effect(ID, EffectID)),
      not is_provider_of_virtual(node(X, Package), Virtual).
 
-% Choose the provider among root specs, if possible
-:- provider(ProviderNode, node(min_dupe_id, Virtual)),
-   virtual_condition_holds(_, PossibleProvider, Virtual),
-   PossibleProvider != ProviderNode,
-   explicitly_requested_root(PossibleProvider),
-   not self_build_requirement(PossibleProvider, ProviderNode),
-   not explicitly_requested_root(ProviderNode),
-   not language(Virtual).
+% Penalize the fact that a root could provide the virtual, but is not the provider
+provider_not_among_roots(ProviderNode, Virtual)
+  :- provider(ProviderNode, node(min_dupe_id, Virtual)),
+     virtual_condition_holds(_, PossibleProvider, Virtual),
+     PossibleProvider != ProviderNode,
+     explicitly_requested_root(PossibleProvider),
+     not self_build_requirement(PossibleProvider, ProviderNode),
+     not explicitly_requested_root(ProviderNode),
+     not language(Virtual).
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
@@ -1825,12 +1864,18 @@ attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
    attr("compatible_runtime", PackageNode, Runtime, VersionRange),
    concrete(PackageNode).
 
-% If a compiler package is depended on with type link, it's used as a library
-compiler_used_as_a_library(node(X, Child), Hash) :-
+% If a compiler package is depended on with type link, it imposes its link dependencies
+compiler_imposes_link_deps(Child, Hash) :-
   concrete(node(X, Child)),
   attr("hash", node(X, Child), Hash),
   compiler_package(Child), % Used to restrict grounding for this rule
   attr("depends_on", _, node(X, Child), "link").
+
+% If a compiler package is a root, it imposes its link dependencies
+compiler_imposes_link_deps(Child, Hash) :-
+  attr("root", node(X, Child)),
+  attr("hash", node(X, Child), Hash),
+  compiler_package(Child).
 
 % If a compiler is used for C on a package, it must provide C++ too, if need be, and vice-versa
 :-  attr("virtual_on_edge", PackageNode, CompilerNode1, "c"),
@@ -2120,14 +2165,14 @@ imposed_constraint(Hash, Attr, PackageName, A1, A2) :-
 imposed_constraint(Hash, Attr, PackageName, A1, A2, A3) :- hash_attr(Hash, Attr, PackageName, A1, A2, A3).
 imposed_constraint(Hash, "hash", PackageName, Hash) :- installed_hash(PackageName, Hash).
 
-% If a compiler is not used as a library, we just enforce "run" dependency, so we
-% can get by with a much smaller search space.
+% If a compiler does not need to impose its link dependencies, we just enforce "run"
+% dependency, so we can get by with a much smaller search space.
 avoid_link_dependency(Hash, DepName) :-
   hash_attr(Hash, "depends_on", PackageName, DepName, "link"),
   not hash_attr(Hash, "depends_on", PackageName, DepName, "run"),
   hash_attr(Hash, "hash", DepName, DepHash),
   compiler_package(PackageName),
-  not compiler_used_as_lib(PackageName, Hash).
+  not compiler_imposes_link_deps(PackageName, Hash).
 
 % When a compiler is not used as a library, its transitive run-type dependencies are unified in the
 % build environment (they appear in PATH etc.), but their pure link-type dependencies are NOT. This
@@ -2138,7 +2183,7 @@ avoid_link_dependency(Hash, DepName) :-
 % Base case: direct run dep of a non-library compiler
 compiler_non_lib_run_dep(DepHash, DepName) :-
   compiler_package(CompilerName),
-  not compiler_used_as_lib(CompilerName, CompilerHash),
+  not compiler_imposes_link_deps(CompilerName, CompilerHash),
   hash_attr(CompilerHash, "depends_on", CompilerName, DepName, "run"),
   hash_attr(CompilerHash, "hash", DepName, DepHash).
 
@@ -2327,8 +2372,9 @@ opt_criterion(5, "low", "", 0, "target mismatches (reused nodes)").
 opt_criterion(4, "low", "", 0, "version badness (runtimes)").
 opt_criterion(3, "low", "", 0, "non-preferred targets (runtimes)").
 opt_criterion(2, "low", "", 0, "providers on edges").
-opt_criterion(1, "low", "", 0, "version badness on edges").
-opt_criterion(0, "low", "", 0, "penalty on symmetric duplicates").
+% Before "version badness on edges", whose cost does not depend on how duplicates are numbered
+opt_criterion(1, "low", "", 0, "penalty on symmetric duplicates").
+opt_criterion(0, "low", "", 0, "version badness on edges").
 
 %----------------------------------------------------------------------------
 % Show optimization criteria
@@ -2460,11 +2506,17 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
       opt_priority(Priority, BuildPriority, _, _, "variant penalty (non-roots)")
 }.
 
-% Minimize the weights of all the other providers (mpi, lapack, etc.)
+% Minimize the weights of all the other providers (mpi, lapack, etc.).
+% The penalty for a provider that is not a root, when a root could provide the virtual,
+% must be larger than any provider weight.
 #minimize{
     Weight@Priority, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not language(Virtual), not language_runtime(Virtual),
+      build_priority(ProviderNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, _, "preferred providers (excluded compilers and language runtimes)");
+    1000@Priority, ProviderNode,Virtual,"not a root"
+    : provider_not_among_roots(ProviderNode, Virtual),
       build_priority(ProviderNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, _, "preferred providers (excluded compilers and language runtimes)")
 }.
@@ -2570,11 +2622,31 @@ compiler_penalty(PackageNode, C-1) :-
       opt_priority(Priority, _, _, _, "providers on edges")
 }.
 
-% Try to use latest versions of nodes as much as possible
+% weight_shifted(Weight, Shifted, I) holds for Shifted = Weight / 2**I, with integer division
+weight_shifted(Weight, Weight, 0) :- pkg_fact(_, version_declared(_, Weight)).
+weight_shifted(Weight, Shifted / 2, I + 1) :- weight_shifted(Weight, Shifted, I), Shifted > 1.
+
+% weight_bit(Weight, I) holds if bit I of Weight is set
+weight_bit(Weight, I) :- weight_shifted(Weight, Shifted, I), Shifted \ 2 = 1.
+
+version_weight_bit(node(X, Package), I)
+  :- version_weight(node(X, Package), Weight),
+     multiple_unification_sets(Package),
+     weight_bit(Weight, I).
+
+% Try to use latest versions of nodes as much as possible.
+%
+% A node has a single version weight, so summing 2**I over its bits gives
+% the same cost as summing the weight. The weights are encoded as bits to
+% reduce the size of the grounded program.
+%
+% For a node with V possible versions and P possible parents:
+% - Minimizing the weight grounds V * P elements.
+% - Minimizing the bits grounds about log2(V) * P elements
+% because all the versions with bit I set map to the same version_weight_bit/2 atom.
 #minimize{
-    Weight@Priority, ParentNode,node(X, Package)
-    : version_weight(node(X, Package), Weight),
-      multiple_unification_sets(Package),
+    2 ** I@Priority, ParentNode,node(X, Package),I
+    : version_weight_bit(node(X, Package), I),
       not attr("root", node(X, Package)),
       depends_on(ParentNode, node(X, Package)),
       opt_priority(Priority, _, _, _, "version badness on edges")

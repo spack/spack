@@ -730,8 +730,12 @@ Which deprecations are allowed is set with ``allow:``, a list of selectors:
        deprecation:
          allow: []
 
-A ``deprecated()`` directive is skipped when at least one selector matches it, or, for a directive with labels, when each of its labels is matched by a selector.
-The default is an empty list, which allows none of them, so Spack will not select a deprecated version unless the configuration says so.
+A ``deprecated()`` directive is skipped in either of these cases:
+
+- At least one selector matches it.
+- It has labels, and each of them is matched by a selector or fixed by a patch applied to the spec (see :ref:`patches that fix a deprecation <deprecate-patch-fixes>`).
+
+The default for ``allow:`` is an empty list, which allows no deprecation.
 
 In this example, deprecations of severity ``low`` on any package are allowed silently, while ``medium`` and above remain errors.
 The list for ``openssl`` replaces the one under ``all:``, so every deprecation on that package is an error regardless of the global setting.

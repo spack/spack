@@ -320,7 +320,11 @@ copyright = "Spack Project Developers"
 #
 # The short X.Y version.
 import spack
+import spack.database
+import spack.environment.environment
 import spack.package
+import spack.spec
+import spack.url_buildcache
 
 version = ".".join(str(s) for s in spack.spack_version_info[:2])
 # The full version, including alpha/beta/rc tags.
@@ -580,6 +584,10 @@ rst_epilog = f"""
 .. |package_api_version| replace:: v{spack.package_api_version[0]}.{spack.package_api_version[1]}
 .. |min_package_api_version| replace:: v{spack.min_package_api_version[0]}.{spack.min_package_api_version[1]}
 .. |spack_version| replace:: {spack.spack_version}
+.. |specfile_format_version| replace:: v{spack.spec.SPECFILE_FORMAT_VERSION}
+.. |db_version| replace:: v{spack.database._DB_VERSION}
+.. |lockfile_version| replace:: v{spack.environment.environment.CURRENT_LOCKFILE_VERSION}
+.. |buildcache_layout_version| replace:: v{spack.url_buildcache.CURRENT_BUILD_CACHE_LAYOUT_VERSION}
 """
 
 html_static_path = ["_static"]
