@@ -286,16 +286,18 @@ def _make_gpu_target(
     return GPUTarget(_make_gpu_microarch(value), compatible=False)
 
 
+def is_compatible_gpu_value(value: Union[str, bool]) -> bool:
+    """Whether a GPU variant value is a compatible form archspec knows, e.g. ``:86``."""
+    try:
+        return _make_gpu_target(str(value)).compatible
+    except ValueError:
+        return False
+
+
 def has_compatible_gpu_value(variant: vt.VariantValue) -> bool:
     """Whether a GPU variant carries a compatible form archspec knows, e.g. ``:86``. Such a
     variant is compared by the architecture, not by the variant's own exact rules."""
-    for value in variant.values:
-        try:
-            if _make_gpu_target(str(value)).compatible:
-                return True
-        except ValueError:
-            continue
-    return False
+    return any(is_compatible_gpu_value(value) for value in variant.values)
 
 
 def _closed_interval_targets(

@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Set, Tuple, Type, Union
 import spack.vendor.archspec.cpu
 
 import spack.deptypes as dt
+import spack.gpus
 import spack.package_base
 import spack.platforms
 import spack.repo
@@ -86,6 +87,7 @@ class SpecClauseGenerator:
         )
         self.version_constraints: Dict[str, Set] = collections.defaultdict(set)
         self.target_constraints: Set = set()
+        self.gpu_constraints: Set[str] = set()
         self.variant_values_from_specs: Set = set()
         #: Cache for pkg_class()
         self._pkg_classes: Dict[str, Type[spack.package_base.PackageBase]] = {}
@@ -202,6 +204,21 @@ class SpecClauseGenerator:
             # now that variants can be conditional, it should force a variant to exist.
             if not variant.values:
                 continue
+
+            if vname in spack.gpus.VENDOR_BY_VARIANT:
+                # a compatible form like :86 constrains the value, like a target range does
+                constraints = [v for v in variant.values if spack.spec.is_compatible_gpu_value(v)]
+                if constraints:
+                    self.gpu_constraints.update(str(c) for c in constraints)
+                    clauses.extend(
+                        fn.attr("gpu_variant_satisfies", name, vname, c) for c in constraints
+                    )
+                    values = tuple(v for v in variant.values if v not in constraints)
+                    if not values:
+                        continue
+                    variant = vt.VariantValue(
+                        variant.type, vname, values, concrete=variant.concrete
+                    )
 
             if name and not spec.concrete and not self.is_virtual(name):
                 self._record_possible_values(name, variant, spec)

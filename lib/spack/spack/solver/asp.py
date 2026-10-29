@@ -38,6 +38,7 @@ from typing import (
 )
 
 import spack.vendor.archspec.cpu
+import spack.vendor.archspec.gpu
 
 import spack
 import spack.caches
@@ -2360,6 +2361,31 @@ class SpackSolverSetup:
                 self.gen.fact(fn.target_satisfies(target_constraint, target))
             self.gen.newline()
 
+    def define_gpu_constraints(self):
+        """Facts on the GPU targets that satisfy each compatible form in the input, best first:
+        the host's GPUs of that vendor and their ancestors, or the form's own target when the
+        host has none (a cross-compile)."""
+        host: Dict[str, List[spack.vendor.archspec.gpu.GPUMicroarch]] = {}
+        if self.clauses.gpu_constraints:
+            for gpu in spack.gpus.host():
+                host.setdefault(gpu.vendor, []).append(gpu)
+
+        for constraint in sorted(self.clauses.gpu_constraints):
+            target = spack.vendor.archspec.gpu.TARGETS[constraint[1:]]
+            accepted = spack.spec.GPUTarget(target, compatible=True).accepted_targets()
+            candidates = [
+                node
+                for gpu in host.get(target.vendor, [])
+                for node in (gpu, *gpu.ancestors)
+                if node in accepted
+            ]
+            if not host.get(target.vendor):
+                candidates = [target]
+            for weight, node in enumerate(dict.fromkeys(candidates)):
+                self.gen.fact(fn.gpu_target_satisfies(constraint, node.name))
+                self.gen.fact(fn.gpu_target_weight(constraint, node.name, weight))
+            self.gen.newline()
+
     def define_variant_values(self):
         """Validate variant values from the command line.
 
@@ -2506,15 +2532,6 @@ class SpackSolverSetup:
                         start_str = f"'{root}'" if s == root else f"'{s}' in '{root}'"
                         raise UnsatisfiableSpecError(
                             f"{start_str} cannot depend on {', '.join(sorted(invalid))}"
-                        )
-
-                for name in spack.gpus.VENDOR_BY_VARIANT:
-                    variant = s.variants.get(name)
-                    if variant is not None and spack.spec.has_compatible_gpu_value(variant):
-                        raise UnsatisfiableSpecError(
-                            f"cannot concretize '{root}': {variant} selects builds compatible "
-                            f"with that GPU and is for queries only. Build for an exact target, "
-                            f"or for the host's with {name}={spack.gpus.HOST_DEFAULT}"
                         )
 
                 spack.spec.Spec.ensure_valid_variants(s, repo=repo)
@@ -2717,6 +2734,9 @@ class SpackSolverSetup:
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
+
+        self.gen.h1("GPU Constraints")
+        self.define_gpu_constraints()
 
         # once we've done a full traversal and know possible versions, check that the
         # requested solve is at least consistent.
