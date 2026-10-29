@@ -528,7 +528,11 @@ def migrate_with_staging(
 
         # Callback creates staging directory and populates it
         tty.debug(f"Migrating {description} from {old_path} to {new_path}")
-        prepare_staging_callback(old_path, staging_path, new_path)
+        try:
+            prepare_staging_callback(old_path, staging_path, new_path)
+        except Exception as e:
+            tty.debug(f"Failed to migrate {description} from {old_path} to {new_path}: {e}")
+            return False
 
         # Set staging directory permissions to 0700 before rename
         # (migrating to home directory, only user should access)
@@ -680,7 +684,7 @@ def _prepare_config_staging(old_location, staging_path, new_location):
         return [name for name in contents if name.endswith(".yaml") or name.endswith(".yml")]
 
     # Create the stage directory
-    os.makedirs(staging_path, exists_ok=True)
+    os.makedirs(staging_path, exist_ok=True)
 
     # First pass: copy non-YAML files and directories
     for item in os.listdir(old_location):
@@ -707,6 +711,7 @@ def _prepare_config_staging(old_location, staging_path, new_location):
                 shutil.copy2(old_item_path, staging_item_path)
         except OSError as e:
             tty.debug(f"Skipping {item} during migration: {e}")
+            raise
 
     # Second pass: process and copy YAML files
     _process_yaml_files_in_directory(
