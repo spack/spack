@@ -660,6 +660,19 @@ def _rewrite_symlinks_after_copy(staging_path, old_location, new_location, error
     return rewrites
 
 
+# Directories to exclude at the first level when copying config
+# These are non-config data that Spack <= 1.2 wrote into ~/.spack
+_EXCLUDED_TOPLEVEL_DIRS_CONFIG = {
+    "bootstrap",
+    "cache",
+    "git_repos",
+    "package_repos",
+    "reports",
+    "test",
+    "stage",
+}
+
+
 def _prepare_config_staging(old_location, staging_path, new_location):
     """Callback for config migration - copies files and processes config files.
 
@@ -668,16 +681,6 @@ def _prepare_config_staging(old_location, staging_path, new_location):
     2. Process and copy YAML files with path rewriting
     3. Rewrite symlinks as needed
     """
-    # Directories to exclude at the first level (cache/temporary data)
-    EXCLUDED_TOPLEVEL_DIRS = {
-        "bootstrap",
-        "cache",
-        "git_repos",
-        "package_repos",
-        "reports",
-        "test",
-        "stage",
-    }
 
     # Helper to skip YAML files during directory copy
     def ignore_yaml_files(directory, contents):
@@ -692,7 +695,7 @@ def _prepare_config_staging(old_location, staging_path, new_location):
         staging_item_path = os.path.join(staging_path, item)
 
         # Skip excluded toplevel directories
-        if os.path.isdir(old_item_path) and item in EXCLUDED_TOPLEVEL_DIRS:
+        if os.path.isdir(old_item_path) and item in _EXCLUDED_TOPLEVEL_DIRS_CONFIG:
             tty.debug(f"Skipping excluded directory: {item}")
             continue
 
@@ -715,8 +718,16 @@ def _prepare_config_staging(old_location, staging_path, new_location):
 
     # Second pass: process and copy YAML files
     _process_yaml_files_in_directory(
-        old_location, staging_path, process_config_file_paths, new_location, EXCLUDED_TOPLEVEL_DIRS
+        old_location,
+        staging_path,
+        process_config_file_paths,
+        new_location,
+        _EXCLUDED_TOPLEVEL_DIRS_CONFIG,
     )
+
+    if not os.listdir(staging_path):
+        # Caught by migrate_with_staging
+        raise MigrationStagingError("no user config to migrate")
 
     # Third pass: rewrite symlinks
     symlink_rewrites = _rewrite_symlinks_after_copy(staging_path, old_location, new_location)
@@ -751,6 +762,24 @@ def _prepare_gpg_staging(old_path, staging_path, marker_name):
         f.write(f"Migrated from {spack.paths.prefix}\n")
 
 
+def _has_user_config_to_migrate(old_location: str) -> bool:
+    """Returns True iff there are config files to migrate.
+
+    True if any files or non-excluded dirs in ~/.spack
+    Allows _migrate_user_config to exit early in the trivial case.
+    """
+    if not _is_nonempty_directory(old_location):
+        return False
+
+    for item in os.listdir(old_location):
+        old_item_location = os.path.join(old_location, item)
+        if not os.path.isdir(old_item_location):
+            return True
+        if item not in _EXCLUDED_TOPLEVEL_DIRS_CONFIG:
+            return True
+    return False
+
+
 def _migrate_user_config() -> bool:
     """Copy config files from ~/.spack to user config location.
 
@@ -762,6 +791,10 @@ def _migrate_user_config() -> bool:
 
     old_location = os.path.expanduser("~/.spack")
     new_location = migration_config_home()
+
+    # No migration when there is nothing to migrate
+    if not _has_user_config_to_migrate(old_location):
+        return False
 
     already_populated = _is_nonempty_directory(new_location)
 
