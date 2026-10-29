@@ -13,7 +13,11 @@ def cpus_available():
     of available CPUs might differ from the number of physical CPUs when
     using spack through Slurm or container runtimes.
     """
+    # sched_getaffinity is not available on all platforms
+    sched_getaffinity = getattr(os, "sched_getaffinity", None)
     try:
-        return len(os.sched_getaffinity(0))  # novermin
+        if sched_getaffinity is not None:
+            return len(sched_getaffinity(0))
     except Exception:
-        return multiprocessing.cpu_count()
+        pass
+    return multiprocessing.cpu_count()

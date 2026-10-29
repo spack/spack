@@ -275,6 +275,14 @@ def ci_reindex(args):
     buildcache.update_index(mirror, update_keys=True)
 
 
+def _required_env(name: str) -> str:
+    """Value of an environment variable that the CI pipeline must set."""
+    value = os.environ.get(name)
+    if value is None:
+        tty.die(f"spack ci rebuild requires the {name} environment variable")
+    return value
+
+
 def ci_rebuild(args):
     """\
     rebuild a spec if it is not on the remote mirror
@@ -295,11 +303,6 @@ def ci_rebuild(args):
     # Grab the environment variables we need.  These either come from the
     # pipeline generation step ("spack ci generate"), where they were written
     # out as variables, or else provided by GitLab itself.
-    pipeline_artifacts_dir = os.environ.get("SPACK_ARTIFACTS_ROOT")
-    job_log_dir = os.environ.get("SPACK_JOB_LOG_DIR")
-    job_test_dir = os.environ.get("SPACK_JOB_TEST_DIR")
-    repro_dir = os.environ.get("SPACK_JOB_REPRO_DIR")
-    concrete_env_dir = os.environ.get("SPACK_CONCRETE_ENV_DIR")
     ci_job_name = os.environ.get("CI_JOB_NAME")
     signing_key = os.environ.get("SPACK_SIGNING_KEY")
     job_spec_pkg_name = os.environ.get("SPACK_JOB_SPEC_PKG_NAME")
@@ -320,12 +323,12 @@ def ci_rebuild(args):
         tty.die("SPACK_REQUIRE_SIGNING=True => spack must have exactly one signing key")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
-    ci_project_dir = os.environ.get("CI_PROJECT_DIR")
-    pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)
-    job_log_dir = os.path.join(ci_project_dir, job_log_dir)
-    job_test_dir = os.path.join(ci_project_dir, job_test_dir)
-    repro_dir = os.path.join(ci_project_dir, repro_dir)
-    concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)
+    ci_project_dir = _required_env("CI_PROJECT_DIR")
+    pipeline_artifacts_dir = os.path.join(ci_project_dir, _required_env("SPACK_ARTIFACTS_ROOT"))
+    job_log_dir = os.path.join(ci_project_dir, _required_env("SPACK_JOB_LOG_DIR"))
+    job_test_dir = os.path.join(ci_project_dir, _required_env("SPACK_JOB_TEST_DIR"))
+    repro_dir = os.path.join(ci_project_dir, _required_env("SPACK_JOB_REPRO_DIR"))
+    concrete_env_dir = os.path.join(ci_project_dir, _required_env("SPACK_CONCRETE_ENV_DIR"))
 
     # Debug print some of the key environment variables we should have received
     tty.debug("pipeline_artifacts_dir = {0}".format(pipeline_artifacts_dir))

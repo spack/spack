@@ -108,7 +108,7 @@ def override(string: str) -> bool:
     configs instead of merging into them.
 
     """
-    return hasattr(string, "override") and string.override
+    return bool(getattr(string, "override", False))
 
 
 def merge_yaml(dest, source, prepend=False, append=False):

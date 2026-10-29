@@ -212,7 +212,10 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # Create a list of subcommand actions. Argparse internals are nasty!
         # Note: you can only call _get_subactions() once.  Even nastier!
         if not hasattr(self, "actions"):
-            self.actions = self._subparsers._actions[-1]._get_subactions()
+            subparsers = next(
+                a for a in self._actions if isinstance(a, argparse._SubParsersAction)
+            )
+            self.actions = subparsers._get_subactions()
 
         # make a set of commands not yet added.
         remaining = set(spack.cmd.all_commands())
@@ -945,7 +948,9 @@ def _main(argv=None):
     # configuration. This doesn't include much -- setting up the parser,
     # restoring some key environment variables, very simple CLI options, etc.
     # ------------------------------------------------------------------------
-    warnings.showwarning = showwarning
+    # ty models module-level functions as non-reassignable, but overriding this hook is the
+    # documented way to redirect warnings
+    warnings.showwarning = showwarning  # ty: ignore[invalid-assignment]
 
     # Create a parser with a simple positional argument first.  We'll
     # lazily load the subcommand(s) we need later. This allows us to
@@ -990,7 +995,7 @@ def _main(argv=None):
             e.print_context()
             env_format_error = e
 
-    def add_environment_scope():
+    def add_environment_scope(env: ev.Environment):
         if env_format_error:
             # Allow command to continue without env in case it is `spack config edit`
             # All other cases will raise in `finish_parse_and_run`
@@ -1003,7 +1008,7 @@ def _main(argv=None):
 
     # add the environment
     if env:
-        add_environment_scope()
+        add_environment_scope(env)
 
     # Push scopes from the command line last
     if args.config_scopes:

@@ -135,8 +135,9 @@ class ResolveSharedElfLibDepsVisitor(BaseDirectoryVisitor):
         # supported in general. Also remove empty paths.
         rpaths = [x.replace(b"$ORIGIN", origin) for x in rpaths if x]
 
-        # Do not allow relative rpaths (they are relative to the current working directory)
-        rpaths, relative_rpaths = stable_partition(rpaths, os.path.isabs)
+        # Do not allow relative rpaths (they are relative to the current working directory).
+        # (lambdas keep the element type bytes; passing os.path.isabs widens it to any path type)
+        rpaths, relative_rpaths = stable_partition(rpaths, lambda x: os.path.isabs(x))
 
         # If there's a / in the needed lib, it's opened directly, otherwise it needs
         # a search.
@@ -144,7 +145,7 @@ class ResolveSharedElfLibDepsVisitor(BaseDirectoryVisitor):
 
         # Do not allow relative paths in direct libs (they are relative to the current working
         # directory)
-        direct_libs, unresolved = stable_partition(direct_libs, os.path.isabs)
+        direct_libs, unresolved = stable_partition(direct_libs, lambda x: os.path.isabs(x))
 
         resolved: Dict[bytes, bytes] = {}
 

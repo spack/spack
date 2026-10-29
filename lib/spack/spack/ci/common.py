@@ -187,11 +187,16 @@ class CDashHandler:
             self.site += f" ({runner})"
 
     def args(self):
+        build_name = self.build_name()
+        if build_name is None:
+            raise spack.error.SpackError(
+                "SPACK_CDASH_BUILD_NAME must be set to report to CDash from a CI job"
+            )
         return [
             "--cdash-upload-url",
             win_quote(self.upload_url),
             "--cdash-build",
-            win_quote(self.build_name()),
+            win_quote(build_name),
             "--cdash-site",
             win_quote(self.site),
             "--cdash-buildstamp",
@@ -216,7 +221,7 @@ class CDashHandler:
         tty.debug(f"Using CDash build name ({env_build_name}) from the environment")
         return env_build_name
 
-    @property  # type: ignore
+    @property
     def build_stamp(self):
         """Returns the CDash build stamp.
 
@@ -234,7 +239,7 @@ class CDashHandler:
         tty.debug(f"Generated new build stamp ({build_stamp})")
         return build_stamp
 
-    @property  # type: ignore
+    @property
     @memoized
     def project_enc(self):
         tty.debug(f"Encoding project ({type(self.project)}): {self.project})")
@@ -691,7 +696,7 @@ class SpackCIConfig:
                 endpoint_url = urlparse(endpoint)
 
                 # Configure the request header
-                header = {"User-Agent": web_util.SPACK_USER_AGENT}
+                header: Dict[str, str] = {"User-Agent": web_util.SPACK_USER_AGENT}
                 header.update(mapping.get("header", {}))
 
                 # Expand header environment variables

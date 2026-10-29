@@ -8,19 +8,21 @@ import io
 import os
 import re
 import sys
+import types
+from typing import Optional
 
 import spack.extensions
-
-try:
-    import pytest
-except ImportError:
-    pytest = None  # type: ignore
-
 import spack.paths
 import spack.util.filesystem
 from spack.util import tty
 from spack.util.tty import color
 from spack.util.tty.colify import colify
+
+pytest: Optional[types.ModuleType] = None
+try:
+    import pytest
+except ImportError:
+    pass
 
 description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
@@ -111,6 +113,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 def do_list(args, extra_args):
     """Print a lists of tests than what pytest offers."""
+    if pytest is None:
+        return
 
     def colorize(c, prefix):
         if isinstance(prefix, tuple):

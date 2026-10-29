@@ -5,7 +5,7 @@
 import argparse
 import copy
 import sys
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import spack.binary_distribution
 import spack.config
@@ -218,7 +218,11 @@ def query_arguments(args):
     if args.implicit:
         explicit = False
 
-    q_args = {"installed": installed, "predicate_fn": predicate_fn, "explicit": explicit}
+    q_args: Dict[str, Any] = {
+        "installed": installed,
+        "predicate_fn": predicate_fn,
+        "explicit": explicit,
+    }
 
     install_tree = args.install_tree
     upstreams = spack.config.CONFIG.get("upstreams", {})

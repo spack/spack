@@ -357,7 +357,7 @@ def test_external_node_completion(
 @pytest.mark.regression("52179")
 def test_external_spec_single_valued_variant_type_is_corrected(config, mock_packages):
     """Tests that an external spec string including a single-valued variant is parsed correctly."""
-    externals_dict = [
+    externals_dict: List[ExternalDict] = [
         {"spec": "dual-cmake-autotools@1.0 build_system=mock_autotools", "prefix": "/usr/dual"}
     ]
     parser = ExternalSpecsParser(
@@ -381,7 +381,9 @@ def test_external_spec_multi_valued_variant_is_not_changed(config, mock_packages
     definition in package.py says otherwise.
     """
     # Package.py prescribes a single-valued variant in this case
-    externals_dict = [{"spec": "variant-values@1.0 v=foo,bar", "prefix": "/usr/variant-values"}]
+    externals_dict: List[ExternalDict] = [
+        {"spec": "variant-values@1.0 v=foo,bar", "prefix": "/usr/variant-values"}
+    ]
     parser = ExternalSpecsParser(
         externals_dict, repo=mock_packages, complete_node=complete_variants_and_architecture
     )

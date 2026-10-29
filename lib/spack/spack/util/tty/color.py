@@ -65,7 +65,7 @@ import re
 import sys
 import textwrap
 from contextlib import contextmanager
-from typing import IO, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
+from typing import IO, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
 
 class ColorParseError(Exception):
@@ -269,7 +269,7 @@ def set_color_when(when: Union[str, bool, None]) -> None:
 
 
 @contextmanager
-def color_when(value: Union[str, bool, None]) -> Iterator[None]:
+def color_when(value: Union[str, bool, None]) -> Generator[None, None, None]:
     """Context manager to temporarily use a particular color setting."""
     old_value = _force_color
     set_color_when(value)
@@ -475,7 +475,7 @@ def cescape(string: str) -> str:
 
 
 class ColorStream:
-    def __init__(self, stream: io.IOBase, color: Optional[bool] = None) -> None:
+    def __init__(self, stream: Union[io.IOBase, IO[str]], color: Optional[bool] = None) -> None:
         self._stream = stream
         self._color = color
 

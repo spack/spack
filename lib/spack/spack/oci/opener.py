@@ -427,7 +427,7 @@ def ensure_status(request: urllib.request.Request, response: HTTPResponse, statu
         return
 
     raise spack.util.web.DetailedHTTPError(
-        request, response.status, response.reason, response.info(), None
+        request, response.status, response.reason, response.headers, None
     )
 
 
