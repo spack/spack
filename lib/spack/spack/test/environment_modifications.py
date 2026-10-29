@@ -257,6 +257,50 @@ def test_path_manipulation(env):
     assert os.environ["PATH_LIST_WITH_DUPLICATES"].count(make_path("duplicate")) == 1
 
 
+@pytest.mark.parametrize("method", ["remove_path", "remove_first_path", "remove_last_path"])
+def test_remove_path_does_not_add_current_directory(method):
+    """Removing a path must not turn unset variables or empty entries into ".", the current
+    working directory."""
+    a, b = make_path("a"), make_path("b")
+    env = {"EMPTY": "", "TRAILING": a + os.pathsep, "MIDDLE": os.pathsep.join([b, "", a])}
+
+    modifications = EnvironmentModifications()
+    for name in ("UNSET", "EMPTY", "TRAILING", "MIDDLE"):
+        getattr(modifications, method)(name, a)
+    modifications.apply_modifications(env)
+
+    assert "UNSET" not in env
+    assert env["EMPTY"] == ""
+    assert env["TRAILING"] == ""
+    assert env["MIDDLE"] == os.pathsep.join([b, ""])
+
+
+@pytest.mark.parametrize("method", ["prune_duplicate_paths", "deprioritize_system_paths"])
+def test_path_cleanup_keeps_empty_entries(method):
+    """An empty entry, as in MANPATH=:/opt/man, must stay empty and not become "."."""
+    env = {"LEADING": os.pathsep + make_path("a")}
+
+    modifications = EnvironmentModifications()
+    getattr(modifications, method)("LEADING")
+    modifications.apply_modifications(env)
+
+    assert env["LEADING"] == os.pathsep + make_path("a")
+
+
+def test_reversed_prepend_path_restores_trailing_separator():
+    """Undoing a prepend to a variable with a trailing separator, as Spack writes MANPATH,
+    gives back the original value."""
+    modifications = EnvironmentModifications()
+    modifications.prepend_path("MANPATH", make_path("view", "share", "man"))
+
+    env = {"MANPATH": os.pathsep}
+    modifications.apply_modifications(env)
+    assert env["MANPATH"] == make_path("view", "share", "man") + os.pathsep * 2
+
+    modifications.reversed().apply_modifications(env)
+    assert env["MANPATH"] == os.pathsep
+
+
 @pytest.mark.not_on_windows("Skip unix path tests on Windows")
 def test_unix_system_path_manipulation(env):
     """Tests manipulting paths that have special meaning as system paths on Unix"""
