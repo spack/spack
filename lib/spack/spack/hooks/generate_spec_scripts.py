@@ -74,7 +74,9 @@ def make_repo_path(root):
     return spack.repo.RepoPath(*repos) if repos else None
 
 
-def get_environment_modifications(spec, shell, repo=None) -> Tuple[str, str]:
+def get_environment_modifications(
+    spec, shell, repo=None, use_cache: bool = True
+) -> Tuple[str, str]:
     """Returns both load and unload environment modifications for the spec.
     Args:
         spec: The spec whose environment modifications we are returning
@@ -88,10 +90,10 @@ def get_environment_modifications(spec, shell, repo=None) -> Tuple[str, str]:
     unload_env_mod = load_env_mod.reversed()
 
     load_env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-    load_mods = load_env_mod.shell_modifications(shell, cache=True)
+    load_mods = load_env_mod.shell_modifications(shell, cache=use_cache)
 
     unload_env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-    unload_mods = unload_env_mod.shell_modifications(shell, cache=True)
+    unload_mods = unload_env_mod.shell_modifications(shell, cache=use_cache)
 
     return load_mods, unload_mods
 
@@ -182,7 +184,9 @@ def post_install(spec, explicit=None):
             cached_repo = make_repo_path(spack_dir)
 
             # Write shell script to load & unload
-            load_mods, unload_mods = get_environment_modifications(spec, shell, cached_repo)
+            load_mods, unload_mods = get_environment_modifications(
+                spec, shell, cached_repo, use_cache=True
+            )
             write_script(load_script_path, load_mods, shell)
             write_script(unload_script_path, unload_mods, shell)
         except Exception as e:

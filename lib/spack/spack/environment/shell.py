@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import textwrap
-from typing import Optional
+from typing import Optional, Tuple
 
 import spack.config
 import spack.repo
@@ -14,14 +14,18 @@ from spack.util.environment import EnvironmentModifications, ShellCmdString
 from spack.util.tty.color import colorize
 
 
-def _make_spack_prompt(shell: str, prompt: str) -> str:
+def _make_spack_prompt(shell: str, prompt: str, use_cache: bool) -> str:
     shell_cmd = ShellCmdString(shell)
     cmds = ""
     if shell == "csh":
         # TODO: figure out how to make color work for csh
         cmds += "if (! $?SPACK_OLD_PROMPT ) "
-        cmds += shell_cmd.spack_set("SPACK_OLD_PROMPT", prompt)
-        cmds += shell_cmd.spack_set("prompt", f"{prompt} $prompt")
+        if use_cache:
+            cmds += shell_cmd.spack_set("SPACK_OLD_PROMPT", prompt)
+            cmds += shell_cmd.spack_set("prompt", f"{prompt} $prompt")
+        else:
+            cmds += shell_cmd.set("SPACK_OLD_PROMPT", prompt)
+            cmds += shell_cmd.set("prompt", f"{prompt} $prompt")
     elif shell == "fish":
         # NOTE: We're not changing the fish_prompt function (which is fish's
         # solution to the PS1 variable) here. This is a bit fiddly, and easy to
@@ -32,8 +36,12 @@ def _make_spack_prompt(shell: str, prompt: str) -> str:
         old_prompt = os.environ.get("SPACK_OLD_PROMPT")
         if not old_prompt:
             old_prompt = os.environ.get("PROMPT")
-        cmds += shell_cmd.spack_set("SPACK_OLD_PROMPT", str(old_prompt))
-        cmds += shell_cmd.spack_set("PROMPT", f"{prompt} $P$G")
+        if use_cache:
+            cmds += shell_cmd.spack_set("SPACK_OLD_PROMPT", str(old_prompt))
+            cmds += shell_cmd.spack_set("PROMPT", f"{prompt} $P$G")
+        else:
+            cmds += shell_cmd.set("SPACK_OLD_PROMPT", str(old_prompt))
+            cmds += shell_cmd.set("PROMPT", f"{prompt} $P$G")
     elif shell == "pwsh":
         cmds += (
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
@@ -68,39 +76,53 @@ def _make_spack_prompt(shell: str, prompt: str) -> str:
     return cmds
 
 
-def activate_commands(env, shell, view: Optional[str] = None):
+def activate_commands(env, shell, use_cache: bool, view: Optional[str] = None):
     # Construct the commands to run
     shell_cmd = ShellCmdString(shell)
-    cmds = shell_cmd.spack_set("SPACK_ENV", env.path)
+    if use_cache:
+        cmds = shell_cmd.spack_set("SPACK_ENV", env.path)
+    else:
+        cmds = shell_cmd.set("SPACK_ENV", env.path)
 
     if view:
-        cmds += shell_cmd.spack_set("SPACK_ENV_VIEW", view)
+        if use_cache:
+            cmds += shell_cmd.spack_set("SPACK_ENV_VIEW", view)
+        else:
+            cmds += shell_cmd.set("SPACK_ENV_VIEW", view)
     return cmds
 
 
-def activate_prompt_cmds(env, shell, prompt):
+def activate_prompt_cmds(env, shell, prompt, use_cache: bool):
     short_name = env.name
     if short_name == env.path:
         short_name = os.path.basename(short_name)
 
     shell_cmd = ShellCmdString(shell)
-    cmds = shell_cmd.spack_set("VIRTUAL_ENV_PROMPT", short_name)
+    if use_cache:
+        cmds = shell_cmd.spack_set("VIRTUAL_ENV_PROMPT", short_name)
+    else:
+        cmds = shell_cmd.set("VIRTUAL_ENV_PROMPT", short_name)
 
     if prompt:
-        cmds += _make_spack_prompt(shell, f"[{short_name}]")
+        cmds += _make_spack_prompt(shell, f"[{short_name}]", use_cache=use_cache)
     return cmds
 
 
-def deactivate_commands(shell):
+def deactivate_commands(shell, use_cache: bool):
     shell_cmd = ShellCmdString(shell)
-    cmds = shell_cmd.spack_unset("SPACK_ENV")
-    cmds += shell_cmd.spack_unset("SPACK_ENV_VIEW")
-    cmds += shell_cmd.spack_unset("VIRTUAL_ENV_PROMPT")
+    if use_cache:
+        cmds = shell_cmd.spack_unset("SPACK_ENV")
+        cmds += shell_cmd.spack_unset("SPACK_ENV_VIEW")
+        cmds += shell_cmd.spack_unset("VIRTUAL_ENV_PROMPT")
+    else:
+        cmds = shell_cmd.unset("SPACK_ENV")
+        cmds += shell_cmd.unset("SPACK_ENV_VIEW")
+        cmds += shell_cmd.unset("VIRTUAL_ENV_PROMPT")
 
     return cmds
 
 
-def deactivate_prompt_cmds(shell):
+def deactivate_prompt_cmds(shell, use_cache: bool):
     shell_cmd = ShellCmdString(shell)
     cmds = ""
     if shell == "csh":
@@ -118,8 +140,12 @@ def deactivate_prompt_cmds(shell):
         # TODO: despacktivate
         old_prompt = os.environ.get("SPACK_OLD_PROMPT")
         if old_prompt:
-            cmds += shell_cmd.spack_set("PROMPT", old_prompt)
-            cmds += shell_cmd.spack_unset("SPACK_OLD_PROMPT")
+            if use_cache:
+                cmds += shell_cmd.spack_set("PROMPT", old_prompt)
+                cmds += shell_cmd.spack_unset("SPACK_OLD_PROMPT")
+            else:
+                cmds += shell_cmd.set("PROMPT", old_prompt)
+                cmds += shell_cmd.unset("SPACK_OLD_PROMPT")
     elif shell == "pwsh":
         cmds += (
             "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
@@ -157,7 +183,9 @@ def alias_despacktivate_cmds(shell):
     return shell_cmd.alias("despacktivate", "spack env deactivate")
 
 
-def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
+def activate(
+    env, view: Optional[str] = "default"
+) -> Tuple[EnvironmentModifications, EnvironmentModifications]:
     """Compute environment modifications for activating an environment.
 
     Arguments:
@@ -169,6 +197,7 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
         modifications to activate environment."""
 
     env_mods = EnvironmentModifications()
+    prefix_mods = EnvironmentModifications()
 
     #
     # NOTE in the fish-shell: Path variables are a special kind of variable
@@ -184,7 +213,8 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
     try:
         if view and env.has_view(view):
             with spack.store.STORE.db.read_transaction():
-                env.add_view_to_env(env_mods, view)
+                prefix_mods, spec_mods = env.add_view_to_env(env_mods, view)
+                env_mods.extend(spec_mods)
     except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
         tty.error(e)
         tty.die(
@@ -195,7 +225,7 @@ def activate(env, view: Optional[str] = "default") -> EnvironmentModifications:
             "    spack -e {0} concretize --force".format(env.name),
         )
 
-    return env_mods
+    return prefix_mods, env_mods
 
 
 def validate_view(env, view: Optional[str] = "default") -> None:
@@ -210,10 +240,10 @@ def validate_view(env, view: Optional[str] = "default") -> None:
         view: the view name to validate
     """
     # Call activate() and discard the result to trigger validation and error handling
-    _ = activate(env, view)
+    _, _ = activate(env, view)
 
 
-def deactivate(active_env, view) -> EnvironmentModifications:
+def deactivate(active_env, view) -> Tuple[EnvironmentModifications, EnvironmentModifications]:
     """Deactivate an environment and collect corresponding environment modifications.
 
     Note: unloads the environment in its current state, not in the state it was
@@ -228,9 +258,10 @@ def deactivate(active_env, view) -> EnvironmentModifications:
         Environment variables modifications to activate environment.
     """
     env_mods = EnvironmentModifications()
+    prefix_mods = EnvironmentModifications()
 
     if active_env is None:
-        return env_mods
+        return prefix_mods, env_mods
 
     with active_env.manifest.use_config():
         env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
@@ -240,7 +271,8 @@ def deactivate(active_env, view) -> EnvironmentModifications:
     if view:
         try:
             with spack.store.STORE.db.read_transaction():
-                active_env.rm_view_from_env(env_mods, view)
+                prefix_mods, spec_mods = active_env.rm_view_from_env(env_mods, view)
+                env_mods.extend(spec_mods)
         except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
             tty.warn(e)
             tty.warn(
@@ -248,4 +280,4 @@ def deactivate(active_env, view) -> EnvironmentModifications:
                 "or repo, shell environment may be corrupt."
             )
 
-    return env_mods
+    return prefix_mods, env_mods

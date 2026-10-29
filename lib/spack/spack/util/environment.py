@@ -565,82 +565,122 @@ class SetPath(NameValueModifier):
 
 class AppendPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         tty.debug(f"AppendPath: {self.name}+{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
+        directories.append(path_to_os_path(value).pop())
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_append(self.name, value)
 
 
 class PrependPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         tty.debug(f"PrependPath: {self.name}+{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = [path_to_os_path(os.path.normpath(self.value)).pop()] + directories
+        directories = [path_to_os_path(value).pop()] + directories
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
 
         return shell_cmd.spack_prepend(self.name, value)
 
 
 class RemoveFirstPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         tty.debug(f"RemoveFirstPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        directories = [path_to_os_path(os.path.normpath(x) if x else x).pop() for x in directories]
+        val = path_to_os_path(value).pop()
         if val in directories:
             directories.remove(val)
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_remove_first(self.name, value)
 
 
 class RemoveLastPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         tty.debug(f"RemoveLastPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)[::-1]
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        directories = [path_to_os_path(os.path.normpath(x) if x else x).pop() for x in directories]
+        val = path_to_os_path(value).pop()
         if val in directories:
             directories.remove(val)
         env[self.name] = self.separator.join(directories[::-1])
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_remove_last(self.name, value)
 
 
 class RemovePath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         tty.debug(f"RemovePath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
         directories = [
-            path_to_os_path(os.path.normpath(x)).pop()
+            path_to_os_path(os.path.normpath(x) if x else x).pop()
             for x in directories
-            if x != path_to_os_path(os.path.normpath(self.value)).pop()
+            if x != path_to_os_path(value).pop()
         ]
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
+        value = self.value
+        if self.value:
+            value = os.path.normpath(self.value)
+
         shell_cmd = ShellCmdString(shell, self.separator)
-        value = path_to_os_path(os.path.normpath(self.value)).pop()
+        value = path_to_os_path(value).pop()
         return shell_cmd.spack_remove_value(self.name, value)
 
 
@@ -650,7 +690,7 @@ class PruneDuplicatePaths(NameModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories = prune_duplicate_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+            [path_to_os_path(os.path.normpath(x) if x else x).pop() for x in directories]
         )
         env[self.name] = self.separator.join(directories)
 
@@ -1012,7 +1052,7 @@ class EnvironmentModifications:
                 new = new_env.get(name, None)
                 old = env.get(name, None)
                 if explicit or new != old:
-                    if new is None:
+                    if new is None or new == "":
                         cmds += shell_cmd.unset(name)
                     else:
                         value = new_env[name]

@@ -66,7 +66,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     subparser.add_argument(
-        "--dev",
+        "--fresh",
         action="store_true",
         default=False,
         help="bypass the cached script and repo and generate environment modifications",
@@ -102,9 +102,8 @@ def unload(parser, args):
     for spec in specs:
         commands = ""
 
-        if args.dev or spec.external:
-            env_mods = uenv.environment_modifications_from_prefix_inspections([spec])
-            commands += env_mods.shell_modifications(shell, cache=False)
+        if args.fresh or spec.external:
+            _, commands = spec_script.get_environment_modifications(spec, shell, use_cache=False)
             sys.stdout.write(commands)
             return
         else:
@@ -116,7 +115,9 @@ def unload(parser, args):
                 try:
                     # Try to get cached repo if it exists
                     cached_repo = spec_script.make_repo_path(spack_dir)
-                    _, mods = spec_script.get_environment_modifications(spec, shell, cached_repo)
+                    _, mods = spec_script.get_environment_modifications(
+                        spec, shell, cached_repo, use_cache=True
+                    )
                 except Exception as err:
                     tty.die(f"Error generating environment modifications for {spec}:\n{err}")
                 try:
@@ -127,6 +128,8 @@ def unload(parser, args):
 
             commands = spec_script.source_script(unload_script_path, shell)
 
-        env_mods = uenv.environment_modifications_from_prefix_inspections([spec])
-        commands += env_mods.shell_modifications(shell, cache=True)
+        env_mods = uenv.prefix_inspections_environment_modifications([spec])
+        if env_mods:
+            commands += env_mods.shell_modifications(shell, cache=True)
+
         sys.stdout.write(commands)
