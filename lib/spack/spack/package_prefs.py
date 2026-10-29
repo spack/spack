@@ -3,204 +3,93 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import stat
 import warnings
+from typing import Any, Callable, Iterable, NamedTuple, Optional
 
 import spack.config
 import spack.repo
 import spack.spec
 from spack.error import ConfigError
-from spack.version import Version
-
-_lesser_spec_types = {"compiler": spack.spec.CompilerSpec, "version": Version}
 
 
-def _spec_type(component):
-    """Map from component name to spec type for package prefs."""
-    return _lesser_spec_types.get(component, spack.spec.Spec)
+def _first_set(packages: dict, names: Iterable[str], *path: str) -> Any:
+    """Return the first non-empty value at ``packages:<name>:<path>`` for ``name`` in ``names``,
+    or None if there is none."""
+    for name in names:
+        value = packages.get(name)
+        for key in path:
+            if not value:
+                break
+            value = value.get(key)
+        if value:
+            return value
+    return None
 
 
-class PackagePrefs:
-    """Defines the sort order for a set of specs.
+def target_sort_key(
+    configuration: spack.config.Configuration,
+) -> Callable[[spack.spec.Spec], float]:
+    """Return a key to sort ``target=<name>`` specs in the order of ``packages:all:target``.
 
-    Spack's package preference implementation uses PackagePrefs to
-    define sort order. The PackagePrefs class looks at Spack's
-    packages.yaml configuration and, when called on a spec, returns a key
-    that can be used to sort that spec in order of the user's
-    preferences.
-
-    You can use it like this::
-
-       # key function sorts CompilerSpecs for `mpich` in order of preference
-       kf = PackagePrefs("mpich", "compiler", configuration=spack.config.CONFIG)
-       compiler_list.sort(key=kf)
-
-    Or like this::
-
-       # key function to sort VersionLists for OpenMPI in order of preference.
-       kf = PackagePrefs("openmpi", "version", configuration=spack.config.CONFIG)
-       version_list.sort(key=kf)
-
-    Optionally, you can sort in order of preferred virtual dependency
-    providers.  To do that, provide ``"providers"`` and a third argument
-    denoting the virtual package (e.g., ``mpi``)::
-
-       kf = PackagePrefs("trilinos", "providers", "mpi", configuration=spack.config.CONFIG)
-       provider_spec_list.sort(key=kf)
-
+    The key of a spec is the index of the first preferred target it intersects, minus 0.5 if it is
+    equal to that target, or the number of preferred targets if it intersects none.
     """
+    names = _first_set(configuration.get_config("packages"), ("all",), "target") or []
+    order = [spack.spec.Spec(f"target={str(name).strip()}") for name in names]
 
-    def __init__(
-        self, pkgname, component, vpkg=None, all=True, *, configuration: spack.config.Configuration
-    ):
-        self.pkgname = pkgname
-        self.component = component
-        self.vpkg = vpkg
-        self.all = all
-        self._configuration = configuration
+    def key(spec: spack.spec.Spec) -> float:
+        index = next((i for i, s in enumerate(order) if spec.intersects(s)), len(order))
+        if index < len(order) and order[index] == spec:
+            return index - 0.5
+        return index
 
-        self._spec_order = None
-
-    def __call__(self, spec):
-        """Return a key object (an index) that can be used to sort spec.
-
-        Sort is done in package order. We don't cache the result of
-        this function as Python's sort functions already ensure that the
-        key function is called at most once per sorted element.
-        """
-        if self._spec_order is None:
-            self._spec_order = self._specs_for_pkg(
-                self.pkgname,
-                self.component,
-                self.vpkg,
-                self.all,
-                configuration=self._configuration,
-            )
-        spec_order = self._spec_order
-
-        # integer is the index of the first spec in order that satisfies
-        # spec, or it's a number larger than any position in the order.
-        match_index = next(
-            (i for i, s in enumerate(spec_order) if spec.intersects(s)), len(spec_order)
-        )
-        if match_index < len(spec_order) and spec_order[match_index] == spec:
-            # If this is called with multiple specs that all satisfy the same
-            # minimum index in spec_order, the one which matches that element
-            # of spec_order exactly is considered slightly better. Note
-            # that because this decreases the value by less than 1, it is not
-            # better than a match which occurs at an earlier index.
-            match_index -= 0.5
-        return match_index
-
-    @classmethod
-    def order_for_package(
-        cls, pkgname, component, vpkg=None, all=True, *, configuration: spack.config.Configuration
-    ):
-        """Given a package name, sort component (e.g, version, compiler, ...),
-        and an optional vpkg, return the list from the packages config.
-        """
-        pkglist = [pkgname]
-        if all:
-            pkglist.append("all")
-
-        packages = configuration.get_config("packages")
-
-        for pkg in pkglist:
-            pkg_entry = packages.get(pkg)
-            if not pkg_entry:
-                continue
-
-            order = pkg_entry.get(component)
-            if not order:
-                continue
-
-            # vpkg is one more level
-            if vpkg is not None:
-                order = order.get(vpkg)
-
-            if order:
-                ret = [str(s).strip() for s in order]
-                if component == "target":
-                    ret = ["target=%s" % tname for tname in ret]
-                return ret
-
-        return []
-
-    @classmethod
-    def _specs_for_pkg(
-        cls, pkgname, component, vpkg=None, all=True, *, configuration: spack.config.Configuration
-    ):
-        """Given a sort order specified by the pkgname/component/second_key,
-        return a list of CompilerSpecs, VersionLists, or Specs for
-        that sorting list.
-        """
-        pkglist = cls.order_for_package(pkgname, component, vpkg, all, configuration=configuration)
-        spec_type = _spec_type(component)
-        return [spec_type(s) for s in pkglist]
-
-    @classmethod
-    def preferred_variants(
-        cls, pkg_name, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath
-    ):
-        """Return a VariantMap of preferred variants/values for a spec."""
-        packages = configuration.get_config("packages")
-        for pkg_cls in (pkg_name, "all"):
-            variants = packages.get(pkg_cls, {}).get("variants", "")
-            if variants:
-                break
-
-        # allow variants to be list or string
-        if not isinstance(variants, str):
-            variants = " ".join(variants)
-
-        # Only return variants that are actually supported by the package
-        pkg_cls = repo.get_pkg_class(pkg_name)
-        spec = spack.spec.Spec(f"{pkg_name} {variants}")
-        return {
-            name: variant
-            for name, variant in spec.variants.items()
-            if name in pkg_cls.variant_names()
-        }
+    return key
 
 
-def get_package_dir_permissions(spec):
-    """Return the permissions configured for the spec.
+def preferred_variants(
+    pkg_name: str, *, configuration: spack.config.Configuration, repo: spack.repo.RepoPath
+):
+    """Return the variants in ``packages:<pkg_name>:variants``, or else in
+    ``packages:all:variants``, that the package defines, by name."""
+    packages = configuration.get_config("packages")
+    variants = _first_set(packages, (pkg_name, "all"), "variants") or ""
 
-    Include the GID bit if group permissions are on. This makes the group
-    attribute sticky for the directory. Package-specific settings take
-    precedent over settings for ``all``"""
-    perms = get_package_permissions(spec)
-    if perms & stat.S_IRWXG and spack.config.CONFIG.get("config:allow_sgid", True):
-        perms |= stat.S_ISGID
-        if spec.concrete and "/afs/" in spec.prefix:
-            warnings.warn(
-                "Directory {0} seems to be located on AFS. If you"
-                " encounter errors, try disabling the allow_sgid option"
-                " using: spack config add 'config:allow_sgid:false'".format(spec.prefix)
-            )
-    return perms
+    # allow variants to be list or string
+    if not isinstance(variants, str):
+        variants = " ".join(variants)
+
+    # Only return variants that are actually supported by the package
+    pkg_cls = repo.get_pkg_class(pkg_name)
+    spec = spack.spec.Spec(f"{pkg_name} {variants}")
+    return {
+        name: variant for name, variant in spec.variants.items() if name in pkg_cls.variant_names()
+    }
 
 
-def get_package_permissions(spec):
-    """Return the permissions configured for the spec.
+class Permissions(NamedTuple):
+    """Permissions configured under ``packages:<name>:permissions``."""
 
-    Package-specific settings take precedence over settings for ``all``"""
+    #: mode for files
+    file_mode: int
+    #: mode for directories, which is ``file_mode`` plus ``S_ISGID`` when group bits are set
+    #: and ``config:allow_sgid`` is true
+    dir_mode: int
+    #: name of the group, or empty to leave the group unchanged
+    group: str
 
-    # Get read permissions level
-    for name in (spec.name, "all"):
-        try:
-            readable = spack.config.CONFIG.get("packages:%s:permissions:read" % name, "")
-            if readable:
-                break
-        except AttributeError:
-            readable = "world"
 
-    # Get write permissions level
-    for name in (spec.name, "all"):
-        try:
-            writable = spack.config.CONFIG.get("packages:%s:permissions:write" % name, "")
-            if writable:
-                break
-        except AttributeError:
-            writable = "user"
+def package_permissions(
+    configuration: spack.config.Configuration, pkg_name: Optional[str]
+) -> Permissions:
+    """Return the permissions configured for a package.
+
+    Each key of ``packages:<pkg_name>:permissions`` falls back to the same key under
+    ``packages:all:permissions``. With ``pkg_name`` None, only ``packages:all`` is read.
+    """
+    packages = configuration.get_config("packages")
+    names = ("all",) if pkg_name is None else (pkg_name, "all")
+    readable = _first_set(packages, names, "permissions", "read") or ""
+    writable = _first_set(packages, names, "permissions", "write") or ""
+    group = _first_set(packages, names, "permissions", "group") or ""
 
     perms = stat.S_IRWXU
     if readable in ("world", "group"):  # world includes group
@@ -213,7 +102,7 @@ def get_package_permissions(spec):
             raise ConfigError(
                 "Writable permissions may not be more"
                 + " permissive than readable permissions.\n"
-                + "      Violating package is %s" % spec.name
+                + "      Violating package is %s" % (pkg_name or "all")
             )
         perms |= stat.S_IWGRP
     if writable == "world":
@@ -221,22 +110,21 @@ def get_package_permissions(spec):
             raise ConfigError(
                 "Writable permissions may not be more"
                 + " permissive than readable permissions.\n"
-                + "      Violating package is %s" % spec.name
+                + "      Violating package is %s" % (pkg_name or "all")
             )
         perms |= stat.S_IWOTH
 
-    return perms
+    dir_perms = perms
+    if perms & stat.S_IRWXG and configuration.get("config:allow_sgid", True):
+        dir_perms |= stat.S_ISGID
+
+    return Permissions(file_mode=perms, dir_mode=dir_perms, group=group)
 
 
-def get_package_group(spec):
-    """Return the unix group associated with the spec.
-
-    Package-specific settings take precedence over settings for ``all``"""
-    for name in (spec.name, "all"):
-        try:
-            group = spack.config.CONFIG.get("packages:%s:permissions:group" % name, "")
-            if group:
-                break
-        except AttributeError:
-            group = ""
-    return group
+def warn_if_sgid_on_afs(prefix: str, dir_mode: int) -> None:
+    """Warn if ``dir_mode`` sets the sgid bit and ``prefix`` seems to be on AFS."""
+    if dir_mode & stat.S_ISGID and "/afs/" in prefix:
+        warnings.warn(
+            f"Directory {prefix} seems to be located on AFS. If you encounter errors, try "
+            "disabling the allow_sgid option using: spack config add 'config:allow_sgid:false'"
+        )
