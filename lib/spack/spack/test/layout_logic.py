@@ -321,6 +321,101 @@ def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
     assert migrated["include"][2]["path"] == str(shared_cfg)
 
 
+def test_config_path_migration_rewrites_old_defaults(tmp_path):
+    """An absolute path that spells out the Spack 1.2 default for its own config key (e.g.
+    ``bootstrap:root: ~/.spack/bootstrap``, as written by ``spack bootstrap root --set``) is
+    rewritten to that key's new default. The same path under any other key, or any other
+    path under ~/.spack, moves with the config like everything else that was copied.
+    """
+    old = tmp_path / "dot-spack"
+    new = tmp_path / "config-spack"
+    old.mkdir()
+    new.mkdir()
+
+    config_path = new / "config.yaml"
+    config_path.write_text(
+        syaml.dump(
+            {
+                "bootstrap": {"root": str(old / "bootstrap")},
+                "config": {
+                    "misc_cache": str(old / "cache"),
+                    "test_stage": str(old / "test"),
+                    "build_stage": ["$tempdir/$user/spack-stage", str(old / "stage")],
+                    # the same directories under keys they are NOT the default for
+                    "source_cache": str(old / "cache"),
+                    "template_dirs": [str(old / "bootstrap"), str(old / "stage" / "sub")],
+                    # a sub-path of a default is not the default
+                    "extensions": [str(old / "bootstrap" / "store")],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    migrated = spack.migrate.process_config_file_paths(str(config_path), str(old), str(new))
+
+    assert migrated is not None
+    # old default for its own key -> new default
+    assert migrated["bootstrap"]["root"] == "$state_home/bootstrap"
+    assert migrated["config"]["misc_cache"] == "$cache_home/$spack_instance_id/cache"
+    assert migrated["config"]["test_stage"] == "$state_home/test-stage"
+    assert migrated["config"]["build_stage"][1] == "$state_home/stage"
+    # same directory under a different key -> ordinary config-home rewrite
+    assert migrated["config"]["source_cache"] == str(new / "cache")
+    assert migrated["config"]["template_dirs"][0] == str(new / "bootstrap")
+    assert migrated["config"]["template_dirs"][1] == str(new / "stage" / "sub")
+    # sub-path of a default -> ordinary rewrite
+    assert migrated["config"]["extensions"][0] == str(new / "bootstrap" / "store")
+    # variable-form values are not touched
+    assert migrated["config"]["build_stage"][0] == "$tempdir/$user/spack-stage"
+
+
+@pytest.mark.parametrize(
+    "instance_dir,expected_is_default",
+    [
+        ("y6pldc2", True),
+        ("abc2345", True),
+        ("toolong1", False),
+        ("UPPER22", False),
+        ("y6pldc", False),
+    ],
+)
+def test_config_path_migration_instance_misc_cache(tmp_path, instance_dir, expected_is_default):
+    """``~/.spack/<spack_instance_id>/cache`` (the paths.py fallback for misc_cache) counts as
+    the old default only when the directory name is a 7-character base32 instance id."""
+    old = tmp_path / "dot-spack"
+    new = tmp_path / "config-spack"
+    old.mkdir()
+    new.mkdir()
+    config_path = new / "config.yaml"
+    config_path.write_text(
+        syaml.dump({"config": {"misc_cache": str(old / instance_dir / "cache")}}), encoding="utf-8"
+    )
+
+    migrated = spack.migrate.process_config_file_paths(str(config_path), str(old), str(new))
+
+    assert migrated is not None
+    if expected_is_default:
+        assert migrated["config"]["misc_cache"] == "$cache_home/$spack_instance_id/cache"
+    else:
+        assert migrated["config"]["misc_cache"] == str(new / instance_dir / "cache")
+
+
+def test_config_path_migration_override_key(tmp_path):
+    """``key::`` override syntax is still recognised as the same config key."""
+    old = tmp_path / "dot-spack"
+    new = tmp_path / "config-spack"
+    old.mkdir()
+    new.mkdir()
+    config_path = new / "config.yaml"
+    config_path.write_text(f"config:\n  misc_cache:: {old}/cache\n", encoding="utf-8")
+
+    migrated = spack.migrate.process_config_file_paths(str(config_path), str(old), str(new))
+
+    assert migrated is not None
+    assert migrated["config"]["misc_cache:"] == "$cache_home/$spack_instance_id/cache"
+
+
 def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
     """Environment migration applies the path-handling scenarios.
 

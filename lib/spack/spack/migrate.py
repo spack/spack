@@ -5,6 +5,7 @@
 
 import filecmp
 import os
+import re
 import shutil
 import sys
 import time
@@ -340,12 +341,64 @@ def _process_yaml_files_in_directory(
                 tty.debug(f"Skipping {rel_path} during migration: {e}")
 
 
+#: Config entries whose Spack <= 1.2 default lived under ``~/.spack``, and where that default
+#: lives in the new layout.
+#:
+#: Keyed by config path (``section:key``). Each entry lists regexes matching the old
+#: default(s) as ``/``-separated paths relative to ``~/.spack``, and the new default as a
+#: config-variable string so that ``config:locations`` and the ``SPACK_*_HOME``/``XDG_*_HOME``
+#: environment variables keep applying after migration.
+#:
+#: Those subtrees are regenerable data, not configuration, so the home migration does not copy
+#: them (see ``_EXCLUDED_TOPLEVEL_ENTRIES_CONFIG``). A user config file may still spell out the
+#: old default as an absolute path, e.g. ``bootstrap:root: /home/me/.spack/bootstrap`` as
+#: written by ``spack bootstrap root --set``. Only when a value *is* the old default for its own
+#: key is it rewritten to the new default. Any other absolute path under ``~/.spack`` is a
+#: user choice and is rewritten to the config home like everything else that was copied.
+#:
+#: The old defaults are fixed in Spack 1.2 and never change; the new defaults should match
+#: ``etc/spack/defaults``.
+_OLD_DOT_SPACK_DEFAULTS: Dict[str, Tuple[List["re.Pattern[str]"], str]] = {
+    # etc/spack/defaults/bootstrap.yaml: root: $user_cache_path/bootstrap
+    "bootstrap:root": ([re.compile(r"^bootstrap$")], "$state_home/bootstrap"),
+    # etc/spack/defaults/config.yaml: misc_cache: $user_cache_path/cache, and the paths.py
+    # fallback ~/.spack/<spack_instance_id>/cache, where the id is the first 7 characters of
+    # a base32 hash (alphabet a-z2-7)
+    "config:misc_cache": (
+        [re.compile(r"^cache$"), re.compile(r"^[a-z2-7]{7}/cache$")],
+        "$cache_home/$spack_instance_id/cache",
+    ),
+    # etc/spack/defaults/config.yaml: test_stage: $user_cache_path/test
+    "config:test_stage": ([re.compile(r"^test$")], "$state_home/test-stage"),
+    # etc/spack/defaults/config.yaml: build_stage: [..., $user_cache_path/stage]
+    "config:build_stage": ([re.compile(r"^stage$")], "$state_home/stage"),
+}
+
+
+def _relocate_old_default(key_path: List[Union[str, Index]], rel_to_old: str) -> Optional[str]:
+    """If ``rel_to_old`` (a path relative to ``~/.spack``) is the Spack 1.2 default for the
+    config entry at ``key_path``, return that entry's new default; otherwise ``None``."""
+    # config path, ignoring :: and list indices
+    config_key = ":".join(str(k).rstrip(":") for k in key_path if not isinstance(k, Index))
+    entry = _OLD_DOT_SPACK_DEFAULTS.get(config_key)
+    if entry is None:
+        return None
+    matchers, new_default = entry
+    rel_posix = rel_to_old.replace(os.sep, "/")
+    if any(m.match(rel_posix) for m in matchers):
+        return new_default
+    return None
+
+
 def process_config_file_paths(
     file_path: str, old_location: str, new_config_location: str
 ) -> Optional[Dict[str, Any]]:
     """Rewrite paths in config files for relocation.
 
-    - Absolute paths inside old_location: rewrite to new_location
+    - Absolute paths that are the Spack 1.2 default for their config key (e.g.
+      ``bootstrap:root: ~/.spack/bootstrap``): rewrite to the new default for that key
+      (see ``_OLD_DOT_SPACK_DEFAULTS``)
+    - Other absolute paths inside old_location: rewrite to new_location
     - Relative paths starting with ../: make absolute
     - Other paths: leave as-is (files copied to new location)
 
@@ -371,8 +424,11 @@ def process_config_file_paths(
             try:
                 rel_to_old = os.path.relpath(abs_path_norm, old_location_norm)
                 if not rel_to_old.startswith(".."):
-                    # Inside old_location - rewrite to new location
-                    new_path = os.path.join(new_config_location_norm, rel_to_old)
+                    # Inside old_location. If this is a spelled-out old default, use the
+                    # new default; otherwise it moves with the rest of the config.
+                    new_path = _relocate_old_default(key_path, rel_to_old)
+                    if new_path is None:
+                        new_path = os.path.join(new_config_location_norm, rel_to_old)
                     _absolutize_path_in_yaml(data, key_path, new_path)
                     modified = True
             except ValueError:
