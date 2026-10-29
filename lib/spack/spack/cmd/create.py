@@ -6,6 +6,7 @@ import os
 import re
 import sys
 import urllib.parse
+import warnings
 from typing import List, Optional, Tuple
 
 import spack.config
@@ -995,15 +996,19 @@ def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemA
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        version_hashes = spack.stage.get_checksums_for_versions(
+        result = spack.stage.get_checksums_for_versions(
             url_dict,
             name,
             first_stage_function=guesser,
             keep_stage=args.keep_stage,
             config=spack.config.CONFIG,
         )
+        for version, error in result.failures.items():
+            warnings.warn(f"Skipping {name}@{version}: {error}")
+        if not result.hashes:
+            tty.die(f"Could not fetch any versions for {name}")
 
-        versions = get_version_lines(version_hashes)
+        versions = get_version_lines(result.hashes)
     else:
         versions = unhashed_versions
 

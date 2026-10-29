@@ -5,6 +5,7 @@
 import argparse
 import re
 import sys
+import warnings
 from typing import Dict, Optional, Tuple
 
 import spack.config
@@ -167,13 +168,18 @@ def checksum(parser, args):
     else:
         tty.info(f"Found {spack.util.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
-    version_hashes = spack.stage.get_checksums_for_versions(
+    result = spack.stage.get_checksums_for_versions(
         url_dict,
         pkg.name,
         keep_stage=args.keep_stage,
         fetch_options=pkg.fetch_options,
         config=spack.config.CONFIG,
     )
+    for version, error in result.failures.items():
+        warnings.warn(f"Skipping {pkg.name}@{version}: {error}")
+    if not result.hashes:
+        tty.die(f"Could not fetch any versions for {pkg.name}")
+    version_hashes = result.hashes
 
     if args.verify:
         print_checksum_status(pkg, version_hashes)

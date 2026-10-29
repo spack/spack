@@ -12,7 +12,18 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Optional, Set, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Union,
+)
 
 import spack.caches
 import spack.config
@@ -1335,6 +1346,15 @@ def interactive_version_filter(
     return {v: url_dict[v] for v in sorted_and_filtered}
 
 
+class ChecksumResult(NamedTuple):
+    """Result of :func:`get_checksums_for_versions`."""
+
+    #: sha256 of the archive, for each version whose archive was fetched
+    hashes: Dict[StandardVersion, str]
+    #: error message, for each version whose archive could not be fetched or inspected
+    failures: Dict[StandardVersion, str]
+
+
 def get_checksums_for_versions(
     url_by_version: Dict[StandardVersion, str],
     package_name: str,
@@ -1344,7 +1364,7 @@ def get_checksums_for_versions(
     concurrency: Optional[int] = None,
     fetch_options: Optional[Dict[str, str]] = None,
     config: spack.config.Configuration,
-) -> Dict[StandardVersion, str]:
+) -> ChecksumResult:
     """Computes the checksums for each version passed in input, and returns the results.
 
     Archives are fetched according to the usl dictionary passed as input.
@@ -1364,13 +1384,14 @@ def get_checksums_for_versions(
         config: configuration for the stages the archives are fetched into
 
     Returns:
-        A dictionary mapping each version to the corresponding checksum
+        The checksum of each version that was fetched, and an error message for each version
+        that was not
     """
     versions = sorted(url_by_version.keys(), reverse=True)
     search_arguments = [(url_by_version[v], v) for v in versions]
 
     version_hashes: Dict[StandardVersion, str] = {}
-    errors: List[str] = []
+    failures: Dict[StandardVersion, str] = {}
 
     # Don't spawn 16 processes when we need to fetch 2 urls
     if concurrency is not None:
@@ -1387,7 +1408,7 @@ def get_checksums_for_versions(
             url, fetch_options, keep_stage, first_stage_function, config=config
         )
         if isinstance(result, Exception):
-            errors.append(str(result))
+            failures[version] = str(result)
         else:
             version_hashes[version] = result
 
@@ -1405,20 +1426,14 @@ def get_checksums_for_versions(
         for version, future in results:
             result = future.result()
             if isinstance(result, Exception):
-                errors.append(str(result))
+                failures[version] = str(result)
             else:
                 version_hashes[version] = result
-
-        for msg in errors:
-            tty.debug(msg)
-
-    if not version_hashes:
-        tty.die(f"Could not fetch any versions for {package_name}")
 
     num_hash = len(version_hashes)
     tty.debug(f"Checksummed {num_hash} version{'' if num_hash == 1 else 's'} of {package_name}:")
 
-    return version_hashes
+    return ChecksumResult(hashes=version_hashes, failures=failures)
 
 
 def _fetch_and_checksum(
@@ -1446,7 +1461,7 @@ def _fetch_and_checksum(
             checksum = spack.util.crypto.checksum(hashlib.sha256, archive)
         return checksum
     except Exception as e:
-        return Exception(f"[WORKER] Failed to fetch {url}: {e}")
+        return Exception(str(e))
 
 
 class StageError(spack.error.SpackError):
