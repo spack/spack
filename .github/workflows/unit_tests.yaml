@@ -30,12 +30,15 @@ jobs:
         # setup-python cannot provide it on current runners.
         python-version: >-
           ${{ github.ref == 'refs/heads/develop'
-          && fromJSON('["3.8", "3.9", "3.10", "3.11", "3.14"]')
+          && fromJSON('["3.10", "3.11", "3.14"]')
           || fromJSON('["3.14"]') }}
-        # Python 3.7 needs ubuntu-22.04, newer runner images no longer ship it.
+        # setup-python provides Python 3.7 only up to ubuntu-22.04, and 3.8 and 3.9 only up to
+        # ubuntu-24.04.
         include: >-
           ${{ github.ref == 'refs/heads/develop'
-          && fromJSON('[{"os": "ubuntu-22.04", "python-version": "3.7"}]')
+          && fromJSON('[{"os": "ubuntu-22.04", "python-version": "3.7"},
+          {"os": "ubuntu-24.04", "python-version": "3.8"},
+          {"os": "ubuntu-24.04", "python-version": "3.9"}]')
           || fromJSON('[]') }}
 
     steps:
