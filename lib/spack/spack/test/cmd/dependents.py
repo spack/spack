@@ -7,6 +7,7 @@ import re
 import pytest
 
 from spack.main import SpackCommand
+from spack.util.tty.colify import colified
 from spack.util.tty.color import color_when
 
 dependents = SpackCommand("dependents")
@@ -96,10 +97,12 @@ def test_format_installed_dependents(mock_packages, database):
 
 
 @pytest.mark.db
-def test_format_installed_dependents_tty(mock_packages, database, mock_tty_stdout):
+def test_format_installed_dependents_tty(mock_packages, database, mock_tty_stdout, monkeypatch):
+    monkeypatch.setenv("COLIFY_SIZE", "24x80")
     libelf = database.query_one("libelf")
     out = dependents("--installed", "--format", "{name}", "libelf")
-    assert set(out.splitlines()) == {d.name for d in libelf.dependents()}
+    names = [d.name for d in sorted(libelf.dependents())]
+    assert out == colified(names, tty=True, console_cols=80)
     assert "Dependents of" not in out
 
 
@@ -113,6 +116,16 @@ def test_format_empty_installed_dependents(mock_packages, database):
 @pytest.mark.db
 def test_empty_format_installed_dependents(mock_packages, database):
     # An empty format string is valid and produces one blank line per result.
+    libelf = database.query_one("libelf")
+    out = dependents("--installed", "--format=", "libelf")
+    assert out.splitlines() == [""] * len(libelf.dependents())
+
+
+@pytest.mark.db
+def test_empty_format_installed_dependents_tty(
+    mock_packages, database, mock_tty_stdout, monkeypatch
+):
+    monkeypatch.setenv("COLIFY_SIZE", "24x80")
     libelf = database.query_one("libelf")
     out = dependents("--installed", "--format=", "libelf")
     assert out.splitlines() == [""] * len(libelf.dependents())

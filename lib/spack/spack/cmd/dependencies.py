@@ -70,8 +70,10 @@ def dependencies(parser, args):
             spec, "children", args.transitive, deptype=args.deptype
         )
         if deps and args.format is not None:
-            for dep in deps:
-                print(dep.format(args.format))
+            if args.format:
+                spack.cmd.display_specs(deps, args, groups=False)
+            else:
+                sys.stdout.write("\n" * len(deps))
         elif deps:
             spack.cmd.display_specs(deps, long=True)
         else:

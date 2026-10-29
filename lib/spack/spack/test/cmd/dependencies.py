@@ -7,6 +7,7 @@ import re
 import pytest
 
 from spack.main import SpackCommand
+from spack.util.tty.colify import colified
 from spack.util.tty.color import color_when
 
 dependencies = SpackCommand("dependencies")
@@ -99,10 +100,12 @@ def test_format_installed_dependencies(mock_packages, database):
 
 
 @pytest.mark.db
-def test_format_installed_dependencies_tty(mock_packages, database, mock_tty_stdout):
+def test_format_installed_dependencies_tty(mock_packages, database, mock_tty_stdout, monkeypatch):
+    monkeypatch.setenv("COLIFY_SIZE", "24x80")
     root = database.query_one("mpileaks ^mpich")
     out = dependencies("--installed", "--format", "{name}", "mpileaks^mpich")
-    assert set(out.splitlines()) == {s.name for s in root.dependencies()}
+    names = [s.name for s in sorted(root.dependencies())]
+    assert out == colified(names, tty=True, console_cols=80)
     assert "Dependencies of" not in out
 
 
@@ -116,6 +119,16 @@ def test_format_empty_installed_dependencies(mock_packages, database):
 @pytest.mark.db
 def test_empty_format_installed_dependencies(mock_packages, database):
     # An empty format string is valid and produces one blank line per result.
+    root = database.query_one("mpileaks ^mpich")
+    out = dependencies("--installed", "--format=", "mpileaks^mpich")
+    assert out.splitlines() == [""] * len(root.dependencies())
+
+
+@pytest.mark.db
+def test_empty_format_installed_dependencies_tty(
+    mock_packages, database, mock_tty_stdout, monkeypatch
+):
+    monkeypatch.setenv("COLIFY_SIZE", "24x80")
     root = database.query_one("mpileaks ^mpich")
     out = dependencies("--installed", "--format=", "mpileaks^mpich")
     assert out.splitlines() == [""] * len(root.dependencies())

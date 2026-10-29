@@ -105,8 +105,10 @@ def dependents(parser, args):
             tty.msg("Dependents of %s" % spec.cformat(format_string))
         deps = spack.store.STORE.db.installed_relatives(spec, "parents", args.transitive)
         if deps and args.format is not None:
-            for dep in deps:
-                print(dep.format(args.format))
+            if args.format:
+                spack.cmd.display_specs(deps, args, groups=False)
+            else:
+                sys.stdout.write("\n" * len(deps))
         elif deps:
             spack.cmd.display_specs(deps, long=True)
         else:
