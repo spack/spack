@@ -472,7 +472,10 @@ def migrate_with_staging(
     # Prepare parent directory and staging path
     parent = os.path.dirname(new_path)
     staging_path = os.path.join(parent, staging_name)
-    filesystem.mkdirp(parent)
+    try:
+        filesystem.mkdirp(parent)
+    except OSError:
+        return False
 
     # Acquire lock only if caller didn't take responsibility for it
     lock = None
@@ -535,6 +538,14 @@ def migrate_with_staging(
         os.rename(staging_path, new_path)
         tty.debug(f"{description.capitalize()} migrated from {old_path} to {new_path}")
         return True
+
+    except spack.util.lock.LockPermissionError as e:
+        tty.debug(f"Cannot lock for migrating {description}: {e}")
+        return False
+
+    except spack.util.lock.LockTimeoutError as e:
+        tty.debug(f"Timed out waiting for {description} migration lock: {e}")
+        return False
 
     except MigrationStagingError as e:
         tty.debug(f"Cannot migrate {description}: {e}")
@@ -667,6 +678,9 @@ def _prepare_config_staging(old_location, staging_path, new_location):
     # Helper to skip YAML files during directory copy
     def ignore_yaml_files(directory, contents):
         return [name for name in contents if name.endswith(".yaml") or name.endswith(".yml")]
+
+    # Create the stage directory
+    os.makedirs(staging_path, exists_ok=True)
 
     # First pass: copy non-YAML files and directories
     for item in os.listdir(old_location):
