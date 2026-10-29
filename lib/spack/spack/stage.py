@@ -12,7 +12,18 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import TYPE_CHECKING, Callable, Dict, Generator, Iterable, List, Optional, Set, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import spack.caches
 import spack.config
@@ -20,6 +31,7 @@ import spack.error
 import spack.oci.image
 import spack.resource
 import spack.spec
+import spack.util.compression
 import spack.util.crypto
 import spack.util.lang
 import spack.util.lock
@@ -1335,6 +1347,10 @@ def interactive_version_filter(
     return {v: url_dict[v] for v in sorted_and_filtered}
 
 
+#: The checksum of an archive, and why it is an invalid tarball, if it is one
+_FetchResult = Tuple[str, Optional[str]]
+
+
 def get_checksums_for_versions(
     url_by_version: Dict[StandardVersion, str],
     package_name: str,
@@ -1343,6 +1359,7 @@ def get_checksums_for_versions(
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
     fetch_options: Optional[Dict[str, str]] = None,
+    invalid_tarballs: Optional[Dict[StandardVersion, str]] = None,
     config: spack.config.Configuration,
 ) -> Dict[StandardVersion, str]:
     """Computes the checksums for each version passed in input, and returns the results.
@@ -1361,6 +1378,9 @@ def get_checksums_for_versions(
         batch: whether to ask user how many versions to fetch (false) or fetch all versions (true)
         fetch_options: options used for the fetcher (such as timeout or cookies)
         concurrency: maximum number of workers to use for retrieving archives
+        invalid_tarballs: if given, every archive is also validated with
+            :py:func:`spack.util.compression.validate_tarball`, and the error of each invalid
+            tarball is stored here by version
         config: configuration for the stages the archives are fetched into
 
     Returns:
@@ -1368,9 +1388,18 @@ def get_checksums_for_versions(
     """
     versions = sorted(url_by_version.keys(), reverse=True)
     search_arguments = [(url_by_version[v], v) for v in versions]
+    validate = invalid_tarballs is not None
 
     version_hashes: Dict[StandardVersion, str] = {}
     errors: List[str] = []
+
+    def record(version: StandardVersion, result: Union[_FetchResult, Exception]) -> None:
+        if isinstance(result, Exception):
+            errors.append(str(result))
+            return
+        version_hashes[version], invalid = result
+        if invalid is not None and invalid_tarballs is not None:
+            invalid_tarballs[version] = invalid
 
     # Don't spawn 16 processes when we need to fetch 2 urls
     if concurrency is not None:
@@ -1384,30 +1413,28 @@ def get_checksums_for_versions(
     if first_stage_function is not None:
         (url, version), search_arguments = search_arguments[0], search_arguments[1:]
         result = _fetch_and_checksum(
-            url, fetch_options, keep_stage, first_stage_function, config=config
+            url, fetch_options, keep_stage, first_stage_function, validate=validate, config=config
         )
-        if isinstance(result, Exception):
-            errors.append(str(result))
-        else:
-            version_hashes[version] = result
+        record(version, result)
 
     with spack.util.parallel.make_concurrent_executor(concurrency) as executor:
         results = [
             (
                 version,
                 executor.submit(
-                    _fetch_and_checksum, url, fetch_options, keep_stage, config=config
+                    _fetch_and_checksum,
+                    url,
+                    fetch_options,
+                    keep_stage,
+                    validate=validate,
+                    config=config,
                 ),
             )
             for url, version in search_arguments
         ]
 
         for version, future in results:
-            result = future.result()
-            if isinstance(result, Exception):
-                errors.append(str(result))
-            else:
-                version_hashes[version] = result
+            record(version, future.result())
 
         for msg in errors:
             tty.debug(msg)
@@ -1427,8 +1454,9 @@ def _fetch_and_checksum(
     keep_stage: bool,
     action_fn: Optional[Callable[[str, str], None]] = None,
     *,
+    validate: bool = False,
     config: spack.config.Configuration,
-) -> Union[str, Exception]:
+) -> Union[_FetchResult, Exception]:
     try:
         with stage_from_config(
             fs.URLFetchStrategy(url=url, fetch_options=options), keep=keep_stage, config=config
@@ -1444,7 +1472,14 @@ def _fetch_and_checksum(
 
             # Checksum the archive and add it to the list
             checksum = spack.util.crypto.checksum(hashlib.sha256, archive)
-        return checksum
+
+            invalid = None
+            if validate:
+                try:
+                    spack.util.compression.validate_tarball(archive)
+                except spack.util.compression.InvalidTarballError as e:
+                    invalid = str(e)
+        return checksum, invalid
     except Exception as e:
         return Exception(f"[WORKER] Failed to fetch {url}: {e}")
 

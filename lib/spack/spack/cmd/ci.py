@@ -749,8 +749,13 @@ def validate_standard_versions(
         else:
             url_dict[version] = url
 
+    invalid_tarballs: Dict[StandardVersion, str] = {}
     version_hashes = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, fetch_options=pkg.fetch_options, config=cfg.CONFIG
+        url_dict,
+        pkg.name,
+        fetch_options=pkg.fetch_options,
+        invalid_tarballs=invalid_tarballs,
+        config=cfg.CONFIG,
     )
 
     for version, sha in version_hashes.items():
@@ -759,6 +764,14 @@ def validate_standard_versions(
                 f"Invalid checksum found {pkg.name}@{version}\n"
                 f"    [package.py] {pkg.versions[version]['sha256']}\n"
                 f"    [Downloaded] {sha}"
+            )
+            valid_checksums = False
+        # Spack does not extract archives of versions with expand=False
+        elif version in invalid_tarballs and pkg.versions[version].get("expand", True):
+            tty.error(
+                f"Invalid tarball found {pkg.name}@{version}\n"
+                f"    {invalid_tarballs[version]}\n"
+                f"    [URL] {url_dict[version]}"
             )
             valid_checksums = False
         else:

@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import bz2
+import gzip
 import io
+import lzma
 import os
 import pathlib
 import shutil
@@ -125,3 +128,39 @@ def test_file_type_check_does_not_advance_stream(tmp_path: pathlib.Path, ext):
         computed_ext = compression.extension_from_magic_numbers_by_stream(f, decompress=True)
         assert computed_ext == f"tar.{ext}"
         assert f.tell() == 0
+
+
+def _tar(*names: str) -> bytes:
+    out = io.BytesIO()
+    with tarfile.open(fileobj=out, mode="w", format=tarfile.USTAR_FORMAT) as tar:
+        for name in names:
+            info = tarfile.TarInfo(name)
+            info.size = 2
+            tar.addfile(info, io.BytesIO(b"a\n"))
+    return out.getvalue()
+
+
+@pytest.mark.parametrize("name", sorted(os.listdir(datadir)))
+def test_validate_tarball_valid(tmp_path, name):
+    """Valid tarballs pass, and other files are not checked."""
+    shutil.copy(os.path.join(datadir, name), tmp_path)
+    compression.validate_tarball(str(tmp_path / name))
+    assert os.listdir(tmp_path) == [name]
+
+
+@pytest.mark.parametrize(
+    "ext,compress,error",
+    [
+        # A second archive after the first is extracted by some implementations, not others
+        ("tar", lambda data: data + _tar("pkg/b"), "end-of-archive marker"),
+        ("tar.gz", lambda data: gzip.compress(data + _tar("pkg/b")), "end-of-archive marker"),
+        ("tar.bz2", lambda data: bz2.compress(data + _tar("pkg/b")), "end-of-archive marker"),
+        ("tar.xz", lambda data: lzma.compress(data + _tar("pkg/b")), "end-of-archive marker"),
+        ("tar.gz", lambda data: gzip.compress(data)[:-4], "truncated"),
+    ],
+)
+def test_validate_tarball_invalid(tmp_path, ext, compress, error):
+    path = tmp_path / f"pkg.{ext}"
+    path.write_bytes(compress(_tar("pkg/a")))
+    with pytest.raises(compression.InvalidTarballError, match=error):
+        compression.validate_tarball(str(path))
