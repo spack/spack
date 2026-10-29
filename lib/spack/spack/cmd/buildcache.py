@@ -88,6 +88,20 @@ def setup_parser(subparser: argparse.ArgumentParser):
     push_sign.add_argument(
         "--key", "-k", metavar="key", type=str, default=None, help="key for signing"
     )
+    push_keys = push.add_mutually_exclusive_group()
+    push_keys.add_argument(
+        "--upload-key",
+        action="store_true",
+        default=True,
+        dest="upload_key",
+        help="Upload the public part of the signing key to to the build cache",
+    )
+    push_keys.add_argument(
+        "--no-upload-key",
+        action="store_false",
+        dest="upload_key",
+        help="Don't upload the public part of the signing key to to the build cache",
+    )
     push.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
     )
@@ -579,6 +593,7 @@ def push_fn(args):
         force=args.force,
         update_index=args.update_index,
         signing_key=signing_key,
+        upload_key=args.upload_key,
         base_image=args.base_image,
     ) as uploader:
         skipped, upload_errors = uploader.push(specs=specs, config=spack.config.CONFIG)
