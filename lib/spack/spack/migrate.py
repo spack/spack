@@ -662,7 +662,7 @@ def _rewrite_symlinks_after_copy(staging_path, old_location, new_location, error
 
 # Directories to exclude at the first level when copying config
 # These are non-config data that Spack <= 1.2 wrote into ~/.spack
-_EXCLUDED_TOPLEVEL_DIRS_CONFIG = {
+_EXCLUDED_TOPLEVEL_ENTRIES_CONFIG = {
     "bootstrap",
     "cache",
     "git_repos",
@@ -670,6 +670,7 @@ _EXCLUDED_TOPLEVEL_DIRS_CONFIG = {
     "reports",
     "test",
     "stage",
+    "package-repository.lock",
 }
 
 
@@ -694,9 +695,9 @@ def _prepare_config_staging(old_location, staging_path, new_location):
         old_item_path = os.path.join(old_location, item)
         staging_item_path = os.path.join(staging_path, item)
 
-        # Skip excluded toplevel directories
-        if os.path.isdir(old_item_path) and item in _EXCLUDED_TOPLEVEL_DIRS_CONFIG:
-            tty.debug(f"Skipping excluded directory: {item}")
+        # Skip excluded names
+        if item in _EXCLUDED_TOPLEVEL_ENTRIES_CONFIG:
+            tty.debug(f"Skipping excluded item: {item}")
             continue
 
         # Skip YAML files (process separately)
@@ -722,7 +723,7 @@ def _prepare_config_staging(old_location, staging_path, new_location):
         staging_path,
         process_config_file_paths,
         new_location,
-        _EXCLUDED_TOPLEVEL_DIRS_CONFIG,
+        _EXCLUDED_TOPLEVEL_ENTRIES_CONFIG,
     )
 
     if not os.listdir(staging_path):
@@ -773,9 +774,7 @@ def _has_user_config_to_migrate(old_location: str) -> bool:
 
     for item in os.listdir(old_location):
         old_item_location = os.path.join(old_location, item)
-        if not os.path.isdir(old_item_location):
-            return True
-        if item not in _EXCLUDED_TOPLEVEL_DIRS_CONFIG:
+        if item not in _EXCLUDED_TOPLEVEL_ENTRIES_CONFIG:
             return True
     return False
 
