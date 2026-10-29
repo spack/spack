@@ -1,0 +1,1 @@
+SPACK_CI_ENABLE_STACKS=/^(build_systems|tutorial)/
