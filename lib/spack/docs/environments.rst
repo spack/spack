@@ -196,6 +196,31 @@ or the shortcut alias
 
 If the environment was activated with its view, deactivating the environment will remove the view from the user environment.
 
+.. _environment_scripts:
+
+Cached Activation Scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``spack env activate`` does not print environment modifications directly.
+Instead, it prints a command that sources a cached script from the ``.spack-env`` directory inside the environment, e.g.:
+
+.. code-block:: none
+
+   my_env/.spack-env/default_activate
+   my_env/.spack-env/default_deactivate
+
+The scripts are named ``<view>_activate`` and ``<view>_deactivate``, where ``<view>`` is the name of the view being activated -- usually ``default``.
+Activating without a view, e.g. with ``-V, --without-view``, uses ``noview_activate`` and ``noview_deactivate``.
+The scripts set ``SPACK_ENV``, the :ref:`prefix inspection <customize-env-modifications>` variables for the view, and any run environment variables set by the environment's packages.
+
+Generated scripts do not contain shell-specific syntax.
+They call helper functions like ``_spack_env_set`` and ``_spack_env_prepend``, which ``setup-env.sh`` and its siblings define for each shell from ``share/spack/environment-mods.*``.
+``sh``, ``csh``, and ``fish`` therefore share a single activation and deactivation script.
+On Windows, scripts are generated for ``cmd.exe`` and PowerShell with ``.bat`` and ``.ps1`` extensions.
+
+Spack writes the scripts when an environment is created, and rewrites them whenever the environment's views are regenerated, e.g. by ``spack env view regenerate`` or by concretizing or installing in the environment.
+``spack env activate`` regenerates any script that is missing or older than ``spack.lock``, so deleting the cached scripts is harmless.
+
 .. _independent_environments:
 
 .. index::

@@ -9,6 +9,7 @@ import json
 import os
 import pathlib
 import shutil
+import stat
 import sys
 from argparse import Namespace
 from typing import Any, Dict, Optional
@@ -19,6 +20,8 @@ import spack.cmd.env
 import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.environment.depfile as depfile
+import spack.environment.generate_env_scripts as env_script
 import spack.error
 import spack.main
 import spack.package_base
@@ -98,6 +101,31 @@ def setup_combined_multiple_env():
     return test1, test2, combined
 
 
+def _get_cmds_from_script(env_output, shell):
+    """Returns a list of commands from the output of the activate script."""
+    if not env_output:
+        assert False, "No output from output from activate/deactivate command"
+
+    source_cmd = "."
+    quote = '"'
+    if shell in ["csh", "fish", "pwsh"]:
+        source_cmd = "source"
+    elif shell == "bat":
+        source_cmd = "call"
+        quote = "'"
+
+    path_to_script = None
+    for line in env_output.splitlines():
+        if line.startswith(source_cmd):
+            path_to_script = line.split(quote)[1]
+
+    if not path_to_script:
+        assert False, "No source command found"
+
+    with open(path_to_script, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 @pytest.fixture()
 def environment_from_manifest(tmp_path: pathlib.Path):
     """Returns a new environment named 'test' from the content of a manifest file."""
@@ -128,6 +156,591 @@ def test_env_track_nonexistent_path_fails():
         env("track", "path/does/not/exist")
 
     assert "doesn't contain an environment" in env.output
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_write_env_scripts(shell):
+    """Tests that the activation and deactivation scripts are written when an environment
+    is created"""
+    env("create", "script_test")
+    environ = ev.read("script_test")
+
+    path_to_activate_script = env_script.path_to_env_script(
+        environ, shell, script_type="activate", view="default"
+    )
+    path_to_deactivate_script = env_script.path_to_env_script(
+        environ, shell, script_type="deactivate", view="default"
+    )
+
+    assert os.path.isfile(path_to_activate_script)
+    assert os.path.isfile(path_to_deactivate_script)
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_env_script_content(shell):
+    """Tests that SPACK_ENV environment command is in shell's activation script"""
+    env("create", "script_test")
+    environ = ev.read("script_test")
+
+    activate_output = env("activate", f"--{shell}", "script_test")
+    activate_content = _get_cmds_from_script(activate_output, shell)
+
+    assert f"_spack_env_set SPACK_ENV {environ.path}" in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_update_activate_script(shell):
+    """Test activatrion script is not updated when environment is activated"""
+    env("create", "test")
+    environ = ev.read("test")
+
+    path_to_activate_script = env_script.path_to_env_script(
+        environ, shell, script_type="activate", view="default"
+    )
+
+    script_creation_mtime = os.stat(path_to_activate_script).st_mtime
+
+    env("activate", f"--{shell}", "test")
+
+    activated_script_mtime = os.stat(path_to_activate_script).st_mtime
+
+    assert activated_script_mtime == script_creation_mtime
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_scripts_regenerate_after_spec_install(shell):
+    """Test that environment activation and deactivation scripts are regenerated
+    when the spec is installed"""
+
+    env("create", "test")
+    install = SpackCommand("install")
+
+    environ = ev.read("test")
+
+    path_to_activate_script = env_script.path_to_env_script(
+        environ, shell, script_type="activate", view="default"
+    )
+    path_to_deactivate_script = env_script.path_to_env_script(
+        environ, shell, script_type="deactivate", view="default"
+    )
+    initial_activate_mtime = os.stat(path_to_activate_script).st_mtime
+    initial_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
+
+    with environ:
+        install("--add", "view-file", "--fake")
+
+    new_activate_mtime = os.stat(path_to_activate_script).st_mtime
+    new_deactivate_mtime = os.stat(path_to_deactivate_script).st_mtime
+    assert new_activate_mtime > initial_activate_mtime, (
+        "Activation script should be regenerated after lockfile change"
+    )
+    assert new_deactivate_mtime > initial_deactivate_mtime, (
+        "Deactivation script should be regenerated after lockfile change"
+    )
+
+    activate_output = env("activate", f"--{shell}", "test")
+    activate_content = _get_cmds_from_script(activate_output, shell)
+
+    view_file_bin_path = (
+        f"_spack_env_prepend PATH {os.path.join(environ.path, '.spack-env/view/bin')}"
+    )
+    assert view_file_bin_path in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_missing_deactivate_script(shell):
+    """Test that environment deactivation script is recreated if missing"""
+    env("create", "--without-view", "test")
+    environ = ev.read("test")
+
+    env("activate", "--without-view", f"--{shell}", "test")
+
+    path_to_deactivate_script = env_script.path_to_env_script(
+        environ, shell, script_type="deactivate", view=None
+    )
+
+    os.remove(path_to_deactivate_script)
+    assert not os.path.isfile(path_to_deactivate_script)
+
+    env("deactivate", f"--{shell}")
+
+    assert os.path.isfile(path_to_deactivate_script)
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_scripts_path_after_relocation(shell):
+    """Test that paths in activation/deactivation scripts are updated after relocation."""
+
+    env("create", "orig")
+    orig_env = ev.read("orig")
+
+    activate_output = env("activate", f"--{shell}", "orig")
+
+    orig_activate_script_path = env_script.path_to_env_script(
+        orig_env, shell, script_type="activate", view="default"
+    )
+    orig_deactivate_script_path = env_script.path_to_env_script(
+        orig_env, shell, script_type="deactivate", view="default"
+    )
+
+    activate_content = _get_cmds_from_script(activate_output, shell)
+
+    assert os.path.isfile(orig_activate_script_path)
+    assert os.path.isfile(orig_deactivate_script_path)
+    assert orig_env.path in activate_content
+
+    deactivate_output = env("deactivate", f"--{shell}")
+    deactivate_content = _get_cmds_from_script(deactivate_output, shell)
+
+    assert "_spack_env_unset SPACK_ENV" in deactivate_content
+
+    env("rename", "orig", "new")
+    new_env = ev.read("new")
+
+    new_activate_output = env("activate", f"--{shell}", "new")
+    env("view", "regenerate")
+
+    new_activate_script_path = env_script.path_to_env_script(
+        new_env, shell, script_type="activate", view="default"
+    )
+    new_deactivate_script_path = env_script.path_to_env_script(
+        new_env, shell, script_type="deactivate", view="default"
+    )
+
+    assert os.path.isfile(new_activate_script_path)
+    assert os.path.isfile(new_deactivate_script_path)
+    assert not os.path.isfile(orig_activate_script_path)
+    assert not os.path.isfile(orig_deactivate_script_path)
+
+    new_activate_content = _get_cmds_from_script(new_activate_output, shell)
+
+    assert new_env.path in new_activate_content
+    assert orig_env.path not in new_activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_scripts_path_after_relocation_with_external_view(
+    shell, tmp_path, install_mockery, mock_fetch, mutable_mock_env_path
+):
+    """Test external view path remains correct after moving environment from command line."""
+    external_view_dir = tmp_path / "external_view"
+
+    env("create", "--with-view=%s" % external_view_dir, "orig")
+    orig_env = ev.read("orig")
+
+    with orig_env:
+        orig_env.add("libelf")
+        orig_env.concretize()
+        orig_env.write()
+        orig_env.install_specs(fake=True)
+
+    activate_output = env("activate", f"--{shell}", "orig")
+    activate_content = _get_cmds_from_script(activate_output, shell)
+
+    os.environ["SPACK_ENV_VIEW"] = "default"
+
+    if "bat" == shell:
+        prepend_cmake = f'%_spack_env_prepend% "CMAKE_PREFIX_PATH" {external_view_dir} ;'
+    else:
+        prepend_cmake = f"_spack_env_prepend CMAKE_PREFIX_PATH {external_view_dir} :"
+
+    assert prepend_cmake in activate_content
+    assert external_view_dir.exists()
+
+    env("deactivate", f"--{shell}")
+
+    orig_env_path = mutable_mock_env_path / "orig"
+    new_env_path = mutable_mock_env_path / "new"
+    shutil.move(str(orig_env_path), str(new_env_path))
+
+    new_activate_output = env("activate", f"--{shell}", "new")
+    new_activate_content = _get_cmds_from_script(new_activate_output, shell)
+
+    assert prepend_cmake in new_activate_content
+
+    new_deactivate_output = env("deactivate", f"--{shell}")
+    new_deactivate_content = _get_cmds_from_script(new_deactivate_output, shell)
+
+    if "bat" == shell:
+        remove_cmake = f'%_spack_env_remove_first% "CMAKE_PREFIX_PATH" "{external_view_dir}" ";"'
+    else:
+        remove_cmake = f"_spack_env_remove_first CMAKE_PREFIX_PATH {external_view_dir} :"
+
+    assert remove_cmake in new_deactivate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_scripts_regenerate_after_manual_move(
+    shell, tmp_path: pathlib.Path, install_mockery, mock_fetch
+):
+    """Test that activation/deactivation scripts are regenerated with correct paths
+    after manually moving the environment directory from command line."""
+
+    orig_env_dir = tmp_path / "orig_location"
+    orig_env_dir.mkdir()
+
+    with fs.working_dir(str(orig_env_dir)):
+        env("create", "-d", ".")
+
+    orig_env = ev.Environment(str(orig_env_dir))
+
+    with orig_env:
+        orig_env.add("libelf")
+        orig_env.concretize()
+        orig_env.write()
+        orig_env.install_specs(fake=True)
+
+    env("activate", f"--{shell}", "-d", str(orig_env_dir))
+
+    env("deactivate", f"--{shell}")
+
+    # Simulate moving the environment with 'mv' command (filesystem operation)
+    new_env_dir = tmp_path / "new_location"
+    shutil.move(str(orig_env_dir), str(new_env_dir))
+
+    orig_activate_script_path = env_script.path_to_env_script(
+        orig_env, shell, script_type="activate", view="default"
+    )
+    orig_deactivate_script_path = env_script.path_to_env_script(
+        orig_env, shell, script_type="deactivate", view="default"
+    )
+
+    assert not os.path.exists(orig_activate_script_path)
+    assert not os.path.exists(orig_deactivate_script_path)
+
+    moved_env = ev.Environment(str(new_env_dir))
+
+    new_activate_output = env("activate", f"--{shell}", "-d", str(new_env_dir))
+    new_activate_content = _get_cmds_from_script(new_activate_output, shell)
+
+    set_cmd = f"_spack_env_set SPACK_ENV {str(new_env_dir)}"
+    if shell == "bat":
+        set_cmd = f'%_spack_env_set% "SPACK_ENV" {str(new_env_dir)}'
+
+    assert set_cmd in new_activate_content
+    assert str(orig_env_dir) not in new_activate_content
+
+    new_activate_script_path = env_script.path_to_env_script(
+        moved_env, shell, script_type="activate", view="default"
+    )
+    new_deactivate_script_path = env_script.path_to_env_script(
+        moved_env, shell, script_type="deactivate", view="default"
+    )
+
+    assert os.path.isfile(new_activate_script_path)
+    assert os.path.isfile(new_deactivate_script_path)
+
+    deactivate_output = env("deactivate", f"--{shell}")
+    deactivate_content = _get_cmds_from_script(deactivate_output, shell)
+    assert "_spack_env_unset SPACK_ENV" in deactivate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_deactivate_directory_env(shell, tmp_path: pathlib.Path):
+    """Test activation/deactivation of directory-based environments."""
+    with fs.working_dir(str(tmp_path)):
+        env("create", "-d", ".")
+        test_env = ev.Environment(str(tmp_path))
+
+        activate_output = env("activate", f"--{shell}", ".")
+
+        activate_script = env_script.path_to_env_script(
+            test_env, shell, script_type="activate", view="default"
+        )
+        deactivate_script = env_script.path_to_env_script(
+            test_env, shell, script_type="deactivate", view="default"
+        )
+
+        assert os.path.exists(activate_script)
+        assert os.path.exists(deactivate_script)
+
+        # Verify scripts contain correct paths
+        activate_content = _get_cmds_from_script(activate_output, shell)
+        assert str(tmp_path) in activate_content or test_env.path in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_scripts_with_view(shell, tmp_path: pathlib.Path, install_mockery, mock_fetch):
+    """Test that environment scripts handle custom views correctly."""
+    view_dir = tmp_path / "view"
+    env("create", "--with-view=%s" % view_dir, "view_test")
+
+    test_env = ev.read("view_test")
+
+    # Add and install a spec to populate the view
+    test_env.add("libelf")
+    test_env.concretize()
+    test_env.write()
+    test_env.install_specs(fake=True)
+
+    activate_output = env("activate", f"--{shell}", "view_test")
+    activate_content = _get_cmds_from_script(activate_output, shell)
+
+    assert str(view_dir) in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_with_view_name(shell, tmp_path: pathlib.Path):
+    """Test activating an environment with multiple named views."""
+    env("create", "multi_view_test")
+    test_env = ev.read("multi_view_test")
+
+    view1_path = str(tmp_path / "view1")
+    view2_path = str(tmp_path / "view2")
+    spack_yaml_path = os.path.join(test_env.path, "spack.yaml")
+
+    import spack.util.spack_yaml as syaml
+
+    with open(spack_yaml_path, "r", encoding="utf-8") as f:
+        yaml_data = syaml.load_config(f)
+
+    yaml_data["spack"]["view"] = {"view1": {"root": view1_path}, "view2": {"root": view2_path}}
+
+    with open(spack_yaml_path, "w", encoding="utf-8") as f:
+        syaml.dump_config(yaml_data, f)
+
+    test_env = ev.read("multi_view_test")
+
+    assert "view1" in test_env.views
+    assert "view2" in test_env.views
+    assert test_env.views["view1"].root == view1_path
+    assert test_env.views["view2"].root == view2_path
+
+    activate_output = env("activate", f"--{shell}", "--with-view", "view2", "multi_view_test")
+    activate_content = _get_cmds_from_script(activate_output, shell)
+
+    assert "_spack_env_set SPACK_ENV_VIEW view2" in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_create_without_view(
+    shell, tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    """Test creating an environment a view, but activating it without a view.
+    The activation script should not contain SPACK_ENV_VIEW."""
+    env("create", "test")
+
+    test_env = ev.read("test")
+
+    path_to_default_view_script = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view="default"
+    )
+    path_to_no_view_script = env_script.path_to_env_script(
+        test_env, shell, script_type="activate", view=None
+    )
+
+    assert not os.path.isfile(path_to_no_view_script)
+    assert os.path.isfile(path_to_default_view_script)
+
+    with open(path_to_default_view_script, "r", encoding="utf-8") as f:
+        activate_content = f.read()
+
+    assert "SPACK_ENV_VIEW" in activate_content
+
+    activate_output = env("activate", f"--{shell}", "--without-view", "test")
+    no_view_activate_content = _get_cmds_from_script(activate_output, shell)
+
+    assert os.path.isfile(path_to_no_view_script)
+    assert os.path.isfile(path_to_default_view_script)
+    assert "SPACK_ENV_VIEW" not in no_view_activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_without_view(
+    shell, tmp_path: pathlib.Path, mock_stage, mock_fetch, install_mockery
+):
+    """Test creating an environment without a view"""
+    env("create", "test")
+    activate_output = env("activate", "--without-view", f"--{shell}", "test")
+
+    activate_content = _get_cmds_from_script(activate_output, shell)
+    assert "SPACK_ENV_VIEW" not in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
+)
+def test_env_activate_with_external_view(
+    shell, tmp_path: pathlib.Path, install_mockery, mock_fetch
+):
+    """Test activating an environment with a view located outside the environment directory."""
+
+    external_view_dir = tmp_path / "external_view"
+    env("create", "--with-view=%s" % external_view_dir, "external_view_test")
+
+    test_env = ev.read("external_view_test")
+
+    test_env.add("libelf")
+    test_env.concretize()
+    test_env.write()
+    test_env.install_specs(fake=True)
+
+    assert not str(external_view_dir).startswith(test_env.path)
+    assert external_view_dir.exists()
+
+    activate_output = env("activate", f"--{shell}", "external_view_test")
+    activate_content = _get_cmds_from_script(activate_output, shell)
+
+    assert str(external_view_dir) in activate_content
+
+
+@pytest.mark.parametrize(
+    "shell, set_cmake",
+    (
+        [("--pwsh", "$Env:CMAKE_PREFIX_PATH"), ("--bat", 'set "CMAKE_PREFIX_PATH')]
+        if sys.platform == "win32"
+        else [
+            ("--sh", "export CMAKE_PREFIX_PATH"),
+            ("--csh", "setenv CMAKE_PREFIX_PATH"),
+            ("--fish", "set -gx CMAKE_PREFIX_PATH"),
+        ]
+    ),
+)
+def test_env_activate_fresh_bypasses_cached_script(
+    shell, set_cmake, install_mockery, mock_fetch, mock_stage, mutable_mock_env_path
+):
+    """Test that --fresh flag bypasses cached activation scripts and generates fresh
+    environment modifications.
+    """
+    env_name = "test_fresh_activate"
+    env("create", env_name)
+
+    e = ev.read(env_name)
+    with e:
+        add("libelf")
+        e.concretize()
+        e.write()
+        install("--fake")
+
+    activate_script_path = env_script.path_to_env_script(e, shell[2:], "activate", "default")
+
+    os.remove(activate_script_path)
+    assert not os.path.exists(activate_script_path)
+
+    output = env("activate", shell, "--fresh", env_name)
+
+    assert not os.path.exists(activate_script_path)
+
+    assert set_cmake in output
+    assert "_spack_env_set SPACK_ENV" not in output
+
+
+@pytest.mark.parametrize(
+    "shell, unset_env",
+    (
+        [("--pwsh", "Set-Item -Path Env:SPACK_ENV"), ("--bat", 'set "SPACK_ENV="')]
+        if sys.platform == "win32"
+        else [
+            ("--sh", "unset SPACK_ENV"),
+            ("--csh", "unsetenv SPACK_ENV"),
+            ("--fish", "set -e SPACK_ENV"),
+        ]
+    ),
+)
+def test_env_deactivate_fresh_bypasses_cached_script(
+    shell, unset_env, install_mockery, mock_fetch, mock_stage, mutable_mock_env_path, monkeypatch
+):
+    """Test that --fresh flag bypasses cached deactivation scripts and generates fresh
+    environment modifications.
+    """
+    env_name = "test_fresh_deactivate"
+    env("create", env_name)
+
+    e = ev.read(env_name)
+    with e:
+        add("libelf")
+        e.concretize()
+        e.write()
+        install("--fake")
+
+    env("activate", shell, env_name)
+
+    deactivate_script_path = env_script.path_to_env_script(e, shell[2:], "deactivate", "default")
+    os.remove(deactivate_script_path)
+
+    assert not os.path.exists(deactivate_script_path)
+
+    output = env("deactivate", shell, "--fresh")
+
+    assert not os.path.exists(deactivate_script_path)
+
+    assert unset_env in output
+    assert "_spack_env_unset SPACK_ENV" not in output
+
+
+@pytest.mark.parametrize(
+    "shell", (["--bat", "--pwsh"] if sys.platform == "win32" else ["--sh", "--csh", "--fish"])
+)
+def test_env_activate_readonly_outputs_env_modifications(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
+):
+    """Test that if the .spack-env directory is read-only, when activating an environment
+    spack outputs the environment modifications to stdout instead of writing to a script.
+    """
+
+    env_name = f"test_readonly_{shell[2:]}"
+    env("create", env_name)
+    test_env = ev.read(env_name)
+
+    spack_env_dir = os.path.join(test_env.path, ".spack-env")
+
+    # Remove any existing scripts
+    for filename in os.listdir(spack_env_dir):
+        if "_activate" in filename or "_deactivate" in filename:
+            os.remove(os.path.join(spack_env_dir, filename))
+
+    # Make the .spack-env directory read-only
+    original_mode = os.stat(spack_env_dir).st_mode
+
+    try:
+        os.chmod(spack_env_dir, stat.S_IRUSR | stat.S_IXUSR)
+
+        activate_output = env("activate", shell, env_name, fail_on_error=False)
+
+        activation_script_path = env_script.path_to_env_script(
+            test_env, shell[2:], script_type="activate", view="default"
+        )
+
+        assert f"Error generating {activation_script_path}" in activate_output
+        assert "Permission denied" in activate_output
+
+        cmd_name = "_spack_env_set"
+        var_name = "SPACK_ENV"
+        if shell == "--bat":
+            cmd_name = f"%{cmd_name}%"
+            var_name = f'"{var_name}"'
+
+        assert f"{cmd_name} {var_name}" in activate_output
+
+    finally:
+        # Restore original permissions
+        os.chmod(spack_env_dir, original_mode)
 
 
 def test_env_track_existing_env_fails():
@@ -644,7 +1257,8 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
         install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
-    ev.shell.activate(e).apply_modifications(env_variables)
+    _, env_mod = ev.shell.activate(e)
+    env_mod.apply_modifications(env_variables)
     assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
 
 
@@ -3186,10 +3800,12 @@ def test_stack_view_activate_from_default(
     # Replace the name of the view
     content = content.replace("combinatorial:", "default:")
     with installed_environment(content):
-        shell = env("activate", "--sh", "test")
-        assert "PATH" in shell, shell
-        assert str(view_dir / "bin") in shell
-        assert "FOOBAR=mpileaks" in shell
+        activate_output = env("activate", "--sh", "test")
+        activate_content = _get_cmds_from_script(activate_output, "sh")
+
+        assert "PATH" in activate_content, activate_content
+        assert str(view_dir / "bin") in activate_content
+        assert "_spack_env_set FOOBAR mpileaks" in activate_content
 
 
 def test_envvar_set_in_activate(tmp_path: pathlib.Path, mock_packages, install_mockery):
@@ -3222,18 +3838,24 @@ spack:
         install("--fake")
 
     test_env = ev.read("test")
-    output = env("activate", "--sh", "test")
 
-    assert "SPACK_ENVAR_SET_IN_ENV_LOAD=True" in output
-    assert "CONFIG_ENVAR_SET_IN_ENV_LOAD=True" in output
+    path_to_activate = env_script.path_to_env_script(test_env, "sh", "activate", "default")
+
+    with open(path_to_activate, encoding="utf-8") as f:
+        activate_content = f.read()
+
+    assert "_spack_env_set SPACK_ENVAR_SET_IN_ENV_LOAD True" in activate_content
+    assert "_spack_env_set CONFIG_ENVAR_SET_IN_ENV_LOAD True" in activate_content
 
     with test_env:
         with spack.util.environment.set_env(
             SPACK_ENVAR_SET_IN_ENV_LOAD="True", CONFIG_ENVAR_SET_IN_ENV_LOAD="True"
         ):
-            output = env("deactivate", "--sh")
-            assert "unset SPACK_ENVAR_SET_IN_ENV_LOAD" in output
-            assert "unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
+            deactivate_content = env("deactivate", "--sh")
+            deactivate_content = _get_cmds_from_script(deactivate_content, "sh")
+
+            assert "_spack_env_unset SPACK_ENVAR_SET_IN_ENV_LOAD" in deactivate_content
+            assert "_spack_env_unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in deactivate_content
 
 
 def test_stack_view_no_activate_without_default(
@@ -3315,38 +3937,135 @@ def test_stack_view_multiple_views(installed_environment, tmp_path: pathlib.Path
             assert current_dir.exists() is not spec.satisfies("target=core2")
 
 
-def test_env_activate_sh_prints_shell_output(mock_stage, mock_fetch, install_mockery):
-    """Check the shell commands output by ``spack env activate --sh``.
-
-    This is a cursory check; ``share/spack/qa/setup-env-test.sh`` checks
-    for correctness.
-    """
+def test_env_activate_sh_script_output():
+    """Check the shell commands output by ``spack env activate --sh``."""
     env("create", "test")
 
-    out = env("activate", "--sh", "test")
-    assert "export SPACK_ENV=" in out
-    assert "export PS1=" not in out
-    assert "alias despacktivate=" in out
+    # includes the path to the cached script
+    activate_output = env("activate", "--prompt", "--sh", "test")
+    cached_activate_commands = _get_cmds_from_script(activate_output, "sh")
 
-    out = env("activate", "--sh", "--prompt", "test")
-    assert "export SPACK_ENV=" in out
-    assert "export PS1=" in out
-    assert "alias despacktivate=" in out
+    assert "_spack_env_set SPACK_ENV " not in activate_output
+    assert "_spack_env_set SPACK_ENV " in cached_activate_commands
+    assert "export PS1=" in activate_output
+    assert "export PS1=" not in cached_activate_commands
+    assert "alias despacktivate=" in activate_output
+    assert "alias despacktivate=" not in cached_activate_commands
 
 
-def test_env_activate_csh_prints_shell_output(mock_stage, mock_fetch, install_mockery):
+def test_env_activate_csh_script_output():
     """Check the shell commands output by ``spack env activate --csh``."""
     env("create", "test")
 
-    out = env("activate", "--csh", "test")
-    assert "setenv SPACK_ENV" in out
-    assert "setenv set prompt" not in out
-    assert "alias despacktivate" in out
+    # includes the path to the cached script
+    activate_output = env("activate", "--prompt", "--csh", "test")
+    cached_activate_commands = _get_cmds_from_script(activate_output, "csh")
 
-    out = env("activate", "--csh", "--prompt", "test")
-    assert "setenv SPACK_ENV" in out
-    assert "set prompt=" in out
-    assert "alias despacktivate" in out
+    assert "_spack_env_set SPACK_ENV " not in activate_output
+    assert "_spack_env_set SPACK_ENV " in cached_activate_commands
+    assert "_spack_env_set prompt" in activate_output
+    assert "_spack_env_set prompt" not in cached_activate_commands
+    assert "alias despacktivate" in activate_output
+    assert "alias despacktivate" not in cached_activate_commands
+
+
+def test_env_activate_fish_script_output():
+    """Check the shell commands output by ``spack env activate --fish``."""
+    env("create", "test")
+
+    # includes the path to the cached script
+    activate_output = env("activate", "--prompt", "--fish", "test")
+    cached_activate_commands = _get_cmds_from_script(activate_output, "fish")
+
+    assert "_spack_env_set SPACK_ENV " not in activate_output
+    assert "_spack_env_set SPACK_ENV " in cached_activate_commands
+    assert "function despacktivate" in activate_output
+    assert "function despacktivate" not in cached_activate_commands
+
+
+def test_env_deactivate_sh_script_output():
+    """Check the shell commands output by ``spack env deactivate --sh``."""
+    env("create", "--without-view", "test")
+    env("activate", "--sh", "--without-view", "test")
+    environ = ev.read("test")
+
+    deactivate_output = env("deactivate", "--sh")
+    path_to_deactivate = env_script.path_to_env_script(environ, "sh", "deactivate", None)
+
+    assert "unalias despacktivate" in deactivate_output
+    assert "SPACK_OLD_PS1" in deactivate_output
+    assert os.path.isfile(path_to_deactivate)
+
+
+def test_env_deactivate_csh_script_output():
+    """Check the shell commands output by ``spack env deactivate --csh``."""
+    env("create", "--without-view", "test")
+    env("activate", "--csh", "--without-view", "test")
+    environ = ev.read("test")
+
+    deactivate_output = env("deactivate", "--csh")
+    path_to_deactivate = env_script.path_to_env_script(environ, "csh", "deactivate", None)
+
+    assert "unalias despacktivate" in deactivate_output
+    assert "SPACK_OLD_PROMPT" in deactivate_output
+    assert os.path.isfile(path_to_deactivate)
+
+
+def test_env_deactivate_fish_script_output():
+    """Check the shell commands output by ``spack env deactivate --fish``."""
+    env("create", "--without-view", "test")
+    env("activate", "--fish", "--without-view", "test")
+    environ = ev.read("test")
+
+    deactivate_output = env("deactivate", "--fish")
+    path_to_deactivate = env_script.path_to_env_script(environ, "fish", "deactivate", None)
+
+    assert "functions -e despacktivate" in deactivate_output
+    assert os.path.isfile(path_to_deactivate)
+
+
+@pytest.mark.parametrize("shell", ["sh", "csh", "fish"])
+def test_env_activate_includes_prefix_inspections(
+    shell, install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path
+):
+    """Test that environment activation outputs prefix inspections from the view."""
+
+    env_name = "test_prefix_inspections"
+    env("create", env_name)
+
+    e = ev.read(env_name)
+    with e:
+        add("libelf")
+        e.concretize()
+        e.write()
+        install("--fake")
+
+    activate_output = env("activate", f"--{shell}", env_name)
+
+    e = ev.read(env_name)
+    libelf_spec = None
+    for spec in e.concrete_roots():
+        if spec.name == "libelf":
+            libelf_spec = spec
+            break
+    assert libelf_spec is not None
+
+    libelf_prefix = str(libelf_spec.prefix)
+    libelf_bin = os.path.join(libelf_prefix, "bin")
+
+    if shell == "bat":
+        expected_path_prepend = f'%_spack_env_prepend% "PATH" "{libelf_bin}" ";"'
+    else:
+        expected_path_prepend = f"_spack_env_prepend PATH {libelf_bin} :"
+
+    assert expected_path_prepend in activate_output
+
+    if shell == "bat":
+        expected_cmake_prepend = f'%_spack_env_prepend% "CMAKE_PREFIX_PATH" "{libelf_prefix}" ";"'
+    else:
+        expected_cmake_prepend = f"_spack_env_prepend CMAKE_PREFIX_PATH {libelf_prefix} :"
+
+    assert expected_cmake_prepend in activate_output
 
 
 @pytest.mark.regression("12719")
@@ -3358,13 +4077,15 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
     with ev.read("test") as e:
         viewdir = e.default_view.root
 
-    out = env("activate", "--sh", "test")
+    activate_output = env("activate", "--sh", "test")
+    activate_content = _get_cmds_from_script(activate_output, "sh")
+
     viewdir_bin = os.path.join(viewdir, "bin")
 
     assert (
-        "export PATH={0}".format(viewdir_bin) in out
-        or "export PATH='{0}".format(viewdir_bin) in out
-        or 'export PATH="{0}'.format(viewdir_bin) in out
+        "spack_env_prepend PATH {0}".format(viewdir_bin) in activate_content
+        or "export PATH='{0}".format(viewdir_bin) in activate_content
+        or 'export PATH="{0}'.format(viewdir_bin) in activate_content
     )
 
 
@@ -3385,8 +4106,10 @@ spack:
       root: {nondefaultdir}"""
         )
     env("create", "test", str(env_template))
-    shell = env("activate", "--sh", "--with-view", "nondefault", "test")
-    assert os.path.join(nondefaultdir, "bin") in shell
+    activate_output = env("activate", "--sh", "--with-view", "nondefault", "test")
+    activate_content = _get_cmds_from_script(activate_output, "sh")
+
+    assert os.path.join(nondefaultdir, "bin") in activate_content
 
 
 def test_concretize_user_specs_together(mutable_config):
@@ -3867,8 +4590,13 @@ def test_activate_temp(monkeypatch, tmp_path: pathlib.Path):
     temporary directory"""
     env_dir = lambda: str(tmp_path)
     monkeypatch.setattr(spack.cmd.env, "create_temp_env_directory", env_dir)
-    shell = env("activate", "--temp", "--sh")
-    active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+
+    activate_output = env("activate", "--temp", "--sh")
+    activate_content = _get_cmds_from_script(activate_output, "sh")
+
+    active_env_var = next(
+        line for line in activate_content.splitlines() if ev.spack_env_var in line
+    )
     assert str(tmp_path) in active_env_var
     assert ev.is_env_dir(str(tmp_path))
 
@@ -3883,8 +4611,13 @@ def test_activate_parser_conflicts_with_temp(conflict_arg):
 
 def test_create_and_activate_managed(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
-        shell = env("activate", "--without-view", "--create", "--sh", "foo")
-        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+        activate_output = env("activate", "--without-view", "--create", "--sh", "foo")
+        activate_content = _get_cmds_from_script(activate_output, "sh")
+
+        active_env_var = next(
+            line for line in activate_content.splitlines() if ev.spack_env_var in line
+        )
+
         assert str(tmp_path) in active_env_var
         active_ev = active_environment()
         assert active_ev and "foo" == active_ev.name
@@ -3894,8 +4627,13 @@ def test_create_and_activate_managed(tmp_path: pathlib.Path):
 def test_create_and_activate_independent(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
         env_dir = os.path.join(str(tmp_path), "foo")
-        shell = env("activate", "--without-view", "--create", "--sh", env_dir)
-        active_env_var = next(line for line in shell.splitlines() if ev.spack_env_var in line)
+
+        activate_output = env("activate", "--without-view", "--create", "--sh", env_dir)
+        activate_content = _get_cmds_from_script(activate_output, "sh")
+
+        active_env_var = next(
+            line for line in activate_content.splitlines() if ev.spack_env_var in line
+        )
         assert str(env_dir) in active_env_var
         assert ev.is_env_dir(env_dir)
         env("deactivate")

@@ -1062,14 +1062,14 @@ _spack_env() {
 _spack_env_activate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -v --with-view -V --without-view -p --prompt --temp --create --envfile --keep-relative -d --dir"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -v --with-view -V --without-view -p --prompt --temp --create --envfile --keep-relative -d --dir --fresh"
     else
         _environments
     fi
 }
 
 _spack_env_deactivate() {
-    SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh"
+    SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --fresh"
 }
 
 _spack_env_create() {
@@ -1406,7 +1406,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --list"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh --first --list --fresh"
     else
         _installed_packages
     fi
@@ -2086,7 +2086,7 @@ _spack_unit_test() {
 _spack_unload() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -a --all"
+        SPACK_COMPREPLY="-h --help --sh --csh --fish --bat --pwsh -a --all --fresh"
     else
         _installed_packages
     fi
