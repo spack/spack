@@ -1421,7 +1421,7 @@ complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -f -a
 complete -c spack -n '__fish_spack_using_command deconcretize' -s a -l all -d 'deconcretize ALL specs that match each supplied spec'
 
 # spack dependencies
-set -g __fish_spack_optspecs_spack_dependencies h/help i/installed t/transitive deptype= V/no-expand-virtuals
+set -g __fish_spack_optspecs_spack_dependencies h/help i/installed t/transitive deptype= format= V/no-expand-virtuals
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 dependencies' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command dependencies' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command dependencies' -s h -l help -d 'show this help message and exit'
@@ -1431,16 +1431,20 @@ complete -c spack -n '__fish_spack_using_command dependencies' -s t -l transitiv
 complete -c spack -n '__fish_spack_using_command dependencies' -s t -l transitive -d 'show all transitive dependencies'
 complete -c spack -n '__fish_spack_using_command dependencies' -l deptype -r -f -a deptype
 complete -c spack -n '__fish_spack_using_command dependencies' -l deptype -r -d 'comma-separated list of deptypes to traverse (default=build,link,run,test)'
+complete -c spack -n '__fish_spack_using_command dependencies' -l format -r -f -a format
+complete -c spack -n '__fish_spack_using_command dependencies' -l format -r -d 'format each installed spec with this format string (requires --installed)'
 complete -c spack -n '__fish_spack_using_command dependencies' -s V -l no-expand-virtuals -f -a expand_virtuals
 complete -c spack -n '__fish_spack_using_command dependencies' -s V -l no-expand-virtuals -d 'do not expand virtual dependencies'
 
 # spack dependents
-set -g __fish_spack_optspecs_spack_dependents h/help i/installed t/transitive
+set -g __fish_spack_optspecs_spack_dependents h/help i/installed format= t/transitive
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 dependents' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command dependents' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command dependents' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command dependents' -s i -l installed -f -a installed
 complete -c spack -n '__fish_spack_using_command dependents' -s i -l installed -d 'list installed dependents of an installed spec instead of possible dependents of a package'
+complete -c spack -n '__fish_spack_using_command dependents' -l format -r -f -a format
+complete -c spack -n '__fish_spack_using_command dependents' -l format -r -d 'format each installed spec with this format string (requires --installed)'
 complete -c spack -n '__fish_spack_using_command dependents' -s t -l transitive -f -a transitive
 complete -c spack -n '__fish_spack_using_command dependents' -s t -l transitive -d 'show all transitive dependents'
 
