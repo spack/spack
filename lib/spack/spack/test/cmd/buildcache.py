@@ -7,6 +7,7 @@ import json
 import os
 import pathlib
 import shutil
+import tarfile
 import urllib.parse
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
@@ -21,6 +22,7 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
+import spack.installer_dispatch
 import spack.main
 import spack.mirrors.mirror
 import spack.spec
@@ -182,18 +184,21 @@ def test_update_key_index(
     assert "keys.manifest.json" in key_dir_list
 
 
-def test_buildcache_autopush(tmp_path: pathlib.Path, install_mockery, mock_fetch):
-    """Test buildcache with autopush"""
+def test_buildcache_autopush(
+    tmp_path: pathlib.Path, install_mockery, mock_fetch, installer_variant
+):
+    """Autopush receives the completed log and install manifest."""
     mirror_dir = tmp_path / "mirror"
     mirror_autopush_dir = tmp_path / "mirror_autopush"
 
     mirror("add", "--unsigned", "mirror", mirror_dir.as_uri())
     mirror("add", "--autopush", "--unsigned", "mirror-autopush", mirror_autopush_dir.as_uri())
 
-    s = spack.concretize.concretize_one("libdwarf")
+    s = spack.concretize.concretize_one("trivial-install-test-package")
 
-    # Install and generate build cache index
-    PackageInstaller([s.package], fake=True, explicit=True).install()
+    spack.installer_dispatch.create_installer(
+        [s.package], explicit=True, root_policy="source_only"
+    ).install()
 
     manifest_file = URLBuildcacheEntry.get_manifest_filename(s)
     specs_dirs = os.path.join(
@@ -202,6 +207,26 @@ def test_buildcache_autopush(tmp_path: pathlib.Path, install_mockery, mock_fetch
 
     assert not (mirror_dir / specs_dirs / manifest_file).exists()
     assert (mirror_autopush_dir / specs_dirs / manifest_file).exists()
+
+    cache_entry = URLBuildcacheEntry(mirror_autopush_dir.as_uri(), s, allow_unsigned=True)
+    cache_entry.read_manifest()
+    tarball_record = cache_entry.get_blob_record(BuildcacheComponent.TARBALL)
+    tarball_path = mirror_autopush_dir.joinpath(
+        *URLBuildcacheEntry.get_blob_path_components(tarball_record)
+    )
+    with tarfile.open(tarball_path, "r:gz") as archive:
+        members = archive.getmembers()
+        manifest_member = next(
+            member for member in members if member.name.endswith("/.spack/install_manifest.json")
+        )
+        log_member = next(
+            member for member in members if member.name.endswith("/.spack/spack-build-out.txt.gz")
+        )
+        with archive.extractfile(manifest_member) as manifest_file:
+            install_manifest = json.load(manifest_file)
+
+    assert log_member is not None
+    assert s.package.install_log_path in install_manifest
 
 
 def test_buildcache_sync(
