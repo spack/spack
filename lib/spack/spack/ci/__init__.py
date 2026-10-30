@@ -57,6 +57,7 @@ from .generator_registry import UnknownGeneratorException, get_generator
 # Import any modules with generator functions from here, so they get
 # registered without introducing any import cycles.
 from .gitlab import generate_gitlab_yaml  # noqa: F401
+from .json_generator import generate_json_pipeline  # noqa: F401
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
