@@ -10,6 +10,7 @@ import itertools
 import os
 import re
 import sys
+import time
 import traceback
 import types
 import typing
@@ -1143,3 +1144,137 @@ class PriorityOrderedMapping(Mapping[KT, VT]):
         self._priorities = [(p, k) for p, k in self._priorities if k != key]
         assert len(self._data) == len(self._priorities)
         return popped_item
+
+
+def readline_with_timeout(
+    prompt_format: str, timeout: float, update_interval: float = 1.0
+) -> Optional[str]:
+    """Read a line from stdin with a countdown timer in the prompt.
+
+    Args:
+        prompt_format: The prompt (this will insert "(remaining ...):" at the end)
+        timeout: Maximum time to wait for input in seconds
+        update_interval: How often to update the countdown display in seconds
+
+    Returns:
+        The input line if entered before timeout, None if timeout expires
+    """
+    # Platform-specific setup
+    if sys.platform == "win32":
+        import msvcrt
+
+        def check_input_ready(timeout_sec):
+            """Check if input is available (Windows)."""
+            deadline = time.monotonic() + timeout_sec
+            while time.monotonic() < deadline:
+                if msvcrt.kbhit():
+                    return True
+                time.sleep(0.05)
+            return False
+
+        def read_char():
+            """Read one character (Windows)."""
+            return msvcrt.getwch()
+
+        cleanup = lambda: None
+    else:
+        import select
+        import termios
+        import tty
+
+        # Save terminal settings to restore later
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+
+        def check_input_ready(timeout_sec):
+            """Check if input is available (Unix)."""
+            ready, _, _ = select.select([sys.stdin], [], [], timeout_sec)
+            return bool(ready)
+
+        def read_char():
+            """Read one character (Unix)."""
+            return os.read(fd, 1).decode(errors="replace")
+
+        def cleanup():
+            """Restore terminal settings (Unix)."""
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+    # Install signal handlers to ensure cleanup on SIGTERM/SIGINT/SIGHUP
+    # Note: SIGKILL (kill -9) cannot be caught and will leave terminal in raw mode
+    original_sigterm = None
+    original_sigint = None
+    original_sighup = None
+    if sys.platform != "win32":
+        import signal
+
+        def signal_handler(signum, frame):
+            """Clean up terminal before exit."""
+            cleanup()
+            if signum == signal.SIGINT:
+                # SIGINT (Ctrl+C) - raise to let caller handle
+                raise KeyboardInterrupt
+            else:
+                # SIGTERM/SIGHUP - exit cleanly after cleanup
+                sys.exit(128 + signum)
+
+        original_sigterm = signal.signal(signal.SIGTERM, signal_handler)
+        original_sigint = signal.signal(signal.SIGINT, signal_handler)
+        original_sighup = signal.signal(signal.SIGHUP, signal_handler)
+
+    try:
+        if sys.platform != "win32":
+            # Put terminal in raw mode to read character-by-character
+            tty.setraw(fd, when=termios.TCSANOW)
+
+        deadline = time.monotonic() + timeout
+        characters: List[str] = []
+        last_update = 0.0
+
+        # Main input loop
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                sys.stderr.write("\n")
+                sys.stderr.flush()
+                return None
+
+            # Update display periodically
+            now = time.monotonic()
+            if now - last_update >= update_interval:
+                full_prompt = f"{prompt_format} (remaining {int(remaining)}s) "
+                sys.stderr.write(f"\r{full_prompt}{''.join(characters)}")
+                sys.stderr.flush()
+                last_update = now
+
+            # Check for input
+            if not check_input_ready(min(update_interval, remaining)):
+                continue
+
+            character = read_char()
+
+            # Handle special characters
+            if character in ("\r", "\n"):
+                sys.stderr.write("\r\n")
+                sys.stderr.flush()
+                return "".join(characters)
+            if character in ("\003", "\x03"):  # Ctrl+C
+                raise KeyboardInterrupt
+            if character in ("\b", "\x7f", "\x08"):  # Backspace or DEL
+                if characters:
+                    characters.pop()
+                    # Redraw immediately after backspace
+                    full_prompt = f"{prompt_format} (remaining {int(remaining)}s) "
+                    sys.stderr.write(f"\r{full_prompt}{''.join(characters)} \b")
+                    sys.stderr.flush()
+                continue
+            if character.isprintable():
+                characters.append(character)
+                sys.stderr.write(character)
+                sys.stderr.flush()
+    finally:
+        cleanup()
+        # Restore original signal handlers
+        if sys.platform != "win32":
+            signal.signal(signal.SIGTERM, original_sigterm)
+            signal.signal(signal.SIGINT, original_sigint)
+            signal.signal(signal.SIGHUP, original_sighup)

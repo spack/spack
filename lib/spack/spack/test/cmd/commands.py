@@ -278,8 +278,12 @@ def test_update_completion_arg(shell, tmp_path: pathlib.Path, monkeypatch):
 # Note: this test is never expected to be supported on Windows
 @pytest.mark.not_on_windows("Shell completion script generator fails on windows")
 @pytest.mark.parametrize("shell", ["bash", "fish"])
-def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
+def test_updated_completion_scripts(shell, tmp_path: pathlib.Path, monkeypatch):
     """Make sure our shell tab completion scripts remain up-to-date."""
+
+    # TODO: if the user is developing inside an instance they used `spack isolate`
+    # on, `spack commands --update-completion` will add scopes that will not
+    # match the CI instance
 
     width = 72
     lines = textwrap.wrap(
@@ -288,7 +292,7 @@ def test_updated_completion_scripts(shell, tmp_path: pathlib.Path):
         "update Spack's shell tab completion scripts by running:",
         width,
     )
-    lines.append("\n    spack commands --update-completion\n")
+    lines.append("\n    spack -E commands --update-completion\n")
     lines.extend(
         textwrap.wrap(
             "and adding the changed files (minus your global 'include:' scopes) "

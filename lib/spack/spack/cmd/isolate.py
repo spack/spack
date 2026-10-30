@@ -4,15 +4,11 @@
 import os
 import shutil
 import sys
-import textwrap
 from argparse import ArgumentParser
-from typing import cast
+from typing import Dict, List
 
-from spack.vendor.ruamel.yaml.compat import ordereddict
-
-import spack.config
+import spack.migrate
 import spack.paths
-import spack.schema.include
 import spack.util.spack_yaml as syaml
 from spack.util import tty
 
@@ -20,93 +16,75 @@ description = "isolate the current spack instance from the home directory"
 section = "config"
 level = "long"
 
-INCLUDE_PATH = os.path.join(spack.paths.etc_path, "include.yaml")
-PRESERVED_INCLUDE_PATH = os.path.join(spack.paths.etc_path, ".isolate.include.yaml")
-ISOLATE_SCOPE_PATH = os.path.join(spack.paths.etc_path, "isolate")
+
+def _isolate_include_config(new_user_path):
+    """Write include.yaml with include:: override to redirect user scope."""
+    include_list = [
+        {"name": "user", "path": new_user_path, "optional": True, "prefer_modify": True},
+        {
+            "name": "layout",
+            "path": os.path.join(spack.paths.isolate_scope_path, "layout"),
+            "optional": True,
+        },
+    ]
+
+    include_key = syaml.syaml_str("include")
+    # The override replaces the standard_scopes include list.
+    include_key.override = True  # type: ignore[attr-defined]
+    include_data = syaml.syaml_dict([(include_key, include_list)])
+
+    include_yaml_path = os.path.join(spack.paths.isolate_scope_path, "include.yaml")
+    with open(include_yaml_path, "w", encoding="utf-8") as f:
+        syaml.dump_config(include_data, f)
 
 
-def _get_scope_indices(included_scopes):
-    user_index = None
-    site_index = None
-    system_index = None
-    iso_index = None
-    for i, entry in enumerate(included_scopes):
-        if entry["name"] == "user":
-            user_index = i
-        elif entry["name"] == "site":
-            site_index = i
-        elif entry["name"] == "system":
-            system_index = i
-        elif entry["name"] == "isolate":
-            iso_index = i
-    return user_index, site_index, system_index, iso_index
+def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
+    """Return location settings for data created by an isolated Spack."""
+    return {"data": [isolate_target], "state": [isolate_target], "cache": [isolate_target]}
 
 
-def _isolate_bootstrap_config(new_user_path):
-    bootstrap_yaml = {"bootstrap": {"root": os.path.join(new_user_path, "bootstrap")}}
-    with open(os.path.join(ISOLATE_SCOPE_PATH, "bootstrap.yaml"), "w", encoding="utf-8") as f:
-        syaml.dump(bootstrap_yaml, f)
+def _setup_isolate_scope(new_user_path, overwrite: bool, reuse_old: bool) -> str:
+    """Set up the isolate scope directories and include.yaml.
 
+    Returns:
+        final_user_path - the user redirect path
+    """
+    # Check if this is --self (isolate scope IS the user path)
+    is_self = os.path.exists(spack.paths.isolate_scope_path) and os.path.samefile(
+        new_user_path, spack.paths.isolate_scope_path
+    )
 
-def _isolate_config_config(new_user_path):
-    build_stage_dirs = ["$tempdir/$user/spack-stage", os.path.join(new_user_path, "stage")]
-    test_stage_dir = os.path.join(new_user_path, "test-stage")
-    misc_cache_dir = os.path.join(new_user_path, "cache")
-    config_yaml = {
-        "config": {
-            "build_stage:": build_stage_dirs,
-            "test_stage:": test_stage_dir,
-            "misc_cache:": misc_cache_dir,
-        }
-    }
-    with open(os.path.join(ISOLATE_SCOPE_PATH, "config.yaml"), "w", encoding="utf-8") as f:
-        syaml.dump(config_yaml, f)
-
-
-def _isolate_repos_config(new_user_path):
-    current_repos_config = spack.config.CONFIG.get("repos")
-    new_repos_config = {}
-    for key, value in current_repos_config.items():
-        if isinstance(value, str):
-            new_repos_config[key] = value
-        if isinstance(value, dict):
-            if "destination" not in value:
-                value["destination"] = os.path.join(new_user_path, "repos", key)
-                new_repos_config[key] = value
-
-    with open(os.path.join(ISOLATE_SCOPE_PATH, "repos.yaml"), "w", encoding="utf-8") as f:
-        syaml.dump({"repos": new_repos_config}, f)
-
-
-def _setup_isolate_scope(new_user_path, overwrite: bool):
     # Bypass overwriting/pre-existing when using --self
-    if os.path.exists(ISOLATE_SCOPE_PATH):
-        if os.path.samefile(new_user_path, ISOLATE_SCOPE_PATH):
+    if os.path.exists(spack.paths.isolate_scope_path):
+        if is_self:
             pass
         elif overwrite:
-            shutil.rmtree(ISOLATE_SCOPE_PATH)
-            os.mkdir(ISOLATE_SCOPE_PATH)
-        else:
-            raise Exception("An isolation already exists for this Spack instance")
+            shutil.rmtree(spack.paths.isolate_scope_path)
+            os.makedirs(spack.paths.isolate_scope_path)
+        elif not reuse_old:
+            tty.die(
+                "An isolation already exists for this Spack instance:"
+                " see --help for --overwrite/--reuse-old options"
+            )
     else:
-        os.mkdir(ISOLATE_SCOPE_PATH)
-    isolate_dict = {}
-    isolate_dict["name"] = "isolate"
-    isolate_dict["path"] = ISOLATE_SCOPE_PATH
-    _isolate_bootstrap_config(new_user_path)
-    _isolate_config_config(new_user_path)
-    _isolate_repos_config(new_user_path)
-    return isolate_dict
+        os.makedirs(spack.paths.isolate_scope_path, exist_ok=True)
 
+    # For --self, create a redirected user subdirectory for user config additions
+    # The isolate scope's config files point to isolate/bootstrap, isolate/cache, etc.
+    # But user additions go to isolate/user-redirect
+    if is_self:
+        user_redirect_path = os.path.join(spack.paths.isolate_scope_path, "user")
+        os.makedirs(user_redirect_path, exist_ok=True)
+        final_user_path = user_redirect_path
+    else:
+        final_user_path = new_user_path
 
-def _get_new_user_scope(new_user_path):
-    return {
-        "name": "user",
-        "path": new_user_path,
-        "optional": True,
-        "prefer_modify": True,
-        "when": '"SPACK_DISABLE_LOCAL_CONFIG" not in env',
-    }
+    # Write include.yaml with include:: override to redirect user scope
+    # For --self, this points to user-redirect/
+    # For --path, this points to the external path
+    _isolate_include_config(final_user_path)
+
+    return final_user_path
 
 
 def _ensure_destination_setup(destination: str, overwrite: bool):
@@ -114,18 +92,9 @@ def _ensure_destination_setup(destination: str, overwrite: bool):
         if overwrite:
             shutil.rmtree(destination)
         else:
-            raise Exception(f"Isolation destination: {destination} already exists")
+            tty.die(f"Isolation destination: {destination} already exists")
     os.mkdir(destination)
     return os.path.abspath(destination)
-
-
-def _preserve_and_extract_include():
-    if not os.path.exists(PRESERVED_INCLUDE_PATH):
-        shutil.copy(INCLUDE_PATH, PRESERVED_INCLUDE_PATH)
-    include_config = cast(
-        ordereddict, spack.config.read_config_file(INCLUDE_PATH, spack.schema.include.schema)
-    )
-    return include_config["include"]
 
 
 def setup_parser(subparser: ArgumentParser):
@@ -143,46 +112,103 @@ def setup_parser(subparser: ArgumentParser):
         "--undo", action="store_true", help="undo the result of calling isolate"
     )
     subparser.add_argument(
-        "--overwrite", action="store_true", help="overwrite existing isolation if necessary"
+        "--overwrite",
+        action="store_true",
+        help="overwrite (delete and replace) existing isolation",
+    )
+    subparser.add_argument(
+        "--reuse-old",
+        action="store_true",
+        help=(
+            "reuse an existing isolation target without overwriting its configuration"
+            " (this is generally for Spack instances that used `spack isolate` before"
+            " 1.3 and then upgraded to 1.3)"
+        ),
     )
 
 
 def _do_isolate(args):
-    destination = _ensure_destination_setup(args.path, args.overwrite)
-    include_config: list = _preserve_and_extract_include()
-    isolate_scope = _setup_isolate_scope(destination, args.overwrite)
-    user_index, site_index, system_index, old_isolate_index = _get_scope_indices(include_config)
-    # No need for a separate isolation scope when using --self
-    if not os.path.samefile(destination, ISOLATE_SCOPE_PATH):
-        # insert the isolate scope above the below user and site but above system
-        if old_isolate_index is not None:  # first try the old isolate index (--overwrite)
-            include_config[old_isolate_index] = isolate_scope
-        elif site_index is not None:  # otherwise put it below the site scope
-            include_config.insert(site_index + 1, isolate_scope)
-        elif system_index is not None:  # if there is no site scope, put it above the system scope
-            include_config.insert(system_index, isolate_scope)
-        elif user_index is not None:  # if there is no system scope, put it below the user scope
-            include_config.insert(user_index + 1, isolate_scope)
-        else:  # Strange changes have been made if there is no site, system, or user scope
-            include_config.append(isolate_scope)
+    if args.overwrite and args.reuse_old:
+        tty.die("Cannot combine --overwrite and --reuse-old")
 
-    new_user_scope = _get_new_user_scope(destination)
-    if user_index is not None:
-        include_config[user_index] = new_user_scope
+    # Validate that path is (or can be) a directory
+    if os.path.exists(args.path) and not os.path.isdir(args.path):
+        tty.die(f"Isolation path {args.path} exists but is not a directory")
+
+    # Check write permissions if directory exists
+    if os.path.exists(args.path):
+        test_file = os.path.join(args.path, ".spack-write-test")
+        try:
+            with open(test_file, "w", encoding="utf-8") as f:
+                pass
+            os.remove(test_file)
+        except (OSError, PermissionError) as e:
+            tty.die(f"Isolation path {args.path} is not writable: {e}")
     else:
-        include_config.insert(0, new_user_scope)
+        # Verify we have permissions to create the directory by checking parent
+        parent = os.path.dirname(args.path) or "."
+        if not os.access(parent, os.W_OK):
+            tty.die(f"Cannot create isolation path {args.path}: parent directory is not writable")
 
-    with open(INCLUDE_PATH, "w", encoding="utf-8") as f:
-        syaml.dump({"include": include_config}, f)
+    target_config_existed = os.path.isfile(os.path.join(args.path, "config.yaml"))
+    if os.path.exists(args.path):
+        if args.overwrite:
+            destination = _ensure_destination_setup(args.path, overwrite=True)
+        elif args.reuse_old:
+            destination = os.path.abspath(args.path)
+        else:
+            tty.die(
+                f"Isolation destination: {args.path} already exists:"
+                " see --help for --overwrite/--reuse-old options"
+            )
+    else:
+        destination = _ensure_destination_setup(args.path, overwrite=False)
+
+    cfg_destination = destination
+    if args.use_self:
+        data_destination = spack.paths.self_isolation_prefix
+    else:
+        data_destination = destination
+
+    cfg_destination = _setup_isolate_scope(cfg_destination, args.overwrite, args.reuse_old)
+
+    # Build config with isolation locations
+    scope_config = {
+        "config": {
+            "build_stage:": [
+                "$tempdir/$user/spack-stage",
+                os.path.join(data_destination, "stage"),
+            ],
+            "test_stage:": os.path.join(data_destination, "test-stage"),
+            "locations": _isolate_locations_config(data_destination),
+        }
+    }
+
+    old_resources = {}
+    if not spack.migrate.migration_done():
+        old_resources = spack.migrate.detect_old_resources()
+
+    if any(old_resources.values()):
+        spack.migrate.generate_old_layout_config(old_resources, scope_config)
+        config_path = os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
+    elif target_config_existed:
+        config_path = os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
+    else:
+        config_path = os.path.join(cfg_destination, "config.yaml")
+
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    with open(config_path, "w", encoding="utf-8") as f:
+        syaml.dump(scope_config, f)
 
 
 def _undo_isolate():
-    if not os.path.exists(ISOLATE_SCOPE_PATH):
-        raise RuntimeError("Cannot find isolation to undo")
-    if not os.path.exists(PRESERVED_INCLUDE_PATH):
-        raise RuntimeError("Cannot find pre-isolate include.yaml")
-    shutil.rmtree(ISOLATE_SCOPE_PATH)
-    shutil.copy(PRESERVED_INCLUDE_PATH, INCLUDE_PATH)
+    if not os.path.exists(spack.paths.isolate_scope_path):
+        tty.die("Cannot find isolation to undo")
+
+    shutil.rmtree(spack.paths.isolate_scope_path)
+    tty.msg(f"Removed isolate scope: {spack.paths.isolate_scope_path}")
+
+    spack.migrate.perform_migration()
 
 
 def isolate(parser, args):
@@ -193,28 +219,7 @@ def isolate(parser, args):
         if args.path is not None:
             tty.die("Cannot provide both --self and --path")
         else:
-            args.path = ISOLATE_SCOPE_PATH
+            args.path = spack.paths.isolate_scope_path
     elif args.path is None:
         tty.die("Must provide one of --path, --self, or --undo")
     _do_isolate(args)
-    tty.warn(
-        "\n".join(
-            textwrap.wrap(
-                "Due to current limitations in Spack's configuration, adding repos without an"
-                " explicit destination will default to $SPACK_USER_CACHE_PATH or ~/.spack."
-                " This behavior will be fixed with shared spack in v1.3."
-            )
-        )
-    )
-    if "SPACK_DISABLE_LOCAL_CONFIG" in os.environ:
-        tty.warn(
-            "\n".join(
-                textwrap.wrap(
-                    "SPACK_DISABLE_LOCAL_CONFIG is present in the current shell environment,"
-                    " which disables the user scope. spack isolate uses this scope for"
-                    " isolation. In order for future configuration changes to be added"
-                    " to the isolated scope, you will need to unset SPACK_DISABLE_LOCAL_CONFIG."
-                )
-            )
-        )
-        pass

@@ -37,7 +37,20 @@ properties: Dict[str, Any] = {
                             "Python code) evaluates to true",
                         },
                         "name": {"type": "string"},
-                        "path_override_env_var": {"type": "string"},
+                        "path_override_env_var": {
+                            "oneOf": [
+                                {"type": "string"},
+                                {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "List of environment variables to check. "
+                                    "First one that is set is used.",
+                                },
+                            ],
+                            "description": "Environment variable name(s) to override the path "
+                            "field. Can be a single string or list. For lists, variables are "
+                            "checked in order and the first one that is set is used.",
+                        },
                         "path": {
                             "type": "string",
                             "description": "Path to configuration file/directory (absolute, "
