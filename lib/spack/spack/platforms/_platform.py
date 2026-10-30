@@ -48,11 +48,7 @@ class Platform:
             self.add_target(name, microarchitecture)
 
     def target(self, name):
-        name = str(name)
-        if name in Platform.reserved_targets:
-            name = self.default
-
-        return self.targets.get(name, None)
+        return self.targets.get(str(name), None)
 
     def add_operating_system(self, name, os_class):
         if name in Platform.reserved_oss:
@@ -67,9 +63,6 @@ class Platform:
         return self.operating_system(self.default_os)
 
     def operating_system(self, name):
-        if name in Platform.reserved_oss:
-            name = self.default_os
-
         return self.operating_sys.get(name, None)
 
     def buildable_oses(self):
