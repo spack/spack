@@ -57,15 +57,48 @@ class _HookRunner:
 
     def __call__(self, *args, **kwargs):
         for module in self.hooks:
-            if hasattr(module, self.hook_name):
-                hook = getattr(module, self.hook_name)
-                if hasattr(hook, "__call__"):
-                    hook(*args, **kwargs)
+            _run_hook(module, self.hook_name, *args, **kwargs)
+
+
+def _run_hook(module, hook_name, *args, **kwargs):
+    if hasattr(module, hook_name):
+        hook = getattr(module, hook_name)
+        if callable(hook):
+            hook(*args, **kwargs)
 
 
 # pre/post install and run by the install subprocess
 pre_install = _HookRunner("pre_install")
 post_install = _HookRunner("post_install")
+
+
+_POST_INSTALL_MANIFEST_HOOK = "spack.hooks.write_install_manifest"
+
+
+def _post_install_manifest_hook_index() -> int:
+    for index, module in enumerate(post_install.hooks):
+        if module.__name__ == _POST_INSTALL_MANIFEST_HOOK:
+            if not callable(getattr(module, "post_install", None)):
+                break
+            return index
+    raise RuntimeError(
+        f"Post-install hook boundary {_POST_INSTALL_MANIFEST_HOOK!r} is not registered"
+    )
+
+
+def post_install_pre_manifest(*args, **kwargs):
+    """Run post-install hooks before the install manifest is written."""
+    manifest_index = _post_install_manifest_hook_index()
+    for module in post_install.hooks[:manifest_index]:
+        _run_hook(module, "post_install", *args, **kwargs)
+
+
+def post_install_manifest_and_after(*args, **kwargs):
+    """Run install-manifest generation and the remaining post-install hooks."""
+    manifest_index = _post_install_manifest_hook_index()
+    for module in post_install.hooks[manifest_index:]:
+        _run_hook(module, "post_install", *args, **kwargs)
+
 
 pre_uninstall = _HookRunner("pre_uninstall")
 post_uninstall = _HookRunner("post_uninstall")

@@ -38,6 +38,7 @@ import spack.spec
 import spack.store
 import spack.url_buildcache
 import spack.util.environment
+import spack.util.file_permissions as fp
 import spack.util.filesystem as fs
 import spack.util.lock
 import spack.util.timer
@@ -441,6 +442,11 @@ class BuildRequest(NamedTuple):
     stop_at: Optional[str]
 
 
+class PostInstallState(NamedTuple):
+    timer: spack.util.timer.Timer
+    cache: bool
+
+
 def worker_function(
     request: BuildRequest,
     state: IpcChannel,
@@ -526,10 +532,15 @@ def worker_function(
     )
     state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
+    tee_closed = False
 
     try:
         with PrefixPivoter(spec.prefix, request.keep_prefix):
-            _install(request, state_stream, spack.store.STORE)
+            post_install_state = _install(request, state_stream, spack.store.STORE)
+            tee_closed = True
+            tee.close()
+            _archive_build_log(spec.package, log_path)
+            _finish_post_install(spec.package, spec, request.explicit, post_install_state)
     except spack.error.StopPhase:
         exit_code = ExitCode.STOPPED_AT_PHASE
     except ProcessError as e:
@@ -541,24 +552,59 @@ def worker_function(
         traceback.print_exc(limit=-4)
         exit_code = ExitCode.BUILD_ERROR
     finally:
-        tee.close()
+        if not tee_closed:
+            tee.close()
         state_stream.close()
 
-    if exit_code == ExitCode.SUCCESS:
-        # Try to install the compressed log file
-        if not os.path.lexists(spec.package.install_log_path):
-            try:
-                with open(log_path, "rb") as f, open(spec.package.install_log_path, "wb") as g:
-                    # Use GzipFile directly so we can omit filename / mtime in header
-                    gzip_file = GzipFile(
-                        filename="", mode="wb", compresslevel=6, mtime=0, fileobj=g
-                    )
-                    shutil.copyfileobj(f, gzip_file)
-                    gzip_file.close()
-            except Exception:
-                pass  # don't fail the build just because log compression failed
-
     sys.exit(exit_code)
+
+
+def _archive_build_log(pkg: "spack.package_base.PackageBase", log_path: str) -> None:
+    """Install a compressed build log atomically; log archival is best-effort."""
+    install_log_path = pkg.install_log_path
+    if os.path.lexists(install_log_path):
+        return
+
+    manifest_path = os.path.join(
+        pkg.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
+    )
+    # A cache manifest describes the archived prefix. Do not add a local install log to it.
+    # Spliced installs remove this manifest during relocation and must get a new one below.
+    if pkg.installed_from_binary_cache and os.path.exists(manifest_path):
+        return
+
+    temp_fd = None
+    temp_path = None
+    try:
+        temp_fd, temp_path = tempfile.mkstemp(
+            prefix=".spack-build-out-", suffix=".tmp", dir=os.path.dirname(install_log_path)
+        )
+        with os.fdopen(temp_fd, "wb") as compressed_file:
+            temp_fd = None
+            with open(log_path, "rb") as log_file:
+                with GzipFile(
+                    filename="", mode="wb", compresslevel=6, mtime=0, fileobj=compressed_file
+                ) as gzip_file:
+                    shutil.copyfileobj(log_file, gzip_file)
+
+        fp.set_permissions_by_spec(temp_path, pkg.spec)
+        os.replace(temp_path, install_log_path)
+        temp_path = None
+    except Exception:
+        pass  # don't fail the build just because log compression failed
+    finally:
+        if temp_fd is not None:
+            try:
+                os.close(temp_fd)
+            except OSError:
+                pass
+        if temp_path is not None:
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass
 
 
 def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
@@ -687,7 +733,7 @@ def _rewire_no_db(
 
 def _install(
     request: BuildRequest, state_stream: io.TextIOWrapper, store: spack.store.Store
-) -> None:
+) -> PostInstallState:
     """Install a spec from build cache or source."""
     spec, explicit, install_policy = request.spec, request.explicit, request.install_policy
 
@@ -701,14 +747,12 @@ def _install(
     if request.fake:
         store.layout.create_install_directory(spec)
         _do_fake_install(pkg)
-        _post_install(pkg, spec, explicit, timer, cache=False)
-        return
+        return _post_install(pkg, spec, explicit, timer, cache=False)
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
         if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream, timer):
-            _post_install(pkg, spec, explicit, timer, cache=True)
-            return
+            return _post_install(pkg, spec, explicit, timer, cache=True)
         elif install_policy == "cache_only":
             send_state("no binary available", state_stream)
             raise BinaryCacheMiss(f"No binary available for {spec}")
@@ -718,8 +762,7 @@ def _install(
         if install_policy == "source_only":
             send_state("rewiring", state_stream)
             _rewire_no_db(spec, timer)
-            _post_install(pkg, spec, explicit, timer, cache=False)
-            return
+            return _post_install(pkg, spec, explicit, timer, cache=False)
         # Binary cache was the only option; signal miss for force_source expansion.
         send_state("no binary available", state_stream)
         raise BinaryCacheMiss(f"No binary available for {spec}")
@@ -805,7 +848,7 @@ def _install(
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
 
         _archive_build_metadata(pkg)
-        _post_install(pkg, spec, explicit, timer, cache=False)
+        return _post_install(pkg, spec, explicit, timer, cache=False)
 
 
 def _post_install(
@@ -814,16 +857,32 @@ def _post_install(
     explicit: bool,
     timer: spack.util.timer.Timer,
     cache: bool = False,
-) -> None:
-    # Do post install (and potentially post binary install) hooks
-    with timer.measure("post-install"):
-        if cache:
-            if hasattr(pkg, "_post_buildcache_install_hook"):
-                pkg._post_buildcache_install_hook()
-        spack.hooks.post_install(spec, explicit)
+) -> PostInstallState:
+    timer.start("post-install")
+    try:
+        if cache and hasattr(pkg, "_post_buildcache_install_hook"):
+            pkg._post_buildcache_install_hook()
+        spack.hooks.post_install_pre_manifest(spec, explicit)
+    except BaseException:
+        timer.stop("post-install")
+        raise
 
-    timer.stop()
-    _write_timer_json(pkg, timer, cache)
+    return PostInstallState(timer, cache)
+
+
+def _finish_post_install(
+    pkg: "spack.package_base.PackageBase",
+    spec: spack.spec.Spec,
+    explicit: bool,
+    state: PostInstallState,
+) -> None:
+    try:
+        spack.hooks.post_install_manifest_and_after(spec, explicit)
+    finally:
+        state.timer.stop("post-install")
+
+    state.timer.stop()
+    _write_timer_json(pkg, state.timer, state.cache)
 
 
 def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
