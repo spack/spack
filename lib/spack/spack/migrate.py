@@ -825,11 +825,10 @@ def _has_user_config_to_migrate(old_location: str) -> bool:
     True if any files or non-excluded dirs in ~/.spack
     Allows _migrate_user_config to exit early in the trivial case.
     """
-    if not _is_nonempty_directory(old_location):
+    if not os.path.isdir(old_location):
         return False
 
     for item in os.listdir(old_location):
-        old_item_location = os.path.join(old_location, item)
         if item not in _EXCLUDED_TOPLEVEL_ENTRIES_CONFIG:
             return True
     return False
