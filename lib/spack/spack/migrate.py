@@ -1633,7 +1633,7 @@ def perform_migration():
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
         try:
             with spack.util.lock.WriteTransaction(lock):
-                if not os.path.exists(marker_path):
+                if not migration_done():
                     # Waiting for user input inside the lock prevents other
                     # instances from progressing, but prevents a scenario where
                     # user says "Y" and then a separate non-tty process subverts
