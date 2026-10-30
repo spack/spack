@@ -1187,7 +1187,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                 # Check if content matches (prior copy or identical from another checkout)
                 if os.path.islink(src_path) and os.path.islink(dst_path):
                     # For symlinks, compare targets
-                    if os.realpath(src_path) == os.realpath(dst_path):
+                    if os.path.realpath(src_path) == os.path.realpath(dst_path):
                         tty.debug(
                             f"License symlink {entry} already exists with matching target, "
                             f"skipping"
