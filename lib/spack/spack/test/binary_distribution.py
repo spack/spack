@@ -233,6 +233,7 @@ def test_download_tarball_reports_signature_verification_failure(
 
     class MockMirror:
         fetch_url = mirror_url
+        fetch_location = mirror_url
         fetch_view = None
         signed = True
         supported_layout_versions = [3]
@@ -266,6 +267,55 @@ def test_download_tarball_reports_signature_verification_failure(
     output = capfd.readouterr().err
     assert "Failed to verify signature for binary package corge/" in output
     assert "Signature could not be verified" in output
+
+
+@pytest.mark.parametrize("layout_version", [2, 3])
+def test_download_tarball_with_mirror_returns_mirror_fetched_from(
+    monkeypatch, mock_packages, layout_version
+):
+    spec = spack.concretize.concretize_one("corge")
+    archive_stage = object()
+
+    class MockMirror:
+        fetch_view = None
+        signed = False
+        supported_layout_versions = [layout_version]
+
+        def __init__(self, name):
+            self.name = name
+            self.fetch_url = self.fetch_location = f"file:///{name}"
+
+        def matches_binary(self, spec, direction):
+            return True
+
+    class MockCacheEntry:
+        def __init__(self, url, spec, allow_unsigned=False):
+            self.url = url
+
+        def fetch_archive(self):
+            if self.url == "file:///missing":
+                raise spack.url_buildcache.BuildcacheEntryError("not found")
+
+        def get_archive_stage(self):
+            return archive_stage
+
+        def destroy(self):
+            pass
+
+    mirrors = {name: MockMirror(name) for name in ("missing", "local", "remote")}
+    monkeypatch.setattr(spack.mirrors.mirror, "MirrorCollection", lambda binary=True: mirrors)
+    monkeypatch.setattr(
+        spack.binary_distribution,
+        "get_url_buildcache_class",
+        lambda layout_version: MockCacheEntry,
+    )
+    monkeypatch.setattr(spack.binary_distribution, "warn_v2_layout", lambda *args: None)
+
+    assert spack.binary_distribution.download_tarball_with_mirror(spec, unsigned=True) == (
+        archive_stage,
+        mirrors["local"],
+    )
+    assert spack.binary_distribution.download_tarball(spec, unsigned=True) is archive_stage
 
 
 def fake_dag_hash(spec, length=None):

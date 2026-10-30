@@ -146,3 +146,18 @@ def test_parse_link_rel_next():
     assert parse("<https://example.com/example; broken=broken") is None
     assert parse("https://example.com/example; rel=prev") is None
     assert parse("https://example.com/example; a=b; c=d; g=h") is None
+
+
+@pytest.mark.parametrize(
+    "url,expected",
+    [
+        ("https://user:token@example.com/cache", "https://example.com/cache"),
+        ("https://user@example.com:8443/cache", "https://example.com:8443/cache"),
+        ("https://example.com/cache?access_token=abc#frag", "https://example.com/cache"),
+        ("oci://user:token@ghcr.io/org/image", "oci://ghcr.io/org/image"),
+        ("s3://bucket/path", "s3://bucket/path"),
+        ("file:///local/mirror", "file:///local/mirror"),
+    ],
+)
+def test_redact(url, expected):
+    assert url_util.redact(url) == expected

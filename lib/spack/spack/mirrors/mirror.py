@@ -175,6 +175,11 @@ class Mirror:
         return self.get_url("fetch")
 
     @property
+    def fetch_location(self) -> str:
+        """The fetch URL without any secrets, for display purposes"""
+        return url_util.redact(self.fetch_url)
+
+    @property
     def push_url(self) -> str:
         """Get the valid, canonicalized push URL"""
         return self.get_url("push")

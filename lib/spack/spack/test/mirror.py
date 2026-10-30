@@ -489,3 +489,15 @@ def test_mirror_matches(mock_packages, mutable_config):
     )
     assert m.matches_binary(spec, direction="fetch") is False
     assert m.matches_binary(spec, direction="push") is True
+
+
+@pytest.mark.parametrize(
+    "data,expected",
+    [
+        ("https://example.com/cache", "https://example.com/cache"),
+        ("https://user:token@example.com/cache", "https://example.com/cache"),
+        ({"url": "s3://bucket/cache", "view": "develop"}, "s3://bucket/cache"),
+    ],
+)
+def test_mirror_fetch_location(data, expected):
+    assert spack.mirrors.mirror.Mirror(data, "test").fetch_location == expected

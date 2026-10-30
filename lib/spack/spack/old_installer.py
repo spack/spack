@@ -410,14 +410,15 @@ def _process_binary_cache_tarball(
             else ``False``
     """
     with timer.measure("fetch"):
-        tarball_stage = binary_distribution.download_tarball(
+        fetched = binary_distribution.download_tarball_with_mirror(
             pkg.spec.build_spec, unsigned, mirrors_for_spec
         )
 
-        if tarball_stage is None:
+        if fetched is None:
             return False
 
-    tty.msg(f"Extracting {package_id(pkg.spec)} from binary cache")
+    tarball_stage, mirror = fetched
+    tty.msg(f"Extracting {package_id(pkg.spec)} from binary cache {mirror.fetch_location}")
 
     with timer.measure("install"), spack.store.filter_padding():
         binary_distribution.extract_tarball(pkg.spec, tarball_stage, force=False, timer=timer)

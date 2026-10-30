@@ -70,6 +70,19 @@ def test_buildcache_push_command(mutable_database: Database):
         assert os.path.exists(os.path.join(spec.prefix, "bin", f"mpileaks{exe_suffix}"))
 
 
+def test_download_tarball_with_mirror_returns_oci_mirror(mutable_database: Database):
+    with oci_servers(InMemoryOCIRegistry("example.com")):
+        mirror("add", "oci-test", "oci://example.com/image")
+        buildcache("push", "oci-test", "libelf")
+
+        spec = mutable_database.query_local("libelf")[0]
+        fetched = spack.binary_distribution.download_tarball_with_mirror(spec, unsigned=True)
+        assert fetched is not None
+        stage, oci_mirror = fetched
+        stage.destroy()
+        assert oci_mirror.fetch_url == "oci://example.com/image"
+
+
 def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
     """Tests whether we can create an OCI image from a full environment with multiple roots."""
     env("create", "test")

@@ -258,6 +258,14 @@ def find_list_urls(url: str) -> Set[str]:
     return list_urls
 
 
+def redact(url: str) -> str:
+    """Remove the user name, password, query and fragment from a URL, so that it can be displayed
+    without leaking any secrets they may contain."""
+    parts = urlsplit(url)
+    netloc = parts.netloc.rpartition("@")[2]
+    return urlunsplit(parts._replace(netloc=netloc, query="", fragment=""))
+
+
 def strip_query_and_fragment(url: str) -> Tuple[str, str]:
     """Strips query and fragment from a url, then returns the base url and the suffix.
 

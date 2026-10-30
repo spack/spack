@@ -3,11 +3,24 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Tests for the installer.build module (PrefixPivoter and prefix management)."""
 
+import io
+import json
 import pathlib
+import types
 
 import pytest
 
-from spack.installer.build import OVERWRITE_GARBAGE_SUFFIX, BinaryCacheMiss, PrefixPivoter
+import spack.binary_distribution
+import spack.installer.build
+import spack.mirrors.mirror
+import spack.util.timer
+from spack.installer.build import (
+    OVERWRITE_GARBAGE_SUFFIX,
+    BinaryCacheMiss,
+    PrefixPivoter,
+    _write_timer_json,
+    install_from_buildcache,
+)
 
 
 @pytest.fixture
@@ -227,3 +240,98 @@ class TestPrefixPivoterFailureRecovery:
         assert (existing_prefix / "partial_file").exists()
         # Backup directory, failed prefix, and empty garbage directory should exist
         assert len(list(tmp_path.iterdir())) == 3
+
+
+def test_install_from_buildcache_reports_mirror_fetched_from(monkeypatch):
+    """The build cache state gives the URL of the mirror the binary was downloaded from."""
+
+    class MockSpec:
+        build_spec = None
+        spliced = False
+
+        class package:
+            installed_from_binary_cache = False
+
+    local = spack.mirrors.mirror.Mirror("https://user:token@example.com/cache", "local")
+    monkeypatch.setattr(
+        spack.mirrors.mirror, "MirrorCollection", lambda binary=True: {"local": local}
+    )
+    monkeypatch.setattr(
+        spack.binary_distribution,
+        "download_tarball_with_mirror",
+        lambda *args, **kwargs: (object(), local),
+    )
+    monkeypatch.setattr(spack.binary_distribution, "extract_tarball", lambda *args, **kwargs: None)
+
+    state_stream = io.StringIO()
+    location = install_from_buildcache([], MockSpec(), True, state_stream)  # type: ignore
+    assert location == "https://example.com/cache"
+    messages = [json.loads(line) for line in state_stream.getvalue().splitlines()]
+    assert [m["state"] for m in messages if "state" in m] == [
+        "fetching from build cache",
+        "fetched from build cache https://example.com/cache",
+        "relocating",
+    ]
+
+
+def test_install_from_buildcache_no_binary(monkeypatch):
+    class MockSpec:
+        build_spec = None
+
+    local = spack.mirrors.mirror.Mirror("file:///local", "local")
+    monkeypatch.setattr(
+        spack.mirrors.mirror, "MirrorCollection", lambda binary=True: {"local": local}
+    )
+    monkeypatch.setattr(
+        spack.binary_distribution, "download_tarball_with_mirror", lambda *args, **kwargs: None
+    )
+
+    state_stream = io.StringIO()
+    assert install_from_buildcache([], MockSpec(), True, state_stream) is None  # type: ignore
+
+
+@pytest.mark.parametrize("mirror_url", [None, "s3://bucket/cache"])
+def test_write_timer_json_records_mirror_url(tmp_path: pathlib.Path, mirror_url):
+    class MockPackage:
+        name = "pkg"
+        times_log_path = str(tmp_path / "install_times.json")
+
+        class spec:
+            @staticmethod
+            def dag_hash():
+                return "abcdef"
+
+    _write_timer_json(MockPackage(), spack.util.timer.Timer(), True, mirror_url)  # type: ignore
+    with open(MockPackage.times_log_path, encoding="utf-8") as f:
+        data = json.load(f)
+    assert data.get("mirror_url") == mirror_url
+
+
+def test_install_records_mirror_url_from_buildcache(monkeypatch):
+    """The location returned by install_from_buildcache ends up in install_times.json."""
+
+    class MockRequest:
+        class spec:
+            package = types.SimpleNamespace()
+
+        explicit = True
+        install_policy = "auto"
+        run_tests = False
+        fake = False
+        mirrors: list = []
+        unsigned = True
+
+    post_install_kwargs = {}
+    monkeypatch.setattr(
+        spack.installer.build,
+        "install_from_buildcache",
+        lambda *args, **kwargs: "s3://bucket/cache",
+    )
+    monkeypatch.setattr(
+        spack.installer.build,
+        "_post_install",
+        lambda *args, **kwargs: post_install_kwargs.update(kwargs),
+    )
+
+    spack.installer.build._install(MockRequest(), io.StringIO(), None)  # type: ignore
+    assert post_install_kwargs == {"cache": True, "mirror_url": "s3://bucket/cache"}
