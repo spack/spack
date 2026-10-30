@@ -1898,6 +1898,17 @@ def download_tarball(
         (if required), and its checksum validated. Otherwise, return the stage
         containing the downloaded tarball.
     """
+    result = download_tarball_with_mirror(spec, unsigned, mirrors_for_spec)
+    return result[0] if result else None
+
+
+def download_tarball_with_mirror(
+    spec: spack.spec.Spec,
+    unsigned: Optional[bool] = False,
+    mirrors_for_spec: Optional[List[MirrorMetadata]] = None,
+) -> Optional[Tuple[spack.stage.Stage, spack.mirrors.mirror.Mirror]]:
+    """Like :func:`download_tarball`, but also return the mirror the tarball was downloaded
+    from, as a ``(stage, mirror)`` tuple."""
     configured_mirrors: Iterable[spack.mirrors.mirror.Mirror] = (
         spack.mirrors.mirror.MirrorCollection(binary=True).values()
     )
@@ -1945,6 +1956,8 @@ def download_tarball(
 
         # If it's an OCI index, do things differently, since we cannot compose URLs.
         fetch_url = mirror.fetch_url
+        # Shown in messages instead of fetch_url, which may contain credentials.
+        location = mirror.fetch_location
 
         # TODO: refactor this to some "nice" place.
         if spack.oci.image.is_oci_url(fetch_url):
@@ -1984,7 +1997,7 @@ def download_tarball(
                     except InvalidMetadataFile as e:
                         tty.warn(
                             f"Ignoring binary package for {spec.name}/{spec.dag_hash()[:7]} "
-                            f"from {fetch_url} due to invalid metadata file: {e}"
+                            f"from {location} due to invalid metadata file: {e}"
                         )
                         local_specfile_stage.destroy()
                         continue
@@ -2004,7 +2017,7 @@ def download_tarball(
                     continue
                 tarball_stage.cache_local()
 
-            return tarball_stage
+            return tarball_stage, mirror
         else:
             cache_type = get_url_buildcache_class(layout_version=layout_version)
             cache_entry = cache_type(fetch_url, spec, allow_unsigned=currently_unsigned)
@@ -2014,7 +2027,7 @@ def download_tarball(
             except NoVerifyException as e:
                 tty.error(
                     f"Failed to verify signature for binary package "
-                    f"{spec.name}/{spec.dag_hash()[:7]} from {fetch_url} "
+                    f"{spec.name}/{spec.dag_hash()[:7]} from {location} "
                     f"(v{layout_version}): {e}"
                 )
                 cache_entry.destroy()
@@ -2022,16 +2035,17 @@ def download_tarball(
             except Exception as e:
                 tty.debug(
                     f"Encountered error attempting to fetch archive for "
-                    f"{spec.name}/{spec.dag_hash()[:7]} from {fetch_url} "
+                    f"{spec.name}/{spec.dag_hash()[:7]} from {location} "
                     f"(v{layout_version}) due to {e}"
                 )
                 cache_entry.destroy()
                 continue
 
             if layout_version == 2:
-                warn_v2_layout(fetch_url, "Installing a spec")
+                warn_v2_layout(location, "Installing a spec")
 
-            return cache_entry.get_archive_stage()
+            archive_stage = cache_entry.get_archive_stage()
+            return (archive_stage, mirror) if archive_stage is not None else None
 
     # Falling through the nested loops means we exhaustively searched
     # for all known kinds of spec files on all mirrors and did not find

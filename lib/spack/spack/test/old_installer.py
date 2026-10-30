@@ -18,6 +18,7 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
+import spack.mirrors.mirror
 import spack.old_installer as inst
 import spack.package_base
 import spack.package_prefs as prefs
@@ -178,10 +179,10 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
 
     def _spec(spec, unsigned=False, mirrors_for_spec=None):
-        return spec
+        return spec, spack.mirrors.mirror.Mirror("https://user:token@example.com/cache")
 
     # Skip binary distribution functionality since assume tested elsewhere
-    monkeypatch.setattr(spack.binary_distribution, "download_tarball", _spec)
+    monkeypatch.setattr(spack.binary_distribution, "download_tarball_with_mirror", _spec)
     monkeypatch.setattr(spack.binary_distribution, "extract_tarball", _noop)
 
     # Skip database updates
@@ -192,7 +193,7 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 
     out = capfd.readouterr()[0]
     assert "Extracting pkg-a" in out
-    assert "from binary cache" in out
+    assert "from binary cache https://example.com/cache" in out
 
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages, monkeypatch):
