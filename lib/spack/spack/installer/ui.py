@@ -10,9 +10,11 @@ for the overall design."""
 
 import io
 import os
+import re
 import sys
 import time
-from typing import Callable, Dict, Generator, List, NamedTuple, Optional, TextIO, Union
+from collections import deque
+from typing import Callable, Deque, Dict, Generator, List, NamedTuple, Optional, Set, TextIO, Union
 
 import spack.config
 import spack.util.tty.color as coloring
@@ -39,8 +41,19 @@ class ChangeJobs(NamedTuple):
     delta: int
 
 
+class BuildProgress(NamedTuple):
+    """Structured progress displayed for an active build."""
+
+    percent: Optional[str] = None
+    message: Optional[str] = None
+
+
 #: A command produced by the UI and executed by the event loop.
 UiCommand = Union[SetEcho, ChangeJobs]
+
+ANSI_ESCAPE = re.compile(rb"\x1b\[[0-9;]*m")
+PROGRESS_LINE = re.compile(r"^\s*\[\s*([\d,/% ]+)\]\s*(.*)$")
+FRACTIONAL_PROGRESS_LINE = re.compile(r"^\s*\[\s*([\d,]+)\s*/\s*([\d,]+)\]\s*(.*)$")
 
 #: How often to update a spinner in seconds
 SPINNER_INTERVAL = 0.1
@@ -50,6 +63,9 @@ SPINNER_CHARS = "|/-\\"
 
 #: How long to display finished packages before graying them out
 CLEANUP_TIMEOUT = 2.0
+
+#: How many recent log chunks to keep per build for instant context when switching streams.
+LOG_HISTORY_SIZE = 15
 
 
 class BuildInfo:
@@ -68,7 +84,8 @@ class BuildInfo:
         "finished_time",
         "start_time",
         "duration",
-        "progress_percent",
+        "progress",
+        "progress_buffer",
         "log_path",
         "log_summary",
     )
@@ -95,7 +112,8 @@ class BuildInfo:
         self.finished_time: Optional[float] = None
         self.start_time: float = 0.0
         self.duration: Optional[float] = None
-        self.progress_percent: Optional[int] = None
+        self.progress: Optional[BuildProgress] = None
+        self.progress_buffer: bytes = b""
         self.log_path = log_path
         self.log_summary: Optional[str] = None
 
@@ -198,6 +216,8 @@ class TerminalUI(InstallerUI):
         self.completed = 0
         self.builds: Dict[str, BuildInfo] = {}
         self.finished_builds: List[BuildInfo] = []
+        #: Failed build IDs already persisted in terminal history.
+        self.printed_failures: Set[str] = set()
         self.spinner_index = 0
         self.dirty = True  # Start dirty to draw initial state
         self.active_area_rows = 0
@@ -206,9 +226,13 @@ class TerminalUI(InstallerUI):
         self.next_update = 0.0
         self.overview_mode = True  # Whether to draw the package overview
         self.tracked_build_id = ""  # identifier of the package whose logs we follow
+        #: Whether the selected build's log is streamed above the overview.
+        self.log_streaming = verbose
+        self.log_history: Dict[str, Deque[bytes]] = {}
         self.search_term = ""
         self.search_mode = False
         self.log_ends_with_newline = True
+        self.log_stream_buffer = b""
         self.actual_jobs: int = 0
         self.target_jobs: int = 0
         self.blocked: bool = False
@@ -224,9 +248,6 @@ class TerminalUI(InstallerUI):
         if color is None:
             color = coloring.get_color_when(stdout)
         self.color = coloring.get_colors(color)
-
-        #: Verbose mode only applies to non-TTY where we want to track a single build log.
-        self.verbose = verbose and not self.is_tty
         self.filter_padding = filter_padding
         #: When True, suppress all terminal output (process is in background).
         self.headless = False
@@ -247,33 +268,82 @@ class TerminalUI(InstallerUI):
         self.headless = headless
 
     def refresh_interval(self) -> Optional[float]:
-        # Only an interactive, foreground terminal animates the spinner; a suppressed (headless)
-        # or non-tty frontend needs no periodic redraw.
-        if self.headless or not self.is_tty:
-            return None
-        return SPINNER_INTERVAL
+        # Periodic redraws only advance a visible spinner; other modes have nothing to redraw.
+        if self.overview_mode and self.is_tty and not self.headless:
+            return SPINNER_INTERVAL
+        return None
 
     def on_build_added(self, info: BuildInfo) -> None:
-        """Add a new build to the display and mark the display as dirty."""
+        """Add a build, initialize its log history, and enable required log forwarding."""
         info.start_time = int(self.get_time())
         self.builds[info.id] = info
+        self.log_history[info.id] = deque(maxlen=LOG_HISTORY_SIZE)
         self.dirty = True
-        # Track the new build's logs when we're not already following another build. This applies
-        # only in non-TTY verbose mode.
-        if self.verbose and not self.tracked_build_id:
+        if self.log_streaming and not self.tracked_build_id:
+            self.log_stream_buffer = b""
+            self.log_ends_with_newline = True
             self.tracked_build_id = info.id
+            self.commands.append(SetEcho(info.id, True))
+        # TTY builds forward logs so the overview can parse progress after mode changes.
+        elif self.is_tty:
             self.commands.append(SetEcho(info.id, True))
 
     def on_build_removed(self, build_id: str) -> None:
-        """Remove a build from the display (e.g. after a binary cache miss before retry)."""
+        """Remove retained logs, the failure marker, and tracking state for a build."""
         self.builds.pop(build_id, None)
+        self.log_history.pop(build_id, None)
+        self.printed_failures.discard(build_id)
         if self.tracked_build_id == build_id:
+            self.log_stream_buffer = b""
+            self.log_ends_with_newline = True
             self.tracked_build_id = ""
             self.overview_mode = True
         self.dirty = True
 
     def toggle(self) -> None:
-        """Toggle between overview mode and following a specific build."""
+        """Toggle selected-log streaming, showing stored summaries for failed builds."""
+        if not self.log_streaming:
+            already_tracked = bool(self.tracked_build_id)
+            if not self.tracked_build_id:
+                self.next()
+            if not self.tracked_build_id:
+                return
+            tracked_build = self.builds.get(self.tracked_build_id)
+            if tracked_build is not None and tracked_build.state == "failed":
+                if already_tracked:
+                    summary = self._failed_log_summary(tracked_build)
+                    if self.is_tty and self.overview_mode:
+                        self._redraw_overview_with_log_history(
+                            self.tracked_build_id, summary.encode()
+                        )
+                    else:
+                        self.stdout.write(summary)
+                        self.stdout.flush()
+                return
+            self.log_streaming = True
+            self.dirty = True
+            if not self.is_tty:
+                self.commands.append(SetEcho(self.tracked_build_id, True))
+            else:
+                self._redraw_overview_with_log_history(self.tracked_build_id)
+        else:
+            if self.log_stream_buffer:
+                self.log_stream_buffer = b""
+                self.log_ends_with_newline = True
+            elif not self.log_ends_with_newline:
+                self.stdout.buffer.write(b"\n")
+                self.log_ends_with_newline = True
+            self.search_term = ""
+            self.search_mode = False
+            self.log_streaming = False
+            self.dirty = True
+            if self.tracked_build_id and not self.is_tty:
+                self.commands.append(SetEcho(self.tracked_build_id, False))
+            elif self.is_tty:
+                self._redraw_overview_with_log_history("")
+
+    def _toggle_overview(self) -> None:
+        """Return from the legacy full-screen log display to the overview."""
         if self.overview_mode:
             self.next()
         else:
@@ -285,7 +355,8 @@ class TerminalUI(InstallerUI):
             self.search_mode = False
             self.overview_mode = True
             self.dirty = True
-            self.commands.append(SetEcho(self.tracked_build_id, False))
+            if not self.is_tty:
+                self.commands.append(SetEcho(self.tracked_build_id, False))
             self.tracked_build_id = ""
 
     def search_input(self, char: str) -> None:
@@ -316,8 +387,12 @@ class TerminalUI(InstallerUI):
                 self.search_input(char)
             elif overview and char == "/":
                 self.enter_search()
-            elif char == "v" or char in ("q", "\x1b") and not overview:
+            elif char == "v":
                 self.toggle()
+            elif char == "q" and self.log_streaming:
+                self.toggle()
+            elif char in ("q", "\x1b") and not overview:
+                self._toggle_overview()
             elif char == "n":
                 self.next(1)
             elif char == "p" or char == "N":
@@ -351,44 +426,51 @@ class TerminalUI(InstallerUI):
         return matching[(idx + direction) % len(matching)]
 
     def next(self, direction: int = 1) -> None:
-        """Follow the logs of the next build in the list."""
+        """Select another unfinished or failed build and show its logs when streaming."""
         new_build_id = self._get_next(direction)
 
         if not new_build_id or self.tracked_build_id == new_build_id:
             return
 
+        self.log_stream_buffer = b""
+        self.log_ends_with_newline = True
+
         new_build = self.builds[new_build_id]
 
-        self.overview_mode = False
-
-        # Stop following the previous and start following the new build.
-        if self.tracked_build_id:
+        # Non-TTY output must stop forwarding the previous build before switching.
+        if self.tracked_build_id and self.log_streaming and not self.is_tty:
             self.commands.append(SetEcho(self.tracked_build_id, False))
 
         self.tracked_build_id = new_build_id
 
-        version_str = f"{self.color.CYAN}@{new_build.version}{self.color.RESET}"
         prefix = "" if self.log_ends_with_newline else "\n"
 
         if new_build.state == "failed":
-            # For failed builds, show the stored log summary instead of following live logs.
-            self.stdout.write(f"{prefix}==> Log summary of {new_build.name}{version_str}\n")
-            self.log_ends_with_newline = True
-            if new_build.log_summary:
-                self.stdout.write(new_build.log_summary)
-            if new_build.log_path:
-                if not new_build.log_summary:
-                    self.stdout.write("No errors parsed from log, see full log: ")
-                else:
-                    self.stdout.write("Full log: ")
-                self.stdout.write(f"{new_build.log_path}\n")
-            self.stdout.flush()
-        else:
-            # Tell the user we're following new logs, and instruct the child to start sending.
-            self.stdout.write(f"{prefix}==> Following logs of {new_build.name}{version_str}\n")
-            self.log_ends_with_newline = True
-            self.stdout.flush()
+            summary = self._failed_log_summary(new_build, prefix=prefix)
+            if self.is_tty and self.overview_mode:
+                self._redraw_overview_with_log_history(new_build_id, summary.encode())
+            else:
+                self.stdout.write(summary)
+                self.stdout.flush()
+        elif self.log_streaming:
             self.commands.append(SetEcho(new_build_id, True))
+            if self.is_tty:
+                self._redraw_overview_with_log_history(new_build_id)
+
+    def _failed_log_summary(self, build: BuildInfo, prefix: str = "") -> str:
+        """Format a failed build's stored summary and mark output as newline-terminated."""
+        version = f"{self.color.CYAN}@{build.version}{self.color.RESET}"
+        output = io.StringIO()
+        output.write(f"{prefix}==> Log summary of {build.name}{version}\n")
+        if build.log_summary:
+            output.write(build.log_summary)
+        if build.log_path:
+            output.write(
+                "Full log: " if build.log_summary else "No errors parsed from log, see full log: "
+            )
+            output.write(f"{build.log_path}\n")
+        self.log_ends_with_newline = True
+        return output.getvalue()
 
     def on_blocked_changed(self, blocked: bool) -> None:
         """Set whether all pending builds are blocked by another Spack process."""
@@ -423,7 +505,7 @@ class TerminalUI(InstallerUI):
         now = self.get_time()
         build_info = self.builds[build_id]
         build_info.state = state
-        build_info.progress_percent = None
+        build_info.progress = None
 
         if state == "failed":
             # Store the log summary for interactive browsing and the final failure printout.
@@ -434,12 +516,15 @@ class TerminalUI(InstallerUI):
             build_info.duration = now - build_info.start_time
             build_info.finished_time = now + CLEANUP_TIMEOUT
 
-            # Stop tracking the finished build's logs.
+            # Continue streaming after success so output does not stop between builds.
             if build_id == self.tracked_build_id:
-                if not self.overview_mode:
-                    self.toggle()
-                if self.verbose:
-                    self.tracked_build_id = ""
+                self.log_stream_buffer = b""
+                self.log_ends_with_newline = True
+                self.tracked_build_id = ""
+                if state == "finished" and self.log_streaming:
+                    self.next()
+                else:
+                    self.log_streaming = False
 
         self.dirty = True
         self._update_terminal_title()
@@ -469,12 +554,20 @@ class TerminalUI(InstallerUI):
         self.total += count
 
     def on_progress(self, build_id: str, current: int, total: int) -> None:
-        """Update the progress of a package and mark the display as dirty."""
+        """Update the binary cache fetching progress of a package."""
         percent = int((current / total) * 100)
         build_info = self.builds[build_id]
-        if build_info.progress_percent != percent:
-            build_info.progress_percent = percent
+        self._set_progress(build_info, BuildProgress(f"{percent}%", "fetching"))
+
+    def _set_progress(self, build_info: BuildInfo, progress: Optional[BuildProgress]) -> None:
+        """Store changed structured progress and mark the overview dirty."""
+        if build_info.progress != progress:
+            build_info.progress = progress
             self.dirty = True
+
+    def _progress_prefix(self, build_info: BuildInfo) -> Optional[str]:
+        """Return the displayed percentage for a build, if progress is available."""
+        return build_info.progress.percent if build_info.progress else None
 
     def render(self, finalize: bool = False) -> None:
         """Redraw the interactive display."""
@@ -510,6 +603,12 @@ class TerminalUI(InstallerUI):
         if not self.dirty and not finalize:
             return
 
+        self._render_overview(now=now, has_unfinished=has_unfinished, finalize=finalize)
+
+    def _render_overview(
+        self, *, now: float, has_unfinished: bool, finalize: bool = False
+    ) -> None:
+        """Render persisted completed and failed rows plus the mutable active-build overview."""
         # Build the overview output in a buffer and print all at once to avoid flickering.
         buffer = io.StringIO()
 
@@ -537,6 +636,19 @@ class TerminalUI(InstallerUI):
             # active_area_rows. Set to 0 to force newlines instead of cursor movement.
             self.active_area_rows = 0
 
+        # Persist failures and retain their build records for log-summary navigation.
+        failures = [
+            build
+            for build in self.builds.values()
+            if build.state == "failed" and build.id not in self.printed_failures
+        ]
+        if failures:
+            for build in failures:
+                self._render_build(build, buffer, now=now)
+                self._println(buffer, force_newline=True)
+                self.printed_failures.add(build.id)
+            self.active_area_rows = 0
+
         # Then a header followed by the active builds. This is the "mutable" part of the display.
         self.total_lines = 0
 
@@ -545,7 +657,12 @@ class TerminalUI(InstallerUI):
                 jobs_str = f"{self.actual_jobs}=>{self.target_jobs}"
             else:
                 jobs_str = str(self.target_jobs)
-
+            tracked_build = self.builds.get(self.tracked_build_id)
+            tracked_str = (
+                f"  {self.color.BLACK_BRIGHT}({tracked_build.name}){self.color.RESET}"
+                if tracked_build
+                else ""
+            )
             long_header = (
                 f"{self.color.BOLD}Progress:{self.color.RESET} {self.completed}/{self.total}"
                 f"  {self.color.CYAN}+{self.color.RESET}/{self.color.CYAN}-{self.color.RESET}: "
@@ -554,6 +671,7 @@ class TerminalUI(InstallerUI):
                 f"  {self.color.CYAN}v{self.color.RESET}: logs"
                 f"  {self.color.CYAN}n{self.color.RESET}/{self.color.CYAN}p{self.color.RESET}:"
                 " next/prev"
+                f"{tracked_str}"
             )
             if coloring.clen(long_header) < max_width:
                 self._println(buffer, long_header)
@@ -567,9 +685,9 @@ class TerminalUI(InstallerUI):
             self._println(buffer, "Waiting for other Spack install process...")
 
         displayed_builds = (
-            [b for b in self.builds.values() if self._is_displayed(b)]
+            [b for b in self.builds.values() if b.state != "failed" and self._is_displayed(b)]
             if self.search_term
-            else self.builds.values()
+            else [b for b in self.builds.values() if b.state != "failed"]
         )
         len_builds = len(displayed_builds)
 
@@ -614,19 +732,146 @@ class TerminalUI(InstallerUI):
         else:
             buffer.write("\033[0m\033[K\033[1B\r")  # reset, clear to EOL, move to next line
 
+    def _build_progress_message(self, build_message: str) -> Optional[str]:
+        """Extract and shorten the file or target name from a builder progress message."""
+        msg = ""
+        # CMake progress output, such as "Building C/CXX/Fortran object <file.o>".
+        if build_message.startswith("Linking "):
+            msg = build_message
+        elif build_message.startswith("Built target "):
+            msg = build_message
+        elif build_message.startswith("Building "):
+            _, _, msg = build_message.partition(" object ")
+        # Bazel progress output, such as "Compiling <file>; <other info>".
+        elif build_message.startswith("Compiling "):
+            msg = build_message.partition("Compiling ")[2]
+        elif build_message.startswith("TdGenerate "):
+            msg = build_message.partition("TdGenerate ")[2]
+
+        # Shorten file paths to the last two components, e.g. a/b/d.c.o -> b/d.c.
+        paths = msg.split(";", 1)[0].replace("\\", "/").split("/")
+        if len(paths) >= 2 and paths[-2] != "CMakeFiles":
+            msg = "/".join(paths[-2:])
+        else:
+            msg = paths[-1]
+        return msg[:-2] if msg.endswith(".o") else msg or None
+
+    def _parse_builder_progress(self, build_info: BuildInfo, data: bytes) -> None:
+        """Parse complete CMake and similar build progress lines into structured progress."""
+        # Pipe reads can split a CMake line at any byte. Keep the incomplete tail until
+        # the next callback so only complete lines update the displayed progress.
+        lines = (build_info.progress_buffer + data).split(b"\n")
+        build_info.progress_buffer = lines.pop()
+        for line in lines:
+            clean_line = ANSI_ESCAPE.sub(b"", line).decode(errors="replace").strip()
+
+            if clean_line.startswith("-- ") or clean_line.startswith("CMake "):
+                status_message = clean_line[3:] if clean_line.startswith("-- ") else clean_line
+                self._set_progress(
+                    build_info, BuildProgress(self._progress_prefix(build_info), status_message)
+                )
+                continue
+
+            progress_line = PROGRESS_LINE.match(clean_line)
+            if not progress_line:
+                continue
+
+            # Determine the progress percentage from either a percent or a fraction.
+            percent = None
+            if progress_line.group(1).endswith("%"):
+                percent = progress_line.group(1).strip()
+            else:
+                num_match = FRACTIONAL_PROGRESS_LINE.match(clean_line)
+                if num_match:
+                    total = int(num_match.group(2).replace(",", ""))
+                    if total > 0:
+                        current = int(num_match.group(1).replace(",", ""))
+                        percent = f"{int((current / total) * 100)}%"
+
+            # If a percentage was determined, parse the rest of the line as a progress message.
+            # This is usually a CMake or Bazel progress line, e.g. "Building C object <file.o>".
+            if percent:
+                build_message = progress_line.group(2).strip()
+                message = self._build_progress_message(build_message) if build_message else None
+                self._set_progress(build_info, BuildProgress(percent, message))
+            else:
+                continue  # No percentage was determined, ignore this line
+
     def on_log_output(self, build_id: str, data: bytes) -> None:
+        """Cache chunks, parse builder progress, buffer partial lines, and stream selected TTY
+        output."""
         if self.headless:
-            return
-        # Discard logs we are not following. Generally this should not happen as we tell the child
-        # to only send logs when we are following it. It could maybe happen while transitioning
-        # between builds.
-        if build_id != self.tracked_build_id:
             return
         if self.filter_padding:
             data = padding_filter_bytes(data)
+        self.log_history.setdefault(build_id, deque(maxlen=LOG_HISTORY_SIZE)).append(data)
+        if self.overview_mode and self.is_tty:
+            if self.filter_padding:
+                data = padding_filter_bytes(data)
+            build_info = self.builds.get(build_id)
+            if build_info is not None:
+                self._parse_builder_progress(build_info, data)
+            if not (self.log_streaming and build_id == self.tracked_build_id):
+                return
+        # Do not write output from an unselected build. TTY output has already been retained above
+        # for replay and progress processing.
+        if build_id != self.tracked_build_id:
+            return
+        if self.overview_mode and self.is_tty:
+            data = self.log_stream_buffer + data
+            last_newline = data.rfind(b"\n")
+            if last_newline < 0:
+                self.log_stream_buffer = data
+                self.log_ends_with_newline = False
+                return
+            self.log_stream_buffer = data[last_newline + 1 :]
+            data = data[: last_newline + 1]
+            self.log_ends_with_newline = not self.log_stream_buffer
+            now = self.get_time()
+            if self.active_area_rows > 0:
+                self.stdout.write(f"\033[{self.active_area_rows}A\r\033[0J")
+            self.stdout.flush()
         self.stdout.buffer.write(data)
+        if self.overview_mode and self.is_tty:
+            self.dirty = True
+            self.active_area_rows = 0
+            has_unfinished = any(pkg.finished_time is None for pkg in self.builds.values())
+            self._render_overview(now=now, has_unfinished=has_unfinished)
+        else:
+            self.log_ends_with_newline = data.endswith(b"\n")
         self.stdout.flush()
-        self.log_ends_with_newline = data.endswith(b"\n")
+
+    def _redraw_overview_with_log_history(
+        self, build_id: str, output: Optional[bytes] = None
+    ) -> None:
+        """Replay cached output, then redraw the overview and any persisted failed rows."""
+        if self.headless or not self.is_tty:
+            return
+        # The full-screen redraw removes persisted rows, so emit them again below the log.
+        self.printed_failures.clear()
+        self.log_stream_buffer = b""
+        history = (output,) if output is not None else self.log_history.get(build_id, ())
+        history_rows = sum(chunk.count(b"\n") for chunk in history)
+        history_needs_newline = bool(history and not history[-1].endswith(b"\n"))
+
+        # Wrapped log lines make relative clearing unreliable. Preserve the cursor below the
+        # overview, clear the full display, and restore that exact position before redrawing it.
+        self.stdout.write("\0337\033[2J")
+        if history:
+            rows_above = self.active_area_rows + history_rows + int(history_needs_newline)
+            self.stdout.write(f"\033[{rows_above}A\r")
+        self.stdout.flush()
+        for chunk in history:
+            self.stdout.buffer.write(chunk)
+        if history_needs_newline:
+            self.stdout.buffer.write(b"\n")
+        self.log_ends_with_newline = True
+        self.stdout.write("\0338")
+        now = self.get_time()
+        self.dirty = True
+        has_unfinished = any(pkg.finished_time is None for pkg in self.builds.values())
+        self._render_overview(now=now, has_unfinished=has_unfinished)
+        self.stdout.flush()
 
     def _render_build(
         self, build_info: BuildInfo, buffer: io.StringIO, max_width: int = 0, now: float = 0.0
@@ -671,11 +916,8 @@ class TerminalUI(InstallerUI):
         yield f"{name_color}{build_info.name}{self.color.RESET}"
         yield f"{self.color.CYAN}@{build_info.version}{self.color.RESET}"
 
-        # progress or state
-        if build_info.progress_percent is not None:
-            yield " fetching"
-            yield f": {build_info.progress_percent}%"
-        elif build_info.state == "finished":
+        # State or completed/failed detail.
+        if build_info.state == "finished":
             prefix = build_info.prefix
             yield f" {padding_filter(prefix) if self.filter_padding else prefix}"
         elif build_info.state == "failed":
@@ -685,11 +927,22 @@ class TerminalUI(InstallerUI):
         else:
             yield f" {build_info.state}"
 
-        # Duration
+        progress = build_info.progress if build_info.state not in ("finished", "failed") else None
+
+        # Duration and progress percentage
         elapsed = (
             build_info.duration
             if build_info.duration is not None
             else (now - build_info.start_time)
         )
+        timing = []
         if elapsed > 0:
-            yield f"{self.color.BLACK_BRIGHT} ({pretty_duration(elapsed)}){self.color.RESET}"
+            timing.append(pretty_duration(elapsed))
+        if progress and progress.percent:
+            timing.append(progress.percent)
+        if timing:
+            timing_text = ", ".join(timing) if len(timing) > 1 else timing[0]
+            yield f"{self.color.BLACK_BRIGHT} ({timing_text}){self.color.RESET}"
+
+        if progress and progress.message:
+            yield f" {progress.message}"
