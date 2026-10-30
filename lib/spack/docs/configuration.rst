@@ -699,9 +699,10 @@ See :ref:`where_spack_writes_data` for details.
 
 Spack provides three environment variables that allow you to override or opt out of configuration locations:
 
-.. envvar:: SPACK_USER_CONFIG_PATH
+.. envvar:: SPACK_CONFIG_HOME
 
    Override the path to use for the ``user`` scope (``~/.config/spack`` by default).
+   ``SPACK_USER_CONFIG_PATH`` is supported as a lower-precedence alias for backwards compatibility.
 
 .. envvar:: SPACK_SYSTEM_CONFIG_PATH
 

@@ -243,7 +243,8 @@ The default ``user``, ``system``, and ``site`` scopes are defined using ``includ
 
 You can see that all three of these scopes are given meaningful names, and all three are ``optional``, i.e., they'll be ignored if their directories do not exist.
 The ``user`` and ``system`` scopes can also be disabled by setting ``SPACK_DISABLE_LOCAL_CONFIG``.
-Finally, the ``user`` scope can be overridden with a path in ``SPACK_USER_CONFIG_PATH`` if it is set (see :ref:`local-config-overrides`).
+Finally, the ``user`` scope can be overridden with a path in ``SPACK_CONFIG_HOME`` if it is set (see :ref:`local-config-overrides`).
+``SPACK_USER_CONFIG_PATH`` remains available at lower precedence for backwards compatibility.
 
 Overriding scopes by name
 ^^^^^^^^^^^^^^^^^^^^^^^^^
