@@ -415,7 +415,9 @@ In this case:
 - old-resource paths are recorded in configuration alongside the new data/state/cache defaults;
 - for a fresh isolation target, both isolation locations and old-resource paths are written to the target's `config.yaml`;
 - for `--reuse-old` with an existing target `config.yaml`, isolation locations and old-resource paths are written to the layout scope instead to avoid overwriting the preserved configuration;
-- the isolate scope's `include.yaml` includes the layout scope, making old-resource redirects available when needed;
+- if no migration decision has been recorded yet (`.migration-done` absent), old-resource paths are detected and written to the isolate layout scope (`$spack/etc/spack/isolate/layout`);
+- if a migration decision has already been recorded, old-resource paths are not re-derived: the migration's layout scope (`$spack/etc/spack/layout`) already records which resources were retained, and re-detecting would re-pin successfully migrated resources to their stale pre-migration copies;
+- the isolate scope's `include.yaml` includes both layout scopes, making old-resource redirects available in either case;
 - the resulting configuration uses the isolate scope and gives user or user-redirect configuration higher precedence than layout fallback values.
 
 ## 4.3 Reusing an old isolation target after pulling
@@ -447,14 +449,15 @@ Expected `--reuse-old` behavior:
 
 ## 4.4 Isolation and the layout scope
 
-The isolate include uses an override so external user, site, and system scopes are not implicitly reintroduced. The replacement include must explicitly retain the layout scope because layout contains old-resource redirects and migration decisions.
+The isolate include uses an override so external user, site, and system scopes are not implicitly reintroduced. The replacement include must explicitly retain the migration's layout scope (`$spack/etc/spack/layout`) because it contains old-resource redirects and migration decisions, and `spack migrate undo` / `use-new-layout` continue to write there and so continue to apply to an isolated instance.
 
 The intended effective precedence is:
 
 1. the defining isolate scope, including preserved old target configuration when applicable;
 2. isolated user or user-redirect scope;
-3. layout scope;
-4. built-in defaults.
+3. isolate layout scope (`$spack/etc/spack/isolate/layout`), holding isolation locations and, for a pre-migration isolation, detected old-resource paths;
+4. migration layout scope (`$spack/etc/spack/layout`);
+5. built-in defaults.
 
 The defining scope is not removed merely because it defines `include::`; inherited include scopes are replaced, but the scope containing the override remains active without recursively including its own directory.
 

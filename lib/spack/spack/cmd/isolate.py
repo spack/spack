@@ -18,14 +18,21 @@ level = "long"
 
 
 def _isolate_include_config(new_user_path):
-    """Write include.yaml with include:: override to redirect user scope."""
+    """Write include.yaml with include:: override to redirect user scope.
+
+    Scopes are listed highest precedence first. The migration's layout scope
+    (``$spack/etc/spack/layout``) is included last so that paths to retained old
+    resources (e.g. existing installs) remain in effect after isolation, and so that
+    ``spack migrate undo`` / ``use-new-layout`` keep applying to an isolated instance.
+    """
     include_list = [
         {"name": "user", "path": new_user_path, "optional": True, "prefer_modify": True},
         {
-            "name": "layout",
+            "name": "isolate_layout",
             "path": os.path.join(spack.paths.isolate_scope_path, "layout"),
             "optional": True,
         },
+        {"name": "layout", "path": spack.paths.layout_scope_path, "optional": True},
     ]
 
     include_key = syaml.syaml_str("include")
@@ -184,6 +191,9 @@ def _do_isolate(args):
         }
     }
 
+    # If a migration decision has been made, the paths to any retained old resources are
+    # already recorded in the layout scope, which the isolate include.yaml pulls in. Only an
+    # instance that has not yet decided needs them derived here.
     old_resources = {}
     if not spack.migrate.migration_done():
         old_resources = spack.migrate.detect_old_resources()

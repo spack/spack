@@ -404,3 +404,65 @@ def test_isolate_undo_preserves_data(isolate_paths, tmp_path):
     assert not isolate_scope_path.exists(), "Config scope should be removed"
     assert data_location.exists(), "Data location should be preserved"
     assert (fake_install / "bin" / "zlib").exists(), "Installs should be preserved"
+
+
+@pytest.mark.parametrize("use_self", [False, True])
+def test_isolate_after_migration_keeps_retained_resources(isolate_paths, tmp_path, use_self):
+    """After a migration decision, `spack isolate` must keep reading the layout scope.
+
+    The migration records paths to retained old resources (always the install tree;
+    environments/GPG/licenses only if their copy failed) in ``$spack/etc/spack/layout``.
+    Isolation replaces the standard include list, so it must include that scope itself,
+    and must not re-derive old resource paths (which would re-pin successfully migrated
+    resources to their stale pre-migration copies).
+    """
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
+
+    # Old resources exist in the prefix: installs (retained) and environments (migrated)
+    old_install = base_prefix / "opt" / "spack"
+    (old_install / ".spack-db").mkdir(parents=True)
+    (old_install / ".spack-db" / "index.json").write_text("{}", encoding="utf-8")
+    old_envs = base_prefix / "var" / "spack" / "environments" / "myenv"
+    old_envs.mkdir(parents=True)
+    (old_envs / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+
+    # Simulate an approved migration: envs copied, installs retained, decision recorded
+    layout_dir = etc_spack / "layout"
+    layout_dir.mkdir()
+    (layout_dir / "config.yaml").write_text(
+        f"config:\n  install_tree:\n    root: {old_install}\n", encoding="utf-8"
+    )
+    Path(spack.migrate.migration_done_marker_path()).write_text("done\n", encoding="utf-8")
+
+    if use_self:
+        sp_isolate("--self")
+    else:
+        sp_isolate("--path", str(tmp_path / "iso"))
+
+    cfg = spack.config.create()
+    active = [s.name for s in cfg.active_scopes]
+
+    # Both layout scopes are active, isolate's above the migration's, user above both
+    assert "layout" in active and "isolate_layout" in active and "user" in active
+    assert active.index("layout") < active.index("isolate_layout") < active.index("user")
+
+    # Retained installs are still visible
+    assert str(cfg.get("config:install_tree:root")) == str(old_install)
+
+    # Successfully migrated resources were NOT re-pinned to the stale prefix copies
+    assert cfg.get("config:environments_root") == "$data_home/environments"
+    assert cfg.get("config:gpg_path") == "$data_home/gpg"
+    assert cfg.get("config:license_dir") == "$data_home/licenses"
+
+    # Isolation locations apply
+    isolation_target = Path(spack.paths.self_isolation_prefix) if use_self else tmp_path / "iso"
+    assert cfg.get("config:locations:data")[0] == str(isolation_target)
+
+    # `spack migrate undo` still reaches the isolated instance through the layout scope
+    (layout_dir / "config.yaml").write_text(
+        f"config:\n  install_tree:\n    root: {old_install}\n"
+        f"  environments_root: {old_envs.parent}\n",
+        encoding="utf-8",
+    )
+    cfg = spack.config.create()
+    assert str(cfg.get("config:environments_root")) == str(old_envs.parent)
