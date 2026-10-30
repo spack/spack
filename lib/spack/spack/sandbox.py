@@ -108,6 +108,10 @@ class Sandbox(ABC):
     @abstractmethod
     def _allow_write(self, original: Path, resolved: Path): ...
 
+    @property
+    @abstractmethod
+    def supports_network_blocking(self) -> bool: ...
+
     @abstractmethod
     def apply(self, block_network: bool = False): ...
 
@@ -219,9 +223,13 @@ class LandlockSandbox(Sandbox):
             "prctl(PR_SET_NO_NEW_PRIVS)",
         )
 
-    def apply(self, block_network: bool = False):
+    @property
+    def supports_network_blocking(self) -> bool:
         # Network access requires ABI v4
-        if block_network and self.abi_version < 4:
+        return self.abi_version >= 4
+
+    def apply(self, block_network: bool = False):
+        if block_network and not self.supports_network_blocking:
             raise SandboxError(
                 f"Blocking network access requires Landlock ABI v4+ (kernel 6.7+), "
                 f"but this kernel only supports ABI v{self.abi_version}."

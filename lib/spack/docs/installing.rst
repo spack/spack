@@ -189,6 +189,10 @@ All other paths must be explicitly allowed in configuration:
        allow_write:          # Additional paths with write and execute permissions
        - /scratch
 
+With ``enable: true`` builds fail if the kernel does not support the sandbox.
+With ``enable: auto`` the sandbox is used when the kernel supports it; otherwise builds run without it, which is noted in the build log.
+Similarly, with ``enable: auto`` and ``allow_network: false``, network access is only blocked when the kernel supports it (Linux 6.7+).
+
 The sandbox activates immediately after source extraction and prefix creation.
 Note that network restrictions only apply during the build phases, leaving Spack's own fetch operations unaffected.
 
