@@ -217,12 +217,12 @@ def get_visitor_from_args(
     if not isinstance(depflag, dt.DepFlag):
         depflag = dt.canonicalize(depflag)
     visitor = visitor or BaseVisitor(depflag)
+    if direction == "parents":
+        visitor = ReverseVisitor(visitor, depflag)
     if cover == "nodes":
         visitor = CoverNodesVisitor(visitor, key, visited)
     elif cover == "edges":
         visitor = CoverEdgesVisitor(visitor, key, visited)
-    if direction == "parents":
-        visitor = ReverseVisitor(visitor, depflag)
     return visitor
 
 
