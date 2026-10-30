@@ -184,7 +184,9 @@ def _do_isolate(args):
         }
     }
 
-    old_resources = spack.migrate.detect_old_resources()
+    old_resources = {}
+    if not spack.migrate.migration_done():
+        old_resources = spack.migrate.detect_old_resources()
 
     if any(old_resources.values()):
         spack.migrate.generate_old_layout_config(old_resources, scope_config)

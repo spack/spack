@@ -898,6 +898,11 @@ def migration_done_marker_path() -> str:
     return os.path.join(spack.paths.prefix, ".migration-done")
 
 
+def migration_done() -> bool:
+    """Returns whether the migration_done_marker exists."""
+    return os.path.exists(migration_done_marker_path())
+
+
 def _migration_source_hash() -> str:
     """Compute a hash of the spack prefix to identify this migration source.
 
@@ -1620,8 +1625,7 @@ def perform_migration():
     # values whether they were migrated
     config_migrated = migrate_home()["user_config"]
 
-    marker_path = migration_done_marker_path()
-    if os.path.exists(marker_path):
+    if migration_done():
         return config_migrated
 
     if any(old_resources.values()):
