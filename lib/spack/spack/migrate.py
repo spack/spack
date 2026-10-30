@@ -1156,8 +1156,8 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     """Copy licenses individually without claiming to lock out manual edits.
 
     Symlinks are copied as symlinks (not dereferenced), preserving their targets.
-    Since the old license directory remains in place after migration, symlinks
-    pointing to old locations will continue to work.
+    Relative symlinks pointing outside the license dir are rewritten to be absolute.
+    Absolute symlinks into the license dir are rewritten to be relative.
     """
     if not os.path.exists(src_dir):
         return True
@@ -1182,7 +1182,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                 # Check if content matches (prior copy or identical from another checkout)
                 if os.path.islink(src_path) and os.path.islink(dst_path):
                     # For symlinks, compare targets
-                    if os.readlink(src_path) == os.readlink(dst_path):
+                    if os.realpath(src_path) == os.realpath(dst_path):
                         tty.debug(
                             f"License symlink {entry} already exists with matching target, "
                             f"skipping"
@@ -1222,6 +1222,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                 # Copy file or symlink (follow_symlinks=False preserves symlinks)
                 shutil.copy2(src_path, dst_path, follow_symlinks=False)
             copied.append(entry)
+
         except (OSError, shutil.Error) as e:
             tty.warn(
                 f"License migration stopped at {entry}: {e}. Copied licenses: "
@@ -1229,6 +1230,18 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                 f"will remain configured; copied files may remain in {dst_dir}."
             )
             return False
+
+    # Rewrite relative symlinks that point out of the license dir, since those would dangle after
+    # migration
+    try:
+        # License migration doesn't use a stage dir, so the destination/stage are the same
+        rewrites = _rewrite_symlinks_after_copy(dst_dir, src_dir, dst_dir)
+    except OSError as e:
+        tty.warn(f"License migration: could not rewrite symlinks in {dst_dir}: {e}")
+        return False
+    for link, old, new in rewrites:
+        tty.debug(f"Rewrote license symlink {os.path.relpath(link, dst_dir)}: {old} -> {new}")
+
     return True
 
 
