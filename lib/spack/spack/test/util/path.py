@@ -31,6 +31,34 @@ fixed_lines = [
 ]
 
 
+@pytest.mark.only_windows("Windows path")
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        (r"\\?\C:\spack\opt", r"C:\spack\opt"),
+        (r"\\?\UNC\server\share\spack", r"\\server\share\spack"),
+        (r"\\?\unc\server\share\spack", r"\\server\share\spack"),
+        # drive relative path after the prefix
+        (r"\\?\C:spack\opt", r"C:spack\opt"),
+        # no drive after the prefix: removing it would break the path, so keep it
+        (
+            r"\\?\Volume{0b1f7c2e-3a4d-4e5f-8a9b-0c1d2e3f4a5b}\spack",
+            r"\\?\Volume{0b1f7c2e-3a4d-4e5f-8a9b-0c1d2e3f4a5b}\spack",
+        ),
+        (r"\\?\spack\opt", r"\\?\spack\opt"),
+        # paths without the extended-length prefix are returned unchanged
+        (r"\\server\share\spack", r"\\server\share\spack"),
+        (r"C:\spack\opt", r"C:\spack\opt"),
+        (r"C:spack\opt", r"C:spack\opt"),
+        (r"spack\opt", r"spack\opt"),
+        (r"?dir\file", r"?dir\file"),
+        ("", ""),
+    ],
+)
+def test_sanitize_win_longpath(path, expected):
+    assert sup.sanitize_win_longpath(path) == expected
+
+
 def test_sanitize_filename():
     """Test filtering illegal characters out of potential filenames"""
     sanitized = sup.sanitize_filename("""a<b>cd/?e:f"g|h*i.\0txt""")
