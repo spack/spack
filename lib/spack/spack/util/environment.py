@@ -428,10 +428,10 @@ class RemoveFirstPath(NamePathModifier):
         tty.debug(f"RemoveFirstPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        normalized = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
         val = path_to_os_path(os.path.normpath(self.value)).pop()
-        if val in directories:
-            directories.remove(val)
+        if val in normalized:
+            del directories[normalized.index(val)]
         env[self.name] = self.separator.join(directories)
 
 
@@ -440,10 +440,10 @@ class RemoveLastPath(NamePathModifier):
         tty.debug(f"RemoveLastPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)[::-1]
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        normalized = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
         val = path_to_os_path(os.path.normpath(self.value)).pop()
-        if val in directories:
-            directories.remove(val)
+        if val in normalized:
+            del directories[normalized.index(val)]
         env[self.name] = self.separator.join(directories[::-1])
 
 
@@ -452,11 +452,8 @@ class RemovePath(NamePathModifier):
         tty.debug(f"RemovePath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
-        directories = [
-            path_to_os_path(os.path.normpath(x)).pop()
-            for x in directories
-            if x != path_to_os_path(os.path.normpath(self.value)).pop()
-        ]
+        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        directories = [x for x in directories if path_to_os_path(os.path.normpath(x)).pop() != val]
         env[self.name] = self.separator.join(directories)
 
 
