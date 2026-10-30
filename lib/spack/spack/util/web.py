@@ -729,6 +729,9 @@ def stat_url(url: str) -> Optional[Tuple[int, float]]:
 
     elif parsed_url.scheme == "s3":
         return s3_util.stat_object(url)
+    elif parsed_url.scheme == "gs":
+        blob = GCSBlob(parsed_url)
+        return blob.stat()
     else:
         raise NotImplementedError(f"Unrecognized URL scheme: {parsed_url.scheme}")
 
