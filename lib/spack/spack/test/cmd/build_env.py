@@ -64,3 +64,12 @@ def test_failure_when_uninstalled_deps(config, mock_packages):
         spack.error.SpackError, match="Not all dependencies of dttop are installed"
     ):
         build_env("dttop")
+
+
+@pytest.mark.only_windows("Ensure paths with spaces are not split on Windows")
+@pytest.mark.usefixtures("config", "mock_packages", "working_env")
+def test_command_args_with_spaces_are_preserved(tmp_path: pathlib.Path):
+    out = tmp_path / "argv.txt"
+    script = "import sys; open(sys.argv[1], 'w').write(repr(sys.argv[2:]))"
+    build_env("pkg-c", "--", sys.executable, "-c", script, str(out), "C:/spack stage/foo", "x")
+    assert out.read_text() == repr(["C:/spack stage/foo", "x"])
