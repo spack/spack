@@ -1162,7 +1162,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
 
     Symlinks are copied as symlinks (not dereferenced), preserving their targets.
     Relative symlinks pointing outside the license dir are rewritten to be absolute.
-    Absolute symlinks into the license dir are rewritten to be relative.
+    Absolute symlinks into the license dir are rewritten to the new license dir.
     """
     if not os.path.exists(src_dir):
         return True
