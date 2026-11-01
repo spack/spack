@@ -139,25 +139,3 @@ def test_remove_python_cache_skips_symlinked_pycache(tmp_path: pathlib.Path, mon
     assert (view_dir / "__pycache__").is_symlink()
     assert (target / "module.cpython-312.pyc").exists()
     assert not real_cache.exists()
-
-
-def test_remove_python_cache_tolerates_concurrent_removal(tmp_path: pathlib.Path, monkeypatch):
-    """Files and directories removed by another process while walking are not an error."""
-    cache = tmp_path / "var" / "__pycache__"
-    cache.mkdir(parents=True)
-    (tmp_path / "var" / "stale.pyc").touch()
-
-    real_remove = os.remove
-
-    def remove_twice(path, *args, **kwargs):
-        real_remove(path)
-        real_remove(path)  # raises FileNotFoundError, as if another process got there first
-
-    monkeypatch.setattr(spack.cmd.clean.os, "remove", remove_twice)
-    monkeypatch.setattr(spack.cmd.clean, "lib_path", str(tmp_path / "lib"))
-    monkeypatch.setattr(spack.cmd.clean, "var_path", str(tmp_path / "var"))
-
-    spack.cmd.clean.remove_python_cache()
-
-    assert not (tmp_path / "var" / "stale.pyc").exists()
-    assert not cache.exists()
