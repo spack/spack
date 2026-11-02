@@ -38,10 +38,11 @@ def can_fetch_versions(monkeypatch, no_add):
         return {Version("1.0"): "https://www.example.com/pkg-1.0.tar.gz"}
 
     def get_checksums_for_versions(url_by_version, package_name, **kwargs):
-        return {
+        hashes = {
             v: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
             for v in url_by_version
         }
+        return spack.stage.ChecksumResult(hashes=hashes, failures={})
 
     def url_exists(url, curl=None):
         return True
@@ -61,7 +62,7 @@ def cannot_fetch_versions(monkeypatch, no_add):
         return {}
 
     def get_checksums_for_versions(url_by_version, package_name, **kwargs):
-        return {}
+        return spack.stage.ChecksumResult(hashes={}, failures={})
 
     def url_exists(url, curl=None):
         return False
