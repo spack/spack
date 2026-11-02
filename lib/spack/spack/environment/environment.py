@@ -38,7 +38,6 @@ import spack.error
 import spack.filesystem_view as fsv
 import spack.installer_dispatch
 import spack.package_base
-import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.schema.spec_list
@@ -87,9 +86,8 @@ spack_env_view_var = "SPACK_ENV_VIEW"
 #: Validation error for a currently activate environment that failed to parse
 _active_environment_error: Optional[spack.config.ConfigFormatError] = None
 
-#: default path where environments are stored in the spack tree
-default_env_path = os.path.join(spack.paths.var_path, "environments")
-
+#: default path where environments are stored (XDG-compliant location)
+default_env_path = f"$data_home{os.sep}environments"
 
 #: Name of the input yaml file for an environment
 manifest_name = "spack.yaml"
@@ -381,13 +379,18 @@ def create(
         include_concrete: concrete environment names/paths to be included
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
-    return create_in_dir(
-        environment_dir,
-        init_file=init_file,
-        with_view=with_view,
-        keep_relative=keep_relative,
-        include_concrete=include_concrete,
-    )
+    env_root = env_root_path()
+    fs.mkdirp(env_root)
+    lock = lk.Lock(os.path.join(env_root, ".lock"), default_timeout=120)
+    with lk.WriteTransaction(lock):
+        env = create_in_dir(
+            environment_dir,
+            init_file=init_file,
+            with_view=with_view,
+            keep_relative=keep_relative,
+            include_concrete=include_concrete,
+        )
+    return env
 
 
 def create_in_dir(

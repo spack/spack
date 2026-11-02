@@ -6,7 +6,7 @@
 # file to keep it current.
 #
 # Users can override these settings by editing
-# `$SPACK_ROOT/etc/spack/concretizer.yaml`, `~/.spack/concretizer.yaml`,
+# `$SPACK_ROOT/etc/spack/concretizer.yaml`, `~/.config/spack/concretizer.yaml`,
 # or by adding a `concretizer:` section to an environment.
 # -------------------------------------------------------------------------
 concretizer:

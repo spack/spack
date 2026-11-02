@@ -121,7 +121,8 @@ CONFIG_DEFAULTS = {
         "dirty": False,
         "build_jobs": min(16, cpus_available()),
         "build_stage": "$tempdir/spack-stage",
-        "license_dir": spack.paths.default_license_dir,
+        "license_dir": "$data_home/licenses",
+        "misc_cache": "$cache_home/$spack_instance_id/cache",
     },
     "concretizer": {"externals": {"completion": "default_variants"}},
 }
@@ -141,6 +142,38 @@ MAX_RECURSIVE_INCLUDES = 100
 
 # placeholder object for unspecified default for get methods
 default_sigil = object()
+
+#: configurable config vars -- these cannot be used by include paths
+#: nor by other paths that can affect config values
+CONFIGURABLE_VARS = ("state_home", "cache_home", "data_home", "user_cache_path")
+_CVARS_RE = "|".join(CONFIGURABLE_VARS)
+CONFIGURABLE_VARS_REGEX = r"(\$(" + _CVARS_RE + r")\b)|(\$\{(" + _CVARS_RE + r")\})"
+
+
+def substitute_include_path(path, context):
+    """Substitute path variables in include paths, with validation.
+
+    Args:
+        path: path string that may contain variables
+        context: context string for error messages
+
+    Returns:
+        Substituted path string
+
+    Raises:
+        ValueError: if path contains prohibited configurable variables
+    """
+    banned_var = re.search(CONFIGURABLE_VARS_REGEX, path)
+    if banned_var:
+        msg = (
+            "Included scope is defined in terms of prohibited config variable."
+            f" ({banned_var.group(0)}): {path}"
+            f"\n    Context: {context}"
+            "\n\n    Include config paths may not refer to configurable config variables."
+        )
+        raise ValueError(msg)
+
+    return substitute_path_variables(path)
 
 
 class ConfigScope:
@@ -167,7 +200,7 @@ class ConfigScope:
 
                 # Do not include duplicate scopes
                 for included_scope in included_scopes:
-                    if any([included_scope.name == scope.name for scope in self._included_scopes]):
+                    if any(included_scope.name == scope.name for scope in self._included_scopes):
                         warnings.warn(f"Ignoring duplicate included scope: {included_scope.name}")
                         continue
 
@@ -618,13 +651,22 @@ class Configuration:
         scope = next(s for s in self.scopes.reversed_values() if s.writable)
 
         # if a scope prefers that we edit another, respect that.
-        while scope:
-            preferred = scope
-            scope = next(
-                (s for s in scope.included_scopes if s.writable and s.prefer_modify), None
-            )
+        # Search recursively through the tree to find prefer_modify scopes
+        def find_preferred(s: ConfigScope) -> Optional[ConfigScope]:
+            for included in s.included_scopes:
+                if included.writable and included.prefer_modify:
+                    # This scope is marked prefer_modify, but check if it delegates further
+                    deeper = find_preferred(included)
+                    return deeper if deeper else included
+                elif included.writable:
+                    # Not prefer_modify itself, but might have prefer_modify descendants
+                    deeper = find_preferred(included)
+                    if deeper:
+                        return deeper
+            return None
 
-        return preferred
+        preferred = find_preferred(scope)
+        return preferred if preferred else scope
 
     def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
@@ -1400,11 +1442,36 @@ class IncludePath(OptionalInclude):
 
         super().__init__(entry)
         path_override_env_var = entry.get("path_override_env_var", "")
-        if path_override_env_var and path_override_env_var in os.environ:
-            path = os.environ[path_override_env_var]
-        else:
+
+        # Support both string and list for path_override_env_var
+        path_candidates = []
+        if isinstance(path_override_env_var, str):
+            path_candidates = [path_override_env_var] if path_override_env_var else []
+        elif isinstance(path_override_env_var, list):
+            path_candidates = path_override_env_var
+
+        # Try each candidate in order, use first one that resolves to non-empty string
+        path = None
+        for candidate in path_candidates:
+            if "$" in candidate:
+                # Contains variable syntax like $XDG_CONFIG_HOME/spack
+                if _check_all_vars_resolve(candidate, spack_vars=False):
+                    path = os.path.expandvars(candidate)
+                    assert "$" not in path
+                    break
+            else:
+                # Simple env var name like SPACK_USER_CONFIG_PATH
+                if candidate in os.environ and os.environ[candidate]:
+                    path = os.environ[candidate]
+                    break
+
+        # Fall back to path field if no candidate resolved
+        if path is None:
             path = entry.get("path", "")
-        self.path = substitute_path_variables(path)
+
+        context_prefix = f"({self.name}) " if self.name else ""
+        context = f"{context_prefix}{path}"
+        self.path = substitute_include_path(path, context)
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1452,6 +1519,7 @@ class IncludePath(OptionalInclude):
         canonical_path = canonicalize_path(self.path, base)
         config_path = rfc_util.local_path(canonical_path, self.sha256, base)
         assert config_path
+
         self.destination = config_path
 
         scope = self._scope(self.path, self.destination, parent_scope)
@@ -2254,9 +2322,142 @@ def get_user():
 NOMATCH = object()
 
 
+_frozen_home = {}
+_resolving_location_vars = set()
+
+
+def freeze(home_vars):
+    global _frozen_home
+
+    _frozen_home = home_vars
+
+
+def is_frozen():
+    """Indicates that config-based variables have been set in place in
+    such a way that applying new configuration to them would be ignored."""
+    return bool(_frozen_home)
+
+
+def collect():
+    return {
+        "data": _resolve_location_var("data"),
+        "state": _resolve_location_var("state"),
+        "cache": _resolve_location_var("cache"),
+    }
+
+
+def _resolve_location_var(location_key, config: Optional["Configuration"] = None):
+    """Resolve a config:locations entry to a concrete path.
+
+    Args:
+        location_key: one of 'data', 'cache', or 'state'
+        config: Configuration to use. Defaults to CONFIG
+
+    Returns:
+        A resolved path string or None
+    """
+    if _frozen_home and location_key in _frozen_home:
+        return _frozen_home[location_key]
+
+    # Detect recursion early before it accumulates nested paths.
+    # Must use global state because recursion happens through lambda callbacks:
+    # substitute_config_variables -> re.sub -> lambda in replacements() -> _resolve_location_var
+    # The lambda is called by re.sub with no way to pass a recursion-tracking parameter.
+    if location_key in _resolving_location_vars:
+        raise spack.error.ConfigError(f"Recursive reference to ${location_key}_home")
+
+    _resolving_location_vars.add(location_key)
+    try:
+        return _resolve_location_var_impl(location_key, config=config)
+    finally:
+        _resolving_location_vars.discard(location_key)
+
+
+def _check_all_vars_resolve(
+    path: str, config: Optional["Configuration"] = None, spack_vars: bool = True
+):
+    """Returns true iff all variables in path are set to non-empty."""
+    env_vars_regex = r"\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)"
+    if sys.platform == "win32":
+        env_vars_regex = r"\${([^}]+)}|\$([a-zA-Z_][a-zA-Z0-9_]*)|%([^%]+)%"
+
+    matches = re.findall(env_vars_regex, path)
+    if not matches:
+        return True
+
+    if spack_vars:
+        config = config if config is not None else CONFIG
+        repl = replacements(config)
+
+    for group in matches:
+        for var in group:
+            # The groups that didn't match will return ""
+            if not var:
+                continue
+
+            # If it's a spack variable and we're checking spack variables,
+            # check replacements for it.
+            # spack variables are case-insensitive
+            key = var.lower()
+            if spack_vars and key in repl:
+                value = repl[key]()
+                if value is NOMATCH or not str(value):
+                    return False
+            # Otherwise treat as an env var
+            elif not os.environ.get(var, None):
+                return False
+
+    return True
+
+
+def _resolve_location_var_impl(location_key, config=None):
+    """Implementation of _resolve_location_var without recursion tracking."""
+    config = config if config is not None else CONFIG
+    location_list = config.get(f"config:locations:{location_key}", default=[])
+
+    if isinstance(location_list, str):
+        # Schema allows specifying a single item as a string in place of list
+        location_list = [location_list]
+
+    for item in location_list:
+        # If the entry is empty or doesn't resolve, skip it
+        if not item or not item.strip() or not _check_all_vars_resolve(item, config):
+            continue
+
+        # Attempt to resolve all variables in the entry
+        candidate = os.path.normpath(substitute_path_variables(item))
+
+        # Reject relative paths in locations - they resolve inconsistently
+        if not os.path.isabs(candidate):
+            raise spack.error.ConfigError(
+                f"config:locations:{location_key} entry '{item}' resolved to relative path "
+                f"'{candidate}'. All location entries must resolve to absolute paths."
+            )
+        return candidate
+
+    # If the user has locations config for this key and none resolved, error
+    if location_list:
+        raise spack.error.ConfigError(
+            f"config:locations:{location_key} is defined but all entries failed to resolve."
+        )
+
+    # Fallback to XDG defaults if nothing in config matched (e.g. if a user set
+    # config::)
+    expanded_home = os.path.expanduser("~")
+    if location_key == "data":
+        return os.path.join(expanded_home, ".local", "share", "spack")
+    elif location_key == "state":
+        return os.path.join(expanded_home, ".local", "state", "spack")
+    elif location_key == "cache":
+        return os.path.join(expanded_home, ".cache", "spack")
+    else:
+        raise ValueError(f"Unexpected request: {location_key}")
+
+
 # Substitutions to perform
 def replacements(config: Optional["Configuration"] = None):
     arch = architecture()
+    config = config if config is not None else CONFIG
 
     return {
         "spack": lambda: spack.paths.prefix,
@@ -2272,8 +2473,11 @@ def replacements(config: Optional["Configuration"] = None):
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.family,
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
-        "env": lambda: (config if config is not None else CONFIG).env_path or NOMATCH,
+        "env": lambda: config.env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
+        "data_home": lambda: _resolve_location_var("data", config=config),
+        "cache_home": lambda: _resolve_location_var("cache", config=config),
+        "state_home": lambda: _resolve_location_var("state", config=config),
     }
 
 
@@ -2286,7 +2490,7 @@ def substitute_config_variables(path, config: Optional["Configuration"] = None):
     - $spack               The Spack instance's prefix
     - $tempdir             Default temporary directory returned by tempfile.gettempdir()
     - $user                The current user's username
-    - $user_cache_path     The user cache directory (~/.spack, unless overridden)
+    - $user_cache_path     The user cache directory (alias for $state_home)
     - $spack_instance_id   Hash that distinguishes Spack instances on the filesystem
     - $architecture        The spack architecture triple for the current system
     - $arch                The spack architecture triple for the current system
@@ -2297,6 +2501,9 @@ def substitute_config_variables(path, config: Optional["Configuration"] = None):
     - $target_family       The family of the target detected for the system
     - $date                The current date (YYYY-MM-DD)
     - $spack_short_version The spack short version
+    - $data_home           Default location for permanent important data (e.g. installs)
+    - $state_home          Default location for important caches (e.g. provider index)
+    - $cache_home          Backup location for temporary caches (e.g. staging)
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only

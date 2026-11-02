@@ -35,6 +35,7 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
+import spack.migrate
 import spack.paths
 import spack.platforms
 import spack.solver.asp
@@ -394,6 +395,8 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
 def make_argument_parser(**kwargs):
     """Create an basic argument parser without any subcommands added."""
+    import spack.argparse_common
+
     parser = SpackArgumentParser(
         prog="spack",
         formatter_class=SpackHelpFormatter,
@@ -405,146 +408,7 @@ def make_argument_parser(**kwargs):
         **kwargs,
     )
 
-    general = parser.add_argument_group("general")
-    general.add_argument(
-        "--color",
-        action="store",
-        default=None,
-        choices=("always", "never", "auto"),
-        help="when to colorize output (default: auto)",
-    )
-    general.add_argument(
-        "-v", "--verbose", action="store_true", help="print additional output during builds"
-    )
-    general.add_argument(
-        "-k",
-        "--insecure",
-        action="store_true",
-        help="do not check ssl certificates when downloading",
-    )
-    general.add_argument(
-        "-b", "--bootstrap", action="store_true", help="use bootstrap config, store, and externals"
-    )
-    general.add_argument(
-        "-V", "--version", action="store_true", help="show version number and exit"
-    )
-    general.add_argument(
-        "-h",
-        "--help",
-        dest="help",
-        action="store_const",
-        const="short",
-        default=None,
-        help="show this help message and exit",
-    )
-    general.add_argument(
-        "-H",
-        "--all-help",
-        dest="help",
-        action="store_const",
-        const="long",
-        default=None,
-        help="show help for all commands (same as `spack help --all`)",
-    )
-
-    config = parser.add_argument_group("configuration and environments")
-    config.add_argument(
-        "-c",
-        "--config",
-        default=None,
-        action="append",
-        dest="config_vars",
-        help="add one or more custom, one-off config settings",
-    )
-    config.add_argument(
-        "-C",
-        "--config-scope",
-        dest="config_scopes",
-        action="append",
-        metavar="DIR|ENV",
-        help="add directory or environment as read-only config scope",
-    )
-    envs = config  # parser.add_argument_group("environments")
-    env_mutex = envs.add_mutually_exclusive_group()
-    env_mutex.add_argument(
-        "-e", "--env", dest="env", metavar="ENV", action="store", help="run with an environment"
-    )
-    env_mutex.add_argument(
-        "-D",
-        "--env-dir",
-        dest="env_dir",
-        metavar="DIR",
-        action="store",
-        help="run with environment in directory (ignore managed envs)",
-    )
-    env_mutex.add_argument(
-        "-E",
-        "--no-env",
-        dest="no_env",
-        action="store_true",
-        help="run without any environments activated (see spack env)",
-    )
-    envs.add_argument(
-        "--use-env-repo",
-        action="store_true",
-        help="when in an environment, use its package repository",
-    )
-
-    debug = parser.add_argument_group("debug")
-    debug.add_argument(
-        "-d",
-        "--debug",
-        action="count",
-        default=0,
-        help="write out debug messages\n\n(more d's for more verbosity: -d, -dd, -ddd, etc.)",
-    )
-    debug.add_argument(
-        "-t",
-        "--backtrace",
-        action="store_true",
-        default="SPACK_BACKTRACE" in os.environ,
-        help="always show backtraces for exceptions",
-    )
-    debug.add_argument("--pdb", action="store_true", help=argparse.SUPPRESS)
-    debug.add_argument("--timestamp", action="store_true", help="add a timestamp to tty output")
-    debug.add_argument(
-        "-m", "--mock", action="store_true", help="use mock packages instead of real ones"
-    )
-    debug.add_argument(
-        "--print-shell-vars", action="store", help="print info needed by setup-env.*sh"
-    )
-    debug.add_argument(
-        "--stacktrace",
-        action="store_true",
-        default="SPACK_STACKTRACE" in os.environ,
-        help="add stacktraces to all printed statements",
-    )
-
-    locks = general
-    lock_mutex = locks.add_mutually_exclusive_group()
-    lock_mutex.add_argument(
-        "-l",
-        "--enable-locks",
-        action="store_true",
-        dest="locks",
-        default=None,
-        help="use filesystem locking (default)",
-    )
-    lock_mutex.add_argument(
-        "-L",
-        "--disable-locks",
-        action="store_false",
-        dest="locks",
-        help="do not use filesystem locking (unsafe)",
-    )
-
-    debug.add_argument(
-        "-p", "--profile", action="store_true", dest="spack_profile", help=argparse.SUPPRESS
-    )
-    debug.add_argument("--profile-file", default=None, help=argparse.SUPPRESS)
-    debug.add_argument("--sorted-profile", default=None, metavar="STAT", help=argparse.SUPPRESS)
-    debug.add_argument("--lines", default=20, action="store", help=argparse.SUPPRESS)
-
+    spack.argparse_common.add_all_global_arguments(parser)
     return parser
 
 
@@ -796,7 +660,7 @@ def print_setup_info(*info):
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
     """
-    from spack.modules.common import root_path
+    from spack.modules.common import ModulesError, root_path
 
     shell = "csh" if "csh" in info else "sh"
 
@@ -814,8 +678,11 @@ def print_setup_info(*info):
     # print roots for all module systems
     module_to_roots = {"tcl": list(), "lmod": list()}
     for name in module_to_roots.keys():
-        path = root_path(name, "default")
-        module_to_roots[name].append(path)
+        try:
+            path = root_path(name, "default")
+            module_to_roots[name].append(path)
+        except ModulesError:
+            pass
 
     other_spack_instances = spack.config.CONFIG.get("upstreams") or {}
     for install_properties in other_spack_instances.values():
@@ -966,6 +833,25 @@ def _main(argv=None):
         print(spack.get_version())
         return 0
 
+    # -------------------------------------------------------------------------
+    # The next two sections after this one set up config properly.
+    # Nothing can touch config before here
+    # -------------------------------------------------------------------------
+    # If a test or script overrides with a non-singleton, allow that
+    assert (
+        not isinstance(spack.config.CONFIG, spack.util.lang.Singleton)
+        or spack.config.CONFIG._instance is None
+    )
+
+    # ------------------------------------------------------------------------------------
+    # This part of `main()` handles migration from the old configs (Spack 1.2 and earlier)
+    # ------------------------------------------------------------------------------------
+
+    # We do not reuse cmd_string, because aliases are not evaluated here
+    cmd_string = args.command or ""
+    if cmd_string != "isolate":
+        spack.migrate.perform_migration()
+
     # ------------------------------------------------------------------------
     # This part of the `main()` sets up Spack's configuration.
     #
@@ -1016,6 +902,18 @@ def _main(argv=None):
     # ------------------------------------------------------------------------
     # Things that require configuration should go below here
     # ------------------------------------------------------------------------
+    if (
+        sys.platform == "darwin"
+        and multiprocessing.get_start_method(allow_none=True) is None
+        and spack.config.CONFIG.get("config:installer") == "new"
+    ):
+        # Forkserver is significantly faster than spawn. This has to be configured once and early
+        # in the process.
+        multiprocessing.set_start_method("forkserver")
+    # When using the forkserver start method, preload the following modules to improve startup
+    # time of child processes.
+    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
+
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(","))
         return 0
@@ -1124,17 +1022,6 @@ def main(argv=None):
             the executable name. If None, parses from sys.argv.
 
     """
-    if (
-        sys.platform == "darwin"
-        and multiprocessing.get_start_method(allow_none=True) is None
-        and spack.config.CONFIG.get("config:installer") == "new"
-    ):
-        # Forkserver is significantly faster than spawn. This has to be configured once and early
-        # in the process.
-        multiprocessing.set_start_method("forkserver")
-    # When using the forkserver start method, preload the following modules to improve startup
-    # time of child processes.
-    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
     try:
         g0, g1, g2 = gc.get_threshold()
         gc.set_threshold(50 * g0, g1, g2)

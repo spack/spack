@@ -184,6 +184,7 @@ For instance, let's assume we want to add a new version to the ``silo`` package:
 
    from spack_repo.builtin.packages.silo.package import Silo as BuiltinSilo
 
+
    class Silo(BuiltinSilo):
        # Version not in builtin.silo
        version("special_version")
@@ -194,6 +195,7 @@ If we need to customize the builder too, we just have to inherit from it, like a
 .. code-block:: python
 
    from spack_repo.builtin.packages.silo.package import CMakeBuilder as SiloCMakeBuilder
+
 
    class CMakeBuilder(SiloCMakeBuilder):
        def cmake_args(self):

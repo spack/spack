@@ -138,7 +138,9 @@ If you want one file to take precedence over another, you can put the include wi
    - /path/to/higher/precedence/scope/
    - /path/to/middle/precedence/scope/
    - git: https://github.com/org/git-repo-scope
-     commit: 95c59784bd02ea248bf905d79d063df38e087b19
+     commit: "95c59784bd02ea248bf905d79d063df38e087b19"
+     paths:
+     - .
 
 ``prefer_modify``
 ^^^^^^^^^^^^^^^^^
@@ -286,7 +288,7 @@ The ``user`` and ``system`` scopes depend on the user and the machine on which S
 
 If you want to eliminate them completely from an environment, you can write:
 
-.. code-block:: yaml
+.. code-block:: text
 
    spack:
      include:: []

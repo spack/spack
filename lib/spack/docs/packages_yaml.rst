@@ -23,13 +23,13 @@ At a high level, the ``packages.yaml`` file is structured like this:
 .. code-block:: yaml
 
    packages:
-     package1:
-       # settings for package1
-     package2:
-       # settings for package2
+     # Settings for package1
+     package1: {}
+     # Settings for package2
+     package2: {}
      # ...
-     all:
-       # settings that apply to all packages.
+     # Settings that apply to all packages
+     all: {}
 
 You can either set build preferences specifically for *one* package, or you can specify that certain settings should apply to *all* packages.
 The types of settings you can customize are described in detail below.
