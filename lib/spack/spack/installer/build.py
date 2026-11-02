@@ -629,12 +629,16 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
 
 
 def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> None:
-    if not config.get("enable", False):
+    enable = config.get("enable", False)
+    if not enable:
         return
 
     try:
         sandbox = spack.sandbox.get_sandbox()
     except spack.sandbox.SandboxError as e:
+        if enable == "auto":
+            spack.util.tty.msg(f"Building without sandbox: {e}")
+            return
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
     for dep in spec.traverse(root=False):
@@ -660,8 +664,13 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
     for p in config.get("allow_write", []):
         sandbox.allow_write(p)
 
+    block_network = not config.get("allow_network", True)
+    if block_network and enable == "auto" and not sandbox.supports_network_blocking:
+        spack.util.tty.msg("Building without network sandbox: not supported by the kernel")
+        block_network = False
+
     try:
-        sandbox.apply(block_network=not config.get("allow_network", True))
+        sandbox.apply(block_network=block_network)
     except spack.sandbox.SandboxError as e:
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
