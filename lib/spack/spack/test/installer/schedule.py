@@ -1112,8 +1112,7 @@ class TestScheduleBuilds:
     def test_installed_in_upstream_explicit_set_not_marked(
         self, upstream_and_downstream_db: Tuple[Database, Database], mock_packages
     ):
-        """An installed-implicit spec in an upstream is done, but not marked explicit: the
-        upstream database is read-only, and the local one has no record of it."""
+        """test that we do not mark a spec explicit if it is taken from an upstream database"""
         upstream_db, downstream_db = upstream_and_downstream_db
         spec = self._make_spec("trivial-install-test-package")
         with writable(upstream_db):
