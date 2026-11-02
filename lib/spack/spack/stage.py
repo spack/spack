@@ -1347,7 +1347,6 @@ def interactive_version_filter(
 
 
 class ChecksumResult(NamedTuple):
-
     #: sha256 of the archive, for each version whose archive was fetched
     hashes: Dict[StandardVersion, str]
     #: error message, for each version whose archive could not be fetched or inspected
