@@ -62,6 +62,7 @@ import spack.user_environment
 import spack.util.environment
 import spack.util.file_permissions as fp
 import spack.util.filesystem
+import spack.util.lock
 import spack.util.path
 import spack.util.spack_yaml as syaml
 from spack import tengine
@@ -128,6 +129,11 @@ class ModuleConfigurationCache:
         """
         self.read_database()
         return self._records.get(spec.dag_hash())
+
+    def installed(self, spec: spack.spec.Spec) -> bool:
+        """Returns whether the spec is recorded as installed."""
+        record = self.record(spec)
+        return bool(record and record.installed)
 
     def explicit(self, spec: spack.spec.Spec) -> bool:
         """Returns whether the spec is recorded as explicitly installed."""
@@ -1378,6 +1384,25 @@ class ModuleContext(tengine.Context):
         return value
 
 
+def _shared_access() -> Tuple[Optional[str], int]:
+    """Returns the group configured for all packages, and the mode bits to add to the
+    directories of module files for the group and the write access configured for all
+    packages.
+    """
+    all_spec = spack.spec.Spec("all")
+    configured = spack.package_prefs.get_package_dir_permissions(all_spec)
+    group = spack.package_prefs.get_package_group(all_spec)
+
+    added = 0
+    if configured & stat.S_IWGRP:
+        added |= stat.S_IRWXG
+    if configured & stat.S_IWOTH:
+        added |= stat.S_IRWXO
+    if group and configured & stat.S_ISGID:
+        added |= stat.S_ISGID
+    return group, added
+
+
 def make_module_directory(path: str) -> None:
     """Creates a directory of module files and its missing parents according to the umask, then
     adds to them the group and the write access configured for all packages.
@@ -1391,22 +1416,70 @@ def make_module_directory(path: str) -> None:
     missing = [path, *spack.util.filesystem.longest_existing_parent(path)[1]]
     spack.util.filesystem.mkdirp(path)
 
-    all_spec = spack.spec.Spec("all")
-    configured = spack.package_prefs.get_package_dir_permissions(all_spec)
-    group = spack.package_prefs.get_package_group(all_spec)
-
-    added = 0
-    if configured & stat.S_IWGRP:
-        added |= stat.S_IRWXG
-    if configured & stat.S_IWOTH:
-        added |= stat.S_IRWXO
-    if group and configured & stat.S_ISGID:
-        added |= stat.S_ISGID
+    group, added = _shared_access()
     for directory in reversed(missing):
-        if group:
-            spack.util.filesystem.chgrp(directory, group)
-        if added:
-            os.chmod(directory, stat.S_IMODE(os.stat(directory).st_mode) | added)
+        _add_shared_access(directory, group, added)
+
+
+def _add_shared_access(path: str, group: Optional[str], added: int) -> None:
+    """Sets the group of a path, if any, and adds mode bits to it."""
+    if group:
+        spack.util.filesystem.chgrp(path, group)
+    if added:
+        os.chmod(path, stat.S_IMODE(os.stat(path).st_mode) | added)
+
+
+MODULE_ROOT_LOCK = ".spack-lock"
+
+#: Mode bits of the shared access that apply to the lock file of a module root
+_LOCK_FILE_ACCESS = stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH
+
+
+def _create_module_root_lock_file(path: str) -> None:
+    try:
+        os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_RDWR, 0o666))
+    except FileExistsError:
+        return
+    group, added = _shared_access()
+    _add_shared_access(path, group, added & _LOCK_FILE_ACCESS)
+
+
+def add_shared_access_to_module_root(root: str) -> None:
+    """Applies the group and the write access of ``packages:all`` to a module root and its lock
+    file.
+
+    A path the user is not allowed to change, e.g. one owned by another user, is skipped.
+    """
+    group, added = _shared_access()
+    with contextlib.suppress(PermissionError):
+        _add_shared_access(root, group, added)
+    with contextlib.suppress(PermissionError):
+        _add_shared_access(os.path.join(root, MODULE_ROOT_LOCK), group, added & _LOCK_FILE_ACCESS)
+
+
+@contextlib.contextmanager
+def module_root_transaction(root: str) -> Iterator[ModuleConfigurationCache]:
+    """Holds an exclusive lock on a module root, shared by every Spack process changing the
+    module files under it, and yields what the database records, as read after taking the lock.
+
+    Callers must not hold a database or prefix lock when entering the context, since reading
+    the database takes a database read lock while this lock is held.
+
+    Raises:
+        spack.util.lock.LockError: if the lock cannot be taken within ``config:db_lock_timeout``
+        OSError: if the module root or its lock file cannot be created
+    """
+    make_module_directory(root)
+    path = os.path.join(root, MODULE_ROOT_LOCK)
+    _create_module_root_lock_file(path)
+    lock_cfg = spack.database.lock_configuration(spack.config.CONFIG)
+    lock = spack.util.lock.Lock(
+        path, default_timeout=lock_cfg.database_timeout, desc="module root", enable=lock_cfg.enable
+    )
+    with spack.util.lock.WriteTransaction(lock):
+        cache = ModuleConfigurationCache()
+        cache.read_database()
+        yield cache
 
 
 class BaseModuleFileWriter:

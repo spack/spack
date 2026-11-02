@@ -1667,6 +1667,8 @@ class TestTcl:
         assert os.readlink(default_link) == module_file
 
         removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
+        for x in removed:
+            spack.store.STORE.db.remove(x)
         spack.modules.remove_module_files(removed)
         assert not os.path.exists(module_file)
         assert not os.path.lexists(default_link)
@@ -1688,6 +1690,8 @@ class TestTcl:
         assert os.readlink(default_link) == module_file
 
         removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
+        for x in removed:
+            spack.store.STORE.db.remove(x)
         spack.modules.remove_module_files(removed)
         assert os.path.exists(module_file)
         assert not os.path.lexists(default_link)
@@ -1734,3 +1738,26 @@ class TestTcl:
             content = f.read()
         assert concrete_a.dag_hash(7) not in content
         assert concrete_b.dag_hash(7) in content
+
+
+def test_write_module_files_skips_specs_not_installed(install_mockery, module_configuration):
+    """Tests that no module file is written for a spec that is not installed, e.g. one that
+    another process uninstalled in the meantime."""
+    module_configuration("fold_variants_all")
+    # This spec is not installed
+    spec = spack.concretize.concretize_one("mpileaks@2.3 ~debug ^zmpi")
+    spack.modules.write_module_files([spec])
+    assert not os.path.exists(writer_cls.from_spec(spec, "default").layout.filename)
+
+
+def test_remove_module_files_skips_installed_specs(install_mockery, module_configuration):
+    """Tests that the module file of a spec that is installed is kept, e.g. one that another
+    process installed again in the meantime."""
+    module_configuration("fold_variants_all")
+    install("--fake", "mpileaks@2.3 ~debug ^zmpi")
+    spec = spack.store.STORE.db.query_one("mpileaks@2.3 ~debug ^zmpi")
+    module_file = writer_cls.from_spec(spec, "default").layout.filename
+    spack.modules.remove_module_files([spec])
+
+    with open(module_file, encoding="utf-8") as f:
+        assert spec.dag_hash(7) in f.read()

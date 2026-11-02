@@ -6,8 +6,10 @@
 include Tcl or Lua modules, and others.
 """
 
+import collections
+import os
 import warnings
-from typing import Dict, List, Optional, Sequence, Set, Tuple, Type
+from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple, Type
 
 import spack.config
 import spack.error
@@ -15,6 +17,7 @@ import spack.repo
 import spack.spec
 import spack.store
 from spack.util import tty
+from spack.util.lang import dedupe
 
 from . import common
 from .common import BaseModuleFileWriter, disable_modules
@@ -101,54 +104,64 @@ def get_module(
             return writer.layout.use_name
 
 
-def _enabled_module_types() -> List[Tuple[str, str]]:
-    """Returns the (module set name, module type) pairs enabled by the configuration, or no
-    pair, with a warning, when the modules configuration is not valid."""
+def _enabled_module_roots() -> Dict[str, List[Tuple[str, str]]]:
+    """Returns the enabled (module set name, module type) pairs grouped by the real path of their
+    module root, or an empty dict, with a warning, when the modules configuration is not
+    valid.
+    """
+    by_root: Dict[str, List[Tuple[str, str]]] = collections.defaultdict(list)
     try:
-        return [
-            (name, module_type)
-            for name, module_set in spack.config.CONFIG.get("modules", {}).items()
-            for module_type in module_set.get("enable") or []
-        ]
+        for name, module_set in spack.config.CONFIG.get("modules", {}).items():
+            for module_type in module_set.get("enable") or []:
+                by_root[os.path.realpath(common.root_path(module_type, name))].append(
+                    (name, module_type)
+                )
     except spack.error.ConfigError as e:
         warnings.warn(
             "module files are not updated, as the modules configuration is not valid: "
             f"{e}. Fix it, then run 'spack module <type> refresh'"
         )
-        return []
+        return {}
+    return by_root
 
 
-def _read_database() -> Optional[common.ModuleConfigurationCache]:
-    """Returns a cache holding what the database records, or None, with a warning, when the
-    database cannot be read."""
-    cache = common.ModuleConfigurationCache()
-    try:
-        cache.read_database()
-    except Exception as e:
-        warnings.warn(
-            "module files are not updated, as the database cannot be read "
-            f"[{type(e).__name__}: {e}]"
-        )
-        return None
-    return cache
+def _update_module_roots(specs: Sequence[spack.spec.Spec], update: Callable[..., None]) -> None:
+    """Calls ``update`` for each enabled module root, holding the lock of the root."""
+    if not specs:
+        return
+
+    for root, enabled in _enabled_module_roots().items():
+        try:
+            with common.module_root_transaction(root) as cache:
+                update(specs, enabled, cache)
+        except Exception as e:
+            refresh = " or ".join(
+                f"'spack module {t} refresh'" for t in dedupe(t for _, t in enabled)
+            )
+            warnings.warn(
+                f"module files under {root} are not updated [{type(e).__name__}: {e}]. "
+                f"Run {refresh} once the cause is fixed"
+            )
 
 
 def write_module_files(specs: Sequence[spack.spec.Spec]) -> None:
-    """Writes the module files of installations recorded in the database, for every module set
-    and type enabled by the configuration.
+    """Writes the module files of the specs, for every enabled module set and type.
 
-    A module file folding several of them is written once, since writing it for any one of
-    them lists them all.
+    Specs that the database does not record as installed are skipped. A module file shared by
+    several specs is written only once, since it lists all of them.
     """
-    if not specs:
-        return
-    enabled = _enabled_module_types()
-    cache = _read_database() if enabled else None
-    if cache is None:
-        return
+    _update_module_roots(specs, _write_module_files)
+
+
+def _write_module_files(
+    specs: Sequence[spack.spec.Spec],
+    enabled: List[Tuple[str, str]],
+    cache: common.ModuleConfigurationCache,
+) -> None:
+    installed = [s for s in specs if cache.installed(s)]
     for name, module_type in enabled:
         written_filenames: Set[str] = set()
-        for spec in specs:
+        for spec in installed:
             try:
                 writer = module_types[module_type].from_spec(spec, name, cache=cache)
                 # An excluded installation does not write the module file of its siblings
@@ -173,16 +186,19 @@ def remove_module_files(specs: Sequence[spack.spec.Spec]) -> None:
 
     A module file holding several of them is updated once.
     """
-    if not specs:
-        return
-    enabled = _enabled_module_types()
-    cache = _read_database() if enabled else None
-    if cache is None:
-        return
-    removed_specs = frozenset(specs)
+    _update_module_roots(specs, _remove_module_files)
+
+
+def _remove_module_files(
+    specs: Sequence[spack.spec.Spec],
+    enabled: List[Tuple[str, str]],
+    cache: common.ModuleConfigurationCache,
+) -> None:
+    removed = [s for s in specs if not cache.installed(s)]
+    removed_specs = frozenset(removed)
     for name, module_type in enabled:
         updated_filenames: Set[str] = set()
-        for spec in specs:
+        for spec in removed:
             try:
                 writer = module_types[module_type].from_spec(
                     spec, name, removed_specs=removed_specs, cache=cache

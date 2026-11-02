@@ -1209,19 +1209,19 @@ def test_concurrent_packages_set_in_config(mutable_config: Configuration, mock_p
 def test_install_succeeds_when_module_files_cannot_be_written(
     install_mockery, mutable_config, tmp_path, installer_variant
 ):
-    """Tests that an installation succeeds when its module files cannot be written, and that
-    one warning is emitted for each installed spec.
+    """Tests that an installation succeeds when its module root cannot be created, and that a
+    single warning names the module root.
     """
     not_a_directory = tmp_path / "file"
     not_a_directory.write_text("")
+    root = not_a_directory / "modules"
     mutable_config.set("modules:default:enable", ["tcl"])
-    mutable_config.set("modules:default:roots:tcl", str(not_a_directory / "modules"))
+    mutable_config.set("modules:default:roots:tcl", str(root))
 
-    with pytest.warns(UserWarning, match="cannot write the tcl module file") as warned:
+    with pytest.warns(UserWarning, match="module files under") as warned:
         install("--fake", "dependent-install")
 
-    messages = [str(w.message) for w in warned if "module file" in str(w.message)]
-    installed = spack.store.STORE.db.query()
-    assert len(messages) == len(installed)
-    for spec in installed:
-        assert any(spec.format("{name}{@version}{/hash:7}") in m for m in messages)
+    messages = [str(w.message) for w in warned if "module files" in str(w.message)]
+    assert len(messages) == 1
+    assert f"module files under {root} are not updated" in messages[0]
+    assert spack.store.STORE.db.query("dependent-install")

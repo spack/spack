@@ -369,3 +369,24 @@ def test_loads_keeps_active_the_first_installation_of_the_file(
     out = module("tcl", "loads", "mpileaks@2.3 ^zmpi")
     (active_line,) = [line for line in out.splitlines() if line.startswith("module load")]
     assert f"hash={listed_first.dag_hash(7)}" in active_line
+
+
+def test_refresh_writes_specs_installed_at_the_prompt(
+    install_mockery, module_configuration, monkeypatch
+):
+    """Tests that ``refresh`` writes the module file of a spec installed while the user was at
+    its prompt, e.g. by another process.
+    """
+    module_configuration("variants_none")
+    install("--fake", "mpileaks@2.3 ~debug ^zmpi")
+
+    def install_and_proceed(*args, **kwargs):
+        with spack.modules.disable_modules():
+            install("--fake", "mpileaks@2.3 +debug ^zmpi")
+        return True
+
+    monkeypatch.setattr(spack.util.tty, "get_yes_or_no", install_and_proceed)
+    module("tcl", "refresh")
+
+    spec = spack.store.STORE.db.query_one("mpileaks@2.3 +debug ^zmpi")
+    assert os.path.exists(writer_cls.from_spec(spec, "default").layout.filename)

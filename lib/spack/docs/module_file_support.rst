@@ -185,6 +185,12 @@ A module set may override that behavior by setting the ``arch_folder`` config va
          tcl: /path/to/install/tcl/modules
        arch_folder: false
 
+Spack processes that change module files take an exclusive lock on the ``.spack-lock`` file in the module root, so that concurrent commands like ``spack install`` and ``spack uninstall`` write the files they share one at a time.
+When the module root is shared by several users, the lock file must be writable by all of them: Spack creates it with the group and the write access configured in ``packages:all:permissions``.
+These are applied again to the module root and to the lock file by ``spack module <type> refresh --delete-tree``, when run by the user who owns them.
+A process waits for the lock up to ``config:db_lock_timeout`` seconds, then warns that it did not update its module files.
+Setting ``config:locks`` to ``false`` disables the lock.
+
 Module layout
 ^^^^^^^^^^^^^
 

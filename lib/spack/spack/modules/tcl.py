@@ -213,7 +213,7 @@ class TclConfiguration(BaseConfiguration):
             if x.satisfies(name_version_spec)
         }
 
-        # This spec may not be recorded yet, the ones being removed still are
+        # This spec may not be recorded yet, and the ones being removed may still be
         spec_list = (spec_list | {self.spec}) - self.removed_specs
 
         # Sorted as the module file selects the first installation matching a request

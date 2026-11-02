@@ -326,24 +326,97 @@ def test_module_directories_get_group_and_write_access_for_all_packages(
         assert p.stat().st_gid == gid
 
 
-def test_refresh_delete_tree_recreates_root_with_group_and_write_access(
+def test_refresh_delete_tree_keeps_root_lock_file(
     tmp_path, mutable_config, database_mutable_config, monkeypatch
 ):
-    """Tests that refreshing with ``--delete-tree`` recreates the module root with the group and
-    the write access configured for all packages on top of what the umask gives.
+    """Tests that refreshing with ``--delete-tree`` removes everything in the module root, except
+    the lock file other processes may be waiting on.
     """
     root = tmp_path / "root"
-    root.mkdir()
     monkeypatch.setattr(spack.modules.common, "root_path", lambda *args: str(root))
+    module = spack.main.SpackCommand("module")
+    module("tcl", "refresh", "-y")
+    lock_file = root / spack.modules.common.MODULE_ROOT_LOCK
+    inode = lock_file.stat().st_ino
+    stale = root / "stale"
+    stale.mkdir()
+    (stale / "module").write_text("")
+
+    module("tcl", "refresh", "--delete-tree", "-y")
+
+    # Stale module is deleted, lockfile has the same inode
+    assert not stale.exists()
+    assert lock_file.stat().st_ino == inode
+
+
+@pytest.mark.parametrize(
+    "write,added",
+    [
+        ("group", stat.S_IRGRP | stat.S_IWGRP),
+        ("world", stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH),
+    ],
+)
+def test_module_root_lock_file_gets_group_and_write_access_for_all_packages(
+    write, added, tmp_path, mutable_config, database_mutable_config
+):
+    """Tests that the lock file of a module root is readable and writable by the group and the
+    write access configured for all packages, on top of what the umask gives.
+    """
+    gid = _group_for_test()
+    mutable_config.set(
+        "packages:all:permissions",
+        {"read": "world", "write": write, "group": grp.getgrgid(gid).gr_name},
+    )
+    reference = tmp_path / "reference"
+    reference.write_text("")
+
+    spack.main.SpackCommand("module")("tcl", "refresh", "-y")
+
+    lock_file = tmp_path / spack.modules.common.MODULE_ROOT_LOCK
+    assert lock_file.stat().st_mode == reference.stat().st_mode | added
+    assert lock_file.stat().st_gid == gid
+
+
+def test_no_module_root_created_when_modules_are_disabled(
+    tmp_path, mutable_config, database_mutable_config, monkeypatch
+):
+    """Tests that the module file updates run by install and uninstall create neither the module
+    root nor its lock file when no module type is enabled, as in the default configuration.
+    """
+    root = tmp_path / "root"
+    monkeypatch.setattr(spack.modules.common, "root_path", lambda *args: str(root))
+    spec = spack.store.STORE.db.query_one("mpileaks ^mpich")
+
+    with spack.modules.disable_modules():
+        spack.modules.write_module_files([spec])
+    assert not root.exists()
+
+    with spack.modules.disable_modules():
+        spack.modules.remove_module_files([spec])
+    assert not root.exists()
+
+
+def test_refresh_delete_tree_adds_group_and_write_access_to_existing_root(
+    tmp_path, mutable_config, database_mutable_config
+):
+    """Tests that ``refresh --delete-tree`` applies the group and the write access of
+    ``packages:all`` to a module root and its lock file that were created before they were
+    configured.
+    """
+    root = tmp_path
+    module = spack.main.SpackCommand("module")
+    module("tcl", "refresh", "-y")
+    lock_file = root / spack.modules.common.MODULE_ROOT_LOCK
+    root_mode, lock_file_mode = root.stat().st_mode, lock_file.stat().st_mode
     gid = _group_for_test()
     mutable_config.set(
         "packages:all:permissions",
         {"read": "world", "write": "group", "group": grp.getgrgid(gid).gr_name},
     )
-    reference = tmp_path / "reference"
-    reference.mkdir()
 
-    spack.main.SpackCommand("module")("tcl", "refresh", "--delete-tree", "-y")
+    module("tcl", "refresh", "--delete-tree", "-y")
 
-    assert root.stat().st_mode == reference.stat().st_mode | stat.S_IRWXG | stat.S_ISGID
+    assert root.stat().st_mode == root_mode | stat.S_IRWXG | stat.S_ISGID
     assert root.stat().st_gid == gid
+    assert lock_file.stat().st_mode == lock_file_mode | stat.S_IRGRP | stat.S_IWGRP
+    assert lock_file.stat().st_gid == gid
