@@ -1469,8 +1469,8 @@ class TestTerminalUIColor:
         tui, _, stdout = create_tui(is_tty=False, total=1, color=True)
         on_build_added(tui, "pkg")
         tui.on_state_changed("pkg", "finished")
-        # green indicator, reset, dark-gray hash
-        expected = spack.util.tty.color.colorize("@g[+]@. @K", color=True)
+        # green indicator, reset, faint hash
+        expected = spack.util.tty.color.colorize("@g[+]@. @#", color=True)
         assert stdout.getvalue().startswith(expected)
 
     def test_non_tty_failed_color_true_emits_red(self):
@@ -1478,8 +1478,8 @@ class TestTerminalUIColor:
         tui, _, stdout = create_tui(is_tty=False, total=1, color=True)
         on_build_added(tui, "pkg")
         tui.on_state_changed("pkg", "failed")
-        # red indicator, reset, dark-gray hash
-        expected = spack.util.tty.color.colorize("@r[x]@. @K", color=True)
+        # red indicator, reset, faint hash
+        expected = spack.util.tty.color.colorize("@r[x]@. @#", color=True)
         assert stdout.getvalue().startswith(expected)
 
     def test_non_tty_finished_color_false_no_ansi(self):

@@ -329,7 +329,7 @@ class LineAnnotationEmitter(emitter.Emitter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         del _ANNOTATIONS[:]
-        self.colors = "KgrbmcyGRBMCY"
+        self.colors = "grbmcyGRBMCY"
         self.filename_colors = {}
 
     def process_scalar(self):
@@ -340,7 +340,7 @@ class LineAnnotationEmitter(emitter.Emitter):
     def write_line_break(self, data=None):
         super().write_line_break(data)
         if self.saved is None:
-            _ANNOTATIONS.append(colorize("@K{---}"))
+            _ANNOTATIONS.append(colorize("@#{---}"))
             return
 
         # append annotations at the end of each line
