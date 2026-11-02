@@ -1361,6 +1361,7 @@ def get_checksums_for_versions(
     keep_stage: bool = False,
     concurrency: Optional[int] = None,
     fetch_options: Optional[Dict[str, str]] = None,
+    fallback_urls: Optional[Dict[StandardVersion, List[str]]] = None,
     config: spack.config.Configuration,
 ) -> ChecksumResult:
     """Computes the checksums for each version passed in input, and returns the results.
@@ -1379,6 +1380,8 @@ def get_checksums_for_versions(
         batch: whether to ask user how many versions to fetch (false) or fetch all versions (true)
         fetch_options: options used for the fetcher (such as timeout or cookies)
         concurrency: maximum number of workers to use for retrieving archives
+        fallback_urls: other URLs keyed by version, tried in order if the download from the
+            URL in ``url_by_version`` fails
         config: configuration for the stages the archives are fetched into
 
     Returns:
@@ -1387,6 +1390,7 @@ def get_checksums_for_versions(
     """
     versions = sorted(url_by_version.keys(), reverse=True)
     search_arguments = [(url_by_version[v], v) for v in versions]
+    fallback_urls = fallback_urls or {}
 
     version_hashes: Dict[StandardVersion, str] = {}
     failures: Dict[StandardVersion, str] = {}
@@ -1403,7 +1407,12 @@ def get_checksums_for_versions(
     if first_stage_function is not None:
         (url, version), search_arguments = search_arguments[0], search_arguments[1:]
         result = _fetch_and_checksum(
-            url, fetch_options, keep_stage, first_stage_function, config=config
+            url,
+            fetch_options,
+            keep_stage,
+            first_stage_function,
+            fallback_urls=fallback_urls.get(version, []),
+            config=config,
         )
         if isinstance(result, Exception):
             failures[version] = str(result)
@@ -1415,7 +1424,12 @@ def get_checksums_for_versions(
             (
                 version,
                 executor.submit(
-                    _fetch_and_checksum, url, fetch_options, keep_stage, config=config
+                    _fetch_and_checksum,
+                    url,
+                    fetch_options,
+                    keep_stage,
+                    fallback_urls=fallback_urls.get(version, []),
+                    config=config,
                 ),
             )
             for url, version in search_arguments
@@ -1440,12 +1454,12 @@ def _fetch_and_checksum(
     keep_stage: bool,
     action_fn: Optional[Callable[[str, str], None]] = None,
     *,
+    fallback_urls: Optional[List[str]] = None,
     config: spack.config.Configuration,
 ) -> Union[str, Exception]:
     try:
-        with stage_from_config(
-            fs.URLFetchStrategy(url=url, fetch_options=options), keep=keep_stage, config=config
-        ) as stage:
+        fetcher = fs.URLFetchStrategy(url=url, mirrors=fallback_urls, fetch_options=options)
+        with stage_from_config(fetcher, keep=keep_stage, config=config) as stage:
             # Fetch the archive
             stage.fetch()
             archive = stage.archive_file
