@@ -2019,7 +2019,7 @@ class Environment:
                 spack.util.environment.EnvironmentModifications(),
             )
         return (
-            prefix_mods.reversed() if reverse else prefix_mods,
+            prefix_mods.reversed() if reverse and prefix_mods else prefix_mods,
             env_mods.reversed() if reverse else env_mods,
         )
 
@@ -2036,8 +2036,10 @@ class Environment:
             env_mod: the environment modifications object that is modified.
             view: the name of the view to activate."""
         descriptor = self.views.get(view)
+        prefix_mods = spack.util.environment.EnvironmentModifications()
+
         if not descriptor:
-            return spack.util.environment.EnvironmentModifications(), env_mod
+            return prefix_mods, env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor))
 
@@ -2063,11 +2065,11 @@ class Environment:
             env_mod: the environment modifications object that is modified.
             view: the name of the view to deactivate."""
         descriptor = self.views.get(view)
+        prefix_mods = spack.util.environment.EnvironmentModifications()
         if not descriptor:
-            return spack.util.environment.EnvironmentModifications(), env_mod
+            return prefix_mods, env_mod
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
-
         prefix_mods, spec_env_mods = self._env_modifications_for_view(descriptor, reverse=True)
         env_mod.extend(spec_env_mods)
 

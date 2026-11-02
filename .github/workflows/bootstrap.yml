@@ -112,10 +112,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ["macos-15-intel", "macos-latest", "ubuntu-latest"]
+        runner: ["macos-15-intel", "macos-latest", "ubuntu-24.04"]
     steps:
       - name: Setup macOS
-        if: ${{ matrix.runner != 'ubuntu-latest' }}
+        if: ${{ matrix.runner != 'ubuntu-24.04' }}
         run: brew install tree
       - name: Remove system executables
         run: |

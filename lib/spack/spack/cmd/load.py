@@ -112,7 +112,7 @@ def load(parser, args):
         commands = ""
 
         if args.fresh or spec.external:
-            commands, _ = spec_script.get_environment_modifications(spec, shell)
+            commands, _ = spec_script.get_environment_modifications(spec, shell, use_cache=False)
             sys.stdout.write(commands)
             return
         else:
@@ -124,8 +124,8 @@ def load(parser, args):
                 try:
                     # Try to get cached repo if it exists
                     cached_repo = spec_script.make_repo_path(spack_dir)
-                    mods, _ = spec_script.get_cached_environment_modifications(
-                        spec, shell, cached_repo
+                    mods, _ = spec_script.get_environment_modifications(
+                        spec, shell, cached_repo, use_cache=True
                     )
                 except Exception as err:
                     tty.die(f"Error generating environment modifications for {spec}:\n{err}")
@@ -138,5 +138,7 @@ def load(parser, args):
             commands = spec_script.source_script(load_script_path, shell)
 
         env_mods = uenv.prefix_inspections_environment_modifications([spec])
-        commands += env_mods.shell_modifications(shell, cache=True)
+        if env_mods:
+            commands += env_mods.shell_modifications(shell, cache=True)
+
         sys.stdout.write(commands)

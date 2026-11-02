@@ -213,9 +213,9 @@ def write_env_deactivate_script(env, view: Optional[str] = None):
         env: the environment the deactivation script is written for
         view: the name of the environment's view
     """
-    path_to_sh_activate_script = path_to_env_script(env, "activate", "sh", view)
-    path_to_bat_activate_script = path_to_env_script(env, "activate", "bat", view)
-    path_to_pwsh_activate_script = path_to_env_script(env, "activate", "pwsh", view)
+    path_to_sh_activate_script = path_to_env_script(env, "sh", "activate", view)
+    path_to_bat_activate_script = path_to_env_script(env, "bat", "activate", view)
+    path_to_pwsh_activate_script = path_to_env_script(env, "pwsh", "activate", view)
 
     if (
         not os.path.exists(path_to_sh_activate_script)

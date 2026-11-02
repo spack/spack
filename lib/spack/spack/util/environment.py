@@ -616,7 +616,7 @@ class RemoveFirstPath(NamePathModifier):
         tty.debug(f"RemoveFirstPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        directories = [path_to_os_path(os.path.normpath(x) if x else x).pop() for x in directories]
         val = path_to_os_path(value).pop()
         if val in directories:
             directories.remove(val)
@@ -641,7 +641,7 @@ class RemoveLastPath(NamePathModifier):
         tty.debug(f"RemoveLastPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)[::-1]
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        directories = [path_to_os_path(os.path.normpath(x) if x else x).pop() for x in directories]
         val = path_to_os_path(value).pop()
         if val in directories:
             directories.remove(val)
@@ -666,8 +666,11 @@ class RemovePath(NamePathModifier):
         tty.debug(f"RemovePath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
-        val = path_to_os_path(value).pop()
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories if x != val]
+        directories = [
+            path_to_os_path(os.path.normpath(x) if x else x).pop()
+            for x in directories
+            if x != path_to_os_path(value).pop()
+        ]
         env[self.name] = self.separator.join(directories)
 
     def cache_command(self, shell: str = DEFAULT_SHELL):
@@ -686,7 +689,7 @@ class PruneDuplicatePaths(NameModifier):
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories = prune_duplicate_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+            [path_to_os_path(os.path.normpath(x) if x else x).pop() for x in directories]
         )
         env[self.name] = self.separator.join(directories)
 
@@ -1048,7 +1051,7 @@ class EnvironmentModifications:
                 new = new_env.get(name, None)
                 old = env.get(name, None)
                 if explicit or new != old:
-                    if new is None:
+                    if new is None or new == "":
                         cmds += shell_cmd.unset(name)
                     else:
                         value = new_env[name]
