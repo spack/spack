@@ -54,6 +54,31 @@ Spack also independently (without prompting) copies user configuration from ``~/
 This home-directory migration can occur for a fresh checkout and does not create migration state in the Spack prefix.
 The old files remain in place for use by older Spack instances.
 
+.. _spack-migrate-command:
+
+The ``spack migrate`` command
+-----------------------------
+
+``spack migrate`` manages the state left behind by the migration described above. It has three actions:
+
+``spack migrate undo``
+  Point all resources back at their legacy locations under ``$spack`` by updating the layout scope.
+  Nothing is moved or deleted; copies made in the new locations are left in place.
+
+``spack migrate use-new-layout``
+  Remove the layout scope and re-run the migration of ``$spack``-internal resources, for example after declining the prompt on the first run.
+
+``spack migrate cleanup-old``
+  Permanently delete ``~/.spack``.
+  Before deleting, Spack prints what the directory contains, which values in the *active* configuration still refer to it, and asks for confirmation.
+  Pass ``--yes`` to skip the prompt (required when there is no terminal) and ``--dry-run`` to print the report without deleting.
+
+  Only the active configuration is inspected.
+  Inactive environments, conditional configuration scopes, other Spack instances, and anything outside Spack's configuration are not checked; it is up to you to make sure nothing else depends on the directory.
+
+  If ``config:install_tree:root`` resolves to a directory under ``~/.spack``, ``cleanup-old`` refuses to proceed **even with** ``--yes``, because deleting the directory would delete your installed packages and the next ``spack install`` would silently recreate the store there.
+  Uninstalling the packages does not lift this restriction: the configured install tree must be moved out of ``~/.spack`` first, or the directory removed by hand.
+
 Using ``spack isolate`` to avoid migration prompts
 ---------------------------------------------------
 

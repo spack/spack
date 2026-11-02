@@ -2,12 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 from pathlib import Path
 
 import pytest
 
 import spack.config
 import spack.main
+import spack.util.tty
 
 sp_migrate = spack.main.SpackCommand("migrate")
 sp_config = spack.main.SpackCommand("config")
@@ -91,44 +93,167 @@ def test_undo_nothing_to_undo(mock_spack_instance, monkeypatch):
     assert "no old resources" in sp_migrate.output
 
 
+def _setup_cleanup_old(home_dir, new_user_config="config: {}\n"):
+    """Create a ~/.spack with some content and a migrated ~/.config/spack."""
+    old_user = Path(home_dir) / ".spack"
+    old_user.mkdir()
+    (old_user / "config.yaml").write_text("config: {}\n", encoding="utf-8")
+    (old_user / "bootstrap" / "store").mkdir(parents=True)
+    (old_user / "bootstrap" / "store" / "blob").write_bytes(b"\0" * 4096)
+
+    new_user = Path(home_dir) / ".config" / "spack"
+    new_user.mkdir(parents=True)
+    (new_user / "config.yaml").write_text(new_user_config, encoding="utf-8")
+    return old_user, new_user
+
+
 def test_migrate_cleanup_old_removes_unreferenced_legacy_directory(
     mock_spack_instance, monkeypatch
 ):
-    """cleanup-old removes ~/.spack only when active configuration no longer uses it."""
+    """cleanup-old --yes removes ~/.spack when nothing fatal refers to it."""
     home_dir, base_prefix = mock_spack_instance
-    old_user = Path(home_dir) / ".spack"
-    old_user.mkdir()
-    (old_user / "config.yaml").write_text("config: {}\n", encoding="utf-8")
-
-    # Create new user config location so fallback to ~/.spack is not used
-    new_user = Path(home_dir) / ".config" / "spack"
-    new_user.mkdir(parents=True)
-    (new_user / "config.yaml").write_text("config: {}\n", encoding="utf-8")
-
+    old_user, _ = _setup_cleanup_old(home_dir)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    sp_migrate("cleanup-old")
+    out = sp_migrate("cleanup-old", "--yes")
 
+    assert not old_user.exists()
+    # The report names the directory, its contents, and what was not checked
+    assert "permanently delete" in out
+    assert "bootstrap" in out
+    assert "Not checked" in out
+
+
+def test_migrate_cleanup_old_dry_run_does_not_remove(mock_spack_instance, monkeypatch):
+    home_dir, base_prefix = mock_spack_instance
+    old_user, _ = _setup_cleanup_old(home_dir)
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    out = sp_migrate("cleanup-old", "--dry-run")
+
+    assert old_user.exists()
+    assert "Dry run" in out
+
+
+def test_migrate_cleanup_old_requires_confirmation(mock_spack_instance, monkeypatch):
+    """Without --yes, cleanup-old prompts; with no terminal it refuses."""
+    home_dir, base_prefix = mock_spack_instance
+    old_user, _ = _setup_cleanup_old(home_dir)
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    # No terminal: refuse
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: False)
+    with pytest.raises(spack.main.SpackCommandError):
+        sp_migrate("cleanup-old")
+    assert "no terminal" in sp_migrate.output
+    assert old_user.exists()
+
+    # Terminal, user says no
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
+    monkeypatch.setattr(spack.util.tty, "get_yes_or_no", lambda *a, **k: False)
+    out = sp_migrate("cleanup-old")
+    assert "Not removing" in out
+    assert old_user.exists()
+
+    # Terminal, user says yes
+    monkeypatch.setattr(spack.util.tty, "get_yes_or_no", lambda *a, **k: True)
+    sp_migrate("cleanup-old")
     assert not old_user.exists()
 
 
-def test_migrate_cleanup_old_rejects_referenced_legacy_directory(mock_spack_instance, monkeypatch):
-    """cleanup-old preserves ~/.spack while a configured path still references it."""
+def test_migrate_cleanup_old_refuses_install_tree(mock_spack_instance, monkeypatch):
+    """An install tree under ~/.spack (config:install_tree:root) is never deleted, even
+    with --yes."""
     home_dir, base_prefix = mock_spack_instance
-    old_user = Path(home_dir) / ".spack"
-    old_user.mkdir()
-    (old_user / "config.yaml").write_text("config: {}\n", encoding="utf-8")
+    old_user, new_user = _setup_cleanup_old(home_dir)
+    store = old_user / "opt"
+    store.mkdir()
+    (new_user / "config.yaml").write_text(
+        f"config:\n  install_tree:\n    root: {store}\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    with pytest.raises(spack.main.SpackCommandError):
+        sp_migrate("cleanup-old", "--yes")
+
+    assert old_user.exists()
+    assert "current install tree" in sp_migrate.output
+    assert "config:install_tree:root" in sp_migrate.output
+
+
+def test_migrate_cleanup_old_reports_references(mock_spack_instance, monkeypatch):
+    """Non-fatal references to ~/.spack are listed but do not block removal."""
+    home_dir, base_prefix = mock_spack_instance
+    old_user, new_user = _setup_cleanup_old(home_dir)
+    (new_user / "config.yaml").write_text(
+        f"config:\n  source_cache: {old_user}/srccache\n", encoding="utf-8"
+    )
+    (new_user / "mirrors.yaml").write_text(
+        f"mirrors:\n  local: file://{old_user}/mirror\n", encoding="utf-8"
+    )
+    (new_user / "repos.yaml").write_text(
+        f"repos:\n  mine: {old_user}/myrepo/spack_repo/mine\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    out = sp_migrate("cleanup-old", "--yes")
+
+    assert "still refers" in out
+    assert "config:source_cache" in out
+    assert "mirrors:local" in out
+    assert "repos:mine" in out
+    # ... but none of these block removal
+    assert not old_user.exists()
+
+
+def test_migrate_cleanup_old_user_scope_reference(mock_spack_instance, monkeypatch):
+    """A user scope still pointing at ~/.spack is reported."""
+    home_dir, base_prefix = mock_spack_instance
+    old_user, _ = _setup_cleanup_old(home_dir)
     standard_scopes = Path(base_prefix) / "etc" / "spack" / "standard_scopes"
     include_path = standard_scopes / "include.yaml"
     include_text = include_path.read_text(encoding="utf-8")
     include_path.write_text(include_text.replace("~/.config/spack", "~/.spack"), encoding="utf-8")
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    with pytest.raises(spack.main.SpackCommandError):
-        sp_migrate("cleanup-old")
-    assert "still refers" in sp_migrate.output
+    out = sp_migrate("cleanup-old", "--dry-run")
 
+    assert "still refers" in out
+    assert "user configuration scope" in out
     assert old_user.exists()
+
+
+def test_migrate_cleanup_old_refuses_symlink(mock_spack_instance, monkeypatch):
+    home_dir, base_prefix = mock_spack_instance
+    target = Path(home_dir) / "real-dot-spack"
+    target.mkdir()
+    (target / "config.yaml").write_text("config: {}\n", encoding="utf-8")
+    (Path(home_dir) / ".spack").symlink_to(target)
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    with pytest.raises(spack.main.SpackCommandError):
+        sp_migrate("cleanup-old", "--yes")
+
+    assert "symbolic link" in sp_migrate.output
+    assert target.exists()
+    assert (target / "config.yaml").exists()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="permission bits")
+def test_migrate_cleanup_old_reports_removal_failures(mock_spack_instance, monkeypatch):
+    home_dir, base_prefix = mock_spack_instance
+    old_user, _ = _setup_cleanup_old(home_dir)
+    locked = old_user / "bootstrap" / "store"
+    locked.chmod(0o555)
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    try:
+        with pytest.raises(spack.main.SpackCommandError):
+            sp_migrate("cleanup-old", "--yes")
+        assert "Could not completely remove" in sp_migrate.output
+        assert "blob" in sp_migrate.output
+    finally:
+        locked.chmod(0o755)
 
 
 def test_migrate_can_alternate_between_old_and_new_layout(mock_spack_instance, monkeypatch):
