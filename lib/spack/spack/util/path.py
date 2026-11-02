@@ -8,6 +8,7 @@ TODO: this is really part of spack.config. Consolidate it.
 """
 
 import functools
+import ntpath
 import os
 import re
 import subprocess
@@ -126,7 +127,16 @@ def sanitize_win_longpath(path: str) -> str:
     """Strip Windows extended path prefix from strings
     Returns sanitized string.
     no-op if extended path prefix is not present"""
-    return path.lstrip("\\\\?\\")
+    prefix = "\\\\?\\"
+    if not path.startswith(prefix):
+        return path
+    rest = path[len(prefix) :]
+    if rest[:4].upper() == "UNC\\":
+        return "\\\\" + rest[4:]
+    if ntpath.splitdrive(rest)[0]:
+        return rest
+    # Keep the prefix where removing it would break the path, e.g. \\?\Volume{GUID}\...
+    return path
 
 
 # This is intended to be longer than the part of the install path
