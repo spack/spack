@@ -426,8 +426,9 @@ def schedule_builds(
                 # keep the read lock (either downgraded or already a read lock)
                 del pending[idx]
                 newly_installed.append((dag_hash, spec, lock))
-                # It's already installed, but needs to be marked as explicitly installed in the DB.
-                if dag_hash in explicit and not record.explicit:
+                # It's already installed, but needs to be marked as explicitly installed in the DB,
+                # unless it's installed in an upstream, whose DB is read-only.
+                if dag_hash in explicit and not record.explicit and not upstream:
                     to_mark_explicit.append(MarkExplicitAction(spec))
                 build_graph.enqueue_parents(dag_hash, pending)
                 continue
