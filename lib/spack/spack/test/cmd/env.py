@@ -60,7 +60,7 @@ from spack.version import Version
 # TODO-27021
 # everything here uses the mock_env_path
 pytestmark = [
-    pytest.mark.usefixtures("mutable_config", "mutable_mock_env_path", "mutable_mock_repo"),
+    pytest.mark.usefixtures("mutable_config", "mutable_mock_env_path", "mock_packages"),
     pytest.mark.maybeslow,
     pytest.mark.not_on_windows("Envs unsupported on Windows"),
 ]
