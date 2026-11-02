@@ -13,6 +13,10 @@ from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
 
 import spack.builder
 import spack.util.tty as _tty
+
+# Let packages use our URL tools to query for information if needed
+import spack.util.web as _web_util
+
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
     MakeExecutable,
@@ -199,6 +203,11 @@ class tty:
     info = _tty.info
     msg = _tty.msg
     warn = _tty.warn
+
+class web_util:
+    urlopen = _web_util.urlopen
+    SPACK_USER_AGENT = _web_util.SPACK_USER_AGENT
+    DetailedHTTPError = _web_util.DetailedHTTPError
 
 
 def is_system_path(path: str) -> bool:
@@ -448,6 +457,7 @@ api: Dict[str, Tuple[str, ...]] = {
         "static_library_suffix",
         "substitute_version_in_url",
         "windows_sfn",
+        "web_util",
     ),
     "v2.6": ("deprecated",),
 }
@@ -620,6 +630,7 @@ __all__ = [
     "substitute_version_in_url",
     "windows_sfn",
     "deprecated",
+    "web_util",
 ]
 
 # These are just here for editor support; they may be set when the build env is set up.
