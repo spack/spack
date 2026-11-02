@@ -13,10 +13,7 @@ from spack.vendor.macholib.MachO import LC_ID_DYLIB, MachO
 
 import spack.builder
 import spack.util.tty as _tty
-
-# Let packages use our URL tools to query for information if needed
 import spack.util.web as _web_util
-
 from spack.archspec import microarchitecture_flags, microarchitecture_flags_from_target
 from spack.build_environment import (
     MakeExecutable,
