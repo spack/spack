@@ -703,6 +703,7 @@ def test_keys_are_ordered(configuration_dir):
 
     data = config_scope.get_section("modules")
 
+    assert data is not None
     prefix_inspections = data["modules"]["prefix_inspections"]
 
     for actual, expected in zip(prefix_inspections, expected_order):
@@ -1646,13 +1647,15 @@ def test_included_path_string_no_parent_path(
     assert isinstance(included_scopes[0], spack.config.SingleFileScope)
     destination = include.destination
     curr_dir = os.getcwd()
-    assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
+    assert destination is not None
+    assert curr_dir == os.path.commonprefix([curr_dir, destination])
 
 
 def test_included_path_substitution():
     # check a straight path substitution
     entry = {"path": "$user_cache_path/path/to/config.yaml"}
     include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.IncludePath)
     assert spack.paths.user_cache_path in include.path
 
     # check path through an environment variable
@@ -1660,6 +1663,7 @@ def test_included_path_substitution():
     os.environ["SPACK_TEST_PATH_SUB"] = path
     entry = {"name": "vartest", "path": "$SPACK_TEST_PATH_SUB"}
     include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.IncludePath)
     assert path in include.path
 
 
@@ -1757,6 +1761,7 @@ def test_included_path_git_substitutions():
     os.environ["SPACK_TEST_URL_SUB"] = url
     entry["git"] = "$SPACK_TEST_URL_SUB"
     include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.GitIncludePaths)
     assert include.git == url, "Expected git url environment var substitution"
 
 
@@ -1823,7 +1828,7 @@ def test_included_path_git(
     base_paths = [os.path.basename(p) for p in paths]
     for scope in scopes:
         assert isinstance(scope, spack.config.SingleFileScope)
-        assert os.path.basename(scope.path) in base_paths  # type: ignore[union-attr]
+        assert os.path.basename(scope.path) in base_paths
         assert scope.name.split(":")[1] in base_paths
 
     # Second pass uses the scopes previously built.
@@ -1867,6 +1872,7 @@ def test_included_path_url_temp_dest(mock_low_high_config):
     for scope in [None, parent_scope]:
         rest = "parent scope with no path" if scope else "no parent scope"
         destination = include.base_directory(entry["path"], parent_scope=scope)
+        assert destination is not None
         dest_dir = str(pathlib.Path(destination).parent)
         temp_dir = tempfile.gettempdir()
         assert dest_dir == temp_dir, pre + rest
@@ -1888,6 +1894,7 @@ def test_included_path_git_temp_dest(mock_low_high_config):
     for scope in [None, parent_scope]:
         rest = "parent scope with no path" if scope else "no parent scope"
         destination = include.base_directory(entry["git"], parent_scope=scope)
+        assert destination is not None
         dest_dir = str(pathlib.Path(destination).parent)
         temp_dir = tempfile.gettempdir()
         assert dest_dir == temp_dir, pre + rest
@@ -1933,7 +1940,8 @@ def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, mo
         include.scopes(parent_scope)
 
     # set up invalid option failure
-    include.branch = ""  # type: ignore[union-attr]
+    assert isinstance(include, spack.config.GitIncludePaths)
+    include.branch = ""
     with pytest.raises(spack.error.ConfigError, match="Missing or unsupported options"):
         include.scopes(parent_scope)
 

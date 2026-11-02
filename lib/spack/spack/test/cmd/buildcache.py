@@ -1400,9 +1400,9 @@ def test_buildcache_check_index_full(
 
     out = buildcache("check-index", "--verify", "exists", "manifests", "blobs", "--", "my-mirror")
     # Everything thing be good here
-    assert "Index exists in mirror: my-mirror"
-    assert "Missing specs: 0"
-    assert "Missing blobs: 0"
+    assert "Index exists in mirror: my-mirror" in out
+    assert "Missing specs: 0" in out
+    assert "Missing blobs: 0" in out
     if view:
         assert "Unindexed specs: n/a" in out
     else:
@@ -1410,7 +1410,6 @@ def test_buildcache_check_index_full(
 
     # Remove the index blob
     # This creates index not for both view and non-view indices
-    # For non-view indices this is also a missing blob
     index_name = "index.manifest.json"
     if view:
         index_name = os.path.join(view, index_name)
@@ -1426,15 +1425,15 @@ def test_buildcache_check_index_full(
 
     out = buildcache("check-index", "--verify", "exists", "manifests", "blobs", "--", "my-mirror")
     # Everything thing be good here
-    assert "Index does not exist in mirror: my-mirror"
-    assert "Missing specs: 0"
+    assert "Index does not exist in mirror: my-mirror" in out
+    assert "Missing specs: 0" in out
+    # "Missing blobs" counts the blobs of specs; a missing index blob is reported separately
+    assert "Missing blobs: 0" in out
     if view:
         assert "Unindexed specs: n/a" in out
-        assert "Missing blobs: 0"
     else:
         assert "The index blob is missing" in out
         assert "Unindexed specs: 15" in out
-        assert "Missing blobs: 1"
 
 
 def test_buildcache_push_with_group(

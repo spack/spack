@@ -19,6 +19,7 @@ import spack.cmd.env
 import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.environment.shell
 import spack.error
 import spack.main
 import spack.package_base
@@ -628,7 +629,7 @@ def test_env_modifications_error_on_activate(
     pkg = mock_packages.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
-    ev.shell.activate(e)
+    spack.environment.shell.activate(e)
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
@@ -644,7 +645,7 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
         install("--add", "--fake", "depends-on-run-env")
 
     env_variables = {}
-    ev.shell.activate(e).apply_modifications(env_variables)
+    spack.environment.shell.activate(e).apply_modifications(env_variables)
     assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
 
 
@@ -2235,7 +2236,8 @@ def configure_reuse(reuse_mode, combined_env) -> Optional[ev.Environment]:
         }
     # Disable unification in these tests to avoid confusing reuse due to unification using an
     # include concrete spec vs reuse due to the reuse configuration
-    _config["concretizer"].update({"unify": False})
+    concretizer_config: Dict[str, Any] = _config["concretizer"]
+    concretizer_config["unify"] = False
 
     combined_env.manifest.configuration.update(_config)
     combined_env.manifest.changed = True

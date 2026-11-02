@@ -5,13 +5,17 @@ from typing import Any, Dict, List
 
 
 class Reporter:
-    """Base class for report writers."""
+    """Base class for report writers.
 
-    def build_report(self, filename: str, specs: List[Dict[str, Any]]):
+    The output location is a file or a directory depending on the reporter, so parameters are
+    positional-only (``__`` prefix) and subclasses may name them as they see fit.
+    """
+
+    def build_report(self, __filename: str, __specs: List[Dict[str, Any]]):
         raise NotImplementedError("must be implemented by derived classes")
 
-    def test_report(self, filename: str, specs: List[Dict[str, Any]]):
+    def test_report(self, __filename: str, __specs: List[Dict[str, Any]]):
         raise NotImplementedError("must be implemented by derived classes")
 
-    def concretization_report(self, filename: str, msg: str):
+    def concretization_report(self, __filename: str, __msg: str):
         raise NotImplementedError("must be implemented by derived classes")

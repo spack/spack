@@ -45,12 +45,6 @@ spack:
         allow:
           - labels: [version_deprecated]
 
-    py-typed-ast:
-      require: "+wheel"
-
-    py-platformdirs:
-      require: "+wheel"
-
   concretizer:
     reuse: true
     unify: true
@@ -61,6 +55,6 @@ spack:
   mirrors::
 {% for mirror in bootstrap_mirrors %}
     {{mirror}}:
-      url: https://binaries.spack.io/releases/v2026.03/{{mirror}}
+      url: https://binaries.spack.io/develop/{{mirror}}
       signed: true
 {% endfor %}

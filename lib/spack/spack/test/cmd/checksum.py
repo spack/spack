@@ -17,7 +17,11 @@ from spack.main import SpackCommand
 from spack.package_base import ManualDownloadRequiredError
 from spack.repo import RepoPath
 from spack.stage import interactive_version_filter
-from spack.version import Version
+from spack.version import StandardVersion
+
+#: All versions in these tests are standard versions (``spack.version.Version`` may also return a
+#: GitVersion, which the checksum APIs don't accept)
+Version = StandardVersion.from_string
 
 spack_checksum = SpackCommand("checksum")
 

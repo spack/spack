@@ -8,7 +8,7 @@ import pathlib
 import shutil
 import tempfile
 from contextlib import contextmanager
-from typing import IO, Dict, Iterator, Optional, Tuple, Union
+from typing import IO, Dict, Generator, Optional, Tuple, Union
 
 from spack.error import SpackError
 from spack.util.filesystem import rename
@@ -157,7 +157,9 @@ class FileCache:
         return self._locks[key_str]
 
     @contextmanager
-    def read_transaction(self, key: Union[str, pathlib.Path]) -> Iterator[Optional[IO[str]]]:
+    def read_transaction(
+        self, key: Union[str, pathlib.Path]
+    ) -> Generator[Optional[IO[str]], None, None]:
         """Get a read transaction on a file cache item.
 
         Returns a context manager that yields an open file object for reading,
@@ -179,7 +181,7 @@ class FileCache:
     @contextmanager
     def write_transaction(
         self, key: Union[str, pathlib.Path]
-    ) -> Iterator[Tuple[Optional[IO[str]], IO[str]]]:
+    ) -> Generator[Tuple[Optional[IO[str]], IO[str]], None, None]:
         """Get a write transaction on a file cache item.
 
         Returns a context manager that yields (old_file, new_file) where old_file

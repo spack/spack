@@ -181,6 +181,8 @@ def _reset(args):
             continue
 
         # If we are outside of an env scope delete the bootstrap.yaml file
+        if not isinstance(scope, spack.config.DirectoryConfigScope):
+            continue
         bootstrap_yaml = os.path.join(scope.path, "bootstrap.yaml")
         backup_file = bootstrap_yaml + ".bkp"
         if os.path.exists(bootstrap_yaml):

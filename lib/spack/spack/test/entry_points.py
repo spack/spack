@@ -102,7 +102,7 @@ def test_spack_entry_point_extension(tmp_path: pathlib.Path, mock_get_entry_poin
 
 @pytest.mark.skipif(sys.version_info[:2] < (3, 8), reason="Python>=3.8 required")
 def test_llnl_util_lang_get_entry_points(tmp_path: pathlib.Path, monkeypatch):
-    import importlib.metadata  # type: ignore # novermin
+    import importlib.metadata  # novermin
 
     monkeypatch.setattr(importlib.metadata, "entry_points", entry_points_factory(tmp_path))
 

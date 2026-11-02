@@ -170,8 +170,10 @@ class ChildInfo:
         self.proc.join()
         exit_code = self.proc.exitcode
         assert exit_code is not None, "Finished build should have exit code set"
-        if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
-            self.proc.close()
+        # close() is optional on ProcessLike (and not available in Python 3.6)
+        close = getattr(self.proc, "close", None)
+        if close is not None:
+            close()
         return exit_code
 
 

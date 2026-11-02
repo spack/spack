@@ -130,9 +130,11 @@ class Variant:
 
         elif isinstance(values, type):
             # supplying a type means any value *of that type*
+            value_type: type = values
+
             def isa_type(v):
                 try:
-                    values(v)
+                    value_type(v)
                     return True
                 except ValueError:
                     return False
@@ -535,7 +537,8 @@ class VariantValueRemoval(VariantValue):
     __slots__ = ()
 
     def __init__(self, name):
-        super().__init__(VariantType.INDICATOR, name, (None,))
+        # None is a sentinel value: this variant only marks ``name`` for removal
+        super().__init__(VariantType.INDICATOR, name, (None,))  # ty: ignore[invalid-argument-type]
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply

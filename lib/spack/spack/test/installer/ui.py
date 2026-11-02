@@ -218,8 +218,9 @@ class TestBasicStateManagement:
 
         tui.builds[build_id].log_path = str(log_file)
         tui.on_state_changed(build_id, "failed")
-        assert tui.builds[build_id].log_summary is not None
-        assert "error" in tui.builds[build_id].log_summary.lower()
+        log_summary = tui.builds[build_id].log_summary
+        assert log_summary is not None
+        assert "error" in log_summary.lower()
 
     def test_failed_state_no_log_path(self):
         """No summary is stored for a failed build without a log path."""
@@ -638,17 +639,17 @@ class TestNavigation:
         assert first_id == build_ids[0]
 
         # Set tracked and get next
-        tui.tracked_build_id = first_id
+        tui.tracked_build_id = build_ids[0]
         next_id = tui._get_next(1)
         assert next_id == build_ids[1]
 
         # Get next again
-        tui.tracked_build_id = next_id
+        tui.tracked_build_id = build_ids[1]
         next_id = tui._get_next(1)
         assert next_id == build_ids[2]
 
         # Wrap around
-        tui.tracked_build_id = next_id
+        tui.tracked_build_id = build_ids[2]
         next_id = tui._get_next(1)
         assert next_id == build_ids[0]
 
@@ -665,7 +666,7 @@ class TestNavigation:
         assert prev_id == build_ids[0]
 
         # Go backward again (wrap around)
-        tui.tracked_build_id = prev_id
+        tui.tracked_build_id = build_ids[0]
         prev_id = tui._get_next(-1)
         assert prev_id == build_ids[2]
 
@@ -1437,7 +1438,7 @@ class TestTerminalUIVerbose:
         tui.on_log_output("trivial-install-test-package", b"hello log\n")
 
         stdout.flush()
-        assert stdout.buffer.getvalue() == b"hello log\n"
+        assert stdout.buffer.getvalue() == b"hello log\n"  # ty: ignore[unresolved-attribute]
 
     def test_verbose_print_logs_untracked(self):
         """on_log_output() for an untracked build discards data."""
@@ -1450,7 +1451,7 @@ class TestTerminalUIVerbose:
         tui.on_log_output("pkg2", b"ignored\n")
 
         stdout.flush()
-        assert stdout.buffer.getvalue() == b""
+        assert stdout.buffer.getvalue() == b""  # ty: ignore[unresolved-attribute]
 
     def test_verbose_tty_no_effect(self):
         """In TTY mode, on_build_added() does not set tracked_build_id automatically."""

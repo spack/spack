@@ -50,7 +50,8 @@ class OptimizationCriteria(NamedTuple):
     value: int
     name: str
     band: str
-    kind: OptimizationKind
+    #: one of the ``OptimizationKind`` constants
+    kind: int
 
 
 def build_criteria_names(costs, arg_tuples):

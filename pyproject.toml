@@ -18,8 +18,8 @@ dev = [
   "pytest-xdist",
   "click",
   "ruff",
-  "mypy",
   "vendoring",
+  "ty",
   "vermin",
 ]
 ci = ["pytest-cov", "codecov[toml]"]
@@ -101,74 +101,45 @@ spack = ["spack"]
 "*-ci-package.py" = ["F403", "F405", "F821"]
 
 
-[tool.mypy]
-files = ["lib/spack/spack/**/*.py"]
-exclude = "lib/spack/spack/vendor"
-mypy_path = ["lib/spack"]
-allow_redefinition = true
-
-# This and a generated import file allows supporting packages
-namespace_packages = true
-
-# To avoid re-factoring all the externals, ignore errors and missing imports
-# globally, then turn back on in spack and spack submodules
-ignore_errors = true
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "spack.*"
-ignore_errors = false
-ignore_missing_imports = false
-
-[[tool.mypy.overrides]]
-module = "spack_repo.*"
-ignore_errors = false
-ignore_missing_imports = false
-# we can't do this here, not a module scope option, in spack style instead
-# disable_error_code = 'no-redef'
-
-[[tool.mypy.overrides]]
-module = "spack.test.packages"
-ignore_errors = true
-
-# ignore errors in fake import path for packages
-[[tool.mypy.overrides]]
-module = "spack.pkg.*"
-ignore_errors = true
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "spack.vendor.*"
-ignore_errors = true
-
-# Spack imports a number of external packages, and they *may* require Python 3.8 or
-# higher in recent versions. This can cause mypy to fail because we check for 3.7
-# compatibility. We could restrict mypy to run for the oldest supported version (3.7),
-# but that means most developers won't be able to run mypy, which means it'll fail
-# more in CI. Instead, we exclude these imported packages from mypy checking.
-[[tool.mypy.overrides]]
-module = [
-  "IPython",
-  "altgraph",
-  "attr",
-  "boto3",
-  "botocore",
-  "distro",
-  "importlib.metadata",
-  "jinja2",
-  "jsonschema",
-  "macholib",
-  "markupsafe",
-  "numpy",
-  "pkg_resources",
-  "pyristent",
-  "pytest",
-  "ruamel.yaml",
-  "six",
+[tool.ty.src]
+include = ["lib/spack"]
+exclude = [
+  # vendored third-party code is not checked
+  "lib/spack/spack/vendor",
+  # the Sphinx configuration and extensions
+  "lib/spack/docs",
 ]
-follow_imports = "skip"
-follow_imports_for_stubs = true
 
+[tool.ty.analysis]
+# optional dependencies, which need not be installed where the type check runs
+allowed-unresolved-imports = [
+  # S3 and GCS mirror support
+  "boto3",
+  "boto3.*",
+  "botocore",
+  "botocore.*",
+  "google.**",
+  # `spack python -i ipython`
+  "IPython",
+  # test dependencies
+  "pytest",
+  "_pytest",
+  "_pytest.*",
+  "xdist",
+  "py",
+  "mpi4py",
+  "mpi4py.*",
+]
+
+[tool.ty.environment]
+root = ["lib/spack"]
+extra-paths = [
+  # mock package repositories imported by the unit tests
+  "var/spack/test_repos",
+]
+# Spack still runs on Python 3.6 and 3.7 (vermin checks that), but code that only runs there,
+# such as ``sys.version_info < (3, 8)`` branches, is treated as unreachable and not type checked.
+python-version = "3.8"
 
 [tool.pyright]
 useLibraryCodeForTypes = true

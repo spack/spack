@@ -197,13 +197,13 @@ def gpg_untrust(args):
 def gpg_publish(args):
     """publish public keys to a build cache"""
 
-    mirror = None
+    # exactly one of these is set: they are a required mutually exclusive group
     if args.directory:
         url = spack.util.url.path_to_file_url(args.directory)
         mirror = spack.mirrors.mirror.Mirror(url, url)
     elif args.mirror_name:
         mirror = spack.mirrors.mirror.MirrorCollection(binary=True).lookup(args.mirror_name)
-    elif args.mirror_url:
+    else:
         mirror = spack.mirrors.mirror.Mirror(args.mirror_url, args.mirror_url)
 
     with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:

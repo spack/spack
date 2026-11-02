@@ -467,15 +467,15 @@ class InternalConfigScope(ConfigScope):
         for sk, sv in data.items():
             if sk.endswith(":"):
                 key = syaml.syaml_str(sk[:-1])
-                key.override = True  # type: ignore[attr-defined]
+                key.override = True
             elif sk.endswith("+"):
                 key = syaml.syaml_str(sk[:-1])
-                key.prepend = True  # type: ignore[attr-defined]
+                key.prepend = True
             elif sk.endswith("-"):
                 key = syaml.syaml_str(sk[:-1])
-                key.append = True  # type: ignore[attr-defined]
+                key.append = True
             else:
-                key = sk  # type: ignore[assignment]
+                key = sk
 
             if isinstance(sv, dict):
                 result[key] = InternalConfigScope._process_dict_keyname_overrides(sv)
@@ -520,7 +520,7 @@ class Configuration:
 
     def highest(self) -> ConfigScope:
         """Scope with the highest precedence"""
-        return next(self.scopes.reversed_values())  # type: ignore
+        return next(self.scopes.reversed_values())
 
     @_config_mutator
     def push_scope_incremental(
@@ -663,8 +663,8 @@ class Configuration:
 
     def get_config_filename(self, scope: str, section: str) -> str:
         """For some scope and section, get the name of the configuration file."""
-        scope = self._validate_scope(scope)
-        return scope.get_section_filename(section)
+        scope_obj = self._validate_scope(scope)
+        return scope_obj.get_section_filename(section)
 
     @_config_mutator
     def clear_caches(self) -> None:
@@ -709,19 +709,19 @@ class Configuration:
             raise RuntimeError(msg)
 
         _validate_section_name(section)  # validate section name
-        scope = self._validate_scope(scope)  # get ConfigScope object
+        scope_obj = self._validate_scope(scope)  # get ConfigScope object
 
         # manually preserve comments
-        need_comment_copy = section in scope.sections and scope.sections[section]
+        need_comment_copy = section in scope_obj.sections and scope_obj.sections[section]
         if need_comment_copy:
-            comments = syaml.extract_comments(scope.sections[section][section])
+            comments = syaml.extract_comments(scope_obj.sections[section][section])
 
         # read only the requested section's data.
-        scope.sections[section] = syaml.syaml_dict({section: update_data})
+        scope_obj.sections[section] = syaml.syaml_dict({section: update_data})
         if need_comment_copy and comments:
-            syaml.set_comments(scope.sections[section][section], data_comments=comments)
+            syaml.set_comments(scope_obj.sections[section][section], data_comments=comments)
 
-        scope._write_section(section)
+        scope_obj._write_section(section)
 
     def get_config(
         self, section: str, scope: Optional[str] = None, _merged_scope: Optional[str] = None
@@ -1052,7 +1052,7 @@ class Configuration:
         has_existing_value = True
         path = ""
         override = False
-        value = components[-1]
+        value: Any = components[-1]
         if not isinstance(value, syaml.syaml_str):
             value = syaml.load_config(value)
         for idx, name in enumerate(components[:-1]):
@@ -1076,7 +1076,7 @@ class Configuration:
 
                 # construct value from this point down
                 for component in reversed(components[idx + 1 : -1]):
-                    value: Dict[str, str] = {component: value}  # type: ignore[no-redef]
+                    value = {component: value}
                 break
 
         if override:
@@ -1087,7 +1087,7 @@ class Configuration:
 
         # append values to lists
         if isinstance(existing, list) and not isinstance(value, list):
-            value: List[str] = [value]  # type: ignore[no-redef]
+            value = [value]
 
         # merge value into existing
         new = spack.schema.merge_yaml(existing, value)
@@ -1352,7 +1352,7 @@ class OptionalInclude:
 
     def _validate_parent_scope(self, parent_scope: ConfigScope):
         """Validates that a parent scope is a valid configuration object"""
-        # enforced by type checking but those can always be # type: ignore'd
+        # enforced by type checking but those can always be suppressed with type: ignore
         assert isinstance(parent_scope, ConfigScope), (
             f"Includes must be within a configuration scope (ConfigScope), not {type(parent_scope)}"  # noqa: E501
         )
@@ -1567,9 +1567,7 @@ class GitIncludePaths(OptionalInclude):
         return self.destination
 
     def fetched(self) -> bool:
-        return bool(self.destination) and os.path.exists(
-            os.path.join(self.destination, ".git")  # type: ignore[arg-type]
-        )
+        return bool(self.destination) and os.path.exists(os.path.join(self.destination, ".git"))
 
     def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
         """Instantiate configuration scopes for the included paths.
@@ -1780,10 +1778,8 @@ def validate(
     try:
         spack.schema.Validator(schema).validate(data)
     except jsonschema.ValidationError as e:
-        if hasattr(e.instance, "lc"):
-            line_number = e.instance.lc.line + 1
-        else:
-            line_number = None
+        lc = getattr(e.instance, "lc", None)
+        line_number = lc.line + 1 if lc is not None else None
         raise ConfigFormatError(e, data, filename, line_number) from e
     # return the validated data so that we can access the raw data
     # mostly relevant for environments
@@ -1871,13 +1867,13 @@ def get_default_from_schema(path):
     section = components[0]
 
     # Use None to construct the test data
-    test_data = None
-    for component in reversed(components):
+    test_data: Dict[str, Any] = {components[-1]: None}
+    for component in reversed(components[:-1]):
         test_data = {component: test_data}
 
     try:
         validate(test_data, SECTION_SCHEMAS[section])
-    except (ConfigFormatError, AttributeError) as e:
+    except ConfigFormatError as e:
         jsonschema_error = e.validation_error
 
         # Try to get the type from the default value
@@ -2153,12 +2149,12 @@ def use_configuration(
 
 
 def _normalize_input(entry: Union[ScopeWithOptionalPriority, str]) -> ScopeWithPriority:
-    if isinstance(entry, tuple):
-        return entry
-
     default_priority = ConfigScopePriority.CONFIG_FILES
     if isinstance(entry, ConfigScope):
         return default_priority, entry
+
+    if isinstance(entry, tuple):
+        return entry
 
     # Otherwise we need to construct it
     path = os.path.normpath(entry)
@@ -2348,8 +2344,8 @@ def canonicalize_path(
     # relative to that path.
     filename = None
     if isinstance(path, syaml.syaml_str):
-        filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
-        assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
+        filename = os.path.dirname(path._start_mark.name)
+        assert path._start_mark.name == path._end_mark.name
 
     path = substitute_path_variables(path, config)
 

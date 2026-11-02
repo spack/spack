@@ -29,7 +29,7 @@ class ProgWriter(aw.ArgparseWriter):
 
 def test_format_not_overridden():
     with pytest.raises(TypeError):
-        aw.ArgparseWriter("spack")
+        aw.ArgparseWriter("spack")  # ty: ignore[call-non-callable]
 
 
 def suppress_parser() -> argparse.ArgumentParser:

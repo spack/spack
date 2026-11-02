@@ -797,6 +797,7 @@ class TestSpecDag:
         a = s["callpath"]
 
         query = a.last_query
+        assert query is not None
         assert query.name == "callpath"
         assert len(query.extra_parameters) == 0
         assert not query.isvirtual
@@ -805,6 +806,7 @@ class TestSpecDag:
         a = s["mpi"]
 
         query = a.last_query
+        assert query is not None
         assert query.name == "mpi"
         assert len(query.extra_parameters) == 0
         assert query.isvirtual
@@ -814,6 +816,7 @@ class TestSpecDag:
         a = s["mpi:cxx,fortran"]
 
         query = a.last_query
+        assert query is not None
         assert query.name == "mpi"
         assert len(query.extra_parameters) == 2
         assert "cxx" in query.extra_parameters
@@ -833,13 +836,13 @@ class TestSpecDag:
 
     def test_canonical_deptype(self):
         # special values
-        assert dt.canonicalize(all) == dt.ALL
+        assert dt.canonicalize(all) == dt.ALL  # ty: ignore[invalid-argument-type]
         assert dt.canonicalize("all") == dt.ALL
 
         with pytest.raises(ValueError):
-            dt.canonicalize(None)
+            dt.canonicalize(None)  # ty: ignore[invalid-argument-type]
         with pytest.raises(ValueError):
-            dt.canonicalize([None])
+            dt.canonicalize([None])  # ty: ignore[invalid-argument-type]
 
         # everything in all_types is canonical
         for v in dt.ALL_TYPES:

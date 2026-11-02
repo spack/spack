@@ -64,10 +64,10 @@ def packages_to_maintainers(package_names=None):
 
 def maintainers_to_packages(users=None):
     user_to_pkgs = defaultdict(lambda: [])
+    lower_users = [u.lower() for u in users] if users else []
     for name in spack.repo.PATH.all_package_names():
         cls = spack.repo.PATH.get_pkg_class(name)
         for user in cls.maintainers:
-            lower_users = [u.lower() for u in users]
             if not users or user.lower() in lower_users:
                 user_to_pkgs[user].append(cls.name)
 

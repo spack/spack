@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import warnings
-from typing import TYPE_CHECKING, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 from spack.vendor.typing_extensions import Literal
 
@@ -62,14 +62,13 @@ def create_installer(
         spack.sandbox.get_sandbox()
 
     # The old installer dumps the full log from the command layer instead.
+    extra: Dict[str, Any] = {}
     if use_old_installer:
-        from spack.old_installer import PackageInstaller  # type: ignore
-
-        extra = {}
+        from spack.old_installer import PackageInstaller
     else:
-        from spack.installer import PackageInstaller  # type: ignore
+        from spack.installer import PackageInstaller
 
-        extra = {"show_log_on_error": show_log_on_error}
+        extra["show_log_on_error"] = show_log_on_error
 
     return PackageInstaller(
         packages,

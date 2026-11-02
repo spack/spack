@@ -266,7 +266,7 @@ def test_automatic_oci_basic_authentication():
     )
     with pytest.raises(urllib.error.HTTPError) as e:
         opener_with_wrong_auth.open(image.endpoint())
-    assert e.value.getcode() == 401
+    assert e.value.code == 401
 
 
 def test_wrong_credentials():
@@ -285,7 +285,7 @@ def test_wrong_credentials():
     with pytest.raises(urllib.error.HTTPError) as e:
         opener.open(image.endpoint())
 
-    assert e.value.getcode() == 401
+    assert e.value.code == 401
 
 
 def test_wrong_bearer_token_returned_by_auth_server():
@@ -307,7 +307,7 @@ def test_wrong_bearer_token_returned_by_auth_server():
     with pytest.raises(urllib.error.HTTPError) as e:
         opener.open(image.endpoint())
 
-    assert e.value.getcode() == 401
+    assert e.value.code == 401
 
 
 class TrivialAuthServer(DummyServer):
@@ -418,7 +418,7 @@ def test_auth_method_we_cannot_handle_is_error(www_authenticate, error_message):
 
     with pytest.raises(urllib.error.HTTPError, match=error_message) as e:
         urlopen(image.endpoint())
-    assert e.value.getcode() == 401
+    assert e.value.code == 401
 
 
 # Parametrize over single POST vs POST + PUT.

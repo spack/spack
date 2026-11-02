@@ -9,10 +9,10 @@ from spack.util import tty
 
 #: at what level we should write stack traces or short error messages
 #: this is module-scoped because it needs to be set very early
-debug = 0
+debug: int = 0
 
 #: whether to show a backtrace when an error is printed, enabled with ``--backtrace``.
-SHOW_BACKTRACE = False
+SHOW_BACKTRACE: bool = False
 
 
 class SpackAPIWarning(UserWarning):
@@ -68,7 +68,9 @@ class SpackError(Exception):
                 sys.stderr.write(self.traceback)
             else:
                 # run parent exception hook.
-                sys.excepthook(*sys.exc_info())
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                if exc_type is not None and exc_value is not None:
+                    sys.excepthook(exc_type, exc_value, exc_tb)
 
         sys.stderr.flush()
         self.printed = True

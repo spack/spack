@@ -72,9 +72,10 @@ class GitRefLookup:
         if not self._pkg:
             try:
                 pkg = self.repo.get_pkg_class(self.pkg_name)
-                pkg.git
-            except (spack.repo.RepoError, AttributeError) as e:
+            except spack.repo.RepoError as e:
                 raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}") from e
+            if not hasattr(pkg, "git"):
+                raise VersionLookupError(f"Couldn't get the git repo for {self.pkg_name}")
             self._pkg = pkg
         return self._pkg
 

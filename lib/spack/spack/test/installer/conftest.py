@@ -18,7 +18,7 @@ from spack.spec import Spec
 
 
 def create_dag(
-    nodes: List[str], edges: List[Tuple[str, str, Union[dt.DepType, Tuple[dt.DepType, ...]]]]
+    nodes: List[str], edges: List[Tuple[str, str, Union[dt.DepTypes, dt.DepFlag]]]
 ) -> Dict[str, Spec]:
     """
     Create a DAG of concrete specs, as a mapping from package name to Spec.

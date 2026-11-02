@@ -11,8 +11,9 @@ import os
 import re
 import shutil
 import sys
+import types
 from collections import Counter, OrderedDict
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import spack.config
 import spack.error
@@ -258,7 +259,7 @@ class PackageTest:
         if not pkg.spec.concrete:
             raise ValueError("Stand-alone tests require a concrete package")
 
-        self.counts: "Counter" = Counter()  # type: ignore[attr-defined]
+        self.counts: "Counter" = Counter()
         self.pkg = pkg
         self.test_failures: List[TestFailureType] = []
         self.test_parts: OrderedDict[str, "TestStatus"] = OrderedDict()
@@ -303,10 +304,9 @@ class PackageTest:
         fs.touch(self.test_log_file)  # Otherwise log_parse complains
         fs.set_install_permissions(self.test_log_file)
 
-        with spack.util.tty.log.threadlog(
-            self.test_log_file, echo=verbose, append=True
-        ) as self._logger:
-            with self.logger.force_echo():  # type: ignore[union-attr]
+        with spack.util.tty.log.threadlog(self.test_log_file, echo=verbose, append=True) as logger:
+            self._logger = logger
+            with logger.force_echo():
                 tty.msg("Testing package " + colorize(r"@*g{" + self.pkg_id + r"}"))
 
             # use debug print levels for log file to record commands
@@ -408,12 +408,7 @@ class PackageTest:
 
     def parts(self) -> int:
         """The total number of (checked) test parts."""
-        try:
-            # New in Python 3.10
-            total = self.counts.total()  # type: ignore[attr-defined]
-        except AttributeError:
-            nums = [n for _, n in self.counts.items()]
-            total = sum(nums)
+        total = sum(self.counts.values())
         return total
 
     def print_log_path(self):
@@ -513,7 +508,7 @@ def test_part(
 
             if exc_type is spack.util.executable.ProcessError or exc_type is TypeError:
                 iostr = io.StringIO()
-                write_log_summary(iostr, "test", tester.test_log_file, last=1)  # type: ignore[assignment]
+                write_log_summary(iostr, "test", tester.test_log_file, last=1)
                 m = iostr.getvalue()
             else:
                 # We're below the package context, so get context from
@@ -592,7 +587,7 @@ def test_function_names(pkg: "PackageObjectOrClass", add_virtuals: bool = False)
 
 def test_functions(
     pkg: "PackageObjectOrClass", add_virtuals: bool = False
-) -> List[Tuple[str, Callable]]:
+) -> List[Tuple[str, types.FunctionType]]:
     """Grab all non-empty test functions.
 
     Args:
@@ -622,7 +617,7 @@ def test_functions(
             if not name.startswith("test_"):
                 continue
 
-            tests.append((clss.__name__, test_fn))  # type: ignore[union-attr]
+            tests.append((clss.__name__, test_fn))
 
     return tests
 
@@ -822,12 +817,7 @@ def write_test_summary(counts: "Counter"):
         counts: counts of the occurrences of relevant test status types
     """
     summary = [f"{n} {s.lower()}" for s, n in counts.items() if n > 0]
-    try:
-        # New in Python 3.10
-        total = counts.total()  # type: ignore[attr-defined]
-    except AttributeError:
-        nums = [n for _, n in counts.items()]
-        total = sum(nums)
+    total = sum(counts.values())
 
     if total:
         print("{:=^80}".format(" {} of {} ".format(", ".join(summary), plural(total, "spec"))))
@@ -913,7 +903,7 @@ class TestSuite:
                 status = self.test_status(spec, externals)
                 self.counts[status] += 1
                 self.write_test_result(spec, status)
-                record.succeed(externals)
+                record.succeed(externals=externals)
 
             except SkipTest:
                 record.skip(msg="Test marked to skip")

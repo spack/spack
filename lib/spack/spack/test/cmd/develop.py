@@ -274,7 +274,7 @@ class TestDevelop:
 
 
 def _git_commit_list(git_repo_dir):
-    git = spack.util.git.git()
+    git = spack.util.git.git(required=True)
     with fs.working_dir(git_repo_dir):
         output = git("log", "--pretty=format:%h", "-n", "20", output=str)
     return output.strip().split()

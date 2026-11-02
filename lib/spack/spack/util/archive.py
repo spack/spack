@@ -9,7 +9,7 @@ import pathlib
 import tarfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
-from typing import Callable, Dict, Generator, List, Tuple
+from typing import IO, Callable, Dict, Generator, List, Optional, Tuple
 
 from spack.util import tty
 from spack.util.filesystem import readlink
@@ -22,7 +22,7 @@ class ChecksumWriter(io.BufferedIOBase):
     myfileobj = None
 
     def __init__(self, fileobj, algorithm=hashlib.sha256):
-        self.fileobj = fileobj
+        self.fileobj: Optional[IO[bytes]] = fileobj
         self.hasher = algorithm()
         self.length = 0
 
@@ -37,6 +37,7 @@ class ChecksumWriter(io.BufferedIOBase):
             length = data.nbytes
 
         if length > 0:
+            assert self.fileobj is not None
             self.fileobj.write(data)
             self.hasher.update(data)
 
@@ -61,13 +62,15 @@ class ChecksumWriter(io.BufferedIOBase):
         fileobj = self.fileobj
         if fileobj is None:
             return
-        self.fileobj.close()
+        fileobj.close()
         self.fileobj = None
 
     def flush(self):
+        assert self.fileobj is not None
         self.fileobj.flush()
 
     def fileno(self):
+        assert self.fileobj is not None
         return self.fileobj.fileno()
 
     def rewind(self):
@@ -83,6 +86,7 @@ class ChecksumWriter(io.BufferedIOBase):
         return True
 
     def tell(self):
+        assert self.fileobj is not None
         return self.fileobj.tell()
 
     def seek(self, offset, whence=io.SEEK_SET):
@@ -246,6 +250,14 @@ def reproducible_tarfile_from_prefix(
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
+def _read_text_member(tar: tarfile.TarFile, name: str) -> str:
+    """Contents of a regular file in a tar archive, stripped of surrounding whitespace."""
+    member = tar.extractfile(name)
+    if member is None:
+        raise tarfile.ReadError(f"{name} is not a regular file")
+    return member.read().decode("utf-8").strip()
+
+
 def retrieve_commit_from_archive(archive_path, ref):
     """Extract git data from an archive with out expanding it
 
@@ -266,16 +278,14 @@ def retrieve_commit_from_archive(archive_path, ref):
                     prefix = name[:-4]
                     break
             if f"{prefix}.git/HEAD" in names:
-                head = tar.extractfile(f"{prefix}.git/HEAD").read().decode("utf-8").strip()
+                head = _read_text_member(tar, f"{prefix}.git/HEAD")
                 if is_git_commit_sha(head):
                     # detached HEAD/ lightweight tag
                     return head
                 else:
                     # refs in had have the format "ref <relative path to ref>"
                     ref = head.split()[1]
-                    contents = (
-                        tar.extractfile(f"{prefix}.git/{ref}").read().decode("utf-8").strip()
-                    )
+                    contents = _read_text_member(tar, f"{prefix}.git/{ref}")
                     if is_git_commit_sha(contents):
                         return contents
     except tarfile.ReadError:

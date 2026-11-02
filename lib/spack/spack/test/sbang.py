@@ -60,7 +60,7 @@ php_line_patched2 = "?>\n"
 last_line = "last!\n"
 
 
-@pytest.fixture  # type: ignore[no-redef]
+@pytest.fixture
 def sbang_line(temporary_store: spack.store.Store):
     yield "#!/bin/sh %s/bin/sbang\n" % temporary_store.layout.root
 

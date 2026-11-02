@@ -149,15 +149,11 @@ def loads(module_type, specs, args, out=None):
         # FIXME : work around permits to get a unique list of spec anyhow.
         # FIXME : (same problem as in spack/modules.py)
         seen = set()
-        seen_add = seen.add
         for spec in specs_from_user_constraint:
-            specs.extend(
-                [
-                    item
-                    for item in spec.traverse(order="post", cover="nodes")
-                    if not (item in seen or seen_add(item))
-                ]
-            )
+            for item in spec.traverse(order="post", cover="nodes"):
+                if item not in seen:
+                    seen.add(item)
+                    specs.append(item)
 
     cache: spack.modules.common.ModuleConfigurationCache = {}
     modules = [

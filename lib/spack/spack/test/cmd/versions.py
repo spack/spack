@@ -41,7 +41,7 @@ def test_remote_versions_only(monkeypatch):
 
 def test_new_versions_only(monkeypatch):
     """Test a package for which new versions should be available."""
-    from spack_repo.builtin_mock.packages.brillig.package import Brillig  # type: ignore[import]
+    from spack_repo.builtin_mock.packages.brillig.package import Brillig
 
     def mock_fetch_remote_versions(*args, **kwargs):
         mock_remote_versions = {

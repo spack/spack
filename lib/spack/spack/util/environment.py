@@ -101,13 +101,13 @@ class ShellCmdString:
         return sep.join(cmds)
 
 
-TRACING_ENABLED = False
+TRACING_ENABLED: bool = False
 
 Path = str
 ModificationList = List[Union["NameModifier", "NameValueModifier"]]
 
 
-def is_system_path(path: Path) -> bool:
+def is_system_path(path: Optional[Path]) -> bool:
     """Returns True if the argument is a system path, False otherwise."""
     return bool(path) and (os.path.normpath(path) in SYSTEM_DIRS)
 
@@ -121,7 +121,7 @@ def deprioritize_system_paths(paths: List[Path]) -> List[Path]:
     """Reorders input paths by putting system paths at the end of the list, otherwise
     preserving order.
     """
-    return list(sorted(paths, key=is_system_path))
+    return sorted(paths, key=lambda p: is_system_path(p))
 
 
 def prune_duplicate_paths(paths: List[Path]) -> List[Path]:

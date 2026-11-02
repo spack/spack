@@ -4,6 +4,7 @@
 """Tests for the base class of every Spack error."""
 
 import pickle
+from typing import List, Optional, Tuple
 
 import pytest
 
@@ -51,7 +52,10 @@ def test_errors_with_their_own_constructor_survive_a_pipe(factory):
 
 def test_output_does_not_satisfy_input_keeps_its_specs():
     """Tests that OutputDoesNotSatisfyInputError keeps its specs over a pickle round-trip."""
-    unsolved = [(Spec("pkg-a"), Spec("pkg-b")), (Spec("pkg-c"), None)]
+    unsolved: List[Tuple[Spec, Optional[Spec]]] = [
+        (Spec("pkg-a"), Spec("pkg-b")),
+        (Spec("pkg-c"), None),
+    ]
     error = spack.solver.error.OutputDoesNotSatisfyInputError(unsolved)
 
     replayed = pickle.loads(pickle.dumps(error))

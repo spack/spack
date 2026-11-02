@@ -25,6 +25,9 @@ if TYPE_CHECKING:
 if TYPE_CHECKING:
     import spack.concretize
 
+if TYPE_CHECKING:
+    import spack.solver.asp
+
 
 class PossibleGraph(NamedTuple):
     real_pkgs: Set[str]

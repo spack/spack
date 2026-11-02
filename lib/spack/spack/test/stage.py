@@ -341,7 +341,7 @@ def failing_search_fn():
 class FailingFetchStrategy(spack.fetch_strategy.FetchStrategy):
     def fetch(self):
         raise spack.fetch_strategy.FailedDownloadError(
-            "<non-existent URL>", "This implementation of FetchStrategy always fails"
+            spack.error.FetchError("This implementation of FetchStrategy always fails")
         )
 
 
@@ -896,6 +896,7 @@ class TestDevelopStage:
         stage = develop_stage_from_config(
             "test-stage", srcdir, reference_link="link-to-stage", config=mutable_config
         )
+        assert stage.reference_link is not None
         assert not os.path.exists(stage.reference_link)
         stage.create()
         assert os.path.exists(stage.reference_link)

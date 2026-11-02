@@ -7,9 +7,18 @@ be used to iterate over tokens in a string."""
 
 import enum
 import re
-from typing import Generator, Mapping, Match, Optional, Type
+from typing import TYPE_CHECKING, Any, Generator, List, Mapping, Match, Optional, Type
 
 from spack.util.lang import PatternStr
+
+if TYPE_CHECKING:
+
+    class Scanner:
+        """The object returned by ``Pattern.scanner()``, which typeshed doesn't describe."""
+
+        def match(self) -> Optional[Match[str]]: ...
+
+        def search(self) -> Optional[Match[str]]: ...
 
 
 class TokenBase(enum.Enum):
@@ -44,7 +53,7 @@ class Token:
         return str(self)
 
     def __str__(self):
-        parts = [self.kind, self.value]
+        parts: List[Any] = [self.kind, self.value]
         if self.subvalues:
             parts += [self.subvalues]
         return f"({', '.join(f'`{p}`' for p in parts)})"
@@ -66,6 +75,15 @@ def fast_regex(tokens: Mapping[str, str], skip_whitespace: bool = True) -> Patte
     """
     joined = "|".join(f"(?P<{name}>{regex})" for name, regex in tokens.items())
     return re.compile(rf"\s*(?:{joined})" if skip_whitespace else joined)
+
+
+def regex_scanner(pattern: PatternStr, string: str, pos: int = 0) -> "Scanner":
+    """Return ``pattern.scanner(string, pos)``, whose ``match()`` and ``search()`` methods
+    return successive matches of ``pattern`` in ``string`` (``None`` once there are no more).
+
+    ``Pattern.scanner`` is undocumented, but long-standing, CPython API that typeshed omits.
+    """
+    return pattern.scanner(string, pos)  # ty: ignore[unresolved-attribute]
 
 
 def token_match_regex(token: TokenBase):
@@ -115,7 +133,7 @@ class Tokenizer:
         if not text:
             return
 
-        scanner = self.regex.scanner(text)  # type: ignore[attr-defined]
+        scanner = regex_scanner(self.regex, text)
         m: Optional[Match] = None
         for m in iter(scanner.match, None):
             # The following two assertions are to help mypy
