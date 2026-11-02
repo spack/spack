@@ -201,6 +201,7 @@ class tty:
     msg = _tty.msg
     warn = _tty.warn
 
+
 class web_util:
     urlopen = _web_util.urlopen
     SPACK_USER_AGENT = _web_util.SPACK_USER_AGENT
