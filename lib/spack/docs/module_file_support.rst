@@ -279,6 +279,20 @@ To pin a specific version as the default, add a ``defaults`` key to your modules
 The spec can be as specific as needed.
 If multiple packages in the same directory match, the last one generated wins.
 
+By default, the default version is defined with a ``default`` symlink pointing to the module file.
+Set the ``defaults_format`` option to ``modulerc`` to define the default version with a statement in the ``.modulerc`` file located in the module directory instead (a ``module-version`` command for ``tcl``, a ``module_version`` function call in ``.modulerc.lua`` for ``lmod``):
+
+.. code-block:: yaml
+
+   modules:
+     my-module-set:
+       tcl:
+         defaults_format: modulerc
+         defaults:
+         - gcc@10.2.1
+
+After changing ``defaults_format``, regenerate the module files (e.g., ``spack module tcl refresh``) to convert the existing default version definitions to the newly configured format.
+
 Module content
 ^^^^^^^^^^^^^^
 
