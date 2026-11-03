@@ -172,5 +172,11 @@ def edit(parser, args):
         spack.util.editor.editor(*paths)
         return
 
-    paths = [locate_package(n, repo) for n in names] if names else [default_repo.packages_path]
+    try:
+        paths = [locate_package(n, repo) for n in names] if names else [default_repo.packages_path]
+    except spack.repo.UnknownPackageError as e:
+        spack.cmd.report_unknown_package(
+            e, hint="Use 'spack create' to create a new package.", repo=repo
+        )
+        raise SystemExit(1)
     spack.util.editor.editor(*paths)

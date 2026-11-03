@@ -76,6 +76,27 @@ def _solver(*, factory: Optional["SpecFiltersFactory"] = None) -> "Solver":
     return Solver(context=spack.context.default(), specs_factory=factory)
 
 
+def ensure_existing_package_names(specs: Sequence[Spec]) -> None:
+    """Raise if a spec refers to a package that does not exist in the repository.
+
+    Args:
+        specs: specs whose nodes are checked, dependencies included
+    """
+    for root in specs:
+        for spec in root.traverse():
+            if not spec.name:
+                continue
+            # raises UnknownNamespaceError for a namespace that is not configured
+            repo = spack.repo.PATH.repo_for_pkg(spec)
+            # exists() is a directory listing, is_virtual() reads the provider index, so a name
+            # with a package.py never reaches the index
+            if repo.exists(spec.name) or spack.repo.PATH.is_virtual(spec.name):
+                continue
+            raise spack.repo.UnknownPackageError(
+                spec.name, namespace=spec.namespace, repo_root=repo.root
+            )
+
+
 def _concretize_specs_together(
     abstract_specs: Sequence[Spec],
     *,
@@ -90,6 +111,7 @@ def _concretize_specs_together(
             will have test dependencies. If False, test dependencies will be disregarded.
         factory: optional factory to produce a list of specs to be reused
     """
+    ensure_existing_package_names(abstract_specs)
     result = _solver(factory=factory).solve(abstract_specs, tests=tests)
     return [s.copy() for s in result.specs]
 
@@ -152,6 +174,7 @@ def _concretize_together_when_possible(
     """
 
     to_concretize = [concrete if concrete else abstract for abstract, concrete in spec_list]
+    ensure_existing_package_names(to_concretize)
     old_concrete_to_abstract = {
         concrete: abstract for (abstract, concrete) in spec_list if concrete
     }
@@ -207,6 +230,9 @@ def _concretize_separately(
     )
 
     to_concretize = [abstract for abstract, concrete in spec_list if not concrete]
+    # validate in the parent process, cause validation failures in sub-processes result in a
+    # RuntimeError instead of UnknownPackageError
+    ensure_existing_package_names(to_concretize)
     args = [
         (i, str(abstract), tests, factory)
         for i, abstract in enumerate(to_concretize)
@@ -324,6 +350,8 @@ def _solve_one(spec: Spec, *, tests: TestsType, factory: Optional["SpecFiltersFa
             raise spack.error.SpecError(
                 f"Spec {node} has no name; cannot concretize an anonymous spec"
             )
+
+    ensure_existing_package_names([spec])
 
     result = _solver(factory=factory).solve([spec], tests=tests)
 

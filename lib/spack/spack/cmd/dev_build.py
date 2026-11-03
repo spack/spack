@@ -12,7 +12,6 @@ import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
 import spack.installer_dispatch
-import spack.repo
 import spack.store
 from spack.cmd.common import arguments
 from spack.util import tty
@@ -100,8 +99,7 @@ def dev_build(self, args):
         args.subparser.error("only takes one spec")
 
     spec = specs[0]
-    if not spack.repo.PATH.exists(spec.name):
-        raise spack.repo.UnknownPackageError(spec.name)
+    spack.concretize.ensure_existing_package_names([spec])
 
     if not spec.versions.concrete_range_as_version:
         args.subparser.error(
