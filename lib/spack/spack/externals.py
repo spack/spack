@@ -70,8 +70,12 @@ def node_from_dict(external_dict: ExternalDict) -> spack.spec.Spec:
         )
 
     result.extra_attributes = extra_attributes
+    # packages.yaml is user input: expand default_os/default_target before constraining
+    aliases = spack.spec.LocalAliases()
+    aliases.expand(result)
     if "required_target" in external_dict:
-        result.constrain(f"target={external_dict['required_target']}")
+        required = f"target={external_dict['required_target']}"
+        result.constrain(spack.spec.parse_one_or_raise(required, aliases=aliases))
     return result
 
 
