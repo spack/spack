@@ -20,6 +20,7 @@ import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
 import spack.mirrors.mirror
+import spack.modules
 import spack.oci.image
 import spack.oci.oci
 import spack.spec
@@ -634,10 +635,16 @@ def install_fn(args):
     if matches:
         # Fail before extracting anything if the database cannot be modified.
         spack.store.STORE.db.ensure_latest_db_version()
-    for match in matches:
-        spack.binary_distribution.install_single_spec(
-            match, unsigned=args.unsigned, force=args.force
-        )
+    installed: List[Spec] = []
+    try:
+        for match in matches:
+            for node in match.traverse(root=True, order="post", deptype=("link", "run")):
+                if spack.binary_distribution.install_root_node(
+                    node, unsigned=args.unsigned, force=args.force
+                ):
+                    installed.append(node)
+    finally:
+        spack.modules.write_module_files(installed)
 
 
 def list_fn(args):

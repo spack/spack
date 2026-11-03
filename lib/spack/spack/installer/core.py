@@ -300,6 +300,9 @@ class PackageInstaller:
 
         self.next_database_write = 0.0
 
+        #: Specs added to the database by ``install()``, also when it raises
+        self.recorded_specs: List[spack.spec.Spec] = []
+
     def install(self) -> None:
         # Refuse disallowed deprecations before updating any index, so an install that cannot
         # succeed does no work first
@@ -472,6 +475,7 @@ class PackageInstaller:
                     with db.write_transaction():
                         for action in database_actions:
                             action.save_to_db(db)
+                    self._extend_recorded_specs(database_actions)
                 except Exception as e:
                     db_exc = e
 
@@ -648,7 +652,13 @@ class PackageInstaller:
             )
             and self._save_to_db(database_actions, retained_read_locks)
         ):
+            self._extend_recorded_specs(database_actions)
             database_actions.clear()
+
+    def _extend_recorded_specs(self, database_actions: List[DatabaseAction]) -> None:
+        self.recorded_specs.extend(
+            a.spec for a in database_actions if isinstance(a, AddSpecAction)
+        )
 
     def _save_to_db(
         self,
