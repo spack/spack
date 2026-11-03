@@ -458,7 +458,7 @@ api: Dict[str, Tuple[str, ...]] = {
         "deprecated",
     ),
     "v2.6": ("deprecated",),
-    "v2.7": ("web_util", "deprecated",),
+    "v2.7": ("web_util", "deprecated"),
 }
 
 # Splatting does not work for static analysis tools.
