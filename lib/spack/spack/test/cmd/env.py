@@ -739,6 +739,15 @@ def test_remove_before_concretize(mutable_config):
         assert not e.concretized_roots
 
 
+def test_remove_spec_with_toolchain(tmp_path: pathlib.Path):
+    """Manifest entries are toolchain-expanded like the spec on the command line before matching"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text("spack:\n  toolchains:\n    tc: '%c=gcc'\n  specs: [mpileaks %tc]\n")
+    with ev.Environment(tmp_path):
+        remove("mpileaks %tc")
+    assert "mpileaks" not in manifest.read_text()
+
+
 def test_remove_command():
     env("create", "test")
     assert "test" in env("list")
