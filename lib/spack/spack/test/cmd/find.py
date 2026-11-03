@@ -349,7 +349,7 @@ def test_find_prefix_in_env(
 
 
 def test_find_specs_include_concrete_env(
-    mutable_mock_env_path, mutable_mock_repo, tmp_path: pathlib.Path
+    mock_packages, mutable_mock_env_path, tmp_path: pathlib.Path
 ):
     path = tmp_path / "spack.yaml"
 
@@ -395,7 +395,7 @@ spack:
 
 
 def test_find_specs_nested_include_concrete_env(
-    mutable_mock_env_path, mutable_mock_repo, tmp_path: pathlib.Path
+    mock_packages, mutable_mock_env_path, tmp_path: pathlib.Path
 ):
     path = tmp_path / "spack.yaml"
 

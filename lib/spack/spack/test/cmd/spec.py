@@ -24,9 +24,7 @@ mirror = SpackCommand("mirror")
 uninstall = SpackCommand("uninstall")
 
 # Unit tests should not be affected by the user's managed environments
-pytestmark = pytest.mark.usefixtures(
-    "mutable_mock_env_path", "mutable_config", "mutable_mock_repo"
-)
+pytestmark = pytest.mark.usefixtures("mutable_mock_env_path", "mutable_config", "mock_packages")
 
 spec = SpackCommand("spec")
 
