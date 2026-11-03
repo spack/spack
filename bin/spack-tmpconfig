@@ -14,7 +14,7 @@ trap clean_up ERR
 
 [[ -n "$TMPCONFIG_DEBUG" ]] && printf "Redirecting TMP_DIR and spack directories to $TMP_DIR\n"
 
-export BOOTSTRAP="$(spack bootstrap root)"
+export BOOTSTRAP="$($DIR/spack bootstrap root)"
 private_bootstrap="$TMP_DIR/bootstrap"
 
 use_spack=''
@@ -85,12 +85,16 @@ bootstrap:
   root: $BOOTSTRAP
 EOF
 
+# ro bindings are belt+suspenders in case the config above doesn't redirect everything
 if [[ -n "$use_bwrap" ]] ; then
     CMD=(
         bwrap
         --dev-bind / /
         --ro-bind "$DIR/.." "$DIR/.." # do not touch spack root
-        --ro-bind $HOME/.spack $HOME/.spack # do not touch user config/cache dir
+        --ro-bind-try $HOME/.config/spack $HOME/.config/spack # do not touch user config dir
+        --ro-bind-try $HOME/.cache/spack $HOME/.cache/spack # do not touch user config dir
+        --ro-bind-try $HOME/.local/state/spack $HOME/.local/state/spack # do not touch user state dir
+        --ro-bind-try $HOME/.local/share/spack $HOME/.local/share/spack # do not touch user data dir
         --bind "$TMP_DIR" "$TMP_DIR"
         --bind "$BOOTSTRAP" "$BOOTSTRAP"
         --die-with-parent
