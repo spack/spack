@@ -566,6 +566,70 @@ class TestLmod:
         assert len([x for x in content if hide_cmd_alt1 == x]) == 0
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
 
+    def test_alias(self, module_configuration, temporary_store):
+        """Tests the addition and removal of module alias commands in the root modulerc."""
+        module_configuration("alias")
+
+        spec = spack.concretize.concretize_one("mpileaks@2.3")
+        writer = writer_cls.from_spec(spec, "default", True)
+        writer.write()
+
+        # aliases are defined in the .modulerc.lua at the root of the modulepath directory
+        # unlocked by the hierarchy prefix of this module, not next to the module file
+        modulerc = writer.layout.modulepath_modulerc
+        assert modulerc == os.path.join(writer.layout.modulepath, ".modulerc.lua")
+        assert modulerc != writer.layout.modulerc
+        assert writer.layout.filename == os.path.join(
+            writer.layout.modulepath, f"{writer.layout.use_name}.lua"
+        )
+        assert os.path.exists(modulerc)
+        with open(modulerc, encoding="utf-8") as f:
+            content = [x.strip() for x in f.readlines()]
+        alias_cmd = f'module_alias("mpileaks-latest", "{writer.layout.use_name}")'
+        alias_cmd_other = f'module_alias("mpi-app", "{writer.layout.use_name}")'
+        assert len([x for x in content if x == alias_cmd]) == 1
+        assert len([x for x in content if x == alias_cmd_other]) == 1
+
+        # another installation matching the alias configuration redefines the alias onto its
+        # own module (last written module wins) and a warning is emitted
+        spec_alt = spack.concretize.concretize_one("mpileaks@2.2")
+        writer_alt = writer_cls.from_spec(spec_alt, "default", True)
+        with pytest.warns(UserWarning, match="redefined onto"):
+            writer_alt.write()
+        with open(modulerc, encoding="utf-8") as f:
+            content = [x.strip() for x in f.readlines()]
+        assert alias_cmd not in content
+        assert f'module_alias("mpileaks-latest", "{writer_alt.layout.use_name}")' in content
+
+        # removing both modules removes the aliases and the emptied modulerc file
+        writer_alt.remove()
+        writer.remove()
+        assert not os.path.exists(modulerc)
+
+        # aliases no longer defined in the configuration are removed when the module
+        # file is rewritten
+        writer.write(overwrite=True)
+        assert os.path.exists(modulerc)
+        module_configuration("autoload_direct")
+        writer = writer_cls.from_spec(spec, "default", True)
+        writer.write(overwrite=True)
+        assert not os.path.exists(modulerc)
+
+    def test_alias_shadowing_module(self, module_configuration, temporary_store):
+        """Tests the warning emitted when a module alias clashes with a module file."""
+        module_configuration("alias")
+
+        # a module file existing where the alias is defined is reported as shadowed
+        spec = spack.concretize.concretize_one("mpileaks@2.3")
+        writer = writer_cls.from_spec(spec, "default", True)
+        os.makedirs(writer.layout.modulepath, exist_ok=True)
+        with open(
+            os.path.join(writer.layout.modulepath, "mpi-app.lua"), "w", encoding="utf-8"
+        ) as f:
+            f.write("")
+        with pytest.warns(UserWarning, match="shadows the existing module file"):
+            writer.write()
+
     def test_naming_scheme_compat(self, factory, module_configuration):
         """Tests backwards compatibility for naming_scheme key"""
         module_configuration("naming_scheme")

@@ -613,6 +613,94 @@ class TestTcl:
         assert len([x for x in content if hide_cmd_alt1 == x]) == 0
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
 
+    def test_alias(self, module_configuration, temporary_store):
+        """Tests the addition and removal of module alias commands in the root modulerc."""
+        module_configuration("alias")
+
+        spec = spack.concretize.concretize_one("mpileaks@2.3")
+        writer = writer_cls.from_spec(spec, "default", True)
+        writer.write()
+
+        # aliases are defined in the modulerc at the root of the modulepath directory, not in
+        # the modulerc next to the module file
+        modulerc = writer.layout.modulepath_modulerc
+        assert modulerc == os.path.join(writer.layout.modulepath, ".modulerc")
+        assert modulerc != writer.layout.modulerc
+        assert os.path.exists(modulerc)
+        with open(modulerc, encoding="utf-8") as f:
+            content = [x.strip() for x in f.readlines()]
+        alias_cmd = f"module-alias mpileaks-latest {writer.layout.use_name}"
+        alias_cmd_other = f"module-alias mpi-app {writer.layout.use_name}"
+        assert len([x for x in content if x == alias_cmd]) == 1
+        assert len([x for x in content if x == alias_cmd_other]) == 1
+
+        # rewriting the same module leaves the modulerc unchanged
+        writer.write(overwrite=True)
+        with open(modulerc, encoding="utf-8") as f:
+            assert content == [x.strip() for x in f.readlines()]
+
+        # another installation matching the alias configuration redefines the alias onto its
+        # own module (last written module wins) and a warning is emitted
+        spec_alt = spack.concretize.concretize_one("mpileaks@2.2")
+        writer_alt = writer_cls.from_spec(spec_alt, "default", True)
+        with pytest.warns(UserWarning, match="redefined onto"):
+            writer_alt.write()
+        with open(modulerc, encoding="utf-8") as f:
+            content = [x.strip() for x in f.readlines()]
+        assert alias_cmd not in content
+        assert f"module-alias mpileaks-latest {writer_alt.layout.use_name}" in content
+        assert len([x for x in content if x.startswith("module-alias mpileaks-latest ")]) == 1
+        assert len([x for x in content if x.startswith("module-alias mpi-app ")]) == 1
+
+        # removing the module owning the aliases removes them, leaving an empty modulerc
+        # that gets deleted
+        writer_alt.remove()
+        assert not os.path.exists(modulerc)
+
+        # regenerating the remaining module defines the aliases onto it again
+        writer.write(overwrite=True)
+        with open(modulerc, encoding="utf-8") as f:
+            content = [x.strip() for x in f.readlines()]
+        assert alias_cmd in content
+
+        # aliases no longer defined in the configuration are removed when the module
+        # file is rewritten
+        module_configuration("autoload_direct")
+        writer = writer_cls.from_spec(spec, "default", True)
+        writer.write(overwrite=True)
+        assert not os.path.exists(modulerc)
+
+    def test_alias_shadowing_module(self, module_configuration, temporary_store):
+        """Tests the warnings emitted when a module alias clashes with a module file."""
+        module_configuration("alias")
+
+        # a module file existing where the alias is defined is reported as shadowed
+        spec = spack.concretize.concretize_one("mpileaks@2.3")
+        writer = writer_cls.from_spec(spec, "default", True)
+        os.makedirs(writer.layout.modulepath, exist_ok=True)
+        with open(os.path.join(writer.layout.modulepath, "mpi-app"), "w", encoding="utf-8") as f:
+            f.write("#%Module\n")
+        with pytest.warns(UserWarning, match="shadows the existing module file"):
+            writer.write()
+
+        # a module file generated where an alias is defined is reported as shadowed
+        spec = spack.concretize.concretize_one("libdwarf")
+        writer = writer_cls.from_spec(spec, "default", True)
+        modulerc = writer.layout.modulepath_modulerc
+        with open(modulerc, "a", encoding="utf-8") as f:
+            f.write(f"module-alias {writer.layout.use_name} foo/1.0\n")
+        with pytest.warns(UserWarning, match="is shadowed by an alias"):
+            writer.write()
+
+    def test_alias_with_invalid_token(self, module_configuration, temporary_store):
+        """Tests the error raised when an alias name uses an invalid format token."""
+        module_configuration("wrong_alias")
+
+        spec = spack.concretize.concretize_one("mpileaks")
+        writer = writer_cls.from_spec(spec, "default", True)
+        with pytest.raises(RuntimeError, match="cannot be part of a module alias name"):
+            writer.write()
+
     @pytest.mark.regression("37788")
     @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
     def test_layout_for_specs_compiled_with_core_compilers(
