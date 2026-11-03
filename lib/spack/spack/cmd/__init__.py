@@ -15,9 +15,9 @@ from typing import Callable, Container, Generator, List, Optional, Sequence, Uni
 import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.environment.environment
 import spack.error
 import spack.extensions
-import spack.migrate
 import spack.paths
 import spack.spec
 import spack.spec_parser
@@ -644,60 +644,44 @@ def require_active_env(parser):
     )
 
 
-def _maybe_rewrite_spack_env_after_migration() -> None:
-    """Rewrite SPACK_ENV if it points to the old environments location.
+def _maybe_rewrite_spack_env_after_migration(args: argparse.Namespace) -> None:
+    """Rewrite SPACK_ENV if it points at the pre-migration copy of a migrated environment.
 
-    After migration from old layout to XDG layout, environments move from their
-    old location to a new one. If SPACK_ENV was set before the migration (e.g.,
-    in a parent shell), it still points to the old location. This function
-    detects that case and rewrites SPACK_ENV to point to the new location.
+    A shell that activated an environment before the migration still has SPACK_ENV set to
+    ``$spack/var/spack/environments/<name>``. If that environment was copied to the current
+    environments root, point SPACK_ENV at the copy so that this command reads and writes
+    the live environment rather than the stale one.
+
+    ``spack env deactivate`` is left alone: the shell's PATH and friends still hold the
+    old copy's view, so that is the environment to deactivate.
     """
     spack_env = os.environ.get(ev.spack_env_var)
     if not spack_env:
         return
-
-    # Check if we have an old environments path
-    old_envs_path = spack.paths.old_envs_path
-    if not old_envs_path or not os.path.exists(old_envs_path):
+    # args.command is the unparsed remainder, e.g. ["env", "deactivate", "--sh"]
+    command = getattr(args, "command", None) or []
+    if len(command) >= 2 and command[0] == "env" and command[1] == "deactivate":
         return
 
-    # Get the current configured environments_root
-    try:
-        new_envs_path = spack.config.CONFIG.get("config:environments_root")
-        if not new_envs_path:
-            return
-    except (KeyError, AttributeError):
-        # Config not ready yet or environments_root not configured
+    old_root = os.path.realpath(spack.paths.old_envs_path)
+    new_root = os.path.realpath(spack.environment.environment.env_root_path())
+    if old_root == new_root:
         return
 
-    old_envs_real = os.path.realpath(os.path.expanduser(old_envs_path))
-    new_envs_real = os.path.realpath(spack.config.substitute_path_variables(new_envs_path))
     spack_env_real = os.path.realpath(os.path.expanduser(spack_env))
-
-    new_default = os.path.join(spack.migrate.migration_data_home(), "environments")
-
     try:
-        if not os.path.samefile(new_envs_real, new_default):
-            return
-        # else: a new `spack env activate <name>` would not have generated the
-        # current SPACK_ENV: it would have looked into the new default location for
-        # environments; rewrite it below
-    except (OSError, FileNotFoundError):
-        # One of the paths doesn't exist or can't be accessed - use string comparison fallback
-        if os.path.realpath(os.path.expanduser(new_default)) != new_envs_real:
-            return
+        rel = os.path.relpath(spack_env_real, old_root)
+    except ValueError:  # different drives on Windows
+        return
+    if rel.startswith(".."):
+        return  # not under the old environments root
 
-    try:
-        # Check if SPACK_ENV is under the old environments path
-        if os.path.commonpath([spack_env_real, old_envs_real]) == old_envs_real:
-            rel_path = os.path.relpath(spack_env_real, old_envs_real)
-            new_spack_env = os.path.join(new_envs_real, rel_path)
-            os.environ[ev.spack_env_var] = new_spack_env
-            tty.debug(f"Rewrote {ev.spack_env_var} from {spack_env} to {new_spack_env}")
-    except (ValueError, OSError):
-        # commonpath raises ValueError if paths are on different drives (Windows)
-        # or OSError for other path issues - just skip rewriting in these cases
-        pass
+    new_spack_env = os.path.join(new_root, rel)
+    if not os.path.isdir(new_spack_env):
+        return  # this environment was not migrated; keep using the old copy
+
+    os.environ[ev.spack_env_var] = new_spack_env
+    tty.debug(f"Rewrote {ev.spack_env_var} from {spack_env} to {new_spack_env}")
 
 
 def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
@@ -729,7 +713,7 @@ def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
 
         # if no argument, look for the environment variable
         if not env:
-            _maybe_rewrite_spack_env_after_migration()
+            _maybe_rewrite_spack_env_after_migration(args)
             env = os.environ.get(ev.spack_env_var)
 
             # nothing was set; there's no active environment
