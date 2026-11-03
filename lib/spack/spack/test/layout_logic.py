@@ -598,6 +598,80 @@ def test_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch
         )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="unix domain sockets")
+def test_gpg_migration_skips_transient_files(tmp_path):
+    """A live GnuPG home holds agent sockets, lock files, an RNG seed and keyring backups.
+    Sockets cannot be copied and used to fail the whole migration; the rest must not be
+    carried over (a stale lock would block gpg in the new home). Key material is copied,
+    symlinks are preserved rather than followed.
+    """
+    import socket
+    import tempfile
+
+    # AF_UNIX socket paths are limited to ~100 bytes; pytest's tmp_path is too deep on macOS
+    # (the same reason GnuPG has --create-socketdir), so put the GPG home somewhere short.
+    old = pathlib.Path(tempfile.mkdtemp(prefix="gpg-")) / "gpg"
+    old.mkdir()
+    (old / "pubring.kbx").write_bytes(b"keyring")
+    (old / "trustdb.gpg").write_bytes(b"trust")
+    (old / "private-keys-v1.d").mkdir()
+    (old / "private-keys-v1.d" / "deadbeef.key").write_bytes(b"secret")
+    (old / "openpgp-revocs.d").mkdir()
+    (old / "openpgp-revocs.d" / "deadbeef.rev").write_bytes(b"revoke")
+    # transient
+    (old / "pubring.kbx~").write_bytes(b"backup")
+    (old / "random_seed").write_bytes(b"seed")
+    (old / "pubring.kbx.lock").write_text("1234@host\n", encoding="utf-8")
+    (old / "trustdb.gpg.lock").write_text("1234@host\n", encoding="utf-8")
+    sockets = []
+    for name in ("S.gpg-agent", "S.gpg-agent.extra", "S.dirmngr"):
+        sock = socket.socket(socket.AF_UNIX)
+        sock.bind(str(old / name))
+        sockets.append(sock)
+    # a symlinked keyring component must stay a symlink, not become a copy
+    shared = tmp_path / "shared-trustdb.gpg"
+    shared.write_bytes(b"shared")
+    (old / "trustdb-link.gpg").symlink_to(shared)
+
+    new = tmp_path / "new-gpg"
+    try:
+        migrated = spack.migrate.migrate_with_staging(
+            old_path=str(old),
+            new_path=str(new),
+            prepare_staging_callback=lambda o, s, n: spack.migrate._prepare_gpg_staging(
+                o, s, ".migration-test"
+            ),
+            lock_name=".gpg-test.lock",
+            staging_name=".gpg-test-staging",
+            description="GPG home",
+            verify_destination_callback=spack.migrate.can_migrate_to_location,
+        )
+    finally:
+        for sock in sockets:
+            sock.close()
+        shutil.rmtree(old.parent, ignore_errors=True)
+
+    assert migrated is True
+    assert (new / "pubring.kbx").read_bytes() == b"keyring"
+    assert (new / "trustdb.gpg").read_bytes() == b"trust"
+    assert (new / "private-keys-v1.d" / "deadbeef.key").read_bytes() == b"secret"
+    assert (new / "openpgp-revocs.d" / "deadbeef.rev").read_bytes() == b"revoke"
+    assert (new / ".migration-test").exists()
+    assert (new / "trustdb-link.gpg").is_symlink()
+    assert os.stat(new).st_mode & 0o777 == 0o700
+
+    for transient in (
+        "pubring.kbx~",
+        "random_seed",
+        "pubring.kbx.lock",
+        "trustdb.gpg.lock",
+        "S.gpg-agent",
+        "S.gpg-agent.extra",
+        "S.dirmngr",
+    ):
+        assert not (new / transient).exists(), f"{transient} should not have been copied"
+
+
 def test_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
     """Migration recursively copies the legacy package repository tree."""
     home_dir, _ = mock_spack_instance

@@ -259,6 +259,7 @@ If the user approves migration, Spack migrates both the GPG keyring and the GPG 
 - If `SPACK_GNUPGHOME` is set, migration instead preserves that explicit GPG home and the old import-keys directory; it does not copy GPG data to the new defaults.
 - Destinations must not already exist; keyrings are never merged.
 - Each directory is copied to a private sibling staging directory (the keyring with mode `0700`) and atomically renamed into place before the next directory is processed.
+- Transient GnuPG files are not copied: agent sockets (`S.*`), lock files (`*.lock`), the RNG seed (`random_seed`) and keyring backups (`*~`). None hold key material; sockets cannot be copied and lock files would block gpg in the new home. Symlinks are preserved as symlinks.
 - If the second migration fails after the first has been published, layout configuration points both GPG paths to their retained locations. A later attempt from the same Spack instance recognizes its marker in the first destination and can resume with the second directory.
 - Failed staging is removed.
 - Old GPG directories remain in place after successful copying.

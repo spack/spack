@@ -811,9 +811,21 @@ def _prepare_package_repos_staging(old_path, staging_path, new_path):
         shutil.copytree(old_path, staging_path, symlinks=True)
 
 
+#: Transient files GnuPG keeps in its home directory. None of these hold key material, and
+#: copying them is harmful or impossible: agent sockets (``S.*``) cannot be copied at all and
+#: fail the whole copy, stale lock files would block gpg in the new home, and the RNG seed
+#: and keyring backups are regenerated on demand.
+_GPG_TRANSIENT_PATTERNS = ("S.*", "*.lock", "random_seed", "*~")
+
+
 def _prepare_gpg_staging(old_path, staging_path, marker_name):
     """Callback for GPG migration - copy directory, set permissions, add marker."""
-    shutil.copytree(old_path, staging_path)
+    shutil.copytree(
+        old_path,
+        staging_path,
+        symlinks=True,
+        ignore=shutil.ignore_patterns(*_GPG_TRANSIENT_PATTERNS),
+    )
     os.chmod(staging_path, 0o700)
     with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
         f.write(f"Migrated from {spack.paths.prefix}\n")
