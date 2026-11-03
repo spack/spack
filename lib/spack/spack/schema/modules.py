@@ -159,7 +159,15 @@ tcl_configuration = {
     "description": "Configuration for Tcl module files compatible with Environment Modules and "
     "Lmod",
     "additionalKeysAreSpecs": True,
-    "properties": {**common_props},
+    "properties": {
+        **common_props,
+        "update_cache": {
+            "type": "boolean",
+            "default": False,
+            "description": "Keep the module cache updated when module files are created or "
+            "removed",
+        },
+    },
     "additionalProperties": ref_module_file_configuration,
 }
 

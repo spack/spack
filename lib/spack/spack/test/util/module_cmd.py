@@ -10,6 +10,22 @@ import spack.util.module_cmd
 
 
 @pytest.mark.not_on_windows("Module files are not supported on Windows")
+def test_module_env_is_passed_to_non_state_changing_commands():
+    """Test that the environb argument sets the environment of module commands whose
+    output is returned, like cache-related ones."""
+    environb = dict(os.environb)
+    environb[b"MODULEPATH"] = b"/spack/test/modulepath"
+    # Ensure the real module initialization script is not sourced
+    environb.pop(b"MODULESHOME", None)
+
+    output = spack.util.module_cmd.module(
+        "cacheclear", module_template='echo "$MODULEPATH"', environb=environb
+    )
+
+    assert output.strip() == "/spack/test/modulepath"
+
+
+@pytest.mark.not_on_windows("Module files are not supported on Windows")
 def test_load_module_success(monkeypatch, working_env):
     """Test that load_module properly handles successful module loads.
 
