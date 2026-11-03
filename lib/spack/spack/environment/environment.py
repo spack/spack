@@ -3795,10 +3795,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             ValueError: if no equivalent match is found
         """
-        result = []
-        for yaml_spec_str in self.configuration["specs"]:
-            if Spec(yaml_spec_str) == Spec(user_spec):
-                result.append(yaml_spec_str)
+        toolchains = spack.config.CONFIG.get("toolchains", {})
+        wanted = spack.spec.parse(user_spec, toolchains=toolchains)
+        result = [
+            yaml_spec_str
+            for yaml_spec_str in self.configuration["specs"]
+            if spack.spec.parse(yaml_spec_str, toolchains=toolchains) == wanted
+        ]
 
         if not result:
             raise ValueError(f"cannot find a spec equivalent to {user_spec}")

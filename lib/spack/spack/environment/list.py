@@ -8,7 +8,7 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.variant
 from spack.error import SpackError
-from spack.spec import Spec, expand_toolchains
+from spack.spec import Spec, expand_toolchains, parse
 
 
 class SpecList:
@@ -74,11 +74,12 @@ class SpecList:
         self._specs = None
 
     def remove(self, spec):
-        # Get spec to remove from list
+        # Get spec to remove from list, comparing with toolchains expanded like in self.specs
         remove = [
             s
             for s in self.yaml_list
-            if (isinstance(s, str) and not s.startswith("$")) and Spec(s) == Spec(spec)
+            if (isinstance(s, str) and not s.startswith("$"))
+            and parse(s, toolchains=self._toolchains) == [Spec(spec)]
         ]
         if not remove:
             msg = f"Cannot remove {spec} from SpecList {self.name}.\n"
