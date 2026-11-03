@@ -466,3 +466,51 @@ def test_isolate_after_migration_keeps_retained_resources(isolate_paths, tmp_pat
     )
     cfg = spack.config.create()
     assert str(cfg.get("config:environments_root")) == str(old_envs.parent)
+
+
+def test_isolate_reuse_old_keeps_generated_layout(isolate_paths, tmp_path):
+    """``--reuse-old`` keeps an existing isolate layout config instead of regenerating it.
+
+    The first ``--reuse-old`` writes generated settings to the isolate layout scope (not to
+    the preserved target). Running it again, or after the user has edited that file,
+    keeps the file as it is.
+    """
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
+    target = tmp_path / "old-isolation"
+    target.mkdir()
+    (target / "config.yaml").write_text("config:\n  build_jobs: 3\n", encoding="utf-8")
+
+    sp_isolate("--path", str(target), "--reuse-old")
+
+    layout_config = isolate_scope_path / "layout" / "config.yaml"
+    assert layout_config.exists()
+    generated = layout_config.read_text(encoding="utf-8")
+
+    # User edits the generated file
+    edited = generated + "  build_jobs: 99\n"
+    layout_config.write_text(edited, encoding="utf-8")
+
+    out = sp_isolate("--path", str(target), "--reuse-old")
+    assert "Keeping existing" in out
+
+    # Edits survived, and the preserved target is untouched as well
+    assert layout_config.read_text(encoding="utf-8") == edited
+    assert (target / "config.yaml").read_text(encoding="utf-8") == "config:\n  build_jobs: 3\n"
+
+
+def test_isolate_self_reuse_old_keeps_user_config(isolate_paths):
+    """For ``--self``, the generated config is the user scope; ``--reuse-old`` must not
+    discard settings the user has added to it since."""
+    home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
+
+    sp_isolate("--self")
+    user_config = isolate_scope_path / "user" / "config.yaml"
+    assert user_config.exists()
+
+    spack.config.CONFIG = spack.config.create()
+    sp_config("add", "config:build_jobs:7")
+    assert "build_jobs: 7" in user_config.read_text(encoding="utf-8")
+
+    out = sp_isolate("--self", "--reuse-old")
+    assert "Keeping existing" in out
+    assert "build_jobs: 7" in user_config.read_text(encoding="utf-8")

@@ -8,7 +8,7 @@ This document organizes the intended behavior of the shared-storage changes in t
 - **Old resources** are artifacts created by an older Spack layout under the Spack prefix, such as `$spack/opt/spack`, `$spack/var/spack/environments`, `$spack/opt/spack/gpg`, and `$spack/opt/spack/licenses`.
 - **Layout scope** is `$spack/etc/spack/layout/`. It records paths to old resources that were not successfully migrated (e.g., installs, or portable resources whose copy failed).
 - **Isolate scope** is `$spack/etc/spack/isolate/`. It redirects newly created configuration and generated artifacts to an isolation target.
-- **User-redirect scope** is the writable user configuration scope used by `spack isolate --self`.
+- **Isolated user scope** is the writable user configuration scope established by `spack isolate`: the `--path` target, or `$spack/etc/spack/isolate/user` for `--self`.
 
 The central safety rule is:
 
@@ -63,7 +63,7 @@ Explicit, resource-specific configuration still takes precedence. For example, a
 
 Location settings participate in normal Spack configuration scope precedence:
 
-- user or user-redirect configuration can override layout defaults;
+- user configuration (or, for `spack isolate --self`, the `user` subdirectory of the isolate scope) can override layout defaults;
 - layout configuration provides recorded old-resource paths and migration decisions;
 - explicitly configured resource-specific paths remain user choices;
 - command-line and active-environment configuration can override lower-priority generated configuration where applicable.
@@ -398,7 +398,7 @@ For:
 spack isolate --self
 ```
 
-`$spack/etc/spack/isolate` is both the isolate scope and the isolation target. User configuration additions go in its `user-redirect` subdirectory.
+`$spack/etc/spack/isolate` is both the isolate scope and the isolation target. User configuration additions go in its `user` subdirectory (`$spack/etc/spack/isolate/user`); generated data goes to `$spack/.isolate`.
 
 ## 4.2 Isolation immediately after updating an existing Spack
 
@@ -419,7 +419,7 @@ In this case:
 - if no migration decision has been recorded yet (`.migration-done` absent), old-resource paths are detected and written to the isolate layout scope (`$spack/etc/spack/isolate/layout`);
 - if a migration decision has already been recorded, old-resource paths are not re-derived: the migration's layout scope (`$spack/etc/spack/layout`) already records which resources were retained, and re-detecting would re-pin successfully migrated resources to their stale pre-migration copies;
 - the isolate scope's `include.yaml` includes both layout scopes, making old-resource redirects available in either case;
-- the resulting configuration uses the isolate scope and gives user or user-redirect configuration higher precedence than layout fallback values.
+- the resulting configuration uses the isolate scope and gives user configuration higher precedence than layout fallback values.
 
 ## 4.3 Reusing an old isolation target after pulling
 
@@ -441,7 +441,7 @@ Expected `--reuse-old` behavior:
 - old target files such as `config.yaml`, `repos.yaml`, and `bootstrap.yaml` remain byte-for-byte intact;
 - the current isolate include behavior is established without restoring the old tracked-file modification;
 - the defining isolate scope remains effective, so preserved old configuration continues to contribute values;
-- `user-redirect` is used for new user configuration when applicable;
+- for `--self`, the isolate scope's `user` subdirectory is used for new user configuration;
 - layout remains available for old-resource redirects and generated location settings;
 - explicit old repository destinations remain unchanged;
 - new repositories without explicit destinations use the isolated location defaults.
@@ -455,7 +455,7 @@ The isolate include uses an override so external user, site, and system scopes a
 The intended effective precedence is:
 
 1. the defining isolate scope, including preserved old target configuration when applicable;
-2. isolated user or user-redirect scope;
+2. isolated user scope (`--path` target, or `$spack/etc/spack/isolate/user` for `--self`);
 3. isolate layout scope (`$spack/etc/spack/isolate/layout`), holding isolation locations and, for a pre-migration isolation, detected old-resource paths;
 4. migration layout scope (`$spack/etc/spack/layout`);
 5. built-in defaults.

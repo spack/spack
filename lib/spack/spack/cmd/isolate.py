@@ -76,9 +76,8 @@ def _setup_isolate_scope(new_user_path, overwrite: bool, reuse_old: bool) -> str
     else:
         os.makedirs(spack.paths.isolate_scope_path, exist_ok=True)
 
-    # For --self, create a redirected user subdirectory for user config additions
-    # The isolate scope's config files point to isolate/bootstrap, isolate/cache, etc.
-    # But user additions go to isolate/user-redirect
+    # For --self, the isolate scope is also the target, so user config additions go to
+    # its `user` subdirectory rather than the scope directory itself.
     if is_self:
         user_redirect_path = os.path.join(spack.paths.isolate_scope_path, "user")
         os.makedirs(user_redirect_path, exist_ok=True)
@@ -87,7 +86,7 @@ def _setup_isolate_scope(new_user_path, overwrite: bool, reuse_old: bool) -> str
         final_user_path = new_user_path
 
     # Write include.yaml with include:: override to redirect user scope
-    # For --self, this points to user-redirect/
+    # For --self, this points to isolate/user/
     # For --path, this points to the external path
     _isolate_include_config(final_user_path)
 
@@ -205,6 +204,12 @@ def _do_isolate(args):
         config_path = os.path.join(spack.paths.isolate_scope_path, "layout", "config.yaml")
     else:
         config_path = os.path.join(cfg_destination, "config.yaml")
+
+    # --reuse-old keeps whatever configuration is already in place: a layout file generated
+    # by an earlier --reuse-old (possibly edited since), or for --self the user scope itself.
+    if args.reuse_old and os.path.exists(config_path):
+        tty.msg(f"Keeping existing {config_path}")
+        return
 
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
     with open(config_path, "w", encoding="utf-8") as f:
