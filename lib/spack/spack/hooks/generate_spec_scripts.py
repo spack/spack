@@ -98,28 +98,6 @@ def get_environment_modifications(
     return load_mods, unload_mods
 
 
-def get_environment_modifications(spec, shell) -> Tuple[str, str]:
-    """Returns both load and unload environment modifications for the spec.
-    Args:
-        spec: The spec whose environment modifications we are returning
-        shell: The shell that the user is running
-        repo: (Optional) A repo to use when calculating environment modifications
-
-    Returns:
-        tuple: (load_modifications, unload_modifications)
-    """
-    load_env_mod = uenv.environment_modifications_for_specs(spec)
-    unload_env_mod = load_env_mod.reversed()
-
-    load_env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-    load_mods = load_env_mod.shell_modifications(shell, cache=False)
-
-    unload_env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-    unload_mods = unload_env_mod.shell_modifications(shell, cache=False)
-
-    return load_mods, unload_mods
-
-
 def script_needs_update(script_path: str) -> bool:
     """Check if a script needs regeneration.
 
