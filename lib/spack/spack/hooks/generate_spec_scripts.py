@@ -86,7 +86,11 @@ def get_environment_modifications(
     Returns:
         tuple: (load_modifications, unload_modifications)
     """
-    load_env_mod = uenv.spec_environment_modifications([spec], repo=repo)
+    if use_cache:
+        load_env_mod = uenv.spec_environment_modifications([spec], repo=repo)
+    else:
+        load_env_mod = uenv.environment_modifications_for_specs(spec)
+
     unload_env_mod = load_env_mod.reversed()
 
     load_env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())

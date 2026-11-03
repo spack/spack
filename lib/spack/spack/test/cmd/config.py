@@ -587,9 +587,7 @@ def test_config_add_to_env(mutable_empty_config):
     assert expected in output
 
 
-def test_config_add_to_env_preserve_comments(
-    mutable_empty_config, tmp_path: pathlib.Path
-):
+def test_config_add_to_env_preserve_comments(mutable_empty_config, tmp_path: pathlib.Path):
     filepath = str(tmp_path / "spack.yaml")
     manifest = """# comment
 spack:  # comment
