@@ -12,7 +12,7 @@ if sys.platform != "win32":
 import ctypes
 import msvcrt
 from ctypes import wintypes
-from typing import Dict, List, Optional
+from typing import Dict, Optional, Tuple
 
 from spack.util.lock import FILE_TRACKER, FileBackend, LockError, LockType, OpenFile
 
@@ -85,19 +85,17 @@ def _unlock_file(fd: int, offset: int, length: int) -> None:
 class _RangeLock:
     """The lock this process holds on a byte range, shared by all its backends for that range."""
 
-    __slots__ = ("start", "length", "refs", "writers")
+    __slots__ = ("refs", "writers")
 
-    def __init__(self, start: int, length: int) -> None:
-        self.start = start
-        self.length = length
+    def __init__(self) -> None:
         #: number of backends holding the lock
         self.refs = 0
         #: number of backends holding it for writing; the OS lock is exclusive if this is > 0
         self.writers = 0
 
 
-#: The locks this process holds, by the file they were taken through.
-_held_locks: Dict[OpenFile, List[_RangeLock]] = {}
+#: The locks this process holds, by the file they were taken through and their range.
+_held_locks: Dict[Tuple[OpenFile, int, int], _RangeLock] = {}
 
 
 class WindowsBackend(FileBackend):
@@ -114,8 +112,8 @@ class WindowsBackend(FileBackend):
 
     def __init__(self, path: str, start: int, length: int, debug: bool = False) -> None:
         length = length or GATE_OFFSET - start
-        if start + length > GATE_OFFSET:
-            raise ValueError(f"lock range of {path} ends past {GATE_OFFSET}")
+        if length <= 0 or start + length > GATE_OFFSET:
+            raise ValueError(f"lock range of {path} must be non-empty and end by {GATE_OFFSET}")
         super().__init__(path, start, length, debug=debug)
         #: the lock this backend holds, if any, and whether it holds it for writing
         self._held: Optional[_RangeLock] = None
@@ -144,16 +142,16 @@ class WindowsBackend(FileBackend):
         """Try once to acquire the lock in ``op`` mode. Returns whether it was acquired."""
         write = op == LockType.WRITE
         if self._held is not None:
-            return self._set_mode(write)
-
-        if self._file_ref is None:  # closed after a failed attempt
-            self.prepare(op)
-        acquired = False
-        try:
-            acquired = self._acquire(write)
-        finally:
-            if not acquired:
-                self._close()
+            acquired = self._set_mode(write)
+        else:
+            if self._file_ref is None:  # closed after a failed attempt
+                self.prepare(op)
+            acquired = False
+            try:
+                acquired = self._acquire(write)
+            finally:
+                if not acquired:
+                    self._close()
 
         if acquired and self.debug:
             self._log_lock_owner(op)
@@ -165,10 +163,7 @@ class WindowsBackend(FileBackend):
         assert held is not None and self._file_ref is not None, "cannot release an unheld lock"
         if held.refs == 1:
             self._unlock_range()
-            locks = _held_locks[self._file_ref]
-            locks.remove(held)
-            if not locks:
-                del _held_locks[self._file_ref]
+            del _held_locks[(self._file_ref, self._start, self._length)]
         elif self._writer and held.writers == 1:
             self._downgrade()
 
@@ -182,13 +177,12 @@ class WindowsBackend(FileBackend):
     def _acquire(self, write: bool) -> bool:
         """Join the lock this process holds on the range, or take a new one."""
         assert self._file_ref is not None
-        locks = _held_locks.get(self._file_ref, [])
-        held = next((x for x in locks if (x.start, x.length) == (self._start, self._length)), None)
+        key = (self._file_ref, self._start, self._length)
+        held = _held_locks.get(key)
         if held is None:
             if not self._lock_new(write):
                 return False
-            held = _RangeLock(self._start, self._length)
-            _held_locks.setdefault(self._file_ref, []).append(held)
+            held = _held_locks[key] = _RangeLock()
         elif write and not held.writers and not self._upgrade():
             return False
 

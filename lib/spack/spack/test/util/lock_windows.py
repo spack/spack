@@ -75,6 +75,8 @@ def test_lock_range():
     lk.Lock("lockfile", start=lkw.GATE_OFFSET - 1, length=1)
     with pytest.raises(ValueError):
         lk.Lock("lockfile", start=lkw.GATE_OFFSET, length=1)
+    with pytest.raises(ValueError):
+        lk.Lock("lockfile", start=lkw.GATE_OFFSET)
 
 
 def test_whole_file_lock_covers_byte_range_locks(lock_path):

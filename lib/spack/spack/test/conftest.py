@@ -1026,7 +1026,7 @@ def configuration_dir(request, tmp_path_factory: pytest.TempPathFactory, linux_o
     # Fill out config.yaml, packages.yaml and modules.yaml templates.
     config = tmp_path / "site" / "config.yaml"
     config_template = test_config / "config.yaml"
-    config.write_text(config_template.read_text().format(install_tree_root, True))
+    config.write_text(config_template.read_text().format(install_tree_root))
 
     target = str(spack.vendor.archspec.cpu.host().family)
     compilers = tmp_path / "site" / "packages.yaml"

@@ -77,10 +77,10 @@ class OpenFileTracker:
     reference-count it. The descriptor is only closed when the reference count reaches zero (i.e.
     no ``Lock`` in this process still needs it).
 
-    Descriptors are *not* released on unlock; they are kept alive across lock/unlock cycles so that
-    the next lock operation can skip re-opening the file. ``PosixBackend._ensure_valid_handle``
-    re-validates the on-disk inode before each lock operation and drops a stale descriptor when
-    the file was deleted and replaced.
+    Descriptors are *not* released on unlock (except on Windows, which can't delete open files);
+    they are kept alive across lock/unlock cycles so that the next lock operation can skip
+    re-opening the file. ``FileBackend._ensure_valid_handle`` re-validates the on-disk inode
+    before each lock operation and drops a stale descriptor when the file was deleted and replaced.
     """
 
     def __init__(self):
@@ -446,7 +446,7 @@ class Lock:
             desc: optional debug message lock description, which is helpful for distinguishing
                 between different Spack locks.
             enable: when False, swap in a no-op backend so all lock operations succeed
-                without acquiring a real filesystem lock. Always disabled on Windows.
+                without acquiring a real filesystem lock.
         """
         self.path = path
         self._reads = 0
