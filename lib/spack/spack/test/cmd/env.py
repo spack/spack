@@ -4352,7 +4352,6 @@ def test_env_activate_includes_prefix_inspections(
         expected_cmake_prepend = f"_spack_env_prepend CMAKE_PREFIX_PATH {libelf_prefix} :"
 
     assert expected_cmake_prepend in activate_output
->>>>>>> 754b6e2a635ca00a9e7b292c9660babc569e0a8e
 
 
 @pytest.mark.regression("12719")
