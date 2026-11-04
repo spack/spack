@@ -2542,6 +2542,31 @@ def test_env_create_filter_allows_included_config_without_ambient_scopes(
     assert "packages" not in manifest
 
 
+@pytest.mark.parametrize("location", ["manifest", "include", "absent"])
+def test_env_create_filter_copies_only_source_concretizer(
+    tmp_path: pathlib.Path, mutable_config, location: str
+):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    include = ""
+    concretizer = ""
+    if location == "include":
+        (source_dir / "common.yaml").write_text("concretizer:\n  reuse: false\n")
+        include = "  include:\n  - ./common.yaml\n"
+    elif location == "manifest":
+        concretizer = "  concretizer:\n    reuse: false\n"
+    (source_dir / "spack.yaml").write_text(f"spack:\n{include}  specs:\n  - libelf\n{concretizer}")
+    filter_yaml = _write_filter_yaml(
+        tmp_path, "filter:\n  concrete: false\n  config:\n    allow: [concretizer]\n"
+    )
+
+    with mutable_config.override("concretizer", {"force": True, "reuse": True}):
+        env("create", "--filter", filter_yaml, "filtered", str(source_dir))
+
+    manifest = ev.read("filtered").manifest["spack"]
+    assert manifest.get("concretizer") == ({"reuse": False} if location != "absent" else None)
+
+
 def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")

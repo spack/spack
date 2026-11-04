@@ -781,12 +781,10 @@ def _configuration_with_resolved_includes(
 
 
 def _filtered_configuration(
-    source_env: "Environment",
     source_configuration: Dict[str, Any],
     filter_configuration: Dict[str, Any],
     specs: Sequence[Union[str, Dict[str, Any]]],
     with_view: Optional[Union[str, pathlib.Path, bool]],
-    resolved_includes: bool,
 ) -> Dict[str, Any]:
     allowed_sections = set(filter_configuration["config"]["allow"])
     blocked_sections = set(filter_configuration["config"]["block"])
@@ -807,20 +805,12 @@ def _filtered_configuration(
     def include_section(name: str) -> bool:
         return name not in blocked_sections and (not allowed_sections or name in allowed_sections)
 
-    with source_env:
-        if include_section("packages"):
-            filtered_packages = _filter_packages_configuration(
-                source_configuration.get("packages", {}), filter_configuration
-            )
-        else:
-            filtered_packages = {}
-
-        if include_section("concretizer"):
-            filtered["concretizer"] = (
-                copy.deepcopy(source_configuration.get("concretizer", {}))
-                if resolved_includes
-                else copy.deepcopy(spack.config.CONFIG.get("concretizer"))
-            )
+    if include_section("packages"):
+        filtered_packages = _filter_packages_configuration(
+            source_configuration.get("packages", {}), filter_configuration
+        )
+    else:
+        filtered_packages = {}
 
     if include_section("packages"):
         if filtered_packages:
@@ -829,12 +819,6 @@ def _filtered_configuration(
             filtered.pop("packages", None)
     else:
         filtered.pop("packages", None)
-
-    if not include_section("concretizer"):
-        filtered.pop("concretizer", None)
-
-    if "concretizer" in filtered and not filtered["concretizer"]:
-        filtered.pop("concretizer", None)
 
     filtered["specs"] = specs
 
@@ -945,12 +929,7 @@ def _create_filtered_environment_in_dir(
             )
 
         filtered_configuration = _filtered_configuration(
-            source_env,
-            source_configuration,
-            filter_configuration,
-            filtered_specs,
-            with_view,
-            resolved_includes=resolved_includes,
+            source_configuration, filter_configuration, filtered_specs, with_view
         )
         _set_filtered_manifest(env, filtered_configuration)
 
