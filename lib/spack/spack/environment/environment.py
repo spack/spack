@@ -590,6 +590,9 @@ def _validated_filter_projection(spec: Spec, format_string: str) -> str:
 def _filtered_concrete_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Tuple[str, Spec]]:
+    """Select concrete specs and format their manifest entries."""
+    # Select specs and projection formats before removing dependencies, since their
+    # constraints may refer to dependencies (for example, "mpileaks ^mpich").
     return [
         (
             _validated_filter_projection(
@@ -604,6 +607,61 @@ def _filtered_concrete_root_entries(
             filter_configuration["specs"]["block"],
         )
     ]
+
+
+def _filtered_concrete_dags(
+    filtered_roots: Sequence[Tuple[str, Spec]], filter_configuration: Dict[str, Any]
+) -> List[Tuple[str, Spec]]:
+    """Copy selected roots with excluded nodes and edges removed from their DAGs."""
+    # Spliced specs record what they were built from in build_spec. The lockfile
+    # includes those specs and their dependencies, so they must be filtered too.
+    pending = [concrete for _, concrete in filtered_roots]
+    originals: Dict[str, Spec] = {}
+    while pending:
+        concrete = pending.pop()
+        key = concrete.dag_hash()
+        if key in originals:
+            continue
+        originals[key] = concrete
+        pending.extend(concrete.dependencies())
+        if concrete.build_spec is not concrete:
+            pending.append(concrete.build_spec)
+
+    # Copy each allowed spec without dependencies so the source is not changed.
+    # Reuse the same copy wherever a dependency is shared by multiple roots.
+    # Preserve the original hashes so Spack can still find installed packages.
+    selected = {
+        key: concrete.copy(deps=False)
+        for key, concrete in originals.items()
+        if _spec_is_allowed(
+            concrete,
+            filter_configuration["specs"]["allow"],
+            filter_configuration["specs"]["block"],
+        )
+    }
+    for key, concrete in selected.items():
+        original = originals[key]
+        # copy(deps=False) still points to the source's build_spec. Point to its
+        # filtered copy instead, or use None if that spec was excluded.
+        concrete._build_spec = (
+            selected.get(original.build_spec.dag_hash())
+            if original.build_spec is not original
+            else None
+        )
+        # Restore dependencies only when they are allowed by the filter.
+        for edge in original.edges_to_dependencies():
+            dependency = selected.get(edge.spec.dag_hash())
+            if dependency is not None:
+                concrete.add_dependency_edge(
+                    dependency,
+                    depflag=edge.depflag,
+                    virtuals=edge.virtuals,
+                    direct=edge.direct,
+                    propagation=edge.propagation,
+                    when=edge.when,
+                )
+
+    return [(abstract, selected[concrete.dag_hash()]) for abstract, concrete in filtered_roots]
 
 
 def _filtered_abstract_root_entries(
@@ -839,6 +897,7 @@ def _create_filtered_environment_in_dir(
                     "without a spack.lock"
                 )
             filtered_roots = _filtered_concrete_root_entries(source_env, filter_configuration)
+            filtered_roots = _filtered_concrete_dags(filtered_roots, filter_configuration)
             filtered_specs = [abstract for abstract, _ in filtered_roots]
         else:
             filtered_specs = _filtered_abstract_root_entries(source_env, filter_configuration)
