@@ -3890,7 +3890,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         result = []
         for item in self.configuration["specs"]:
             spec_str = spec_string(item)
-            if spec_str is not None and spack.spec.parse(spec_str, toolchains=toolchains) == wanted:
+            if (
+                spec_str is not None
+                and spack.spec.parse(spec_str, toolchains=toolchains) == wanted
+            ):
                 result.append(item)
 
         if not result:
