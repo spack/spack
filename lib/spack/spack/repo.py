@@ -488,6 +488,10 @@ class FastPackageChecker(Mapping[str, float]):
 class Indexer(metaclass=abc.ABCMeta):
     """Adaptor for indexes that need to be generated when repos are updated."""
 
+    #: Version of the format of the cached index. It is part of the cache file name, so a cache
+    #: written in another format, e.g. by another version of Spack, is neither read nor replaced.
+    version = 1
+
     def __init__(self, repository):
         self.repository = repository
         self.index = None
@@ -567,6 +571,8 @@ class ProviderIndexer(Indexer):
 
 class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
+
+    version = spack.patch.PatchCache.VERSION
 
     def _create(self) -> spack.patch.PatchCache:
         return spack.patch.PatchCache(repository=self.repository)
@@ -670,10 +676,13 @@ class RepoIndex:
         """Determine which packages need an update, and update indexes. Returns true if the
         index is fresh."""
 
-        # Filename of the provider index cache (we assume they're all json)
+        # Filename of the index cache (we assume they're all json)
         from spack.spec import SPECFILE_FORMAT_VERSION
 
-        cache_filename = f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}-index.json"
+        cache_filename = (
+            f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}"
+            f"-index_v{indexer.version}.json"
+        )
 
         with self.cache.read_transaction(cache_filename) as f:
             # Get the mtime of the cache if it exists, of -inf.
@@ -1396,9 +1405,7 @@ class Repo:
             )
             self._repo_index.add_indexer("providers", ProviderIndexer(self))
             self._repo_index.add_indexer("tags", TagIndexer(self))
-            # The name is also the cache directory. v2: dependency patches are keyed by the
-            # dependency as written, so caches with resolved fullname keys must not be reused.
-            self._repo_index.add_indexer("patches_v2", PatchIndexer(self))
+            self._repo_index.add_indexer("patches", PatchIndexer(self))
         return self._repo_index
 
     @property
@@ -1414,7 +1421,7 @@ class Repo:
     def get_patch_index(self, allow_stale: bool = False) -> spack.patch.PatchCache:
         """Index of patches and packages they're defined on. Set allow_stale is True to bypass
         cache validation and return a potentially stale index."""
-        return self.index.get_index("patches_v2", allow_stale=allow_stale)
+        return self.index.get_index("patches", allow_stale=allow_stale)
 
     def providers_for(self, virtual: Union[str, "spack.spec.Spec"]) -> List["spack.spec.Spec"]:
         providers = self.provider_index.providers_for(virtual)

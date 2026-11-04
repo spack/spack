@@ -403,6 +403,11 @@ class PatchCache:
                 ... etc. ...
     """
 
+    #: Version of the index format, see ``spack.repo.Indexer.version``. Increase it when the
+    #: format changes. v2: dependency patches are keyed by the dependency as written, not by
+    #: the fullname it resolves to in the repository of the patching package.
+    VERSION = 2
+
     def __init__(
         self, repository: "spack.repo.RepoPath", data: Optional[Dict[str, Any]] = None
     ) -> None:
