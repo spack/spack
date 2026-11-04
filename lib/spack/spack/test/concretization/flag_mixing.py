@@ -100,6 +100,14 @@ def test_mix_spec_and_compiler_cfg(concretize_scope, test_repo):
     assert s1.satisfies('cflags="-Wall -O2"')
 
 
+@pytest.mark.regression("50685")
+def test_mix_spec_and_compiler_cfg_with_empty_flags(concretize_scope, test_repo):
+    update_concretize_scope(_compiler_cfg_one_entry_with_cflags(""), "packages")
+
+    s1 = spack.concretize.concretize_one("y %gcc@12.100.100")
+    assert s1.compiler_flags["cflags"] == []
+
+
 def test_pkg_flags_from_compiler_and_none(concretize_scope, mock_packages):
     packages_yaml = f"""
 {_compiler_cfg_one_entry_with_cflags("-Wall")}
