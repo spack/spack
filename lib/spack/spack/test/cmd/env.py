@@ -2478,6 +2478,70 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
     assert [spec.name for spec in filtered.concrete_roots()] == ["mpileaks"]
 
 
+@pytest.mark.parametrize("concrete", [False, True])
+def test_env_create_filter_blocks_included_config(tmp_path: pathlib.Path, concrete: bool):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    (source_dir / "nested.yaml").write_text(
+        "mirrors:\n  internal: https://mirror.example.com/internal\n"
+    )
+    (source_dir / "common.yaml").write_text(
+        "include:\n- ./nested.yaml\n"
+        "mirrors:\n  shared: https://mirror.example.com/shared\n"
+        "packages:\n  cmake:\n    buildable: false\n"
+    )
+    (source_dir / "spack.yaml").write_text(
+        "spack:\n  include:\n  - ./common.yaml\n  specs:\n  - libelf\n  view: false\n"
+    )
+    source = ev.Environment(source_dir)
+    if concrete:
+        source.concretize()
+        source.write()
+
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        f"filter:\n  concrete: {str(concrete).lower()}\n  config:\n    block: [mirrors]\n",
+    )
+    filtered_dir = tmp_path / "filtered"
+    env("create", "-d", str(filtered_dir), "--filter", filter_yaml, str(source_dir))
+
+    filtered = ev.Environment(filtered_dir)
+    assert "include" not in filtered.manifest["spack"]
+    assert "mirrors" not in filtered.manifest["spack"]
+    assert filtered.manifest["spack"]["packages"]["cmake"] == {"buildable": False}
+    with filtered:
+        assert "internal" not in spack.config.CONFIG.get("mirrors")
+        assert "shared" not in spack.config.CONFIG.get("mirrors")
+    assert bool(filtered.concrete_roots()) == concrete
+
+
+def test_env_create_filter_allows_included_config_without_ambient_scopes(
+    tmp_path: pathlib.Path, mutable_config
+):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    (source_dir / "common.yaml").write_text(
+        "mirrors:\n  included: https://mirror.example.com/included\n"
+        "  shared: https://mirror.example.com/from-include\n"
+    )
+    (source_dir / "spack.yaml").write_text(
+        "spack:\n  include:\n  - ./common.yaml\n  specs:\n  - libelf\n"
+        "  mirrors:\n    inline: https://mirror.example.com/inline\n"
+        "    shared: https://mirror.example.com/from-manifest\n"
+    )
+    filter_yaml = _write_filter_yaml(
+        tmp_path, "filter:\n  concrete: false\n  config:\n    allow: [mirrors]\n"
+    )
+    with mutable_config.override("mirrors", {"ambient": "https://mirror.example.com/ambient"}):
+        env("create", "--filter", filter_yaml, "filtered", str(source_dir))
+
+    manifest = ev.read("filtered").manifest["spack"]
+    assert set(manifest["mirrors"]) == {"inline", "included", "shared"}
+    assert manifest["mirrors"]["shared"] == "https://mirror.example.com/from-manifest"
+    assert "include" not in manifest
+    assert "packages" not in manifest
+
+
 def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")

@@ -212,6 +212,8 @@ An empty ``packages:block`` list blocks nothing.
 The ``config`` subsection controls which top-level configuration sections are copied from the source environment.
 ``config:allow`` is a list of section names to copy; an empty list allows all sections.
 ``config:block`` is a list of section names to omit; an empty list blocks nothing.
+If the source environment includes configuration files, their settings are filtered too.
+The new environment writes the retained settings into its manifest instead of including those files.
 
 The optional ``projections`` subsection controls how concrete specs are written as abstract roots in the generated ``spack.yaml``.
 Keys are spec constraints and values are spec format strings.

@@ -758,12 +758,35 @@ def _filter_packages_configuration(
     }
 
 
+def _configuration_with_resolved_includes(
+    source_env: "Environment", source_configuration: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Merge sections from the source manifest and its included files.
+
+    Use a separate configuration so settings from active user or site scopes
+    are not copied into the filtered environment.
+    """
+    configuration = spack.config.Configuration()
+    configuration.push_scope(source_env.manifest.env_config_scope)
+    resolved = dict(source_configuration)
+    resolved.pop(manifest_include_name, None)
+
+    for section in spack.config.SECTION_SCHEMAS:
+        if section == manifest_include_name:
+            continue
+        if any(scope.get_section(section) for scope in configuration.active_scopes):
+            resolved[section] = configuration.deepcopy_as_builtin(section)
+
+    return resolved
+
+
 def _filtered_configuration(
     source_env: "Environment",
     source_configuration: Dict[str, Any],
     filter_configuration: Dict[str, Any],
     specs: Sequence[Union[str, Dict[str, Any]]],
     with_view: Optional[Union[str, pathlib.Path, bool]],
+    resolved_includes: bool,
 ) -> Dict[str, Any]:
     allowed_sections = set(filter_configuration["config"]["allow"])
     blocked_sections = set(filter_configuration["config"]["block"])
@@ -793,7 +816,11 @@ def _filtered_configuration(
             filtered_packages = {}
 
         if include_section("concretizer"):
-            filtered["concretizer"] = copy.deepcopy(spack.config.CONFIG.get("concretizer"))
+            filtered["concretizer"] = (
+                copy.deepcopy(source_configuration.get("concretizer", {}))
+                if resolved_includes
+                else copy.deepcopy(spack.config.CONFIG.get("concretizer"))
+            )
 
     if include_section("packages"):
         if filtered_packages:
@@ -905,12 +932,25 @@ def _create_filtered_environment_in_dir(
 
         initialize_environment_dir(root, envfile=init_file)
         env = Environment(root)
+        source_configuration = source_env.manifest[TOP_LEVEL_KEY]
+        resolved_includes = any(
+            not _is_lockfile_include_path(path)
+            for path in spack.config.paths_from_includes(
+                source_configuration.get(manifest_include_name, [])
+            )
+        )
+        if resolved_includes:
+            source_configuration = _configuration_with_resolved_includes(
+                source_env, source_configuration
+            )
+
         filtered_configuration = _filtered_configuration(
             source_env,
-            source_env.manifest[TOP_LEVEL_KEY],
+            source_configuration,
             filter_configuration,
             filtered_specs,
             with_view,
+            resolved_includes=resolved_includes,
         )
         _set_filtered_manifest(env, filtered_configuration)
 
