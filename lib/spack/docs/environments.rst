@@ -184,6 +184,32 @@ Retained specs keep their original hashes to identify existing installations.
 The filtered graph does not describe their complete build dependencies, and Spack does not reconcretize it during creation.
 When ``concrete`` is ``false``, the source may be a manifest file or environment directory, and Spack filters only the abstract specs from ``spack.yaml``.
 In this mode Spack does not write a lockfile for the new environment.
+The filter is applied only when the new environment is created; it is not applied again when you later change or concretize that environment.
+For example, blocking ``hdf5+mpi`` can remove an existing ``hdf5+mpi`` spec during creation, but a remaining ``hdf5`` spec may later be concretized with MPI enabled.
+
+Suppose ``old-env`` contains ``libelf`` and a site-provided package called ``licensed-solver`` that requires a license:
+
+.. code-block:: yaml
+
+   spack:
+     specs: [libelf, licensed-solver]
+
+To create an environment without the licensed package, put the following in ``filter.yaml``:
+
+.. code-block:: yaml
+
+   filter:
+     specs:
+       block: [licensed-solver]
+
+Create the filtered environment:
+
+.. code-block:: console
+
+   $ spack env create --filter filter.yaml no-license-env old-env
+
+The new environment keeps ``libelf`` but omits ``licensed-solver`` from its lockfile, even if it was a dependency in ``old-env``.
+Add any other license-requiring packages to the block list as needed.
 
 The ``specs`` subsection selects which specs are kept.
 ``specs:allow`` is a list of spec constraints to keep; an empty list keeps every spec.
