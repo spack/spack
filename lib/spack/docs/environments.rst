@@ -177,7 +177,11 @@ The filter file contains a top-level ``filter:`` section:
 
 The ``concrete`` option controls whether the filter is applied to the concretized lockfile graph or to the abstract specs in ``spack.yaml``.
 When ``concrete`` is ``true`` (the default), the source must be an environment directory with a ``spack.lock`` file.
-Spack filters all concrete specs in the source lockfile graph, writes matching concrete specs as roots of the new environment, and writes a new ``spack.lock`` preserving the selected concrete specs.
+Spack filters all concrete specs in the source lockfile graph and writes matching concrete specs as roots of the new environment.
+The new ``spack.lock`` contains only selected nodes and dependency edges between them, including in build-spec provenance graphs.
+Excluded nodes are removed completely, even when they are dependencies of selected specs.
+Retained specs keep their original hashes to identify existing installations.
+The filtered graph does not describe their complete build dependencies, and Spack does not reconcretize it during creation.
 When ``concrete`` is ``false``, the source may be a manifest file or environment directory, and Spack filters only the abstract specs from ``spack.yaml``.
 In this mode Spack does not write a lockfile for the new environment.
 

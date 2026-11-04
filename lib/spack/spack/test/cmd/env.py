@@ -11,7 +11,7 @@ import pathlib
 import shutil
 import sys
 from argparse import Namespace
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 
 import pytest
 
@@ -2162,6 +2162,85 @@ def test_env_create_filter_can_select_concrete_dependency(tmp_path: pathlib.Path
 
     assert [spec.name for spec in filtered.user_specs] == ["callpath"]
     assert [spec.name for spec in filtered.concrete_roots()] == ["callpath"]
+    assert [spec.name for spec in filtered.all_specs()] == ["callpath"]
+
+
+@pytest.mark.parametrize(
+    "specs_filter, allowed_names",
+    [
+        ("block: [callpath]", None),
+        ("allow: [mpileaks, libelf, libdwarf]", {"mpileaks", "libelf", "libdwarf"}),
+    ],
+)
+def test_env_create_filter_removes_excluded_concrete_dependencies(
+    tmp_path: pathlib.Path, specs_filter: str, allowed_names: Optional[Set[str]]
+):
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("mpileaks")
+    source.concretize()
+    source.write()
+    original_lockfile = pathlib.Path(source.lock_path).read_text()
+    original_specs = {spec.dag_hash(): spec for spec in source.all_specs()}
+    expected = {
+        key: spec
+        for key, spec in original_specs.items()
+        if spec.name != "callpath" and (allowed_names is None or spec.name in allowed_names)
+    }
+
+    filter_yaml = _write_filter_yaml(tmp_path, f"filter:\n  specs:\n    {specs_filter}\n")
+    env("create", "--filter", filter_yaml, "filtered", "source")
+
+    filtered = ev.read("filtered")
+    assert {spec.dag_hash() for spec in filtered.all_specs()} == set(expected)
+    assert {spec.dag_hash() for spec in filtered.concrete_roots()} == set(expected)
+    for spec in filtered.all_specs():
+        assert {
+            (edge.spec.dag_hash(), edge.depflag, edge.virtuals)
+            for edge in spec.edges_to_dependencies()
+        } == {
+            (edge.spec.dag_hash(), edge.depflag, edge.virtuals)
+            for edge in original_specs[spec.dag_hash()].edges_to_dependencies()
+            if edge.spec.dag_hash() in expected
+        }
+
+    lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text())
+    assert set(lockfile["concrete_specs"]) == set(expected)
+    assert pathlib.Path(source.lock_path).read_text() == original_lockfile
+    assert {spec.dag_hash() for spec in source.all_specs()} == set(original_specs)
+
+
+@pytest.mark.parametrize("blocked_spec", ["callpath", "mpileaks ^libelf@0.8.13"])
+def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, blocked_spec: str):
+    original = spack.concretize.concretize_one("mpileaks ^libelf@0.8.13")
+    replacement = spack.concretize.concretize_one("libelf@0.8.12")
+    spliced = original.splice(replacement, transitive=True)
+    env("create", "source")
+    source = ev.read("source")
+    source.add("mpileaks")
+    source.add_concrete_spec(Spec("mpileaks"), spliced)
+    source.write()
+    original_lockfile = pathlib.Path(source.lock_path).read_text()
+
+    filter_yaml = _write_filter_yaml(
+        tmp_path, f"filter:\n  specs:\n    block: ['{blocked_spec}']\n"
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
+
+    filtered = ev.read("filtered")
+    lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text())
+    assert lockfile["concrete_specs"]
+    for node in lockfile["concrete_specs"].values():
+        for dependency in node.get("dependencies", []):
+            assert dependency["hash"] in lockfile["concrete_specs"]
+        if "build_spec" in node:
+            assert node["build_spec"]["hash"] in lockfile["concrete_specs"]
+    if blocked_spec == "callpath":
+        assert all(node["name"] != "callpath" for node in lockfile["concrete_specs"].values())
+    else:
+        assert original.dag_hash() not in lockfile["concrete_specs"]
+    assert pathlib.Path(source.lock_path).read_text() == original_lockfile
 
 
 def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pathlib.Path):
