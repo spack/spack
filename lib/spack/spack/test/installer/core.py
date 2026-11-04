@@ -105,6 +105,16 @@ def test_build_failure_reported_through_event_loop(temporary_store, mock_package
     assert _record(temporary_store, spec) is None
 
 
+@pytest.mark.disable_clean_stage_check
+def test_build_exiting_without_exit_code_fails(temporary_store, mock_packages):
+    """Only the exit code reported by the build counts: a build that exits without one failed."""
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(exitcode=None)})
+    with pytest.raises(spack.error.InstallError):
+        _install(launcher, spec)
+    assert _record(temporary_store, spec) is None
+
+
 def test_cache_miss_falls_back_to_source_build(
     temporary_store: Store, mock_packages, mutable_config: Configuration, tmp_path
 ):

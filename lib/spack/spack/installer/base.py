@@ -14,7 +14,7 @@ import socket
 import sys
 import threading
 from multiprocessing.connection import Connection
-from typing import Callable, MutableMapping, NamedTuple, Optional, Union
+from typing import Callable, MutableMapping, NamedTuple, Optional
 
 from spack.vendor.typing_extensions import Literal
 
@@ -224,18 +224,6 @@ class NoMakeflags(Makeflags):
 
     def apply(self, env: MutableMapping[str, str]) -> None:
         pass
-
-
-class ProcessExitNotifier(abc.ABC):
-    """Selector-watchable handle that becomes readable when the child process exits."""
-
-    @property
-    @abc.abstractmethod
-    def fileobj(self) -> Union[int, socket.socket]:
-        """Object/fd to register with the selector to detect process exit."""
-
-    def close(self) -> None:
-        """Release any resources. Default: nothing to release."""
 
 
 class JobServerBase(abc.ABC):
