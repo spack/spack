@@ -75,7 +75,7 @@ def change(parser, args):
                         allow_changing_multiple_specs=args.all,
                     )
             except (ValueError, spack.environment.SpackEnvironmentError) as e:
-                msg = "Cannot change abstract specs."
+                msg = f"Cannot change abstract specs: {e}."
                 msg += " Try again with '--concrete-only' to change concrete specs only."
                 raise ValueError(msg) from e
 

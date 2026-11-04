@@ -8,7 +8,7 @@ import spack.spec
 import spack.util.spack_yaml
 import spack.variant
 from spack.error import SpackError
-from spack.spec import Spec, expand_toolchains, parse
+from spack.spec import Spec, expand_toolchains
 
 
 class SpecList:
@@ -70,29 +70,6 @@ class SpecList:
             self.specs_as_yaml_list.append(spec_str)
 
         # Invalidate cache variables when we change the list
-        self._constraints = None
-        self._specs = None
-
-    def remove(self, spec):
-        # Get spec to remove from list, comparing with toolchains expanded like in self.specs
-        remove = [
-            s
-            for s in self.yaml_list
-            if (isinstance(s, str) and not s.startswith("$"))
-            and parse(s, toolchains=self._toolchains) == [Spec(spec)]
-        ]
-        if not remove:
-            msg = f"Cannot remove {spec} from SpecList {self.name}.\n"
-            msg += f"Either {spec} is not in {self.name} or {spec} is "
-            msg += "expanded from a matrix and cannot be removed directly."
-            raise SpecListError(msg)
-
-        # Remove may contain more than one string representation of the same spec
-        for item in remove:
-            self.yaml_list.remove(item)
-            self.specs_as_yaml_list.remove(item)
-
-        # invalidate cache variables when we change the list
         self._constraints = None
         self._specs = None
 

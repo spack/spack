@@ -108,14 +108,6 @@ class TestSpecList:
         assert mock_list.specs_as_constraints == DEFAULT_CONSTRAINTS + [[Spec("libdwarf")]]
         assert mock_list.specs == DEFAULT_SPECS + [Spec("libdwarf")]
 
-    def test_spec_list_remove(self, parser_and_speclist):
-        parser, mock_list = parser_and_speclist
-        mock_list.remove("libelf")
-
-        assert mock_list.specs_as_yaml_list + ["libelf"] == DEFAULT_EXPANSION
-        assert mock_list.specs_as_constraints + [[Spec("libelf")]] == DEFAULT_CONSTRAINTS
-        assert mock_list.specs + [Spec("libelf")] == DEFAULT_SPECS
-
     def test_spec_list_extension(self, parser_and_speclist):
         parser, mock_list = parser_and_speclist
         other_list = parser.parse_user_specs(
