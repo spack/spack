@@ -62,6 +62,7 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
+import spack.util.hash
 import spack.util.lang
 import spack.util.libc
 import spack.util.lock
@@ -111,6 +112,39 @@ def clear_env_vars(working_env, monkeypatch):
     for location in ["CONFIG", "DATA", "STATE", "CACHE"]:
         monkeypatch.delenv(f"XDG_{location}_HOME", raising=False)
         monkeypatch.delenv(f"SPACK_{location}_HOME", raising=False)
+
+
+def patch_spack_prefix(monkeypatch, prefix: str) -> None:
+    """Point ``spack.paths.prefix`` and every path derived from it at ``prefix``.
+
+    ``spack.paths`` holds plain constants, so patching ``prefix`` alone would leave the
+    derived ones (``etc_path``, ``old_envs_path``, ...) pointing at the real checkout.
+    """
+    derived = {
+        "prefix": prefix,
+        "spack_root": prefix,
+        "bin_path": os.path.join(prefix, "bin"),
+        "opt_path": os.path.join(prefix, "opt"),
+        "share_path": os.path.join(prefix, "share", "spack"),
+        "etc_path": os.path.join(prefix, "etc", "spack"),
+        "isolate_scope_path": os.path.join(prefix, "etc", "spack", "isolate"),
+        "layout_scope_path": os.path.join(prefix, "etc", "spack", "layout"),
+        "self_isolation_prefix": os.path.join(prefix, ".isolate"),
+        "var_path": os.path.join(prefix, "var", "spack"),
+        "old_envs_path": os.path.join(prefix, "var", "spack", "environments"),
+        "old_gpg_path": os.path.join(prefix, "opt", "spack", "gpg"),
+        "old_gpg_keys_path": os.path.join(prefix, "var", "spack", "gpg"),
+        "old_licenses_path": os.path.join(prefix, "etc", "spack", "licenses"),
+        "spack_instance_id": spack.util.hash.b32_hash(prefix)[:7],
+    }
+    for name, value in derived.items():
+        monkeypatch.setattr(spack.paths, name, value)
+    # ~/.spack-derived paths follow $HOME, which the caller may have changed
+    old_dot_spack = os.path.expanduser(os.path.join("~", ".spack"))
+    monkeypatch.setattr(spack.paths, "old_default_dot_spack", old_dot_spack)
+    monkeypatch.setattr(
+        spack.paths, "old_package_repos_path", os.path.join(old_dot_spack, "package_repos")
+    )
 
 
 @pytest.fixture
@@ -187,22 +221,19 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
     (simulated_etc / "site").mkdir(exist_ok=True)
 
     set_home(str(home_dir))
-
-    from spack.paths import SpackPaths
-
-    monkeypatch.setattr(spack.paths, "locations", SpackPaths(_prefix=str(base_prefix)))
+    patch_spack_prefix(monkeypatch, str(base_prefix))
     return str(home_dir), str(base_prefix)
 
 
 @pytest.fixture
 def modifies_spackpaths():
-    """Clear _frozen_home before and after tests that modify spack.paths.locations.
+    """Clear _frozen_home before and after tests that patch spack.paths.
 
     This fixture is strictly necessary only for tests that BOTH:
-    - Modify spack.paths.locations (change the spack prefix/paths)
+    - Patch spack.paths (change the spack prefix/paths)
     - Create subprocesses that might freeze path values
 
-    However, it's applied to all tests that modify spack.paths.locations to avoid
+    However, it's applied to all tests that patch spack.paths to avoid
     fragility - if a test starts creating subprocesses later, frozen values from
     prior tests won't leak in.
 
@@ -277,15 +308,25 @@ def write_file(filename, contents):
         f.write(contents)
 
 
+class _ConstantPath:
+    """Picklable stand-in for a ``spack.config.*_path()`` function.
+
+    Monkeypatched values are re-applied in ``spawn``-mode child processes through
+    ``spack.subprocess_context.TestPatches``, which pickles them, so a lambda will not do.
+    """
+
+    def __init__(self, path: str):
+        self.path = path
+
+    def __call__(self) -> str:
+        return self.path
+
+
 @pytest.fixture
-def override_git_repos_cache_path(tmp_path: Path):
+def override_git_repos_cache_path(tmp_path: Path, monkeypatch):
     tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
     tmp_git_path.mkdir()
-    spack.paths.locations.user_repos_cache_path = str(tmp_git_path)
-    yield
-    # Restore by deleting the override attribute
-    if hasattr(spack.paths.locations, "_user_repos_cache_path_override"):
-        delattr(spack.paths.locations, "_user_repos_cache_path_override")
+    monkeypatch.setattr(spack.config, "user_repos_cache_path", _ConstantPath(str(tmp_git_path)))
 
 
 @pytest.fixture(scope="session")
@@ -2404,25 +2445,19 @@ def inode_cache():
 
 
 @pytest.fixture(autouse=True)
-def mock_user_cache_path(tmp_path: Path):
+def mock_user_cache_path(tmp_path: Path, monkeypatch):
     """Point $user_cache_path-derived locations (misc cache, BINARY_INDEX's persistent
-    index cache, etc.) at a per-test temporary directory instead of the real ~/.spack.
+    index cache, etc.) at a per-test temporary directory instead of the real ~/.cache/spack.
 
     Without this, every test process (and, under pytest-xdist, every worker) reads and
-    writes the same real, on-disk cache concurrently, since `$user_cache_path` defaults
-    to `~/.spack` unless SPACK_USER_CACHE_PATH is set. `spack.config.replacements()`
-    resolves `$user_cache_path` lazily via `spack.paths.user_cache_path` on every
-    substitution, so setting it on the locations instance here is picked up correctly.
-
-    Since this sets the override on the current locations instance, tests that create
-    a new SpackPaths instance (e.g., mock_spack_instance) will automatically use the
-    new instance's computed value instead.
+    writes the same real, on-disk cache concurrently. `spack.config.replacements()`
+    resolves `$user_cache_path` lazily via `spack.config.user_cache_path()` on every
+    substitution, so patching that function here is picked up correctly regardless of
+    when `spack.config` was first imported.
     """
-    spack.paths.locations.user_cache_path = str(tmp_path / "user_cache")
-    yield
-    # Restore by deleting the override attribute
-    if hasattr(spack.paths.locations, "_user_cache_path_override"):
-        delattr(spack.paths.locations, "_user_cache_path_override")
+    monkeypatch.setattr(
+        spack.config, "user_cache_path", _ConstantPath(str(tmp_path / "user_cache"))
+    )
 
 
 @pytest.fixture(autouse=True)

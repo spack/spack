@@ -2454,6 +2454,58 @@ def _resolve_location_var_impl(location_key, config=None):
         raise ValueError(f"Unexpected request: {location_key}")
 
 
+# Paths that depend on configuration. These used to be constants in spack.paths, derived from
+# ~/.spack; they now follow config:locations and the corresponding config:* settings.
+
+
+def user_cache_path() -> str:
+    """Root for per-user caches (``$cache_home``)."""
+    return _resolve_location_var("cache")
+
+
+def reports_path() -> str:
+    """junit, cdash, etc. reports about builds."""
+    return os.path.join(user_cache_path(), "reports")
+
+
+def default_test_path() -> str:
+    """Default for ``config:test_stage``: installation test (``spack test``) output."""
+    return os.path.join(user_cache_path(), "test")
+
+
+def user_repos_cache_path() -> str:
+    """Git repositories fetched to compare commits to versions."""
+    return os.path.join(user_cache_path(), "git_repos")
+
+
+def package_repos_path() -> str:
+    """Default location where remote package repositories are cloned."""
+    return os.path.join(_resolve_location_var("data"), "package_repos")
+
+
+def _configured_data_path(key: str, default_subdir: str) -> str:
+    value = CONFIG.get(key, None)
+    if value:
+        return canonicalize_path(value)
+    # Fallback if the defaults scope is not loaded (e.g. ``config::`` in user config)
+    return os.path.join(_resolve_location_var("data"), default_subdir)
+
+
+def gpg_path() -> str:
+    """GPG home directory (``config:gpg_path``)."""
+    return _configured_data_path("config:gpg_path", "gpg")
+
+
+def gpg_keys_path() -> str:
+    """Directory of pre-imported public keys (``config:gpg_keys_path``)."""
+    return _configured_data_path("config:gpg_keys_path", "gpg-keys")
+
+
+def default_fetch_cache_path() -> str:
+    """Source cache directory (``config:source_cache``)."""
+    return _configured_data_path("config:source_cache", "downloads")
+
+
 # Substitutions to perform
 def replacements(config: Optional["Configuration"] = None):
     arch = architecture()
@@ -2463,7 +2515,7 @@ def replacements(config: Optional["Configuration"] = None):
         "spack": lambda: spack.paths.prefix,
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
-        "user_cache_path": lambda: spack.paths.user_cache_path,
+        "user_cache_path": lambda: user_cache_path(),
         "spack_instance_id": lambda: spack.paths.spack_instance_id,
         "architecture": lambda: arch,
         "arch": lambda: arch,

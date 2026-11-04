@@ -8,7 +8,6 @@ from typing import cast
 
 import spack.config
 import spack.fetch_strategy
-import spack.paths
 import spack.util.file_cache
 import spack.util.lang
 
@@ -49,7 +48,7 @@ def fetch_cache_location(*, config: spack.config.Configuration) -> str:
     """
     path = config.get("config:source_cache")
     if not path:
-        path = spack.paths.default_fetch_cache_path
+        path = spack.config.default_fetch_cache_path()
     return spack.config.canonicalize_path(path, config=config)
 
 

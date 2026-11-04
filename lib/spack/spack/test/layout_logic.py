@@ -142,7 +142,7 @@ def test_child_proc_xdg_isolation(tmp_path, mock_spack_instance, mutable_config,
     $data_home resolution in those subprocesses uses the frozen values from the
     parent process (via freeze() in subprocess_context), not the new env vars.
 
-    This test modifies the global spack.paths.locations and must run serially.
+    This test patches the global spack.paths and must run serially.
     """
     import spack.config
     import spack.subprocess_context
@@ -170,9 +170,11 @@ def test_user_cache_path_is_default_when_env_var_is_empty(
 
     home_dir, base_prefix = mock_spack_instance
 
-    # Create fresh config after mock_spack_instance sets up paths
+    # Create fresh config after mock_spack_instance sets up paths. The autouse
+    # mock_user_cache_path fixture patches user_cache_path(); bypass it to test the
+    # real resolution.
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    assert os.path.join(home_dir, ".cache", "spack") == spack.paths.user_cache_path
+    assert os.path.join(home_dir, ".cache", "spack") == spack.config._resolve_location_var("cache")
 
 
 @pytest.mark.parametrize(
@@ -191,18 +193,15 @@ def test_user_cache_path_is_overridable(working_env, mock_spack_instance, monkey
         os.environ[env_var] = p
         expected = p
 
-    # Create fresh SpackPaths instance after setting env var
-    from spack.paths import SpackPaths
-
-    fresh_paths = SpackPaths(_prefix=base_prefix)
-    monkeypatch.setattr(spack.paths, "locations", fresh_paths)
+    # Create fresh config after setting the env var. The autouse mock_user_cache_path
+    # fixture patches user_cache_path(); bypass it to test the real resolution.
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    assert spack.paths.user_cache_path == expected
+    assert spack.config._resolve_location_var("cache") == expected
 
 
 def test_substitute_user_cache(mock_spack_instance):
-    assert os.path.join(spack.paths.user_cache_path, "baz") == spack.config.canonicalize_path(
+    assert os.path.join(spack.config.user_cache_path(), "baz") == spack.config.canonicalize_path(
         os.path.join("$user_cache_path", "baz")
     )
 
@@ -685,7 +684,7 @@ def test_migration_copies_package_repositories(mock_spack_instance, monkeypatch)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     spack.migrate.migrate_home()
 
-    new_repos = pathlib.Path(spack.paths.package_repos_path)
+    new_repos = pathlib.Path(spack.config.package_repos_path())
     assert (new_repos / "first" / "root.txt").read_text(encoding="utf-8") == "first root"
     assert (new_repos / "first" / "nested" / "nested.txt").read_text(encoding="utf-8") == (
         "nested"
@@ -707,7 +706,7 @@ def test_migration_skips_existing_package_repository_destination(mock_spack_inst
 
     (old_repo.parent / "second").mkdir()
 
-    new_repos = pathlib.Path(spack.paths.package_repos_path)
+    new_repos = pathlib.Path(spack.config.package_repos_path())
     new_repo = new_repos / "abc1234"
     new_repo.mkdir(parents=True)
     (new_repo / "source").write_text("new", encoding="utf-8")

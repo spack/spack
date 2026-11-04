@@ -45,7 +45,6 @@ import spack.caches
 import spack.config
 import spack.error
 import spack.patch
-import spack.paths
 import spack.provider_index
 import spack.tag
 import spack.traverse
@@ -86,7 +85,7 @@ def repo_or_default(repo: Optional["RepoPath"]) -> "RepoPath":
 def package_repository_lock(config: spack.config.Configuration) -> spack.util.lock.Lock:
     """Lock for process safety when cloning remote package repositories"""
     return spack.util.lock.Lock(
-        os.path.join(spack.paths.user_cache_path, "package-repository.lock"),
+        os.path.join(spack.config.user_cache_path(), "package-repository.lock"),
         enable=config.get("config:locks", True),
     )
 
@@ -2111,7 +2110,7 @@ def parse_config_descriptor(
 
     if destination is None:  # use a default destination
         dir_name = spack.util.hash.b32_hash(repository)[-7:]
-        destination = os.path.join(spack.paths.package_repos_path, dir_name)
+        destination = os.path.join(spack.config.package_repos_path(), dir_name)
     else:
         destination = spack.config.canonicalize_path(destination)
 

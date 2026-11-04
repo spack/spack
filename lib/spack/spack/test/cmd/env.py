@@ -5183,7 +5183,7 @@ def stale_activated_env(tmp_path, mutable_mock_env_path, monkeypatch):
     (old_root / "unmigrated").mkdir()
     (old_root / "unmigrated" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
 
-    monkeypatch.setattr(spack.paths.locations, "old_envs_path", str(old_root))
+    monkeypatch.setattr(spack.paths, "old_envs_path", str(old_root))
     return old_root, mutable_mock_env_path
 
 
