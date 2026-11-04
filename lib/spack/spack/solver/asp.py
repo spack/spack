@@ -1984,8 +1984,7 @@ class SpackSolverSetup:
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
-        preferences = spack.package_prefs.PackagePrefs
-        preferred_variants = preferences.preferred_variants(
+        preferred_variants = spack.package_prefs.preferred_variants(
             pkg_name, configuration=self.context.config, repo=self.context.repo
         )
         if not preferred_variants:
@@ -2015,9 +2014,7 @@ class SpackSolverSetup:
                 )
 
     def target_preferences(self):
-        key_fn = spack.package_prefs.PackagePrefs(
-            "all", "target", configuration=self.context.config
-        )
+        key_fn = spack.package_prefs.target_sort_key(self.context.config)
 
         if not self.target_specs_cache:
             self.target_specs_cache = [

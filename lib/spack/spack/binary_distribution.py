@@ -57,6 +57,7 @@ import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.package_prefs
 import spack.paths
 import spack.platforms
 import spack.spec
@@ -89,7 +90,6 @@ from spack.oci.oci import (
     upload_blob_with_retry,
     upload_manifest_with_retry,
 )
-from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import stage_from_config
 from spack.util import file_cache, timer, tty
@@ -2347,12 +2347,9 @@ def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=t
             raise NoOverwriteException(str(spec.prefix))
 
     # Create the install prefix
-    fsys.mkdirp(
-        spec.prefix,
-        mode=get_package_dir_permissions(spec),
-        group=get_package_group(spec),
-        default_perms="parents",
-    )
+    perms = spack.package_prefs.package_permissions(spack.config.CONFIG, spec.name)
+    spack.package_prefs.warn_if_sgid_on_afs(spec.prefix, perms.dir_mode)
+    fsys.mkdirp(spec.prefix, mode=perms.dir_mode, group=perms.group, default_perms="parents")
 
     tarfile_path = tarball_stage.save_filename
 
