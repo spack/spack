@@ -92,7 +92,7 @@ if [[ -n "$use_bwrap" ]] ; then
         --dev-bind / /
         --ro-bind "$DIR/.." "$DIR/.." # do not touch spack root
         --ro-bind-try $HOME/.config/spack $HOME/.config/spack # do not touch user config dir
-        --ro-bind-try $HOME/.cache/spack $HOME/.cache/spack # do not touch user config dir
+        --ro-bind-try $HOME/.cache/spack $HOME/.cache/spack # do not touch user cache dir
         --ro-bind-try $HOME/.local/state/spack $HOME/.local/state/spack # do not touch user state dir
         --ro-bind-try $HOME/.local/share/spack $HOME/.local/share/spack # do not touch user data dir
         --bind "$TMP_DIR" "$TMP_DIR"
