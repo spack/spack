@@ -43,6 +43,12 @@ SOCKET_DIR = None
 #: GNUPGHOME environment variable in the context of this Python module
 GNUPGHOME = None
 
+
+class Signature(enum.Enum):
+    Cleartext = enum.auto()
+    Detached = enum.auto()
+
+
 #: Regular expression to pull spec contents out of clearsigned signature
 #: file.
 CLEARSIGN_FILE_REGEX = re.compile(
