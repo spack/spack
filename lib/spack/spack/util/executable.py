@@ -26,6 +26,32 @@ WINDOWS_DEFAULT_PATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
 OutType = Union[Optional[BinaryIO], str, Type[str], Callable]
 
 
+def jobserver_auth(makeflags: str) -> Optional[str]:
+    """Return the value of the last jobserver flag in ``MAKEFLAGS``, which gmake uses."""
+    auth = None
+    for flag in makeflags.split():
+        name, _, value = flag.partition("=")
+        if name in ("--jobserver-auth", "--jobserver-fds"):
+            auth = value
+    return auth
+
+
+def jobserver_fds(makeflags: str) -> Tuple[int, ...]:
+    """Return the open fds of a pipe based jobserver advertised in ``MAKEFLAGS``."""
+    if sys.platform == "win32":  # pipe based jobservers are POSIX specific
+        return ()
+    match = re.fullmatch(r"(\d+),(\d+)", jobserver_auth(makeflags) or "")
+    if not match:
+        return ()
+    fds = (int(match.group(1)), int(match.group(2)))
+    try:
+        for fd in fds:
+            os.fstat(fd)
+    except OSError:  # stale MAKEFLAGS
+        return ()
+    return fds
+
+
 def _process_cmd_output(
     out: bytes,
     err: bytes,
