@@ -5829,3 +5829,64 @@ def test_reported_total_ignores_specs_that_were_kept(unify, mutable_config, mock
     assert total == 1
     assert [count for _, _, count, _ in ui.concretized] == [1]
     assert [abstract.name for abstract, _, _, _ in ui.concretized] == ["mpileaks"]
+
+
+def test_failing_change_of_a_definition_leaves_the_manifest_untouched(environment_from_manifest):
+    """Tests that when 'spack change' fails on the second spec of a definition, the change of
+    the first spec is not written to spack.yaml.
+    """
+    e = environment_from_manifest("""\
+spack:
+  definitions:
+  - mylist: [mpileaks, libelf]
+  specs: [$mylist]
+""")
+    manifest = pathlib.Path(e.manifest_path)
+    before = manifest.read_text(encoding="utf-8")
+
+    with e:
+        change("-l", "mylist", "mpileaks@2.3", "callpath@1.0", fail_on_error=False)
+
+    assert change.returncode != 0
+    assert manifest.read_text(encoding="utf-8") == before
+
+
+def test_manifest_edit_keeps_the_format_of_the_configuration(environment_from_manifest):
+    """Tests that adding a spec does not write to spack.yaml the format upgrades applied when
+    reading the configuration of the environment.
+    """
+    e = environment_from_manifest("""\
+spack:
+  config:
+    shared_linking: rpath
+  specs: [mpileaks]
+""")
+
+    with e, e.write_transaction():
+        assert spack.config.CONFIG.get("config:shared_linking") == {"type": "rpath", "bind": False}
+        e.add("libelf")
+        e.write()
+
+    data = spack.util.spack_yaml.load(pathlib.Path(e.manifest_path).read_text(encoding="utf-8"))
+    assert data["spack"]["config"]["shared_linking"] == "rpath"
+    assert data["spack"]["specs"] == ["mpileaks", "libelf"]
+
+
+def test_manifest_edit_and_configuration_write_are_both_kept(environment_from_manifest):
+    """Tests that an edit of the manifest followed by a write to the environment scope, in the
+    same process, both end up in spack.yaml.
+    """
+    e = environment_from_manifest("""\
+spack:
+  view: true
+  specs: [mpileaks]
+""")
+
+    with e:
+        e.manifest.set_default_view(False)
+        spack.config.CONFIG.set("config:debug", True, scope=e.scope_name)
+        e.write()
+
+    data = spack.util.spack_yaml.load(pathlib.Path(e.manifest_path).read_text(encoding="utf-8"))
+    assert data["spack"]["view"] is False
+    assert data["spack"]["config"]["debug"] is True
