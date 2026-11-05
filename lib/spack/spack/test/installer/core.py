@@ -29,6 +29,25 @@ from spack.test.installer.conftest import (
 class TestPackageInstallerConstructor:
     """Tests for PackageInstaller constructor, especially capacity initialization."""
 
+    def test_terminal_ui_selected_from_environment(
+        self, temporary_store, mock_packages, monkeypatch
+    ):
+        from spack.installer.ui import TerminalUI
+
+        monkeypatch.setenv("SPACK_INSTALLER_UI", "terminal")
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        assert isinstance(PackageInstaller([spec.package]).ui, TerminalUI)
+
+    def test_invalid_ui_selected_from_environment(
+        self, temporary_store, mock_packages, monkeypatch
+    ):
+        monkeypatch.setenv("SPACK_INSTALLER_UI", "invalid")
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        with pytest.raises(spack.error.SpackError, match="Unknown installer UI"):
+            PackageInstaller([spec.package])
+
     def test_capacity_explicit_concurrent_packages(self, temporary_store, mock_packages):
         """Test that capacity is set correctly when concurrent_packages is explicitly provided."""
         spec = spack.spec.Spec("trivial-install-test-package")

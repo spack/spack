@@ -49,7 +49,7 @@ from spack.installer.schedule import (
     _node_to_roots,
     schedule_builds,
 )
-from spack.installer.ui import BuildInfo, InstallerUI, SetEcho, TerminalUI
+from spack.installer.ui import BuildInfo, InstallerUI, SetEcho, installer_ui_class
 
 if sys.platform == "win32":
     from spack.installer.base import NoopJobServer as JobServer
@@ -271,7 +271,7 @@ class PackageInstaller:
         self.verbose = verbose
         self.running_builds: Dict[str, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
-        self.ui = ui or TerminalUI(
+        self.ui = ui or installer_ui_class()(
             total=0,
             verbose=verbose,
             filter_padding=self.store.has_padding(),
