@@ -672,7 +672,7 @@ def test_gpg_migration_skips_transient_files(tmp_path):
 
 
 def test_migration_copies_package_repositories(mock_spack_instance, monkeypatch):
-    """Migration recursively copies the legacy package repository tree."""
+    """Migration recursively copies each legacy package repository clone."""
     home_dir, _ = mock_spack_instance
     old_repos = pathlib.Path(home_dir) / ".spack" / "package_repos"
     (old_repos / "first" / "nested").mkdir(parents=True)
@@ -681,10 +681,13 @@ def test_migration_copies_package_repositories(mock_spack_instance, monkeypatch)
     (old_repos / "second").mkdir()
     (old_repos / "second" / "root.txt").write_text("second root", encoding="utf-8")
 
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.migrate.migrate_home()
+    result = spack.migrate.migrate_home()
 
-    new_repos = pathlib.Path(spack.config.package_repos_path())
+    assert result["package_repos"] is True
+    new_repos = pathlib.Path(spack.migrate.migration_data_home()) / "package_repos"
+    # ... and that is where a freshly built config will look for them
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    assert pathlib.Path(spack.config.package_repos_path()) == new_repos
     assert (new_repos / "first" / "root.txt").read_text(encoding="utf-8") == "first root"
     assert (new_repos / "first" / "nested" / "nested.txt").read_text(encoding="utf-8") == (
         "nested"
@@ -693,30 +696,74 @@ def test_migration_copies_package_repositories(mock_spack_instance, monkeypatch)
     assert (old_repos / "first" / "root.txt").exists()
     assert (old_repos / "second" / "root.txt").exists()
     if sys.platform != "win32":
-        assert (new_repos.parent / ".spack-package-repos-migration-lock").exists()
-    assert not (new_repos.parent / ".package-repos-migration").exists()
+        assert (new_repos / ".spack-package-repos-migration-lock").exists()
+    assert not any(p.name.startswith(".package-repos-migration") for p in new_repos.iterdir())
+
+    # Second run: nothing left to copy, nothing reported as migrated
+    assert spack.migrate.migrate_home()["package_repos"] is False
 
 
-def test_migration_skips_existing_package_repository_destination(mock_spack_instance, monkeypatch):
-    """An existing package repository destination is never overwritten."""
+def test_migration_merges_package_repositories(mock_spack_instance, capsys):
+    """Clones are keyed by the hash of their remote URL and the destination is shared by
+    every Spack instance on the machine, so a destination that already holds some clones
+    (from a fresh checkout, or another migration) must not block the rest: existing
+    clones are left alone, missing ones are copied.
+    """
     home_dir, _ = mock_spack_instance
-    old_repo = pathlib.Path(home_dir) / ".spack" / "package_repos" / "abc1234"
+    old_repos = pathlib.Path(home_dir) / ".spack" / "package_repos"
+    old_present = old_repos / "abc1234"
+    old_present.mkdir(parents=True)
+    (old_present / "source").write_text("old", encoding="utf-8")
+    old_missing = old_repos / "k7m2x3q"
+    old_missing.mkdir()
+    (old_missing / "source").write_text("site repo with local edits", encoding="utf-8")
+    # a stray file in the old root is not a clone and is ignored
+    (old_repos / "package-repository.lock").write_text("", encoding="utf-8")
+
+    # migration resolves its destination from the environment, not from config
+    new_repos = pathlib.Path(spack.migrate.migration_data_home()) / "package_repos"
+    new_present = new_repos / "abc1234"
+    new_present.mkdir(parents=True)
+    (new_present / "source").write_text("new", encoding="utf-8")
+
+    result = spack.migrate.migrate_home()
+
+    assert result["package_repos"] is True
+    # existing clone untouched
+    assert (new_present / "source").read_text(encoding="utf-8") == "new"
+    # missing clone copied
+    assert (new_repos / "k7m2x3q" / "source").read_text(encoding="utf-8") == (
+        "site repo with local edits"
+    )
+    assert not (new_repos / "package-repository.lock").exists()
+    # old clones retained
+    assert (old_present / "source").read_text(encoding="utf-8") == "old"
+    # no warning: every clone is accounted for
+    assert "could not be copied" not in capsys.readouterr().err
+
+
+def test_migration_warns_about_package_repositories_it_cannot_copy(mock_spack_instance, capsys):
+    """A clone that cannot be copied is named in a warning, with what the user can do
+    about it, instead of being silently abandoned."""
+    home_dir, _ = mock_spack_instance
+    old_repos = pathlib.Path(home_dir) / ".spack" / "package_repos"
+    old_repo = old_repos / "k7m2x3q"
     old_repo.mkdir(parents=True)
-    (old_repo / "source").write_text("old", encoding="utf-8")
+    (old_repo / "source").write_text("x", encoding="utf-8")
 
-    (old_repo.parent / "second").mkdir()
+    new_repos = pathlib.Path(spack.migrate.migration_data_home()) / "package_repos"
+    new_repos.mkdir(parents=True)
+    # a file where the clone should go: the copy cannot proceed
+    (new_repos / "k7m2x3q").write_text("in the way", encoding="utf-8")
 
-    new_repos = pathlib.Path(spack.config.package_repos_path())
-    new_repo = new_repos / "abc1234"
-    new_repo.mkdir(parents=True)
-    (new_repo / "source").write_text("new", encoding="utf-8")
+    result = spack.migrate.migrate_home()
 
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    spack.migrate.migrate_home()
-
-    assert (new_repo / "source").read_text(encoding="utf-8") == "new"
-    assert not (new_repos / "second").exists()
-    assert (old_repo / "source").read_text(encoding="utf-8") == "old"
+    assert result["package_repos"] is False
+    err = capsys.readouterr().err
+    assert "could not be copied" in err
+    assert str(old_repo) in err
+    assert "repos:<name>:destination" in err
+    assert (new_repos / "k7m2x3q").read_text(encoding="utf-8") == "in the way"
 
 
 def test_config_migration_skips_unparseable_yaml(mock_spack_instance, monkeypatch):

@@ -795,19 +795,19 @@ def _prepare_config_staging(old_location, staging_path, new_location):
             tty.warn(f"  {rel_link}: {old_target} -> {new_target}")
 
 
-def _prepare_package_repos_staging(old_path, staging_path, new_path):
-    """Callback for package repos migration - copy while holding old repo lock.
+def _old_package_repos_lock() -> spack.util.lock.Lock:
+    """The lock Spack <= 1.2 holds while cloning into ``~/.spack/package_repos``.
 
-    Acquires the old package-repository.lock to prevent copying a repo that's
-    currently being cloned by another Spack instance using the old locations.
+    Taken (shared) while copying so that a repository still being cloned by an older
+    Spack instance is not copied half-done.
     """
-    # Acquire the old lock to prevent copying a half-cloned repo
-    # The old lock was in ~/.spack (parent of old package_repos location)
-    old_lock_dir = os.path.dirname(old_path)
-    old_lock_path = os.path.join(old_lock_dir, "package-repository.lock")
+    lock_path = os.path.join(spack.paths.old_default_dot_spack, "package-repository.lock")
+    return spack.util.lock.Lock(lock_path)
 
-    old_repo_lock = spack.util.lock.Lock(old_lock_path)
-    with spack.util.lock.ReadTransaction(old_repo_lock):
+
+def _prepare_package_repo_staging(old_path, staging_path, new_path):
+    """Callback for migrating one package repository clone."""
+    with spack.util.lock.ReadTransaction(_old_package_repos_lock()):
         shutil.copytree(old_path, staging_path, symlinks=True)
 
 
@@ -884,20 +884,60 @@ def _migrate_user_config() -> bool:
 
 
 def _migrate_package_repositories() -> bool:
-    """Copy legacy package repositories to the new default location."""
-    old_path = spack.paths.old_package_repos_path
-    data_home = migration_data_home()
-    new_path = os.path.join(data_home, "package_repos")
+    """Copy legacy package repository clones to the new default location.
 
-    return migrate_with_staging(
-        old_path=old_path,
-        new_path=new_path,
-        prepare_staging_callback=_prepare_package_repos_staging,
-        lock_name=".spack-package-repos-migration-lock",
-        staging_name=".package-repos-migration",
-        description="package repositories",
-        verify_destination_callback=can_migrate_to_location,
-    )
+    ``package_repos`` holds one clone per remote, in a directory named by the hash of
+    the remote URL, so the directory is shared by every Spack instance on the machine
+    and may already be partly populated (by a fresh checkout, or an earlier migration).
+    Clones are therefore copied one at a time: a clone whose directory already exists
+    at the destination is the same repository and is left alone; the rest are copied.
+
+    Returns True if any clone was copied.
+    """
+    old_root = spack.paths.old_package_repos_path
+    new_root = os.path.join(migration_data_home(), "package_repos")
+
+    if not _is_nonempty_directory(old_root):
+        return False
+
+    copied: List[str] = []
+    skipped: List[str] = []
+    failed: List[str] = []
+    for name in sorted(os.listdir(old_root)):
+        old_path = os.path.join(old_root, name)
+        new_path = os.path.join(new_root, name)
+        if not os.path.isdir(old_path):
+            continue
+        if os.path.isdir(new_path) and os.listdir(new_path):
+            skipped.append(name)
+            continue
+        ok = migrate_with_staging(
+            old_path=old_path,
+            new_path=new_path,
+            prepare_staging_callback=_prepare_package_repo_staging,
+            lock_name=".spack-package-repos-migration-lock",
+            staging_name=f".package-repos-migration-{name}",
+            description=f"package repository {name}",
+            verify_destination_callback=can_migrate_to_location,
+        )
+        (copied if ok else failed).append(name)
+
+    if failed:
+        lines = [f"The following package repository clones could not be copied to {new_root}:"]
+        for name in failed:
+            lines.append(f"  - {os.path.join(old_root, name)}")
+        lines.append(
+            f"Spack will use whatever is at the corresponding path under {new_root} instead,"
+            " cloning afresh if nothing is there. Any local changes in the old clones are"
+            f" still in {old_root}; to keep using an old clone, point its"
+            " `repos:<name>:destination` setting at it."
+        )
+        tty.warn(*lines)
+
+    if skipped:
+        tty.debug(f"Package repositories already present in {new_root}: {', '.join(skipped)}")
+
+    return bool(copied)
 
 
 def _migration_lock_path() -> str:

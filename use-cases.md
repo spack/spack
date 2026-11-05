@@ -305,7 +305,8 @@ For package repositories:
 
 - The old location is `~/.spack/package_repos`.
 - The new location is `~/.local/share/spack/package_repos` (using the default data home).
-- Migration only occurs if the new location does not exist and the old location exists.
+- Each subdirectory is one clone, named by the hash of its remote URL, so the directory is shared by every Spack instance on the machine and may already be partly populated (by a fresh checkout, or an earlier migration). Clones are migrated one at a time: a clone whose directory already exists at the destination is the same repository and is left alone; clones that are missing are copied.
+- A clone that cannot be copied is named in a warning. Spack will use whatever is at the destination path instead (cloning afresh if nothing is there); the old clone stays in `~/.spack/package_repos` and can be kept in use with `repos:<name>:destination`.
 
 This allows users who:
 
@@ -544,9 +545,9 @@ User config and package repositories are migrated from `~/.spack` independently 
   - Another Spack instance will never see partial config files; the directory appears atomically.
 
 - **Package repositories** (`~/.spack/package_repos` → `~/.local/share/spack/package_repos`):
-  - Uses a sibling lock (`.spack-package-repos-migration-lock`) to serialize concurrent migrations.
-  - Stages the entire tree to `.package-repos-migration` before atomically renaming.
-  - Another Spack instance will never see a partial repository tree.
+  - Uses a lock in the destination directory (`.spack-package-repos-migration-lock`) to serialize concurrent migrations, and takes the old `~/.spack/package-repository.lock` (shared) while copying so that a clone still being made by an older Spack is not copied half-done.
+  - Stages each clone to `.package-repos-migration-<hash>` before atomically renaming it into place.
+  - Another Spack instance will never see a partial clone.
 
 Both home directory migrations can run safely alongside any number of other Spack instances, whether they're using the old locations, the new locations, or attempting concurrent migrations.
 
