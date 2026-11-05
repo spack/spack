@@ -1536,8 +1536,6 @@ class Environment:
         self._unify = None
         self.views: Dict[str, ViewDescriptor] = {}
 
-        #: Toolchains used to expand the specs of the manifest
-        self._toolchains: Dict[str, Any] = {}
         #: Parser for spec lists
         self._spec_lists_parser = SpecListParser()
         #: Specs from "spack.yaml"
@@ -1746,8 +1744,9 @@ class Environment:
         self._process_included_lockfiles()
 
     def _sync_speclists(self):
-        self._toolchains = spack.config.CONFIG.get("toolchains", {})
-        self._spec_lists_parser = SpecListParser(toolchains=self._toolchains)
+        self._spec_lists_parser = SpecListParser(
+            toolchains=spack.config.CONFIG.get("toolchains", {})
+        )
         self.spec_lists = {}
         self.spec_lists.update(
             self._spec_lists_parser.parse_definitions(
@@ -2016,7 +2015,7 @@ class Environment:
             text = str(Spec.override(Spec(entry.text), change_spec))
             expected = Spec.override(entry.spec, change_spec)
             try:
-                expanded = _expanded_spec(text, self._toolchains)
+                expanded = self._spec_lists_parser.expand(text)
             except spack.error.UnsatisfiableSpecError:
                 expanded = None
             if expanded != expected:
@@ -2101,7 +2100,7 @@ class Environment:
             return [], []
         entries = [
             e
-            for e in self.manifest.entries(list_name, toolchains=self._toolchains)
+            for e in self.manifest.entries(list_name, expand=self._spec_lists_parser.expand)
             if e.spec in in_list
         ]
         written = collections.Counter(e.spec for e in entries)
@@ -3732,13 +3731,6 @@ class ManifestEntry(NamedTuple):
     spec: Spec
 
 
-def _expanded_spec(text: str, toolchains: Dict[str, Any]) -> Spec:
-    spec = Spec(text)
-    if toolchains:
-        spack.spec.expand_toolchains(spec, toolchains)
-    return spec
-
-
 class EnvironmentManifestFile(collections.abc.Mapping):
     """Manages the in-memory representation of a manifest file, and its synchronization
     with the actual manifest on disk.
@@ -3848,7 +3840,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
         self._explicit = {DEFAULT_USER_SPEC_GROUP: True}
 
-    def entries(self, list_name: str, *, toolchains: Dict[str, Any]) -> List[ManifestEntry]:
+    def entries(self, list_name: str, *, expand: Callable[[str], Spec]) -> List[ManifestEntry]:
         """Returns the spec strings written in a list of the manifest.
 
         The strings are taken from:
@@ -3862,7 +3854,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         Args:
             list_name: ``specs``, or the name of a definition
-            toolchains: toolchains to expand in the parsed specs
+            expand: parses a string into the spec stored in each entry
         """
         if list_name == USER_SPECS_KEY:
             containers = self._default_group_lists()
@@ -3870,7 +3862,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             containers = [item[list_name] for item in self._active_definitions(list_name)]
 
         return [
-            ManifestEntry(list_name, container, idx, item, _expanded_spec(item, toolchains))
+            ManifestEntry(list_name, container, idx, item, expand(item))
             for container in containers
             for idx, item in enumerate(container)
             if isinstance(item, str) and not item.startswith("$")
