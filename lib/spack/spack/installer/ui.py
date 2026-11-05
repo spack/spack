@@ -545,6 +545,8 @@ class TerminalUI(InstallerUI):
             # active_area_rows. Set to 0 to force newlines instead of cursor movement.
             self.active_area_rows = 0
 
+        self._render_persisted_rows(buffer, now)
+
         # Then a header followed by the active builds. This is the "mutable" part of the display.
         self.total_lines = 0
 
@@ -576,9 +578,13 @@ class TerminalUI(InstallerUI):
             self._println(buffer, "Waiting for other Spack install process...")
 
         displayed_builds = (
-            [b for b in self.builds.values() if self._is_displayed(b)]
+            [
+                b
+                for b in self.builds.values()
+                if self._show_in_overview(b) and self._is_displayed(b)
+            ]
             if self.search_term
-            else self.builds.values()
+            else [b for b in self.builds.values() if self._show_in_overview(b)]
         )
         len_builds = len(displayed_builds)
 
@@ -612,6 +618,12 @@ class TerminalUI(InstallerUI):
 
         if finalize:
             self._update_terminal_title(True)
+
+    def _render_persisted_rows(self, buffer: io.StringIO, now: float) -> None:
+        pass
+
+    def _show_in_overview(self, build: BuildInfo) -> bool:
+        return True
 
     def _overview_header_suffix(self) -> str:
         return ""
