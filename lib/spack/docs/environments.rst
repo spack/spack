@@ -249,13 +249,13 @@ lockfile for the new environment.
 With ``concrete: true``, the source must be an environment directory containing
 ``spack.yaml`` and ``spack.lock``. Spack filters both the original roots (specs
 listed directly in ``spack.yaml``) and their dependencies, including build-spec
-provenance. Blocked specs are removed even when they are dependencies of kept
-roots. The retained specs keep their original hashes, but removing dependencies
-can leave the lockfile incomplete. Spack does not concretize the new environment
-during creation.
+provenance. If a root depends on an excluded spec, Spack drops that entire root
+and logs which excluded spec caused the decision. This also applies to promoted
+roots when ``flatten: true``. The retained DAGs keep their original hashes;
+Spack does not concretize the new environment during creation.
 
-By default, matching roots keep their groups and matching dependencies remain
-dependencies. To make matching dependencies roots too, set ``flatten: true``;
+By default, retained roots keep their groups and all their dependencies. To make
+matching dependencies roots too, set ``flatten: true``;
 the promoted specs go in the default group, as with ``libelf`` in the example.
 If no roots remain, Spack warns and creates an environment with no roots.
 
