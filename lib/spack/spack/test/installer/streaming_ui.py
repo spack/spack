@@ -122,6 +122,36 @@ def add_mock_builds(tui: TerminalUI, count: int) -> List[str]:
 
 
 class TestLogFollowing:
+    def test_failed_rows_persist_and_redraw(self):
+        tui, fake_time, stdout = create_tui(total=2, terminal_cols=30, color=False)
+        on_build_added(tui, "failed", log_path="/tmp/a/very/long/build/log/path.txt")
+        on_build_added(tui, "active")
+        tui.on_state_changed("failed", "failed")
+        tui.render()
+        output = stdout.getvalue()
+        assert output.count("failed@1.0 failed: /tmp/a/very/long/build/log/path.txt") == 1
+        assert output.index("failed@1.0") < output.index("active@1.0")
+        stdout.clear()
+        fake_time.append(inst.SPINNER_INTERVAL)
+        tui.render()
+        assert "failed@1.0" not in stdout.getvalue()
+        tui.next()
+        assert tui.tracked_build_id == "failed"
+        assert stdout.getvalue().count("failed@1.0 failed:") == 1
+
+    def test_removed_failure_is_printed_again(self):
+        tui, fake_time, stdout = create_tui(total=1, color=False)
+        on_build_added(tui, "pkg", log_path="/tmp/first.log")
+        tui.on_state_changed("pkg", "failed")
+        tui.render()
+        stdout.clear()
+        tui.on_build_removed("pkg")
+        on_build_added(tui, "pkg", log_path="/tmp/retry.log")
+        tui.on_state_changed("pkg", "failed")
+        fake_time.append(inst.SPINNER_INTERVAL)
+        tui.render()
+        assert stdout.getvalue().count("pkg@1.0 failed: /tmp/retry.log") == 1
+
     @pytest.mark.parametrize(
         "data,expected",
         [
