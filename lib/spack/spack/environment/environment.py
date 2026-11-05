@@ -491,8 +491,7 @@ def create_in_dir(
                 # locations.
                 # If the full env was copied including internal files, only rewrite
                 # relative paths outside of env
-                _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=copied)
-                _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
+                _rewrite_relative_paths_on_relocation(env, init_file_dir, copied_env=copied)
 
     return env
 
@@ -871,10 +870,7 @@ def _create_filtered_environment_in_dir(
             str(source_path) if is_source_dir else os.path.abspath(os.path.dirname(source_path))
         )
         if not keep_relative and env.path != init_file_dir:
-            _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=is_source_dir)
-            _rewrite_relative_repos_paths_on_relocation(
-                env, init_file_dir, copied_env=is_source_dir
-            )
+            _rewrite_relative_paths_on_relocation(env, init_file_dir, copied_env=is_source_dir)
 
         if filter_configuration["concrete"]:
             _populate_filtered_lockfile(env, filtered_roots)
@@ -882,71 +878,46 @@ def _create_filtered_environment_in_dir(
         return env
 
 
-def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):
-    """When initializing the environment from a manifest file and we plan
-    to store the environment in a different directory, we have to rewrite
-    relative paths to absolute ones."""
-    with env:
-        dev_specs = spack.config.CONFIG.get("develop", default={}, scope=env.scope_name)
-        if not dev_specs:
-            return
-        for name, entry in dev_specs.items():
-            dev_path = substitute_path_variables(entry["path"])
-            expanded_path = spack.config.canonicalize_path(dev_path, default_wd=init_file_dir)
+def _rewrite_relative_paths_on_relocation(
+    env: "Environment", init_file_dir: Union[str, pathlib.Path], copied_env: bool = False
+) -> None:
+    """Makes the paths in a new environment absolute, after its manifest was copied from another
+    directory.
 
-            # Skip if the substituted and expanded path is the same (e.g. when absolute)
-            if entry["path"] == expanded_path:
-                continue
+    The paths rewritten are those of ``develop`` entries, and those of ``repos`` entries given as
+    a path. Variables in a path are substituted, and a relative path is resolved against the
+    original directory.
 
-            # If copied and it's inside the env, we copied it and don't need to relativize
-            if copied_env and expanded_path.startswith(init_file_dir):
-                continue
+    Args:
+        env: the new environment
+        init_file_dir: directory the manifest was copied from
+        copied_env: whether the whole environment directory was copied. If True, paths inside
+            ``init_file_dir`` are left as written, since they were copied too.
+    """
+    config = env._config
+    init_dir = str(init_file_dir)
 
-            tty.debug("Expanding develop path for {0} to {1}".format(name, expanded_path))
+    def relocated(path: str) -> str:
+        expanded = spack.config.canonicalize_path(
+            substitute_path_variables(path, config), default_wd=init_dir, config=config
+        )
+        if expanded == path or (copied_env and expanded.startswith(init_dir)):
+            return path
+        tty.debug(f"Expanding {path} to {expanded}")
+        return expanded
 
-            dev_specs[name]["path"] = expanded_path
+    dev_specs = config.get("develop", default={}, scope=env.scope_name)
+    if dev_specs:
+        for entry in dev_specs.values():
+            entry["path"] = relocated(entry["path"])
+        config.set("develop", dev_specs, scope=env.scope_name)
 
-        spack.config.CONFIG.set("develop", dev_specs, scope=env.scope_name)
-
-        env._dev_specs = None
-        # If we changed the environment's spack.yaml scope, that will not be reflected
-        # in the manifest that we read
-        env._re_read()
-
-
-def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=False):
-    """When initializing the environment from a manifest file and we plan
-    to store the environment in a different directory, we have to rewrite
-    relative repo paths to absolute ones and expand environment variables."""
-    with env:
-        repos_specs = spack.config.CONFIG.get("repos", default={}, scope=env.scope_name)
-        if not repos_specs:
-            return
-        for name, entry in list(repos_specs.items()):
-            # only rewrite when we have a path-based repository
-            if not isinstance(entry, str):
-                continue
-            repo_path = substitute_path_variables(entry)
-            expanded_path = spack.config.canonicalize_path(repo_path, default_wd=init_file_dir)
-
-            # Skip if the substituted and expanded path is the same (e.g. when absolute)
-            if entry == expanded_path:
-                continue
-
-            # If copied and it's inside the env, we copied it and don't need to relativize
-            if copied_env and expanded_path.startswith(init_file_dir):
-                continue
-
-            tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
-
-            repos_specs[name] = expanded_path
-
-        spack.config.CONFIG.set("repos", repos_specs, scope=env.scope_name)
-
-        env.repos_specs = None
-        # If we changed the environment's spack.yaml scope, that will not be reflected
-        # in the manifest that we read
-        env._re_read()
+    repos = config.get("repos", default={}, scope=env.scope_name)
+    if repos:
+        for name, entry in repos.items():
+            if isinstance(entry, str):
+                repos[name] = relocated(entry)
+        config.set("repos", repos, scope=env.scope_name)
 
 
 def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
@@ -1773,6 +1744,10 @@ class Environment:
                 name=key, yaml_list=self.manifest.user_specs(group=group)
             )
 
+    def _clear_scope_caches(self) -> None:
+        """Clears the caches of the environment scope, after a manifest edit of a section."""
+        self._config.clear_caches(scope=self.scope_name)
+
     def _user_specs_key(self, *, group: Optional[str] = None) -> str:
         if group is None or group == DEFAULT_USER_SPEC_GROUP:
             return USER_SPECS_KEY
@@ -1969,6 +1944,7 @@ class Environment:
                 self.manifest.add_user_spec(str(user_spec))
             else:
                 self.manifest.add_definition(str(user_spec), list_name=list_name)
+                self._clear_scope_caches()
             self._sync_speclists()
 
         return bool(not existing)
@@ -2023,6 +1999,8 @@ class Environment:
                 self.manifest.override_definition(
                     str(spec), override=str(override_spec), list_name=list_name
                 )
+        if list_name != USER_SPECS_KEY:
+            self._clear_scope_caches()
         self._sync_speclists()
 
     def remove(self, query_spec, list_name=USER_SPECS_KEY, force=False):
@@ -2068,6 +2046,8 @@ class Environment:
                     self.manifest.remove_definition(str(spec), list_name=list_name)
 
         # Recompute "definitions" and user specs
+        if list_name != USER_SPECS_KEY:
+            self._clear_scope_caches()
         self._sync_speclists()
         new_specs = set(self.user_specs)
 
@@ -2350,6 +2330,7 @@ class Environment:
         if path_or_bool is False:
             self.views.pop(default_view_name, None)
             self.manifest.remove_default_view()
+            self._clear_scope_caches()
             return
 
         # If we had a default view already just update its path,
@@ -2361,6 +2342,7 @@ class Environment:
             self.views[default_view_name] = ViewDescriptor(self.path, view_path)
 
         self.manifest.set_default_view(self._default_view_as_yaml())
+        self._clear_scope_caches()
 
     def delete_default_view(self) -> None:
         """Deletes the default view associated with this environment."""
@@ -3967,8 +3949,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             item[list_name].append(user_spec)
             break
 
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def remove_definition(self, user_spec: str, list_name: str) -> None:
@@ -3992,8 +3972,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def override_definition(self, user_spec: str, *, override: str, list_name: str) -> None:
@@ -4019,8 +3997,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def _iterate_on_definitions(self, definitions, *, list_name, err_msg):
@@ -4112,6 +4088,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     ) -> spack.config.SingleFileScope:
         """Returns a new configuration scope for the manifest file.
 
+        The scope shares ``yaml_content`` with this manifest.
+
         Args:
             name: name of the scope
             env_path: path used for "$env" in the include paths of the scope, or None for the
@@ -4125,6 +4103,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             yaml_path=[TOP_LEVEL_KEY],
             writable=writable,
             env_path=env_path,
+            data=self.yaml_content,
         )
         ensure_no_disallowed_env_config_mods(scope)
         return scope
