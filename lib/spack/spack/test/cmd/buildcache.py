@@ -36,6 +36,7 @@ from spack.url_buildcache import (
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     check_mirror_for_layout,
+    get_entries_from_cache,
     get_url_buildcache_class,
 )
 from spack.util.filesystem import copy_tree, find, getuid
@@ -1161,6 +1162,29 @@ def test_buildcache_create_view_empty(
     hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
     # Assert there are no hashes in the view
     assert not hashes_in_view
+
+
+def test_get_entries_from_cache_lists_root_and_view_indices(
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path
+):
+    """Listing INDEX manifests must find both the root index and view indices"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    spec = mutable_database.query_local("mpileaks")[0]
+    buildcache("push", "--update-index", "my-mirror", spec.format("{/hash}"))
+    _, env_args = args_for_env_by_path(spec)
+    buildcache("update-index", "--name", "test_view", "my-mirror", *env_args)
+
+    mirror_url = url_util.path_to_file_url(mirror_directory)
+    index_manifests, _ = get_entries_from_cache(mirror_url, BuildcacheComponent.INDEX)
+
+    found = {url_util.local_file_path(url) for url in index_manifests}
+    expected = {
+        url_util.local_file_path(URLBuildcacheEntry.get_index_url(mirror_url)),
+        url_util.local_file_path(URLBuildcacheEntry.get_index_url(mirror_url, "test_view")),
+    }
+    assert found == expected
 
 
 @pytest.mark.parametrize(
