@@ -469,6 +469,14 @@ def worker_function(
         # Reset SIGTSTP to default in case the parent had a custom handler.
         signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
+        # Under forkserver/spawn Python drops CLOEXEC. We don't want to expose these fds to the
+        # build. Notably the state fd should be closed, since its EOF signals to the parent process
+        # that the build has finished, and that should not be delayed by daemons that keep the fd
+        # open, such as sccache or bazel, which exit only after a certain period of inactivity.
+        for channel in (state, parent, tee_control_r, tee_control_w):
+            if channel is not None:
+                os.set_inheritable(channel.fileno(), False)
+
     def handle_sigterm(signum, frame):
         # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
         # for all child processes to exit before raising KeyboardInterrupt. This ensures all
