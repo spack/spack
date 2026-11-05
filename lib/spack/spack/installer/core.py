@@ -21,6 +21,7 @@ import spack.config
 import spack.deprecation
 import spack.error
 import spack.mirrors.mirror
+import spack.plugins
 import spack.report
 import spack.spec
 import spack.stage
@@ -65,20 +66,6 @@ if TYPE_CHECKING:
 
 #: How often to flush completed builds to the database
 DATABASE_WRITE_INTERVAL = 5.0
-
-
-def installer_ui_class() -> type:
-    """Select a built-in installer UI from the environment."""
-    name = os.environ.get("SPACK_INSTALLER_UI", "terminal")
-    if name == "terminal":
-        return TerminalUI
-    if name == "streaming":
-        from spack.installer.streaming_ui import StreamingTerminalUI
-
-        return StreamingTerminalUI
-    raise spack.error.SpackError(
-        f"Unknown installer UI '{name}'; SPACK_INSTALLER_UI must be 'terminal' or 'streaming'"
-    )
 
 
 class ReportData:
@@ -285,12 +272,18 @@ class PackageInstaller:
         self.verbose = verbose
         self.running_builds: Dict[str, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
-        self.ui = ui or installer_ui_class()(
-            total=0,
-            verbose=verbose,
-            filter_padding=self.store.has_padding(),
-            show_log_on_error=show_log_on_error,
-        )
+        if ui is not None:
+            self.ui = ui
+        else:
+            self.ui = spack.plugins.create_plugin(
+                "ui",
+                TerminalUI,
+                base_class=InstallerUI,
+                total=0,
+                verbose=verbose,
+                filter_padding=self.store.has_padding(),
+                show_log_on_error=show_log_on_error,
+            )
         self.ui.on_total_increased(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
         self.ui.on_jobs_changed(self.jobs, self.jobs)

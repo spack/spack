@@ -10,22 +10,10 @@ from typing import List, Optional, Tuple, cast
 
 import pytest
 
-import spack.error
 import spack.installer.ui as inst
 from spack.installer.base import StdinReader
-from spack.installer.core import installer_ui_class
 from spack.installer.streaming_ui import LOG_HISTORY_SIZE, BuildProgress
 from spack.installer.streaming_ui import StreamingTerminalUI as TerminalUI
-
-
-def test_installer_ui_selection(monkeypatch):
-    monkeypatch.delenv("SPACK_INSTALLER_UI", raising=False)
-    assert installer_ui_class() is inst.TerminalUI
-    monkeypatch.setenv("SPACK_INSTALLER_UI", "streaming")
-    assert installer_ui_class() is TerminalUI
-    monkeypatch.setenv("SPACK_INSTALLER_UI", "invalid")
-    with pytest.raises(spack.error.SpackError, match="Unknown installer UI"):
-        installer_ui_class()
 
 
 def _fd_reader(fd: int) -> StdinReader:

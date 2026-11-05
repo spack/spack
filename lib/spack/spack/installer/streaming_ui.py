@@ -20,6 +20,15 @@ class BuildProgress(NamedTuple):
     message: Optional[str] = None
 
 
+def setup() -> type:
+    """Return the streaming UI when the required terminal UI API is available."""
+    required = ("_render_overview", "_tracked_build_finished", "_generate_state_components")
+    missing = [name for name in required if not callable(getattr(TerminalUI, name, None))]
+    if missing:
+        raise RuntimeError(f"incompatible terminal UI API: missing {', '.join(missing)}")
+    return StreamingTerminalUI
+
+
 class StreamingTerminalUI(TerminalUI):
     """Keep the progress overview visible while following build logs."""
 

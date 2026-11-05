@@ -100,7 +100,14 @@ properties: Dict[str, Any] = {
             "extensions": {
                 "type": "array",
                 "items": {"type": "string"},
-                "description": "List of Spack extensions to load",
+                "description": "List of Spack command extensions to load",
+            },
+            "plugins": {
+                "type": "object",
+                "additionalProperties": {
+                    "anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]
+                },
+                "description": "Subsystem plugin entry-point names from spack.plugins.* groups",
             },
             "template_dirs": {
                 "type": "array",
