@@ -300,6 +300,9 @@ class PackageInstaller:
 
         self.next_database_write = 0.0
 
+        #: Specs added to the database by ``install()``, also when it raises
+        self.recorded_specs: List[spack.spec.Spec] = []
+
     def install(self) -> None:
         # Refuse disallowed deprecations before updating any index, so an install that cannot
         # succeed does no work first
@@ -404,9 +407,9 @@ class PackageInstaller:
                         if data.name == "output":
                             self._handle_child_logs(child_info, selector)
                         elif data.name == "state":
-                            self._handle_child_state(child_info, selector)
-                        elif data.name == "sentinel":
-                            finished_builds.append(data.build_id)
+                            # EOF on the state channel means the build process has exited.
+                            if not self._handle_child_state(child_info, selector):
+                                finished_builds.append(data.build_id)
                     elif data == STDIN_EVENT:
                         stdin_ready = True
                     elif data == SIGWINCH_EVENT:
@@ -472,26 +475,30 @@ class PackageInstaller:
                     with db.write_transaction():
                         for action in database_actions:
                             action.save_to_db(db)
+                    self._extend_recorded_specs(database_actions)
                 except Exception as e:
                     db_exc = e
 
-            # Send SIGTERM to running builds; this is a no-op in the successful case.
+            # Send SIGTERM to running builds and release their jobserver tokens; this is a no-op in
+            # the successful case.
             for child in self.running_builds.values():
                 try:
                     child.proc.terminate()
                 except Exception:
                     pass
-
-            # Release our jobserver token for each terminated build and then join.
-            for child in self.running_builds.values():
                 try:
                     jobserver.release()
-                    child.proc.join(timeout=30)
-                    if child.proc.is_alive():
-                        child.proc.kill()
-                        child.proc.join()
                 except Exception:
                     pass
+
+            # Wait for the builds to exit, kill those that do not, and reap them all.
+            try:
+                for build_id in self._wait_for_exit(timeout=30):
+                    self.running_builds[build_id].proc.kill()
+                for child in self.running_builds.values():
+                    child.proc.join()
+            except Exception:
+                pass
 
             # Release all held locks best-effort, so that one failure does not prevent the others
             # from being released.
@@ -569,7 +576,6 @@ class PackageInstaller:
         jobserver.release()
         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
         self._drain_child_output(build, selector)
-        self._drain_child_state(build, selector)
         exitcode = build.close(selector)
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
@@ -648,7 +654,13 @@ class PackageInstaller:
             )
             and self._save_to_db(database_actions, retained_read_locks)
         ):
+            self._extend_recorded_specs(database_actions)
             database_actions.clear()
+
+    def _extend_recorded_specs(self, database_actions: List[DatabaseAction]) -> None:
+        self.recorded_specs.extend(
+            a.spec for a in database_actions if isinstance(a, AddSpecAction)
+        )
 
     def _save_to_db(
         self,
@@ -832,6 +844,27 @@ class PackageInstaller:
         except OSError:
             pass
 
+    def _wait_for_exit(self, timeout: float) -> List[str]:
+        """Process output and state of the running builds until their state channels reach EOF.
+        Returns the ids of builds that are still running after the timeout."""
+        deadline = time.monotonic() + timeout
+        running = set(self.running_builds)
+        with selectors.DefaultSelector() as selector:
+            for build_id in running:
+                self.running_builds[build_id].register_with_selector(selector, build_id)
+            while running:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                for key, _ in selector.select(remaining):
+                    data = key.data
+                    child = self.running_builds[data.build_id]
+                    if data.name == "output":
+                        self._handle_child_logs(child, selector)
+                    elif not self._handle_child_state(child, selector):
+                        running.discard(data.build_id)
+        return list(running)
+
     def _handle_child_logs(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
         """Handle reading output logs from a child process pipe. Returns False once the channel
         has reached EOF and was unregistered, True while it remains open."""
@@ -858,12 +891,6 @@ class PackageInstaller:
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
         while self._handle_child_logs(child_info, selector):
-            pass
-
-    def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
-        """Read and process any remaining state messages from a finished child's pipe."""
-        # Must drain before child.close() to consume any remaining data before bridges close.
-        while self._handle_child_state(child_info, selector):
             pass
 
     def _handle_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
@@ -909,5 +936,7 @@ class PackageInstaller:
                 self.ui.on_progress(dag_hash, message["progress"], message["total"])
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
+            elif "exit" in message:
+                child_info.exit_code = message["exit"]
 
         return True

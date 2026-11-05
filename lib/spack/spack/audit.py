@@ -55,6 +55,7 @@ import spack.enums
 import spack.package_base
 import spack.patch
 import spack.repo
+import spack.schema.modules
 import spack.spec
 import spack.util.crypto
 import spack.util.lang
@@ -192,6 +193,11 @@ config_packages = AuditClass(
 #: Sanity checks on packages.yaml
 config_repos = AuditClass(
     group="configs", tag="CFG-REPOS", description="Sanity checks on repositories", kwargs=()
+)
+
+#: Sanity checks on modules.yaml
+config_modules = AuditClass(
+    group="configs", tag="CFG-MODULES", description="Sanity checks on modules.yaml", kwargs=()
 )
 
 
@@ -334,6 +340,37 @@ def _ensure_no_folders_without_package_py(error_cls):
                 f" in the following folders"
             )
             errors.append(error_cls(summary=summary, details=[f"{x}" for x in missing]))
+    return errors
+
+
+@config_modules
+def _ensure_templates_apply_to_folded_installations(error_cls):
+    """With variants defined in tcl module files, the installations of a package version share
+    one module file, so a template must be set for them all"""
+    errors = []
+    modules_yaml = spack.config.CONFIG.get_config("modules")
+    # The keys that are not options of the tcl section are spec constraints
+    option_keys = spack.schema.modules.tcl_configuration["properties"]
+    for set_name, module_set in modules_yaml.items():
+        if set_name == "prefix_inspections":
+            continue
+        tcl_yaml = module_set.get("tcl", {})
+        if tcl_yaml.get("variants", "none") == "none":
+            continue
+        for constraint, rules in tcl_yaml.items():
+            if constraint in option_keys or "template" not in rules:
+                continue
+            # Installations of different versions never share a module file, so a constraint
+            # on the package name and version applies to the whole module file
+            if spack.spec.constrains_only_name_and_versions(spack.spec.Spec(constraint)):
+                continue
+            summary = (
+                f"Setting a template for '{constraint}' in the tcl configuration of the "
+                f"'{set_name}' module set, while 'variants: {tcl_yaml['variants']}' folds "
+                "the installations of a package version into one module file. Set the "
+                "template for the package or package version instead"
+            )
+            errors.append(_make_config_error(rules, summary, error_cls=error_cls))
     return errors
 
 

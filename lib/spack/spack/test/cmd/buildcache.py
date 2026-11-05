@@ -24,6 +24,7 @@ import spack.error
 import spack.main
 import spack.mirrors.mirror
 import spack.spec
+import spack.store
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.active_environment import active_environment
@@ -1583,3 +1584,22 @@ def test_buildcache_push_group_requires_active_env(tmp_path: pathlib.Path):
 
     with pytest.raises(spack.main.SpackCommandError):
         buildcache("push", "--unsigned", "--group", "default", str(mirror_dir), fail_on_error=True)
+
+
+def test_buildcache_install_writes_module_files(
+    temporary_mirror, install_mockery, tcl_module_filename
+):
+    """Tests that buildcache install writes the module file of each spec it installs."""
+    install("--fake", "--no-cache", "dependent-install")
+    buildcache("push", "--unsigned", temporary_mirror, "dependent-install")
+    buildcache("update-index", temporary_mirror)
+    installed = spack.store.STORE.db.query()
+    uninstall("-y", "--all")
+    assert not any(os.path.exists(tcl_module_filename(s)) for s in installed)
+
+    buildcache("install", "--unsigned", "dependent-install")
+
+    assert {s.dag_hash() for s in spack.store.STORE.db.query()} == {
+        s.dag_hash() for s in installed
+    }
+    assert all(os.path.exists(tcl_module_filename(s)) for s in installed)

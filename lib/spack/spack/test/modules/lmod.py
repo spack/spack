@@ -524,8 +524,8 @@ class TestLmod:
 
         # after removing both the implicit and explicit module, the modulerc file would be empty
         # and should be removed.
-        writer_cls.from_spec(spec, "default", False).remove()
-        writer_cls.from_spec(spec, "default", True).remove()
+        writer_cls.from_spec(spec, "default", False).remove_installation()
+        writer_cls.from_spec(spec, "default", True).remove_installation()
         assert not os.path.exists(writer.layout.modulerc)
         assert not os.path.exists(writer.layout.filename)
 
@@ -534,7 +534,7 @@ class TestLmod:
         writer.write()
         assert os.path.exists(writer.layout.filename)
         assert os.path.exists(writer.layout.modulerc)
-        writer.remove()
+        writer.remove_installation()
         assert not os.path.exists(writer.layout.modulerc)
         assert not os.path.exists(writer.layout.filename)
 
@@ -558,7 +558,7 @@ class TestLmod:
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
 
         # one version is removed
-        writer_alt1.remove()
+        writer_alt1.remove_installation()
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
             content = [line.strip() for line in f.readlines()]

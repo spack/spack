@@ -661,7 +661,7 @@ class ArchSpec:
                 )
 
             spec_platform = spack.platforms.by_name(self.platform)
-            value = str(spec_platform.operating_system(value))
+            value = str(spec_platform.default_operating_system())
 
         self._os = value
 
@@ -699,7 +699,7 @@ class ArchSpec:
                 )
 
             spec_platform = spack.platforms.by_name(self.platform)
-            value = spec_platform.target(value)
+            value = spec_platform.default_target()
 
         self._target = value
 

@@ -739,6 +739,15 @@ def test_remove_before_concretize(mutable_config):
         assert not e.concretized_roots
 
 
+def test_remove_spec_with_toolchain(tmp_path: pathlib.Path):
+    """Manifest entries are toolchain-expanded like the spec on the command line before matching"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text("spack:\n  toolchains:\n    tc: '%c=gcc'\n  specs: [mpileaks %tc]\n")
+    with ev.Environment(tmp_path):
+        remove("mpileaks %tc")
+    assert "mpileaks" not in manifest.read_text()
+
+
 def test_remove_command():
     env("create", "test")
     assert "test" in env("list")
@@ -4326,8 +4335,8 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_modules_exist_after_env_install(installed_environment):
-    with installed_environment(
+def test_modules_exist_after_env_install(environment_from_manifest, install_mockery, mock_fetch):
+    environment_from_manifest(
         """
 spack:
   specs:
@@ -4343,7 +4352,9 @@ spack:
       roots:
         tcl: without_view
 """
-    ) as e:
+    )
+    with ev.read("test") as e:
+        install("--fake")
         specs = e.all_specs()
         for module_set in ("uses_view", "without_view"):
             modules = glob.glob(f"{e.path}/{module_set}/**/*/*")
