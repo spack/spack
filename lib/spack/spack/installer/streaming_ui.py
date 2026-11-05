@@ -1,6 +1,7 @@
 """Terminal installer UI with selected logs above the progress overview."""
 
 import io
+import re
 from collections import deque
 from typing import Deque, Dict, Generator, NamedTuple, Optional
 
@@ -9,6 +10,9 @@ from spack.util.lang import pretty_duration
 from spack.util.path import padding_filter, padding_filter_bytes
 
 LOG_HISTORY_SIZE = 15
+ANSI_ESCAPE = re.compile(rb"\x1b\[[0-9;]*m")
+PROGRESS_LINE = re.compile(r"^\s*\[\s*([\d,/% ]+)\]\s*(.*)$")
+FRACTIONAL_PROGRESS_LINE = re.compile(r"^\s*\[\s*([\d,]+)\s*/\s*([\d,]+)\]\s*(.*)$")
 
 
 class BuildProgress(NamedTuple):
@@ -24,6 +28,7 @@ class StreamingTerminalUI(TerminalUI):
         self.log_streaming = kwargs.get("verbose", args[7] if len(args) > 7 else False)
         self.log_history: Dict[str, Deque[bytes]] = {}
         self.progress: Dict[str, BuildProgress] = {}
+        self.progress_buffers: Dict[str, bytes] = {}
         self.log_stream_buffer = b""
 
     def refresh_interval(self) -> Optional[float]:
@@ -37,6 +42,7 @@ class StreamingTerminalUI(TerminalUI):
         info.start_time = int(self.get_time())
         self.builds[info.id] = info
         self.log_history[info.id] = deque(maxlen=LOG_HISTORY_SIZE)
+        self.progress_buffers[info.id] = b""
         self.dirty = True
         if self.log_streaming and not self.tracked_build_id:
             self.log_stream_buffer = b""
@@ -55,6 +61,7 @@ class StreamingTerminalUI(TerminalUI):
         super().on_build_removed(build_id)
         self.log_history.pop(build_id, None)
         self.progress.pop(build_id, None)
+        self.progress_buffers.pop(build_id, None)
 
     def on_state_changed(self, build_id: str, state: str) -> None:
         self.progress.pop(build_id, None)
@@ -244,6 +251,48 @@ class StreamingTerminalUI(TerminalUI):
             return f"  {self.color.BLACK_BRIGHT}({tracked_build.name}){self.color.RESET}"
         return ""
 
+    def _build_progress_message(self, build_message: str) -> Optional[str]:
+        message = ""
+        if build_message.startswith(("Linking ", "Built target ")):
+            message = build_message
+        elif build_message.startswith("Building "):
+            message = build_message.partition(" object ")[2]
+        elif build_message.startswith(("Compiling ", "TdGenerate ")):
+            message = build_message.partition(" ")[2]
+        paths = message.split(";", 1)[0].replace("\\", "/").split("/")
+        message = (
+            "/".join(paths[-2:]) if len(paths) >= 2 and paths[-2] != "CMakeFiles" else paths[-1]
+        )
+        return message[:-2] if message.endswith(".o") else message or None
+
+    def _parse_builder_progress(self, build_id: str, data: bytes) -> None:
+        lines = (self.progress_buffers.get(build_id, b"") + data).split(b"\n")
+        self.progress_buffers[build_id] = lines.pop()
+        for line in lines:
+            text = ANSI_ESCAPE.sub(b"", line).decode(errors="replace").strip()
+            if text.startswith(("-- ", "CMake ")):
+                message = text[3:] if text.startswith("-- ") else text
+                self._set_progress(
+                    build_id, BuildProgress(self._progress_prefix(self.builds[build_id]), message)
+                )
+                continue
+            match = PROGRESS_LINE.match(text)
+            if not match:
+                continue
+            percent = None
+            if match.group(1).strip().endswith("%"):
+                percent = match.group(1).strip()
+            else:
+                fraction = FRACTIONAL_PROGRESS_LINE.match(text)
+                if fraction:
+                    total = int(fraction.group(2).replace(",", ""))
+                    if total:
+                        current = int(fraction.group(1).replace(",", ""))
+                        percent = f"{int(current / total * 100)}%"
+            if percent:
+                progress_message = self._build_progress_message(match.group(2).strip())
+                self._set_progress(build_id, BuildProgress(percent, progress_message))
+
     def on_log_output(self, build_id: str, data: bytes) -> None:
         """Cache forwarded log chunks and stream selected output above the TTY overview."""
         if self.headless:
@@ -252,6 +301,8 @@ class StreamingTerminalUI(TerminalUI):
             data = padding_filter_bytes(data)
         self.log_history.setdefault(build_id, deque(maxlen=LOG_HISTORY_SIZE)).append(data)
         if self.overview_mode and self.is_tty:
+            if build_id in self.builds:
+                self._parse_builder_progress(build_id, data)
             if not (self.log_streaming and build_id == self.tracked_build_id):
                 return
         # Do not write output from an unselected build. TTY output has already been retained above
