@@ -447,10 +447,7 @@ class TerminalUI(InstallerUI):
 
             # Stop tracking the finished build's logs.
             if build_id == self.tracked_build_id:
-                if not self.overview_mode:
-                    self.toggle()
-                if self.verbose:
-                    self.tracked_build_id = ""
+                self._tracked_build_finished(state)
 
         self.dirty = True
         self._update_terminal_title()
@@ -460,6 +457,12 @@ class TerminalUI(InstallerUI):
             line = "".join(self._generate_line_components(build_info, static=True, now=now))
             self.stdout.write(line + "\n")
             self.stdout.flush()
+
+    def _tracked_build_finished(self, state: str) -> None:
+        if not self.overview_mode:
+            self.toggle()
+        if self.verbose:
+            self.tracked_build_id = ""
 
     def _parse_log_summary(self, build_info: BuildInfo) -> None:
         """Store the interesting parts of a failed build's log."""
