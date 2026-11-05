@@ -19,9 +19,6 @@ import spack.spec_diff
 from spack.spec import Spec
 from spack.util.lang import stable_partition
 
-#: Version of the serialization produced by EnvironmentDiff.as_dict
-DIFF_FORMAT_VERSION = 1
-
 
 class UserSpecDivergence(NamedTuple):
     """The list of divergent nodes found for a single common user spec."""
@@ -61,7 +58,10 @@ class EnvironmentDiff(NamedTuple):
         One entry per user spec reaching a divergence. Environment identities are not included.
         """
         return {
-            "_meta": {"file-type": "spack-environment-diff", "diff-version": DIFF_FORMAT_VERSION},
+            "_meta": {
+                "file-type": "spack-environment-diff",
+                "diff-version": spack.spec_diff.DIFF_FORMAT_VERSION,
+            },
             "only_in_a": _roots_to_dict(self.inputs.only_in_a),
             "only_in_b": _roots_to_dict(self.inputs.only_in_b),
             "common": _roots_to_dict(self.inputs.common),

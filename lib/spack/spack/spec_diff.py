@@ -302,7 +302,7 @@ def node_to_dict(node: NodeDivergence) -> Dict[str, Any]:
     }
 
 
-#: Version of the serialization produced by SpecDiff.as_dict
+#: Version of the serializations produced by SpecDiff.as_dict and EnvironmentDiff.as_dict
 DIFF_FORMAT_VERSION = 1
 
 

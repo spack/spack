@@ -23,6 +23,7 @@ import spack.variant
 from spack.active_environment import active_environment
 from spack.environment import diff as env_diff_core
 from spack.util import tty
+from spack.util.lang import stable_partition
 from spack.util.tty.colify import render_blocks, terminal_columns
 from spack.util.tty.color import cescape, clen, colorize
 
@@ -118,11 +119,9 @@ def _open_environment_to_diff(
     path = spack.config.substitute_path_variables(argument)
     if os.path.isfile(path):
         root = stack.enter_context(tempfile.TemporaryDirectory(prefix="spack-env-diff-"))
-        # create_in_dir tells a lockfile from a manifest by suffix
-        init_file = path
-        if not path.endswith((".lock", ".json")):
-            init_file = os.path.join(root, ev.lockfile_name)
-            shutil.copy(path, init_file)
+        # create_in_dir tells a lockfile from a manifest by its file name
+        init_file = os.path.join(root, ev.lockfile_name)
+        shutil.copy(path, init_file)
         try:
             env = ev.create_in_dir(os.path.join(root, "env"), init_file=init_file)
         except ev.SpackEnvironmentError as e:
@@ -196,7 +195,8 @@ def _diff_specs(args) -> bool:
         }
         print(sjson.dumps({**result.as_dict(), "specs": identities}))
     else:
-        SpecDiffRenderer(result).render()
+        name_format = "{name}{@version}{/hash:7}"
+        SpecDiffRenderer(result, before.cformat(name_format), after.cformat(name_format)).render()
 
     return result.equivalent
 
@@ -204,8 +204,8 @@ def _diff_specs(args) -> bool:
 def _variant_default(node: spack.spec.Spec, key: str) -> Optional[spack.variant.VariantValue]:
     """Returns the default value of a variant for a node, or None if it cannot be determined.
 
-    An environment can have been concretized against a package repository that no longer contains
-    this package, or no longer defines this variant, so the lookup is allowed to come up empty.
+    A spec can have been concretized against a package repository that no longer contains this
+    package, or no longer defines this variant, so the lookup is allowed to come up empty.
     """
     try:
         # get_variant picks the definition whose `when` the node satisfies
@@ -220,9 +220,8 @@ def _attribute_style(
     """Returns how prominently one difference of a divergent node should be rendered.
 
     A difference that is what one would expect from a re-concretization is rendered normally, and
-    a suspicious one is highlighted, taking the second environment to be the later state of the
-    first. Only versions and variants have an expected direction, so any other difference is
-    highlighted.
+    a suspicious one is highlighted, taking the second side to be the later state of the first.
+    Only versions and variants have an expected direction, so any other difference is highlighted.
     """
     if attribute.category is spack.spec_diff.DiffCategory.VERSION:
         try:
@@ -267,7 +266,7 @@ def _format_divergent_node(
 
     Args:
         divergence: the node where the two DAGs diverge
-        first: render the node from the first environment, otherwise the one from the second
+        first: render the node from the first side, otherwise the one from the second
         styles: styles from :func:`_node_styles`, shared by the two sides of the node
     """
     categories = {attribute.category for attribute in divergence.attributes}
@@ -328,6 +327,11 @@ def _format_root(root: ev.UserSpecId, *, with_group: bool = True) -> str:
     return f"{root.spec} (group: {root.group})"
 
 
+def _recipe_key(node: spack.spec_diff.NodeDivergence) -> Tuple[str, str]:
+    """Key of a recipe change: one per package, since every instance has its own package hash."""
+    return node.node_a.namespace or "", node.node_a.name
+
+
 def _is_recipe_change(node: spack.spec_diff.NodeDivergence) -> bool:
     """Whether a divergence reports a changed recipe rather than a configuration difference."""
     return any(
@@ -380,8 +384,7 @@ def _group_divergences(
         root = input_divergence.root
         for node in input_divergence.nodes:
             if _is_recipe_change(node):
-                key = (node.node_a.namespace or "", node.node_a.name)
-                recipes.setdefault(key, (node, []))[1].append(root)
+                recipes.setdefault(_recipe_key(node), (node, []))[1].append(root)
             else:
                 node_key = (node.node_a.dag_hash(), node.node_b.dag_hash())
                 config.setdefault(root.group, {}).setdefault(node_key, (node, []))[1].append(root)
@@ -519,17 +522,13 @@ class EnvironmentDiffRenderer(_DiffRenderer):
             )
 
 
-#: How a spec is named at the top of the comparison
-_SPEC_NAME_FORMAT = "{name}{@version}{/hash:7}"
-
-
 class SpecDiffRenderer(_DiffRenderer):
-    """Renders a ``SpecDiff`` to the terminal."""
+    """Renders a ``SpecDiff`` to the terminal, for the two named specs."""
 
-    def __init__(self, result: spack.spec_diff.SpecDiff) -> None:
-        super().__init__(
-            result.root_a.cformat(_SPEC_NAME_FORMAT), result.root_b.cformat(_SPEC_NAME_FORMAT)
-        )
+    def __init__(
+        self, result: spack.spec_diff.SpecDiff, name_before: str, name_after: str
+    ) -> None:
+        super().__init__(name_before, name_after)
         self.result = result
 
     def render(self) -> None:
@@ -542,19 +541,14 @@ class SpecDiffRenderer(_DiffRenderer):
             return
 
         nodes = sorted(result.nodes, key=spack.spec_diff.node_sort_key)
-        config = [node for node in nodes if not _is_recipe_change(node)]
+        recipe_changes, config = stable_partition(nodes, _is_recipe_change)
         if config:
             self._section(
                 "@*{Node differences}",
                 [self._node_block(node, node.node_a.name) for node in config],
             )
 
-        # One entry per package, since every instance of a package has its own package hash
-        recipes = {
-            (node.node_a.namespace or "", node.node_a.name)
-            for node in nodes
-            if _is_recipe_change(node)
-        }
+        recipes = {_recipe_key(node) for node in recipe_changes}
         if recipes:
             self._section(
                 "@*{Packages whose recipe differs}", [[name] for _, name in sorted(recipes)]

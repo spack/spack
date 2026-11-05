@@ -98,7 +98,7 @@ def test_environment_diff_as_dict_is_canonical_and_omits_environment_identity(
 
     assert payload["_meta"] == {
         "file-type": "spack-environment-diff",
-        "diff-version": diff.DIFF_FORMAT_VERSION,
+        "diff-version": spec_diff.DIFF_FORMAT_VERSION,
     }
 
     # Canonical order, regardless of the order the inputs arrived in

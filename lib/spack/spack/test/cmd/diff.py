@@ -87,7 +87,7 @@ SHARED_DEP = (
 
 
 @_needs_environments
-def test_env_diff_reports_inputs_and_divergence(concretized_env):
+def test_diff_reports_inputs_and_divergence(concretized_env):
     """`spack diff` reports unique inputs and localizes a divergence for common inputs."""
     concretized_env("test1", "spack:\n  specs:\n  - mpileaks\n")
     concretized_env(
@@ -110,7 +110,7 @@ def test_env_diff_reports_inputs_and_divergence(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_json(concretized_env):
+def test_diff_json(concretized_env):
     """`spack diff --json` emits a machine-readable structure."""
     concretized_env("test1", PINNED.format("2.3"))
     concretized_env("test2", PINNED.format("2.2"))
@@ -125,7 +125,7 @@ def test_env_diff_json(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_requires_concretized_environment(concretized_env):
+def test_diff_requires_concretized_environment(concretized_env):
     """`spack diff` errors clearly when an environment is not concretized."""
     env_cmd("create", "test1")
     with ev.read("test1"):
@@ -137,7 +137,7 @@ def test_env_diff_requires_concretized_environment(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_renders_unique_dependency(concretized_env):
+def test_diff_renders_unique_dependency(concretized_env):
     """A dependency present on one side only is rendered with the direct dependency sigil."""
     # `+openblas` adds a dependency on `openblas`, so the two roots differ both on the variant
     # and on the edge. Requiring the variant keeps `simple-inheritance` a common input spec.
@@ -165,7 +165,7 @@ def test_env_diff_renders_unique_dependency(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_groups_shared_divergent_node(concretized_env):
+def test_diff_groups_shared_divergent_node(concretized_env):
     """A node reached from several input specs is reported once, listing the input specs."""
     concretized_env("test1", SHARED_DEP.format("3.0.4"))
     concretized_env("test2", SHARED_DEP.format("1.0"))
@@ -179,7 +179,7 @@ def test_env_diff_groups_shared_divergent_node(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_reports_count_for_many_shared_inputs(concretized_env, monkeypatch):
+def test_diff_reports_count_for_many_shared_inputs(concretized_env, monkeypatch):
     """Past a threshold, the input specs reaching a divergent node are counted, not listed."""
     monkeypatch.setattr(spack.cmd.diff, "_MAX_LISTED_INPUTS", 1)
     concretized_env("test1", SHARED_DEP.format("3.0.4"))
@@ -189,7 +189,7 @@ def test_env_diff_reports_count_for_many_shared_inputs(concretized_env, monkeypa
 
 
 @_needs_environments
-def test_env_diff_distinguishes_groups(concretized_env):
+def test_diff_distinguishes_groups(concretized_env):
     """Roots of different groups are compared separately, not collapsed by abstract spec."""
     # The abstract spec is `mpileaks` in all four roots, so only the group tells them apart
     concretized_env("test1", GROUPED.format("2.3", "2.2"))
@@ -207,7 +207,7 @@ def test_env_diff_distinguishes_groups(concretized_env):
     assert "2.3" not in output
 
 
-def test_env_diff_merges_recipe_changes_per_package(capsys):
+def test_diff_merges_recipe_changes_per_package(capsys):
     """Recipe changes are merged per package, since a package hash is per instance.
 
     Two differently configured instances of the same package yield different package hashes for
@@ -219,8 +219,10 @@ def test_env_diff_merges_recipe_changes_per_package(capsys):
 
     output = _render(
         capsys,
-        _reached_from("mpileaks", _divergence(first, first, recipe, value_a="aaa", value_b="bbb")),
-        _reached_from(
+        _user_spec_divergence(
+            "mpileaks", _divergence(first, first, recipe, value_a="aaa", value_b="bbb")
+        ),
+        _user_spec_divergence(
             "callpath", _divergence(second, second, recipe, value_a="ccc", value_b="ddd")
         ),
     )
@@ -233,7 +235,7 @@ def test_env_diff_merges_recipe_changes_per_package(capsys):
 
 
 @_needs_environments
-def test_env_diff_sections_differences_by_group(concretized_env):
+def test_diff_sections_differences_by_group(concretized_env):
     """Configuration differences are reported under the group of the input spec reaching them."""
     # Both groups diverge, so each section has to show its own difference
     concretized_env("test1", GROUPED.format("2.3", "2.2"))
@@ -250,7 +252,7 @@ def test_env_diff_sections_differences_by_group(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_no_prune_reports_downstream_differences(concretized_env):
+def test_diff_no_prune_reports_downstream_differences(concretized_env):
     """`--no-prune` reports the consequences of a difference, not just the first one found."""
     # `dyninst` is reached only through `callpath`, which itself differs between the two
     manifest = (
@@ -278,7 +280,7 @@ def test_env_diff_no_prune_reports_downstream_differences(concretized_env):
 
 @_needs_environments
 @pytest.mark.parametrize("lockfile", ["v1", "v2", "v3"])
-def test_env_diff_refuses_environments_without_package_hashes(concretized_env, lockfile):
+def test_diff_refuses_environments_without_package_hashes(concretized_env, lockfile):
     """Environments from lockfiles older than package hashes are refused, not crashed on."""
     env_cmd(
         "create",
@@ -292,7 +294,7 @@ def test_env_diff_refuses_environments_without_package_hashes(concretized_env, l
 
 
 @_needs_environments
-def test_env_diff_accepts_a_concretized_empty_environment(concretized_env):
+def test_diff_accepts_a_concretized_empty_environment(concretized_env):
     """An environment with nothing to concretize is comparable, not "not concretized"."""
     concretized_env("test1", "spack:\n  specs: []\n")
     concretized_env("test2", "spack:\n  specs: []\n")
@@ -301,7 +303,7 @@ def test_env_diff_accepts_a_concretized_empty_environment(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_refuses_a_partially_concretized_environment(concretized_env):
+def test_diff_refuses_a_partially_concretized_environment(concretized_env):
     """A spec added after the last concretization is refused, not dropped from the comparison."""
     concretized_env("test1", "spack:\n  specs:\n  - mpileaks\n")
     concretized_env("test2", "spack:\n  specs:\n  - mpileaks\n")
@@ -317,7 +319,7 @@ def test_env_diff_refuses_a_partially_concretized_environment(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_json_is_ordered_canonically(concretized_env):
+def test_diff_json_is_ordered_canonically(concretized_env):
     """`--json` does not inherit the order the environment happened to concretize its roots in."""
     # Three groups with no dependency between them are concretized in an unspecified order, so
     # the roots reach the diff in an order that varies between runs.
@@ -344,7 +346,7 @@ def test_env_diff_json_is_ordered_canonically(concretized_env):
 
 
 @_needs_environments
-def test_env_diff_reports_a_differing_external(concretized_env):
+def test_diff_reports_a_differing_external(concretized_env):
     """An external found at a different prefix is named, not left unexplained."""
     # `libelf` is used rather than one of the `external*` mock packages because those are already
     # declared external by the mock configuration. Externals merge across scopes, so a manifest
@@ -379,7 +381,9 @@ def _divergence(node_a, node_b, category, key="", value_a="", value_b=""):
     return spec_diff.NodeDivergence(node_a, node_b, [attribute])
 
 
-def _reached_from(root: str, *nodes: spec_diff.NodeDivergence) -> env_diff_core.UserSpecDivergence:
+def _user_spec_divergence(
+    root: str, *nodes: spec_diff.NodeDivergence
+) -> env_diff_core.UserSpecDivergence:
     """Divergent nodes reached from one input spec of the default group."""
     return env_diff_core.UserSpecDivergence(
         ev.UserSpecId("default", spack.spec.Spec(root)), list(nodes)
@@ -400,7 +404,7 @@ def _render(capsys, *divergences: env_diff_core.UserSpecDivergence, color: bool 
     return capsys.readouterr().out
 
 
-def test_print_env_diff_renders_recipe_changes(capsys):
+def test_diff_renders_recipe_changes(capsys):
     """The recipe section cannot be reached end to end, since a recipe cannot be changed midway.
 
     Two environments concretized in one process share their package files, so the only way to a
@@ -411,7 +415,7 @@ def test_print_env_diff_renders_recipe_changes(capsys):
         mpich, mpich, spec_diff.DiffCategory.RECIPE, value_a="aaa", value_b="bbb"
     )
 
-    output = _render(capsys, _reached_from("mpileaks", divergence))
+    output = _render(capsys, _user_spec_divergence("mpileaks", divergence))
 
     assert "Packages whose recipe differs" in output
     assert "mpich  (from mpileaks)" in output
@@ -419,7 +423,7 @@ def test_print_env_diff_renders_recipe_changes(capsys):
     assert "before: mpich" not in output
 
 
-def test_print_env_diff_renders_an_unresolved_input(capsys):
+def test_diff_renders_an_unresolved_input(capsys):
     """The bucket for a difference nothing accounts for is reported rather than swallowed."""
     root = ev.UserSpecId("default", spack.spec.Spec("mpileaks"))
     result = env_diff_core.EnvironmentDiff(
@@ -436,14 +440,14 @@ def test_print_env_diff_renders_an_unresolved_input(capsys):
     assert "equivalent" not in output
 
 
-def test_env_diff_renders_only_the_differing_architecture_part(capsys, mutable_mock_repo):
+def test_diff_renders_only_the_differing_architecture_part(capsys, mutable_mock_repo):
     """Architecture parts are rendered one part at a time."""
     node = spack.concretize.concretize_one("mpich@3.0.4")
     divergence = _divergence(
         node, node, spec_diff.DiffCategory.ARCHITECTURE, "os", "debian6", "ubuntu99"
     )
 
-    output = _render(capsys, _reached_from("mpileaks", divergence))
+    output = _render(capsys, _user_spec_divergence("mpileaks", divergence))
 
     # only the differing part is shown, and the version, which does not differ, is hidden
     assert f"os={node.architecture.os}" in output
@@ -463,7 +467,7 @@ def _concretized_directory_env(directory: pathlib.Path, content: str) -> ev.Envi
 
 
 @_needs_environments
-def test_env_diff_accepts_environment_directories(tmp_path):
+def test_diff_accepts_environment_directories(tmp_path):
     """Both arguments are a name or a directory, and directories were only ever the former."""
     _concretized_directory_env(tmp_path / "d1", PINNED.format("2.3"))
     _concretized_directory_env(tmp_path / "d2", PINNED.format("2.2"))
@@ -475,7 +479,7 @@ def test_env_diff_accepts_environment_directories(tmp_path):
 
 
 @_needs_environments
-def test_env_diff_orders_input_specs_the_same_way_everywhere(concretized_env):
+def test_diff_orders_input_specs_the_same_way_everywhere(concretized_env):
     """The text and the json output must not disagree on the order of the same list."""
     # Sorting the rendered strings and sorting by (group, spec) part ways as soon as groups are
     # involved, since the group is rendered as a suffix.
@@ -511,7 +515,7 @@ def test_env_diff_orders_input_specs_the_same_way_everywhere(concretized_env):
         ("3.0.4", "3.0.3", spack.spec.HIGHLIGHT_COLOR),
     ],
 )
-def test_env_diff_highlights_only_a_version_regression(
+def test_diff_highlights_only_a_version_regression(
     version_a, version_b, color, capsys, mutable_mock_repo
 ):
     """Tests that the style of a version change depends on its direction, on both sides."""
@@ -519,7 +523,7 @@ def test_env_diff_highlights_only_a_version_regression(
     node_b = spack.concretize.concretize_one(f"mpich@{version_b}")
     divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VERSION)
 
-    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
+    output = _render(capsys, _user_spec_divergence("mpileaks", divergence), color=True)
 
     assert clr.colorize(f"{color}@@{version_a}@.", color=True) in output
     assert clr.colorize(f"{color}@@{version_b}@.", color=True) in output
@@ -534,7 +538,7 @@ def test_env_diff_highlights_only_a_version_regression(
         ("~debug", "+debug", spack.spec.HIGHLIGHT_COLOR),
     ],
 )
-def test_env_diff_styles_a_variant_by_the_value_it_lands_on(
+def test_diff_styles_a_variant_by_the_value_it_lands_on(
     starts_from, lands_on, color, capsys, mutable_mock_repo
 ):
     """The style of a variant change is judged on the value the second side lands on."""
@@ -542,7 +546,7 @@ def test_env_diff_styles_a_variant_by_the_value_it_lands_on(
     node_b = spack.concretize.concretize_one(f"mpich@3.0.4{lands_on}")
     divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VARIANT, "debug")
 
-    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
+    output = _render(capsys, _user_spec_divergence("mpileaks", divergence), color=True)
 
     assert clr.colorize(f"{color}{starts_from}@.", color=True) in output
     assert clr.colorize(f"{color}{lands_on}@.", color=True) in output
@@ -551,7 +555,7 @@ def test_env_diff_styles_a_variant_by_the_value_it_lands_on(
 @pytest.mark.parametrize(
     "variant,color", [("~debug", spack.spec.VARIANT_COLOR), ("+debug", spack.spec.HIGHLIGHT_COLOR)]
 )
-def test_env_diff_styles_a_variant_absent_on_the_second_side(
+def test_diff_styles_a_variant_absent_on_the_second_side(
     variant, color, capsys, mutable_mock_repo
 ):
     """A variant only the first side has is judged on the only value the diff has to show."""
@@ -560,24 +564,24 @@ def test_env_diff_styles_a_variant_absent_on_the_second_side(
     assert "debug" not in node_b.variants
     divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VARIANT, "debug")
 
-    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
+    output = _render(capsys, _user_spec_divergence("mpileaks", divergence), color=True)
 
     assert clr.colorize(f"{color}{variant}@.", color=True) in output
 
 
-def test_env_diff_highlights_a_variant_the_package_no_longer_declares(capsys, mutable_mock_repo):
+def test_diff_highlights_a_variant_the_package_no_longer_declares(capsys, mutable_mock_repo):
     """A node recorded with a variant its package does not declare has no default to judge by."""
     node_a = spack.concretize.concretize_one("mpich@3.0.4")
     node_b = spack.concretize.concretize_one("mpich@3.0.4")
     node_b.variants.set(spack.variant.BoolValuedVariant("gone", True))
     divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VARIANT, "gone")
 
-    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
+    output = _render(capsys, _user_spec_divergence("mpileaks", divergence), color=True)
 
     assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}+gone@.", color=True) in output
 
 
-def test_env_diff_highlights_a_variant_of_a_package_no_longer_in_the_repository(
+def test_diff_highlights_a_variant_of_a_package_no_longer_in_the_repository(
     capsys, mutable_mock_repo, monkeypatch
 ):
     """An environment can have been concretized against a repository we no longer have."""
@@ -590,14 +594,14 @@ def test_env_diff_highlights_a_variant_of_a_package_no_longer_in_the_repository(
 
     monkeypatch.setattr(spack.repo.PATH, "get", unknown)
 
-    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
+    output = _render(capsys, _user_spec_divergence("mpileaks", divergence), color=True)
 
     # ~debug is the default, but with no package to read it from the change stays highlighted
     assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}~debug@.", color=True) in output
 
 
 @_needs_environments
-def test_env_diff_json_is_versioned_and_names_the_environments(concretized_env, tmp_path):
+def test_diff_json_is_versioned_and_names_the_environments(concretized_env, tmp_path):
     """`spack diff --json` includes a format version, and the identity of what it compared."""
     concretized_env("test1", PINNED.format("2.3"))
 
@@ -609,7 +613,7 @@ def test_env_diff_json_is_versioned_and_names_the_environments(concretized_env, 
 
     assert result["_meta"] == {
         "file-type": "spack-environment-diff",
-        "diff-version": env_diff_core.DIFF_FORMAT_VERSION,
+        "diff-version": spec_diff.DIFF_FORMAT_VERSION,
     }
 
     # A managed environment is named, an independent one is identified by its directory. Either
@@ -620,7 +624,7 @@ def test_env_diff_json_is_versioned_and_names_the_environments(concretized_env, 
 
 
 @_needs_environments
-def test_env_diff_accepts_lockfile_paths(concretized_env, tmp_path):
+def test_diff_accepts_lockfile_paths(concretized_env, tmp_path):
     """Two lockfiles can be compared directly, without creating an environment for each first."""
     before = concretized_env("test1", PINNED.format("2.3"))
     after = concretized_env("test2", PINNED.format("2.2"))
@@ -639,7 +643,7 @@ def test_env_diff_accepts_lockfile_paths(concretized_env, tmp_path):
 
 
 @_needs_environments
-def test_env_diff_reports_a_lockfile_by_the_path_it_was_given(concretized_env, tmp_path):
+def test_diff_reports_a_lockfile_by_the_path_it_was_given(concretized_env, tmp_path):
     """The throwaway environment a lockfile is read through never surfaces in the output."""
     before = concretized_env("test1", PINNED.format("2.3"))
     after = concretized_env("test2", PINNED.format("2.2"))
@@ -655,7 +659,7 @@ def test_env_diff_reports_a_lockfile_by_the_path_it_was_given(concretized_env, t
 
 
 @_needs_environments
-def test_env_diff_mixes_an_environment_and_a_lockfile(concretized_env, tmp_path):
+def test_diff_mixes_an_environment_and_a_lockfile(concretized_env, tmp_path):
     """The two sides are resolved independently, so they need not be of the same kind."""
     concretized_env("test1", PINNED.format("2.3"))
     after = concretized_env("test2", PINNED.format("2.2"))
@@ -671,7 +675,7 @@ def test_env_diff_mixes_an_environment_and_a_lockfile(concretized_env, tmp_path)
 
 
 @_needs_environments
-def test_env_diff_names_the_lockfile_it_refuses(concretized_env, tmp_path):
+def test_diff_names_the_lockfile_it_refuses(concretized_env, tmp_path):
     """A lockfile that cannot be compared is named by its path, not by a temporary directory."""
     concretized_env("test1", "spack:\n  specs:\n  - mpileaks\n")
     legacy = tmp_path / "old.lock"
@@ -684,7 +688,7 @@ def test_env_diff_names_the_lockfile_it_refuses(concretized_env, tmp_path):
 
 
 @_needs_environments
-def test_env_diff_refuses_a_manifest_path(concretized_env, tmp_path):
+def test_diff_refuses_a_manifest_path(concretized_env, tmp_path):
     """A manifest is not a lockfile, and the error points at the directory to pass instead."""
     concretized_env("test1", PINNED.format("2.3"))
     directory = tmp_path / "independent"
@@ -699,7 +703,7 @@ def test_env_diff_refuses_a_manifest_path(concretized_env, tmp_path):
 
 
 @_needs_environments
-def test_env_diff_refuses_a_file_that_is_not_a_lockfile(concretized_env, tmp_path):
+def test_diff_refuses_a_file_that_is_not_a_lockfile(concretized_env, tmp_path):
     """A file is accepted for what it contains, not for how it is named."""
     concretized_env("test1", PINNED.format("2.3"))
     not_a_lockfile = tmp_path / "notes.txt"
@@ -710,7 +714,7 @@ def test_env_diff_refuses_a_file_that_is_not_a_lockfile(concretized_env, tmp_pat
 
 
 @_needs_environments
-def test_env_diff_accepts_a_lockfile_whose_name_is_not_a_lockfile_name(concretized_env, tmp_path):
+def test_diff_accepts_a_lockfile_whose_name_is_not_a_lockfile_name(concretized_env, tmp_path):
     """A lockfile downloaded under any name is still compared as a lockfile."""
     concretized_env("test1", PINNED.format("2.3"))
     after = concretized_env("test2", PINNED.format("2.2"))
@@ -842,7 +846,7 @@ def test_diff_specs_lists_recipe_changes_by_package(capsys):
         _divergence(before["callpath"], before["callpath"], recipe, value_a="ccc", value_b="ddd"),
     ]
 
-    spack.cmd.diff.SpecDiffRenderer(spec_diff.SpecDiff(before, after, nodes)).render()
+    spack.cmd.diff.SpecDiffRenderer(spec_diff.SpecDiff(before, after, nodes), "s1", "s2").render()
 
     output = capsys.readouterr().out
     assert "Packages whose recipe differs" in output
