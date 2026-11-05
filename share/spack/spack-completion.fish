@@ -916,7 +916,7 @@ complete -c spack -n '__fish_spack_using_command buildcache migrate' -s y -l yes
 complete -c spack -n '__fish_spack_using_command buildcache migrate' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack cd
-set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= v/view= first
+set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages E/env-root I/install-root c/source-dir b/build-dir e/env= v/view= first
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 cd' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command cd' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command cd' -s h -l help -d 'show this help message and exit'
@@ -934,6 +934,10 @@ complete -c spack -n '__fish_spack_using_command cd' -s s -l stage-dir -f -a sta
 complete -c spack -n '__fish_spack_using_command cd' -s s -l stage-dir -d 'stage directory for a spec'
 complete -c spack -n '__fish_spack_using_command cd' -s S -l stages -f -a stages
 complete -c spack -n '__fish_spack_using_command cd' -s S -l stages -d 'top level stage directory'
+complete -c spack -n '__fish_spack_using_command cd' -s E -l env-root -f -a env_root
+complete -c spack -n '__fish_spack_using_command cd' -s E -l env-root -d 'top level environment directory'
+complete -c spack -n '__fish_spack_using_command cd' -s I -l install-root -f -a install_root
+complete -c spack -n '__fish_spack_using_command cd' -s I -l install-root -d 'top level installation directory'
 complete -c spack -n '__fish_spack_using_command cd' -s c -l source-dir -f -a source_dir
 complete -c spack -n '__fish_spack_using_command cd' -s c -l source-dir -d 'source directory for a spec (requires it to be staged first)'
 complete -c spack -n '__fish_spack_using_command cd' -s b -l build-dir -f -a build_dir
@@ -2273,7 +2277,7 @@ complete -c spack -n '__fish_spack_using_command load' -l list -f -a list
 complete -c spack -n '__fish_spack_using_command load' -l list -d 'show loaded packages: same as ``spack find --loaded``'
 
 # spack location
-set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages c/source-dir b/build-dir e/env= v/view= first
+set -g __fish_spack_optspecs_spack_location h/help m/module-dir r/spack-root i/install-dir p/package-dir repo= s/stage-dir S/stages E/env-root I/install-root c/source-dir b/build-dir e/env= v/view= first
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 location' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command location' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command location' -s h -l help -d 'show this help message and exit'
@@ -2291,6 +2295,10 @@ complete -c spack -n '__fish_spack_using_command location' -s s -l stage-dir -f 
 complete -c spack -n '__fish_spack_using_command location' -s s -l stage-dir -d 'stage directory for a spec'
 complete -c spack -n '__fish_spack_using_command location' -s S -l stages -f -a stages
 complete -c spack -n '__fish_spack_using_command location' -s S -l stages -d 'top level stage directory'
+complete -c spack -n '__fish_spack_using_command location' -s E -l env-root -f -a env_root
+complete -c spack -n '__fish_spack_using_command location' -s E -l env-root -d 'top level environment directory'
+complete -c spack -n '__fish_spack_using_command location' -s I -l install-root -f -a install_root
+complete -c spack -n '__fish_spack_using_command location' -s I -l install-root -d 'top level installation directory'
 complete -c spack -n '__fish_spack_using_command location' -s c -l source-dir -f -a source_dir
 complete -c spack -n '__fish_spack_using_command location' -s c -l source-dir -d 'source directory for a spec (requires it to be staged first)'
 complete -c spack -n '__fish_spack_using_command location' -s b -l build-dir -f -a build_dir
