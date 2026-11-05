@@ -375,7 +375,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependents -d 'sh
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deprecate -d 'replace one package with another via symlinks'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dev-build -d 'build package from code in current working directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a develop -d 'add a spec to an environment'"'"'s develop: section'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a diff -d 'compare two specs'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a diff -d 'compare two concrete environments, or two specs'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a docs -d 'open spack documentation in a web browser'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open package files in ``$EDITOR``'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a env -d 'manage environments'
@@ -1523,12 +1523,16 @@ complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -d 'traverse nodes of the graph to mark everything up to the root as a develop spec'
 
 # spack diff
-set -g __fish_spack_optspecs_spack_diff h/help json first a/attribute= ignore=
-complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' -f -a '(__fish_spack_installed_specs)'
+set -g __fish_spack_optspecs_spack_diff h/help s/specs json no-prune first a/attribute= ignore=
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' $__fish_spack_force_files -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command diff' -s s -l specs -f -a compare_specs
+complete -c spack -n '__fish_spack_using_command diff' -s s -l specs -d 'compare two specs instead of two environments'
 complete -c spack -n '__fish_spack_using_command diff' -l json -f -a dump_json
 complete -c spack -n '__fish_spack_using_command diff' -l json -d 'dump json output instead of pretty printing'
+complete -c spack -n '__fish_spack_using_command diff' -l no-prune -f -a prune
+complete -c spack -n '__fish_spack_using_command diff' -l no-prune -d 'report every differing node, instead of reporting the node where a difference first appears and skipping the subgraph below it'
 complete -c spack -n '__fish_spack_using_command diff' -l first -f -a load_first
 complete -c spack -n '__fish_spack_using_command diff' -l first -d 'load the first match if multiple packages match the spec'
 complete -c spack -n '__fish_spack_using_command diff' -s a -l attribute -r -f -a attribute
@@ -1574,7 +1578,6 @@ complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a list -d 'list 
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a ls -d 'list all managed environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a status -d 'print active environment status'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a st -d 'print active environment status'
-complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a diff -d 'compare two concrete environments'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a loads -d 'list modules for an installed environment '"'"'(see spack module loads)'"'"''
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a view -d 'manage the environment'"'"'s view'
 complete -c spack -n '__fish_spack_using_command_pos 0 env' -f -a update -d 'update the environment manifest to the latest schema format'
@@ -1707,16 +1710,6 @@ complete -c spack -n '__fish_spack_using_command env status' -s h -l help -d 'sh
 set -g __fish_spack_optspecs_spack_env_st h/help
 complete -c spack -n '__fish_spack_using_command env st' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env st' -s h -l help -d 'show this help message and exit'
-
-# spack env diff
-set -g __fish_spack_optspecs_spack_env_diff h/help no-prune json
-
-complete -c spack -n '__fish_spack_using_command env diff' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command env diff' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command env diff' -l no-prune -f -a prune
-complete -c spack -n '__fish_spack_using_command env diff' -l no-prune -d 'report every differing node, instead of reporting the node where a difference first appears and skipping the subgraph below it'
-complete -c spack -n '__fish_spack_using_command env diff' -l json -f -a dump_json
-complete -c spack -n '__fish_spack_using_command env diff' -l json -d 'dump json output instead of pretty printing'
 
 # spack env loads
 set -g __fish_spack_optspecs_spack_env_loads h/help n/module-set-name= m/module-type= input-only p/prefix= x/exclude= r/dependencies
