@@ -49,17 +49,14 @@ from spack.installer.base import (
     IpcChannel,
     JobServerBase,
     Makeflags,
-    ProcessExitNotifier,
 )
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
 
 if sys.platform == "win32":
-    from spack.installer.windows import WindowsSentinelBridge as ExitNotifier
     from spack.installer.windows import WindowsTee as Tee
     from spack.installer.windows import create_build_channels, make_state_stream
 else:
-    from spack.installer.posix import PosixExitNotifier as ExitNotifier
     from spack.installer.posix import PosixTee as Tee
     from spack.installer.posix import create_build_channels, make_state_stream
 
@@ -80,14 +77,9 @@ class ProcessLike(Protocol):
     @property
     def pid(self) -> Optional[int]: ...
 
-    @property
-    def exitcode(self) -> Optional[int]: ...
-
     def terminate(self) -> None: ...
 
     def kill(self) -> None: ...
-
-    def is_alive(self) -> bool: ...
 
     def join(self, timeout: Optional[float] = None) -> None: ...
 
@@ -103,10 +95,10 @@ class ChildInfo:
         "output_r_conn",
         "state_r_conn",
         "control_w_conn",
-        "notifier",
         "log_path",
         "prefix_lock",
         "state_buffer",
+        "exit_code",
     )
 
     def __init__(
@@ -116,7 +108,6 @@ class ChildInfo:
         output_r_conn: IpcChannel,
         state_r_conn: IpcChannel,
         control_w_conn: IpcChannel,
-        notifier: ProcessExitNotifier,
         log_path: str,
     ) -> None:
         self.proc = proc
@@ -124,13 +115,14 @@ class ChildInfo:
         self.output_r_conn = output_r_conn
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
-        self.notifier = notifier
         self.log_path = log_path
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
         # Buffer for partially received state data from this child. Kept as raw bytes and split on
         # b"\n": the newline byte cannot occur inside a multi-byte UTF-8 sequence, so framing is
         # safe without decoding partial reads.
         self.state_buffer = b""
+        #: Exit code reported by the build as its last state message.
+        self.exit_code: Optional[int] = None
 
     def release_prefix_lock(self) -> None:
         if self.prefix_lock is not None:
@@ -141,16 +133,13 @@ class ChildInfo:
         self.prefix_lock = None
 
     def register_with_selector(self, selector: selectors.BaseSelector, build_id: str) -> None:
-        """Register output, state, and sentinel channels with the selector."""
+        """Register output and state channels with the selector."""
         selector.register(self.output_r_conn, selectors.EVENT_READ, FdInfo(build_id, "output"))
         selector.register(self.state_r_conn, selectors.EVENT_READ, FdInfo(build_id, "state"))
-        selector.register(
-            self.notifier.fileobj, selectors.EVENT_READ, FdInfo(build_id, "sentinel")
-        )
 
     def close(self, selector: selectors.BaseSelector) -> int:
-        """Unregister and close file descriptors, and join the child process.
-        Returns the exit code of the child process."""
+        """Unregister and close file descriptors, and join the child process. Returns the exit code
+        the build reported, or ``BUILD_ERROR`` if it exited without reporting one."""
         try:
             selector.unregister(self.output_r_conn)
         except (KeyError, OSError):
@@ -159,20 +148,13 @@ class ChildInfo:
             selector.unregister(self.state_r_conn)
         except (KeyError, OSError):
             pass
-        try:
-            selector.unregister(self.notifier.fileobj)
-        except (KeyError, ValueError, OSError):
-            pass
         self.output_r_conn.close()
         self.state_r_conn.close()
         self.control_w_conn.close()
-        self.notifier.close()
         self.proc.join()
-        exit_code = self.proc.exitcode
-        assert exit_code is not None, "Finished build should have exit code set"
         if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
             self.proc.close()
-        return exit_code
+        return ExitCode.BUILD_ERROR if self.exit_code is None else self.exit_code
 
 
 def dump_packages(spec: spack.spec.Spec, path: str) -> None:
@@ -300,6 +282,12 @@ def send_progress(current: int, total: int, state_pipe: io.TextIOWrapper) -> Non
 def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     """Send a notification that the package was installed from binary cache."""
     json.dump({"installed_from_binary_cache": True}, state_pipe, separators=(",", ":"))
+    state_pipe.write("\n")
+
+
+def send_exit(exit_code: int, state_pipe: io.TextIOWrapper) -> None:
+    """Send the exit code: the last message, sent after the build's last write to its prefix."""
+    json.dump({"exit": exit_code}, state_pipe, separators=(",", ":"))
     state_pipe.write("\n")
 
 
@@ -464,9 +452,11 @@ def worker_function(
         global_state: Global state to restore
     """
     spec, log_path = request.spec, request.log_path
+    state_stream = make_state_stream(state)
 
     # TODO: don't start a build for external packages
     if spec.external:
+        send_exit(ExitCode.SUCCESS, state_stream)
         return
 
     global_state.restore()
@@ -478,6 +468,14 @@ def worker_function(
 
         # Reset SIGTSTP to default in case the parent had a custom handler.
         signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+
+        # Under forkserver/spawn Python drops CLOEXEC. We don't want to expose these fds to the
+        # build. Notably the state fd should be closed, since its EOF signals to the parent process
+        # that the build has finished, and that should not be delayed by daemons that keep the fd
+        # open, such as sccache or bazel, which exit only after a certain period of inactivity.
+        for channel in (state, parent, tee_control_r, tee_control_w):
+            if channel is not None:
+                os.set_inheritable(channel.fileno(), False)
 
     def handle_sigterm(signum, frame):
         # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
@@ -524,7 +522,6 @@ def worker_function(
     sys.stderr = os.fdopen(
         sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
     )
-    state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
     try:
@@ -542,7 +539,6 @@ def worker_function(
         exit_code = ExitCode.BUILD_ERROR
     finally:
         tee.close()
-        state_stream.close()
 
     if exit_code == ExitCode.SUCCESS:
         # Try to install the compressed log file
@@ -558,6 +554,7 @@ def worker_function(
             except Exception:
                 pass  # don't fail the build just because log compression failed
 
+    send_exit(exit_code, state_stream)
     sys.exit(exit_code)
 
 
@@ -864,13 +861,7 @@ def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
     channels.close_child_ends()
 
     return ChildInfo(
-        proc,
-        spec,
-        channels.output_r,
-        channels.state_r,
-        channels.control_w,
-        ExitNotifier(proc),
-        request.log_path,
+        proc, spec, channels.output_r, channels.state_r, channels.control_w, request.log_path
     )
 
 

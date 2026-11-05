@@ -21,7 +21,7 @@ import tempfile
 import termios
 import tty
 import warnings
-from multiprocessing import Pipe, Process
+from multiprocessing import Pipe
 from multiprocessing.connection import Connection
 from typing import Callable, MutableMapping, Optional, Tuple
 
@@ -37,7 +37,6 @@ from spack.installer.base import (
     BuildChannels,
     JobServerBase,
     Makeflags,
-    ProcessExitNotifier,
     StdinReader,
     Tee,
 )
@@ -180,17 +179,6 @@ class PosixTerminalState(BaseTerminalState):
 
     def _should_enter_foreground(self) -> bool:
         return not _is_background_tty(sys.stdin)
-
-
-class PosixExitNotifier(ProcessExitNotifier):
-    """Process-exit notifier for POSIX: the multiprocessing sentinel fd is selector-watchable."""
-
-    def __init__(self, proc: Process) -> None:
-        self.proc = proc
-
-    @property
-    def fileobj(self) -> int:
-        return self.proc.sentinel
 
 
 def create_build_channels() -> BuildChannels:
