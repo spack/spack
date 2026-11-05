@@ -11,31 +11,11 @@ from typing import List, Tuple
 import spack.config
 import spack.migrate
 import spack.paths
-import spack.util.spack_yaml as syaml
 from spack.util import tty
 
 description = "manage migration of Spack resources"
 section = "config"
 level = "long"
-
-
-def _restore_user_scope_path() -> None:
-    """Point the standard user scope back at the legacy ~/.spack location."""
-    include_path = os.path.join(spack.paths.etc_path, "standard_scopes", "include.yaml")
-    with open(include_path, "r", encoding="utf-8") as f:
-        include_config = syaml.load(f) or {}
-
-    includes = include_config.get("include", [])
-    for entry in includes:
-        if isinstance(entry, dict) and entry.get("name") == "user":
-            entry["path"] = "~/.spack"
-            break
-    else:
-        tty.die(f"Cannot restore user scope: no user entry in {include_path}")
-
-    with open(include_path, "w", encoding="utf-8") as f:
-        syaml.dump(include_config, f)
-    tty.msg(f"  Updated user scope: {include_path}")
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
@@ -50,15 +30,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
             " copies made in the new locations are left in place."
         ),
     )
-    undo.add_argument(
-        "--restore-old-user-scope",
-        action="store_true",
-        help=(
-            "restore the user scope to ~/.spack (changes git-managed config in the"
-            " Spack repository)"
-        ),
-    )
-
     cleanup = sp.add_parser(
         "cleanup-old",
         help="permanently delete ~/.spack",
@@ -352,8 +323,6 @@ def _undo(args):
             tty.msg(f"  - Point gpg_keys_path back to {spack.paths.old_gpg_keys_path}")
         # Installs are never migrated, so don't need to mention that
         tty.msg("  - Update layout scope to use old locations")
-        if args.restore_old_user_scope:
-            tty.msg("  - Update standard scopes to use ~/.spack for the user scope")
         return
 
     tty.msg("Undoing migration...")
@@ -365,9 +334,6 @@ def _undo(args):
     spack.migrate.force_old_layout(old_resources)
 
     tty.msg("  Updated layout scope to point to old locations")
-
-    if args.restore_old_user_scope:
-        _restore_user_scope_path()
 
     tty.msg("\nUndo complete!")
     tty.msg(

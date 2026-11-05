@@ -2370,11 +2370,9 @@ complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -d 'show this help message and exit'
 
 # spack migrate undo
-set -g __fish_spack_optspecs_spack_migrate_undo h/help restore-old-user-scope dry-run
+set -g __fish_spack_optspecs_spack_migrate_undo h/help dry-run
 complete -c spack -n '__fish_spack_using_command migrate undo' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command migrate undo' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command migrate undo' -l restore-old-user-scope -f -a restore_old_user_scope
-complete -c spack -n '__fish_spack_using_command migrate undo' -l restore-old-user-scope -d 'restore the user scope to ~/.spack (changes git-managed config in the Spack repository)'
 complete -c spack -n '__fish_spack_using_command migrate undo' -l dry-run -f -a dry_run
 complete -c spack -n '__fish_spack_using_command migrate undo' -l dry-run -d 'show what would be done without actually doing it'
 

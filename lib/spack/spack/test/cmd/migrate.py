@@ -12,7 +12,6 @@ import spack.main
 import spack.util.tty
 
 sp_migrate = spack.main.SpackCommand("migrate")
-sp_config = spack.main.SpackCommand("config")
 
 
 def _write_layout_config(path: Path, **config):
@@ -23,8 +22,8 @@ def _write_layout_config(path: Path, **config):
     (path / "config.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def test_migrate_undo_restores_backup_and_configuration(mock_spack_instance, monkeypatch):
-    """Undo points scopes back to old locations (resources already there)."""
+def test_migrate_undo_restores_old_layout(mock_spack_instance, monkeypatch):
+    """Undo points the layout scope back at the old locations (resources already there)."""
     home_dir, base_prefix = mock_spack_instance
 
     # Create migration marker
@@ -49,7 +48,7 @@ def test_migrate_undo_restores_backup_and_configuration(mock_spack_instance, mon
     _write_layout_config(layout)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    sp_migrate("undo", "--restore-old-user-scope")
+    sp_migrate("undo")
 
     # Old resources should still exist at their original locations
     assert (old_licenses / "license.dat").read_text(encoding="utf-8") == "license"
@@ -62,20 +61,12 @@ def test_migrate_undo_restores_backup_and_configuration(mock_spack_instance, mon
     assert str(old_envs) in layout_text
     assert str(old_gpg) in layout_text
 
+    # The tracked standard scopes file is not touched
     standard_scopes = (
         Path(base_prefix) / "etc" / "spack" / "standard_scopes" / "include.yaml"
     ).read_text(encoding="utf-8")
-    assert "~/.spack" in standard_scopes
-
-    # Verify ~/.spack is actually the active write scope
-    old_user = Path(home_dir) / ".spack"
-    old_user.mkdir(exist_ok=True)
-    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    sp_config("add", "config:build_jobs:99")
-
-    old_user_config = old_user / "config.yaml"
-    assert old_user_config.exists()
-    assert "build_jobs: 99" in old_user_config.read_text(encoding="utf-8")
+    assert "~/.config/spack" in standard_scopes
+    assert '"~/.spack"' not in standard_scopes
 
 
 def test_undo_nothing_to_undo(mock_spack_instance, monkeypatch):

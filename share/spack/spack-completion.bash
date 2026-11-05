@@ -1476,7 +1476,7 @@ _spack_migrate() {
 }
 
 _spack_migrate_undo() {
-    SPACK_COMPREPLY="-h --help --restore-old-user-scope --dry-run"
+    SPACK_COMPREPLY="-h --help --dry-run"
 }
 
 _spack_migrate_cleanup_old() {
