@@ -150,7 +150,7 @@ def pkg_source(args):
         args.subparser.error("requires exactly one spec")
 
     spec = specs[0]
-    filename = spack.repo.PATH.filename_for_package_name(spec.name)
+    filename = spack.repo.PATH.filename_for_package_name(spec.fullname)
 
     # regular source dump -- just get the package and print its contents
     if args.canonical:
