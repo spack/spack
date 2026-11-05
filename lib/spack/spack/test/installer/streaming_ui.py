@@ -122,6 +122,65 @@ def add_mock_builds(tui: TerminalUI, count: int) -> List[str]:
 
 
 class TestLogFollowing:
+    @pytest.mark.parametrize(
+        "data,expected",
+        [
+            (
+                b"[ 96%] Building CXX object src/CMakeFiles/foo.cpp.o\n",
+                BuildProgress("96%", "foo.cpp"),
+            ),
+            (
+                b"[15,557 / 23,143] TdGenerate dir/file.inc; 7s local\n",
+                BuildProgress("67%", "dir/file.inc"),
+            ),
+            (
+                b"[51 / 100] Compiling src\\dir\\file.cc; 42s local\n",
+                BuildProgress("51%", "dir/file.cc"),
+            ),
+            (
+                b"\x1b[32m[100%] Built target foo\x1b[0m\n",
+                BuildProgress("100%", "Built target foo"),
+            ),
+            (
+                b"[ 99%] Linking C executable target\n",
+                BuildProgress("99%", "Linking C executable target"),
+            ),
+            (b"[2/10] ...\n", BuildProgress("20%")),
+        ],
+    )
+    def test_builder_progress_formats(self, data, expected):
+        tui, _, stdout = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_log_output(build_id, data)
+        assert tui.progress[build_id] == expected
+        assert stdout.getvalue() == ""
+
+    def test_builder_progress_interleaved_partial_lines(self):
+        tui, _, _ = create_tui(total=2)
+        first, second = add_mock_builds(tui, 2)
+        tui.on_log_output(first, b"[ 96%] Building CXX object CMakeFiles/foo")
+        tui.on_log_output(second, b"[2/10] Compiling dir/bar")
+        assert not tui.progress
+        tui.on_log_output(first, b".cpp.o\n")
+        tui.on_log_output(second, b".cc; local\n")
+        assert tui.progress[first] == BuildProgress("96%", "foo.cpp")
+        assert tui.progress[second] == BuildProgress("20%", "dir/bar.cc")
+        tui.on_build_removed(first)
+        assert first not in tui.progress_buffers
+
+    def test_builder_status_and_invalid_progress(self):
+        tui, _, _ = create_tui()
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_progress(build_id, 50, 100)
+        tui.dirty = False
+        tui.on_log_output(build_id, b"[12] ignored\n[1/0] ignored\n")
+        assert tui.progress[build_id] == BuildProgress("50%", "fetching")
+        assert not tui.dirty
+        tui.on_log_output(build_id, b"-- Checking\n")
+        assert tui.progress[build_id] == BuildProgress("50%", "Checking")
+        tui.on_log_output(build_id, b"CMake message\n")
+        assert tui.progress[build_id] == BuildProgress("50%", "CMake message")
+
     def test_structured_fetch_progress(self):
         tui, _, stdout = create_tui(total=1, color=False)
         [build_id] = add_mock_builds(tui, 1)
