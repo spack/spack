@@ -257,6 +257,7 @@ def test_spack_schemas_are_valid():
 
 
 def test_filter_schema_accepts_valid_configuration():
+    """Accept valid filter settings and both package filter forms."""
     v = spack.schema.Validator(spack.schema.filter.schema)
     v.validate(
         {
@@ -294,6 +295,7 @@ def test_filter_schema_accepts_valid_configuration():
     ],
 )
 def test_filter_schema_rejects_invalid_configuration(data):
+    """Reject unknown keys and invalid filter setting types."""
     v = spack.schema.Validator(spack.schema.filter.schema)
     with pytest.raises(jsonschema.ValidationError):
         v.validate(data)
