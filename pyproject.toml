@@ -6,7 +6,7 @@ dependencies = ["clingo"]
 dynamic = ["version"]
 
 [project.scripts]
-spack = "lib.spack.spack_installable.main:main"
+spack = "spack.main:main"
 
 [tool.hatch.version]
 path = "lib/spack/spack/__init__.py"
@@ -28,21 +28,17 @@ ci = ["pytest-cov", "codecov[toml]"]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# Ship spack as a top-level package and fold the data dirs under it (see force-include
+# below) so paths.py can find them relative to the package. var/spack is not shipped.
 [tool.hatch.build.targets.wheel]
-include = [
-  "/bin",
-  "/etc",
-  "/lib",
-  "/share",
-  "/var",
-  "CITATION.cff",
-  "COPYRIGHT",
-  "LICENSE-APACHE",
-  "LICENSE-MIT",
-  "NOTICE",
-  "README.md",
-  "SECURITY.md",
-]
+packages = ["lib/spack/spack"]
+# The test suite is for development only.
+exclude = ["/lib/spack/spack/test"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"etc/spack" = "spack/etc/spack"
+"share/spack" = "spack/share/spack"
+"bin/sbang" = "spack/bin/sbang"
 
 [tool.hatch.envs.default]
 features = ["dev"]
