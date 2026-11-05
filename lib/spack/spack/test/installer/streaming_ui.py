@@ -12,7 +12,7 @@ import pytest
 
 import spack.installer.ui as inst
 from spack.installer.base import StdinReader
-from spack.installer.streaming.ui import LOG_HISTORY_SIZE
+from spack.installer.streaming.ui import LOG_HISTORY_SIZE, BuildProgress
 from spack.installer.streaming.ui import StreamingTerminalUI as TerminalUI
 
 
@@ -122,6 +122,30 @@ def add_mock_builds(tui: TerminalUI, count: int) -> List[str]:
 
 
 class TestLogFollowing:
+    def test_structured_fetch_progress(self):
+        tui, _, stdout = create_tui(total=1, color=False)
+        [build_id] = add_mock_builds(tui, 1)
+        tui.on_progress(build_id, 1, 3)
+        assert tui.progress[build_id] == BuildProgress("33%", "fetching")
+        assert tui._progress_prefix(tui.builds[build_id]) == "33%"
+        tui.render()
+        assert "(33%) fetching" in stdout.getvalue()
+        tui.dirty = False
+        tui.on_progress(build_id, 1, 3)
+        assert not tui.dirty
+        tui.on_state_changed(build_id, "building")
+        assert build_id not in tui.progress
+
+    def test_structured_progress_message_and_removal(self):
+        tui, _, stdout = create_tui(total=1, color=False)
+        [build_id] = add_mock_builds(tui, 1)
+        tui._set_progress(build_id, BuildProgress(message="configuring"))
+        assert tui._progress_prefix(tui.builds[build_id]) is None
+        tui.render()
+        assert "configuring" in stdout.getvalue()
+        tui.on_build_removed(build_id)
+        assert build_id not in tui.progress
+
     def test_verbose_tty_continues_partial_log_line(self):
         tui, _, fake_stdout = create_tui(total=1, verbose=True)
         on_build_added(tui, "pkg0")
