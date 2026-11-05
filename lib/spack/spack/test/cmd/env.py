@@ -2590,84 +2590,78 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
     assert [spec.name for spec in filtered.concrete_roots()] == ["mpileaks"]
 
 
-@pytest.mark.parametrize("concrete", [False, True])
-def test_env_create_filter_blocks_included_config(tmp_path: pathlib.Path, concrete: bool):
+def _write_source_with_include(tmp_path: pathlib.Path) -> pathlib.Path:
     source_dir = tmp_path / "source"
     source_dir.mkdir()
-    (source_dir / "nested.yaml").write_text(
-        "mirrors:\n  internal: https://mirror.example.com/internal\n"
-    )
     (source_dir / "common.yaml").write_text(
-        "include:\n- ./nested.yaml\n"
-        "mirrors:\n  shared: https://mirror.example.com/shared\n"
-        "packages:\n  cmake:\n    buildable: false\n"
+        "mirrors:\n  internal: https://mirror.example.com/internal\n"
     )
     (source_dir / "spack.yaml").write_text(
         "spack:\n  include:\n  - ./common.yaml\n  specs:\n  - libelf\n  view: false\n"
     )
-    source = ev.Environment(source_dir)
+    return source_dir
+
+
+@pytest.mark.parametrize(
+    "filter_config", ["config:\n    block: [mirrors]\n", "packages: externals_only\n"]
+)
+def test_env_create_filter_rejects_includes_it_cannot_filter(
+    tmp_path: pathlib.Path, filter_config: str
+):
+    source_dir = _write_source_with_include(tmp_path)
+    filter_yaml = _write_filter_yaml(tmp_path, f"filter:\n  {filter_config}")
+    filtered_dir = tmp_path / "filtered"
+
+    with pytest.raises(ev.SpackEnvironmentError, match="cannot remove settings from included"):
+        env("create", "--filter", filter_yaml, "-d", str(filtered_dir), str(source_dir))
+    assert not filtered_dir.exists()
+
+
+@pytest.mark.parametrize("concrete", [False, True])
+def test_env_create_filter_drops_blocked_includes(tmp_path: pathlib.Path, concrete: bool):
+    source_dir = _write_source_with_include(tmp_path)
     if concrete:
+        source = ev.Environment(source_dir)
         source.concretize()
         source.write()
-
     filter_yaml = _write_filter_yaml(
         tmp_path,
-        f"filter:\n  concrete: {str(concrete).lower()}\n  config:\n    block: [mirrors]\n",
+        f"filter:\n  concrete: {str(concrete).lower()}\n  config:\n    block: [include]\n",
     )
     filtered_dir = tmp_path / "filtered"
     env("create", "--filter", filter_yaml, "-d", str(filtered_dir), str(source_dir))
 
     filtered = ev.Environment(filtered_dir)
     assert "include" not in filtered.manifest["spack"]
-    assert "mirrors" not in filtered.manifest["spack"]
-    assert filtered.manifest["spack"]["packages"]["cmake"] == {"buildable": False}
     with filtered:
         assert "internal" not in spack.config.CONFIG.get("mirrors")
-        assert "shared" not in spack.config.CONFIG.get("mirrors")
     assert bool(filtered.concrete_roots()) == concrete
 
 
-def test_env_create_filter_allows_included_config_without_ambient_scopes(
-    tmp_path: pathlib.Path, mutable_config
-):
-    source_dir = tmp_path / "source"
-    source_dir.mkdir()
-    (source_dir / "common.yaml").write_text(
-        "mirrors:\n  included: https://mirror.example.com/included\n"
-        "  shared: https://mirror.example.com/from-include\n"
-    )
-    (source_dir / "spack.yaml").write_text(
-        "spack:\n  include:\n  - ./common.yaml\n  specs:\n  - libelf\n"
-        "  mirrors:\n    inline: https://mirror.example.com/inline\n"
-        "    shared: https://mirror.example.com/from-manifest\n"
-    )
-    filter_yaml = _write_filter_yaml(
-        tmp_path, "filter:\n  concrete: false\n  config:\n    allow: [mirrors]\n"
-    )
-    with mutable_config.override("mirrors", {"ambient": "https://mirror.example.com/ambient"}):
-        env("create", "--filter", filter_yaml, "filtered", str(source_dir))
+@pytest.mark.parametrize(
+    "filter_content", ["filter: {}\n", "filter:\n  config:\n    allow: [include, view]\n"]
+)
+def test_env_create_filter_keeps_includes_unchanged(tmp_path: pathlib.Path, filter_content: str):
+    source_dir = _write_source_with_include(tmp_path)
+    filter_yaml = _write_filter_yaml(tmp_path, filter_content)
+    filtered_dir = tmp_path / "filtered"
+    env("create", "--filter", filter_yaml, "-d", str(filtered_dir), str(source_dir))
 
-    manifest = ev.read("filtered").manifest["spack"]
-    assert set(manifest["mirrors"]) == {"inline", "included", "shared"}
-    assert manifest["mirrors"]["shared"] == "https://mirror.example.com/from-manifest"
-    assert "include" not in manifest
-    assert "packages" not in manifest
+    filtered = ev.Environment(filtered_dir)
+    assert filtered.manifest["spack"]["include"] == ["./common.yaml"]
+    assert (filtered_dir / "common.yaml").read_text() == (source_dir / "common.yaml").read_text()
+    with filtered:
+        assert "internal" in spack.config.CONFIG.get("mirrors")
 
 
-@pytest.mark.parametrize("location", ["manifest", "include", "absent"])
+@pytest.mark.parametrize("location", ["manifest", "absent"])
 def test_env_create_filter_copies_only_source_concretizer(
     tmp_path: pathlib.Path, mutable_config, location: str
 ):
     source_dir = tmp_path / "source"
     source_dir.mkdir()
-    include = ""
-    concretizer = ""
-    if location == "include":
-        (source_dir / "common.yaml").write_text("concretizer:\n  reuse: false\n")
-        include = "  include:\n  - ./common.yaml\n"
-    elif location == "manifest":
-        concretizer = "  concretizer:\n    reuse: false\n"
-    (source_dir / "spack.yaml").write_text(f"spack:\n{include}  specs:\n  - libelf\n{concretizer}")
+    concretizer = "  concretizer:\n    reuse: false\n" if location == "manifest" else ""
+    (source_dir / "spack.yaml").write_text(f"spack:\n  specs:\n  - libelf\n{concretizer}")
     filter_yaml = _write_filter_yaml(
         tmp_path, "filter:\n  concrete: false\n  config:\n    allow: [concretizer]\n"
     )
@@ -2676,7 +2670,7 @@ def test_env_create_filter_copies_only_source_concretizer(
         env("create", "--filter", filter_yaml, "filtered", str(source_dir))
 
     manifest = ev.read("filtered").manifest["spack"]
-    assert manifest.get("concretizer") == ({"reuse": False} if location != "absent" else None)
+    assert manifest.get("concretizer") == ({"reuse": False} if location == "manifest" else None)
 
 
 def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):

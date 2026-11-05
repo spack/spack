@@ -263,8 +263,14 @@ If no roots remain, Spack warns and creates an environment with no roots.
 
 Under ``config:``, ``allow`` lists the configuration sections to copy and ``block``
 lists the sections to omit. Empty lists mean copy all sections and block none,
-respectively. Settings from files included by the source environment are filtered
-too; retained settings are written directly into the new ``spack.yaml``.
+respectively.
+
+Files included by the source environment are not filtered: their ``include:``
+entries are copied unchanged. If the source has includes and the filter limits
+``config`` or ``packages``, Spack stops with an error, because blocked settings in
+the included files would otherwise reach the new environment. Add ``include`` to
+``config:block`` to drop the includes, or to ``config:allow`` to keep them
+unchanged.
 
 The ``packages`` setting further controls entries within the copied ``packages:``
 section. It defaults to ``all``. Set it to ``externals_only`` to retain only package

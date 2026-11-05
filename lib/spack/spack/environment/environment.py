@@ -799,26 +799,36 @@ def _filter_packages_configuration(
     }
 
 
-def _configuration_with_resolved_includes(
-    source_env: "Environment", source_configuration: Dict[str, Any]
-) -> Dict[str, Any]:
-    """Merge sections from the source manifest and its included files.
+def _filter_can_remove_settings(filter_configuration: Dict[str, Any]) -> bool:
+    """Whether the filter limits which configuration sections or package entries are copied."""
+    default_block = set(_default_filter_configuration()["config"]["block"])
+    return bool(
+        filter_configuration["config"]["allow"]
+        or set(filter_configuration["config"]["block"]) - default_block
+        or filter_configuration["packages"] != "all"
+    )
 
-    Use a separate configuration so settings from active user or site scopes
-    are not copied into the filtered environment.
-    """
-    configuration = spack.config.Configuration()
-    configuration.push_scope(source_env.manifest.env_config_scope)
-    resolved = dict(source_configuration)
-    resolved.pop(manifest_include_name, None)
 
-    for section in spack.config.SECTION_SCHEMAS:
-        if section == manifest_include_name:
-            continue
-        if any(scope.get_section(section) for scope in configuration.active_scopes):
-            resolved[section] = configuration.deepcopy_as_builtin(section)
-
-    return resolved
+def _check_includes_can_be_copied(
+    source_configuration: Dict[str, Any], filter_configuration: Dict[str, Any]
+) -> None:
+    """Included files are copied unchanged, so refuse to copy them when the filter could
+    have removed settings from them, unless the filter says what to do with them."""
+    includes = [
+        path
+        for path in spack.config.paths_from_includes(
+            source_configuration.get(manifest_include_name, [])
+        )
+        if not _is_lockfile_include_path(path)
+    ]
+    config_filter = filter_configuration["config"]
+    explicit = manifest_include_name in config_filter["allow"] + config_filter["block"]
+    if includes and not explicit and _filter_can_remove_settings(filter_configuration):
+        raise SpackEnvironmentError(
+            "the filter cannot remove settings from included files: add "
+            f"'{manifest_include_name}' to filter:config:block to drop them, or to "
+            "filter:config:allow to keep them unchanged"
+        )
 
 
 def _filtered_configuration(
@@ -935,6 +945,7 @@ def _create_filtered_environment_in_dir(
         is_source_dir: bool
         source_env, source_path, is_source_dir = source_info
         filter_configuration = _read_filter_configuration(filter_file)
+        _check_includes_can_be_copied(source_env.manifest[TOP_LEVEL_KEY], filter_configuration)
         filtered_roots: Sequence[Tuple[str, Spec, str]] = []
         filtered_specs: List[Union[str, Dict[str, Any]]]
 
@@ -962,20 +973,8 @@ def _create_filtered_environment_in_dir(
 
         initialize_environment_dir(root, envfile=init_file)
         env = Environment(root)
-        source_configuration = source_env.manifest[TOP_LEVEL_KEY]
-        resolved_includes = any(
-            not _is_lockfile_include_path(path)
-            for path in spack.config.paths_from_includes(
-                source_configuration.get(manifest_include_name, [])
-            )
-        )
-        if resolved_includes:
-            source_configuration = _configuration_with_resolved_includes(
-                source_env, source_configuration
-            )
-
         filtered_configuration = _filtered_configuration(
-            source_configuration, filter_configuration, filtered_specs, with_view
+            source_env.manifest[TOP_LEVEL_KEY], filter_configuration, filtered_specs, with_view
         )
         _set_filtered_manifest(env, filtered_configuration)
 
