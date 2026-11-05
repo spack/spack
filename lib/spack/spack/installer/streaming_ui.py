@@ -3,7 +3,7 @@
 import io
 import re
 from collections import deque
-from typing import Deque, Dict, Generator, NamedTuple, Optional
+from typing import Deque, Dict, Generator, NamedTuple, Optional, Set
 
 from spack.installer.ui import SPINNER_INTERVAL, BuildInfo, ChangeJobs, SetEcho, TerminalUI
 from spack.util.lang import pretty_duration
@@ -27,6 +27,7 @@ class StreamingTerminalUI(TerminalUI):
         super().__init__(*args, **kwargs)
         self.log_streaming = kwargs.get("verbose", args[7] if len(args) > 7 else False)
         self.log_history: Dict[str, Deque[bytes]] = {}
+        self.printed_failures: Set[str] = set()
         self.progress: Dict[str, BuildProgress] = {}
         self.progress_buffers: Dict[str, bytes] = {}
         self.log_stream_buffer = b""
@@ -60,6 +61,7 @@ class StreamingTerminalUI(TerminalUI):
             self.log_ends_with_newline = True
         super().on_build_removed(build_id)
         self.log_history.pop(build_id, None)
+        self.printed_failures.discard(build_id)
         self.progress.pop(build_id, None)
         self.progress_buffers.pop(build_id, None)
 
@@ -251,6 +253,22 @@ class StreamingTerminalUI(TerminalUI):
             return f"  {self.color.BLACK_BRIGHT}({tracked_build.name}){self.color.RESET}"
         return ""
 
+    def _render_persisted_rows(self, buffer: io.StringIO, now: float) -> None:
+        failures = [
+            build
+            for build in self.builds.values()
+            if build.state == "failed" and build.id not in self.printed_failures
+        ]
+        for build in failures:
+            self._render_build(build, buffer, now=now)
+            self._println(buffer, force_newline=True)
+            self.printed_failures.add(build.id)
+        if failures:
+            self.active_area_rows = 0
+
+    def _show_in_overview(self, build: BuildInfo) -> bool:
+        return build.state != "failed"
+
     def _build_progress_message(self, build_message: str) -> Optional[str]:
         message = ""
         if build_message.startswith(("Linking ", "Built target ")):
@@ -339,6 +357,7 @@ class StreamingTerminalUI(TerminalUI):
         """Clear the TTY, replay cached output with a final newline, and redraw the overview."""
         if self.headless or not self.is_tty:
             return
+        self.printed_failures.clear()
         self.log_stream_buffer = b""
         history = (output,) if output is not None else self.log_history.get(build_id, ())
         history_rows = sum(chunk.count(b"\n") for chunk in history)
