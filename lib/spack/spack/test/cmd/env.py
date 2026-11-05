@@ -738,6 +738,12 @@ def test_remove_before_concretize(mutable_config):
         e.concretize()
         assert not e.concretized_roots
 
+        # Ensure setting force=True ignores nonexistent specs
+        with pytest.raises(ev.SpackEnvironmentError):
+            e.remove("nonexistent-pkg")
+
+        e.remove("nonexistent-pkg", force=True)
+
 
 def test_remove_spec_with_toolchain(tmp_path: pathlib.Path):
     """Manifest entries are toolchain-expanded like the spec on the command line before matching"""
