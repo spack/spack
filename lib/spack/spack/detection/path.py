@@ -156,6 +156,9 @@ def libraries_in_ld_and_system_library_path(
 
         # Environment variables
         if sys.platform == "darwin":
+            # NOTE: although DYLD_LIBRARY_PATH is normally hidden from processes
+            # due to System Integrity Protection, Spack's restore_macos_dyld_vars
+            # function will set DYLD_X from SPACK_DYLD_X .
             search_paths.extend(environment.get_path("DYLD_LIBRARY_PATH"))
             search_paths.extend(environment.get_path("DYLD_FALLBACK_LIBRARY_PATH"))
         elif sys.platform.startswith("linux"):
