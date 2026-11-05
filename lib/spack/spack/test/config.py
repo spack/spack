@@ -2159,3 +2159,27 @@ def test_compilers_section_is_rejected(schema, contents):
     """Tests that a 'compilers' section is rejected with a pointer to packages.yaml"""
     with pytest.raises(spack.config.ConfigFormatError, match="packages.yaml"):
         check_schema(schema, contents)
+
+
+def test_configuration_copy_shares_scopes_not_their_list():
+    """Tests that a copy of a configuration has the same scopes, and that pushing or removing
+    scopes in the copy leaves the original unchanged.
+    """
+    low = spack.config.InternalConfigScope("low", {"config": {"build_jobs": 1}})
+    high = spack.config.InternalConfigScope("high", {"config": {"build_jobs": 2}})
+    original = spack.config.create_from(
+        (ConfigScopePriority.DEFAULTS, low), (ConfigScopePriority.COMMAND_LINE, high)
+    )
+
+    copy = original.copy()
+    assert list(copy.scopes.items()) == list(original.scopes.items())
+
+    copy.remove_scope("high")
+    copy.push_scope(
+        spack.config.InternalConfigScope("middle", {"config": {"build_jobs": 3}}),
+        priority=ConfigScopePriority.ENVIRONMENT,
+    )
+    assert list(copy.scopes) == ["low", "middle"]
+    assert copy.get("config:build_jobs") == 3
+    assert list(original.scopes) == ["low", "high"]
+    assert original.get("config:build_jobs") == 2
