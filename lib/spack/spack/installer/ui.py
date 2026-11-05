@@ -683,6 +683,11 @@ class TerminalUI(InstallerUI):
         yield f"{name_color}{build_info.name}{self.color.RESET}"
         yield f"{self.color.CYAN}@{build_info.version}{self.color.RESET}"
 
+        yield from self._generate_state_components(build_info, now)
+
+    def _generate_state_components(
+        self, build_info: BuildInfo, now: float
+    ) -> Generator[str, None, None]:
         # progress or state
         if build_info.progress_percent is not None:
             yield " fetching"
