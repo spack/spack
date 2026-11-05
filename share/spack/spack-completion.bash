@@ -1031,7 +1031,7 @@ _spack_develop() {
 _spack_diff() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --specs --json --no-prune --first -a --attribute --ignore"
+        SPACK_COMPREPLY="-h --help -s --specs --json --no-prune"
     else
         SPACK_COMPREPLY=""
     fi

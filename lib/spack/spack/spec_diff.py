@@ -300,3 +300,63 @@ def node_to_dict(node: NodeDivergence) -> Dict[str, Any]:
             for attribute in node.attributes
         ],
     }
+
+
+#: Version of the serialization produced by SpecDiff.as_dict
+DIFF_FORMAT_VERSION = 1
+
+
+class SpecDiff(NamedTuple):
+    """Full result of comparing two concrete specs."""
+
+    root_a: Spec
+    root_b: Spec
+    #: Nodes where the two DAGs diverge
+    nodes: List[NodeDivergence]
+
+    @property
+    def equivalent(self) -> bool:
+        """Whether the two specs are the same concrete spec."""
+        return self.root_a.dag_hash() == self.root_b.dag_hash()
+
+    def as_dict(self) -> Dict[str, Any]:
+        """Canonical, deterministically ordered serialization of the comparison.
+
+        The identities of the two specs are not included.
+        """
+        return {
+            "_meta": {"file-type": "spack-spec-diff", "diff-version": DIFF_FORMAT_VERSION},
+            "nodes": [node_to_dict(node) for node in sorted(self.nodes, key=node_sort_key)],
+        }
+
+
+def diff_specs(spec_a: Spec, spec_b: Spec, *, prune: bool = True) -> SpecDiff:
+    """Compare two concrete specs of the same package.
+
+    Args:
+        spec_a: first concrete spec to compare
+        spec_b: second concrete spec to compare
+        prune: when True, don't visit subDAGs when a difference on a node is found
+
+    Raises:
+        SpecDiffError: if the two specs are not concrete, are of different packages, or have a
+            node without a package hash
+    """
+    if not spec_a.concrete or not spec_b.concrete:
+        raise SpecDiffError("diff_specs requires two concrete specs")
+
+    if spec_a.name != spec_b.name:
+        raise SpecDiffError(
+            f"cannot compare '{spec_a.name}' with '{spec_b.name}'",
+            "the two specs must be of the same package",
+        )
+
+    # Without package hashes, nodes with equal configuration cannot be told apart
+    for root in (spec_a, spec_b):
+        if any(not recorded_package_hash(node) for node in root.traverse()):
+            raise SpecDiffError(
+                f"cannot compare '{root.format('{name}{/hash:7}')}': it was concretized by a "
+                f"version of Spack that did not record package hashes"
+            )
+
+    return SpecDiff(spec_a, spec_b, diff_concrete_dags(spec_a, spec_b, prune=prune))

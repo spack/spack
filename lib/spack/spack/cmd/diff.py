@@ -6,7 +6,6 @@ import argparse
 import contextlib
 import os
 import shutil
-import sys
 import tempfile
 from typing import Dict, List, Optional, Tuple
 
@@ -17,17 +16,15 @@ import spack.environment as ev
 import spack.environment.environment
 import spack.error
 import spack.hash_lookup
-import spack.repo
 import spack.spec
 import spack.spec_diff
 import spack.util.spack_json as sjson
 import spack.variant
 from spack.active_environment import active_environment
 from spack.environment import diff as env_diff_core
-from spack.solver import asp, clauses
 from spack.util import tty
 from spack.util.tty.colify import render_blocks, terminal_columns
-from spack.util.tty.color import cescape, clen, colorize, cprint, get_color_when
+from spack.util.tty.color import cescape, clen, colorize
 
 description = "compare two concrete environments, or two specs"
 section = "query"
@@ -59,27 +56,11 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "first appears and skipping the subgraph below it",
     )
     subparser.add_argument(
-        "--first",
-        action="store_true",
-        default=False,
-        dest="load_first",
-        help="load the first match if multiple packages match the spec",
-    )
-    subparser.add_argument(
-        "-a",
-        "--attribute",
-        action="append",
-        help="select the attributes to show (defaults to all)",
-    )
-    subparser.add_argument(
-        "--ignore", action="append", help="omit diffs related to these dependencies"
-    )
-    subparser.add_argument(
         "inputs",
         nargs=argparse.REMAINDER,
         metavar="before after",
-        help="two concrete environments, each a name, a directory, or a lockfile; the second is "
-        "taken to be the later state of the first. With --specs, two specs",
+        help="two concrete environments, each a name, a directory, or a lockfile, or with --specs "
+        "two installed specs; the second is taken to be the later state of the first",
     )
 
 
@@ -180,191 +161,33 @@ def _diff_environments(args) -> None:
         EnvironmentDiffRenderer(result, before, after).render()
 
 
-def shift(asp_function: asp.AspFunction) -> asp.AspFunction:
-    """Transforms ``attr("foo", "bar")`` into ``foo("bar")``."""
-    args = asp_function.args
-    if not args:
-        raise ValueError(f"Can't shift ASP function with no arguments: {str(asp_function)}")
-    return asp.AspFunction(args[0], args[1:])
-
-
-def compare_specs(a, b, to_string=False, color=None, ignore_packages=None):
-    """
-    Generate a comparison, including diffs (for each side) and an intersection.
-
-    We can either print the result to the console, or parse
-    into a json object for the user to save. We return an object that shows
-    the differences, intersection, and names for a pair of specs a and b.
-
-    Arguments:
-        a (spack.spec.Spec): the first spec to compare
-        b (spack.spec.Spec): the second spec to compare
-        a_name (str): the name of spec a
-        b_name (str): the name of spec b
-        to_string (bool): return an object that can be json dumped
-        color (bool): whether to format the names for the console
-    """
-    if color is None:
-        color = get_color_when()
-
-    a = a.copy()
-    b = b.copy()
-
-    if ignore_packages:
-        for pkg_name in ignore_packages:
-            a.trim(pkg_name)
-            b.trim(pkg_name)
-
-    # Prepare a clause generator to parse differences
-    generator = clauses.SpecClauseGenerator(repo=spack.repo.PATH)
-
-    # get facts for specs, making sure to include build dependencies of concrete
-    # specs and to descend into dependency hashes so we include all facts.
-    a_facts = {
-        shift(func)
-        for func in generator.spec_clauses(
-            a, body=True, expand_hashes=True, concrete_build_deps=True, include_runtimes=True
-        )
-        if func.name == "attr"
-    }
-    b_facts = {
-        shift(func)
-        for func in generator.spec_clauses(
-            b, body=True, expand_hashes=True, concrete_build_deps=True, include_runtimes=True
-        )
-        if func.name == "attr"
-    }
-
-    # We want to present them to the user as simple key: values
-    intersect = sorted(a_facts.intersection(b_facts))
-    spec1_not_spec2 = sorted(a_facts.difference(b_facts))
-    spec2_not_spec1 = sorted(b_facts.difference(a_facts))
-
-    # Format the spec names to be colored
-    fmt = "{name}{@version}{/hash}"
-    a_name = a.format(fmt, color=color)
-    b_name = b.format(fmt, color=color)
-
-    # We want to show what is the same, and then difference for each
-    return {
-        "intersect": flatten(intersect) if to_string else intersect,
-        "a_not_b": flatten(spec1_not_spec2) if to_string else spec1_not_spec2,
-        "b_not_a": flatten(spec2_not_spec1) if to_string else spec2_not_spec1,
-        "a_name": a_name,
-        "b_name": b_name,
-    }
-
-
-def flatten(functions):
-    """
-    Given a list of ASP functions, convert into a list of key: value tuples.
-
-    We are squashing whatever is after the first index into one string for
-    easier parsing in the interface
-    """
-    updated = []
-    for fun in functions:
-        updated.append([fun.name, " ".join(str(a) for a in fun.args)])
-    return updated
-
-
-def print_difference(c, attributes="all", out=None):
-    """
-    Print the difference.
-
-    Given a diffset for A and a diffset for B, print red/green diffs to show
-    the differences.
-    """
-    # Default to standard out unless another stream is provided
-    out = out or sys.stdout
-
-    A = c["b_not_a"]
-    B = c["a_not_b"]
-
-    cprint("@R{--- %s}" % c["a_name"])  # bright red
-    cprint("@G{+++ %s}" % c["b_name"])  # bright green
-
-    # Cut out early if we don't have any differences!
-    if not A and not B:
-        print("No differences\n")
-        return
-
-    def group_by_type(diffset):
-        grouped = {}
-        for entry in diffset:
-            if entry[0] not in grouped:
-                grouped[entry[0]] = []
-            grouped[entry[0]].append(entry[1])
-
-        # Sort by second value to make comparison slightly closer
-        for key, values in grouped.items():
-            values.sort()
-        return grouped
-
-    A = group_by_type(A)
-    B = group_by_type(B)
-
-    # print a directionally relevant diff
-    keys = list(A) + list(B)
-
-    category = None
-    for key in keys:
-        if "all" not in attributes and key not in attributes:
-            continue
-
-        # Write the attribute, B is subtraction A is addition
-        subtraction = [] if key not in B else B[key]
-        addition = [] if key not in A else A[key]
-
-        # Bail out early if we don't have any entries
-        if not subtraction and not addition:
-            continue
-
-        # If we have a new category, create a new section
-        if category != key:
-            category = key
-
-            # print category in bold, colorized
-            cprint("@*b{@@ %s @@}" % category)  # bold blue
-
-        # Print subtractions first
-        while subtraction:
-            cprint("@R{-  %s}" % subtraction.pop(0))  # bright red
-            if addition:
-                cprint("@G{+  %s}" % addition.pop(0))  # bright green
-
-        # Any additions left?
-        while addition:
-            cprint("@G{+  %s}" % addition.pop(0))
+def _installed_spec(spec: spack.spec.Spec, env: Optional[ev.Environment]) -> spack.spec.Spec:
+    """Resolve a spec argument to the single installed spec it matches."""
+    # If the spec has a hash, check it before disambiguating
+    spack.hash_lookup.replace_hash(spec)
+    if spec.concrete:
+        return spec
+    return spack.cmd.disambiguate_spec(spec, env)
 
 
 def _diff_specs(args) -> None:
+    specs = spack.cmd.parse_specs(args.inputs)
+    if len(specs) != 2:
+        args.subparser.error("you must provide two specs to compare")
+
     env = active_environment()
-
-    if len(args.inputs) != 2:
-        args.subparser.error("you must provide two specs to diff")
-
-    specs = []
-    for spec in spack.cmd.parse_specs(args.inputs):
-        # If the spec has a hash, check it before disambiguating
-        spack.hash_lookup.replace_hash(spec)
-        if spec.concrete:
-            specs.append(spec)
-        else:
-            specs.append(spack.cmd.disambiguate_spec(spec, env, first=args.load_first))
-
-    # Calculate the comparison (c)
-    color = False if args.dump_json else get_color_when()
-    c = compare_specs(specs[0], specs[1], to_string=True, color=color, ignore_packages=args.ignore)
-
-    # Default to all attributes
-    attributes = args.attribute or ["all"]
+    before, after = (_installed_spec(spec, env) for spec in specs)
+    result = spack.spec_diff.diff_specs(before, after, prune=args.prune)
 
     if args.dump_json:
-        print(sjson.dumps(c))
-    else:
-        tty.warn("This interface is subject to change.\n")
-        print_difference(c, attributes)
+        identities = {
+            "a": {"name": before.name, "hash": before.dag_hash()},
+            "b": {"name": after.name, "hash": after.dag_hash()},
+        }
+        print(sjson.dumps({**result.as_dict(), "specs": identities}))
+        return
+
+    SpecDiffRenderer(result).render()
 
 
 def _variant_default(node: spack.spec.Spec, key: str) -> Optional[spack.variant.VariantValue]:
@@ -576,16 +399,13 @@ def _reached_from(roots: List[ev.UserSpecId], *, with_group: bool = True) -> str
     return "from " + ", ".join(_format_root(root, with_group=with_group) for root in roots)
 
 
-class EnvironmentDiffRenderer:
-    """Renders an ``EnvironmentDiff`` to the terminal, for the two named environments."""
+class _DiffRenderer:
+    """Layout shared by the environment and the spec renderers."""
 
-    def __init__(
-        self, result: env_diff_core.EnvironmentDiff, name_before: str, name_after: str
-    ) -> None:
-        self.result = result
+    def __init__(self, name_before: str, name_after: str) -> None:
         self.name_before = name_before
         self.name_after = name_after
-        # Environment names can be long paths, so they are printed once and labels used after
+        # Names can be long paths, so they are printed once and labels used after
         self.label_before = colorize("@R{before}")
         self.label_after = colorize("@G{after}")
         # Tags are padded so the two sides align; labels stay unpadded for section headers
@@ -593,6 +413,16 @@ class EnvironmentDiffRenderer:
         self.tag_after = f"{self.label_after}:  "
         # Zero when the output is not a terminal, which keeps the blocks in a single column
         self.columns = terminal_columns()
+
+    def _line(self, text: str) -> None:
+        print(f"{' ' * _BAND_INDENT}{text}")
+
+    def _names(self) -> None:
+        """Print what is compared, once, so that sections can refer to the two sides by label."""
+        print()
+        self._line(f"{self.tag_before}{self.name_before}")
+        self._line(f"{self.tag_after}{self.name_after}")
+        print()
 
     def _section(self, label: str, blocks: List[List[str]]) -> None:
         """Print a section header followed by its blocks.
@@ -608,26 +438,31 @@ class EnvironmentDiffRenderer:
             print(line)
         print()
 
-    def _node_block(
-        self, node: spack.spec_diff.NodeDivergence, roots: List[ev.UserSpecId]
-    ) -> List[str]:
+    def _node_block(self, node: spack.spec_diff.NodeDivergence, header: str) -> List[str]:
         """Render one divergent node as a block: a header, the two sides, then its annotations."""
         styles = _node_styles(node)
         return [
-            f"{node.node_a.name}  ({_reached_from(roots, with_group=False)})",
+            header,
             f"    {self.tag_before}{_format_divergent_node(node, first=True, styles=styles)}",
             f"    {self.tag_after}{_format_divergent_node(node, first=False, styles=styles)}",
         ] + _annotations(node)
 
+
+class EnvironmentDiffRenderer(_DiffRenderer):
+    """Renders an ``EnvironmentDiff`` to the terminal, for the two named environments."""
+
+    def __init__(
+        self, result: env_diff_core.EnvironmentDiff, name_before: str, name_after: str
+    ) -> None:
+        super().__init__(name_before, name_after)
+        self.result = result
+
     def render(self) -> None:
-        print()
-        print(f"{' ' * _BAND_INDENT}{self.tag_before}{self.name_before}")
-        print(f"{' ' * _BAND_INDENT}{self.tag_after}{self.name_after}")
-        print()
+        self._names()
 
         result = self.result
         if result.equivalent:
-            print(f"{' ' * _BAND_INDENT}the two environments are equivalent")
+            self._line("the two environments are equivalent")
             print()
             return
 
@@ -651,7 +486,12 @@ class EnvironmentDiffRenderer:
         for group, entries in config_by_group.items():
             self._section(
                 f"@*{{Group: {cescape(group)}}}" if show_groups else "@*{Node differences}",
-                [self._node_block(node, roots) for node, roots in entries],
+                [
+                    self._node_block(
+                        node, f"{node.node_a.name}  ({_reached_from(roots, with_group=False)})"
+                    )
+                    for node, roots in entries
+                ],
             )
 
         # Recipe changes come last, as the least actionable finding
@@ -666,3 +506,49 @@ class EnvironmentDiffRenderer:
                 "@*{Common input specs with no difference to point at}",
                 [[_format_root(r)] for r in env_diff_core.sorted_roots(result.unresolved)],
             )
+
+
+#: How a spec is named at the top of the comparison
+_SPEC_NAME_FORMAT = "{name}{@version}{/hash:7}"
+
+
+class SpecDiffRenderer(_DiffRenderer):
+    """Renders a ``SpecDiff`` to the terminal."""
+
+    def __init__(self, result: spack.spec_diff.SpecDiff) -> None:
+        super().__init__(
+            result.root_a.cformat(_SPEC_NAME_FORMAT), result.root_b.cformat(_SPEC_NAME_FORMAT)
+        )
+        self.result = result
+
+    def render(self) -> None:
+        self._names()
+
+        result = self.result
+        if result.equivalent:
+            self._line("the two specs are identical")
+            print()
+            return
+
+        nodes = sorted(result.nodes, key=spack.spec_diff.node_sort_key)
+        config = [node for node in nodes if not _is_recipe_change(node)]
+        if config:
+            self._section(
+                "@*{Node differences}",
+                [self._node_block(node, node.node_a.name) for node in config],
+            )
+
+        # One entry per package, since every instance of a package has its own package hash
+        recipes = {
+            (node.node_a.namespace or "", node.node_a.name)
+            for node in nodes
+            if _is_recipe_change(node)
+        }
+        if recipes:
+            self._section(
+                "@*{Packages whose recipe differs}", [[name] for _, name in sorted(recipes)]
+            )
+
+        if not nodes:
+            self._line("the two specs differ, with no difference to point at")
+            print()

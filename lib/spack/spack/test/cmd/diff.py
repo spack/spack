@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import gzip
 import os
 import pathlib
 import shutil
@@ -18,7 +19,6 @@ import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.tty.color as clr
 import spack.variant
-import spack.version
 from spack import spec_diff
 from spack.cmd.env import _env_create
 from spack.environment import diff as env_diff_core
@@ -35,167 +35,6 @@ diff_cmd = spack.main.SpackCommand("diff")
 find_cmd = spack.main.SpackCommand("find")
 env_cmd = spack.main.SpackCommand("env")
 add_cmd = spack.main.SpackCommand("add")
-
-# Note that the hash of p1 will differ depending on the variant chosen
-# we probably always want to omit that from diffs
-# p1____
-# |     \
-# p2     v1
-# | ____/ |
-# p3      p4
-
-# i1 and i2 provide v1 (and both have the same dependencies)
-
-# All packages have an associated variant
-
-
-@pytest.fixture
-def test_repo(mutable_config):
-    builder_test_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "diff")
-    with spack.repo.use_repositories(builder_test_path) as mock_repo:
-        yield mock_repo
-
-
-def test_diff_ignore(test_repo):
-    specA = spack.concretize.concretize_one("p1+usev1")
-    specB = spack.concretize.concretize_one("p1~usev1")
-
-    c1 = spack.cmd.diff.compare_specs(specA, specB, to_string=False)
-
-    def match(function, name, args):
-        limit = len(args)
-        return function.name == name and list(args[:limit]) == list(function.args[:limit])
-
-    def find(function_list, name, args):
-        return any(match(f, name, args) for f in function_list)
-
-    assert find(c1["a_not_b"], "node_os", ["p4"])
-
-    c2 = spack.cmd.diff.compare_specs(specA, specB, ignore_packages=["v1"], to_string=False)
-
-    assert not find(c2["a_not_b"], "node_os", ["p4"])
-    assert find(c2["intersect"], "node_os", ["p3"])
-
-    # Check ignoring changes on multiple packages
-
-    specA = spack.concretize.concretize_one("p1+usev1 ^p3+p3var")
-    specA = spack.concretize.concretize_one("p1~usev1 ^p3~p3var")
-
-    c3 = spack.cmd.diff.compare_specs(specA, specB, to_string=False)
-    assert find(c3["a_not_b"], "variant_value", ["p3", "p3var"])
-
-    c4 = spack.cmd.diff.compare_specs(specA, specB, ignore_packages=["v1", "p3"], to_string=False)
-    assert not find(c4["a_not_b"], "node_os", ["p4"])
-    assert not find(c4["a_not_b"], "variant_value", ["p3"])
-
-
-def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
-    """Test that we can install two packages and diff them"""
-
-    specA = spack.concretize.concretize_one("mpileaks")
-    specB = spack.concretize.concretize_one("mpileaks+debug")
-
-    # Specs should be the same as themselves
-    c = spack.cmd.diff.compare_specs(specA, specA, to_string=True)
-    assert len(c["a_not_b"]) == 0
-    assert len(c["b_not_a"]) == 0
-
-    # Calculate the comparison (c)
-    c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
-
-    # these particular diffs should have the same length b/c there aren't
-    # any node differences -- just value differences.
-    assert len(c["a_not_b"]) == len(c["b_not_a"])
-
-    # ensure that variant diffs are in here the result
-    assert ["variant_value", "mpileaks debug False"] in c["a_not_b"]
-    assert ["variant_value", "mpileaks debug True"] in c["b_not_a"]
-
-    # ensure that hash diffs are in here the result
-    assert ["hash", "mpileaks %s" % specA.dag_hash()] in c["a_not_b"]
-    assert ["hash", "mpileaks %s" % specB.dag_hash()] in c["b_not_a"]
-
-
-def test_diff_runtimes(install_mockery, mock_fetch, mock_archive, mock_packages):
-    """Test that we can install two packages and diff them"""
-
-    specA = spack.concretize.concretize_one("mpileaks")
-    specB = specA.copy()
-    specB["gcc-runtime"].versions = spack.version.VersionList([spack.version.Version("0.0.0")])
-
-    # Specs should be the same as themselves
-    c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
-    assert ["version", "gcc-runtime 0.0.0"] in c["b_not_a"]
-
-
-def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
-    """Test with and without the --first option"""
-    install_cmd("--fake", "mpileaks")
-
-    # Only one version of mpileaks will work
-    diff_cmd("-s", "mpileaks", "mpileaks")
-
-    # 2 specs are required for a diff
-    with pytest.raises(spack.main.SpackCommandError):
-        diff_cmd("-s", "mpileaks")
-    with pytest.raises(spack.main.SpackCommandError):
-        diff_cmd("-s", "mpileaks", "mpileaks", "mpileaks")
-
-    # Ensure they are the same
-    assert "No differences" in diff_cmd("-s", "mpileaks", "mpileaks")
-    output = diff_cmd("-s", "--json", "mpileaks", "mpileaks")
-    result = sjson.load(output)
-
-    assert not result["a_not_b"]
-    assert not result["b_not_a"]
-
-    assert "mpileaks" in result["a_name"]
-    assert "mpileaks" in result["b_name"]
-
-    # spot check attributes in the intersection to ensure they describe the spec
-    assert "intersect" in result
-    assert all(
-        ["node", dep] in result["intersect"]
-        for dep in ("mpileaks", "callpath", "dyninst", "libelf", "libdwarf", "mpich")
-    )
-
-    assert all(
-        len([diff for diff in result["intersect"] if diff[0] == attr]) == 9
-        for attr in (
-            "version",
-            "node_target",
-            "node_platform",
-            "node_os",
-            "node",
-            "package_hash",
-            "hash",
-        )
-    )
-
-    # After we install another version, it should ask us to disambiguate
-    install_cmd("mpileaks+debug")
-
-    # There are two versions of mpileaks
-    with pytest.raises(spack.main.SpackCommandError):
-        diff_cmd("-s", "mpileaks", "mpileaks+debug")
-
-    # But if we tell it to use the first, it won't try to disambiguate
-    assert "variant" in diff_cmd("-s", "--first", "mpileaks", "mpileaks+debug")
-
-    # This matches them exactly
-    debug_hash = find_cmd("--format", "{hash}", "mpileaks+debug").strip()
-    no_debug_hashes = find_cmd("--format", "{hash}", "mpileaks~debug")
-    no_debug_hash = no_debug_hashes.split()[0]
-    output = diff_cmd(
-        "-s", "--json", "mpileaks/{0}".format(debug_hash), "mpileaks/{0}".format(no_debug_hash)
-    )
-    result = sjson.load(output)
-
-    assert ["hash", "mpileaks %s" % debug_hash] in result["a_not_b"]
-    assert ["variant_value", "mpileaks debug True"] in result["a_not_b"]
-
-    assert ["hash", "mpileaks %s" % no_debug_hash] in result["b_not_a"]
-    assert ["variant_value", "mpileaks debug False"] in result["b_not_a"]
 
 
 @pytest.fixture()
@@ -902,3 +741,110 @@ def test_diff_requires_two_environments(concretized_env, arguments):
         diff_cmd(*arguments)
 
     assert exc.value.code == 2
+
+
+def _install_and_find(spec: str) -> str:
+    """Install a spec and return the hash of the installation matching it."""
+    install_cmd("--fake", spec)
+    return find_cmd("--format", "{/hash}", spec).strip()
+
+
+def test_diff_specs_reports_a_differing_dependency(install_mockery, mock_fetch, mock_archive):
+    """Two installations of a package that differ below the root are compared node by node."""
+    before = _install_and_find("mpileaks ^mpich@3.0.4")
+    after = _install_and_find("mpileaks ^mpich@1.0")
+
+    output = diff_cmd("--specs", before, after)
+
+    assert "before: mpich@3.0.4/" in output
+    assert "after:  mpich@1.0/" in output
+    # Specs have no input specs, so nodes are not attributed to any
+    assert "(from" not in output
+
+
+def test_diff_specs_json(install_mockery, mock_fetch, mock_archive):
+    """`spack diff --specs --json` is versioned, and names the two specs it compared."""
+    before = _install_and_find("mpileaks ^mpich@3.0.4")
+    after = _install_and_find("mpileaks ^mpich@1.0")
+
+    result = sjson.load(diff_cmd("--specs", "--json", before, after))
+
+    assert result["_meta"] == {
+        "file-type": "spack-spec-diff",
+        "diff-version": spec_diff.DIFF_FORMAT_VERSION,
+    }
+    assert [node["name"] for node in result["nodes"]] == ["mpich"]
+    assert result["specs"]["a"] == {"name": "mpileaks", "hash": before[1:]}
+    assert result["specs"]["b"] == {"name": "mpileaks", "hash": after[1:]}
+
+
+def test_diff_specs_reports_identical_specs(install_mockery, mock_fetch, mock_archive):
+    """A spec compared with itself is reported as such."""
+    installed = _install_and_find("mpileaks")
+
+    assert "the two specs are identical" in diff_cmd("--specs", installed, installed)
+    assert sjson.load(diff_cmd("--specs", "--json", installed, installed))["nodes"] == []
+
+
+def test_diff_specs_refuses_an_ambiguous_spec(install_mockery, mock_fetch, mock_archive):
+    """A spec matching several installations fails, listing the candidates."""
+    first = _install_and_find("mpileaks ^mpich@3.0.4")
+    second = _install_and_find("mpileaks ^mpich@1.0")
+
+    with pytest.raises(spack.main.SpackCommandError) as exc:
+        diff_cmd("--specs", "mpileaks", "mpileaks")
+
+    assert exc.value.code == 1
+    assert first[1:8] in exc.value.output and second[1:8] in exc.value.output
+
+
+def test_diff_specs_refuses_specs_of_different_packages(install_mockery, mock_fetch, mock_archive):
+    """Two specs of different packages have no node in common to compare."""
+    mpileaks = _install_and_find("mpileaks")
+    mpich = find_cmd("--format", "{/hash}", "mpich").strip()
+
+    with pytest.raises(spec_diff.SpecDiffError, match="must be of the same package"):
+        diff_cmd("--specs", mpileaks, mpich)
+
+
+@pytest.mark.parametrize("arguments", [["mpileaks"], ["mpileaks", "+debug"]])
+def test_diff_specs_requires_two_specs(arguments):
+    """Specs are counted after parsing, so a spec spanning several words counts once."""
+    with pytest.raises(spack.main.SpackCommandError) as exc:
+        diff_cmd("--specs", *arguments)
+
+    assert exc.value.code == 2
+
+
+def test_diff_specs_refuses_specs_without_package_hashes(tmp_path):
+    """Spec files written before package hashes existed are refused, as environments are."""
+    paths = []
+    for version in ("v017", "v019"):
+        source = os.path.join(
+            spack.paths.test_path, "data", "specfiles", f"hdf5.{version}.json.gz"
+        )
+        with gzip.open(source, "rt", encoding="utf-8") as stream:
+            path = tmp_path / f"hdf5.{version}.json"
+            path.write_text(stream.read())
+        paths.append(str(path))
+
+    with pytest.raises(spec_diff.SpecDiffError, match="did not record package hashes"):
+        diff_cmd("--specs", *paths)
+
+
+def test_diff_specs_lists_recipe_changes_by_package(capsys):
+    """A recipe change has no configuration to show, so only the package is named."""
+    before = spack.concretize.concretize_one("mpileaks")
+    after = spack.concretize.concretize_one("mpileaks+debug")
+    recipe = spec_diff.DiffCategory.RECIPE
+    nodes = [
+        _divergence(before["mpich"], before["mpich"], recipe, value_a="aaa", value_b="bbb"),
+        _divergence(before["callpath"], before["callpath"], recipe, value_a="ccc", value_b="ddd"),
+    ]
+
+    spack.cmd.diff.SpecDiffRenderer(spec_diff.SpecDiff(before, after, nodes)).render()
+
+    output = capsys.readouterr().out
+    assert "Packages whose recipe differs" in output
+    assert "Node differences" not in output
+    assert output.index("callpath") < output.index("mpich")
