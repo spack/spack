@@ -1469,10 +1469,22 @@ _spack_mark() {
 _spack_migrate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --dry-run -y --yes --restore-old-user-scope"
+        SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="cleanup-old undo use-new-layout"
+        SPACK_COMPREPLY="undo cleanup-old use-new-layout"
     fi
+}
+
+_spack_migrate_undo() {
+    SPACK_COMPREPLY="-h --help --restore-old-user-scope --dry-run"
+}
+
+_spack_migrate_cleanup_old() {
+    SPACK_COMPREPLY="-h --help -y --yes --dry-run"
+}
+
+_spack_migrate_use_new_layout() {
+    SPACK_COMPREPLY="-h --help --dry-run"
 }
 
 _spack_mirror() {

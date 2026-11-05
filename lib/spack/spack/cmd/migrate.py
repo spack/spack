@@ -39,24 +39,18 @@ def _restore_user_scope_path() -> None:
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
-    subparser.add_argument(
-        "action",
-        choices=["undo", "cleanup-old", "use-new-layout"],
-        help="migration action to perform",
-    )
-    subparser.add_argument(
-        "--dry-run", action="store_true", help="show what would be done without actually doing it"
-    )
-    subparser.add_argument(
-        "-y",
-        "--yes",
-        action="store_true",
-        help=(
-            "for cleanup-old: do not prompt for confirmation. Still refuses to delete"
-            " ~/.spack if config:install_tree:root points inside it"
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="migrate_command")
+
+    undo = sp.add_parser(
+        "undo",
+        help="point all resources back at their legacy locations under $spack",
+        description=(
+            "Update the layout scope so that environments, GPG data and licenses are read"
+            " from their legacy locations under $spack again. Nothing is moved or deleted;"
+            " copies made in the new locations are left in place."
         ),
     )
-    subparser.add_argument(
+    undo.add_argument(
         "--restore-old-user-scope",
         action="store_true",
         help=(
@@ -65,16 +59,43 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         ),
     )
 
+    cleanup = sp.add_parser(
+        "cleanup-old",
+        help="permanently delete ~/.spack",
+        description=(
+            "Permanently delete ~/.spack. Reports its contents and any references to it in"
+            " the active configuration, then asks for confirmation. Refuses, even with"
+            " --yes, while config:install_tree:root points inside ~/.spack; uninstalling"
+            " packages does not lift this, the install tree must be moved."
+        ),
+    )
+    cleanup.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help=(
+            "do not prompt for confirmation. Still refuses to delete ~/.spack if"
+            " config:install_tree:root points inside it"
+        ),
+    )
+
+    new = sp.add_parser(
+        "use-new-layout",
+        help="remove the layout scope and migrate $spack resources again",
+        description=(
+            "Remove the layout scope and re-run the migration of $spack-internal resources,"
+            " for example after declining the prompt on the first run."
+        ),
+    )
+
+    for parser in (undo, cleanup, new):
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="show what would be done without actually doing it",
+        )
+
     subparser.epilog = (
-        "actions:\n"
-        "  undo             point all resources back at their legacy locations under $spack\n"
-        "  use-new-layout   remove the layout scope and migrate $spack resources again\n"
-        "  cleanup-old      permanently delete ~/.spack. Reports its contents and any\n"
-        "                   references to it in the active configuration, then asks for\n"
-        "                   confirmation (or --yes). Refuses, even with --yes, while\n"
-        "                   config:install_tree:root points inside ~/.spack; uninstalling\n"
-        "                   packages does not lift this, the install tree must be moved.\n"
-        "\n"
         "WARNING:\n"
         "  Do not run this command in parallel with other spack commands for the same\n"
         "  Spack instance. This command modifies configuration files that other processes\n"
@@ -356,11 +377,5 @@ def _undo(args):
 
 
 def migrate(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
-    if args.action == "cleanup-old":
-        _cleanup_old(args)
-    elif args.action == "undo":
-        _undo(args)
-    elif args.action == "use-new-layout":
-        _use_new_layout(args)
-    else:
-        raise AssertionError("Unexpected: should be one of: [cleanup-old, undo, use-new-layout]")
+    action = {"undo": _undo, "cleanup-old": _cleanup_old, "use-new-layout": _use_new_layout}
+    action[args.migrate_command](args)

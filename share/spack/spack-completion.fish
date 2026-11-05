@@ -2362,16 +2362,37 @@ complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -f -a im
 complete -c spack -n '__fish_spack_using_command mark' -s i -l implicit -d 'mark packages as implicitly installed'
 
 # spack migrate
-set -g __fish_spack_optspecs_spack_migrate h/help dry-run y/yes restore-old-user-scope
-complete -c spack -n '__fish_spack_using_command_pos 0 migrate' -f -a 'undo cleanup-old use-new-layout'
+set -g __fish_spack_optspecs_spack_migrate h/help
+complete -c spack -n '__fish_spack_using_command_pos 0 migrate' -f -a undo -d 'point all resources back at their legacy locations under $spack'
+complete -c spack -n '__fish_spack_using_command_pos 0 migrate' -f -a cleanup-old -d 'permanently delete ~/.spack'
+complete -c spack -n '__fish_spack_using_command_pos 0 migrate' -f -a use-new-layout -d 'remove the layout scope and migrate $spack resources again'
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command migrate' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -f -a dry_run
-complete -c spack -n '__fish_spack_using_command migrate' -l dry-run -d 'show what would be done without actually doing it'
-complete -c spack -n '__fish_spack_using_command migrate' -s y -l yes -f -a yes
-complete -c spack -n '__fish_spack_using_command migrate' -s y -l yes -d 'for cleanup-old: do not prompt for confirmation. Still refuses to delete ~/.spack if config:install_tree:root points inside it'
-complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-user-scope -f -a restore_old_user_scope
-complete -c spack -n '__fish_spack_using_command migrate' -l restore-old-user-scope -d 'restore the user scope to ~/.spack (changes git-managed config in the Spack repository)'
+
+# spack migrate undo
+set -g __fish_spack_optspecs_spack_migrate_undo h/help restore-old-user-scope dry-run
+complete -c spack -n '__fish_spack_using_command migrate undo' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command migrate undo' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command migrate undo' -l restore-old-user-scope -f -a restore_old_user_scope
+complete -c spack -n '__fish_spack_using_command migrate undo' -l restore-old-user-scope -d 'restore the user scope to ~/.spack (changes git-managed config in the Spack repository)'
+complete -c spack -n '__fish_spack_using_command migrate undo' -l dry-run -f -a dry_run
+complete -c spack -n '__fish_spack_using_command migrate undo' -l dry-run -d 'show what would be done without actually doing it'
+
+# spack migrate cleanup-old
+set -g __fish_spack_optspecs_spack_migrate_cleanup_old h/help y/yes dry-run
+complete -c spack -n '__fish_spack_using_command migrate cleanup-old' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command migrate cleanup-old' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command migrate cleanup-old' -s y -l yes -f -a yes
+complete -c spack -n '__fish_spack_using_command migrate cleanup-old' -s y -l yes -d 'do not prompt for confirmation. Still refuses to delete ~/.spack if config:install_tree:root points inside it'
+complete -c spack -n '__fish_spack_using_command migrate cleanup-old' -l dry-run -f -a dry_run
+complete -c spack -n '__fish_spack_using_command migrate cleanup-old' -l dry-run -d 'show what would be done without actually doing it'
+
+# spack migrate use-new-layout
+set -g __fish_spack_optspecs_spack_migrate_use_new_layout h/help dry-run
+complete -c spack -n '__fish_spack_using_command migrate use-new-layout' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command migrate use-new-layout' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command migrate use-new-layout' -l dry-run -f -a dry_run
+complete -c spack -n '__fish_spack_using_command migrate use-new-layout' -l dry-run -d 'show what would be done without actually doing it'
 
 # spack mirror
 set -g __fish_spack_optspecs_spack_mirror h/help n/no-checksum
