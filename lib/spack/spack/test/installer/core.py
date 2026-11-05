@@ -29,6 +29,16 @@ from spack.test.installer.conftest import (
 class TestPackageInstallerConstructor:
     """Tests for PackageInstaller constructor, especially capacity initialization."""
 
+    def test_streaming_ui_selected_from_environment(
+        self, temporary_store, mock_packages, monkeypatch
+    ):
+        from spack.installer.streaming_ui import StreamingTerminalUI
+
+        monkeypatch.setenv("SPACK_INSTALLER_UI", "streaming")
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        assert isinstance(PackageInstaller([spec.package]).ui, StreamingTerminalUI)
+
     def test_terminal_ui_selected_from_environment(
         self, temporary_store, mock_packages, monkeypatch
     ):

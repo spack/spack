@@ -276,6 +276,13 @@ Setting it to ``false`` will not show any progress information.
 To work properly, this requires your terminal to reset its title after Spack has finished its work; otherwise, Spack's status information will remain in the terminal's title indefinitely.
 Most terminals should already be set up this way and clear Spack's status information.
 
+The installer terminal interface can be selected with the ``SPACK_INSTALLER_UI``
+environment variable. The default, ``terminal``, switches between the overview
+and build logs. Set it to ``streaming`` to keep the overview visible while
+streaming the selected build's log above it. Press ``v`` to toggle streaming and
+``n`` or ``p`` to select a build. With ``spack install -v``, streaming starts
+automatically. This selector currently supports only these built-in interfaces.
+
 ``aliases``
 -----------
 

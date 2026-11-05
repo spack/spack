@@ -49,7 +49,7 @@ from spack.installer.schedule import (
     _node_to_roots,
     schedule_builds,
 )
-from spack.installer.ui import BuildInfo, InstallerUI, SetEcho, installer_ui_class
+from spack.installer.ui import BuildInfo, InstallerUI, SetEcho, TerminalUI
 
 if sys.platform == "win32":
     from spack.installer.base import NoopJobServer as JobServer
@@ -65,6 +65,20 @@ if TYPE_CHECKING:
 
 #: How often to flush completed builds to the database
 DATABASE_WRITE_INTERVAL = 5.0
+
+
+def installer_ui_class() -> type:
+    """Select a built-in installer UI from the environment."""
+    name = os.environ.get("SPACK_INSTALLER_UI", "terminal")
+    if name == "terminal":
+        return TerminalUI
+    if name == "streaming":
+        from spack.installer.streaming_ui import StreamingTerminalUI
+
+        return StreamingTerminalUI
+    raise spack.error.SpackError(
+        f"Unknown installer UI '{name}'; SPACK_INSTALLER_UI must be 'terminal' or 'streaming'"
+    )
 
 
 class ReportData:

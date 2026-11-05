@@ -15,7 +15,6 @@ import time
 from typing import Callable, Dict, Generator, List, NamedTuple, Optional, TextIO, Union
 
 import spack.config
-import spack.error
 import spack.util.tty.color as coloring
 from spack.util.lang import pretty_duration
 from spack.util.log_parse import write_log_context
@@ -166,16 +165,6 @@ class InstallerUI:
         """How often the frontend needs a periodic ``render`` tick, or None if it never does. The
         event loop bounds its sleep by this together with its own database-flush cadence."""
         return None
-
-
-def installer_ui_class() -> type:
-    """Select a built-in installer UI from the environment."""
-    name = os.environ.get("SPACK_INSTALLER_UI", "terminal")
-    if name == "terminal":
-        return TerminalUI
-    raise spack.error.SpackError(
-        f"Unknown installer UI '{name}'; SPACK_INSTALLER_UI must be 'terminal'"
-    )
 
 
 class TerminalUI(InstallerUI):
