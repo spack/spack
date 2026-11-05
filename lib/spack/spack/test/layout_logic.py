@@ -838,6 +838,82 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     assert (old_envs / "test-env-1" / "spack.yaml").exists()
 
 
+def test_remigration_keeps_previously_migrated_env_and_warns_if_manifests_differ(
+    mock_spack_instance, capsys
+):
+    """An environment that was already migrated from this prefix is not copied again.
+    If its manifest in ``$spack`` now differs from the copy, the copy is kept, the user is
+    told, and the environment is not reported as migrated.
+    """
+    old_envs = pathlib.Path(spack.paths.old_envs_path)
+    new_envs = pathlib.Path(spack.migrate.migration_data_home()) / "environments"
+    for name in ("same", "changed", "abs-path"):
+        (old_envs / name).mkdir(parents=True)
+    (old_envs / "same" / "spack.yaml").write_text("spack:\n  specs: [zlib]\n", encoding="utf-8")
+    (old_envs / "changed" / "spack.yaml").write_text(
+        "spack:\n  specs: [zlib@1.2]\n", encoding="utf-8"
+    )
+    # an absolute path into the env itself is rewritten on copy; that must not count as a
+    # difference
+    (old_envs / "abs-path" / "spack.yaml").write_text(
+        f"spack:\n  specs: [zlib]\n  view: {old_envs / 'abs-path' / 'myview'}\n", encoding="utf-8"
+    )
+
+    ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    assert ok and differing == []
+    assert (new_envs / "abs-path" / "spack.yaml").read_text(encoding="utf-8") == (
+        f"spack:\n  specs: [zlib]\n  view: {new_envs / 'abs-path' / 'myview'}\n"
+    )
+    capsys.readouterr()
+
+    # The $spack copy of one env changes (e.g. after `spack migrate undo`, or a re-clone)
+    (old_envs / "changed" / "spack.yaml").write_text(
+        "spack:\n  specs: [zlib@1.3]\n", encoding="utf-8"
+    )
+    # ... and the user edits the migrated copy of another; both count as "differ"
+    (new_envs / "same" / "spack.yaml").write_text(
+        "spack:\n  specs: [zlib, bzip2]\n", encoding="utf-8"
+    )
+
+    ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+
+    assert ok
+    assert sorted(differing) == ["changed", "same"]
+    # copies are kept as they are
+    assert (new_envs / "changed" / "spack.yaml").read_text(encoding="utf-8") == (
+        "spack:\n  specs: [zlib@1.2]\n"
+    )
+    assert (new_envs / "same" / "spack.yaml").read_text(encoding="utf-8") == (
+        "spack:\n  specs: [zlib, bzip2]\n"
+    )
+    err = capsys.readouterr().err
+    for name in ("changed", "same"):
+        assert f"Attempted to migrate environment {old_envs / name} to {new_envs / name}" in err
+    assert "previously migrated and the environment manifests differ" in err
+    assert "Manually transfer any changes" in err
+    assert "abs-path" not in err
+
+
+def test_remigration_summary_excludes_envs_with_differing_manifests(
+    mock_spack_instance, monkeypatch, capsys
+):
+    old_envs = pathlib.Path(spack.paths.old_envs_path)
+    (old_envs / "foo").mkdir(parents=True)
+    (old_envs / "foo" / "spack.yaml").write_text("spack:\n  specs: [zlib]\n", encoding="utf-8")
+    (old_envs / "bar").mkdir()
+    (old_envs / "bar" / "spack.yaml").write_text("spack:\n  specs: [zlib]\n", encoding="utf-8")
+
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    spack.migrate.migrate_spack_prefix(spack.migrate.detect_old_resources())
+    assert "Migrated: environments." in capsys.readouterr().err
+
+    (old_envs / "foo" / "spack.yaml").write_text("spack:\n  specs: [zlib@2]\n", encoding="utf-8")
+    spack.migrate.migrate_spack_prefix(spack.migrate.detect_old_resources())
+
+    err = capsys.readouterr().err
+    assert "Migrated: environments (except foo: previously migrated, manifests differ" in err
+
+
 def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     """When no old resources exist in $spack, migration doesn't touch the spack prefix.
 

@@ -484,6 +484,24 @@ def _make_marker_verifier(marker_name: str):
     return verify_with_marker
 
 
+def _env_manifests_match(src_env: str, dst_env: str) -> bool:
+    """Whether a previously migrated environment still has the same manifest as its source.
+
+    The migration rewrites absolute paths into the environment's own directory, so the
+    copy's manifest legitimately differs from the source by that substitution; undo it
+    before comparing. The lockfile is not compared: it changes on every concretization.
+    """
+    try:
+        with open(os.path.join(src_env, "spack.yaml"), "r", encoding="utf-8") as f:
+            src_text = f.read()
+        with open(os.path.join(dst_env, "spack.yaml"), "r", encoding="utf-8") as f:
+            dst_text = f.read()
+    except OSError:
+        return False
+    dst_text = dst_text.replace(os.path.abspath(dst_env), os.path.abspath(src_env))
+    return src_text == dst_text
+
+
 def migrate_with_staging(
     old_path: str,
     new_path: str,
@@ -1020,10 +1038,17 @@ def _migrate_gpg(
     return True
 
 
-def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
-    """Copy environments under one lock, removing partial results on failure."""
+def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
+    """Copy environments under one lock, removing partial results on failure.
+
+    Returns: ``(success, differing)`` where ``differing`` names environments that were
+        found already migrated from this prefix but whose manifest no longer matches the
+        source. Those are left as they are at the destination and are not counted as
+        migrated by the caller.
+    """
+    differing: List[str] = []
     if not os.path.exists(src_dir):
-        return True
+        return True, differing
 
     source_hash = _migration_source_hash()
     marker_name = f".migration-{source_hash}"
@@ -1033,7 +1058,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
         filesystem.mkdirp(dst_dir)
     except (OSError, PermissionError):
         # Cannot create destination directory - migration not possible
-        return False
+        return False, differing
 
     # Define environment metadata/view exclusion callback
     # Use hardcoded marker instead of importing from environment module to avoid
@@ -1142,7 +1167,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                         f"Environment {entry} has installs inside it "
                         f"(found {db_index}); skipping migration of all environments"
                     )
-                    return False
+                    return False, differing
 
                 # Read the lockfile and look for dev_path variants
                 # Technically, we could also read the yaml file and only return False if the
@@ -1155,12 +1180,13 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
                                 f"environment {entry} has develop specs in it. "
                                 "Skipping migration of all environments"
                             )
-                            return False
+                            return False, differing
 
         copied = []
         for entry in intersection + remainder:
             src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
+            previously_migrated = verify_with_marker(dst_path) == DestinationCheck.SKIP
             success = migrate_with_staging(
                 old_path=src_path,
                 new_path=dst_path,
@@ -1173,13 +1199,23 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> bool:
             if success:
                 if entry not in destination_entries:
                     copied.append(entry)
+                elif previously_migrated and not _env_manifests_match(src_path, dst_path):
+                    # The marker tells us this copy came from this prefix, but not which
+                    # side has been edited since. Keep the copy; the user decides.
+                    tty.warn(
+                        f"Attempted to migrate environment {src_path} to {dst_path}, but it"
+                        " was previously migrated and the environment manifests differ. The"
+                        f" copy at {dst_path} will be used. Manually transfer any changes"
+                        f" from {src_path} that you want to preserve."
+                    )
+                    differing.append(entry)
             else:
                 for done in copied:
                     shutil.rmtree(os.path.join(dst_dir, done), ignore_errors=True)
-                return False
+                return False, differing
 
         # All environments copied successfully - old environments remain in place
-        return True
+        return True, differing
     finally:
         lock.release_write()
 
@@ -1518,8 +1554,16 @@ def migrate_spack_prefix(old_resources):
     if old_resources["environments"]:
         old_envs = spack.paths.old_envs_path
         target_envs = os.path.join(data_home, "environments")
-        if _migrate_environments(old_envs, target_envs):
-            migrated_resources.append("environments")
+        envs_ok, differing = _migrate_environments(old_envs, target_envs)
+        if envs_ok:
+            if differing:
+                names = ", ".join(differing)
+                migrated_resources.append(
+                    f"environments (except {names}: previously migrated, manifests differ;"
+                    " see warning above)"
+                )
+            else:
+                migrated_resources.append("environments")
             tty.debug(f"Copied environments from {old_envs} to {target_envs}")
             del old_resources["environments"]
 
