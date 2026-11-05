@@ -256,9 +256,14 @@ def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
 
 
 def _write_timer_json(
-    pkg: "spack.package_base.PackageBase", timer: spack.util.timer.Timer, cache: bool
+    pkg: "spack.package_base.PackageBase",
+    timer: spack.util.timer.Timer,
+    cache: bool,
+    mirror_name: Optional[str] = None,
 ) -> None:
     extra_attributes = {"name": pkg.name, "cache": cache, "hash": pkg.spec.dag_hash()}
+    if mirror_name is not None:
+        extra_attributes["mirror_name"] = mirror_name
     try:
         with open(pkg.times_log_path, "w", encoding="utf-8") as timelog:
             timer.write_json(timelog, extra_attributes=extra_attributes)
@@ -285,6 +290,12 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
+def send_fetched_from_binary_cache(mirror_name: str, state_pipe: io.TextIOWrapper) -> None:
+    """Send a notification of which build cache the package was fetched from."""
+    json.dump({"fetched_from_binary_cache": mirror_name}, state_pipe, separators=(",", ":"))
+    state_pipe.write("\n")
+
+
 def send_exit(exit_code: int, state_pipe: io.TextIOWrapper) -> None:
     """Send the exit code: the last message, sent after the build's last write to its prefix."""
     json.dump({"exit": exit_code}, state_pipe, separators=(",", ":"))
@@ -297,25 +308,30 @@ def install_from_buildcache(
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
     timer: spack.util.timer.BaseTimer = spack.util.timer.NULL_TIMER,
-) -> bool:
+) -> Optional[str]:
+    """Install a spec from a build cache. Returns the name of the mirror it was fetched from, or
+    ``None`` if no binary was available."""
     # Skip if no configured mirror accepts this spec (select/exclude filters)
     if not any(
         m.matches_binary(spec, direction="fetch")
         for m in spack.mirrors.mirror.MirrorCollection(binary=True).values()
     ):
-        return False
+        return None
 
     send_state("fetching from build cache", state_stream)
     try:
         with timer.measure("fetch"):
-            tarball_stage = spack.binary_distribution.download_tarball(
+            fetched = spack.binary_distribution.download_tarball_with_mirror(
                 spec.build_spec, unsigned, mirrors
             )
     except spack.binary_distribution.NoConfiguredBinaryMirrors:
-        return False
+        return None
 
-    if tarball_stage is None:
-        return False
+    if fetched is None:
+        return None
+
+    tarball_stage, mirror = fetched
+    send_fetched_from_binary_cache(mirror.name, state_stream)
 
     send_state("relocating", state_stream)
     with timer.measure("install"):
@@ -331,7 +347,7 @@ def install_from_buildcache(
     # inform also the parent that this package was installed from binary cache.
     send_installed_from_binary_cache(state_stream)
 
-    return True
+    return mirror.name
 
 
 class PrefixPivoter:
@@ -712,8 +728,11 @@ def _install(
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
-        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream, timer):
-            _post_install(pkg, spec, explicit, timer, cache=True)
+        mirror_name = install_from_buildcache(
+            request.mirrors, spec, request.unsigned, state_stream, timer
+        )
+        if mirror_name is not None:
+            _post_install(pkg, spec, explicit, timer, cache=True, mirror_name=mirror_name)
             return
         elif install_policy == "cache_only":
             send_state("no binary available", state_stream)
@@ -820,6 +839,7 @@ def _post_install(
     explicit: bool,
     timer: spack.util.timer.Timer,
     cache: bool = False,
+    mirror_name: Optional[str] = None,
 ) -> None:
     # Do post install (and potentially post binary install) hooks
     with timer.measure("post-install"):
@@ -829,7 +849,7 @@ def _post_install(
         spack.hooks.post_install(spec, explicit)
 
     timer.stop()
-    _write_timer_json(pkg, timer, cache)
+    _write_timer_json(pkg, timer, cache, mirror_name)
 
 
 def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
