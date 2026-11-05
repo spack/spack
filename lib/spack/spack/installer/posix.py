@@ -257,7 +257,7 @@ class PipeMakeflags(Makeflags):
 
     Args:
         fifo_path: path of the jobserver FIFO to open
-        flag: "--jobserver-auth" (gmake >= 4.0) or "--jobserver-fds" (gmake < 4.0)
+        flag: "--jobserver-auth" (gmake >= 4.2) or "--jobserver-fds" (gmake < 4.2)
     """
 
     __slots__ = ("fifo_path", "flag")
@@ -305,7 +305,7 @@ class PosixJobServer(JobServerBase):
     def makeflags(self, gmake: Optional[spack.spec.Spec]) -> Makeflags:
         if not gmake or gmake.satisfies("@4.4:"):
             return FifoMakeflags(self.fifo_path, self.num_jobs)
-        flag = "--jobserver-auth" if gmake.satisfies("@4.0:") else "--jobserver-fds"
+        flag = "--jobserver-auth" if gmake.satisfies("@4.2:") else "--jobserver-fds"
         return PipeMakeflags(self.fifo_path, flag)
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
