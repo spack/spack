@@ -2615,7 +2615,7 @@ def test_env_create_filter_blocks_included_config(tmp_path: pathlib.Path, concre
         f"filter:\n  concrete: {str(concrete).lower()}\n  config:\n    block: [mirrors]\n",
     )
     filtered_dir = tmp_path / "filtered"
-    env("create", "-d", str(filtered_dir), "--filter", filter_yaml, str(source_dir))
+    env("create", "--filter", filter_yaml, "-d", str(filtered_dir), str(source_dir))
 
     filtered = ev.Environment(filtered_dir)
     assert "include" not in filtered.manifest["spack"]
