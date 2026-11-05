@@ -118,7 +118,7 @@ def spec(parser, args):
         return
 
     with tree_context():
-        print(
+        sys.stdout.write(
             spack.spec.tree(
                 concrete_specs,
                 cover=args.cover,
