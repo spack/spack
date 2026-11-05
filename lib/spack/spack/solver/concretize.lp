@@ -57,6 +57,8 @@ virtual_has_incoming_edges(Virtual) :- attr("virtual_on_incoming_edges", _, Virt
 virtual_is_a_root(Virtual) :- attr("virtual_root", node(_, Virtual)).
 has_virtual_on_edge_to(ParentNode, ChildPkg, Virtual) :- attr("virtual_on_edge", ParentNode, node(_, ChildPkg), Virtual).
 pkg_has_virtual_on_any_edge(PackageNode, Virtual) :- attr("virtual_on_edge", PackageNode, _, Virtual).
+% Reused specs don't track a real edge to build-only deps (e.g. compilers)
+pkg_has_virtual_on_any_edge(PackageNode, Virtual) :- attr("virtual_on_build_edge", PackageNode, _, Virtual).
 
 node_has_namespace(PackageNode) :- attr("namespace", PackageNode, _).
 node_has_namespace_set(PackageNode) :- attr("namespace_set", PackageNode, _).
