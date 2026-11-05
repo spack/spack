@@ -2121,7 +2121,23 @@ def test_env_create_filter_rejects_lockfile(tmp_path: pathlib.Path):
         env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", source.lock_path)
 
 
-def test_env_create_filter_defaults_to_concrete_allow_all(tmp_path: pathlib.Path):
+def test_env_create_filter_defaults_to_abstract_specs(tmp_path: pathlib.Path):
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("mpileaks")
+    source.concretize()
+    source.write()
+
+    env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", "source")
+
+    filtered = ev.read("filtered")
+    assert [str(spec) for spec in filtered.user_specs] == ["mpileaks"]
+    assert not filtered.concrete_roots()
+    assert not os.path.exists(filtered.lock_path)
+
+
+def test_env_create_filter_preserves_concrete_roots(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2130,14 +2146,19 @@ def test_env_create_filter_defaults_to_concrete_allow_all(tmp_path: pathlib.Path
     source.concretize()
     source.write()
 
-    env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", "source")
+    env(
+        "create",
+        "--filter",
+        _write_filter_yaml(tmp_path, "filter:\n  concrete: true\n"),
+        "filtered",
+        "source",
+    )
 
     filtered = ev.read("filtered")
 
-    assert {"callpath", "libelf", "mpileaks"}.issubset(spec.name for spec in filtered.user_specs)
-    assert {"callpath", "libelf", "mpileaks"}.issubset(
-        spec.name for spec in filtered.concrete_roots()
-    )
+    assert {spec.name for spec in filtered.user_specs} == {"libelf", "mpileaks"}
+    assert {spec.name for spec in filtered.concrete_roots()} == {"libelf", "mpileaks"}
+    assert "callpath" in {spec.name for spec in filtered.all_specs()}
     assert os.path.exists(filtered.lock_path)
 
 
@@ -2152,6 +2173,8 @@ def test_env_create_filter_can_select_concrete_dependency(tmp_path: pathlib.Path
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
+  concrete: true
+  flatten: true
   specs:
     allow: [callpath]
 """,
@@ -2163,6 +2186,80 @@ def test_env_create_filter_can_select_concrete_dependency(tmp_path: pathlib.Path
     assert [spec.name for spec in filtered.user_specs] == ["callpath"]
     assert [spec.name for spec in filtered.concrete_roots()] == ["callpath"]
     assert [spec.name for spec in filtered.all_specs()] == ["callpath"]
+
+
+def test_env_create_filter_warns_when_only_dependencies_match(tmp_path: pathlib.Path):
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("mpileaks")
+    source.concretize()
+    source.write()
+
+    filter_yaml = _write_filter_yaml(
+        tmp_path, "filter:\n  concrete: true\n  specs:\n    allow: [callpath]\n"
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
+
+    filtered = ev.read("filtered")
+    assert not filtered.concrete_roots()
+    assert not os.path.exists(filtered.lock_path)
+    assert "filtered environment has no roots" in env.output
+    assert "filter:flatten" in env.output
+
+
+@pytest.mark.parametrize("flatten", [False, True])
+def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, flatten: bool):
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        """spack:
+  specs:
+  - group: base
+    specs: [libelf]
+    explicit: false
+    override:
+      config:
+        verify_ssl: false
+  - group: apps
+    needs: [base]
+    specs: [mpileaks]
+"""
+    )
+    source = ev.create("source", spack_yaml)
+    source.add_concrete_spec(
+        Spec("libelf"), spack.concretize.concretize_one("libelf"), group="base"
+    )
+    source.add_concrete_spec(
+        Spec("mpileaks"), spack.concretize.concretize_one("mpileaks"), group="apps"
+    )
+    source.write()
+
+    filter_yaml = _write_filter_yaml(
+        tmp_path, f"filter:\n  concrete: true\n  flatten: {str(flatten).lower()}\n"
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
+
+    filtered = ev.read("filtered")
+    groups = {
+        entry["group"]: entry
+        for entry in filtered.manifest["spack"]["specs"]
+        if isinstance(entry, dict)
+    }
+    assert [Spec(spec).name for spec in groups["base"]["specs"]] == ["libelf"]
+    assert groups["base"]["explicit"] is False
+    assert groups["base"]["override"] == {"config": {"verify_ssl": False}}
+    assert [Spec(spec).name for spec in groups["apps"]["specs"]] == ["mpileaks"]
+    assert groups["apps"]["needs"] == ["base"]
+
+    roots_by_group = [
+        (entry.group, filtered.specs_by_hash[entry.hash].name)
+        for entry in filtered.concretized_roots
+    ]
+    assert roots_by_group[:2] == [("base", "libelf"), ("apps", "mpileaks")]
+    promoted = [name for group, name in roots_by_group if group == "default"]
+    assert ("callpath" in promoted) == flatten
+    assert not any(name in ("libelf", "mpileaks") for name in promoted)
+    assert {spec.name for spec in filtered.all_specs()} >= {"libelf", "mpileaks", "callpath"}
 
 
 @pytest.mark.parametrize(
@@ -2189,7 +2286,9 @@ def test_env_create_filter_removes_excluded_concrete_dependencies(
         if spec.name != "callpath" and (allowed_names is None or spec.name in allowed_names)
     }
 
-    filter_yaml = _write_filter_yaml(tmp_path, f"filter:\n  specs:\n    {specs_filter}\n")
+    filter_yaml = _write_filter_yaml(
+        tmp_path, f"filter:\n  concrete: true\n  flatten: true\n  specs:\n    {specs_filter}\n"
+    )
     env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
@@ -2224,7 +2323,8 @@ def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, 
     original_lockfile = pathlib.Path(source.lock_path).read_text()
 
     filter_yaml = _write_filter_yaml(
-        tmp_path, f"filter:\n  specs:\n    block: ['{blocked_spec}']\n"
+        tmp_path,
+        f"filter:\n  concrete: true\n  flatten: true\n  specs:\n    block: ['{blocked_spec}']\n",
     )
     env("create", "--filter", filter_yaml, "filtered", "source")
 
@@ -2254,6 +2354,7 @@ def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pat
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
+  concrete: true
   specs:
     allow: [mpileaks]
   projections:
@@ -2284,6 +2385,7 @@ def test_env_create_filter_rejects_projection_that_formats_to_path(tmp_path: pat
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
+  concrete: true
   specs:
     allow: [mpileaks]
   projections:
@@ -2339,6 +2441,7 @@ def test_env_create_filter_blocks_external_concrete_specs_with_specs_block(tmp_p
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
+  concrete: true
   specs:
     block: [externaltool]
 """,
@@ -2359,7 +2462,13 @@ def test_env_create_filter_includes_versioned_external_concrete_specs(tmp_path: 
     source.concretize()
     source.write()
 
-    env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", "source")
+    env(
+        "create",
+        "--filter",
+        _write_filter_yaml(tmp_path, "filter:\n  concrete: true\n"),
+        "filtered",
+        "source",
+    )
 
     filtered = ev.read("filtered")
 
@@ -2378,6 +2487,7 @@ def test_env_create_filter_blocks_versioned_external_concrete_specs(tmp_path: pa
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
+  concrete: true
   specs:
     block: [externaltool@0.9]
 """,
@@ -2417,6 +2527,7 @@ def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
+  concrete: true
   specs:
     allow: [mpileaks]
   config:
@@ -2464,6 +2575,7 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
+  concrete: true
   specs:
     allow: [mpileaks]
 """,
@@ -2908,6 +3020,7 @@ def test_env_create_filter_manifest_requires_non_concrete(tmp_path: pathlib.Path
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
+  concrete: true
   specs:
     allow: [mpileaks]
 """,
