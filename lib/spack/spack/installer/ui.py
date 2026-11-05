@@ -524,6 +524,11 @@ class TerminalUI(InstallerUI):
         if not self.dirty and not finalize:
             return
 
+        self._render_overview(now=now, has_unfinished=has_unfinished, finalize=finalize)
+
+    def _render_overview(
+        self, *, now: float, has_unfinished: bool, finalize: bool = False
+    ) -> None:
         # Build the overview output in a buffer and print all at once to avoid flickering.
         buffer = io.StringIO()
 
@@ -568,6 +573,7 @@ class TerminalUI(InstallerUI):
                 f"  {self.color.CYAN}v{self.color.RESET}: logs"
                 f"  {self.color.CYAN}n{self.color.RESET}/{self.color.CYAN}p{self.color.RESET}:"
                 " next/prev"
+                f"{self._overview_header_suffix()}"
             )
             if coloring.clen(long_header) < max_width:
                 self._println(buffer, long_header)
@@ -617,6 +623,9 @@ class TerminalUI(InstallerUI):
 
         if finalize:
             self._update_terminal_title(True)
+
+    def _overview_header_suffix(self) -> str:
+        return ""
 
     def _println(self, buffer: io.StringIO, line: str = "", force_newline: bool = False) -> None:
         """Print a line to the buffer, handling line clearing and cursor movement."""
