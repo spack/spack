@@ -102,7 +102,7 @@ def test_band_fills_the_width_with_dashes():
     assert len(line) == 40
 
 
-def test_band_omits_the_dashes_when_there_is_no_room_for_them():
-    """Tests that an empty run of dashes must not be colorized."""
+def test_band_draws_a_short_rule_when_there_is_no_room_for_one():
+    """Tests that a label wider than the width still gets a rule, overflowing the width."""
     line = tty.band("a label wider than the width it is given", 20, indent=2)
-    assert line == "  -- a label wider than the width it is given"
+    assert line == "  -- a label wider than the width it is given ------"

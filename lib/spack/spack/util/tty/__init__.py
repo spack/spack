@@ -283,17 +283,21 @@ def get_yes_or_no(prompt: str, default: Optional[bool] = None) -> Optional[bool]
     return result
 
 
+#: Shortest rule drawn by :func:`band`
+_MIN_BAND_DASHES = 6
+
+
 def band(label: str, width: int, *, indent: int = 2) -> str:
     """Render a section-header rule: an indented ``--``, the label, then dashes filling the width.
 
-    In the style used by `spack spec --show=opt` for its criteria. The label is expected to be
-    colorized already, so its printable length is what sizes the dashes:
-    ``indent + 2 dashes + 1 space + label + 1 space + dashes == width``.
+    The label is expected to be colorized already, so its printable length is what sizes the
+    dashes:
+    ``indent + 2 dashes + 1 space + label + 1 space + dashes == width``. A label too wide for the
+    width still gets a short rule, which overflows the width.
     """
     header = f"{' ' * indent}{colorize('@*{--}')} {label}"
-    dashes = "-" * max(0, width - indent - 4 - clen(label))
-    # An empty @#{} would emit a color code with no reset
-    return f"{header} {colorize(f'@#{{{dashes}}}')}" if dashes else header
+    dashes = "-" * max(_MIN_BAND_DASHES, width - indent - 4 - clen(label))
+    return f"{header} {colorize(f'@#{{{dashes}}}')}"
 
 
 def hline(label: Optional[str] = None, *, char: str = "-", max_width: int = 64) -> None:

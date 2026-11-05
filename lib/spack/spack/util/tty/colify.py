@@ -286,34 +286,34 @@ def _env_columns() -> Optional[int]:
 def terminal_columns() -> int:
     """Width available for output, or 0 when it is not going to a terminal.
 
-    Honors the ``COLIFY_SIZE`` environment variable, so callers can force a deterministic width;
-    a zero return asks the caller to fall back to a single column.
+    Honors the ``COLIFY_SIZE`` environment variable, so callers can force a deterministic width.
     """
     forced_cols = _env_columns()
     if forced_cols is not None:
         return forced_cols
-    if not sys.stdout.isatty():
+    if not _cached_isatty(sys.stdout):
         return 0
     return shutil.get_terminal_size().columns
 
 
-def render_blocks(
-    blocks: List[List[str]], width: int, *, indent: int = 2, gap: int = 4
-) -> List[str]:
+#: Columns between two blocks that share a row in :func:`render_blocks`
+_BLOCK_GAP = 4
+
+
+def render_blocks(blocks: List[List[str]], width: int, *, indent: int = 2) -> List[str]:
     """Lay blocks of lines out in rows, packing several side by side when the width allows it.
 
     Each block is a list of lines rendered as a unit; unlike :func:`colify`, which arranges single
     strings, this keeps a multi-line block intact and aligns the blocks that share a row. A width
     of zero puts every block on its own row, as happens when the output is not going to a terminal.
     """
-    # Each block is measured once here, and the width is carried through the layout below
     sized = [(block, max(clen(line) for line in block)) for block in blocks]
 
     rows: List[List[Tuple[List[str], int]]] = []
     row: List[Tuple[List[str], int]] = []
     used = 0
     for block, size in sized:
-        needed = size if not row else size + gap
+        needed = size if not row else size + _BLOCK_GAP
         # A block too wide to share a row takes one for itself, and simply overflows
         if row and used + needed > width - indent:
             rows.append(row)
@@ -337,5 +337,5 @@ def render_blocks(
             for block, size in row:
                 line = block[line_index] if line_index < len(block) else ""
                 cells.append(line + " " * (size - clen(line)))
-            lines.append((" " * indent + (" " * gap).join(cells)).rstrip())
+            lines.append((" " * indent + (" " * _BLOCK_GAP).join(cells)).rstrip())
     return lines

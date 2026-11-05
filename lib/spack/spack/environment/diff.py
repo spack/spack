@@ -12,7 +12,7 @@ Only the first layer is specific to environments. The second is the generic spec
 ``spack.spec_diff``, which this module drives once per common input spec.
 """
 
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
 
 import spack.environment.environment as ev
 import spack.spec_diff
@@ -48,13 +48,17 @@ class EnvironmentDiff(NamedTuple):
     #: Common inputs whose concrete roots differ, with no node to point at as the cause
     unresolved: List[ev.UserSpecId]
 
+    @property
+    def equivalent(self) -> bool:
+        """Whether the comparison found no difference between the two environments."""
+        return not (
+            self.inputs.only_in_a or self.inputs.only_in_b or self.divergences or self.unresolved
+        )
+
     def as_dict(self) -> Dict[str, Any]:
         """Canonical, deterministically ordered serialization of the comparison.
 
-        One entry per user spec reaching a divergence; unlike the pretty output this does not
-        merge equivalent findings, leaving a consumer free to group them as it sees fit. The
-        identity of the two environments is the caller's to add, since it is not part of the
-        comparison itself.
+        One entry per user spec reaching a divergence. Environment identities are not included.
         """
         return {
             "_meta": {"file-type": "spack-environment-diff", "diff-version": DIFF_FORMAT_VERSION},
@@ -93,13 +97,16 @@ def _concretized_user_specs(env: ev.Environment) -> Dict[ev.UserSpecId, Spec]:
     }
 
 
-def _assert_comparable(env: ev.Environment, label: Optional[str] = None) -> None:
+def _assert_comparable(
+    env: ev.Environment, concretized: Iterable[ev.UserSpecId], label: Optional[str] = None
+) -> None:
     """Raise if an environment is in a state this module cannot answer for.
 
     Args:
         env: environment to check
+        concretized: user specs of the environment that have a concrete spec
         label: how to name the environment in errors, when its own name would not mean anything
-            to the caller (an environment materialized from a lockfile is a temporary directory)
+            to the caller
 
     Raises:
         spack.environment.environment.SpackEnvironmentError: if the environment is not fully
@@ -107,19 +114,15 @@ def _assert_comparable(env: ev.Environment, label: Optional[str] = None) -> None
     """
     label = label or env.name
 
-    # Asking for the roots left to concretize, rather than whether any were, catches specs added
-    # since the last concretization, which would otherwise be dropped from the comparison silently
-    concretized = {ev.UserSpecId(x.group, x.root) for x in env.concretized_roots}
-    pending = sorted(str(x.spec) for x in env._all_user_specs_with_group() - concretized)
+    # Also catches specs added since the last concretization
+    pending = sorted(str(x.spec) for x in env._all_user_specs_with_group().difference(concretized))
     if pending:
         raise ev.SpackEnvironmentError(
             f"environment '{label}' is not concretized. Run `spack concretize` first",
             "input specs not concretized:\n" + "\n".join(f"  {spec}" for spec in pending),
         )
 
-    # Nodes without a package hash cannot be told apart when nothing in their configuration
-    # differs, which is most of what this module reports. Rather than answer with a shrug on
-    # every node, refuse the comparison.
+    # Without package hashes, nodes with equal configuration cannot be told apart
     if any(not spack.spec_diff.recorded_package_hash(node) for node in env.all_specs_generator()):
         raise ev.SpackEnvironmentError(
             f"environment '{label}' was concretized by a version of Spack that did not record "
@@ -150,11 +153,10 @@ def diff_environments(
             comparable
         spack.spec_diff.SpecDiffError: if two concrete DAGs cannot be compared
     """
-    _assert_comparable(env_a, label_a)
-    _assert_comparable(env_b, label_b)
-
     a_map = _concretized_user_specs(env_a)
     b_map = _concretized_user_specs(env_b)
+    _assert_comparable(env_a, a_map, label_a)
+    _assert_comparable(env_b, b_map, label_b)
 
     inputs = input_spec_diff(list(a_map), list(b_map))
 

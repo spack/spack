@@ -16,9 +16,6 @@ import spack.error
 import spack.util.spack_json as sjson
 from spack.spec import Spec
 
-#: Architecture sub-parts compared independently so a diff can point at the exact part.
-_ARCH_PARTS = ("platform", "os", "target")
-
 
 class SpecDiffError(spack.error.SpackError):
     """Raised when two specs cannot be compared."""
@@ -77,7 +74,7 @@ ComparisonCache = Dict[Tuple[str, str], List[AttributeDiff]]
 
 def recorded_package_hash(node: Spec) -> Optional[str]:
     """Returns the package hash of a concrete node, or None if it does not have one."""
-    return getattr(node, "_package_hash", None)
+    return node._package_hash
 
 
 def _serialize(value) -> str:
@@ -106,26 +103,12 @@ def _direct_children(node: Spec) -> Dict[str, Spec]:
     return children
 
 
-class EdgeSignature(NamedTuple):
-    """Aggregated attributes of the direct edges from a node to one dependency name."""
-
-    depflag: dt.DepFlag
-    virtuals: Tuple[str, ...]
-
-    def __str__(self) -> str:
-        """Renders as spec edge attributes, so it can be used inside a ``%[...]name`` literal."""
-        parts = ["deptypes=" + ",".join(dt.flag_to_tuple(self.depflag))]
-        if self.virtuals:
-            parts.append("virtuals=" + ",".join(self.virtuals))
-        return " ".join(parts)
-
-
-def _edge_signatures(node: Spec) -> Dict[str, EdgeSignature]:
-    """Map each direct dependency name to its aggregated edge attributes.
+def _edge_signatures(node: Spec) -> Dict[str, str]:
+    """Map each direct dependency name to its aggregated edge attributes, in spec syntax.
 
     Only the edge is captured, not the child's contents, so a dependency being added, removed,
     or re-typed shows up here while a mere change deeper inside a dependency does not (that is
-    found by descending).
+    found by descending). The result can be used inside a ``%[...]name`` literal.
     """
     aggregated: Dict[str, Tuple[dt.DepFlag, Set[str]]] = {}
     for edge in node.edges_to_dependencies():
@@ -133,10 +116,13 @@ def _edge_signatures(node: Spec) -> Dict[str, EdgeSignature]:
         depflag, virtuals = aggregated.get(name, (0, set()))
         aggregated[name] = (depflag | edge.depflag, virtuals | set(edge.virtuals))
 
-    return {
-        name: EdgeSignature(depflag, tuple(sorted(virtuals)))
-        for name, (depflag, virtuals) in aggregated.items()
-    }
+    signatures = {}
+    for name, (depflag, virtuals) in aggregated.items():
+        signature = "deptypes=" + ",".join(dt.flag_to_tuple(depflag))
+        if virtuals:
+            signature += " virtuals=" + ",".join(sorted(virtuals))
+        signatures[name] = signature
+    return signatures
 
 
 def _text(value) -> str:
@@ -173,7 +159,7 @@ def _mapping_difference(
 
 def _architecture(node: Spec) -> Dict[str, Any]:
     """Architecture as its parts, so a diff can point at the one that changed."""
-    return {part: getattr(node.architecture, part) for part in _ARCH_PARTS}
+    return {part: getattr(node.architecture, part) for part in ("platform", "os", "target")}
 
 
 def _node_local_difference(node_a: Spec, node_b: Spec) -> List[AttributeDiff]:
@@ -217,8 +203,7 @@ def _node_local_difference(node_a: Spec, node_b: Spec) -> List[AttributeDiff]:
 
 def _serialized_difference(node_a: Spec, node_b: Spec) -> List[AttributeDiff]:
     """Checks OTHER differences between two nodes."""
-    # Any state that lands in the hash without a comparison of its own surfaces here instead of
-    # leaving the caller with two different hashes and nothing to say about them.
+    # Catch-all for hashed node state not compared by _node_local_difference
     dropped = {"dependencies", "package_hash", "name"}
     state_a = {k: v for k, v in node_a.to_node_dict().items() if k not in dropped}
     state_b = {k: v for k, v in node_b.to_node_dict().items() if k not in dropped}
@@ -272,8 +257,7 @@ def diff_concrete_dags(
             continue
         visited.add(key)
 
-        # Identical subtree: the dag hash covers build/link/run/test deps and the package
-        # hash, so equal hashes guarantee identical subgraphs. Nothing to report.
+        # Equal dag hashes mean identical subgraphs
         if key[0] == key[1]:
             continue
 
@@ -286,9 +270,7 @@ def diff_concrete_dags(
             if prune and any(x.category in _PRUNING_SUBDAGS for x in attributes):
                 continue
 
-        # When pruning we are ensured that the two nodes have the same list of dependencies,
-        # because any difference in that sense would be caught in the parent. When not pruning
-        # using the intersection of nodes is what makes sense to compare.
+        # With pruning both nodes have the same dependencies; without, common names are paired
         a_children = _direct_children(node_a)
         b_children = _direct_children(node_b)
         for name in sorted(set(a_children) & set(b_children)):

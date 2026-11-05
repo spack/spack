@@ -1081,12 +1081,6 @@ def env_depfile(args):
         sys.stdout.write(makefile)
 
 
-#: Short identifiers for the two environments being compared, used across the whole diff output.
-#: They are directional, unlike the comparison itself: the second environment is taken to be the
-#: later state of the first, which is the assumption `_attribute_style` judges a change against.
-_ENV_BEFORE = "before"
-_ENV_AFTER = "after"
-
 #: Above this many input specs reaching the same divergent node, report a count instead of a list
 _MAX_LISTED_INPUTS = 3
 
@@ -1095,12 +1089,6 @@ _BAND_INDENT = 2
 
 #: Width assumed for section headers when the output is not going to a terminal
 _DEFAULT_WIDTH = 80
-
-#: Shortest rule drawn after a section header, when its content is narrower than its label
-_MIN_RULE = 6
-
-#: Columns `tty.band` spends on its own decoration, i.e. the leading "-- " and the trailing space
-_BAND_DECORATION = 4
 
 #: Categories with no spec syntax to be rendered in, reported on a line of their own instead
 _ANNOTATED_CATEGORIES = (spack.spec_diff.DiffCategory.EXTERNAL, spack.spec_diff.DiffCategory.OTHER)
@@ -1143,10 +1131,7 @@ def env_diff_setup_parser(subparser):
 
 
 def _is_lockfile(path: str) -> bool:
-    """Whether a file is a Spack lockfile, decided by its content rather than by its name.
-
-    Only used to word an error, so the cost of reading the file again does not matter here.
-    """
+    """Whether a file is a Spack lockfile, decided by its content rather than by its name."""
     try:
         with open(path, "r", encoding="utf-8") as stream:
             data = sjson.load(stream)
@@ -1162,8 +1147,8 @@ def _open_environment_to_diff(
     """Resolve one command-line argument to an environment, and to the identity to report for it.
 
     A name or an environment directory is opened where it is. A lockfile is materialized as a
-    throwaway environment, which lives until the stack is closed, so that comparing two lockfiles
-    does not require creating an environment for each of them first.
+    throwaway environment, which is deleted when the stack is closed, so that comparing two
+    lockfiles does not require creating an environment for each of them first.
 
     Raises:
         spack.environment.environment.SpackEnvironmentError: if the argument is a file that is
@@ -1172,8 +1157,7 @@ def _open_environment_to_diff(
     path = spack.config.substitute_path_variables(argument)
     if os.path.isfile(path):
         root = stack.enter_context(tempfile.TemporaryDirectory(prefix="spack-env-diff-"))
-        # A lockfile is told from a manifest by suffix, so only one that is not named like a
-        # lockfile has to be staged under a canonical name; create_in_dir copies it either way
+        # create_in_dir tells a lockfile from a manifest by suffix
         init_file = path
         if not path.endswith((".lock", ".json")):
             init_file = os.path.join(root, ev.lockfile_name)
@@ -1181,8 +1165,7 @@ def _open_environment_to_diff(
         try:
             env = ev.create_in_dir(os.path.join(root, "env"), init_file=init_file)
         except ev.SpackEnvironmentError as e:
-            # Checking what the file is only once materializing it failed keeps the success
-            # path from parsing a lockfile that is about to be parsed again anyway
+            # Parse the file only on failure, to word the error
             if _is_lockfile(path):
                 raise
             hint = f"pass an environment name, a directory, or a '{ev.lockfile_name}' file"
@@ -1190,8 +1173,7 @@ def _open_environment_to_diff(
                 directory = os.path.dirname(argument) or "."
                 hint = f"to compare the environment it describes, pass '{directory}'"
             raise ev.SpackEnvironmentError(f"'{argument}' is not a Spack lockfile", hint) from e
-        # The temporary directory is an implementation detail, so the lockfile is what the
-        # comparison reports as this side's identity. It has no name of its own.
+        # Report the lockfile, not the temporary directory, as this side's identity
         return env, {"name": None, "path": os.path.abspath(path)}
 
     env = ev.environment_from_name_or_dir(argument)
@@ -1208,15 +1190,7 @@ def env_diff(args):
         )
 
         if args.dump_json:
-            # The environment identities are the command's, added on top of the core's
-            # serialization: the core knows what was compared, not what the user called it. They
-            # go in a block of their own, so that no identity key can collide with a key of the
-            # comparison. What was typed on the command line is recorded resolved, since a
-            # consumer needs the environment rather than the string that named it.
-            #
-            # The keys stay positional, unlike the labels of the pretty output: the comparison is
-            # symmetric, and only the way it is rendered assumes a direction, so a consumer is
-            # left free to read the two sides in whichever order it means to.
+            # Keys stay positional: only the pretty output assumes a direction
             identities = {"a": identity_before, "b": identity_after}
             print(sjson.dumps({**result.as_dict(), "environments": identities}))
             return
@@ -1227,12 +1201,11 @@ def env_diff(args):
 def _variant_default(node: spack.spec.Spec, key: str) -> Optional[spack.variant.VariantValue]:
     """Returns the default value of a variant for a node, or None if it cannot be determined.
 
-    An environment can have been concretized against a package repository that no longer knows
+    An environment can have been concretized against a package repository that no longer contains
     this package, or no longer defines this variant, so the lookup is allowed to come up empty.
     """
     try:
-        # get_variant already picks the highest precedence definition whose `when` the node
-        # satisfies, and make_default turns the raw default into a value of the right type.
+        # get_variant picks the definition whose `when` the node satisfies
         return node.package.get_variant(key).make_default()
     except (spack.error.SpackError, ValueError):
         return None
@@ -1244,15 +1217,9 @@ def _attribute_style(
     """Returns how prominently one difference of a divergent node should be rendered.
 
     A difference that is what one would expect from a re-concretization is rendered normally, and
-    only a suspicious one is highlighted. Expectedness is a property of the change rather than of
-    either side, so both rendered specs use the style returned here.
-
-    This is the one place where the two environments are not interchangeable: the second is taken
-    to be the later state of the first, which is what makes a version that does not go up worth
-    pointing at. The comparison itself, and its serialization, stay symmetric.
-
-    Only versions and variants have a notion of an expected direction. Anything else has no
-    default to be judged against, and stays highlighted rather than blending in unclassified.
+    a suspicious one is highlighted, taking the second environment to be the later state of the
+    first. Only versions and variants have an expected direction, so any other difference is
+    highlighted.
     """
     if attribute.category is spack.spec_diff.DiffCategory.VERSION:
         try:
@@ -1262,16 +1229,14 @@ def _attribute_style(
         return spack.enums.PartStyle.NORMAL if newer else spack.enums.PartStyle.HIGHLIGHT
 
     if attribute.category is spack.spec_diff.DiffCategory.VARIANT:
-        # What matters is the value the diff lands on. A variant dropped on the second side is
-        # judged on the value it had on the first one, which is the only value there is.
+        # Judge the value on the second side, or on the first if the variant was dropped
         node = divergence.node_b
         if attribute.key not in node.variants:
             node = divergence.node_a
-        value = node.variants.get(attribute.key)
-        if value is not None:
-            default = _variant_default(node, attribute.key)
-            if default is not None and set(value.values) == set(default.values):
-                return spack.enums.PartStyle.NORMAL
+        value = node.variants[attribute.key]
+        default = _variant_default(node, attribute.key)
+        if default is not None and set(value.values) == set(default.values):
+            return spack.enums.PartStyle.NORMAL
         return spack.enums.PartStyle.HIGHLIGHT
 
     return spack.enums.PartStyle.HIGHLIGHT
@@ -1290,39 +1255,32 @@ def _node_styles(divergence: spack.spec_diff.NodeDivergence) -> _StyleMap:
 
 
 def _format_divergent_node(
-    divergence: spack.spec_diff.NodeDivergence, *, first: bool, styles: Optional[_StyleMap] = None
+    divergence: spack.spec_diff.NodeDivergence, *, first: bool, styles: _StyleMap
 ) -> str:
     """Render one side of a divergent node as an abstract spec holding only the differences.
 
     Every part that is equal on both sides is hidden, so the result is a valid abstract spec
-    naming exactly what changed on that node. Of what is left, an expected change (a newer
-    version, a variant sitting at its default) keeps the color it has in any spec, and only a
-    suspicious one (a version regression, a non-default variant value) is highlighted.
+    naming exactly what changed on that node.
 
     Args:
         divergence: the node where the two DAGs diverge
         first: render the node from the first environment, otherwise the one from the second
-        styles: styles from :func:`_node_styles`, computed here when the caller has none to share
+        styles: styles from :func:`_node_styles`, shared by the two sides of the node
     """
-    if styles is None:
-        styles = _node_styles(divergence)
     categories = {attribute.category for attribute in divergence.attributes}
     node = divergence.node_a if first else divergence.node_b
 
     def style(category: spack.spec_diff.DiffCategory, key: str = "") -> spack.enums.PartStyle:
         return styles.get((category, key), spack.enums.PartStyle.HIDDEN)
 
-    # Version, variants and architecture parts are hidden through the style callbacks below.
-    # Flags and namespace have no callback, so they are dropped from the format string instead;
-    # this means all flags of the node are shown, not only the ones that differ.
+    # Flags and namespace have no style callback, so all flags show when any differs
     format_string = "{name}{@version}"
     if spack.spec_diff.DiffCategory.FLAGS in categories:
         format_string += "{compiler_flags}"
     format_string += "{variants}"
     if spack.spec_diff.DiffCategory.NAMESPACE in categories:
         format_string += "{ namespace=namespace}"
-    # The hash identifies the node and keeps the line usable with e.g. `spack find`. It must be
-    # rendered before the dependency sigils appended below, or it would bind to a dependency.
+    # The hash goes before the dependency sigils appended below, or it would bind to one
     format_string += (
         "{ platform=architecture.platform}{ os=architecture.os}{ target=architecture.target}"
         "{/hash:7}"
@@ -1338,8 +1296,7 @@ def _format_divergent_node(
         ),
     )
 
-    # Dependencies are edges, so they are not part of the node format string and are appended
-    # here with the direct dependency sigil, which is what the traversal compares.
+    # Dependencies are edges, not part of the node format string
     edges = []
     for attribute in divergence.attributes:
         if attribute.category is not spack.spec_diff.DiffCategory.DEPENDENCY:
@@ -1348,8 +1305,7 @@ def _format_divergent_node(
         if not own:
             continue  # the edge only exists on the other side
         other = attribute.value_b if first else attribute.value_a
-        # Both sides depend on this name, but the edge differs: show the edge attributes.
-        # Otherwise the dependency itself is what is unique to this side.
+        # On both sides only the edge differs, so show its attributes
         edges.append(f"%[{own}]{attribute.key}" if other else f"%{attribute.key}")
 
     if edges:
@@ -1379,7 +1335,7 @@ def _is_recipe_change(node: spack.spec_diff.NodeDivergence) -> bool:
 def _annotations(node: spack.spec_diff.NodeDivergence) -> List[str]:
     """Render the differences that a spec literal has no room for, one per line.
 
-    Where an external lives, and the node state the catch-all reports, have no spec syntax to be
+    The prefix of an external, and the node state the catch-all reports, have no spec syntax to be
     written in. Putting them on their own line keeps the two rendered specs above parseable.
     """
     lines = []
@@ -1413,7 +1369,6 @@ def _group_divergences(
     a package hash is taken over the canonical source *filtered for its own spec*, so a single
     edit to a package file yields a different pair of package hashes for every differently
     configured instance of it.
-
     """
     config: Dict[str, Dict[Tuple[str, str], _Entry]] = {}  # group -> (hash of a, hash of b)
     recipes: Dict[Tuple[str, str], _Entry] = {}  # (namespace, name)
@@ -1428,8 +1383,7 @@ def _group_divergences(
                 node_key = (node.node_a.dag_hash(), node.node_b.dag_hash())
                 config.setdefault(root.group, {}).setdefault(node_key, (node, []))[1].append(root)
 
-    # The default group comes first, as it does when the environment is concretized, and the
-    # entries of a group follow their nodes.
+    # Default group first, as in concretization; entries ordered by node
     default = spack.environment.environment.DEFAULT_USER_SPEC_GROUP
     by_group = {
         group: [
@@ -1454,11 +1408,7 @@ def _reached_from(roots: List[ev.UserSpecId], *, with_group: bool = True) -> str
 
 
 class EnvironmentDiffRenderer:
-    """Renders an ``EnvironmentDiff`` to the terminal, for the two named environments.
-
-    The comparison itself carries no identity for the two environments (that is the caller's),
-    so a renderer bundles the diff with the names needed to present it.
-    """
+    """Renders an ``EnvironmentDiff`` to the terminal, for the two named environments."""
 
     def __init__(
         self, result: env_diff_core.EnvironmentDiff, name_before: str, name_after: str
@@ -1466,35 +1416,25 @@ class EnvironmentDiffRenderer:
         self.result = result
         self.name_before = name_before
         self.name_after = name_after
-        # Environment names can be long paths, so they are spelled out once at the top and the
-        # short identifiers used from there on. Their colors match the two sides throughout.
-        self.label_before = colorize(f"@R{{{_ENV_BEFORE}}}")
-        self.label_after = colorize(f"@G{{{_ENV_AFTER}}}")
-        # The two sides are always printed one above the other, so what follows the identifier is
-        # padded to a common width to keep them aligned. The labels themselves stay unpadded,
-        # since a section header ends with one.
-        width = max(len(_ENV_BEFORE), len(_ENV_AFTER))
-        self.tag_before = f"{self.label_before}:{' ' * (width - len(_ENV_BEFORE) + 1)}"
-        self.tag_after = f"{self.label_after}:{' ' * (width - len(_ENV_AFTER) + 1)}"
+        # Environment names can be long paths, so they are printed once and labels used after
+        self.label_before = colorize("@R{before}")
+        self.label_after = colorize("@G{after}")
+        # Tags are padded so the two sides align; labels stay unpadded for section headers
+        self.tag_before = f"{self.label_before}: "
+        self.tag_after = f"{self.label_after}:  "
         # Zero when the output is not a terminal, which keeps the blocks in a single column
         self.columns = terminal_columns()
-        #: Set by _section, so that render can tell whether it found anything to report
-        self.printed = False
 
     def _section(self, label: str, blocks: List[List[str]]) -> None:
         """Print a section header followed by its blocks.
 
-        Like the criteria of `spack spec --show=opt`, the header spans its own content rather than
-        the console, so that a short section does not get a rule running off to the right.
+        The header spans its own content rather than the console, so that a short section does not
+        get a rule running off to the right.
         """
-        self.printed = True
-        text = colorize(label)
         lines = render_blocks(blocks, self.columns, indent=_BAND_INDENT)
         content = max((clen(line) for line in lines), default=0)
-        rule = clen(text) + _BAND_INDENT + _BAND_DECORATION + _MIN_RULE
-        # rule wins over a narrow terminal, so the header is never shorter than its own label
-        width = max(rule, min(content, self.columns or _DEFAULT_WIDTH))
-        print(tty.band(text, width, indent=_BAND_INDENT))
+        width = min(content, self.columns or _DEFAULT_WIDTH)
+        print(tty.band(colorize(label), width, indent=_BAND_INDENT))
         for line in lines:
             print(line)
         print()
@@ -1516,9 +1456,15 @@ class EnvironmentDiffRenderer:
         print(f"{' ' * _BAND_INDENT}{self.tag_after}{self.name_after}")
         print()
 
+        result = self.result
+        if result.equivalent:
+            print(f"{' ' * _BAND_INDENT}the two environments are equivalent")
+            print()
+            return
+
         sides = (
-            (self.label_before, self.result.inputs.only_in_a),
-            (self.label_after, self.result.inputs.only_in_b),
+            (self.label_before, result.inputs.only_in_a),
+            (self.label_after, result.inputs.only_in_b),
         )
         for label, only in sides:
             if only:
@@ -1527,10 +1473,9 @@ class EnvironmentDiffRenderer:
                     [[_format_root(root)] for root in env_diff_core.sorted_roots(only)],
                 )
 
-        config_by_group, recipes = _group_divergences(self.result.divergences)
+        config_by_group, recipes = _group_divergences(result.divergences)
 
-        # A section header already qualifies every entry under it, so the group is not repeated on
-        # each input spec. With nothing but the default group there is nothing to qualify.
+        # Only name groups when there is more than the default one
         default = spack.environment.environment.DEFAULT_USER_SPEC_GROUP
         show_groups = list(config_by_group) != [default]
 
@@ -1540,24 +1485,18 @@ class EnvironmentDiffRenderer:
                 [self._node_block(node, roots) for node, roots in entries],
             )
 
-        # Recipe changes come last: they are the least actionable finding, and unlike a
-        # configuration difference there is no pair of specs to show, since the two configurations
-        # are identical.
+        # Recipe changes come last, as the least actionable finding
         if recipes:
             self._section(
                 "@*{Packages whose recipe differs}",
                 [[f"{node.node_a.name}  ({_reached_from(roots)})"] for node, roots in recipes],
             )
 
-        if self.result.unresolved:
+        if result.unresolved:
             self._section(
                 "@*{Common input specs with no difference to point at}",
-                [[_format_root(r)] for r in env_diff_core.sorted_roots(self.result.unresolved)],
+                [[_format_root(r)] for r in env_diff_core.sorted_roots(result.unresolved)],
             )
-
-        if not self.printed:
-            print(f"{' ' * _BAND_INDENT}the two environments are equivalent")
-            print()
 
 
 #: Dictionary mapping subcommand names and aliases to functions

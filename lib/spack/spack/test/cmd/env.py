@@ -18,7 +18,6 @@ import pytest
 import spack.cmd.env
 import spack.concretize
 import spack.config
-import spack.enums
 import spack.environment as ev
 import spack.error
 import spack.main
@@ -36,6 +35,7 @@ import spack.util.link_tree
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 import spack.util.tty.color as clr
+import spack.variant
 from spack import spec_diff
 from spack.active_environment import active_environment
 from spack.cmd.env import _env_create
@@ -5348,7 +5348,7 @@ def test_env_diff_distinguishes_groups(concretized_env):
     assert "2.3" not in output
 
 
-def test_group_divergences_merges_recipe_changes_per_package():
+def test_env_diff_merges_recipe_changes_per_package(capsys):
     """Recipe changes are merged per package, since a package hash is per instance.
 
     Two differently configured instances of the same package yield different package hashes for
@@ -5356,27 +5356,21 @@ def test_group_divergences_merges_recipe_changes_per_package():
     """
     first = spack.concretize.concretize_one("mpich@3.0.4")
     second = spack.concretize.concretize_one("mpich@1.0")
-    mpileaks = ev.UserSpecId("default", spack.spec.Spec("mpileaks"))
-    callpath = ev.UserSpecId("default", spack.spec.Spec("callpath"))
+    recipe = spec_diff.DiffCategory.RECIPE
 
-    def recipe_divergence(node, value_a, value_b):
-        attribute = spec_diff.AttributeDiff(spec_diff.DiffCategory.RECIPE, "", value_a, value_b)
-        return spec_diff.NodeDivergence(node, node, [attribute])
-
-    config_by_group, recipes = spack.cmd.env._group_divergences(
-        [
-            env_diff_core.UserSpecDivergence(mpileaks, [recipe_divergence(first, "aaa", "bbb")]),
-            env_diff_core.UserSpecDivergence(callpath, [recipe_divergence(second, "ccc", "ddd")]),
-        ]
+    output = _render(
+        capsys,
+        _reached_from("mpileaks", _divergence(first, first, recipe, value_a="aaa", value_b="bbb")),
+        _reached_from(
+            "callpath", _divergence(second, second, recipe, value_a="ccc", value_b="ddd")
+        ),
     )
 
-    # Recipe changes span groups, so they are kept apart from the per-group configuration ones
-    assert config_by_group == {}
-    assert len(recipes) == 1
-    node, roots = recipes[0]
-    assert node.node_a.name == "mpich"
     # Both instances are merged into one entry, and their input specs ordered canonically
-    assert roots == [callpath, mpileaks]
+    assert output.count("mpich  (") == 1
+    assert "mpich  (from callpath, mpileaks)" in output
+    # Recipe changes span groups, so they are kept apart from the per-group configuration ones
+    assert "Node differences" not in output
 
 
 def test_env_diff_sections_differences_by_group(concretized_env):
@@ -5513,8 +5507,31 @@ def test_env_diff_reports_a_differing_external(concretized_env):
     assert "/opt/local" in output
 
 
-def _divergence(node, attributes):
-    return spec_diff.NodeDivergence(node, node, attributes)
+def _divergence(node_a, node_b, category, key="", value_a="", value_b=""):
+    """A divergence whose only reported difference is one attribute of the two nodes."""
+    attribute = spec_diff.AttributeDiff(category, key, value_a, value_b)
+    return spec_diff.NodeDivergence(node_a, node_b, [attribute])
+
+
+def _reached_from(root: str, *nodes: spec_diff.NodeDivergence) -> env_diff_core.UserSpecDivergence:
+    """Divergent nodes reached from one input spec of the default group."""
+    return env_diff_core.UserSpecDivergence(
+        ev.UserSpecId("default", spack.spec.Spec(root)), list(nodes)
+    )
+
+
+def _render(capsys, *divergences: env_diff_core.UserSpecDivergence, color: bool = False) -> str:
+    """Render divergences of common input specs the way `spack env diff` does."""
+    result = env_diff_core.EnvironmentDiff(
+        inputs=env_diff_core.InputDiff(
+            only_in_a=[], only_in_b=[], common=[x.root for x in divergences]
+        ),
+        divergences=list(divergences),
+        unresolved=[],
+    )
+    with clr.color_when(color):
+        spack.cmd.env.EnvironmentDiffRenderer(result, "e1", "e2").render()
+    return capsys.readouterr().out
 
 
 def test_print_env_diff_renders_recipe_changes(capsys):
@@ -5524,17 +5541,12 @@ def test_print_env_diff_renders_recipe_changes(capsys):
     differing package hash is a lockfile written by another Spack, which the command refuses.
     """
     mpich = spack.concretize.concretize_one("mpich@3.0.4")
-    root = ev.UserSpecId("default", spack.spec.Spec("mpileaks"))
-    attribute = spec_diff.AttributeDiff(spec_diff.DiffCategory.RECIPE, "", "aaa", "bbb")
-    result = env_diff_core.EnvironmentDiff(
-        inputs=env_diff_core.InputDiff(only_in_a=[], only_in_b=[], common=[root]),
-        divergences=[env_diff_core.UserSpecDivergence(root, [_divergence(mpich, [attribute])])],
-        unresolved=[],
+    divergence = _divergence(
+        mpich, mpich, spec_diff.DiffCategory.RECIPE, value_a="aaa", value_b="bbb"
     )
 
-    spack.cmd.env.EnvironmentDiffRenderer(result, "e1", "e2").render()
+    output = _render(capsys, _reached_from("mpileaks", divergence))
 
-    output = capsys.readouterr().out
     assert "Packages whose recipe differs" in output
     assert "mpich  (from mpileaks)" in output
     # the two configurations are identical, so there is no pair of specs worth showing
@@ -5558,37 +5570,36 @@ def test_print_env_diff_renders_an_unresolved_input(capsys):
     assert "equivalent" not in output
 
 
-def test_format_divergent_node_highlights_an_architecture_part(mutable_mock_repo):
-    """Architecture parts are rendered through the style callbacks, one part at a time."""
+def test_env_diff_renders_only_the_differing_architecture_part(capsys, mutable_mock_repo):
+    """Architecture parts are rendered one part at a time."""
     node = spack.concretize.concretize_one("mpich@3.0.4")
-    attribute = spec_diff.AttributeDiff(
-        spec_diff.DiffCategory.ARCHITECTURE, "os", "debian6", "ubuntu99"
+    divergence = _divergence(
+        node, node, spec_diff.DiffCategory.ARCHITECTURE, "os", "debian6", "ubuntu99"
     )
 
-    rendered = spack.cmd.env._format_divergent_node(_divergence(node, [attribute]), first=True)
+    output = _render(capsys, _reached_from("mpileaks", divergence))
 
     # only the differing part is shown, and the version, which does not differ, is hidden
-    assert f"os={node.architecture.os}" in rendered
-    assert "@3.0.4" not in rendered
+    assert f"os={node.architecture.os}" in output
+    assert f"target={node.architecture.target}" not in output
+    assert "@3.0.4" not in output
+
+
+def _concretized_directory_env(directory: pathlib.Path, content: str) -> ev.Environment:
+    """Create an independent environment in a directory from a manifest, and concretize it."""
+    directory.mkdir()
+    (directory / ev.manifest_name).write_text(content)
+    environment = ev.Environment(str(directory))
+    with environment:
+        environment.concretize()
+        environment.write()
+    return environment
 
 
 def test_env_diff_accepts_environment_directories(tmp_path):
     """Both arguments are a name or a directory, and directories were only ever the former."""
-    for name, version in (("d1", "2.3"), ("d2", "2.2")):
-        directory = tmp_path / name
-        directory.mkdir()
-        (directory / "spack.yaml").write_text(
-            "spack:\n"
-            "  specs:\n"
-            "  - mpileaks\n"
-            "  packages:\n"
-            "    mpileaks:\n"
-            f"      require: ['@{version}']\n"
-        )
-        environment = ev.Environment(str(directory))
-        with environment:
-            environment.concretize()
-            environment.write()
+    _concretized_directory_env(tmp_path / "d1", PINNED.format("2.3"))
+    _concretized_directory_env(tmp_path / "d2", PINNED.format("2.2"))
 
     output = env("diff", str(tmp_path / "d1"), str(tmp_path / "d2"))
 
@@ -5625,160 +5636,107 @@ def test_env_diff_orders_input_specs_the_same_way_everywhere(concretized_env):
     assert from_text == from_json
 
 
-def _version_divergence(node_a, node_b):
-    """A divergence whose only reported difference is the version of the two nodes."""
-    attribute = spec_diff.AttributeDiff(
-        spec_diff.DiffCategory.VERSION, "", str(node_a.version), str(node_b.version)
-    )
-    return spec_diff.NodeDivergence(node_a, node_b, [attribute])
+@pytest.mark.parametrize(
+    "version_a,version_b,color",
+    [
+        # A newer version is what one expects of a re-concretization, so it is not highlighted
+        ("3.0.3", "3.0.4", spack.spec.VERSION_COLOR),
+        # Going back to an older version is what the output exists to point at
+        ("3.0.4", "3.0.3", spack.spec.HIGHLIGHT_COLOR),
+    ],
+)
+def test_env_diff_highlights_only_a_version_regression(
+    version_a, version_b, color, capsys, mutable_mock_repo
+):
+    """Tests that the style of a version change depends on its direction, on both sides."""
+    node_a = spack.concretize.concretize_one(f"mpich@{version_a}")
+    node_b = spack.concretize.concretize_one(f"mpich@{version_b}")
+    divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VERSION)
 
+    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
 
-def _variant_divergence(node_a, node_b, key):
-    """A divergence whose only reported difference is one variant of the two nodes."""
-    attribute = spec_diff.AttributeDiff(spec_diff.DiffCategory.VARIANT, key, "", "")
-    return spec_diff.NodeDivergence(node_a, node_b, [attribute])
-
-
-def test_format_divergent_node_renders_a_version_bump_normally(mutable_mock_repo):
-    """A newer version is what one expects of a re-concretization, so it is not highlighted."""
-    older = spack.concretize.concretize_one("mpich@3.0.3")
-    newer = spack.concretize.concretize_one("mpich@3.0.4")
-    divergence = _version_divergence(older, newer)
-
-    with clr.color_when(True):
-        rendered_a = spack.cmd.env._format_divergent_node(divergence, first=True)
-        rendered_b = spack.cmd.env._format_divergent_node(divergence, first=False)
-
-    # both sides carry the color a version has in any spec, and neither is highlighted
-    assert clr.colorize(f"{spack.spec.VERSION_COLOR}@@3.0.3@.", color=True) in rendered_a
-    assert clr.colorize(f"{spack.spec.VERSION_COLOR}@@3.0.4@.", color=True) in rendered_b
-    assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}@@", color=True) not in rendered_a
-    assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}@@", color=True) not in rendered_b
-
-
-def test_format_divergent_node_highlights_a_version_regression(mutable_mock_repo):
-    """Going back to an older version is what the output exists to point at."""
-    newer = spack.concretize.concretize_one("mpich@3.0.4")
-    older = spack.concretize.concretize_one("mpich@3.0.3")
-    divergence = _version_divergence(newer, older)
-
-    with clr.color_when(True):
-        rendered_a = spack.cmd.env._format_divergent_node(divergence, first=True)
-        rendered_b = spack.cmd.env._format_divergent_node(divergence, first=False)
-
-    # expectedness is a property of the change, so the two sides agree on the style
-    assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}@@3.0.4@.", color=True) in rendered_a
-    assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}@@3.0.3@.", color=True) in rendered_b
+    assert clr.colorize(f"{color}@@{version_a}@.", color=True) in output
+    assert clr.colorize(f"{color}@@{version_b}@.", color=True) in output
 
 
 @pytest.mark.parametrize(
-    "lands_on,expected",
+    "starts_from,lands_on,color",
     [
         # A variant that ends up at the value the package declares is an expected change
-        ("~debug", spack.enums.PartStyle.NORMAL),
+        ("+debug", "~debug", spack.spec.VARIANT_COLOR),
         # A variant that ends up on a non-default value is worth pointing at
-        ("+debug", spack.enums.PartStyle.HIGHLIGHT),
+        ("~debug", "+debug", spack.spec.HIGHLIGHT_COLOR),
     ],
 )
-def test_attribute_style_of_a_variant_by_the_value_it_lands_on(
-    lands_on, expected, mutable_mock_repo
+def test_env_diff_styles_a_variant_by_the_value_it_lands_on(
+    starts_from, lands_on, color, capsys, mutable_mock_repo
 ):
     """The style of a variant change is judged on the value the second side lands on."""
-    starts_from = "+debug" if lands_on == "~debug" else "~debug"
     node_a = spack.concretize.concretize_one(f"mpich@3.0.4{starts_from}")
     node_b = spack.concretize.concretize_one(f"mpich@3.0.4{lands_on}")
-    divergence = _variant_divergence(node_a, node_b, "debug")
+    divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VARIANT, "debug")
 
-    style = spack.cmd.env._attribute_style(divergence, divergence.attributes[0])
+    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
 
-    assert style is expected
+    assert clr.colorize(f"{color}{starts_from}@.", color=True) in output
+    assert clr.colorize(f"{color}{lands_on}@.", color=True) in output
 
 
 @pytest.mark.parametrize(
-    "spec_a,expected",
-    [
-        ("mpich@3.0.4~debug", spack.enums.PartStyle.NORMAL),
-        ("mpich@3.0.4+debug", spack.enums.PartStyle.HIGHLIGHT),
-    ],
+    "variant,color", [("~debug", spack.spec.VARIANT_COLOR), ("+debug", spack.spec.HIGHLIGHT_COLOR)]
 )
-def test_attribute_style_of_a_variant_absent_on_the_second_side(
-    spec_a, expected, mutable_mock_repo
+def test_env_diff_styles_a_variant_absent_on_the_second_side(
+    variant, color, capsys, mutable_mock_repo
 ):
     """A variant only the first side has is judged on the only value the diff has to show."""
-    node_a = spack.concretize.concretize_one(spec_a)
+    node_a = spack.concretize.concretize_one(f"mpich@3.0.4{variant}")
     node_b = spack.concretize.concretize_one("libelf")
     assert "debug" not in node_b.variants
-    divergence = _variant_divergence(node_a, node_b, "debug")
+    divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VARIANT, "debug")
 
-    style = spack.cmd.env._attribute_style(divergence, divergence.attributes[0])
+    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
 
-    assert style is expected
-
-
-def test_attribute_style_highlights_a_variant_with_no_known_default(mutable_mock_repo):
-    """Neither side holds the variant, so there is no value to weigh against a default."""
-    node = spack.concretize.concretize_one("mpich@3.0.4")
-    divergence = _variant_divergence(node, node, "no-such-variant")
-
-    style = spack.cmd.env._attribute_style(divergence, divergence.attributes[0])
-
-    assert style is spack.enums.PartStyle.HIGHLIGHT
+    assert clr.colorize(f"{color}{variant}@.", color=True) in output
 
 
-def test_variant_default_of_an_unknown_variant_is_none(mutable_mock_repo):
-    """A variant the package no longer declares cannot be weighed against a default."""
-    node = spack.concretize.concretize_one("mpich@3.0.4")
+def test_env_diff_highlights_a_variant_the_package_no_longer_declares(capsys, mutable_mock_repo):
+    """A node recorded with a variant its package does not declare has no default to judge by."""
+    node_a = spack.concretize.concretize_one("mpich@3.0.4")
+    node_b = spack.concretize.concretize_one("mpich@3.0.4")
+    node_b.variants.set(spack.variant.BoolValuedVariant("gone", True))
+    divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VARIANT, "gone")
 
-    assert spack.cmd.env._variant_default(node, "no-such-variant") is None
-    assert spack.cmd.env._variant_default(node, "debug") is not None
+    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
+
+    assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}+gone@.", color=True) in output
 
 
-def test_variant_default_of_an_unknown_package_is_none(mutable_mock_repo, monkeypatch):
+def test_env_diff_highlights_a_variant_of_a_package_no_longer_in_the_repository(
+    capsys, mutable_mock_repo, monkeypatch
+):
     """An environment can have been concretized against a repository we no longer have."""
-    node = spack.concretize.concretize_one("mpich@3.0.4")
+    node_a = spack.concretize.concretize_one("mpich@3.0.4+debug")
+    node_b = spack.concretize.concretize_one("mpich@3.0.4~debug")
+    divergence = _divergence(node_a, node_b, spec_diff.DiffCategory.VARIANT, "debug")
 
     def unknown(spec):
         raise spack.repo.UnknownPackageError(spec.name)
 
     monkeypatch.setattr(spack.repo.PATH, "get", unknown)
 
-    assert spack.cmd.env._variant_default(node, "debug") is None
+    output = _render(capsys, _reached_from("mpileaks", divergence), color=True)
 
-
-def test_attribute_style_highlights_categories_without_a_default(mutable_mock_repo):
-    """Only versions and variants have an expected direction; the rest stays highlighted."""
-    node = spack.concretize.concretize_one("mpich@3.0.4")
-    categories = (
-        spec_diff.DiffCategory.ARCHITECTURE,
-        spec_diff.DiffCategory.NAMESPACE,
-        spec_diff.DiffCategory.FLAGS,
-        spec_diff.DiffCategory.DEPENDENCY,
-        spec_diff.DiffCategory.EXTERNAL,
-        spec_diff.DiffCategory.RECIPE,
-        spec_diff.DiffCategory.OTHER,
-    )
-
-    for category in categories:
-        attribute = spec_diff.AttributeDiff(category, "os", "a", "b")
-        divergence = spec_diff.NodeDivergence(node, node, [attribute])
-
-        style = spack.cmd.env._attribute_style(divergence, attribute)
-
-        assert style is spack.enums.PartStyle.HIGHLIGHT, category
+    # ~debug is the default, but with no package to read it from the change stays highlighted
+    assert clr.colorize(f"{spack.spec.HIGHLIGHT_COLOR}~debug@.", color=True) in output
 
 
 def test_env_diff_json_is_versioned_and_names_the_environments(concretized_env, tmp_path):
-    """`spack env diff --json` carries a format version, and the identity of what it compared."""
+    """`spack env diff --json` includes a format version, and the identity of what it compared."""
     concretized_env("test1", PINNED.format("2.3"))
 
     # The second environment is independent, so the two identities are of different kinds
     directory = tmp_path / "independent"
-    directory.mkdir()
-    (directory / "spack.yaml").write_text(PINNED.format("2.2"))
-    independent = ev.Environment(str(directory))
-    with independent:
-        independent.concretize()
-        independent.write()
+    independent = _concretized_directory_env(directory, PINNED.format("2.2"))
 
     result = sjson.load(env("diff", "--json", "test1", str(directory)))
 
@@ -5788,7 +5746,7 @@ def test_env_diff_json_is_versioned_and_names_the_environments(concretized_env, 
     }
 
     # A managed environment is named, an independent one is identified by its directory. Either
-    # way the identities live in their own block, so they cannot collide with the comparison.
+    # way the identities are stored in their own block, so they cannot collide with the comparison.
     assert result["environments"]["a"] == {"name": "test1", "path": ev.read("test1").path}
     assert result["environments"]["b"] == {"name": independent.name, "path": independent.path}
     assert "environments" not in result["_meta"]

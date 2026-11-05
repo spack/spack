@@ -55,7 +55,7 @@ def test_diff_environments_reports_an_input_it_cannot_explain(
         node.clear_caches(keep_package_hash=True)
     concrete["callpath"]._package_hash = "0" * 32
 
-    # Every difference a comparable environment can carry is accounted for by now, so this bucket
+    # Every difference a comparable environment can have is accounted for by now, so this bucket
     # is reached only if that ever stops holding. Blind the comparison rather than leave the
     # promise that nothing is dropped silently untested.
     monkeypatch.setattr(spec_diff, "_compare_nodes", lambda a, b: [])
@@ -69,7 +69,7 @@ def test_diff_environments_reports_an_input_it_cannot_explain(
 def test_environment_diff_as_dict_is_canonical_and_omits_environment_identity(
     mock_packages, config
 ):
-    """Tests serializing and EnvironmentDiff."""
+    """Tests serializing an EnvironmentDiff."""
     a = spack.concretize.concretize_one("mpileaks ^mpich@3.0.4")
     b = spack.concretize.concretize_one("mpileaks ^mpich@1.0")
     nodes = spec_diff.diff_concrete_dags(a, b)
@@ -96,6 +96,11 @@ def test_environment_diff_as_dict_is_canonical_and_omits_environment_identity(
         "divergences",
     }
 
+    assert payload["_meta"] == {
+        "file-type": "spack-environment-diff",
+        "diff-version": diff.DIFF_FORMAT_VERSION,
+    }
+
     # Canonical order, regardless of the order the inputs arrived in
     assert [entry["spec"] for entry in payload["only_in_a"]] == ["libelf", "zlib"]
 
@@ -105,17 +110,3 @@ def test_environment_diff_as_dict_is_canonical_and_omits_environment_identity(
     assert node["hash_a"] == a["mpich"].dag_hash()
     assert node["hash_b"] == b["mpich"].dag_hash()
     assert any(attribute["category"] == "version" for attribute in node["attributes"])
-
-
-def test_environment_diff_as_dict_is_versioned():
-    """Tests that the serialization carries its own format version."""
-    result = diff.EnvironmentDiff(
-        inputs=diff.InputDiff(only_in_a=[], only_in_b=[], common=[]), divergences=[], unresolved=[]
-    )
-
-    payload = result.as_dict()
-
-    assert payload["_meta"] == {
-        "file-type": "spack-environment-diff",
-        "diff-version": diff.DIFF_FORMAT_VERSION,
-    }
