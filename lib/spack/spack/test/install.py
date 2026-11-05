@@ -240,6 +240,54 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo, installer
     assert all(isinstance(x["seconds"], float) for x in times["phases"])
 
 
+@pytest.mark.parametrize("archived_log", [True, False])
+def test_binary_cache_preserves_manifest_and_archived_log(
+    install_mockery, mock_fetch, mutable_config, temporary_mirror, installer_variant, archived_log
+):
+    """Cache installs preserve their manifest and do not invent a missing build log."""
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    spack.installer_dispatch.create_installer(
+        [spec.package], explicit=True, root_policy="source_only"
+    ).install()
+
+    manifest_path = os.path.join(
+        spec.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
+    )
+    build_log = spec.package.install_log_path
+    with open(manifest_path, encoding="utf-8") as f:
+        manifest = sjson.load(f)
+    if archived_log:
+        assert os.path.isfile(build_log)
+        archived_log_bytes = pathlib.Path(build_log).read_bytes()
+    else:
+        manifest.pop(build_log, None)
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            sjson.dump(manifest, f)
+        os.unlink(build_log)
+
+    cache_manifest_bytes = pathlib.Path(manifest_path).read_bytes()
+    mirror = spack.mirrors.mirror.Mirror.from_local_path(temporary_mirror)
+    with binary_distribution.make_uploader(mirror=mirror) as uploader:
+        uploader.push_or_raise([spec], config=mutable_config)
+
+    PackageBase.uninstall_by_spec(spec, force=True)
+    spack.mirrors.utils.add(mirror)
+    spack.installer_dispatch.create_installer(
+        [spec.package],
+        explicit=True,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
+        unsigned=True,
+    ).install()
+
+    assert pathlib.Path(manifest_path).read_bytes() == cache_manifest_bytes
+    assert os.path.isfile(build_log) is archived_log
+    if archived_log:
+        assert pathlib.Path(build_log).read_bytes() == archived_log_bytes
+
+
 @pytest.fixture()
 def install_upstream(tmp_path_factory: pytest.TempPathFactory, gen_mock_layout, install_mockery):
     """Provides a function that installs a specified set of specs to an

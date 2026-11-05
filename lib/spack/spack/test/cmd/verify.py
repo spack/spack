@@ -99,6 +99,27 @@ def test_single_spec_verify_cmd(mock_packages, mock_archive, mock_fetch, install
     assert res[new_file] == ["added"]
 
 
+def test_source_build_log_in_install_manifest(
+    mock_packages, mock_archive, mock_fetch, install_mockery, installer_variant
+):
+    """The archived build log is part of the install manifest for either installer."""
+    install("trivial-install-test-package")
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    build_log = spec.package.install_log_path
+    manifest_file = os.path.join(
+        spec.prefix,
+        spack.store.STORE.layout.metadata_dir,
+        spack.store.STORE.layout.manifest_file_name,
+    )
+
+    assert os.path.isfile(build_log)
+    with open(manifest_file, encoding="utf-8") as f:
+        manifest = sjson.load(f)
+
+    assert build_log in manifest
+    assert not verify("manifest", f"/{spec.dag_hash()}", fail_on_error=False)
+
+
 @pytest.mark.requires_executables("gcc")
 @skip_unless_linux
 def test_libraries(tmp_path: pathlib.Path, install_mockery, mock_fetch):
