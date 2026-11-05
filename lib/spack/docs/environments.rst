@@ -542,6 +542,9 @@ By default, a node is reported where a difference first appears, and the nodes b
 Use ``--no-prune`` to report every node that differs.
 Use ``--json`` for a machine-readable output.
 
+The exit status is 0 whenever the comparison succeeds, so the differences can be shown, for instance in a CI log, without failing the job.
+With ``--exit-code``, the exit status is 4 if the two environments differ and 0 if they do not.
+
 To compare two specs instead of two environments, use ``spack diff --specs`` (see :ref:`cmd-spack-diff`).
 
 

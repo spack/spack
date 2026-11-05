@@ -713,6 +713,7 @@ The output lists each node of the two DAGs whose configuration differs, as a spe
 The second spec is taken to be the later state of the first: in a terminal, a version that goes back and a variant that lands on a non-default value are highlighted.
 By default, a node is reported where a difference first appears, and the nodes below it are not compared.
 Use ``--no-prune`` to report every node that differs.
+With ``--exit-code``, the exit status is 4 if the two specs differ and 0 if they do not.
 
 To print the comparison as JSON, add ``--json``:
 

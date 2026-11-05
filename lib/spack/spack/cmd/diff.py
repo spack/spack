@@ -30,6 +30,9 @@ description = "compare two concrete environments, or two specs"
 section = "query"
 level = "long"
 
+#: Exit status of ``spack diff --exit-code`` when the two inputs differ
+EXIT_DIFFERENT = 4
+
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
@@ -56,6 +59,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "first appears and skipping the subgraph below it",
     )
     subparser.add_argument(
+        "--exit-code",
+        action="store_true",
+        default=False,
+        help=f"exit with status {EXIT_DIFFERENT} if the two inputs differ, and 0 otherwise",
+    )
+    subparser.add_argument(
         "inputs",
         nargs=argparse.REMAINDER,
         metavar="before after",
@@ -64,11 +73,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
-def diff(parser, args):
-    if args.compare_specs:
-        _diff_specs(args)
-    else:
-        _diff_environments(args)
+def diff(parser, args) -> int:
+    equivalent = _diff_specs(args) if args.compare_specs else _diff_environments(args)
+    return EXIT_DIFFERENT if args.exit_code and not equivalent else 0
 
 
 #: Above this many input specs reaching the same divergent node, report a count instead of a list
@@ -139,7 +146,8 @@ def _open_environment_to_diff(
     return env, {"name": env.name, "path": env.path}
 
 
-def _diff_environments(args) -> None:
+def _diff_environments(args) -> bool:
+    """Compare two environments, and return whether they are equivalent."""
     if len(args.inputs) != 2:
         args.subparser.error("you must provide two environments to compare")
     before, after = args.inputs
@@ -156,9 +164,10 @@ def _diff_environments(args) -> None:
             # Keys stay positional: only the pretty output assumes a direction
             identities = {"a": identity_before, "b": identity_after}
             print(sjson.dumps({**result.as_dict(), "environments": identities}))
-            return
+        else:
+            EnvironmentDiffRenderer(result, before, after).render()
 
-        EnvironmentDiffRenderer(result, before, after).render()
+        return result.equivalent
 
 
 def _installed_spec(spec: spack.spec.Spec, env: Optional[ev.Environment]) -> spack.spec.Spec:
@@ -170,7 +179,8 @@ def _installed_spec(spec: spack.spec.Spec, env: Optional[ev.Environment]) -> spa
     return spack.cmd.disambiguate_spec(spec, env)
 
 
-def _diff_specs(args) -> None:
+def _diff_specs(args) -> bool:
+    """Compare two installed specs, and return whether they are equivalent."""
     specs = spack.cmd.parse_specs(args.inputs)
     if len(specs) != 2:
         args.subparser.error("you must provide two specs to compare")
@@ -185,9 +195,10 @@ def _diff_specs(args) -> None:
             "b": {"name": after.name, "hash": after.dag_hash()},
         }
         print(sjson.dumps({**result.as_dict(), "specs": identities}))
-        return
+    else:
+        SpecDiffRenderer(result).render()
 
-    SpecDiffRenderer(result).render()
+    return result.equivalent
 
 
 def _variant_default(node: spack.spec.Spec, key: str) -> Optional[spack.variant.VariantValue]:

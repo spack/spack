@@ -848,3 +848,35 @@ def test_diff_specs_lists_recipe_changes_by_package(capsys):
     assert "Packages whose recipe differs" in output
     assert "Node differences" not in output
     assert output.index("callpath") < output.index("mpich")
+
+
+@_needs_environments
+@pytest.mark.parametrize(
+    "after,exit_code",
+    [(PINNED.format("2.3"), 0), (PINNED.format("2.2"), spack.cmd.diff.EXIT_DIFFERENT)],
+)
+@pytest.mark.parametrize("output", [[], ["--json"]])
+def test_diff_exit_code_tells_whether_environments_differ(
+    concretized_env, after, exit_code, output
+):
+    """With `--exit-code`, a script can tell differing environments from an error."""
+    concretized_env("test1", PINNED.format("2.3"))
+    concretized_env("test2", after)
+
+    diff_cmd(*output, "test1", "test2")
+    assert diff_cmd.returncode == 0
+
+    diff_cmd(*output, "--exit-code", "test1", "test2", fail_on_error=False)
+    assert diff_cmd.returncode == exit_code
+
+
+def test_diff_exit_code_tells_whether_specs_differ(install_mockery, mock_fetch, mock_archive):
+    """With `--exit-code`, a script can tell differing specs from an error."""
+    before = _install_and_find("mpileaks ^mpich@3.0.4")
+    after = _install_and_find("mpileaks ^mpich@1.0")
+
+    diff_cmd("--specs", "--exit-code", before, before)
+    assert diff_cmd.returncode == 0
+
+    diff_cmd("--specs", "--exit-code", before, after, fail_on_error=False)
+    assert diff_cmd.returncode == spack.cmd.diff.EXIT_DIFFERENT
