@@ -146,12 +146,15 @@ default_sigil = object()
 
 
 class ConfigScope:
-    def __init__(self, name: str, included: bool = False) -> None:
+    def __init__(self, name: str, included: bool = False, env_path: Optional[str] = None) -> None:
         self.name = name
         self.writable = False
         self.sections = syaml.syaml_dict()
         self.prefer_modify = False
         self.included = included
+        # Path used for "$env" in the include paths of this scope, and of the scopes it includes.
+        # If None, the path of the active environment is used.
+        self.env_path = env_path
 
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -164,7 +167,9 @@ class ConfigScope:
 
             includes = self.get_section("include")
             if includes:
-                include_paths = [included_path(data) for data in includes["include"]]
+                include_paths = [
+                    included_path(data, env_path=self.env_path) for data in includes["include"]
+                ]
                 included_scopes = chain(*[include.scopes(self) for include in include_paths])
 
                 # Do not include duplicate scopes
@@ -230,8 +235,9 @@ class DirectoryConfigScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
+        env_path: Optional[str] = None,
     ) -> None:
-        super().__init__(name, included)
+        super().__init__(name, included, env_path)
         self.path = path
         self.writable = writable
         self.prefer_modify = prefer_modify
@@ -293,6 +299,7 @@ class SingleFileScope(ConfigScope):
         writable: bool = True,
         prefer_modify: bool = True,
         included: bool = False,
+        env_path: Optional[str] = None,
     ) -> None:
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -311,7 +318,7 @@ class SingleFileScope(ConfigScope):
                        config:
                          install_tree: $spack/opt/spack
         """
-        super().__init__(name, included)
+        super().__init__(name, included, env_path)
         self._raw_data: Optional[YamlConfigDict] = None
         self.schema = schema
         self.path = path
@@ -514,11 +521,19 @@ class Configuration:
     def __init__(self) -> None:
         self.scopes = lang.PriorityOrderedMapping()
         self.updated_scopes_by_section: Dict[str, List[ConfigScope]] = defaultdict(list)
-        # Path of the active environment, used for the "$env" substitution. It is set
-        # when an environment is activated and unset when it is deactivated, so that
-        # substitutions do not need to import spack.environment (avoiding a circular
-        # import).
+        # Path used for the "$env" substitution, so that substitutions do not need to import
+        # spack.environment (avoiding a circular import). In the global configuration, it is
+        # set when an environment is activated and unset when it is deactivated.
         self.env_path: Optional[str] = None
+
+    def copy(self) -> "Configuration":
+        """Returns a configuration with the same scope objects, at the same priorities. Pushing
+        or removing scopes in the copy does not affect this configuration.
+        """
+        result = Configuration()
+        result.scopes = self.scopes.copy()
+        result.env_path = self.env_path
+        return result
 
     def highest(self) -> ConfigScope:
         """Scope with the highest precedence"""
@@ -1330,7 +1345,11 @@ class OptionalInclude:
             # directories are treated as regular ConfigScopes
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(
-                config_name, config_path, prefer_modify=self.prefer_modify, included=True
+                config_name,
+                config_path,
+                prefer_modify=self.prefer_modify,
+                included=True,
+                env_path=parent_scope.env_path,
             )
         elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
@@ -1340,6 +1359,7 @@ class OptionalInclude:
                 spack.schema.merged.schema,
                 prefer_modify=self.prefer_modify,
                 included=True,
+                env_path=parent_scope.env_path,
             )
         elif exists:
             raise ValueError(
@@ -1397,7 +1417,7 @@ class IncludePath(OptionalInclude):
     sha256: str
     destination: Optional[str]
 
-    def __init__(self, entry: dict):
+    def __init__(self, entry: dict, *, env_path: Optional[str] = None):
         # circular dependencies
 
         super().__init__(entry)
@@ -1406,7 +1426,7 @@ class IncludePath(OptionalInclude):
             path = os.environ[path_override_env_var]
         else:
             path = entry.get("path", "")
-        self.path = substitute_path_variables(path)
+        self.path = substitute_path_variables(path, env_path=env_path)
 
         self.sha256 = entry.get("sha256", "")
         self.remote = "sha256" in entry
@@ -1477,16 +1497,18 @@ class GitIncludePaths(OptionalInclude):
     _paths: List[str]
     destination: Optional[str]
 
-    def __init__(self, entry: dict):
+    def __init__(self, entry: dict, *, env_path: Optional[str] = None):
         # circular dependencies
 
         super().__init__(entry)
-        self.git = substitute_path_variables(entry.get("git", ""))
+        self.git = substitute_path_variables(entry.get("git", ""), env_path=env_path)
 
         self.branch = entry.get("branch", "")
         self.commit = entry.get("commit", "")
         self.tag = entry.get("tag", "")
-        self._paths = [substitute_path_variables(path) for path in entry.get("paths", [])]
+        self._paths = [
+            substitute_path_variables(path, env_path=env_path) for path in entry.get("paths", [])
+        ]
         self.destination = None
         self.remote = True
 
@@ -1618,21 +1640,24 @@ class GitIncludePaths(OptionalInclude):
         return self._paths
 
 
-def included_path(entry: Union[str, pathlib.Path, dict]) -> Union[IncludePath, GitIncludePaths]:
+def included_path(
+    entry: Union[str, pathlib.Path, dict], *, env_path: Optional[str] = None
+) -> Union[IncludePath, GitIncludePaths]:
     """Convert the included paths entry into the appropriate optional include.
 
     Args:
         entry: include configuration entry
+        env_path: path used for "$env", or None for the path of the active environment
 
     Returns: converted entry, where an empty ``when`` means the path is not conditionally included
     """
     if isinstance(entry, (str, pathlib.Path)):
-        return IncludePath({"path": str(entry)})
+        return IncludePath({"path": str(entry)}, env_path=env_path)
 
     if entry.get("path", ""):
-        return IncludePath(entry)
+        return IncludePath(entry, env_path=env_path)
 
-    return GitIncludePaths(entry)
+    return GitIncludePaths(entry, env_path=env_path)
 
 
 def paths_from_includes(includes: List[Union[str, dict]]) -> List[str]:
@@ -2257,7 +2282,7 @@ NOMATCH = object()
 
 
 # Substitutions to perform
-def replacements(config: Optional["Configuration"] = None):
+def replacements(config: Optional["Configuration"] = None, *, env_path: Optional[str] = None):
     arch = architecture()
 
     return {
@@ -2274,12 +2299,14 @@ def replacements(config: Optional["Configuration"] = None):
         "target": lambda: arch.target,
         "target_family": lambda: arch.target.family,
         "date": lambda: __import__("datetime").date.today().strftime("%Y-%m-%d"),
-        "env": lambda: (config if config is not None else CONFIG).env_path or NOMATCH,
+        "env": lambda: env_path or (config if config is not None else CONFIG).env_path or NOMATCH,
         "spack_short_version": lambda: spack.get_short_version(),
     }
 
 
-def substitute_config_variables(path, config: Optional["Configuration"] = None):
+def substitute_config_variables(
+    path, config: Optional["Configuration"] = None, *, env_path: Optional[str] = None
+):
     """Substitute placeholders into paths.
 
     Spack allows paths in configs to have some placeholders, as follows:
@@ -2301,11 +2328,14 @@ def substitute_config_variables(path, config: Optional["Configuration"] = None):
     - $spack_short_version The spack short version
 
     These are substituted case-insensitively into the path, and users can
-    use either ``$var`` or ``${var}`` syntax for the variables. $env is only
-    replaced if there is an active environment, and should only be used in
-    environment yaml files.
+    use either ``$var`` or ``${var}`` syntax for the variables.
+
+    $env is replaced by ``env_path`` if given, otherwise by the environment
+    path of ``config``, or of the global configuration if ``config`` is None.
+    If neither has an environment path, $env is left in the path. It should
+    only be used in environment yaml files.
     """
-    _replacements = replacements(config)
+    _replacements = replacements(config, env_path=env_path)
 
     # Look up replacements
     def repl(match):
@@ -2318,16 +2348,22 @@ def substitute_config_variables(path, config: Optional["Configuration"] = None):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
-def substitute_path_variables(path, config: Optional["Configuration"] = None):
+def substitute_path_variables(
+    path, config: Optional["Configuration"] = None, *, env_path: Optional[str] = None
+):
     """Substitute config vars, expand environment vars, expand user home."""
-    path = substitute_config_variables(path, config)
+    path = substitute_config_variables(path, config, env_path=env_path)
     path = os.path.expandvars(path)
     path = os.path.expanduser(path)
     return path
 
 
 def canonicalize_path(
-    path: str, default_wd: Optional[str] = None, *, config: Optional["Configuration"] = None
+    path: str,
+    default_wd: Optional[str] = None,
+    *,
+    config: Optional["Configuration"] = None,
+    env_path: Optional[str] = None,
 ) -> str:
     """Same as substitute_path_variables, but also take absolute path.
 
@@ -2338,6 +2374,8 @@ def canonicalize_path(
     Arguments:
         path: path being converted as needed
         default_wd: optional working directory/root for non-yaml string paths
+        config: configuration whose environment path is used for "$env"
+        env_path: path used for "$env", overriding the one of ``config``
 
     Returns: An absolute path or non-file URL with path variable substitution
     """
@@ -2353,7 +2391,7 @@ def canonicalize_path(
         filename = os.path.dirname(path._start_mark.name)  # type: ignore[attr-defined]
         assert path._start_mark.name == path._end_mark.name  # type: ignore[attr-defined]
 
-    path = substitute_path_variables(path, config)
+    path = substitute_path_variables(path, config, env_path=env_path)
 
     # Ensure properly process a Windows path
     win_path = pathlib.PureWindowsPath(path)
