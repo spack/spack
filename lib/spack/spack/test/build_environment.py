@@ -449,6 +449,27 @@ def test_wrapper_variables(
         delattr(dep_pkg, "libs")
 
 
+def test_compiler_wrapper_variables(config, mock_packages, working_env, monkeypatch):
+    """For a build, make sure SPACK_DEBUG_LOG_DIR points to the
+    stage path of the package.
+    """
+    spec = spack.concretize.concretize_one("mpileaks")
+    pkg = spec.package
+
+    env_mods = EnvironmentModifications()
+    spack.build_environment.set_wrapper_variables(pkg, env_mods)
+    env_mods.apply_modifications()
+
+    log_dir = os.environ.get("SPACK_DEBUG_LOG_DIR")
+    assert log_dir is not None
+    assert log_dir == pkg.stage.path
+
+    log_id = os.environ.get("SPACK_DEBUG_LOG_ID")
+    assert log_id is not None
+    expected_log_id = spec.format("{name}-{hash:7}")
+    assert log_id == expected_log_id
+
+
 def test_external_prefixes_last(
     mutable_config: Configuration, mock_packages, working_env, monkeypatch
 ):
