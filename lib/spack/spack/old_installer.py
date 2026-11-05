@@ -1420,7 +1420,7 @@ class PackageInstaller:
             create_reports: whether to generate reports for each install
         """
         if sys.platform == "win32":
-            # No locks on Windows, we should always use 1 process
+            # Concurrent builds are not supported on Windows yet, always use 1 process
             # TODO: perhaps raise an error instead and update cmd-line interface
             # to omit this option on Windows for now
             concurrent_packages = 1

@@ -77,10 +77,10 @@ class OpenFileTracker:
     reference-count it. The descriptor is only closed when the reference count reaches zero (i.e.
     no ``Lock`` in this process still needs it).
 
-    Descriptors are *not* released on unlock; they are kept alive across lock/unlock cycles so that
-    the next lock operation can skip re-opening the file. ``PosixBackend._ensure_valid_handle``
-    re-validates the on-disk inode before each lock operation and drops a stale descriptor when
-    the file was deleted and replaced.
+    Descriptors are *not* released on unlock (except on Windows, which can't delete open files);
+    they are kept alive across lock/unlock cycles so that the next lock operation can skip
+    re-opening the file. ``FileBackend._ensure_valid_handle`` re-validates the on-disk inode
+    before each lock operation and drops a stale descriptor when the file was deleted and replaced.
     """
 
     def __init__(self):
@@ -186,8 +186,9 @@ class LockType:
         return op == LockType.READ or op == LockType.WRITE
 
 
-class PosixBackend:
-    """fcntl-based lock backend for POSIX systems."""
+class FileBackend:
+    """Base class for lock backends that lock a byte range of a file opened through
+    ``FILE_TRACKER``."""
 
     def __init__(self, path: str, start: int, length: int, debug: bool = False) -> None:
         self.path = path
@@ -265,43 +266,27 @@ class PosixBackend:
     def prepare(self, op: int) -> None:
         """Ensure the lock file is open; raise if a write lock is requested on a read-only file."""
         fh = self._ensure_valid_handle()
-        if LockType.to_module(op) == fcntl.LOCK_EX and fh.mode == "rb":
+        if op == LockType.WRITE and fh.mode == "rb":
             raise LockROFileError(self.path)
 
     def poll(self, op: int) -> bool:
-        """Attempt to acquire the lock in a non-blocking manner. Return whether
-        the locking attempt succeeds
-        """
-        assert self._file_ref is not None, "cannot poll a lock without the file being set"
-        fh = self._file_ref.fh.fileno()
-        module_op = LockType.to_module(op)
-        try:
-            # Try to get the lock (will raise if not available.)
-            fcntl.lockf(fh, module_op | fcntl.LOCK_NB, self._length, self._start, os.SEEK_SET)
+        raise NotImplementedError
 
-            # help for debugging distributed locking
-            if self.debug:
-                # All locks read the owner PID and host
-                self._read_log_debug_data()
-                tty.debug(
-                    "{0} locked {1} [{2}:{3}] (owner={4})".format(
-                        LockType.to_str(op), self.path, self._start, self._length, self.pid
-                    ),
-                    level=2,
-                )
+    def _log_lock_owner(self, op: int) -> None:
+        """Log the PID and host of the lock owner, and record ourselves as the owner of write
+        locks."""
+        # All locks read the owner PID and host
+        self._read_log_debug_data()
+        tty.debug(
+            "{0} locked {1} [{2}:{3}] (owner={4})".format(
+                LockType.to_str(op), self.path, self._start, self._length, self.pid
+            ),
+            level=2,
+        )
 
-                # Exclusive locks write their PID/host
-                if module_op == fcntl.LOCK_EX:
-                    self._write_log_debug_data()
-
-            return True
-
-        except OSError as e:
-            # EAGAIN and EACCES == locked by another process (so try again)
-            if e.errno not in (errno.EAGAIN, errno.EACCES):
-                raise
-
-        return False
+        # Exclusive locks write their PID/host
+        if op == LockType.WRITE:
+            self._write_log_debug_data()
 
     def _read_log_debug_data(self) -> None:
         """Read PID and host data out of the file if it is there."""
@@ -334,6 +319,41 @@ class PosixBackend:
         os.fsync(self._file_ref.fh.fileno())
 
     def release(self) -> None:
+        raise NotImplementedError
+
+    def cleanup(self, path: str) -> None:
+        """Remove the lock file."""
+        os.unlink(path)
+
+
+class PosixBackend(FileBackend):
+    """fcntl-based lock backend for POSIX systems."""
+
+    def poll(self, op: int) -> bool:
+        """Attempt to acquire the lock in a non-blocking manner. Return whether
+        the locking attempt succeeds
+        """
+        assert self._file_ref is not None, "cannot poll a lock without the file being set"
+        fh = self._file_ref.fh.fileno()
+        module_op = LockType.to_module(op)
+        try:
+            # Try to get the lock (will raise if not available.)
+            fcntl.lockf(fh, module_op | fcntl.LOCK_NB, self._length, self._start, os.SEEK_SET)
+
+            # help for debugging distributed locking
+            if self.debug:
+                self._log_lock_owner(op)
+
+            return True
+
+        except OSError as e:
+            # EAGAIN and EACCES == locked by another process (so try again)
+            if e.errno not in (errno.EAGAIN, errno.EACCES):
+                raise
+
+        return False
+
+    def release(self) -> None:
         """Releases a lock using POSIX locks (``fcntl.lockf``)
 
         Releases the lock regardless of mode. Note that read locks may be masquerading as write
@@ -343,10 +363,6 @@ class PosixBackend:
         fcntl.lockf(
             self._file_ref.fh.fileno(), fcntl.LOCK_UN, self._length, self._start, os.SEEK_SET
         )
-
-    def cleanup(self, path: str) -> None:
-        """Remove the lock file."""
-        os.unlink(path)
 
 
 class DummyBackend:
@@ -390,7 +406,8 @@ class Lock:
 
     In Python, ``lockf`` actually calls ``fcntl``, so this should work with any filesystem
     implementation that supports locking through the fcntl calls. This includes distributed
-    filesystems like Lustre (when flock is enabled) and recent NFS versions.
+    filesystems like Lustre (when flock is enabled) and recent NFS versions. On Windows,
+    ``LockFileEx`` is used instead (see ``spack.util.lock_windows``).
 
     Note that this is for managing contention over resources *between* processes and not for
     managing contention between threads in a process: the functions of this object are not
@@ -429,7 +446,7 @@ class Lock:
             desc: optional debug message lock description, which is helpful for distinguishing
                 between different Spack locks.
             enable: when False, swap in a no-op backend so all lock operations succeed
-                without acquiring a real filesystem lock. Always disabled on Windows.
+                without acquiring a real filesystem lock.
         """
         self.path = path
         self._reads = 0
@@ -450,12 +467,15 @@ class Lock:
         # user sets a timeout for each attempt)
         self.default_timeout = default_timeout or None
 
-        if sys.platform != "win32" and enable:
-            self.backend: Union[PosixBackend, DummyBackend, ForbiddenBackend] = PosixBackend(
-                path, start, length, debug=debug
-            )
-        else:
+        self.backend: Union[FileBackend, DummyBackend, ForbiddenBackend]
+        if not enable:
             self.backend = DummyBackend()
+        elif sys.platform == "win32":
+            from spack.util.lock_windows import WindowsBackend
+
+            self.backend = WindowsBackend(path, start, length, debug=debug)
+        else:
+            self.backend = PosixBackend(path, start, length, debug=debug)
 
     @property
     def enabled(self) -> bool:

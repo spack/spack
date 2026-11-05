@@ -508,9 +508,7 @@ def test_clear_failures_success(tmp_path: pathlib.Path):
     # Ensure the core directory and failure lock file still exist
     assert os.path.isdir(failures.dir)
 
-    # Locks on windows are a no-op
-    if sys.platform != "win32":
-        assert os.path.isfile(failures.locker.lock_path)
+    assert os.path.isfile(failures.locker.lock_path)
 
 
 @pytest.mark.not_on_windows("chmod does not prevent removal on Win")
