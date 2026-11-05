@@ -485,11 +485,13 @@ def create_in_dir(
 
 
 def _is_lockfile_path(path: Union[str, pathlib.Path]) -> bool:
+    """Recognize paths that should be treated as lockfiles."""
     path = str(path)
     return path.endswith(".lock") or path.endswith(".json")
 
 
 def _default_filter_configuration() -> Dict[str, Any]:
+    """Return filter defaults with no limits on specs or packages."""
     return {
         "projections": {"all": spack.spec.DISPLAY_FORMAT},
         "concrete": False,
@@ -502,6 +504,7 @@ def _default_filter_configuration() -> Dict[str, Any]:
 
 
 def _normalized_filter_configuration(configuration: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Fill in omitted filter settings and always block concrete includes."""
     normalized = _default_filter_configuration()
     if not configuration:
         return normalized
@@ -524,20 +527,15 @@ def _normalized_filter_configuration(configuration: Optional[Dict[str, Any]]) ->
         }
 
     config = configuration.get("config", {})
-    config_allow = list(config.get("allow", []))
     config_block = list(config.get("block", []))
     default_config_block = _default_filter_configuration()["config"]["block"]
-    normalized["config"]["allow"] = config_allow
-    normalized["config"]["block"] = list(
-        dict.fromkeys(
-            config_block
-            + [section for section in default_config_block if section not in config_allow]
-        )
-    )
+    normalized["config"]["allow"] = list(config.get("allow", []))
+    normalized["config"]["block"] = list(dict.fromkeys(config_block + default_config_block))
     return normalized
 
 
 def _read_filter_configuration(filter_file: Union[str, pathlib.Path]) -> Dict[str, Any]:
+    """Read and validate a filter file before creating an environment."""
     filter_path = pathlib.Path(filter_file)
     if not filter_path.is_file():
         raise SpackEnvironmentError(
@@ -553,16 +551,24 @@ def _read_filter_configuration(filter_file: Union[str, pathlib.Path]) -> Dict[st
     return _normalized_filter_configuration(data["filter"])
 
 
-def _matches_any_spec(spec: Spec, patterns: Sequence[str]) -> bool:
-    return any(spec.satisfies(Spec(pattern)) for pattern in patterns)
+def _matches_any_spec(spec: Spec, patterns: Sequence[Union[str, Spec]]) -> bool:
+    """Check whether a spec satisfies any requested constraint."""
+    return any(
+        spec.satisfies(pattern if isinstance(pattern, Spec) else Spec(pattern))
+        for pattern in patterns
+    )
 
 
-def _spec_is_allowed(spec: Spec, allow: Sequence[str], block: Sequence[str]) -> bool:
+def _spec_is_allowed(
+    spec: Spec, allow: Sequence[Union[str, Spec]], block: Sequence[Union[str, Spec]]
+) -> bool:
+    """Select a spec only when allowed and not blocked."""
     allowed = not allow or _matches_any_spec(spec, allow)
     return allowed and not _matches_any_spec(spec, block)
 
 
 def _projection_format_for(spec: Spec, projections: Dict[str, str]) -> str:
+    """Choose the first matching root format, falling back to the default."""
     for matcher, format_string in projections.items():
         if matcher == "all":
             continue
@@ -572,6 +578,7 @@ def _projection_format_for(spec: Spec, projections: Dict[str, str]) -> str:
 
 
 def _validated_filter_projection(spec: Spec, format_string: str) -> str:
+    """Format a concrete spec as a root that can be read from a manifest."""
     try:
         projected = spec.format(format_string)
     except spack.error.SpecError as e:
@@ -595,8 +602,8 @@ def _filtered_concrete_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Tuple[str, Spec, str]]:
     """Select original roots, optionally promoting dependencies to default-group roots."""
-    allow = filter_configuration["specs"]["allow"]
-    block = filter_configuration["specs"]["block"]
+    allow = [Spec(pattern) for pattern in filter_configuration["specs"]["allow"]]
+    block = [Spec(pattern) for pattern in filter_configuration["specs"]["block"]]
     original_hashes = {entry.hash for entry in source_env.concretized_roots}
     roots = [
         (
@@ -635,26 +642,44 @@ def _filtered_concrete_dags(
     filtered_roots: Sequence[Tuple[str, Spec, str]], filter_configuration: Dict[str, Any]
 ) -> List[Tuple[str, Spec, str]]:
     """Keep roots whose dependency and build-spec DAGs contain no excluded nodes."""
-    allow = filter_configuration["specs"]["allow"]
-    block = filter_configuration["specs"]["block"]
+    block = [Spec(pattern) for pattern in filter_configuration["specs"]["block"]]
+    blocked_reason: Dict[str, Optional[Spec]] = {}
     result = []
+    projected: Dict[str, str] = {}
     for abstract, concrete, group in filtered_roots:
-        # The lockfile includes build specs, but traverse() does not follow them.
-        pending = [concrete]
-        seen = set()
-        excluded = None
-        while pending and excluded is None:
-            for node in pending.pop().traverse():
-                key = node.dag_hash()
-                if key in seen:
-                    continue
-                seen.add(key)
-                if not _spec_is_allowed(node, allow, block):
-                    excluded = node
-                    break
-                if node.build_spec is not node:
-                    pending.append(node.build_spec)
+        # Check children before their parent, and reuse each result across roots.
+        pending = [(concrete, False)]
+        while pending:
+            node, after_children = pending.pop()
+            key = node.dag_hash()
+            if key in blocked_reason:
+                continue
+            children = node.dependencies()
+            # Build specs are also written to the lockfile.
+            if node.build_spec is not node:
+                children.append(node.build_spec)
+            if not after_children:
+                # Revisit this node after its children have been checked.
+                pending.append((node, True))
+                pending.extend((child, False) for child in children)
+                continue
+
+            reason = node if any(node.satisfies(pattern) for pattern in block) else None
+            if reason is None:
+                for child in children:
+                    reason = blocked_reason[child.dag_hash()]
+                    if reason is not None:
+                        break
+            blocked_reason[key] = reason
+        excluded = blocked_reason[concrete.dag_hash()]
         if excluded is None:
+            key = concrete.dag_hash()
+            if abstract in projected and projected[abstract] != key:
+                raise SpackEnvironmentError(
+                    f"filter projection {abstract!r} matches multiple concrete roots; "
+                    "use a projection with a hash"
+                )
+            projected[abstract] = key
             result.append((abstract, concrete, group))
         else:
             # Keeping a partial root would leave the lockfile incomplete.
@@ -665,6 +690,8 @@ def _filtered_concrete_dags(
 def _filtered_abstract_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Union[str, Dict[str, Any]]]:
+    """Select allowed abstract roots with no blocked dependencies."""
+    block = [Spec(pattern) for pattern in filter_configuration["specs"]["block"]]
     group_specs = {
         group: [
             str(spec)
@@ -674,6 +701,7 @@ def _filtered_abstract_root_entries(
                 filter_configuration["specs"]["allow"],
                 filter_configuration["specs"]["block"],
             )
+            and not any(node.satisfies(pattern) for node in spec.traverse() for pattern in block)
         ]
         for group in source_env.manifest.groups()
     }
@@ -683,6 +711,7 @@ def _filtered_abstract_root_entries(
 def _filtered_grouped_specs(
     source_env: "Environment", group_specs: Dict[str, List[str]]
 ) -> List[Union[str, Dict[str, Any]]]:
+    """Write filtered roots while retaining their group settings."""
     specs: List[Union[str, Dict[str, Any]]] = []
     for group in source_env.manifest.groups():
         filtered_group_specs = group_specs[group]
@@ -712,48 +741,21 @@ def _filtered_grouped_specs(
 def _filtered_concrete_root_specs(
     source_env: "Environment", filtered_roots: Sequence[Tuple[str, Spec, str]]
 ) -> List[Union[str, Dict[str, Any]]]:
+    """Convert retained concrete roots into grouped manifest entries."""
     group_specs: Dict[str, List[str]] = {group: [] for group in source_env.manifest.groups()}
     for abstract, _, group in filtered_roots:
         group_specs[group].append(abstract)
     return _filtered_grouped_specs(source_env, group_specs)
 
 
-def _is_lockfile_include_path(path: str) -> bool:
-    return os.path.basename(substitute_path_variables(path)) == lockfile_name
-
-
-def _filter_lockfile_includes(
-    includes: List[Union[str, Dict[str, Any]]],
-) -> List[Union[str, Dict[str, Any]]]:
-    filtered: List[Union[str, Dict[str, Any]]] = []
-
-    # Including the old lockfile would bring back specs removed by the filter.
-    for entry in includes:
-        if isinstance(entry, str):
-            if not _is_lockfile_include_path(entry):
-                filtered.append(entry)
-            continue
-
-        if "paths" in entry:
-            paths = [
-                path for path in entry.get("paths", []) if not _is_lockfile_include_path(path)
-            ]
-            if paths:
-                filtered_entry = copy.deepcopy(entry)
-                filtered_entry["paths"] = paths
-                filtered.append(filtered_entry)
-            continue
-
-        paths = spack.config.included_path(entry).paths
-        if not any(_is_lockfile_include_path(path) for path in paths):
-            filtered.append(copy.deepcopy(entry))
-
-    return filtered
-
-
 def _filter_packages_configuration(
     packages_configuration: Dict[str, Any], filter_configuration: Dict[str, Any]
 ) -> Dict[str, Any]:
+    """Copy allowed package entries while omitting blocked package names."""
+    blocked_names = {Spec(pattern).name for pattern in filter_configuration["specs"]["block"]}
+    packages_configuration = {
+        name: entry for name, entry in packages_configuration.items() if name not in blocked_names
+    }
     packages_filter = filter_configuration["packages"]
     if packages_filter == "all":
         return copy.deepcopy(packages_configuration)
@@ -774,58 +776,25 @@ def _filter_packages_configuration(
     }
 
 
-def _filter_can_remove_settings(filter_configuration: Dict[str, Any]) -> bool:
-    """Whether the filter limits which configuration sections or package entries are copied."""
-    default_block = set(_default_filter_configuration()["config"]["block"])
-    return bool(
-        filter_configuration["config"]["allow"]
-        or set(filter_configuration["config"]["block"]) - default_block
-        or filter_configuration["packages"] != "all"
-    )
-
-
-def _check_includes_can_be_copied(
-    source_configuration: Dict[str, Any], filter_configuration: Dict[str, Any]
-) -> None:
-    """Included files are copied unchanged, so refuse to copy them when the filter could
-    have removed settings from them, unless the filter says what to do with them."""
-    includes = [
-        path
-        for path in spack.config.paths_from_includes(
-            source_configuration.get(manifest_include_name, [])
-        )
-        if not _is_lockfile_include_path(path)
-    ]
-    config_filter = filter_configuration["config"]
-    explicit = manifest_include_name in config_filter["allow"] + config_filter["block"]
-    if includes and not explicit and _filter_can_remove_settings(filter_configuration):
-        raise SpackEnvironmentError(
-            "the filter cannot remove settings from included files: add "
-            f"'{manifest_include_name}' to filter:config:block to drop them, or to "
-            "filter:config:allow to keep them unchanged"
-        )
-
-
 def _filtered_configuration(
     source_configuration: Dict[str, Any],
     filter_configuration: Dict[str, Any],
     specs: Sequence[Union[str, Dict[str, Any]]],
     with_view: Optional[Union[str, pathlib.Path, bool]],
 ) -> Dict[str, Any]:
+    """Build a manifest from the selected specs and configuration sections."""
     allowed_sections = set(filter_configuration["config"]["allow"])
     blocked_sections = set(filter_configuration["config"]["block"])
     filtered: Dict[str, Any] = {}
 
-    # Specs and packages are filtered separately; do not copy lockfile references.
+    # Specs and packages are filtered separately; includes are never copied.
     for key, value in source_configuration.items():
-        if key in ("specs", "packages", lockfile_include_key) or key in blocked_sections:
+        if (
+            key in ("specs", "packages", manifest_include_name, lockfile_include_key)
+            or key in blocked_sections
+        ):
             continue
         if allowed_sections and key not in allowed_sections:
-            continue
-        if key == manifest_include_name:
-            filtered_includes = _filter_lockfile_includes(value)
-            if filtered_includes:
-                filtered[key] = filtered_includes
             continue
         filtered[key] = copy.deepcopy(value)
 
@@ -850,6 +819,7 @@ def _filtered_configuration(
 def _filtered_source_environment(
     init_file: Union[str, pathlib.Path],
 ) -> Iterator[Tuple["Environment", pathlib.Path, bool]]:
+    """Open an environment directory or stage a manifest for reading."""
     source_path = pathlib.Path(init_file)
     if _is_lockfile_path(source_path):
         raise SpackEnvironmentError(
@@ -871,17 +841,17 @@ def _filtered_source_environment(
 
 
 def _set_filtered_manifest(env: "Environment", configuration: Dict[str, Any]) -> None:
+    """Write the filtered manifest and reload its configuration."""
     env.manifest.yaml_content = {TOP_LEVEL_KEY: configuration}
     env.manifest.changed = True
-    # Remove the source lockfile before reading the filtered manifest.
-    with fs.safe_remove(env.lock_path):
-        env.manifest.flush()
+    env.manifest.flush()
     env._re_read()
 
 
 def _populate_filtered_lockfile(
     env: "Environment", filtered_roots: Sequence[Tuple[str, Spec, str]]
 ) -> None:
+    """Write retained concrete roots without reconcretizing them."""
     for abstract_spec, concrete_spec, group in filtered_roots:
         env.add_concrete_spec(Spec(abstract_spec), concrete_spec, group=group)
     env.write(regenerate=False)
@@ -896,6 +866,7 @@ def _create_filtered_environment_in_dir(
     keep_relative: bool,
     include_concrete: Optional[List[str]],
 ) -> "Environment":
+    """Build a filtered environment in a temporary directory before publishing it."""
     if init_file is None:
         raise SpackEnvironmentError("cannot create a filtered environment without a source")
 
@@ -910,7 +881,16 @@ def _create_filtered_environment_in_dir(
         is_source_dir: bool
         source_env, source_path, is_source_dir = source_info
         filter_configuration = _read_filter_configuration(filter_file)
-        _check_includes_can_be_copied(source_env.manifest[TOP_LEVEL_KEY], filter_configuration)
+        if (
+            source_env.manifest[TOP_LEVEL_KEY].get(manifest_include_name)
+            and manifest_include_name not in filter_configuration["config"]["block"]
+        ):
+            raise SpackEnvironmentError(
+                "filtered environments cannot retain include entries; add "
+                "'include' to filter:config:block to drop them"
+            )
+        if lockfile_include_key in source_env.manifest[TOP_LEVEL_KEY]:
+            tty.warn("filtered environments do not copy include_concrete entries")
         filtered_roots: Sequence[Tuple[str, Spec, str]] = []
         filtered_specs: List[Union[str, Dict[str, Any]]]
 
@@ -936,26 +916,36 @@ def _create_filtered_environment_in_dir(
         else:
             filtered_specs = _filtered_abstract_root_entries(source_env, filter_configuration)
 
-        initialize_environment_dir(root, envfile=init_file)
-        env = Environment(root)
         filtered_configuration = _filtered_configuration(
             source_env.manifest[TOP_LEVEL_KEY], filter_configuration, filtered_specs, with_view
         )
-        _set_filtered_manifest(env, filtered_configuration)
-
-        init_file_dir = (
-            str(source_path) if is_source_dir else os.path.abspath(os.path.dirname(source_path))
-        )
-        if not keep_relative and env.path != init_file_dir:
-            _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=is_source_dir)
-            _rewrite_relative_repos_paths_on_relocation(
-                env, init_file_dir, copied_env=is_source_dir
+        root = pathlib.Path(root).absolute()
+        if os.path.lexists(root):
+            raise SpackEnvironmentError(
+                f"cannot create filtered environment, {root} already exists"
             )
+        root.parent.mkdir(parents=True, exist_ok=True)
+        source_dir = source_path if is_source_dir else source_path.parent
 
-        if filter_configuration["concrete"]:
-            _populate_filtered_lockfile(env, filtered_roots)
+        # Build away from the destination so failures cannot leave source files behind.
+        with tempfile.TemporaryDirectory(prefix=f".{root.name}-", dir=root.parent) as staged:
+            initialize_environment_dir(staged, envfile=None)
+            env = Environment(staged)
+            _set_filtered_manifest(env, filtered_configuration)
+            if not keep_relative and env.path != str(source_dir):
+                _rewrite_relative_dev_paths_on_relocation(env, str(source_dir))
+                _rewrite_relative_repos_paths_on_relocation(env, str(source_dir))
 
-        return env
+            if filter_configuration["concrete"]:
+                _populate_filtered_lockfile(env, filtered_roots)
+
+            if os.path.lexists(root):
+                raise SpackEnvironmentError(
+                    f"cannot create filtered environment, {root} already exists"
+                )
+            os.rename(staged, root)
+
+        return Environment(root)
 
 
 def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):

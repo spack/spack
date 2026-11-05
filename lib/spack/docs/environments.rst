@@ -158,7 +158,7 @@ to only the portion relevant for a particular use-case (eliminating packages or 
 sections).
 
 Suppose ``licensed-env`` contains ``openblas`` and a proprietary package,
-``licensed-solver``, which depends on ``libelf``. 
+``licensed-solver``, which depends on ``libelf``.
 
 .. code-block:: yaml
 
@@ -243,20 +243,22 @@ specs to keep and ``block`` lists specs to remove. An empty ``allow`` list keeps
 specs; an empty ``block`` list removes none. If both are set, ``block`` takes precedence.
 
 With ``concrete: false`` (the default), the source may be an environment directory
-or just a manifest file. Spack filters its listed specs and does not write a
-lockfile for the new environment.
+or just a manifest file. Spack filters its listed specs, rejecting roots that
+explicitly mention a blocked dependency, and does not write a lockfile for the
+new environment.
 
 With ``concrete: true``, the source must be an environment directory containing
-``spack.yaml`` and ``spack.lock``. Spack filters both the original roots (specs
-listed directly in ``spack.yaml``) and their dependencies, including build-spec
-provenance. If a root depends on an excluded spec, Spack drops that entire root
-and logs which excluded spec caused the decision. This also applies to promoted
+``spack.yaml`` and ``spack.lock``. ``specs:allow`` selects root candidates (original
+roots and, with ``flatten: true``, promoted dependencies), not the other nodes in
+their dependency trees. Selected roots keep their dependencies, including build-spec
+provenance, unless ``specs:block`` matches a node. If a root depends on a blocked spec,
+Spack drops the root and logs which spec caused the decision. This also applies to promoted
 roots when ``flatten: true``. The retained DAGs keep their original hashes;
 Spack does not concretize the new environment during creation.
 
-By default, retained roots keep their groups and all their dependencies. To make
-matching dependencies roots too, set ``flatten: true``;
-the promoted specs go in the default group, as with ``libelf`` in the example.
+By default, retained roots keep their groups and unblocked dependencies. To make
+matching dependencies roots too, set ``flatten: true``; the promoted specs go
+in the default group, as with ``libelf`` in the example.
 If no roots remain, Spack warns and creates an environment with no roots.
 
 **Copying Configuration**
@@ -265,12 +267,11 @@ Under ``config:``, ``allow`` lists the configuration sections to copy and ``bloc
 lists the sections to omit. Empty lists mean copy all sections and block none,
 respectively.
 
-Files included by the source environment are not filtered: their ``include:``
-entries are copied unchanged. If the source has includes and the filter limits
-``config`` or ``packages``, Spack stops with an error, because blocked settings in
-the included files would otherwise reach the new environment. Add ``include`` to
-``config:block`` to drop the includes, or to ``config:allow`` to keep them
-unchanged.
+Filtered environments never copy configuration ``include:`` entries or their files.
+If the source has includes, add ``include`` to ``config:block``; otherwise Spack
+stops with an error. Even ``config:allow: [include]`` cannot retain them. Files
+unrelated to the filtered manifest are not copied from the source directory.
+``include_concrete`` is always dropped with a warning.
 
 The ``packages`` setting further controls entries within the copied ``packages:``
 section. It defaults to ``all``. Set it to ``externals_only`` to retain only package
@@ -285,12 +286,15 @@ entries that declare externals, or use ``allow`` and ``block`` to select package
 
 An empty ``packages:allow`` list allows all package entries; an empty
 ``packages:block`` list blocks none. Each retained entry is copied whole, including
-all of its externals.
+all of its externals. The ``packages`` filter still applies, but ``specs:block``
+removes matching package entries even if that filter would retain them. It does not
+rewrite references to blocked specs inside other package entries.
 
 In concrete mode, the optional ``projections`` setting controls how selected roots
 are written as spec strings in the new ``spack.yaml``. Its keys are spec constraints;
 ``all`` provides a fallback and defaults to Spack's standard format. Each format
-must produce a valid spec string.
+must produce a valid spec string. Original roots are intentionally written as
+projected concrete specs rather than their original abstract strings.
 
 .. _cmd-spack-env-activate:
 .. _cmd-spack-env-deactivate:

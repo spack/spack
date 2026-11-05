@@ -2099,17 +2099,20 @@ def test_env_include_concrete_env_yaml(env_name):
 
 
 def _write_filter_yaml(tmp_path: pathlib.Path, content: str = "filter: {}\n") -> str:
+    """Write filter YAML to a temporary file and return its path."""
     filter_yaml = tmp_path / "filter.yaml"
     filter_yaml.write_text(content)
     return str(filter_yaml)
 
 
 def test_env_create_filter_requires_source(tmp_path: pathlib.Path):
+    """Require a source environment when creating a filtered environment."""
     with pytest.raises(ev.SpackEnvironmentError):
         env("create", "--filter", _write_filter_yaml(tmp_path), "filtered")
 
 
 def test_env_create_filter_rejects_lockfile(tmp_path: pathlib.Path):
+    """Reject lockfiles as sources for filtered environment creation."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2122,6 +2125,7 @@ def test_env_create_filter_rejects_lockfile(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_defaults_to_abstract_specs(tmp_path: pathlib.Path):
+    """Create abstract roots by default when filtering a concrete environment."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2138,6 +2142,7 @@ def test_env_create_filter_defaults_to_abstract_specs(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_preserves_concrete_roots(tmp_path: pathlib.Path):
+    """Retain concrete roots and their lockfile when concrete filtering is enabled."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2163,6 +2168,7 @@ def test_env_create_filter_preserves_concrete_roots(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_can_promote_dependency_of_excluded_root(tmp_path: pathlib.Path):
+    """Promote an allowed dependency when its original root is excluded."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2190,6 +2196,7 @@ def test_env_create_filter_can_promote_dependency_of_excluded_root(tmp_path: pat
 
 
 def test_env_create_filter_warns_when_only_dependencies_match(tmp_path: pathlib.Path):
+    """Warn when matching dependencies leave a filtered environment without roots."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2211,6 +2218,7 @@ def test_env_create_filter_warns_when_only_dependencies_match(tmp_path: pathlib.
 
 @pytest.mark.parametrize("flatten", [False, True])
 def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, flatten: bool):
+    """Keep group metadata and concrete roots when filtering grouped specs."""
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         """spack:
@@ -2273,22 +2281,23 @@ def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, fla
 def test_env_create_filter_removes_excluded_concrete_dependencies(
     tmp_path: pathlib.Path, specs_filter: str, allowed_names: Optional[Set[str]]
 ):
+    """Exclude disallowed concrete dependencies without mutating the source graph."""
     env("create", "source")
     source = ev.read("source")
     with source:
         add("mpileaks")
     source.concretize()
     source.write()
-    original_lockfile = pathlib.Path(source.lock_path).read_text()
+    original_lockfile = pathlib.Path(source.lock_path).read_text(encoding="utf-8")
     original_specs = {spec.dag_hash(): spec for spec in source.all_specs()}
-    expected = {
+    expected_roots = {
         key: spec
         for key, spec in original_specs.items()
-        if all(
-            node.name != "callpath" and (allowed_names is None or node.name in allowed_names)
-            for node in spec.traverse()
-        )
+        if (spec.name in allowed_names if allowed_names is not None else True)
+        and (allowed_names is not None or all(node.name != "callpath" for node in spec.traverse()))
     }
+    assert expected_roots
+    expected = {node.dag_hash() for spec in expected_roots.values() for node in spec.traverse()}
 
     filter_yaml = _write_filter_yaml(
         tmp_path, f"filter:\n  concrete: true\n  flatten: true\n  specs:\n    {specs_filter}\n"
@@ -2296,10 +2305,11 @@ def test_env_create_filter_removes_excluded_concrete_dependencies(
     env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
-    assert {spec.dag_hash() for spec in filtered.all_specs()} == set(expected)
-    assert {spec.dag_hash() for spec in filtered.concrete_roots()} == set(expected)
-    assert "Dropping filtered root mpileaks" in env.output
-    assert "excluded spec" in env.output
+    assert {spec.dag_hash() for spec in filtered.all_specs()} == expected
+    assert {spec.dag_hash() for spec in filtered.concrete_roots()} == set(expected_roots)
+    if allowed_names is None:
+        assert "Dropping filtered root mpileaks" in env.output
+        assert "excluded spec" in env.output
     for spec in filtered.all_specs():
         assert {
             (edge.spec.dag_hash(), edge.depflag, edge.virtuals)
@@ -2309,16 +2319,14 @@ def test_env_create_filter_removes_excluded_concrete_dependencies(
             for edge in original_specs[spec.dag_hash()].edges_to_dependencies()
         }
 
-    if expected:
-        lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text())
-        assert set(lockfile["concrete_specs"]) == set(expected)
-    else:
-        assert not pathlib.Path(filtered.lock_path).exists()
-    assert pathlib.Path(source.lock_path).read_text() == original_lockfile
+    lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text(encoding="utf-8"))
+    assert set(lockfile["concrete_specs"]) == expected
+    assert pathlib.Path(source.lock_path).read_text(encoding="utf-8") == original_lockfile
     assert {spec.dag_hash() for spec in source.all_specs()} == set(original_specs)
 
 
 def test_env_create_filter_drops_root_with_excluded_dependency(tmp_path: pathlib.Path):
+    """Drop a concrete root when its dependencies include a blocked spec."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2344,6 +2352,7 @@ def test_env_create_filter_drops_root_with_excluded_dependency(tmp_path: pathlib
 
 @pytest.mark.parametrize("blocked_spec", ["callpath", "mpileaks ^libelf@0.8.13"])
 def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, blocked_spec: str):
+    """Remove filtered build specs while keeping lockfile references valid."""
     original = spack.concretize.concretize_one("mpileaks ^libelf@0.8.13")
     replacement = spack.concretize.concretize_one("libelf@0.8.12")
     spliced = original.splice(replacement, transitive=True)
@@ -2354,7 +2363,7 @@ def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, 
     source.add_concrete_spec(Spec("mpileaks"), spliced)
     source.add_concrete_spec(Spec("externaltool"), spack.concretize.concretize_one("externaltool"))
     source.write()
-    original_lockfile = pathlib.Path(source.lock_path).read_text()
+    original_lockfile = pathlib.Path(source.lock_path).read_text(encoding="utf-8")
 
     filter_yaml = _write_filter_yaml(
         tmp_path,
@@ -2363,7 +2372,7 @@ def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, 
     env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
-    lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text())
+    lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text(encoding="utf-8"))
     assert lockfile["concrete_specs"]
     assert spliced.dag_hash() not in {spec.dag_hash() for spec in filtered.concrete_roots()}
     assert "Dropping filtered root mpileaks" in env.output
@@ -2376,10 +2385,11 @@ def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, 
         assert all(node["name"] != "callpath" for node in lockfile["concrete_specs"].values())
     else:
         assert original.dag_hash() not in lockfile["concrete_specs"]
-    assert pathlib.Path(source.lock_path).read_text() == original_lockfile
+    assert pathlib.Path(source.lock_path).read_text(encoding="utf-8") == original_lockfile
 
 
 def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pathlib.Path):
+    """Accept a root projection that produces a valid spec string."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2409,6 +2419,7 @@ def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pat
 
 
 def test_env_create_filter_rejects_projection_that_formats_to_path(tmp_path: pathlib.Path):
+    """Reject a root projection that produces a path instead of a spec."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2428,7 +2439,27 @@ def test_env_create_filter_rejects_projection_that_formats_to_path(tmp_path: pat
         env("create", "--filter", filter_yaml, "filtered", "source")
 
 
+def test_env_create_filter_rejects_duplicate_projected_roots(tmp_path: pathlib.Path):
+    """Reject projections that make distinct concrete roots indistinguishable."""
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text("spack:\n  specs: [libelf@0.8.12, libelf@0.8.13]\n")
+    source = ev.create("source", spack_yaml)
+    for version in ("0.8.12", "0.8.13"):
+        source.add_concrete_spec(
+            Spec(f"libelf@{version}"), spack.concretize.concretize_one(f"libelf@{version}")
+        )
+    source.write()
+
+    filter_yaml = _write_filter_yaml(
+        tmp_path, 'filter:\n  concrete: true\n  projections:\n    all: "{name}"\n'
+    )
+    with pytest.raises(ev.SpackEnvironmentError, match="matches multiple concrete roots"):
+        env("create", "--filter", filter_yaml, "filtered", "source")
+    assert not pathlib.Path(ev.root("filtered")).exists()
+
+
 def test_env_create_filter_drops_include_concrete_even_when_allowed(tmp_path: pathlib.Path):
+    """Omit include_concrete even when the config filter allows it."""
     env("create", "included")
     included = ev.read("included")
     with included:
@@ -2460,9 +2491,20 @@ def test_env_create_filter_drops_include_concrete_even_when_allowed(tmp_path: pa
 
     assert ev.lockfile_include_key not in filtered_yaml
     assert ev.manifest_include_name not in filtered_yaml
+    assert "do not copy include_concrete" in env.output
+
+
+def test_env_create_filter_drops_blocked_abstract_dependency(tmp_path: pathlib.Path):
+    """Drop an abstract root that depends on a blocked spec."""
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text("spack:\n  specs: [zlib ^licensed-solver, libelf]\n")
+    filter_yaml = _write_filter_yaml(tmp_path, "filter:\n  specs:\n    block: [licensed-solver]\n")
+    env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
+    assert [spec.name for spec in ev.read("filtered").user_specs] == ["libelf"]
 
 
 def test_env_create_filter_blocks_external_concrete_specs_with_specs_block(tmp_path: pathlib.Path):
+    """Block external concrete roots with a specs block filter."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2487,6 +2529,7 @@ def test_env_create_filter_blocks_external_concrete_specs_with_specs_block(tmp_p
 
 
 def test_env_create_filter_includes_versioned_external_concrete_specs(tmp_path: pathlib.Path):
+    """Retain versioned external roots during concrete filtering."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2509,6 +2552,7 @@ def test_env_create_filter_includes_versioned_external_concrete_specs(tmp_path: 
 
 
 def test_env_create_filter_blocks_versioned_external_concrete_specs(tmp_path: pathlib.Path):
+    """Exclude versioned external roots that match a specs block filter."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2533,6 +2577,7 @@ def test_env_create_filter_blocks_versioned_external_concrete_specs(tmp_path: pa
 
 
 def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
+    """Filter roots and configuration from a concrete source environment."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2582,6 +2627,7 @@ def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
+    """Drop lockfile includes when creating a filtered environment."""
     env("create", "included")
     included = ev.read("included")
     with included:
@@ -2602,7 +2648,9 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
     source.concretize()
     source.write()
 
-    filter_yaml = _write_filter_yaml(tmp_path, "filter:\n  concrete: true\n")
+    filter_yaml = _write_filter_yaml(
+        tmp_path, "filter:\n  concrete: true\n  config:\n    block: [include]\n"
+    )
     env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
@@ -2614,6 +2662,7 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
 
 
 def _write_source_with_include(tmp_path: pathlib.Path) -> pathlib.Path:
+    """Create a source environment with a relative config include."""
     source_dir = tmp_path / "source"
     source_dir.mkdir()
     (source_dir / "common.yaml").write_text(
@@ -2626,23 +2675,35 @@ def _write_source_with_include(tmp_path: pathlib.Path) -> pathlib.Path:
 
 
 @pytest.mark.parametrize(
-    "filter_config", ["config:\n    block: [mirrors]\n", "packages: externals_only\n"]
+    "filter_config",
+    [
+        "config: {}\n",
+        "config:\n    allow: [include, view]\n",
+        "config:\n    block: [mirrors]\n",
+        "packages: externals_only\n",
+        "specs:\n    block: [libelf]\n",
+    ],
 )
 def test_env_create_filter_rejects_includes_it_cannot_filter(
     tmp_path: pathlib.Path, filter_config: str
 ):
+    """Require an explicit block for every source configuration include."""
     source_dir = _write_source_with_include(tmp_path)
     filter_yaml = _write_filter_yaml(tmp_path, f"filter:\n  {filter_config}")
     filtered_dir = tmp_path / "filtered"
 
-    with pytest.raises(ev.SpackEnvironmentError, match="cannot remove settings from included"):
+    with pytest.raises(ev.SpackEnvironmentError, match="cannot retain include entries"):
         env("create", "--filter", filter_yaml, "-d", str(filtered_dir), str(source_dir))
     assert not filtered_dir.exists()
 
 
 @pytest.mark.parametrize("concrete", [False, True])
 def test_env_create_filter_drops_blocked_includes(tmp_path: pathlib.Path, concrete: bool):
+    """Omit blocked includes and unrelated source files from the destination."""
     source_dir = _write_source_with_include(tmp_path)
+    (source_dir / "license.dat").write_text("private")
+    (source_dir / ".spack-env" / "logs").mkdir(parents=True)
+    (source_dir / ".spack-env" / "logs" / "licensed-solver.log").write_text("private")
     if concrete:
         source = ev.Environment(source_dir)
         source.concretize()
@@ -2656,31 +2717,75 @@ def test_env_create_filter_drops_blocked_includes(tmp_path: pathlib.Path, concre
 
     filtered = ev.Environment(filtered_dir)
     assert "include" not in filtered.manifest["spack"]
+    assert not (filtered_dir / "common.yaml").exists()
+    assert not (filtered_dir / "license.dat").exists()
+    assert not (filtered_dir / ".spack-env" / "logs").exists()
     with filtered:
         assert "internal" not in spack.config.CONFIG.get("mirrors")
     assert bool(filtered.concrete_roots()) == concrete
 
 
-@pytest.mark.parametrize(
-    "filter_content", ["filter: {}\n", "filter:\n  config:\n    allow: [include, view]\n"]
-)
-def test_env_create_filter_keeps_includes_unchanged(tmp_path: pathlib.Path, filter_content: str):
+def test_env_create_filter_removes_partial_destination(tmp_path: pathlib.Path, monkeypatch):
+    """Remove a partial destination when filtered manifest creation fails."""
     source_dir = _write_source_with_include(tmp_path)
-    filter_yaml = _write_filter_yaml(tmp_path, filter_content)
     filtered_dir = tmp_path / "filtered"
-    env("create", "--filter", filter_yaml, "-d", str(filtered_dir), str(source_dir))
 
-    filtered = ev.Environment(filtered_dir)
-    assert filtered.manifest["spack"]["include"] == ["./common.yaml"]
-    assert (filtered_dir / "common.yaml").read_text() == (source_dir / "common.yaml").read_text()
-    with filtered:
-        assert "internal" in spack.config.CONFIG.get("mirrors")
+    def fail(*args):
+        """Simulate a failure while setting the filtered manifest."""
+        raise RuntimeError("manifest failure")
+
+    monkeypatch.setattr(ev.environment, "_set_filtered_manifest", fail)
+    with pytest.raises(RuntimeError, match="manifest failure"):
+        env(
+            "create",
+            "--filter",
+            _write_filter_yaml(tmp_path, "filter:\n  config:\n    block: [include]\n"),
+            "-d",
+            str(filtered_dir),
+            str(source_dir),
+        )
+    assert not filtered_dir.exists()
+    assert not list(tmp_path.glob(".filtered-*"))
+
+
+def test_env_create_filter_preserves_existing_destination(tmp_path: pathlib.Path):
+    """Leave an existing destination untouched when creation is rejected."""
+    source_dir = _write_source_with_include(tmp_path)
+    filtered_dir = tmp_path / "filtered"
+    filtered_dir.mkdir()
+    (filtered_dir / "keep.txt").write_text("untouched")
+
+    with pytest.raises(ev.SpackEnvironmentError, match="already exists"):
+        env(
+            "create",
+            "--filter",
+            _write_filter_yaml(tmp_path, "filter:\n  config:\n    block: [include]\n"),
+            "-d",
+            str(filtered_dir),
+            str(source_dir),
+        )
+    assert (filtered_dir / "keep.txt").read_text() == "untouched"
+
+
+def test_env_create_filter_blocked_spec_drops_package_entry(tmp_path: pathlib.Path):
+    """Remove package settings for a blocked spec."""
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        "spack:\n  specs: [libelf]\n  packages:\n"
+        "    licensed-solver:\n      externals:\n      - spec: licensed-solver@1\n"
+        "        prefix: /opt/vendor/licensed-solver\n"
+        "    libelf:\n      buildable: false\n"
+    )
+    filter_yaml = _write_filter_yaml(tmp_path, "filter:\n  specs:\n    block: [licensed-solver]\n")
+    env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
+    assert ev.read("filtered").manifest["spack"]["packages"] == {"libelf": {"buildable": False}}
 
 
 @pytest.mark.parametrize("location", ["manifest", "absent"])
 def test_env_create_filter_copies_only_source_concretizer(
     tmp_path: pathlib.Path, mutable_config, location: str
 ):
+    """Copy concretizer settings only when present in the source manifest."""
     source_dir = tmp_path / "source"
     source_dir.mkdir()
     concretizer = "  concretizer:\n    reuse: false\n" if location == "manifest" else ""
@@ -2697,6 +2802,7 @@ def test_env_create_filter_copies_only_source_concretizer(
 
 
 def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):
+    """Keep only packages with externals in externals-only mode."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2733,6 +2839,7 @@ def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_packages_include_all_by_default(tmp_path: pathlib.Path):
+    """Keep every allowed package entry by default."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2770,6 +2877,7 @@ def test_env_create_filter_packages_include_all_by_default(tmp_path: pathlib.Pat
 
 
 def test_env_create_filter_packages_allow_block_entries(tmp_path: pathlib.Path):
+    """Apply package allow and block lists to source package settings."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2815,6 +2923,7 @@ def test_env_create_filter_packages_allow_block_entries(tmp_path: pathlib.Path):
 def test_env_create_filter_packages_externals_only_excludes_non_external_entries(
     tmp_path: pathlib.Path,
 ):
+    """Exclude package entries without externals in externals-only mode."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2857,6 +2966,7 @@ def test_env_create_filter_packages_externals_only_excludes_non_external_entries
 def test_env_create_filter_packages_externals_only_preserves_external_entries(
     tmp_path: pathlib.Path,
 ):
+    """Preserve all external definitions for an included package."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2895,6 +3005,7 @@ def test_env_create_filter_packages_externals_only_preserves_external_entries(
 
 
 def test_env_create_filter_packages_allow_block_external_package_entries(tmp_path: pathlib.Path):
+    """Apply package allow and block lists to external package entries."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2938,6 +3049,7 @@ def test_env_create_filter_packages_allow_block_external_package_entries(tmp_pat
 
 
 def test_env_create_filter_from_manifest(tmp_path: pathlib.Path):
+    """Filter abstract specs and config from a source manifest."""
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         """spack:
@@ -2971,6 +3083,7 @@ def test_env_create_filter_from_manifest(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_from_manifest_preserves_grouped_specs(tmp_path: pathlib.Path):
+    """Preserve grouped abstract specs when filtering a source manifest."""
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         """spack:
@@ -3000,6 +3113,7 @@ def test_env_create_filter_from_manifest_preserves_grouped_specs(tmp_path: pathl
 
 
 def test_env_create_filter_reads_filter_from_file(tmp_path: pathlib.Path):
+    """Read filter settings from a YAML file when creating an environment."""
     filter_yaml = _write_filter_yaml(
         tmp_path,
         """filter:
@@ -3026,6 +3140,7 @@ def test_env_create_filter_reads_filter_from_file(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_manifest_requires_non_concrete(tmp_path: pathlib.Path):
+    """Reject concrete filtering when the source is only a manifest."""
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         """spack:
