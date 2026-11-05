@@ -262,7 +262,8 @@ class Executable:
         For ``output`` and ``error`` it's also accepted to pass a string with a filename, which
         will be automatically opened for writing.
 
-        By default, the subprocess inherits the parent's file descriptors.
+        The subprocess inherits only stdin, stdout and stderr, and on POSIX the fds of a pipe
+        based jobserver advertised in ``MAKEFLAGS``.
         """
         # Setup default environment
         current_environment = os.environ.copy() if env is None else {}
@@ -327,7 +328,8 @@ class Executable:
                 stderr=estream,
                 stdout=ostream,
                 env=current_environment,
-                close_fds=False,
+                # close_fds=True by default: only stdio and jobserver fds are inherited
+                pass_fds=jobserver_fds(current_environment.get("MAKEFLAGS", "")),
             )
         except OSError as e:
             message = "Command: " + cmd_line_string
