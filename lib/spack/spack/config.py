@@ -155,6 +155,8 @@ class ConfigScope:
         # Path used for "$env" in the include paths of this scope, and of the scopes it includes.
         # If None, the path of the active environment is used.
         self.env_path = env_path
+        # If False, format upgrades done when reading are applied to a copy of the data
+        self.upgrade_in_place = True
 
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
@@ -287,7 +289,18 @@ class DirectoryConfigScope(ConfigScope):
 
 
 class SingleFileScope(ConfigScope):
-    """This class represents a configuration scope in a single YAML file."""
+    """A scope whose sections are all in one YAML file, possibly nested under other keys.
+
+    For instance, ``spack.yaml`` has the sections under ``spack:``, so its ``yaml_path`` is
+    ``["spack"]``. A file like the following needs ``yaml_path=["outer", "inner"]``:
+
+    .. code-block:: yaml
+
+       outer:
+         inner:
+           config:
+             install_tree: $spack/opt/spack
+    """
 
     def __init__(
         self,
@@ -300,26 +313,27 @@ class SingleFileScope(ConfigScope):
         prefer_modify: bool = True,
         included: bool = False,
         env_path: Optional[str] = None,
+        data: Optional[YamlConfigDict] = None,
     ) -> None:
-        """Similar to ``ConfigScope`` but can be embedded in another schema.
-
-        Arguments:
-            schema (dict): jsonschema for the file to read
-            yaml_path (list): path in the schema where config data can be
-                found.
-
-                If the schema accepts the following yaml data, the yaml_path
-                would be ['outer', 'inner']
-
-                .. code-block:: yaml
-
-                   outer:
-                     inner:
-                       config:
-                         install_tree: $spack/opt/spack
+        """
+        Args:
+            name: name of the scope
+            path: path to the YAML file
+            schema: JSON schema used to validate the whole file
+            yaml_path: keys leading from the top of the file to the sections
+            writable: whether the scope can be written
+            prefer_modify: whether this scope is preferred for edits, when it is writable and
+                included by the scope that would be edited
+            included: whether this scope is included by another scope
+            env_path: path used for ``$env`` in the include paths of this scope. If None, the
+                path of the active environment is used.
+            data: content of the file, already parsed and validated, used instead of reading
+                the file. The object is stored by reference: writes to the scope modify it, and
+                format upgrades done when reading are applied to a copy.
         """
         super().__init__(name, included, env_path)
-        self._raw_data: Optional[YamlConfigDict] = None
+        self._raw_data: Optional[YamlConfigDict] = data
+        self.upgrade_in_place = data is None
         self.schema = schema
         self.path = path
         self.writable = writable
@@ -389,38 +403,24 @@ class SingleFileScope(ConfigScope):
     def _write_section(self, section: str) -> None:
         if not self.writable:
             raise spack.error.ConfigError(f"Cannot write to immutable scope {self}")
-        data_to_write: Optional[YamlConfigDict] = self._raw_data
 
-        # If there is no existing data, this section SingleFileScope has never
-        # been written to disk. We need to construct the portion of the data
-        # from the root of self._raw_data to the level at which the config
-        # sections are defined. That requires creating keys for every entry in
-        # self.yaml_path
-        if not data_to_write:
-            data_to_write = {}
-            # reverse because we construct it from the inside out
-            for key in reversed(self.yaml_path):
-                data_to_write = {key: data_to_write}
-
-        # data_update_pointer is a pointer to the part of data_to_write
-        # that we are currently updating.
-        # We start by traversing into the data to the point at which the
-        # config sections are defined. This means popping the keys from
-        # self.yaml_path
-        data_update_pointer = data_to_write
+        # Descend to where sections are defined, creating the keys if the file was never written
+        if self._raw_data is None:
+            self._raw_data = {}
+        data_update_pointer = self._raw_data
         for key in self.yaml_path:
-            data_update_pointer = data_update_pointer[key]
+            data_update_pointer = data_update_pointer.setdefault(key, {})
 
-        # For each section, update the data at the level of our pointer
-        # with the data from the section
-        for key, data in self.sections.items():
-            data_update_pointer[key] = data[key]
+        # Only this section: if the data was passed in and edited by the caller, the other
+        # cached sections may be outdated
+        if section in self.sections:
+            data_update_pointer[section] = self.sections[section][section]
 
-        validate(data_to_write, self.schema)
+        validate(self._raw_data, self.schema)
         try:
             filesystem.mkdirp(os.path.dirname(self.path))
             with filesystem.write_tmp_and_move(self.path, encoding="utf-8") as f:
-                syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
+                syaml.dump_config(self._raw_data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to config file {str(e)}") from e
 
@@ -684,12 +684,17 @@ class Configuration:
         return scope.get_section_filename(section)
 
     @_config_mutator
-    def clear_caches(self) -> None:
-        """Clears the caches for configuration files,
+    def clear_caches(self, scope: Optional[str] = None) -> None:
+        """Clears the caches for configuration files.
 
-        This will cause files to be re-read upon the next request."""
-        for scope in self.scopes.values():
-            scope.clear()
+        This will cause files to be re-read upon the next request.
+
+        Args:
+            scope: if given, only the caches of the scope with this name are cleared
+        """
+        scopes = self.scopes.values() if scope is None else [self._validate_scope(scope)]
+        for s in scopes:
+            s.clear()
 
     @_config_mutator
     def update_config(
@@ -880,7 +885,9 @@ class Configuration:
 
             # If configuration is in an old format, transform it and keep track of the scope that
             # may need to be written out to disk.
-            if _update_in_memory(data, section):
+            updated = _update_in_memory(data, section, in_place=config_scope.upgrade_in_place)
+            if updated is not None:
+                data = updated
                 updated_scopes.append(config_scope)
 
             merged_section = spack.schema.merge_yaml(merged_section, data)
@@ -2123,7 +2130,9 @@ def process_config_path(path: str) -> List[str]:
     return ConfigPath.process(path)
 
 
-def _update_in_memory(data: YamlConfigDict, section: str) -> bool:
+def _update_in_memory(
+    data: YamlConfigDict, section: str, *, in_place: bool
+) -> Optional[YamlConfigDict]:
     """Update the format of the configuration data in memory.
 
     This function assumes the section is valid (i.e. validation
@@ -2132,11 +2141,17 @@ def _update_in_memory(data: YamlConfigDict, section: str) -> bool:
     Args:
         data: configuration data
         section: section of the configuration to update
+        in_place: if False, ``data`` is not modified and the update is applied to a copy
 
     Returns:
-        True if the data was changed, False otherwise
+        The updated data, or None if ``data`` is already in the latest format
     """
-    return ensure_latest_format_fn(section)(data)
+    update = _format_update_fn(section)
+    if update is None:
+        return None
+    if not in_place:
+        data = copy.deepcopy(data)
+    return data if update(data) else None
 
 
 def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
@@ -2147,8 +2162,13 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
     Args:
         section: section of the configuration e.g. "packages", "config", etc.
     """
+    return _format_update_fn(section) or (lambda _: False)
+
+
+def _format_update_fn(section: str) -> Optional[Callable[[YamlConfigDict], bool]]:
+    """Returns the function updating a section to the latest format, or None if it has none."""
     # Every module we need is already imported at the top level, so getattr should not raise
-    return getattr(getattr(spack.schema, section), "update", lambda _: False)
+    return getattr(getattr(spack.schema, section), "update", None)
 
 
 @contextlib.contextmanager
