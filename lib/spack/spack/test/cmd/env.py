@@ -2162,7 +2162,7 @@ def test_env_create_filter_preserves_concrete_roots(tmp_path: pathlib.Path):
     assert os.path.exists(filtered.lock_path)
 
 
-def test_env_create_filter_can_select_concrete_dependency(tmp_path: pathlib.Path):
+def test_env_create_filter_can_promote_dependency_of_excluded_root(tmp_path: pathlib.Path):
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2176,16 +2176,17 @@ def test_env_create_filter_can_select_concrete_dependency(tmp_path: pathlib.Path
   concrete: true
   flatten: true
   specs:
-    allow: [callpath]
+    block: [mpileaks]
 """,
     )
     env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
 
-    assert [spec.name for spec in filtered.user_specs] == ["callpath"]
-    assert [spec.name for spec in filtered.concrete_roots()] == ["callpath"]
-    assert [spec.name for spec in filtered.all_specs()] == ["callpath"]
+    assert "callpath" in {spec.name for spec in filtered.user_specs}
+    assert "callpath" in {spec.name for spec in filtered.concrete_roots()}
+    assert "callpath" in {spec.name for spec in filtered.all_specs()}
+    assert "mpileaks" not in {spec.name for spec in filtered.all_specs()}
 
 
 def test_env_create_filter_warns_when_only_dependencies_match(tmp_path: pathlib.Path):
@@ -2283,7 +2284,10 @@ def test_env_create_filter_removes_excluded_concrete_dependencies(
     expected = {
         key: spec
         for key, spec in original_specs.items()
-        if spec.name != "callpath" and (allowed_names is None or spec.name in allowed_names)
+        if all(
+            node.name != "callpath" and (allowed_names is None or node.name in allowed_names)
+            for node in spec.traverse()
+        )
     }
 
     filter_yaml = _write_filter_yaml(
@@ -2294,6 +2298,8 @@ def test_env_create_filter_removes_excluded_concrete_dependencies(
     filtered = ev.read("filtered")
     assert {spec.dag_hash() for spec in filtered.all_specs()} == set(expected)
     assert {spec.dag_hash() for spec in filtered.concrete_roots()} == set(expected)
+    assert "Dropping filtered root mpileaks" in env.output
+    assert "excluded spec" in env.output
     for spec in filtered.all_specs():
         assert {
             (edge.spec.dag_hash(), edge.depflag, edge.virtuals)
@@ -2301,13 +2307,39 @@ def test_env_create_filter_removes_excluded_concrete_dependencies(
         } == {
             (edge.spec.dag_hash(), edge.depflag, edge.virtuals)
             for edge in original_specs[spec.dag_hash()].edges_to_dependencies()
-            if edge.spec.dag_hash() in expected
         }
 
-    lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text())
-    assert set(lockfile["concrete_specs"]) == set(expected)
+    if expected:
+        lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text())
+        assert set(lockfile["concrete_specs"]) == set(expected)
+    else:
+        assert not pathlib.Path(filtered.lock_path).exists()
     assert pathlib.Path(source.lock_path).read_text() == original_lockfile
     assert {spec.dag_hash() for spec in source.all_specs()} == set(original_specs)
+
+
+def test_env_create_filter_drops_root_with_excluded_dependency(tmp_path: pathlib.Path):
+    env("create", "source")
+    source = ev.read("source")
+    with source:
+        add("mpileaks")
+        add("libelf")
+    source.concretize()
+    source.write()
+    libelf = next(spec for spec in source.concrete_roots() if spec.name == "libelf")
+
+    filter_yaml = _write_filter_yaml(
+        tmp_path, "filter:\n  concrete: true\n  specs:\n    block: [callpath]\n"
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
+
+    filtered = ev.read("filtered")
+    assert [spec.dag_hash() for spec in filtered.concrete_roots()] == [libelf.dag_hash()]
+    assert {spec.dag_hash() for spec in filtered.all_specs()} == {
+        spec.dag_hash() for spec in libelf.traverse()
+    }
+    assert "Dropping filtered root mpileaks" in env.output
+    assert "excluded spec callpath" in env.output
 
 
 @pytest.mark.parametrize("blocked_spec", ["callpath", "mpileaks ^libelf@0.8.13"])
@@ -2318,7 +2350,9 @@ def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, 
     env("create", "source")
     source = ev.read("source")
     source.add("mpileaks")
+    source.add("externaltool")
     source.add_concrete_spec(Spec("mpileaks"), spliced)
+    source.add_concrete_spec(Spec("externaltool"), spack.concretize.concretize_one("externaltool"))
     source.write()
     original_lockfile = pathlib.Path(source.lock_path).read_text()
 
@@ -2331,6 +2365,8 @@ def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, 
     filtered = ev.read("filtered")
     lockfile = json.loads(pathlib.Path(filtered.lock_path).read_text())
     assert lockfile["concrete_specs"]
+    assert spliced.dag_hash() not in {spec.dag_hash() for spec in filtered.concrete_roots()}
+    assert "Dropping filtered root mpileaks" in env.output
     for node in lockfile["concrete_specs"].values():
         for dependency in node.get("dependencies", []):
             assert dependency["hash"] in lockfile["concrete_specs"]
@@ -2355,8 +2391,6 @@ def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pat
         tmp_path,
         """filter:
   concrete: true
-  specs:
-    allow: [mpileaks]
   projections:
     all: "{name}@{version}"
 """,
@@ -2386,8 +2420,6 @@ def test_env_create_filter_rejects_projection_that_formats_to_path(tmp_path: pat
         tmp_path,
         """filter:
   concrete: true
-  specs:
-    allow: [mpileaks]
   projections:
     all: "{name}/{version}-{hash:7}"
 """,
@@ -2528,8 +2560,6 @@ def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
         tmp_path,
         """filter:
   concrete: true
-  specs:
-    allow: [mpileaks]
   config:
     allow: [packages, concretizer]
 """,
@@ -2539,8 +2569,8 @@ def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
     filtered = ev.read("filtered")
     filtered_yaml = filtered.manifest["spack"]
 
-    assert [spec.name for spec in filtered.user_specs] == ["mpileaks"]
-    assert [spec.name for spec in filtered.concrete_roots()] == ["mpileaks"]
+    assert {spec.name for spec in filtered.user_specs} == {"mpileaks", "libelf"}
+    assert {spec.name for spec in filtered.concrete_roots()} == {"mpileaks", "libelf"}
     assert set(filtered_yaml["packages"]) == {"all", "cmake", "libelf"}
     assert filtered_yaml["packages"]["all"]["compiler"] == ["gcc"]
     assert "externals" in filtered_yaml["packages"]["cmake"]
@@ -2548,7 +2578,7 @@ def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
     with open(filtered.lock_path, encoding="utf-8") as stream:
         lockfile = filtered._read_lockfile(stream)
 
-    assert [Spec(root["spec"]).name for root in lockfile["roots"]] == ["mpileaks"]
+    assert {Spec(root["spec"]).name for root in lockfile["roots"]} == {"mpileaks", "libelf"}
 
 
 def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
@@ -2572,14 +2602,7 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
     source.concretize()
     source.write()
 
-    filter_yaml = _write_filter_yaml(
-        tmp_path,
-        """filter:
-  concrete: true
-  specs:
-    allow: [mpileaks]
-""",
-    )
+    filter_yaml = _write_filter_yaml(tmp_path, "filter:\n  concrete: true\n")
     env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")

@@ -613,8 +613,7 @@ def _filtered_concrete_root_entries(
     ]
 
     if filter_configuration["flatten"]:
-        # Match against the original DAG before removing edges: constraints can refer
-        # to dependencies (for example, "mpileaks ^mpich").
+        # Match against the original DAG: constraints can refer to dependencies.
         roots.extend(
             (
                 _validated_filter_projection(
@@ -634,59 +633,31 @@ def _filtered_concrete_root_entries(
 def _filtered_concrete_dags(
     filtered_roots: Sequence[Tuple[str, Spec, str]], filter_configuration: Dict[str, Any]
 ) -> List[Tuple[str, Spec, str]]:
-    """Copy selected roots with excluded nodes and edges removed from their DAGs."""
-    # Spliced specs record what they were built from in build_spec. The lockfile
-    # includes those specs and their dependencies, so they must be filtered too.
-    pending = [concrete for _, concrete, _ in filtered_roots]
-    originals: Dict[str, Spec] = {}
-    while pending:
-        concrete = pending.pop()
-        key = concrete.dag_hash()
-        if key in originals:
-            continue
-        originals[key] = concrete
-        pending.extend(concrete.dependencies())
-        if concrete.build_spec is not concrete:
-            pending.append(concrete.build_spec)
-
-    # Copy each allowed spec without dependencies so the source is not changed.
-    # Reuse the same copy wherever a dependency is shared by multiple roots.
-    # Preserve the original hashes so Spack can still find installed packages.
-    selected = {
-        key: concrete.copy(deps=False)
-        for key, concrete in originals.items()
-        if _spec_is_allowed(
-            concrete,
-            filter_configuration["specs"]["allow"],
-            filter_configuration["specs"]["block"],
-        )
-    }
-    for key, concrete in selected.items():
-        original = originals[key]
-        # copy(deps=False) still points to the source's build_spec. Point to its
-        # filtered copy instead, or use None if that spec was excluded.
-        concrete._build_spec = (
-            selected.get(original.build_spec.dag_hash())
-            if original.build_spec is not original
-            else None
-        )
-        # Restore dependencies only when they are allowed by the filter.
-        for edge in original.edges_to_dependencies():
-            dependency = selected.get(edge.spec.dag_hash())
-            if dependency is not None:
-                concrete.add_dependency_edge(
-                    dependency,
-                    depflag=edge.depflag,
-                    virtuals=edge.virtuals,
-                    direct=edge.direct,
-                    propagation=edge.propagation,
-                    when=edge.when,
-                )
-
-    return [
-        (abstract, selected[concrete.dag_hash()], group)
-        for abstract, concrete, group in filtered_roots
-    ]
+    """Keep roots whose dependency and build-spec DAGs contain no excluded nodes."""
+    allow = filter_configuration["specs"]["allow"]
+    block = filter_configuration["specs"]["block"]
+    result = []
+    for abstract, concrete, group in filtered_roots:
+        # The lockfile includes build specs, but traverse() does not follow them.
+        pending = [concrete]
+        seen = set()
+        excluded = None
+        while pending and excluded is None:
+            for node in pending.pop().traverse():
+                key = node.dag_hash()
+                if key in seen:
+                    continue
+                seen.add(key)
+                if not _spec_is_allowed(node, allow, block):
+                    excluded = node
+                    break
+                if node.build_spec is not node:
+                    pending.append(node.build_spec)
+        if excluded is None:
+            result.append((abstract, concrete, group))
+        else:
+            tty.msg(f"Dropping filtered root {abstract}: excluded spec {excluded}")
+    return result
 
 
 def _filtered_abstract_root_entries(
@@ -843,7 +814,7 @@ def _filtered_configuration(
     filtered: Dict[str, Any] = {}
 
     for key, value in source_configuration.items():
-        if key in ("specs", lockfile_include_key) or key in blocked_sections:
+        if key in ("specs", "packages", lockfile_include_key) or key in blocked_sections:
             continue
         if allowed_sections and key not in allowed_sections:
             continue
@@ -854,23 +825,14 @@ def _filtered_configuration(
             continue
         filtered[key] = copy.deepcopy(value)
 
-    def include_section(name: str) -> bool:
-        return name not in blocked_sections and (not allowed_sections or name in allowed_sections)
-
-    if include_section("packages"):
+    if "packages" not in blocked_sections and (
+        not allowed_sections or "packages" in allowed_sections
+    ):
         filtered_packages = _filter_packages_configuration(
             source_configuration.get("packages", {}), filter_configuration
         )
-    else:
-        filtered_packages = {}
-
-    if include_section("packages"):
         if filtered_packages:
             filtered["packages"] = filtered_packages
-        else:
-            filtered.pop("packages", None)
-    else:
-        filtered.pop("packages", None)
 
     filtered["specs"] = specs
 
@@ -915,11 +877,8 @@ def _set_filtered_manifest(env: "Environment", configuration: Dict[str, Any]) ->
 def _populate_filtered_lockfile(
     env: "Environment", filtered_roots: Sequence[Tuple[str, Spec, str]]
 ) -> None:
-    add_concrete_spec = getattr(env, "add_concrete_spec", None) or getattr(
-        env, "_add_concrete_spec"
-    )
     for abstract_spec, concrete_spec, group in filtered_roots:
-        add_concrete_spec(Spec(abstract_spec), concrete_spec, group=group)
+        env.add_concrete_spec(Spec(abstract_spec), concrete_spec, group=group)
     env.write(regenerate=False)
 
 
@@ -962,12 +921,12 @@ def _create_filtered_environment_in_dir(
                     "without a spack.lock"
                 )
             filtered_roots = _filtered_concrete_root_entries(source_env, filter_configuration)
+            filtered_roots = _filtered_concrete_dags(filtered_roots, filter_configuration)
             if not filtered_roots:
                 tty.warn(
-                    "filtered environment has no roots; only matching source roots are kept "
-                    "unless filter:flatten is true"
+                    "filtered environment has no roots; only matching roots with no excluded "
+                    "dependencies are kept (use filter:flatten to promote dependencies)"
                 )
-            filtered_roots = _filtered_concrete_dags(filtered_roots, filter_configuration)
             filtered_specs = _filtered_concrete_root_specs(source_env, filtered_roots)
         else:
             filtered_specs = _filtered_abstract_root_entries(source_env, filter_configuration)
