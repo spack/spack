@@ -14,7 +14,6 @@ import fcntl
 import functools
 import io
 import os
-import re
 import selectors
 import signal
 import tempfile
@@ -40,6 +39,7 @@ from spack.installer.base import (
     StdinReader,
     Tee,
 )
+from spack.util.executable import jobserver_auth
 from spack.util.tty.log import _is_background_tty, ignore_signal
 
 
@@ -401,14 +401,8 @@ def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[str]:
         makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
     """
     makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
-    if not makeflags:
-        return None
-    # In case of multiple --jobserver-* flags, the last one wins, regardless of its format.
-    matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
-    if not matches:
-        return None
-    last_match = matches[-1]
-    return last_match[5:] if last_match.startswith("fifo:") else None
+    auth = jobserver_auth(makeflags)
+    return auth[5:] if auth and auth.startswith("fifo:") else None
 
 
 def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:
