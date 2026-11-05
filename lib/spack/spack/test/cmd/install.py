@@ -6,6 +6,7 @@ import builtins
 import filecmp
 import gzip
 import itertools
+import json
 import os
 import pathlib
 import re
@@ -1157,6 +1158,35 @@ def test_install_use_buildcache(
     # Alternative to --cache-only (always) or --no-cache (never)
     for opt in ["auto", "only", "never"]:
         install_use_buildcache(opt)
+
+
+def test_install_from_buildcache_records_mirror_name(
+    mock_packages,
+    mock_fetch,
+    mock_archive,
+    mock_binary_index,
+    install_mockery,
+    mutable_config,
+    tmp_path: pathlib.Path,
+):
+    """Installing from a build cache records which mirror the binary was fetched from."""
+    mutable_config.set("config:installer", "new")
+    empty_mirror, populated_mirror = tmp_path / "empty", tmp_path / "populated"
+
+    install("pkg-c")
+    buildcache("push", "-u", str(populated_mirror), "pkg-c")
+    uninstall("-y", "pkg-c")
+
+    # Mirrors added later take precedence, so the empty mirror is tried first.
+    mirror("add", "populated", populated_mirror.as_uri())
+    mirror("add", "empty", empty_mirror.as_uri())
+    out = install("--cache-only", "--no-check-signature", "pkg-c")
+    assert "fetched from build cache populated" in out
+
+    spec = spack.store.STORE.db.query_one("pkg-c")
+    assert spec is not None
+    with open(spec.package.times_log_path, encoding="utf-8") as f:
+        assert json.load(f)["mirror_name"] == "populated"
 
 
 @pytest.mark.not_on_windows("Windows logger I/O operation on closed file when install fails")
