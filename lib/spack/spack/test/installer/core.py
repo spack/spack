@@ -159,6 +159,24 @@ class TestPackageInstallerConstructor:
         assert type(spack.plugins.create_plugin("ui", TerminalUI, total=0)) is TerminalUI
         assert "using default TerminalUI" in capsys.readouterr().err
 
+    def test_streaming_ui_entry_point(self, monkeypatch, mutable_config):
+        from spack.installer.streaming.ui import StreamingTerminalUI, setup
+
+        entries = [SimpleNamespace(name="streaming", load=lambda: setup)]
+        monkeypatch.setattr(spack.util.lang, "get_entry_points", lambda *, group: entries)
+        mutable_config.set("config:plugins:ui", "streaming")
+        assert type(spack.plugins.create_plugin("ui", TerminalUI, total=0)) is StreamingTerminalUI
+
+    def test_incompatible_streaming_ui(self, monkeypatch, mutable_config, capsys):
+        from spack.installer.streaming.ui import setup
+
+        entries = [SimpleNamespace(name="streaming", load=lambda: setup)]
+        monkeypatch.setattr(spack.util.lang, "get_entry_points", lambda *, group: entries)
+        mutable_config.set("config:plugins:ui", "streaming")
+        monkeypatch.setattr(TerminalUI, "_render_overview", None)
+        assert type(spack.plugins.create_plugin("ui", TerminalUI, total=0)) is TerminalUI
+        assert "incompatible terminal UI API" in capsys.readouterr().err
+
     def test_broken_installer_plugin_falls_back(
         self, temporary_store, mock_packages, monkeypatch, mutable_config, capsys
     ):

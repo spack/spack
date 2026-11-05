@@ -20,6 +20,25 @@ The ``spack.plugins.ui`` entry-point group provides installer frontends implemen
 ``TerminalUI`` is the built-in default and can be subclassed to customize its behavior.
 Other plugin uses may be added in the future.
 
+The streaming UI is a complete example in ``lib/spack/spack/installer/streaming``.
+From the Spack checkout, install and enable it in the Python environment running Spack:
+
+.. code-block:: console
+
+   $ python -m pip install ./lib/spack/spack/installer/streaming
+   $ spack config add config:plugins:ui:streaming
+
+For plugin development, install it in editable mode instead so changes to the source are available without reinstalling:
+
+.. code-block:: console
+
+   $ python -m pip install -e ./lib/spack/spack/installer/streaming
+   $ spack config add config:plugins:ui:streaming
+
+The streaming UI displays the selected build's log while keeping the overview of all builds visible.
+When available, it shows build progress percentages after elapsed times and excerpts from build output to the right of the progress information.
+With ``spack install -v``, streaming starts automatically.
+
 Installing and Enabling
 -----------------------
 
