@@ -315,7 +315,8 @@ def gray_hash(spec, length):
 def buildcache_status_fn(
     available_hashes: Container[str],
 ) -> Callable[["spack.spec.Spec"], "spack.spec.InstallStatus"]:
-    """Return a status_fn that marks not-installed specs present in a buildcache as [b].
+    """Return a status_fn that marks not-installed specs present in a buildcache as [b], and
+    spliced specs whose build spec is present in a buildcache as [s].
 
     Args:
         available_hashes: any container supporting ``in`` lookups whose elements are dag hashes
@@ -329,6 +330,11 @@ def buildcache_status_fn(
             and spec.dag_hash() in available_hashes
         ):
             return spack.spec.InstallStatus.buildcache
+        if (
+            status == spack.spec.InstallStatus.spliced_from_source
+            and spec.build_spec.dag_hash() in available_hashes
+        ):
+            return spack.spec.InstallStatus.spliced
         return status
 
     return _status_fn
