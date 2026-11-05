@@ -493,7 +493,8 @@ def _is_lockfile_path(path: Union[str, pathlib.Path]) -> bool:
 def _default_filter_configuration() -> Dict[str, Any]:
     return {
         "projections": {"all": spack.spec.DISPLAY_FORMAT},
-        "concrete": True,
+        "concrete": False,
+        "flatten": False,
         "specs": {"allow": [], "block": []},
         "packages": "all",
         "config": {"allow": [], "block": [lockfile_include_key]},
@@ -506,7 +507,8 @@ def _normalized_filter_configuration(configuration: Optional[Dict[str, Any]]) ->
         return normalized
 
     normalized["projections"].update(configuration.get("projections", {}))
-    normalized["concrete"] = configuration.get("concrete", True)
+    normalized["concrete"] = configuration.get("concrete", False)
+    normalized["flatten"] = configuration.get("flatten", False)
 
     specs = configuration.get("specs", {})
     normalized["specs"]["allow"] = list(specs.get("allow", []))
@@ -590,33 +592,52 @@ def _validated_filter_projection(spec: Spec, format_string: str) -> str:
 
 def _filtered_concrete_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
-) -> List[Tuple[str, Spec]]:
-    """Select concrete specs and format their manifest entries."""
-    # Select specs and projection formats before removing dependencies, since their
-    # constraints may refer to dependencies (for example, "mpileaks ^mpich").
-    return [
+) -> List[Tuple[str, Spec, str]]:
+    """Select original roots, optionally promoting dependencies to default-group roots."""
+    allow = filter_configuration["specs"]["allow"]
+    block = filter_configuration["specs"]["block"]
+    original_hashes = {entry.hash for entry in source_env.concretized_roots}
+    roots = [
         (
             _validated_filter_projection(
-                concrete, _projection_format_for(concrete, filter_configuration["projections"])
+                source_env.specs_by_hash[entry.hash],
+                _projection_format_for(
+                    source_env.specs_by_hash[entry.hash], filter_configuration["projections"]
+                ),
             ),
-            concrete,
+            source_env.specs_by_hash[entry.hash],
+            entry.group,
         )
-        for concrete in source_env.all_specs_generator()
-        if _spec_is_allowed(
-            concrete,
-            filter_configuration["specs"]["allow"],
-            filter_configuration["specs"]["block"],
-        )
+        for entry in source_env.concretized_roots
+        if _spec_is_allowed(source_env.specs_by_hash[entry.hash], allow, block)
     ]
+
+    if filter_configuration["flatten"]:
+        # Match against the original DAG before removing edges: constraints can refer
+        # to dependencies (for example, "mpileaks ^mpich").
+        roots.extend(
+            (
+                _validated_filter_projection(
+                    concrete, _projection_format_for(concrete, filter_configuration["projections"])
+                ),
+                concrete,
+                DEFAULT_USER_SPEC_GROUP,
+            )
+            for concrete in source_env.all_specs_generator()
+            if concrete.dag_hash() not in original_hashes
+            and _spec_is_allowed(concrete, allow, block)
+        )
+
+    return roots
 
 
 def _filtered_concrete_dags(
-    filtered_roots: Sequence[Tuple[str, Spec]], filter_configuration: Dict[str, Any]
-) -> List[Tuple[str, Spec]]:
+    filtered_roots: Sequence[Tuple[str, Spec, str]], filter_configuration: Dict[str, Any]
+) -> List[Tuple[str, Spec, str]]:
     """Copy selected roots with excluded nodes and edges removed from their DAGs."""
     # Spliced specs record what they were built from in build_spec. The lockfile
     # includes those specs and their dependencies, so they must be filtered too.
-    pending = [concrete for _, concrete in filtered_roots]
+    pending = [concrete for _, concrete, _ in filtered_roots]
     originals: Dict[str, Spec] = {}
     while pending:
         concrete = pending.pop()
@@ -662,16 +683,17 @@ def _filtered_concrete_dags(
                     when=edge.when,
                 )
 
-    return [(abstract, selected[concrete.dag_hash()]) for abstract, concrete in filtered_roots]
+    return [
+        (abstract, selected[concrete.dag_hash()], group)
+        for abstract, concrete, group in filtered_roots
+    ]
 
 
 def _filtered_abstract_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Union[str, Dict[str, Any]]]:
-    specs: List[Union[str, Dict[str, Any]]] = []
-
-    for group in source_env.manifest.groups():
-        filtered_group_specs = [
+    group_specs = {
+        group: [
             str(spec)
             for spec in source_env.user_specs_by(group=group)
             if _spec_is_allowed(
@@ -680,6 +702,17 @@ def _filtered_abstract_root_entries(
                 filter_configuration["specs"]["block"],
             )
         ]
+        for group in source_env.manifest.groups()
+    }
+    return _filtered_grouped_specs(source_env, group_specs)
+
+
+def _filtered_grouped_specs(
+    source_env: "Environment", group_specs: Dict[str, List[str]]
+) -> List[Union[str, Dict[str, Any]]]:
+    specs: List[Union[str, Dict[str, Any]]] = []
+    for group in source_env.manifest.groups():
+        filtered_group_specs = group_specs[group]
 
         if group == DEFAULT_USER_SPEC_GROUP:
             specs.extend(filtered_group_specs)
@@ -701,6 +734,15 @@ def _filtered_abstract_root_entries(
         specs.append(group_entry)
 
     return specs
+
+
+def _filtered_concrete_root_specs(
+    source_env: "Environment", filtered_roots: Sequence[Tuple[str, Spec, str]]
+) -> List[Union[str, Dict[str, Any]]]:
+    group_specs: Dict[str, List[str]] = {group: [] for group in source_env.manifest.groups()}
+    for abstract, _, group in filtered_roots:
+        group_specs[group].append(abstract)
+    return _filtered_grouped_specs(source_env, group_specs)
 
 
 def _is_lockfile_include_path(path: str) -> bool:
@@ -861,13 +903,13 @@ def _set_filtered_manifest(env: "Environment", configuration: Dict[str, Any]) ->
 
 
 def _populate_filtered_lockfile(
-    env: "Environment", filtered_roots: Sequence[Tuple[str, Spec]]
+    env: "Environment", filtered_roots: Sequence[Tuple[str, Spec, str]]
 ) -> None:
     add_concrete_spec = getattr(env, "add_concrete_spec", None) or getattr(
         env, "_add_concrete_spec"
     )
-    for abstract_spec, concrete_spec in filtered_roots:
-        add_concrete_spec(Spec(abstract_spec), concrete_spec)
+    for abstract_spec, concrete_spec, group in filtered_roots:
+        add_concrete_spec(Spec(abstract_spec), concrete_spec, group=group)
     env.write(regenerate=False)
 
 
@@ -894,7 +936,7 @@ def _create_filtered_environment_in_dir(
         is_source_dir: bool
         source_env, source_path, is_source_dir = source_info
         filter_configuration = _read_filter_configuration(filter_file)
-        filtered_roots: Sequence[Tuple[str, Spec]] = []
+        filtered_roots: Sequence[Tuple[str, Spec, str]] = []
         filtered_specs: List[Union[str, Dict[str, Any]]]
 
         if filter_configuration["concrete"]:
@@ -909,8 +951,13 @@ def _create_filtered_environment_in_dir(
                     "without a spack.lock"
                 )
             filtered_roots = _filtered_concrete_root_entries(source_env, filter_configuration)
+            if not filtered_roots:
+                tty.warn(
+                    "filtered environment has no roots; only matching source roots are kept "
+                    "unless filter:flatten is true"
+                )
             filtered_roots = _filtered_concrete_dags(filtered_roots, filter_configuration)
-            filtered_specs = [abstract for abstract, _ in filtered_roots]
+            filtered_specs = _filtered_concrete_root_specs(source_env, filtered_roots)
         else:
             filtered_specs = _filtered_abstract_root_entries(source_env, filter_configuration)
 

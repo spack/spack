@@ -35,7 +35,8 @@ properties: Dict[str, Any] = {
         "additionalProperties": False,
         "properties": {
             "projections": projection_scheme,
-            "concrete": {"type": "boolean", "default": True},
+            "concrete": {"type": "boolean", "default": False},
+            "flatten": {"type": "boolean", "default": False},
             "specs": allow_block,
             "packages": packages_filter,
             "config": allow_block,

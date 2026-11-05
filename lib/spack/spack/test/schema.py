@@ -266,6 +266,7 @@ def test_filter_schema_accepts_valid_configuration():
                     "mpileaks": "{name}@{version}/{hash:7}",
                 },
                 "concrete": True,
+                "flatten": True,
                 "specs": {"allow": ["mpileaks"], "block": ["zmpi"]},
                 "packages": {"allow": ["all", "cmake"], "block": ["mpileaks"]},
                 "config": {"allow": ["packages"], "block": ["mirrors"]},
@@ -281,6 +282,7 @@ def test_filter_schema_accepts_valid_configuration():
     [
         {"filter": {"externals": {"block": True}}},
         {"filter": {"unknown": []}},
+        {"filter": {"flatten": "yes"}},
         {"filter": {"specs": {"allow": True}}},
         {"filter": {"packages": "externals"}},
         {"filter": {"packages": "none"}},
