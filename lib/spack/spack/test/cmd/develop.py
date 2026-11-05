@@ -430,3 +430,19 @@ def test_develop_with_devpath_staging(
             pass
         else:
             assert os.path.exists(expected_resource_path)
+
+
+def test_nonexistent_develop_package_warning(tmp_path, mock_packages, mutable_config, capsys):
+    env_path = tmp_path / "test_env"
+    e = ev.create_in_dir(env_path)
+    with e:
+        e.add("mpich")
+        spack.config.CONFIG.set(
+            "develop",
+            {"nonexistentpkg": {"spec": "nonexistentpkg@dev", "path": "/fake/path"}},
+            scope=e.scope_name,
+        )
+        e.concretize()
+    captured = capsys.readouterr()
+    assert "nonexistentpkg" in captured.err
+    assert "does not exist in any repository" in captured.err
