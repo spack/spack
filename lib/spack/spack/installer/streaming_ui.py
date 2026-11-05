@@ -2,12 +2,18 @@
 
 import io
 from collections import deque
-from typing import Deque, Dict, Optional
+from typing import Deque, Dict, Generator, NamedTuple, Optional
 
 from spack.installer.ui import SPINNER_INTERVAL, BuildInfo, ChangeJobs, SetEcho, TerminalUI
-from spack.util.path import padding_filter_bytes
+from spack.util.lang import pretty_duration
+from spack.util.path import padding_filter, padding_filter_bytes
 
 LOG_HISTORY_SIZE = 15
+
+
+class BuildProgress(NamedTuple):
+    percent: Optional[str] = None
+    message: Optional[str] = None
 
 
 class StreamingTerminalUI(TerminalUI):
@@ -17,6 +23,7 @@ class StreamingTerminalUI(TerminalUI):
         super().__init__(*args, **kwargs)
         self.log_streaming = kwargs.get("verbose", args[7] if len(args) > 7 else False)
         self.log_history: Dict[str, Deque[bytes]] = {}
+        self.progress: Dict[str, BuildProgress] = {}
         self.log_stream_buffer = b""
 
     def refresh_interval(self) -> Optional[float]:
@@ -47,6 +54,53 @@ class StreamingTerminalUI(TerminalUI):
             self.log_ends_with_newline = True
         super().on_build_removed(build_id)
         self.log_history.pop(build_id, None)
+        self.progress.pop(build_id, None)
+
+    def on_state_changed(self, build_id: str, state: str) -> None:
+        self.progress.pop(build_id, None)
+        super().on_state_changed(build_id, state)
+
+    def on_progress(self, build_id: str, current: int, total: int) -> None:
+        self._set_progress(build_id, BuildProgress(f"{int(current / total * 100)}%", "fetching"))
+
+    def _set_progress(self, build_id: str, progress: Optional[BuildProgress]) -> None:
+        if self.progress.get(build_id) != progress:
+            if progress is None:
+                self.progress.pop(build_id, None)
+            else:
+                self.progress[build_id] = progress
+            self.dirty = True
+
+    def _progress_prefix(self, build_info: BuildInfo) -> Optional[str]:
+        progress = self.progress.get(build_info.id)
+        return progress.percent if progress else None
+
+    def _generate_state_components(
+        self, build_info: BuildInfo, now: float
+    ) -> Generator[str, None, None]:
+        if build_info.state == "finished":
+            prefix = build_info.prefix
+            yield f" {padding_filter(prefix) if self.filter_padding else prefix}"
+        elif build_info.state == "failed":
+            yield " failed"
+            if build_info.log_path:
+                yield f": {build_info.log_path}"
+        else:
+            yield f" {build_info.state}"
+
+        progress = self.progress.get(build_info.id)
+        if build_info.state in ("finished", "failed"):
+            progress = None
+        elapsed = (
+            build_info.duration if build_info.duration is not None else now - build_info.start_time
+        )
+        timing = [pretty_duration(elapsed)] if elapsed > 0 else []
+        if progress and progress.percent:
+            timing.append(progress.percent)
+        if timing:
+            yield f"{self.color.BLACK_BRIGHT} ({', '.join(timing)}){self.color.RESET}"
+        if progress and progress.message:
+            yield f" {progress.message}"
 
     def toggle(self) -> None:
         """Toggle selected-log streaming, showing stored summaries for failed builds."""
