@@ -1075,7 +1075,7 @@ _spack_env_deactivate() {
 _spack_env_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --dir --keep-relative --without-view --with-view --include-concrete --filter"
+        SPACK_COMPREPLY="-h --help -d --dir --keep-relative --without-view --with-view --include-concrete"
     else
         _environments
     fi
