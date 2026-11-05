@@ -497,6 +497,7 @@ def _default_filter_configuration() -> Dict[str, Any]:
         "flatten": False,
         "specs": {"allow": [], "block": []},
         "packages": "all",
+        # Do not carry references to the source lockfile into the new environment.
         "config": {"allow": [], "block": [lockfile_include_key]},
     }
 
@@ -579,6 +580,7 @@ def _validated_filter_projection(spec: Spec, format_string: str) -> str:
             f"filter projection {format_string!r} cannot format concrete spec {spec}"
         ) from e
 
+    # This text becomes a root in spack.yaml, so it must be a valid spec.
     try:
         Spec(projected)
     except (spack.error.SpecError, spack.error.SpecSyntaxError, ValueError) as e:
@@ -656,6 +658,7 @@ def _filtered_concrete_dags(
         if excluded is None:
             result.append((abstract, concrete, group))
         else:
+            # Keeping a partial root would leave the lockfile incomplete.
             tty.msg(f"Dropping filtered root {abstract}: excluded spec {excluded}")
     return result
 
@@ -725,6 +728,7 @@ def _filter_lockfile_includes(
 ) -> List[Union[str, Dict[str, Any]]]:
     filtered: List[Union[str, Dict[str, Any]]] = []
 
+    # Including the old lockfile would bring back specs removed by the filter.
     for entry in includes:
         if isinstance(entry, str):
             if not _is_lockfile_include_path(entry):
@@ -813,6 +817,7 @@ def _filtered_configuration(
     blocked_sections = set(filter_configuration["config"]["block"])
     filtered: Dict[str, Any] = {}
 
+    # Specs and packages are filtered separately; do not copy lockfile references.
     for key, value in source_configuration.items():
         if key in ("specs", "packages", lockfile_include_key) or key in blocked_sections:
             continue
@@ -869,6 +874,7 @@ def _filtered_source_environment(
 def _set_filtered_manifest(env: "Environment", configuration: Dict[str, Any]) -> None:
     env.manifest.yaml_content = {TOP_LEVEL_KEY: configuration}
     env.manifest.changed = True
+    # Remove the source lockfile before reading the filtered manifest.
     with fs.safe_remove(env.lock_path):
         env.manifest.flush()
     env._re_read()
