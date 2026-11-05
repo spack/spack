@@ -16,6 +16,8 @@ It is assumed you have already read the :doc:`Spack Packaging Guide <packaging_g
 The Spack Package API is the *only* module in the Spack codebase considered public API.
 It re-exports essential functions and classes from various Spack modules, allowing package authors to import them directly from :mod:`spack.package` without needing to know Spack's internal structure.
 
+See also the :doc:`Spack builtin repo reference <spack_repo>` and the private :doc:`Spack internal API reference <spack>`.
+
 Spack Package API Versioning
 ----------------------------
 
