@@ -258,7 +258,8 @@ def relocate_elf_binaries(
 
 def relocate_links(links: Iterable[str], prefix_to_prefix: Dict[str, str]) -> None:
     """Relocate links to a new install prefix."""
-    regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
+    prefixes = sorted(prefix_to_prefix, key=len, reverse=True)
+    regex = re.compile("|".join(re.escape(p) for p in prefixes))
     for link in links:
         old_target = readlink(link)
         if not os.path.isabs(old_target):
