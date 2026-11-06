@@ -39,6 +39,7 @@ from spack.cmd.env import _env_create
 from spack.concretize_ui import SolveKind
 from spack.config import Configuration, substitute_path_variables
 from spack.environment import depfile
+from spack.environment.environment import _filtered_abstract_root_entries
 from spack.main import SpackCommand, SpackCommandError
 from spack.old_installer import PackageInstaller
 from spack.repo import RepoPath
@@ -2124,8 +2125,9 @@ def test_env_create_filter_rejects_lockfile(tmp_path: pathlib.Path):
         env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", source.lock_path)
 
 
-def test_env_create_filter_defaults_to_abstract_specs(tmp_path: pathlib.Path):
-    """Create abstract roots by default when filtering a concrete environment."""
+@pytest.mark.parametrize("specs_filter", ["{}", "{block: [callpath]}", "{allow: [callpath]}"])
+def test_env_create_filter_defaults_to_abstract_specs(tmp_path: pathlib.Path, specs_filter: str):
+    """Ignore the source concrete DAG when selecting or flattening abstract specs."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2133,10 +2135,14 @@ def test_env_create_filter_defaults_to_abstract_specs(tmp_path: pathlib.Path):
     source.concretize()
     source.write()
 
-    env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", "source")
+    filter_yaml = _write_filter_yaml(
+        tmp_path, f"filter:\n  flatten: true\n  specs: {specs_filter}\n"
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
-    assert [str(spec) for spec in filtered.user_specs] == ["mpileaks"]
+    expected = [] if "allow" in specs_filter else ["mpileaks"]
+    assert [str(spec) for spec in filtered.user_specs] == expected
     assert not filtered.concrete_roots()
     assert not os.path.exists(filtered.lock_path)
 
@@ -2168,7 +2174,7 @@ def test_env_create_filter_preserves_concrete_roots(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_can_promote_dependency_of_excluded_root(tmp_path: pathlib.Path):
-    """Promote an allowed dependency when its original root is excluded."""
+    """Select an allowed sub-DAG below an unmatched root, even if that ancestor is blocked."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2182,6 +2188,7 @@ def test_env_create_filter_can_promote_dependency_of_excluded_root(tmp_path: pat
   concrete: true
   flatten: true
   specs:
+    allow: [callpath]
     block: [mpileaks]
 """,
     )
@@ -2195,25 +2202,52 @@ def test_env_create_filter_can_promote_dependency_of_excluded_root(tmp_path: pat
     assert "mpileaks" not in {spec.name for spec in filtered.all_specs()}
 
 
-def test_env_create_filter_warns_when_only_dependencies_match(tmp_path: pathlib.Path):
-    """Warn when matching dependencies leave a filtered environment without roots."""
+@pytest.mark.parametrize("flatten", [False, True])
+@pytest.mark.parametrize(
+    "allowed, blocked, selected_names",
+    [
+        ("mpileaks, callpath, libelf", "", {"mpileaks"}),
+        ("callpath, libdwarf, libelf", "", {"callpath"}),
+        ("libelf", "", {"libelf"}),
+        ("callpath", "mpileaks", {"callpath"}),
+        ("mpileaks, callpath", "mpileaks", set()),
+        ("callpath, libelf", "libdwarf", set()),
+        ("externaltool", "", set()),
+    ],
+)
+def test_env_create_filter_selects_allowed_subdags(
+    tmp_path: pathlib.Path, flatten: bool, allowed: str, blocked: str, selected_names: Set[str]
+):
+    """Select whole allowed sub-DAGs, block them, and only then flatten survivors."""
     env("create", "source")
     source = ev.read("source")
     with source:
         add("mpileaks")
     source.concretize()
     source.write()
+    selected = [spec for spec in source.all_specs() if spec.name in selected_names]
+    expected = {node.dag_hash() for spec in selected for node in spec.traverse()}
+    expected_roots = expected if flatten else {spec.dag_hash() for spec in selected}
 
     filter_yaml = _write_filter_yaml(
-        tmp_path, "filter:\n  concrete: true\n  specs:\n    allow: [callpath]\n"
+        tmp_path,
+        f"""filter:
+  concrete: true
+  flatten: {str(flatten).lower()}
+  specs:
+    allow: [{allowed}]
+    block: [{blocked}]
+""",
     )
     env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
-    assert not filtered.concrete_roots()
-    assert not os.path.exists(filtered.lock_path)
-    assert "filtered environment has no roots" in env.output
-    assert "filter:flatten" in env.output
+    assert {spec.dag_hash() for spec in filtered.concrete_roots()} == expected_roots
+    assert {spec.dag_hash() for spec in filtered.all_specs()} == expected
+    assert len(filtered.concretized_roots) == len(expected_roots)
+    if not expected_roots:
+        assert not os.path.exists(filtered.lock_path)
+        assert "filtered environment has no roots" in env.output
 
 
 @pytest.mark.parametrize("flatten", [False, True])
@@ -2272,32 +2306,32 @@ def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, fla
 
 
 @pytest.mark.parametrize(
-    "specs_filter, allowed_names",
+    "specs_filter, selected_names",
     [
-        ("block: [callpath]", None),
-        ("allow: [mpileaks, libelf, libdwarf]", {"mpileaks", "libelf", "libdwarf"}),
+        ("block: [callpath]", {"externaltool"}),
+        ("allow: [mpileaks, libelf, libdwarf]", {"mpileaks"}),
     ],
 )
-def test_env_create_filter_removes_excluded_concrete_dependencies(
-    tmp_path: pathlib.Path, specs_filter: str, allowed_names: Optional[Set[str]]
+def test_env_create_filter_preserves_surviving_dags(
+    tmp_path: pathlib.Path, specs_filter: str, selected_names: Set[str]
 ):
-    """Exclude disallowed concrete dependencies without mutating the source graph."""
+    """Flatten surviving DAGs without mutating their dependencies or the source graph."""
     env("create", "source")
     source = ev.read("source")
     with source:
         add("mpileaks")
+        add("externaltool")
     source.concretize()
     source.write()
     original_lockfile = pathlib.Path(source.lock_path).read_text(encoding="utf-8")
     original_specs = {spec.dag_hash(): spec for spec in source.all_specs()}
-    expected_roots = {
-        key: spec
-        for key, spec in original_specs.items()
-        if (spec.name in allowed_names if allowed_names is not None else True)
-        and (allowed_names is not None or all(node.name != "callpath" for node in spec.traverse()))
+    expected = {
+        node.dag_hash()
+        for spec in source.concrete_roots()
+        if spec.name in selected_names
+        for node in spec.traverse()
     }
-    assert expected_roots
-    expected = {node.dag_hash() for spec in expected_roots.values() for node in spec.traverse()}
+    assert expected
 
     filter_yaml = _write_filter_yaml(
         tmp_path, f"filter:\n  concrete: true\n  flatten: true\n  specs:\n    {specs_filter}\n"
@@ -2306,8 +2340,8 @@ def test_env_create_filter_removes_excluded_concrete_dependencies(
 
     filtered = ev.read("filtered")
     assert {spec.dag_hash() for spec in filtered.all_specs()} == expected
-    assert {spec.dag_hash() for spec in filtered.concrete_roots()} == set(expected_roots)
-    if allowed_names is None:
+    assert {spec.dag_hash() for spec in filtered.concrete_roots()} == expected
+    if specs_filter.startswith("block:"):
         assert "Dropping filtered root mpileaks" in env.output
         assert "excluded spec" in env.output
     for spec in filtered.all_specs():
@@ -2351,8 +2385,10 @@ def test_env_create_filter_drops_root_with_excluded_dependency(tmp_path: pathlib
 
 
 @pytest.mark.parametrize("blocked_spec", ["callpath", "mpileaks ^libelf@0.8.13"])
-def test_env_create_filter_removes_excluded_build_specs(tmp_path: pathlib.Path, blocked_spec: str):
-    """Remove filtered build specs while keeping lockfile references valid."""
+def test_env_create_filter_drops_dags_with_blocked_build_specs(
+    tmp_path: pathlib.Path, blocked_spec: str
+):
+    """Drop whole DAGs with blocked build provenance, preserving surviving lockfile references."""
     original = spack.concretize.concretize_one("mpileaks ^libelf@0.8.13")
     replacement = spack.concretize.concretize_one("libelf@0.8.12")
     spliced = original.splice(replacement, transitive=True)
@@ -2503,6 +2539,86 @@ def test_env_create_filter_drops_blocked_abstract_dependency(tmp_path: pathlib.P
     assert [spec.name for spec in ev.read("filtered").user_specs] == ["libelf"]
 
 
+@pytest.mark.parametrize("flatten", [False, True])
+@pytest.mark.parametrize(
+    "allowed, blocked, selected_specs",
+    [
+        ("", "", ["mpileaks@2.3+debug ^callpath@1.0 ^libelf@0.8.13"]),
+        ("mpileaks, callpath", "", ["mpileaks@2.3+debug ^callpath@1.0 ^libelf@0.8.13"]),
+        ("callpath, libelf", "", ["callpath@1.0", "libelf@0.8.13"]),
+        ("callpath@1.0", "mpileaks", ["callpath@1.0"]),
+        ("callpath, libelf", "libelf", ["callpath@1.0"]),
+        ("mpileaks, libelf", "callpath", []),
+        ("", "mpileaks", []),
+        ("callpath@2.0", "", []),
+    ],
+)
+def test_env_create_filter_selects_abstract_subdags(
+    tmp_path: pathlib.Path, flatten: bool, allowed: str, blocked: str, selected_specs
+):
+    """Filter explicit dependencies in order and serialize without concrete projections."""
+    spack_yaml = tmp_path / "spack.yaml"
+    source_manifest = "spack:\n  specs: [mpileaks@2.3+debug ^callpath@1.0 ^libelf@0.8.13]\n"
+    spack_yaml.write_text(source_manifest)
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        f"""filter:
+  concrete: false
+  flatten: {str(flatten).lower()}
+  projections:
+    all: '{{name}}'
+  specs:
+    allow: [{allowed}]
+    block: [{blocked}]
+""",
+    )
+    env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
+
+    selected_roots = [Spec(spec_string) for spec_string in selected_specs]
+    expected = {
+        str(node) for spec in selected_roots for node in (spec.traverse() if flatten else [spec])
+    }
+    filtered = ev.read("filtered")
+    assert set(filtered.manifest["spack"]["specs"]) == expected
+    assert len(filtered.user_specs) == len(expected)
+    assert not filtered.concrete_roots()
+    assert not os.path.exists(filtered.lock_path)
+    assert spack_yaml.read_text() == source_manifest
+
+
+@pytest.mark.parametrize("flatten", [False, True])
+@pytest.mark.parametrize(
+    "allowed, blocked, selected_names",
+    [
+        (["callpath", "libdwarf"], [], {"callpath"}),
+        (["callpath", "libdwarf"], ["mpileaks"], {"callpath"}),
+        (["mpileaks", "libelf"], ["callpath"], set()),
+        (["callpath", "libelf"], ["libdwarf"], {"libelf"}),
+        (["callpath", "libelf"], [], {"callpath", "libelf"}),
+        (["libelf"], [], {"libelf"}),
+    ],
+)
+def test_env_create_filter_nested_abstract_subdags(
+    monkeypatch, flatten: bool, allowed, blocked, selected_names
+):
+    """Keep explicit nested DAGs intact and deduplicate shared promoted dependencies."""
+    abstract_root = Spec.from_literal(
+        {"mpileaks": {"callpath": {"libdwarf": {"libelf": None}}, "mpich": {"libelf": None}}}
+    )
+    source = ev.create("source")
+    # Adding a spec through the manifest would serialize and flatten this nested fixture.
+    monkeypatch.setattr(source, "user_specs_by", lambda *, group: [abstract_root])
+    filtered_specs = _filtered_abstract_root_entries(
+        source, {"specs": {"allow": allowed, "block": blocked}, "flatten": flatten}
+    )
+    selected_roots = [node for node in abstract_root.traverse() if node.name in selected_names]
+    expected = {
+        str(node) for spec in selected_roots for node in (spec.traverse() if flatten else [spec])
+    }
+    assert set(filtered_specs) == expected
+    assert len(filtered_specs) == len(expected)
+
+
 def test_env_create_filter_blocks_external_concrete_specs_with_specs_block(tmp_path: pathlib.Path):
     """Block external concrete roots with a specs block filter."""
     env("create", "source")
@@ -2626,7 +2742,8 @@ def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
     assert {Spec(root["spec"]).name for root in lockfile["roots"]} == {"mpileaks", "libelf"}
 
 
-def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
+@pytest.mark.parametrize("flatten", [False, True])
+def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path, flatten: bool):
     """Drop lockfile includes when creating a filtered environment."""
     env("create", "included")
     included = ev.read("included")
@@ -2649,7 +2766,9 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
     source.write()
 
     filter_yaml = _write_filter_yaml(
-        tmp_path, "filter:\n  concrete: true\n  config:\n    block: [include]\n"
+        tmp_path,
+        f"filter:\n  concrete: true\n  flatten: {str(flatten).lower()}\n"
+        "  config:\n    block: [include]\n",
     )
     env("create", "--filter", filter_yaml, "filtered", "source")
 
@@ -2657,8 +2776,13 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path):
     filtered_yaml = filtered.manifest["spack"]
 
     assert ev.manifest_include_name not in filtered_yaml
-    assert [spec.name for spec in filtered.user_specs] == ["mpileaks"]
-    assert [spec.name for spec in filtered.concrete_roots()] == ["mpileaks"]
+    expected = {spec.dag_hash() for spec in source.specs_by_hash.values()}
+    if flatten:
+        expected = {
+            node.dag_hash() for spec in source.specs_by_hash.values() for node in spec.traverse()
+        }
+    assert {spec.dag_hash() for spec in filtered.concrete_roots()} == expected
+    assert "cmake" not in {spec.name for spec in filtered.all_specs()}
 
 
 def _write_source_with_include(tmp_path: pathlib.Path) -> pathlib.Path:
@@ -3082,23 +3206,37 @@ def test_env_create_filter_from_manifest(tmp_path: pathlib.Path):
     assert filtered_yaml["packages"] == {"all": {"compiler": ["gcc"]}}
 
 
-def test_env_create_filter_from_manifest_preserves_grouped_specs(tmp_path: pathlib.Path):
-    """Preserve grouped abstract specs when filtering a source manifest."""
+@pytest.mark.parametrize("flatten", [False, True])
+@pytest.mark.parametrize("allow_dependencies", [False, True])
+def test_env_create_filter_from_manifest_preserves_grouped_specs(
+    tmp_path: pathlib.Path, flatten: bool, allow_dependencies: bool
+):
+    """Preserve root occurrences and group metadata while promoting dependencies to default."""
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         """spack:
   specs:
+  - group: base
+    specs: [libelf, libelf]
+    explicit: false
+    override:
+      config:
+        verify_ssl: false
   - group: apps
+    needs: [base]
     specs:
-    - mpileaks
-    - libelf
+    - mpileaks ^callpath ^libelf
+    - mpileaks ^callpath ^libelf
 """
     )
 
     filter_yaml = _write_filter_yaml(
         tmp_path,
-        """filter:
+        f"""filter:
   concrete: false
+  flatten: {str(flatten).lower()}
+  specs:
+    allow: {"[callpath, libelf]" if allow_dependencies else "[]"}
 """,
     )
     env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
@@ -3106,9 +3244,19 @@ def test_env_create_filter_from_manifest_preserves_grouped_specs(tmp_path: pathl
     filtered = ev.read("filtered")
     filtered_yaml = filtered.manifest["spack"]
 
-    assert list(filtered.user_specs) == []
-    assert [spec.name for spec in filtered.user_specs_by(group="apps")] == ["mpileaks", "libelf"]
-    assert filtered_yaml["specs"] == [{"group": "apps", "specs": ["mpileaks", "libelf"]}]
+    expected_promoted = ["callpath"] if allow_dependencies or flatten else []
+    assert [str(spec) for spec in filtered.user_specs] == expected_promoted
+    assert [str(spec) for spec in filtered.user_specs_by(group="base")] == ["libelf", "libelf"]
+    app_specs = [] if allow_dependencies else [str(Spec("mpileaks ^callpath ^libelf"))] * 2
+    assert filtered_yaml["specs"] == expected_promoted + [
+        {
+            "group": "base",
+            "specs": ["libelf", "libelf"],
+            "explicit": False,
+            "override": {"config": {"verify_ssl": False}},
+        },
+        {"group": "apps", "specs": app_specs, "needs": ["base"]},
+    ]
     assert not os.path.exists(filtered.lock_path)
 
 
