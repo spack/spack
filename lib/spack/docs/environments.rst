@@ -153,6 +153,7 @@ Creating Filtered Environments
 Spack can create a new environment by filtering an existing one.
 This is useful for continuous integration on environments containing licensed or proprietary software.
 For example, you can filter out the proprietary software from an environment that will be passed to untrusted CI resources.
+Another use-case can arise when debugging - proprietary software can be filtered out before passing the environment to a vendor to debug.
 This feature can also be used to simplify an environment to only the portion relevant for a particular use-case (eliminating packages or config sections).
 
 Suppose ``licensed-env`` contains ``openblas`` and a proprietary package, ``licensed-solver``, which depends on ``libelf``.
