@@ -15,6 +15,7 @@ _DEFAULT_SEPARATORS = (",", ":")
 _DEFAULT_INDENT = None
 _PRETTY_SEPARATORS = (", ", ": ")
 _PRETTY_INDENT = "  "
+_WRITE_SIZE = 1024 * 1024
 
 
 def load(stream: Any) -> Dict:
@@ -26,9 +27,11 @@ def load(stream: Any) -> Dict:
 
 def dump(data: Any, stream: IO[str], pretty: bool = False) -> None:
     """Wrapper around json.dump with different default arguments"""
-    indent = _PRETTY_INDENT if pretty else _DEFAULT_INDENT
-    separators = _PRETTY_SEPARATORS if pretty else _DEFAULT_SEPARATORS
-    json.dump(data, stream, separators=separators, indent=indent)
+    # json.dump encodes in Python; json.dumps uses the C encoder and is several times faster.
+    text = dumps(data, pretty=pretty)
+    # Write in slices, so that the stream does not hold an encoded copy of the whole document.
+    for i in range(0, len(text), _WRITE_SIZE):
+        stream.write(text[i : i + _WRITE_SIZE])
 
 
 def dumps(data: Any, pretty: bool = False) -> str:

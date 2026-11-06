@@ -40,3 +40,7 @@
 #heuristic attr("variant_value", PackageNode, Variant, Value). [30, init]
 #heuristic attr("variant_value", PackageNode, Variant, Value). [-1, sign]
 #heuristic attr("variant_value", PackageNode, Variant, Value) : variant_default_value(PackageNode, Variant, Value), attr("node", PackageNode). [1@2, sign]
+
+% Prefer the first build unification set, and the first node of a virtual on edges
+#heuristic build_set_id(PackageNode, 0). [1, sign]
+#heuristic virtual_on_edge(PackageNode, ProviderNode, node(0, Virtual), Type). [1, sign]

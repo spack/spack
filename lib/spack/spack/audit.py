@@ -5,14 +5,14 @@
 Spack and run them on-demand.
 
 To register a new class of sanity checks (e.g. sanity checks for
-compilers.yaml), the first action required is to create a new AuditClass
+packages.yaml), the first action required is to create a new AuditClass
 object:
 
 .. code-block:: python
 
-   audit_cfgcmp = AuditClass(
-       tag="CFG-COMPILER",
-       description="Sanity checks on compilers.yaml",
+   audit_cfgpkg = AuditClass(
+       tag="CFG-PACKAGES",
+       description="Sanity checks on packages.yaml",
        kwargs=()
    )
 
@@ -21,8 +21,8 @@ that will perform each a single check:
 
 .. code-block:: python
 
-   @audit_cfgcmp
-   def _search_duplicate_compilers(error_cls):
+   @audit_cfgpkg
+   def _search_duplicate_specs_in_externals(error_cls):
        pass
 
 These functions need to take as argument the keywords declared when
@@ -41,13 +41,12 @@ import collections.abc
 import glob
 import inspect
 import io
-import itertools
 import os
 import pathlib
 import pickle
 import re
 import warnings
-from typing import Iterable, List, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from urllib.request import urlopen
 
 import spack.builder
@@ -56,6 +55,7 @@ import spack.enums
 import spack.package_base
 import spack.patch
 import spack.repo
+import spack.schema.modules
 import spack.spec
 import spack.util.crypto
 import spack.util.lang
@@ -64,10 +64,10 @@ import spack.variant
 from spack.util.string import plural
 
 #: Map an audit tag to a list of callables implementing checks
-CALLBACKS = {}
+CALLBACKS: Dict[str, "AuditClass"] = {}
 
 #: Map a group of checks to the list of related audit tags
-GROUPS = collections.defaultdict(list)
+GROUPS: Dict[str, List[str]] = collections.defaultdict(list)
 
 
 class Error:
@@ -185,35 +185,6 @@ generic = AuditClass(
 )
 
 
-#: Sanity checks on compilers.yaml
-config_compiler = AuditClass(
-    group="configs", tag="CFG-COMPILER", description="Sanity checks on compilers.yaml", kwargs=()
-)
-
-
-@config_compiler
-def _search_duplicate_compilers(error_cls):
-    """Report compilers with the same spec and two different definitions"""
-    errors = []
-
-    compilers = list(
-        sorted(spack.config.CONFIG.get("compilers"), key=lambda x: x["compiler"]["spec"])
-    )
-    for spec, group in itertools.groupby(compilers, key=lambda x: x["compiler"]["spec"]):
-        group = list(group)
-        if len(group) == 1:
-            continue
-
-        error_msg = "Compiler defined multiple times: {0}"
-        try:
-            details = [str(x._start_mark).strip() for x in group]
-        except Exception:
-            details = []
-        errors.append(error_cls(summary=error_msg.format(spec), details=details))
-
-    return errors
-
-
 #: Sanity checks on packages.yaml
 config_packages = AuditClass(
     group="configs", tag="CFG-PACKAGES", description="Sanity checks on packages.yaml", kwargs=()
@@ -222,6 +193,11 @@ config_packages = AuditClass(
 #: Sanity checks on packages.yaml
 config_repos = AuditClass(
     group="configs", tag="CFG-REPOS", description="Sanity checks on repositories", kwargs=()
+)
+
+#: Sanity checks on modules.yaml
+config_modules = AuditClass(
+    group="configs", tag="CFG-MODULES", description="Sanity checks on modules.yaml", kwargs=()
 )
 
 
@@ -367,6 +343,37 @@ def _ensure_no_folders_without_package_py(error_cls):
     return errors
 
 
+@config_modules
+def _ensure_templates_apply_to_folded_installations(error_cls):
+    """With variants defined in tcl module files, the installations of a package version share
+    one module file, so a template must be set for them all"""
+    errors = []
+    modules_yaml = spack.config.CONFIG.get_config("modules")
+    # The keys that are not options of the tcl section are spec constraints
+    option_keys = spack.schema.modules.tcl_configuration["properties"]
+    for set_name, module_set in modules_yaml.items():
+        if set_name == "prefix_inspections":
+            continue
+        tcl_yaml = module_set.get("tcl", {})
+        if tcl_yaml.get("variants", "none") == "none":
+            continue
+        for constraint, rules in tcl_yaml.items():
+            if constraint in option_keys or "template" not in rules:
+                continue
+            # Installations of different versions never share a module file, so a constraint
+            # on the package name and version applies to the whole module file
+            if spack.spec.constrains_only_name_and_versions(spack.spec.Spec(constraint)):
+                continue
+            summary = (
+                f"Setting a template for '{constraint}' in the tcl configuration of the "
+                f"'{set_name}' module set, while 'variants: {tcl_yaml['variants']}' folds "
+                "the installations of a package version into one module file. Set the "
+                "template for the package or package version instead"
+            )
+            errors.append(_make_config_error(rules, summary, error_cls=error_cls))
+    return errors
+
+
 def _make_config_error(config_data, summary, error_cls):
     s = io.StringIO()
     s.write("Occurring in the following file:\n")
@@ -505,6 +512,49 @@ def _check_patch_urls(pkgs, error_cls):
     return errors
 
 
+@package_directives
+def _patch_fixes_are_deprecation_labels(pkgs, error_cls):
+    """Reports labels in 'patch(fixes=...)' that no deprecated() directive of the patched
+    package declares.
+    """
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
+
+        fixing_patches_by_target = collections.defaultdict(list)
+        fixing_patches_by_target[pkg_name] = [
+            x for patches in pkg_cls.patches.values() for x in patches if x.fixes
+        ]
+        for deps_by_name in pkg_cls.dependencies.values():
+            for dep_name, dep in deps_by_name.items():
+                for patches in (dep.patches or {}).values():
+                    fixing_patches_by_target[dep_name].extend(x for x in patches if x.fixes)
+
+        for target, patches in fixing_patches_by_target.items():
+            if not patches or not spack.repo.PATH.exists(target):
+                continue
+            target_cls = spack.repo.PATH.get_pkg_class(target)
+            labels = {
+                label
+                for entries in target_cls.deprecations.values()
+                for entry in entries
+                for label in entry.labels
+            }
+            for patch in patches:
+                for label in patch.fixes:
+                    if label in labels:
+                        continue
+                    name = getattr(patch, "relative_path", None) or patch.path_or_url
+                    summary = (
+                        f"{pkg_name}: patch '{name}' fixes '{label}', which is not a label of "
+                        f"any deprecated() directive of '{target}'"
+                    )
+                    errors.append(error_cls(summary, [f"in {filename}"]))
+
+    return errors
+
+
 @package_attributes
 def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
     """Ensure that packages don't override reserved names"""
@@ -577,7 +627,9 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
     errors = []
     for pkg_name in pkgs:
         try:
-            source = ph.canonical_source(spack.spec.Spec(pkg_name), filter_multimethods=False)
+            source = ph.canonical_source(
+                spack.spec.Spec(pkg_name), filter_multimethods=False, repo=spack.repo.PATH
+            )
         except Exception as e:
             error_msg = "Package '{}' failed to unparse".format(pkg_name)
             details = ["{}".format(str(e))]
@@ -612,21 +664,38 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
     return errors
 
 
+def _declared_build_systems(pkg_cls) -> Set[str]:
+    """Return the names of the build systems declared by a package class."""
+    # values are either ConditionalValue objects or the values themselves
+    return set(
+        v.value if isinstance(v, spack.variant.ConditionalValue) else v
+        for _, variant in pkg_cls.variant_definitions("build_system")
+        for v in variant.values
+    )
+
+
 @package_properties
 def _ensure_package_builders(pkgs, error_cls):
-    """Ensure all packages can produce a builder"""
+    """Ensure all packages can produce a builder for each build system they declare"""
     errors = []
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
-        pkg = pkg_cls(spack.spec.Spec(pkg_name))
-        try:
-            b = spack.builder.buildsystem_name(pkg)
-            if not isinstance(b, str):
-                raise TypeError("invalid builder type {!s}".format(type(b)))
-        except Exception as e:
-            errors.append(
-                error_cls("The package '{pkg_name}' does not have a build system", [str(e)])
-            )
+
+        build_system_names = _declared_build_systems(pkg_cls)
+        if not build_system_names:
+            errors.append(error_cls(f"The package '{pkg_name}' does not have a build system", []))
+            continue
+
+        for build_system_name in sorted(build_system_names):
+            if build_system_name not in spack.builder.BUILDER_CLS:
+                errors.append(
+                    error_cls(
+                        f"The package '{pkg_name}' declares the build system "
+                        f"'{build_system_name}', which has no builder",
+                        [],
+                    )
+                )
+
     return errors
 
 
@@ -706,12 +775,7 @@ def _ensure_env_methods_are_ported_to_builders(pkgs, error_cls):
     for pkg_name in pkgs:
         pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
 
-        # values are either ConditionalValue objects or the values themselves
-        build_system_names = {
-            v.value if isinstance(v, spack.variant.ConditionalValue) else v
-            for _, variant in pkg_cls.variant_definitions("build_system")
-            for v in variant.values
-        }
+        build_system_names = _declared_build_systems(pkg_cls)
         builder_cls_names = [spack.builder.BUILDER_CLS[x].__name__ for x in build_system_names]
 
         has_builders_in_package_py = any(
@@ -808,6 +872,50 @@ def _uses_deprecated_globals(pkgs, error_cls):
                         for name, line in visitor.references_to_globals
                     ],
                 )
+            )
+
+    return errors
+
+
+#: Decorators registering a phase callback, which accept a ``when=`` argument
+PHASE_CALLBACK_DECORATORS = ("run_before", "run_after")
+
+
+def _decorator_name(node: ast.expr) -> Optional[str]:
+    """Return the name of the callable used as a decorator, or None if it cannot be determined."""
+    if isinstance(node, ast.Call):
+        node = node.func
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    if isinstance(node, ast.Name):
+        return node.id
+    return None
+
+
+@package_properties
+def _ensure_when_is_not_combined_with_phase_callbacks(pkgs, error_cls):
+    """Ensure @when is not used on the same method as @run_before or @run_after."""
+    errors = []
+    for pkg_name in pkgs:
+        file = spack.repo.PATH.filename_for_package_name(pkg_name)
+        tree = ast.parse(open(file, "rb").read())
+        details = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef):
+                continue
+            decorators = [_decorator_name(d) for d in node.decorator_list]
+            if "when" not in decorators:
+                continue
+            for name in decorators:
+                if name in PHASE_CALLBACK_DECORATORS:
+                    details.append(
+                        f"{file}:{node.lineno} '{node.name}' is decorated with both @when and "
+                        f"@{name}, pass the condition to @{name}(..., when=...) instead"
+                    )
+
+        if details:
+            errors.append(
+                error_cls(f"Package '{pkg_name}' combines @when with a phase callback", details)
             )
 
     return errors
@@ -1253,6 +1361,12 @@ def _analyze_variants_in_directive(pkg, constraint, *, directive, error_cls, fil
     errors = []
     variant_names = pkg.variant_names()
     summary = f"{requestor}: wrong variant in '{directive}' directive"
+
+    propagation_summary = f"{requestor}: propagating variant in '{directive}' directive"
+    for name in sorted(constraint.propagated_variants):
+        msg = f"using {constraint} in a directive, which propagates the '{name}' variant"
+        errors.append(error_cls(summary=propagation_summary, details=[msg, f"in {filename}"]))
+
     for name, v in constraint.variants.items():
         if name == "commit":
             # Automatic variant
@@ -1262,11 +1376,6 @@ def _analyze_variants_in_directive(pkg, constraint, *, directive, error_cls, fil
             msg = f"variant {name} does not exist in {pkg.name}"
             errors.append(error_cls(summary=summary, details=[msg, f"in {filename}"]))
             continue
-
-        if v.propagate:
-            propagation_summary = f"{requestor}: propagating variant in '{directive}' directive"
-            msg = f"using {constraint} in a directive, which propagates the '{name}' variant"
-            errors.append(error_cls(summary=propagation_summary, details=[msg, f"in {filename}"]))
 
         try:
             spack.variant.prevalidate_variant_value(pkg, v, constraint, strict=True)

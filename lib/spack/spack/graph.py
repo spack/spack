@@ -42,6 +42,7 @@ import enum
 import sys
 from typing import List, Optional, Set, TextIO, Tuple
 
+import spack.context
 import spack.deptypes as dt
 import spack.spec
 import spack.tengine
@@ -309,15 +310,15 @@ class AsciiGraph:
         Arguments:
             spec: spec to graph.  This only handles one spec at a time.
             out: file object to write out to (default is sys.stdout)
-            color: whether to write in color.  Default is to autodetect
-               based on output file.
+            color: whether to write in color.  Default is to autodetect based on the ``--color``
+               setting and the output file.
 
         """
         if out is None:
             out = sys.stdout
 
         if color is None:
-            color = out.isatty()
+            color = spack.util.tty.color.get_color_when(out)
 
         self._out = spack.util.tty.color.ColorStream(out, color=color)
 
@@ -539,7 +540,7 @@ class DAGWithDependencyTypes(DotGraphBuilder):
 
 def _static_edges(specs, depflag):
     for spec in specs:
-        *_, edges = create_graph_analyzer().possible_dependencies(
+        *_, edges = create_graph_analyzer(spack.context.default()).possible_dependencies(
             spec.name, expand_virtuals=True, allowed_deps=depflag
         )
 

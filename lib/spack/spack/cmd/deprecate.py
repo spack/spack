@@ -14,10 +14,13 @@ installation and its deprecator.
 """
 
 import argparse
+from typing import List
 
 import spack.cmd
 import spack.concretize
+import spack.modules
 import spack.old_installer
+import spack.spec
 import spack.store
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
@@ -76,19 +79,12 @@ def setup_parser(sp: argparse.ArgumentParser) -> None:
     )
 
     sp.add_argument(
-        "-l", "--link-type", type=str, default=None, choices=["soft", "hard"], help="(deprecated)"
-    )
-
-    sp.add_argument(
         "specs", nargs=argparse.REMAINDER, help="spec to deprecate and spec to use as deprecator"
     )
 
 
 def deprecate(parser, args):
     """Deprecate one spec in favor of another"""
-    if args.link_type is not None:
-        tty.warn("The --link-type option is deprecated and will be removed in a future release.")
-
     env = active_environment()
     specs = spack.cmd.parse_specs(args.specs)
 
@@ -146,5 +142,17 @@ def deprecate(parser, args):
         if not answer:
             tty.die("Will not deprecate any packages.")
 
-    for dcate, dcator in zip(all_deprecate, all_deprecators):
-        spack.old_installer.deprecate(dcate, dcator, symlink)
+    # Fail before touching the store if the database cannot be modified.
+    spack.store.STORE.db.ensure_latest_db_version()
+
+    recorded_specs: List[spack.spec.Spec] = []
+    try:
+        for dcate, dcator in zip(all_deprecate, all_deprecators):
+            spack.old_installer.deprecate(dcate, dcator, symlink, recorded_specs)
+    finally:
+        spack.modules.write_module_files(recorded_specs)
+        # deprecate() skips specs it cannot deprecate, and they keep their module files
+        db = spack.store.STORE.db
+        with db.read_transaction():
+            deprecated = [s for s in all_deprecate if db.deprecator(s)]
+        spack.modules.remove_module_files(deprecated)

@@ -3,10 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
+
 import pytest
 
 import spack.cmd.uninstall
 import spack.environment
+import spack.error
 import spack.store
 from spack.database import Database
 from spack.enums import InstallRecordStatus
@@ -35,6 +38,16 @@ def test_multiple_matches(mutable_database):
     """Test unable to uninstall when multiple matches."""
     with pytest.raises(SpackCommandError):
         uninstall("-y", "mpileaks")
+
+
+@pytest.mark.db
+def test_uninstall_older_readable_db_fails_before_removing(mutable_database, bumped_db_version):
+    """Nothing is removed when the database needs an explicit reindex to be modified."""
+    spec = mutable_database.query_local("libelf")[0]
+    with pytest.raises(spack.error.ExplicitDatabaseUpgradeError):
+        spack.cmd.uninstall.do_uninstall([spec], force=True)
+    assert os.path.isdir(spec.prefix)
+    assert Database(mutable_database.root).query_local("libelf")
 
 
 @pytest.mark.db

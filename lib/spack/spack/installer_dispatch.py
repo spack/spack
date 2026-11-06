@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import warnings
 from typing import TYPE_CHECKING, List, Optional, Set, Union
 
 from spack.vendor.typing_extensions import Literal
@@ -36,6 +37,7 @@ def create_installer(
     tests: Union[bool, List[str], Set[str]] = False,
     unsigned: Optional[bool] = None,
     verbose: bool = False,
+    show_log_on_error: bool = False,
     concurrent_packages: Optional[int] = None,
     root_policy: Literal["auto", "cache_only", "source_only"] = "auto",
     dependencies_policy: Literal["auto", "cache_only", "source_only"] = "auto",
@@ -44,18 +46,31 @@ def create_installer(
     """Create an installer based on the current configuration and feature support."""
     use_old_installer = spack.config.CONFIG.get("config:installer", "new") == "old"
 
-    if spack.config.CONFIG.get("config:sandbox:enable", False):
-        if use_old_installer:
-            raise spack.sandbox.SandboxError(
-                "config:sandbox:enable is only supported with config:installer:new"
-            )
+    if use_old_installer:
+        # Python's default filter shows this once per process
+        warnings.warn(
+            "config:installer:old is deprecated and will be removed in Spack v1.4. "
+            "Remove the setting or use config:installer:new instead."
+        )
+
+    enable_sandbox = spack.config.CONFIG.get("config:sandbox:enable", False)
+    if enable_sandbox and use_old_installer:
+        raise spack.sandbox.SandboxError(
+            "config:sandbox:enable is only supported with config:installer:new"
+        )
+    if enable_sandbox is True:
         # Probe sandbox support now so builds don't fail later inside a subprocess.
         spack.sandbox.get_sandbox()
 
+    # The old installer dumps the full log from the command layer instead.
     if use_old_installer:
         from spack.old_installer import PackageInstaller  # type: ignore
+
+        extra = {}
     else:
         from spack.installer import PackageInstaller  # type: ignore
+
+        extra = {"show_log_on_error": show_log_on_error}
 
     return PackageInstaller(
         packages,
@@ -81,4 +96,5 @@ def create_installer(
         root_policy=root_policy,
         dependencies_policy=dependencies_policy,
         create_reports=create_reports,
+        **extra,
     )

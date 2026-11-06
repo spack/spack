@@ -8,8 +8,8 @@ import time
 import urllib.parse
 
 import spack.error
+import spack.store
 import spack.util.spack_json as sjson
-from spack.store import STORE
 from spack.util import tty
 
 
@@ -85,10 +85,18 @@ def get_git_commit(spec):
 def get_download_location(spec):
     pkg = spec.package
 
-    try:
-        return str(pkg.url_for_version(spec.version))
-    except spack.error.NoURLError:
-        pass
+    # Versions resolved via a git ref (a plain git version, or a "normal" version pinned
+    # to a commit/tag/branch) don't have a URL that url_for_version() can compute: that
+    # method is only meaningful for versions with a package-supplied url/urls scheme, and
+    # some packages' custom url_for_version() implementations assume purely numeric version
+    # components and raise arbitrary exceptions (not just NoURLError) when handed one of
+    # these. Go straight to the git remote for those instead of calling url_for_version().
+    # See https://github.com/spack/spack/issues/52864.
+    if not pkg.needs_commit(spec.version):
+        try:
+            return str(pkg.url_for_version(spec.version))
+        except spack.error.NoURLError:
+            pass
 
     git_url = pkg.version_or_package_attr("git", spec.version, default=None)
     if git_url and pkg.needs_commit(spec.version):
@@ -108,7 +116,7 @@ def make_spdx_2_3_package_entry(spec):
         "filesAnalyzed": False,
         "licenseDeclared": get_license(pkg) or "NOASSERTION",
         "licenseConcluded": "NOASSERTION",
-        "checksum": get_checksums(spec),
+        "checksums": get_checksums(spec),
     }
 
 
@@ -122,7 +130,7 @@ def sbom_path(spec, sbom_type="spdx-2.3"):
     Returns:
         Path to the SBOM file
     """
-    sbom_dir = os.path.join(STORE.layout.metadata_path(spec), "sbom")
+    sbom_dir = os.path.join(spack.store.STORE.layout.metadata_path(spec), "sbom")
     return os.path.join(sbom_dir, f"{sbom_type}.json")
 
 
@@ -152,7 +160,7 @@ def generate_spdx_2_3(spec):
     deps = []
     relationships = [
         {
-            "spdxElementId": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
+            "spdxElementId": "SPDXRef-DOCUMENT",
             "relationshipType": "DESCRIBES",
             "relatedSpdxElement": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
         }
@@ -174,7 +182,7 @@ def generate_spdx_2_3(spec):
     sbom = {
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
-        "SPDXID": f"SPDXRef-DOCUMENT-{spec.name}-{str(spec.version)}",
+        "SPDXID": "SPDXRef-DOCUMENT",
         "documentNamespace": document_namespace,
         "creationInfo": {
             "created": created_time,

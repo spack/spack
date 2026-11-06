@@ -21,7 +21,6 @@ import socket
 import threading
 import time
 from ctypes import wintypes
-from multiprocessing import Process
 from typing import Callable, Optional
 
 from spack.installer.base import (
@@ -30,7 +29,6 @@ from spack.installer.base import (
     STDIN_EVENT,
     BaseTerminalState,
     BuildChannels,
-    ProcessExitNotifier,
     StdinReader,
     Tee,
 )
@@ -39,6 +37,7 @@ from spack.installer.base import (
 ENABLE_LINE_INPUT = 0x0002
 ENABLE_ECHO_INPUT = 0x0004
 ENABLE_QUICK_EDIT_MODE = 0x0040
+ENABLE_MOUSE_INPUT = 0x0010
 ENABLE_EXTENDED_FLAGS = 0x0080
 ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004  # for stdout handle
 WIN_STD_INPUT_HANDLE = -10
@@ -129,7 +128,9 @@ class WindowsTerminalState(BaseTerminalState):
 
         self.kernel32.GetConsoleMode(self.hStdin, ctypes.byref(self.old_stdin_settings))
 
-        disable = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE
+        disable = (
+            ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_QUICK_EDIT_MODE | ENABLE_MOUSE_INPUT
+        )
         new_in_mode = (self.old_stdin_settings.value & ~disable) | ENABLE_EXTENDED_FLAGS
         self.kernel32.SetConsoleMode(self.hStdin, new_in_mode)
 
@@ -169,33 +170,6 @@ class WindowsTerminalState(BaseTerminalState):
                     self.sigwinch_w.sendall(b"\x00")
                 except OSError:
                     pass
-
-
-class WindowsSentinelBridge(ProcessExitNotifier):
-    """Process-exit notifier for Windows: a thread joins the process and pokes a socket so the
-    selector wakes up (Windows process handles cannot be registered with the selector directly)."""
-
-    def __init__(self, proc: Process) -> None:
-        self.rsock, self.wsock = socket.socketpair()
-        self.rsock.setblocking(False)
-        self.proc = proc
-        self.thread = threading.Thread(target=self._wait, daemon=True)
-        self.thread.start()
-
-    def _wait(self) -> None:
-        self.proc.join()
-        try:
-            self.wsock.sendall(b"x")
-        except OSError:
-            pass
-        self.wsock.close()
-
-    @property
-    def fileobj(self) -> socket.socket:
-        return self.rsock
-
-    def close(self) -> None:
-        self.rsock.close()
 
 
 def create_build_channels() -> BuildChannels:

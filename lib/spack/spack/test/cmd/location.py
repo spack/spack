@@ -231,9 +231,9 @@ def test_location_stage_dir(mock_spec):
 
 
 @pytest.mark.db
-def test_location_stages(mock_spec):
+def test_location_stages(mock_spec, mutable_config):
     """Tests spack location --stages."""
-    assert location("--stages").strip() == spack.stage.get_stage_root()
+    assert location("--stages").strip() == spack.stage.stage_root(mutable_config)
 
 
 def test_location_specified_repo():

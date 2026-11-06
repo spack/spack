@@ -11,19 +11,20 @@ import pickle
 
 import pytest
 
+import spack.config
 import spack.environment as ev
 import spack.package_base
 import spack.platforms
 import spack.solver.asp
 import spack.spec
-import spack.spec_parser
 import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.enums import ConfigScopePriority
 from spack.environment import SpackEnvironmentConfigError
-from spack.environment.environment import EnvironmentManifestFile
+from spack.environment.environment import CURRENT_LOCKFILE_VERSION, EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
+from spack.util.lang import Singleton, ensure_unwrapped
 
 pytestmark = [
     pytest.mark.not_on_windows("Envs are not supported on windows"),
@@ -63,7 +64,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
 
     # rewrite the hash
     old_hash, new_hash = env.concretized_roots[0].hash, "abc"
-    env.specs_by_hash[old_hash]._hash = new_hash  # type: ignore[attr-defined]
+    env.specs_by_hash[old_hash]._hash = new_hash
     env.concretized_roots[0].hash = new_hash
     env.specs_by_hash[new_hash] = env.specs_by_hash[old_hash]
     del env.specs_by_hash[old_hash]
@@ -76,7 +77,7 @@ def test_hash_change_no_rehash_concrete(tmp_path: pathlib.Path, config):
     hashes = [x.hash for x in read_in.concretized_roots]
     assert hashes
     assert hashes[0] in read_in.specs_by_hash
-    _hash = read_in.specs_by_hash[hashes[0]]._hash  # type: ignore[attr-defined]
+    _hash = read_in.specs_by_hash[hashes[0]]._hash
     assert _hash == new_hash
 
 
@@ -820,6 +821,43 @@ def test_deconcretize_then_concretize_does_not_error(mutable_mock_env_path, unif
     assert len(all_root_hashes) == 2
 
 
+def test_concretize_is_noop_for_concretized_namespaced_root(mutable_mock_env_path):
+    """Tests that a root spec with an explicit namespace is not reconcretized by a
+    repeated concretization.
+
+    The lockfile used to store roots in their default string format, which omits the
+    namespace. On re-read, the stored root no longer compared equal to the namespaced
+    user spec, so the spec was considered new and was reconcretized every time.
+    """
+    mutable_mock_env_path.mkdir()
+    spack_yaml = mutable_mock_env_path / ev.manifest_name
+    spack_yaml.write_text(
+        """spack:
+      specs:
+      - builtin_mock.pkg-a
+    """
+    )
+    env = ev.Environment(mutable_mock_env_path)
+    with env:
+        env.concretize()
+        env.write()
+    original_hashes = {x.hash for x in env.concretized_roots}
+
+    # Re-read the environment from the lockfile and concretize again
+    reread = ev.Environment(mutable_mock_env_path)
+    with reread:
+        newly_concretized = reread.concretize()
+
+    # The root was already concretized, so repeated concretization is a no-op
+    assert newly_concretized == []
+    assert len(reread.concretized_roots) == 1
+    assert not any(x.new for x in reread.concretized_roots)
+    assert {x.hash for x in reread.concretized_roots} == original_hashes
+
+    # The abstract root read from the lockfile retains its namespace
+    assert reread.concretized_roots[0].root == spack.spec.Spec("builtin_mock.pkg-a")
+
+
 @pytest.mark.regression("44216")
 def test_root_version_weights_for_old_versions(mutable_mock_env_path):
     """Tests that, when we select two old versions of root specs that have the same version
@@ -983,6 +1021,54 @@ def test_environment_from_name_or_dir(mutable_mock_env_path):
 
     with pytest.raises(ev.SpackEnvironmentError, match="no such environment"):
         _ = ev.environment_from_name_or_dir("fake-env")
+
+
+def test_all_environment_names_ignores_env_contents(mutable_mock_env_path):
+    """Environments are leaves: listing must not descend into their contents."""
+    ev.create("test")
+    ev.create("group/nested")
+
+    # simulate a user keeping a stage directory inside a managed environment
+    stage = mutable_mock_env_path / "test" / "stage" / "spack-stage-foo-1-0-abcdef"
+    stage.mkdir(parents=True)
+    # even a stray manifest below an environment must not be listed as an environment
+    (stage / ev.manifest_name).write_text("spack:\n  specs: []\n")
+
+    assert ev.all_environment_names() == ["group/nested", "test"]
+
+
+def test_all_environment_names_handles_symlink_cycles(mutable_mock_env_path):
+    """Symlink cycles in the environment root must not hang the listing."""
+    ev.create("group/nested")
+    (mutable_mock_env_path / "group" / "loop").symlink_to(mutable_mock_env_path / "group")
+
+    assert ev.all_environment_names() == ["group/nested"]
+
+
+def test_all_environment_names_follows_symlinked_envs(mutable_mock_env_path, tmp_path):
+    """Symlinked environment dirs (e.g. from spack env track) are still listed."""
+    external = tmp_path / "external_env"
+    external.mkdir()
+    (external / ev.manifest_name).write_text("spack:\n  specs: []\n")
+
+    mutable_mock_env_path.mkdir(parents=True, exist_ok=True)
+    (mutable_mock_env_path / "tracked").symlink_to(external)
+
+    assert ev.all_environment_names() == ["tracked"]
+
+
+def test_cannot_create_env_nested_in_another_env(mutable_mock_env_path):
+    """Creating an environment inside an existing environment is an error."""
+    ev.create("outer")
+    with pytest.raises(ev.SpackEnvironmentError, match="inside existing environment 'outer'"):
+        ev.create("outer/inner")
+
+
+def test_cannot_create_env_above_another_env(mutable_mock_env_path):
+    """Creating an environment above an existing environment is an error."""
+    ev.create("group/inner")
+    with pytest.raises(ev.SpackEnvironmentError, match="would contain existing environment"):
+        ev.create("group")
 
 
 def test_env_include_configs(mutable_mock_env_path, mutable_config: Configuration):
@@ -1647,7 +1733,7 @@ spack:
     with ev.Environment(tmp_path):
         # We rely on this behavior when emitting facts for the solver
         toolchains = mutable_config.get("toolchains", {})
-        s = spack.spec_parser.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
+        s = spack.spec.parse("mpileaks %gnu ^callpath %gnu", toolchains=toolchains)[0]
         assert id(s["gcc"]) != id(s["callpath"]["gcc"])
 
 
@@ -1799,7 +1885,7 @@ spack:
             spack.spec.Spec("mpich"),
         ]
 
-    def test_environment_without_groups_use_lockfile_v6(self, create_temporary_manifest):
+    def test_environment_without_groups_has_no_group_attribute(self, create_temporary_manifest):
         manifest = create_temporary_manifest(
             """
 spack:
@@ -1811,7 +1897,7 @@ spack:
         with ev.Environment(manifest.manifest_dir) as e:
             e.concretize()
             lockfile_data = e._to_lockfile_dict()
-            assert lockfile_data["_meta"]["lockfile-version"] == 6
+            assert lockfile_data["_meta"]["lockfile-version"] == CURRENT_LOCKFILE_VERSION
             assert all("group" not in x for x in lockfile_data["roots"])
 
     def test_independent_groups_concretization(self, create_temporary_manifest):
@@ -2191,3 +2277,93 @@ def test_environment_pickle_preserves_lock_state(
         restored = pickle.loads(blob)
 
     assert restored.txlock.enabled == original_enabled
+
+
+def test_env_substitution_reaches_the_unwrapped_configuration(
+    mutable_mock_env_path, mutable_config, monkeypatch
+):
+    """``$env`` expands against the Configuration behind the ``CONFIG`` singleton.
+
+    Test fixtures bind ``CONFIG`` to a plain Configuration, so this test wraps it in a Singleton,
+    as it is in production.
+    """
+    env = ev.create("test_env_path_through_singleton")
+    monkeypatch.setattr(spack.config, "CONFIG", Singleton(lambda: mutable_config))
+
+    with ev.read("test_env_path_through_singleton"):
+        # If the env_path was attached to the singleton wrapper it won't be expanded
+        configuration = ensure_unwrapped(spack.config.CONFIG)
+        expanded = spack.config.canonicalize_path("$env/concretization", config=configuration)
+
+    assert expanded == os.path.join(env.path, "concretization")
+
+
+@pytest.mark.usefixtures("mutable_config")
+class TestLockfileWrites:
+    """The lockfile is only written when its content changes"""
+
+    @pytest.fixture
+    def lockfile(self, tmp_path: pathlib.Path) -> pathlib.Path:
+        (tmp_path / "spack.yaml").write_text("spack:\n  specs:\n  - mpileaks\n")
+        with ev.Environment(tmp_path) as e:
+            e.concretize()
+            e.write()
+        return tmp_path / ev.lockfile_name
+
+    def test_unchanged_lockfile_is_not_rewritten(self, lockfile, monkeypatch):
+        def fail(*args, **kwargs):
+            raise AssertionError("the lockfile was rewritten")
+
+        monkeypatch.setattr(ev.environment.sjson, "dump", fail)
+        with ev.Environment(lockfile.parent) as e:
+            e.write()
+
+    def test_older_lockfile_keeps_its_version_until_reconcretized(self, lockfile):
+        data = json.loads(lockfile.read_text())
+        current = data["_meta"]["lockfile-version"]
+        data["_meta"]["lockfile-version"] = current - 1
+        lockfile.write_text(json.dumps(data))
+        before = lockfile.read_bytes()
+
+        with ev.Environment(lockfile.parent) as e:
+            e.write()
+        assert lockfile.read_bytes() == before
+
+        with ev.Environment(lockfile.parent) as e:
+            e.concretize(force=True)
+            e.write()
+        assert json.loads(lockfile.read_text())["_meta"]["lockfile-version"] == current
+
+    def test_lockfile_v7_reconstructs_provided_virtuals(self, lockfile):
+        """A v7 lockfile does not record provided virtuals, so they are reconstructed on read."""
+        with ev.Environment(lockfile.parent) as e:
+            expected = {s.dag_hash(): s.provided_virtuals for s in e.all_specs()}
+        assert any(expected.values())
+
+        data = json.loads(lockfile.read_text())
+        data["_meta"]["lockfile-version"] = 7
+        data["_meta"]["specfile-version"] = 5
+        for node in data["concrete_specs"].values():
+            node.pop("provided_virtuals", None)
+            node["annotations"]["original_specfile_version"] = 5
+        lockfile.write_text(json.dumps(data))
+
+        with ev.Environment(lockfile.parent) as e:
+            assert {s.dag_hash(): s.provided_virtuals for s in e.all_specs()} == expected
+
+    def test_lockfile_written_when_roots_change(self, lockfile):
+        def roots():
+            return {r["spec"] for r in json.loads(lockfile.read_text())["roots"]}
+
+        with ev.Environment(lockfile.parent) as e:
+            e.add("libelf")
+            e.concretize()
+            e.write()
+        assert roots() == {"mpileaks", "libelf"}
+
+        # Removing a root changes the lockfile without concretizing anything new
+        with ev.Environment(lockfile.parent) as e:
+            e.remove("libelf")
+            e.concretize()
+            e.write()
+        assert roots() == {"mpileaks"}

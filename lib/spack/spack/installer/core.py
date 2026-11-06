@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
 
 import spack.binary_distribution
 import spack.config
+import spack.deprecation
 import spack.error
 import spack.mirrors.mirror
 import spack.report
@@ -191,6 +192,7 @@ class PackageInstaller:
         tests: Union[bool, List[str], Set[str]] = False,
         unsigned: Optional[bool] = None,
         verbose: bool = False,
+        show_log_on_error: bool = False,
         concurrent_packages: Optional[int] = None,
         root_policy: InstallPolicy = "auto",
         dependencies_policy: InstallPolicy = "auto",
@@ -210,6 +212,7 @@ class PackageInstaller:
 
         specs = [pkg.spec for pkg in packages]
 
+        self.roots = specs
         self.has_mirrors = bool(spack.mirrors.mirror.MirrorCollection(binary=True))
         self.root_policy: InstallPolicy = root_policy
         self.dependencies_policy: InstallPolicy = dependencies_policy
@@ -258,6 +261,10 @@ class PackageInstaller:
             parent for parent, children in self.build_graph.parent_to_child.items() if not children
         ]
 
+        # Fail before building anything if the database cannot be modified.
+        if self.pending_builds:
+            self.store.db.ensure_latest_db_version()
+
         #: specs awaiting build-dep expansion (deferred until DB read lock is available)
         self.pending_expansions: List[str] = []
 
@@ -265,7 +272,10 @@ class PackageInstaller:
         self.running_builds: Dict[str, ChildInfo] = {}
         self.log_paths: Dict[str, str] = {}
         self.ui = ui or TerminalUI(
-            total=0, verbose=verbose, filter_padding=self.store.has_padding()
+            total=0,
+            verbose=verbose,
+            filter_padding=self.store.has_padding(),
+            show_log_on_error=show_log_on_error,
         )
         self.ui.on_total_increased(len(self.build_graph.nodes))
         self.jobs = spack.config.determine_number_of_jobs(parallel=True)
@@ -290,10 +300,17 @@ class PackageInstaller:
 
         self.next_database_write = 0.0
 
+        #: Specs added to the database by ``install()``, also when it raises
+        self.recorded_specs: List[spack.spec.Spec] = []
+
     def install(self) -> None:
+        # Refuse disallowed deprecations before updating any index, so an install that cannot
+        # succeed does no work first
+        spack.deprecation.check_deprecations(self.roots)
+
         # check what specs we could fetch from binaries (checks against cache, not remotely)
         try:
-            spack.binary_distribution.BINARY_INDEX.update()
+            spack.binary_distribution.BINARY_INDEX.update(config=spack.config.CONFIG)
         except spack.binary_distribution.FetchCacheError:
             pass
 
@@ -390,9 +407,9 @@ class PackageInstaller:
                         if data.name == "output":
                             self._handle_child_logs(child_info, selector)
                         elif data.name == "state":
-                            self._handle_child_state(child_info, selector)
-                        elif data.name == "sentinel":
-                            finished_builds.append(data.build_id)
+                            # EOF on the state channel means the build process has exited.
+                            if not self._handle_child_state(child_info, selector):
+                                finished_builds.append(data.build_id)
                     elif data == STDIN_EVENT:
                         stdin_ready = True
                     elif data == SIGWINCH_EVENT:
@@ -458,26 +475,30 @@ class PackageInstaller:
                     with db.write_transaction():
                         for action in database_actions:
                             action.save_to_db(db)
+                    self._extend_recorded_specs(database_actions)
                 except Exception as e:
                     db_exc = e
 
-            # Send SIGTERM to running builds; this is a no-op in the successful case.
+            # Send SIGTERM to running builds and release their jobserver tokens; this is a no-op in
+            # the successful case.
             for child in self.running_builds.values():
                 try:
                     child.proc.terminate()
                 except Exception:
                     pass
-
-            # Release our jobserver token for each terminated build and then join.
-            for child in self.running_builds.values():
                 try:
                     jobserver.release()
-                    child.proc.join(timeout=30)
-                    if child.proc.is_alive():
-                        child.proc.kill()
-                        child.proc.join()
                 except Exception:
                     pass
+
+            # Wait for the builds to exit, kill those that do not, and reap them all.
+            try:
+                for build_id in self._wait_for_exit(timeout=30):
+                    self.running_builds[build_id].proc.kill()
+                for child in self.running_builds.values():
+                    child.proc.join()
+            except Exception:
+                pass
 
             # Release all held locks best-effort, so that one failure does not prevent the others
             # from being released.
@@ -555,7 +576,6 @@ class PackageInstaller:
         jobserver.release()
         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
         self._drain_child_output(build, selector)
-        self._drain_child_state(build, selector)
         exitcode = build.close(selector)
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
@@ -634,7 +654,13 @@ class PackageInstaller:
             )
             and self._save_to_db(database_actions, retained_read_locks)
         ):
+            self._extend_recorded_specs(database_actions)
             database_actions.clear()
+
+    def _extend_recorded_specs(self, database_actions: List[DatabaseAction]) -> None:
+        self.recorded_specs.extend(
+            a.spec for a in database_actions if isinstance(a, AddSpecAction)
+        )
 
     def _save_to_db(
         self,
@@ -746,7 +772,7 @@ class PackageInstaller:
                     f"spack-stage-{spec.name}-{spec.version}-{spec.dag_hash()}-"
                 )
                 log_fd, log_path = tempfile.mkstemp(
-                    prefix=prefix, suffix=".log", dir=spack.stage.get_stage_root()
+                    prefix=prefix, suffix=".log", dir=spack.stage.stage_root(spack.config.CONFIG)
                 )
                 os.close(log_fd)
                 self.log_paths[dag_hash] = log_path
@@ -818,6 +844,27 @@ class PackageInstaller:
         except OSError:
             pass
 
+    def _wait_for_exit(self, timeout: float) -> List[str]:
+        """Process output and state of the running builds until their state channels reach EOF.
+        Returns the ids of builds that are still running after the timeout."""
+        deadline = time.monotonic() + timeout
+        running = set(self.running_builds)
+        with selectors.DefaultSelector() as selector:
+            for build_id in running:
+                self.running_builds[build_id].register_with_selector(selector, build_id)
+            while running:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                for key, _ in selector.select(remaining):
+                    data = key.data
+                    child = self.running_builds[data.build_id]
+                    if data.name == "output":
+                        self._handle_child_logs(child, selector)
+                    elif not self._handle_child_state(child, selector):
+                        running.discard(data.build_id)
+        return list(running)
+
     def _handle_child_logs(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
         """Handle reading output logs from a child process pipe. Returns False once the channel
         has reached EOF and was unregistered, True while it remains open."""
@@ -844,12 +891,6 @@ class PackageInstaller:
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
         while self._handle_child_logs(child_info, selector):
-            pass
-
-    def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
-        """Read and process any remaining state messages from a finished child's pipe."""
-        # Must drain before child.close() to consume any remaining data before bridges close.
-        while self._handle_child_state(child_info, selector):
             pass
 
     def _handle_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
@@ -895,5 +936,7 @@ class PackageInstaller:
                 self.ui.on_progress(dag_hash, message["progress"], message["total"])
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
+            elif "exit" in message:
+                child_info.exit_code = message["exit"]
 
         return True

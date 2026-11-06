@@ -37,6 +37,9 @@ too_long = sbang.system_shebang_limit + 1
 short_line = "#!/this/is/short/bin/bash\n"
 long_line = "#!/this/" + ("x" * too_long) + "/is/long\n"
 
+python_line = "#!/this/" + ("x" * too_long) + "/is/python\n"
+python_encoding_line = "# coding: utf-8\n"
+
 lua_line = "#!/this/" + ("x" * too_long) + "/is/lua\n"
 lua_in_text = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
 lua_line_patched = "--!/this/" + ("x" * too_long) + "/is/lua\n"
@@ -90,6 +93,14 @@ class ScriptDirectory:
         with open(self.nonexec_long_shebang, "w", encoding="utf-8") as f:
             f.write(long_line)
             f.write(last_line)
+
+        # python using an encoding comment
+        self.python_shebang = os.path.join(self.tempdir, "python")
+        with open(self.python_shebang, "w", encoding="utf-8") as f:
+            f.write(python_line)
+            f.write(python_encoding_line)
+            f.write(last_line)
+        self.make_executable(self.python_shebang)
 
         # Lua script with long shebang
         self.lua_shebang = os.path.join(self.tempdir, "lua")
@@ -220,6 +231,13 @@ def test_shebang_handling(script_dir, sbang_line):
     # Make sure this is untouched
     with open(script_dir.nonexec_long_shebang, "r", encoding="utf-8") as f:
         assert f.readline() == long_line
+        assert f.readline() == last_line
+
+    # Make sure this got patched and didn't move the encoding line
+    with open(script_dir.python_shebang, "r", encoding="utf-8") as f:
+        assert f.readline() == sbang_line
+        assert f.readline() == python_encoding_line
+        assert f.readline() == python_line
         assert f.readline() == last_line
 
     # Make sure this got patched.

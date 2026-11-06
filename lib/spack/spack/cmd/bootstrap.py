@@ -416,7 +416,9 @@ def _mirror(args):
         msg = 'Adding binary packages from "{0}" to the mirror at {1}'
         spack.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
         spack.util.tty.set_msg_enabled(False)
-        stage = spack.stage.Stage(BINARY_TARBALL, path=tempfile.mkdtemp())
+        stage = spack.stage.stage_from_config(
+            BINARY_TARBALL, path=tempfile.mkdtemp(), config=spack.config.CONFIG
+        )
         stage.create()
         stage.fetch()
         stage.expand_archive()

@@ -55,51 +55,10 @@ def test_package_audits(packages, expected_errors, mock_packages):
         assert not actual_errors, msg
 
 
-# Data used in the test below to audit the double definition of a compiler
-_double_compiler_definition = [
-    {
-        "compiler": {
-            "spec": "gcc@9.0.1",
-            "paths": {
-                "cc": "/usr/bin/gcc-9",
-                "cxx": "/usr/bin/g++-9",
-                "f77": "/usr/bin/gfortran-9",
-                "fc": "/usr/bin/gfortran-9",
-            },
-            "flags": {},
-            "operating_system": "ubuntu18.04",
-            "target": "x86_64",
-            "modules": [],
-            "environment": {},
-            "extra_rpaths": [],
-        }
-    },
-    {
-        "compiler": {
-            "spec": "gcc@9.0.1",
-            "paths": {
-                "cc": "/usr/bin/gcc-9",
-                "cxx": "/usr/bin/g++-9",
-                "f77": "/usr/bin/gfortran-9",
-                "fc": "/usr/bin/gfortran-9",
-            },
-            "flags": {"cflags": "-O3"},
-            "operating_system": "ubuntu18.04",
-            "target": "x86_64",
-            "modules": [],
-            "environment": {},
-            "extra_rpaths": [],
-        }
-    },
-]
-
-
 # TODO/RepoSplit: Should this not rely on mock packages post split?
 @pytest.mark.parametrize(
     "config_section,data,failing_check",
     [
-        # Double compiler definitions in compilers.yaml
-        ("compilers", _double_compiler_definition, "CFG-COMPILER"),
         # Multiple definitions of the same external spec in packages.yaml
         (
             "packages",
@@ -113,6 +72,20 @@ _double_compiler_definition = [
             },
             "CFG-PACKAGES",
         ),
+        # A template set for some of the installations folded in a tcl module file
+        (
+            "modules",
+            {
+                "default": {
+                    "tcl": {
+                        "variants": "all",
+                        "hash_length": 0,
+                        "mpileaks +debug": {"template": "override_from_modules.txt"},
+                    }
+                }
+            },
+            "CFG-MODULES",
+        ),
     ],
 )
 def test_config_audits(
@@ -121,3 +94,53 @@ def test_config_audits(
     with mutable_config.override(config_section, data):
         reports = spack.audit.run_group("configs")
         assert any((check == failing_check) and errors for check, errors in reports)
+
+
+@pytest.mark.parametrize(
+    "tcl_data",
+    [
+        # A template set for a package or a package version applies to the whole module file
+        {"variants": "all", "hash_length": 0, "mpileaks": {"template": "override.txt"}},
+        {"variants": "all", "hash_length": 0, "mpileaks@2.3": {"template": "override.txt"}},
+        {"variants": "all", "hash_length": 0, "all": {"template": "override.txt"}},
+        # Installations are not folded when variants are not defined in module files
+        {"mpileaks +debug": {"template": "override.txt"}},
+    ],
+)
+def test_modules_audit_accepts_templates(mutable_config: Configuration, tcl_data, mock_packages):
+    with mutable_config.override("modules", {"default": {"tcl": tcl_data}}):
+        assert not spack.audit.run_check("CFG-MODULES")
+
+
+def test_when_combined_with_phase_callbacks(mock_packages):
+    """Ensure @when on a method decorated with @run_before or @run_after is reported"""
+    errors = spack.audit.run_check("PKG-PROPERTIES", pkgs=["fail-test-audit-when-callback"])
+    details = [d for e in errors for d in e.details]
+    assert any(
+        "'callback_outside' is decorated with both @when and @run_before" in d for d in details
+    )
+    assert any(
+        "'callback_inside' is decorated with both @when and @run_after" in d for d in details
+    )
+
+
+@pytest.mark.parametrize(
+    "package,expected",
+    [
+        (
+            "patch-fixes-unknown-label",
+            [
+                "patch-fixes-unknown-label: patch 'cve.patch' fixes 'CVE-2026-9999', which is not "
+                "a label of any deprecated() directive of 'patch-fixes-unknown-label'"
+            ],
+        ),
+        ("deprecated-patched", []),
+        ("patches-deprecated-dep", []),
+    ],
+)
+def test_audit_reports_patch_fixes_naming_no_deprecation_label(package, expected, mock_packages):
+    """Tests that a label in patch(fixes=...) must be a label of a deprecated() directive of the
+    patched package, and that a correct one on a dependency is not reported.
+    """
+    errors = spack.audit.run_check("PKG-DIRECTIVES", pkgs=[package])
+    assert [e.summary for e in errors] == expected

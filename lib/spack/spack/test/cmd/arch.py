@@ -11,10 +11,6 @@ def test_arch():
     """Sanity check ``spack arch`` to make sure it works."""
 
     arch()
-    arch("-f")
-    arch("--frontend")
-    arch("-b")
-    arch("--backend")
 
 
 def test_arch_platform():
@@ -22,8 +18,6 @@ def test_arch_platform():
 
     arch("-p")
     arch("--platform")
-    arch("-f", "-p")
-    arch("-b", "-p")
 
 
 def test_arch_operating_system():
@@ -31,8 +25,6 @@ def test_arch_operating_system():
 
     arch("-o")
     arch("--operating-system")
-    arch("-f", "-o")
-    arch("-b", "-o")
 
 
 def test_arch_target():
@@ -40,8 +32,6 @@ def test_arch_target():
 
     arch("-t")
     arch("--target")
-    arch("-f", "-t")
-    arch("-b", "-t")
 
 
 def test_display_targets():

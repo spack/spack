@@ -36,23 +36,14 @@ class ProviderIndex:
         self,
         repository: "spack.repo.RepoType",
         specs: Optional[Iterable["spack.spec.Spec"]] = None,
-        restrict: bool = False,
     ):
         """Provider index based on a single mapping of providers.
 
         Args:
             specs: if provided, will call update on each
                 single spec to initialize this provider index.
-
-            restrict: "restricts" values to the verbatim input specs; do not
-                pre-apply package's constraints.
-
-        TODO: rename this.  It is intended to keep things as broad
-        TODO: as possible without overly restricting results, so it is
-        TODO: not the best name.
         """
         self.repository = repository
-        self.restrict = restrict
         self.providers = {}
         if specs:
             self.update_packages(specs)
@@ -144,24 +135,11 @@ class ProviderIndex:
                         if provided_spec not in provider_map:
                             provider_map[provided_spec] = set()
 
-                        if self.restrict:
-                            provider_set = provider_map[provided_spec]
-
-                            # If this package existed in the index before,
-                            # need to take the old versions out, as they're
-                            # now more constrained.
-                            old = {s for s in provider_set if s.name == spec.name}
-                            provider_set.difference_update(old)
-
-                            # Now add the new version.
-                            provider_set.add(spec)
-
-                        else:
-                            # Before putting the spec in the map, constrain
-                            # it so that it provides what was asked for.
-                            constrained = spec.copy()
-                            constrained.constrain(provider_spec)
-                            provider_map[provided_spec].add(constrained)
+                        # Before putting the spec in the map, constrain
+                        # it so that it provides what was asked for.
+                        constrained = spec.copy()
+                        constrained.constrain(provider_spec)
+                        provider_map[provided_spec].add(constrained)
 
     def to_json(self, stream=None):
         """Dump a JSON representation of this object.

@@ -590,6 +590,22 @@ def test_filter_files_start_stop(tmp_path: pathlib.Path):
         assert all("X" == line.strip() for line in f.readlines())
 
 
+def _raise_on_replacement(match):
+    raise ZeroDivisionError("boom")
+
+
+def test_filter_file_restores_original_on_error(tmp_path: pathlib.Path):
+    path = tmp_path / "file.txt"
+    path.write_text("hello world\n", encoding="utf-8")
+
+    with pytest.raises(ZeroDivisionError):
+        fs.filter_file("world", _raise_on_replacement, str(path))
+
+    assert path.read_text(encoding="utf-8") == "hello world\n"
+    # the copy taken before filtering is the file that was put back
+    assert [p.name for p in tmp_path.iterdir()] == ["file.txt"]
+
+
 # Each test input is a tuple of entries which prescribe
 # - the 'subdirs' to be created from tmp_path
 # - the 'files' in that directory
@@ -789,6 +805,38 @@ def test_temporary_dir_context_manager():
     with fs.temporary_dir() as tmp_dir:
         assert previous_dir != os.path.realpath(os.getcwd())
         assert os.path.realpath(str(tmp_dir)) == os.path.realpath(os.getcwd())
+
+
+@pytest.mark.not_on_windows("Tests behavior that relies on bits to determine executability")
+def test_is_exe(tmp_path: pathlib.Path):
+    """See ``test/util/executable.py`` for how paths are resolved to executables."""
+    script = tmp_path / "script"
+    script.touch()
+
+    # a regular file is only an executable once it has executable permissions
+    assert not fs.is_exe(str(script))
+    fs.set_executable(str(script))
+    assert fs.is_exe(str(script))
+
+    # directories and missing files are not executables
+    assert not fs.is_exe(str(tmp_path))
+    assert not fs.is_exe(str(tmp_path / "does-not-exist"))
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_is_exe_windows(tmp_path: pathlib.Path):
+    """Windows determines whether a file is executable from its extension, not its permissions."""
+    (tmp_path / "script.exe").touch()
+    (tmp_path / "notes.txt").touch()
+
+    assert fs.is_exe(str(tmp_path / "script.exe"))
+    # the extension may be omitted
+    assert fs.is_exe(str(tmp_path / "script"))
+
+    # files without an executable extension, directories and missing files are not executables
+    assert not fs.is_exe(str(tmp_path / "notes.txt"))
+    assert not fs.is_exe(str(tmp_path))
+    assert not fs.is_exe(str(tmp_path / "does-not-exist"))
 
 
 @pytest.mark.not_on_windows("No shebang on Windows")
@@ -1067,6 +1115,43 @@ def test_rename_dest_exists(tmp_path: pathlib.Path):
         assert os.path.exists(link2)
         assert os.path.realpath(str(link2)) == str(a)
         shutil.rmtree(str(f_dir))
+
+
+def test_touchp(tmp_path: pathlib.Path):
+    with fs.working_dir(tmp_path):
+        # Check that no base is required
+        fs.touchp("no-parent")
+        fs.touchp("subdir/t")
+
+    assert (tmp_path / "no-parent").is_file()
+    assert (tmp_path / "subdir" / "t").is_file()
+
+
+def test_force_symlink_replaces_existing(tmp_path: pathlib.Path):
+    target, other = tmp_path / "target", tmp_path / "other"
+    target.write_text("target", encoding="utf-8")
+    other.write_text("other", encoding="utf-8")
+
+    # over a regular file
+    link = tmp_path / "link"
+    link.write_text("stale", encoding="utf-8")
+    fs.force_symlink(str(target), str(link))
+    assert link.read_text(encoding="utf-8") == "target"
+
+    # over an existing link
+    fs.force_symlink(str(other), str(link))
+    assert link.read_text(encoding="utf-8") == "other"
+
+
+@pytest.mark.not_on_windows("the Windows symlink shim raises its own error type here")
+def test_force_symlink_propagates_other_errors(tmp_path: pathlib.Path):
+    """Only "the link exists" is retried; other errors propagate."""
+    target = tmp_path / "target"
+    target.write_text("target", encoding="utf-8")
+    with pytest.raises(FileNotFoundError) as exc_info:
+        fs.force_symlink(str(target), str(tmp_path / "missing" / "link"))
+    # the symlink call reports its src argument as filename
+    assert exc_info.value.filename == str(target)
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")

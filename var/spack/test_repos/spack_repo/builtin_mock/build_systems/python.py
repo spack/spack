@@ -22,14 +22,14 @@ class PythonExtension(PackageBase):
 
 class PythonPackage(PythonExtension):
     build_system_class = "PythonPackage"
-    default_buildsystem = "python_pip"
+    default_buildsystem = "mock_python_pip"
     install_time_test_callbacks = ["test_imports"]
 
-    build_system("python_pip")
-    extends("python", when="build_system=python_pip")
+    build_system("mock_python_pip")
+    extends("python", when="build_system=mock_python_pip")
 
 
-@register_builder("python_pip")
+@register_builder("mock_python_pip")
 class PythonPipBuilder(BuilderWithDefaults):
     phases = ("install",)
     package_methods = ("test_imports",)

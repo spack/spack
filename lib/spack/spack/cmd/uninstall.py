@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 
 import spack.cmd
 import spack.environment as ev
+import spack.modules
 import spack.package_base
 import spack.spec
 import spack.store
@@ -209,15 +210,26 @@ def _remove_from_env(spec, env):
 
 
 def do_uninstall(specs: List[spack.spec.Spec], force: bool = False):
+    if not specs:
+        return
+
+    # Fail before removing anything if the database cannot be modified.
+    spack.store.STORE.db.ensure_latest_db_version()
+
     # TODO: get rid of the call-sites that use this function,
     # so that we don't have to do a dance of list -> set -> list -> set
     hashes_to_remove = {s.dag_hash() for s in specs}
 
-    for s in traverse.traverse_nodes(
-        specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
-    ):
-        if s.dag_hash() in hashes_to_remove:
-            spack.package_base.PackageBase.uninstall_by_spec(s, force=force)
+    removed: List[spack.spec.Spec] = []
+    try:
+        for s in traverse.traverse_nodes(
+            specs, order="topo", direction="children", root=True, cover="nodes", deptype="all"
+        ):
+            if s.dag_hash() in hashes_to_remove:
+                spack.package_base.PackageBase.uninstall_by_spec(s, force=force)
+                removed.append(s)
+    finally:
+        spack.modules.remove_module_files(removed)
 
 
 def get_uninstall_list(args, specs: List[spack.spec.Spec], env: Optional[ev.Environment]):

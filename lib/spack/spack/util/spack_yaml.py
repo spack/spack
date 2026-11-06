@@ -96,7 +96,7 @@ def deepcopy_as_builtin(obj: Any, *, line_info: bool = False) -> Any:
             }
         )
         if line_info:
-            result.line_info = _line_info(obj)
+            result.line_info = source_location(obj)
         return result
     elif isinstance(obj, list):
         return [deepcopy_as_builtin(x, line_info=line_info) for x in obj]
@@ -277,14 +277,14 @@ def dump(data, stream=None, default_flow_style=False):
     return handler.dump(data, stream=stream)
 
 
-def _line_info(obj):
-    """Format a mark as <file>:<line> information."""
+def source_location(obj) -> str:
+    """Return the source location "<file>:<line>" of a YAML object as a string."""
     m = get_mark_from_yaml_data(obj)
     if m is None:
         return ""
-    if m.line:
-        return f"{m.name}:{m.line:d}"
-    return m.name
+    if m.line is None:
+        return m.name
+    return f"{m.name}:{m.line + 1:d}"
 
 
 #: Global for interactions between LineAnnotationDumper and dump_annotated().
@@ -329,7 +329,7 @@ class LineAnnotationEmitter(emitter.Emitter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         del _ANNOTATIONS[:]
-        self.colors = "KgrbmcyGRBMCY"
+        self.colors = "grbmcyGRBMCY"
         self.filename_colors = {}
 
     def process_scalar(self):
@@ -340,7 +340,7 @@ class LineAnnotationEmitter(emitter.Emitter):
     def write_line_break(self, data=None):
         super().write_line_break(data)
         if self.saved is None:
-            _ANNOTATIONS.append(colorize("@K{---}"))
+            _ANNOTATIONS.append(colorize("@#{---}"))
             return
 
         # append annotations at the end of each line

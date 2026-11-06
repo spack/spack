@@ -572,3 +572,18 @@ def test_exclude_modules_variables():
     assert not any(x.startswith("BASH_FUNC_ml") for x in modifications)
     assert not any(x.startswith("BASH_FUNC_module") for x in modifications)
     assert not any(x.startswith("BASH_FUNC__module_raw") for x in modifications)
+
+
+@pytest.mark.not_on_windows("Test relies on POSIX shell quoting rules")
+@pytest.mark.regression("14261")
+def test_sourcing_file_with_spaces(tmp_path):
+    """Sourcing a file works when its path, and the arguments passed to it, contain spaces."""
+    directory = tmp_path / "dir with space"
+    directory.mkdir()
+    script = directory / "sourceme.sh"
+    script.write_text('export FROM_SPACED_PATH=yes\nexport FROM_SPACED_ARG="$1"\n')
+
+    env = environment.environment_after_sourcing_files((str(script), "arg with space"))
+
+    assert env["FROM_SPACED_PATH"] == "yes"
+    assert env["FROM_SPACED_ARG"] == "arg with space"

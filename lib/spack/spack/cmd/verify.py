@@ -6,6 +6,7 @@ import io
 from typing import List, Optional
 
 import spack.cmd
+import spack.package_base
 import spack.spec
 import spack.store
 import spack.verify
@@ -118,7 +119,7 @@ def _verify_version(specs):
             unknown_version.append(spec)
             continue
 
-        if pkg.versions[spec.version].get("deprecated", False):
+        if spack.package_base.deprecated_version(pkg, spec.version):
             deprecated_version.append(spec)
 
     msg_lines = []

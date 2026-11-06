@@ -40,6 +40,30 @@ def test_sbom_generated_with_post_install(mock_packages, install_mockery):
     assert "SPDXID" in pkg
 
 
+def test_sbom_document_spdx_id_is_spec_compliant(mock_packages, install_mockery):
+    """The document SPDXID must be the literal "SPDXRef-DOCUMENT", and the DESCRIBES
+    relationship must reference it, or SPDX validators reject the document."""
+
+    spec = spack.concretize.concretize_one("mpileaks")
+
+    generate_spdx_2_3(spec)
+
+    with open(sbom_path(spec, "spdx-2.3"), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    assert sbom["SPDXID"] == "SPDXRef-DOCUMENT"
+
+    describes = [r for r in sbom["relationships"] if r["relationshipType"] == "DESCRIBES"]
+    assert len(describes) == 1
+    assert describes[0]["spdxElementId"] == "SPDXRef-DOCUMENT"
+
+    # Every relationship endpoint must resolve to the document or a declared package.
+    known_ids = {sbom["SPDXID"]} | {p["SPDXID"] for p in sbom["packages"]}
+    for rel in sbom["relationships"]:
+        assert rel["spdxElementId"] in known_ids
+        assert rel["relatedSpdxElement"] in known_ids
+
+
 def test_sbom_contains_dependencies(mock_packages, install_mockery):
     """Dependencies appear in SBOM with CONTAINS relationship."""
 
@@ -223,13 +247,41 @@ def test_sbom_download_location_and_checksum_from_version_metadata(
 
     pkg = sbom["packages"][0]
     assert pkg["downloadLocation"] == "https://example.com/src.tar.gz"
-    assert pkg["checksum"] == [{"algorithm": "SHA256", "checksumValue": "a" * 64}]
+    assert pkg["checksums"] == [{"algorithm": "SHA256", "checksumValue": "a" * 64}]
 
 
 def test_sbom_download_location_from_git_url(mock_packages, install_mockery):
     """Download location should come from the package-level git URL."""
 
     spec = spack.concretize.concretize_one("git-sparsepaths-version@1.0")
+
+    generate_spdx_2_3(spec)
+
+    with open(sbom_path(spec), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    assert sbom["packages"][0]["downloadLocation"] == "https://a/really.com/big/repo.git"
+
+
+def test_sbom_download_location_skips_broken_url_for_version_on_git_version(
+    mock_packages, install_mockery, monkeypatch
+):
+    """A package whose url_for_version() blows up on a git-resolved version (e.g. because it
+    assumes purely numeric version components) must not crash SBOM generation: for versions
+    that need a commit, url_for_version() should not be called at all, and the download
+    location should fall back to the package's git URL. Regression test for
+    https://github.com/spack/spack/issues/52864.
+    """
+
+    spec = spack.concretize.concretize_one("git-sparsepaths-version@1.0")
+
+    def broken_url_for_version(version):
+        # Mirrors the real-world crash: a package's custom url_for_version() doing
+        # arithmetic/formatting on version components that assumes they are all numeric.
+        major, minor = version[0], version[1]
+        return "v%02d-%02d.tar.gz" % (major, minor)
+
+    monkeypatch.setattr(spec.package, "url_for_version", broken_url_for_version)
 
     generate_spdx_2_3(spec)
 
@@ -312,8 +364,8 @@ def test_sbom_checksums_include_both_sha256_and_git_commit(
     ]
 
     # Verify both checksums are included
-    assert len(pkg["checksum"]) == 2
-    assert pkg["checksum"] == expected_checksums
+    assert len(pkg["checksums"]) == 2
+    assert pkg["checksums"] == expected_checksums
 
 
 def test_sbom_checksums_git_commit_only(mock_packages, install_mockery, monkeypatch):
@@ -341,8 +393,8 @@ def test_sbom_checksums_git_commit_only(mock_packages, install_mockery, monkeypa
     expected_checksums = [{"algorithm": "SHA1", "checksumValue": "c" * 40}]
 
     # Verify only git SHA1 is included
-    assert len(pkg["checksum"]) == 1
-    assert pkg["checksum"] == expected_checksums
+    assert len(pkg["checksums"]) == 1
+    assert pkg["checksums"] == expected_checksums
 
 
 def test_sbom_checksums_none_available(mock_packages, install_mockery, monkeypatch):
@@ -365,7 +417,7 @@ def test_sbom_checksums_none_available(mock_packages, install_mockery, monkeypat
     pkg = sbom["packages"][0]
 
     # Verify no checksums are included
-    assert pkg["checksum"] == []
+    assert pkg["checksums"] == []
 
 
 def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
@@ -396,4 +448,4 @@ def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
 
     assert dep_entry["versionInfo"] == str(dep.version)
     assert dep_entry["downloadLocation"] == "https://example.com/callpath.tar.gz"
-    assert dep_entry["checksum"] == [{"algorithm": "SHA256", "checksumValue": "b" * 64}]
+    assert dep_entry["checksums"] == [{"algorithm": "SHA256", "checksumValue": "b" * 64}]

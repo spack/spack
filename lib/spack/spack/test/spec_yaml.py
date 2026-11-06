@@ -23,8 +23,8 @@ import spack.vendor.ruamel.yaml
 
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.error
-import spack.hash_types as ht
 import spack.paths
 import spack.repo
 import spack.spec
@@ -47,7 +47,7 @@ def check_json_round_trip(spec):
     assert spec.eq_dag(spec_from_json)
 
 
-def test_read_spec_from_signed_json():
+def test_read_spec_from_signed_json(mock_packages):
     spec_dir = os.path.join(spack.paths.test_path, "data", "mirrors", "signed_json")
     file_name = (
         "linux-ubuntu18.04-haswell-gcc-8.4.0-"
@@ -177,7 +177,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
     if spec_str == "dtuse":
         assert spec.external and spec.extra_attributes == extra_attributes
 
-    spec_dict = spec.to_dict(hash=ht.dag_hash)
+    spec_dict = spec.to_dict()
     spec_yaml = spec.to_yaml()
     spec_json = spec.to_json()
 
@@ -204,8 +204,7 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
     from_yaml_rev = Spec.from_yaml(yaml_string_rev)
     from_json_rev = Spec.from_json(json_string_rev)
 
-    # Strip spec if we stripped the yaml
-    spec = spec.copy(deps=ht.dag_hash.depflag)
+    spec = spec.copy()
 
     # specs and their hashes are equal to the original
     assert (
@@ -504,6 +503,9 @@ e: *id002
         "hdf5~~mpi++shared",
         "hdf5 cflags==-g foo==bar cxxflags==-O3",
         "hdf5 cflags=-g foo==bar cxxflags==-O3",
+        # the same variant name, both as a variant and propagated
+        "hdf5+mpi++mpi",
+        "hdf5 foo=a,b foo==b",
         "hdf5%gcc",
         "hdf5%cmake",
         "hdf5^gcc",
@@ -523,15 +525,56 @@ def test_pickle_roundtrip_for_abstract_specs(spec_str):
 
 
 @pytest.mark.parametrize(
-    "spec_str", ["zlib os=redhat6", "zlib platform=test", "zlib os=debian6 target=x86_64"]
+    "spec_str",
+    [
+        # partial architectures. Regression test: ArchSpec.to_dict crashed with AttributeError
+        # when target was None.
+        "zlib os=redhat6",
+        "zlib platform=test",
+        "zlib os=debian6 target=x86_64",
+        # abstract hash
+        "zlib/abcdef",
+        # conditional edges
+        "zlib ^[when='+mpi'] mpich@1",
+        "zlib ^[when='+mpi'] mpich@1 ^[when='~mpi'] mpich@2",
+        # propagated direct dependencies
+        "zlib %%gcc",
+        # flags that propagate and flags that don't, on the same flag type
+        "zlib cflags=-g cflags==-O2",
+        # several flags given as a single group
+        'zlib cflags="-O2 -g"',
+        # several dimensions at once
+        "zlib ++mpi cflags==-g foo=bar,baz target=x86_64:",
+        # the same variant name, both as a variant and propagated, abstract and concrete
+        "zlib+mpi++mpi",
+        "zlib foo=a,b foo==b",
+        "zlib foo:=a,b foo==b",
+    ],
 )
-def test_dict_roundtrip_for_abstract_specs_with_partial_arch(spec_str):
-    """Abstract specs with a partial architecture survive to_dict/from_dict.
-    Regression test: ArchSpec.to_dict crashed with AttributeError when target was None."""
+def test_dict_roundtrip_for_abstract_specs(spec_str):
+    """Abstract specs survive to_dict/from_dict.
+
+    This compares the spec objects, their string representation and the dicts themselves, since
+    `Spec.__eq__` is blind to some of what is serialized, and vice versa."""
     s = spack.spec.Spec(spec_str)
     t = spack.spec.Spec.from_dict(s.to_dict())
     assert s == t
     assert str(s) == str(t)
+    assert s.to_dict() == t.to_dict()
+
+
+def test_from_dict_reads_legacy_propagate_list():
+    """Node dicts written before propagated variants had their own attribute listed them under
+    "parameters" with their name in "propagate"."""
+    node = {
+        "name": "hdf5",
+        "parameters": {"mpi": True, "foo": ["bar", "baz"], "cxxstd": ["17"]},
+        "propagate": ["foo", "mpi", "cxxstd"],
+        "abstract": ["foo", "cxxstd"],
+        "concrete": False,
+    }
+    reconstructed = spack.spec.SpecfileLatest.from_node_dict(node)
+    assert reconstructed == spack.spec.Spec("hdf5++mpi foo==bar,baz cxxstd==17")
 
 
 def test_specfile_alias_is_updated():
@@ -563,6 +606,29 @@ def test_direct_edges_and_round_tripping_to_dict(spec_str, config, mock_packages
             assert "direct" not in dependency_data["parameters"]
 
 
+def test_parallel_deptype_edges_survive_round_trip(mock_packages):
+    """Two parallel edges to one package, differing only in deptype, share one child node once
+    read back from JSON. Sharing the child must not merge them into one edge."""
+    original = Spec("pkg-a ^[deptypes=build] pkg-b ^[deptypes=link] pkg-b")
+    reconstructed = Spec.from_dict(original.to_dict())
+    edges = reconstructed.edges_to_dependencies("pkg-b")
+    assert len(edges) == 2
+    assert {e.depflag for e in edges} == {dt.BUILD, dt.LINK}
+
+
+def test_parallel_edges_are_serialized_in_a_canonical_order(mock_packages):
+    """Two edges to one package with the same dependency types are told apart by their when
+    condition and their virtuals, so a meet producing both is one state with one hash."""
+    forward = Spec("%pkg-b").copy()
+    forward.constrain(Spec("pkg-a ^[when='+foo'] pkg-b@1"))
+    backward = Spec("pkg-a ^[when='+foo'] pkg-b@1").copy()
+    backward.constrain(Spec("%pkg-b"))
+
+    assert len(forward.edges_to_dependencies()) == 2
+    assert forward.to_dict() == backward.to_dict()
+    assert forward.dag_hash() == backward.dag_hash()
+
+
 def test_pickle_preserves_identity_and_prefix(config, mock_packages):
     """When pickling multiple specs that share dependencies, the identity of those dependencies
     should be preserved when unpickling."""
@@ -583,6 +649,21 @@ def test_pickle_preserves_identity_and_prefix(config, mock_packages):
 
     # Test that the specs are the same as dicts
     assert mpileaks_before.to_dict() == mpileaks_after.to_dict()
+
+
+def test_edge_virtuals_reconstructed_for_specfile_v3(config, mock_packages):
+    """Virtuals on edges are recorded from v4 on, so a v3 spec file needs them reconstructed."""
+    as_dict = spack.concretize.concretize_one("mpileaks ^mpich").to_dict()
+    as_dict["spec"]["_meta"]["version"] = 3
+    for node in as_dict["spec"]["nodes"]:
+        node.pop("provided_virtuals", None)
+        node.pop("annotations")
+        for dep in node.get("dependencies", ()):
+            dep["type"] = list(dep.pop("parameters")["deptypes"])
+
+    reread = Spec.from_dict(as_dict)
+    assert reread.original_spec_format() == 3
+    assert "mpi" in reread.edges_to_dependencies(name="mpich")[0].virtuals
 
 
 def test_load_specfile_with_no_nodes():

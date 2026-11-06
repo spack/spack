@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import spack.config
-import spack.hash_types as ht
+import spack.package_prefs
 import spack.projections
 import spack.spec
 import spack.util.filesystem as fs
@@ -135,7 +135,7 @@ class DirectoryLayout:
         with open(path, "w", encoding="utf-8") as f:
             # The hash of the projection is the DAG hash which contains
             # the full provenance, so it's available if we want it later
-            spec.to_json(f, hash=ht.dag_hash)
+            spec.to_json(f)
 
     def write_host_environment(self, spec: "spack.spec.Spec") -> None:
         """The host environment is a json file with os, kernel, and spack
@@ -225,18 +225,14 @@ class DirectoryLayout:
     def create_install_directory(self, spec: "spack.spec.Spec") -> None:
         _check_concrete(spec)
 
-        # Create install directory with properly configured permissions
-        # Cannot import at top of file
-        from spack.package_prefs import get_package_dir_permissions, get_package_group
-
         # Each package folder can have its own specific permissions, while
         # intermediate folders (arch/compiler) are set with access permissions
         # equivalent to the root permissions of the layout.
-        group = get_package_group(spec)
-        perms = get_package_dir_permissions(spec)
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, spec.name)
+        spack.package_prefs.warn_if_sgid_on_afs(spec.prefix, perms.dir_mode)
 
-        fs.mkdirp(spec.prefix, mode=perms, group=group, default_perms="parents")
-        fs.mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
+        fs.mkdirp(spec.prefix, mode=perms.dir_mode, group=perms.group, default_perms="parents")
+        fs.mkdirp(self.metadata_path(spec), mode=perms.dir_mode, group=perms.group)  # in prefix
 
         self.write_spec(spec, self.spec_file_path(spec))
 

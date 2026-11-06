@@ -23,7 +23,6 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 from spack.error import MirrorError
 from spack.oci.image import is_oci_url
-from spack.util import tty
 
 if TYPE_CHECKING:
     import spack.spec
@@ -197,7 +196,7 @@ class Mirror:
         errors = []
 
         # Verify that the credentials that are variables expand
-        if access_pair and isinstance(access_pair, dict):
+        if access_pair:
             if "id_variable" in access_pair and access_pair["id_variable"] not in os.environ:
                 errors.append(f"id_variable {access_pair['id_variable']} not set in environment")
             if "secret_variable" in access_pair:
@@ -210,7 +209,7 @@ class Mirror:
         if access_token_variable:
             if access_token_variable not in os.environ:
                 errors.append(
-                    f"environment variable `{access_pair['access_token_variable']}` "
+                    f"environment variable `{access_token_variable}` "
                     "(access_token_variable) not set"
                 )
 
@@ -245,22 +244,6 @@ class Mirror:
             current_data.pop("access_token")
         elif "access_token_variable" in current_data and "access_token" in new_data:
             current_data.pop("access_token_variable")
-
-        # If updating to a new access_pair that is the deprecated list, warn
-        warn_deprecated_access_pair = False
-        if "access_pair" in new_data:
-            warn_deprecated_access_pair = isinstance(new_data["access_pair"], list)
-        # If the not updating the current access_pair, and it is the deprecated list, warn
-        elif "access_pair" in current_data:
-            warn_deprecated_access_pair = isinstance(current_data["access_pair"], list)
-
-        if warn_deprecated_access_pair:
-            tty.warn(
-                f"in mirror {self.name}: support for plain text secrets in config files "
-                "(access_pair: [id, secret]) is deprecated and will be removed in a future Spack "
-                "version. Use environment variables instead (access_pair: "
-                "{id: ..., secret_variable: ...})"
-            )
 
         keys = [
             "access_pair",
@@ -426,14 +409,11 @@ class Mirror:
 
     def get_access_pair(self, direction: str) -> Optional[Tuple[str, str]]:
         pair = self._get_value("access_pair", direction)
-        if isinstance(pair, (tuple, list)) and len(pair) == 2:
-            return (pair[0], pair[1]) if all(pair) else None
-        elif isinstance(pair, dict):
-            id_ = os.environ.get(pair["id_variable"]) if "id_variable" in pair else pair["id"]
-            secret = os.environ.get(pair["secret_variable"])
-            return (id_, secret) if id_ and secret else None
-        else:
+        if not pair:
             return None
+        id_ = os.environ.get(pair["id_variable"]) if "id_variable" in pair else pair["id"]
+        secret = os.environ.get(pair["secret_variable"])
+        return (id_, secret) if id_ and secret else None
 
     def get_profile(self, direction: str) -> Optional[str]:
         return self._get_value("profile", direction)
@@ -452,6 +432,8 @@ class MirrorCollection(Mapping[str, Mirror]):
         binary: Optional[bool] = None,
         source: Optional[bool] = None,
         autopush: Optional[bool] = None,
+        *,
+        config: Optional[spack.config.Configuration] = None,
     ):
         """Initialize a mirror collection.
 
@@ -466,11 +448,15 @@ class MirrorCollection(Mapping[str, Mirror]):
                     If None, do not filter on source mirrors.
             autopush: If True, only include mirrors that have autopush enabled.
                       If False, omit mirrors that have autopush enabled.
-                      If None, do not filter on autopush."""
+                      If None, do not filter on autopush.
+            config: configuration to look up mirrors from when ``mirrors`` is None. If None, the
+                    global ``spack.config.CONFIG`` is used."""
+        if config is None:
+            config = spack.config.CONFIG
         mirrors_data = (
             mirrors.items()
             if mirrors is not None
-            else spack.config.CONFIG.get_config("mirrors", scope=scope).items()
+            else config.get_config("mirrors", scope=scope).items()
         )
         mirrors = (Mirror(data=mirror, name=name) for name, mirror in mirrors_data)
 

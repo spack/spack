@@ -4,6 +4,7 @@
 import enum
 from typing import Dict, List
 
+import spack.repo
 import spack.spec
 from spack.util import lang
 
@@ -79,7 +80,9 @@ class CompilerAdaptor:
             if compiler in seen:
                 continue
             seen.add(compiler)
-            result.extend(CompilerPropertyDetector(compiler).implicit_rpaths())
+            result.extend(
+                CompilerPropertyDetector(compiler, repo=spack.repo.PATH).implicit_rpaths()
+            )
         return result
 
     @property

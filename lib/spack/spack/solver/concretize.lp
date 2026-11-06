@@ -33,6 +33,14 @@ duplicate_penalty(node(ID1, Package), 1, "version")
    ID2 = ID1 + 1, Weight2 < Weight1,
    max_dupes(Virtual, X), X > 1, ID2 < X.
 
+% Symmetry-breaking rule. Two nodes of a language virtual, each with one provider
+% of the same package, are numbered like their providers
+:- provider(node(ProviderID1, Provider), node(ID1, Language)),
+   provider(node(ProviderID2, Provider), node(ID2, Language)),
+   language(Language), ID1 < ID2, ProviderID2 < ProviderID1,
+   not multiple_providers(node(ID1, Language)),
+   not multiple_providers(node(ID2, Language)).
+
 % Anonymous variables that appear only in negative body literals like `not
 % foo(..., _, ...)` are projected implicitly by clingo v5, but not in clingo
 % v6. Each predicate below is the explicit projection of an existing predicate
@@ -62,7 +70,6 @@ has_requirement_message(Package, X) :- requirement_message(Package, X, _).
 
 node_has_any_compiler(PackageNode) :- node_compiler(_, PackageNode).
 pkg_has_any_compiler(PkgName) :- node_compiler(_, node(_, PkgName)).
-compiler_used_as_lib(PkgName, Hash) :- compiler_used_as_a_library(node(_, PkgName), Hash).
 
 has_concrete_build_dep(ParentNode, BuildDep) :- attr("concrete_build_dependency", ParentNode, BuildDep, _).
 is_self_build_req(PackageNode) :- self_build_requirement(_, PackageNode).
@@ -331,6 +338,7 @@ error(10000, no_value_error, Attribute, Package)
 % Error when multiple attr need to be selected
 error(100, multiple_values_error, Attribute, Package)
   :- attr("node", node(ID, Package)),
+     not multiple_values_explained(node(ID, Package), Attribute),
      attr_single_value(Attribute),
      2 { attr(Attribute, node(ID, Package), Value) }.
 
@@ -366,18 +374,6 @@ version_constraint_satisfied(node(ID,Package), Constraint) :-
 
 attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
 
-% If we select a deprecated version, mark the package as deprecated
-attr("deprecated", node(ID, Package), Version) :-
-     attr("version", node(ID, Package), Version),
-     not external(node(ID, Package)),
-     pkg_fact(Package, deprecated_version(Version)).
-
-error(100, "Package '{0}' needs the deprecated version '{1}', and this is not allowed", Package, Version)
-  :- deprecated_versions_not_allowed(),
-     attr("version", node(ID, Package), Version),
-     build(node(ID, Package)),
-     pkg_fact(Package, deprecated_version(Version)).
-
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
 
@@ -396,13 +392,6 @@ version_weight(node(ID, Package), Weight)
   :- attr("version", node(ID, Package), Version),
      attr("node", node(ID, Package)),
      pkg_fact(Package, version_declared(Version, Weight)).
-
-version_deprecation_penalty(node(ID, Package), Penalty)
-  :- pkg_fact(Package, deprecated_version(Version)),
-     pkg_fact(Package, version_deprecation_penalty(Penalty)),
-     attr("node", node(ID, Package)),
-     attr("version", node(ID, Package), Version),
-     not external(node(ID, Package)).
 
 % More specific error message if the version cannot satisfy some constraint
 % Otherwise covered by `no_version_error` and `versions_conflict_error`.
@@ -430,7 +419,65 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      pkg_fact(Package, version_has_commit(Version, Psha)),
      Vsha != Psha.
 
-#defined deprecated_versions_not_allowed/0.
+% Which nodes are subject to the deprecation policy, per the global 'deprecation_scope':
+% 'all' checks every node in the DAG, 'runtime' checks the root unification set, i.e. the
+% non-build closure of the roots (link, run, and test edges), plus anything that would be built.
+%
+% This uses the already-computed 'root' unification set rather than a dedicated link/run
+% closure, which avoids the extra grounding cost. The only difference is 'test' edges, so
+% under 'runtime' scope concretization is slightly stricter than the install-time gate, which
+% walks link/run only.
+node_in_deprecation_scope(node(ID, Package)) :-
+    attr("node", node(ID, Package)), deprecation_scope("all").
+
+node_in_deprecation_scope(node(ID, Package)) :-
+    unification_set("root", node(ID, Package)), deprecation_scope("runtime").
+
+% Under 'runtime' also gate what we would compile; reused nodes are concrete, hence not 'build'
+node_in_deprecation_scope(node(ID, Package)) :-
+    build(node(ID, Package)), deprecation_scope("runtime").
+
+% Labels fixed on a node by the patches applied to it
+
+deprecation_label_fixed(node(ID, Package), Label) % same recipe patch()
+  :- pkg_fact(Package, deprecation_fix(CondID, Label)),
+     condition_holds(CondID, node(ID, Package)),
+     build(node(ID, Package)).
+
+deprecation_label_fixed(node(ID, Package), Label) % depends_on(..., patches=...)
+  :- pkg_fact(Parent, dependency_deprecation_fix(ParentCondID, Package, CondID, Label)),
+     condition_holds(ParentCondID, node(ParentID, Parent)),
+     depends_on(node(ParentID, Parent), node(ID, Package)),
+     condition_holds(CondID, node(ID, Package)),
+     build(node(ID, Package)).
+
+deprecation_label_fixed(node(ID, Package), Label)  % reused node
+  :- attr("hash", node(ID, Package), Hash),
+     reused_deprecation_fix(Hash, Label).
+
+% Only the directives and labels the policy refuses are emitted.
+% A directive without labels is an error on every node it matches,
+% one with labels is an error for each label not fixed by a patch
+deprecated_node(node(ID, Package), DeprecationID)
+  :- pkg_fact(Package, deprecation_directive(DeprecationID, CondID)),
+     condition_holds(CondID, node(ID, Package)),
+     not external(node(ID, Package)),
+     node_in_deprecation_scope(node(ID, Package)).
+
+deprecation_has_labels(Package, DeprecationID)
+  :- pkg_fact(Package, deprecation_label(DeprecationID, _)).
+
+error(1, "deprecated_error", Package, DeprecationID)
+  :- deprecated_node(node(ID, Package), DeprecationID),
+     not deprecation_has_labels(Package, DeprecationID).
+
+error(1, "deprecated_error", Package, DeprecationID, Label)
+  :- deprecated_node(node(ID, Package), DeprecationID),
+     pkg_fact(Package, deprecation_label(DeprecationID, Label)),
+     not deprecation_label_fixed(node(ID, Package), Label).
+
+#defined reused_deprecation_fix/2.
+#defined deprecation_scope/1.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
@@ -1140,9 +1187,11 @@ error(100, "Cannot find valid provider for virtual {0}", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
      not has_provider(node(X, Virtual)).
 
+multiple_providers(VirtualNode) :- has_provider(VirtualNode), 2 { provider(P, VirtualNode) }.
+
 error(100, "Multiple providers are required for the same '{0}' virtual", Virtual)
   :- attr("virtual_node", node(X, Virtual)),
-     2 { provider(P, node(X, Virtual)) }.
+     multiple_providers(node(X, Virtual)).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 attr("virtual_node", VirtualNode) :- attr("virtual_root", VirtualNode).
@@ -1169,14 +1218,15 @@ do_not_impose(EffectID, node(X, Package))
      pkg_fact(Package, condition_effect(ID, EffectID)),
      not is_provider_of_virtual(node(X, Package), Virtual).
 
-% Choose the provider among root specs, if possible
-:- provider(ProviderNode, node(min_dupe_id, Virtual)),
-   virtual_condition_holds(_, PossibleProvider, Virtual),
-   PossibleProvider != ProviderNode,
-   explicitly_requested_root(PossibleProvider),
-   not self_build_requirement(PossibleProvider, ProviderNode),
-   not explicitly_requested_root(ProviderNode),
-   not language(Virtual).
+% Penalize the fact that a root could provide the virtual, but is not the provider
+provider_not_among_roots(ProviderNode, Virtual)
+  :- provider(ProviderNode, node(min_dupe_id, Virtual)),
+     virtual_condition_holds(_, PossibleProvider, Virtual),
+     PossibleProvider != ProviderNode,
+     explicitly_requested_root(PossibleProvider),
+     not self_build_requirement(PossibleProvider, ProviderNode),
+     not explicitly_requested_root(ProviderNode),
+     not language(Virtual).
 
 % A package cannot be the actual provider for a virtual if it does not
 % fulfill the conditions to provide that virtual
@@ -1598,6 +1648,13 @@ error(10, "'Spec({1}={2})' is not a valid value for '{0}' variant '{1}'", Packag
     not variant_possible_value(node(ID, Package), Variant, Value),
     build(node(ID, Package)).
 
+% Taking a conditional value imposes the condition attached to it.
+% The condition should not be imposed on concrete packages.
+do_not_impose(EffectID, node(ID, Package))
+  :- pkg_fact(Package, conditional_value_condition(ConditionID)),
+     pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+     concrete(node(ID, Package)).
+
 % Some multi valued variants accept multiple values from disjoint sets. Ensure that we
 % respect that constraint and we don't pick values from more than one set at once
 error(100, "{0} variant '{1}' cannot have values '{2}' and '{3}' as they come from disjoint value sets", Package, Variant, Value1, Value2)
@@ -1807,12 +1864,18 @@ attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
    attr("compatible_runtime", PackageNode, Runtime, VersionRange),
    concrete(PackageNode).
 
-% If a compiler package is depended on with type link, it's used as a library
-compiler_used_as_a_library(node(X, Child), Hash) :-
+% If a compiler package is depended on with type link, it imposes its link dependencies
+compiler_imposes_link_deps(Child, Hash) :-
   concrete(node(X, Child)),
   attr("hash", node(X, Child), Hash),
   compiler_package(Child), % Used to restrict grounding for this rule
   attr("depends_on", _, node(X, Child), "link").
+
+% If a compiler package is a root, it imposes its link dependencies
+compiler_imposes_link_deps(Child, Hash) :-
+  attr("root", node(X, Child)),
+  attr("hash", node(X, Child), Hash),
+  compiler_package(Child).
 
 % If a compiler is used for C on a package, it must provide C++ too, if need be, and vice-versa
 :-  attr("virtual_on_edge", PackageNode, CompilerNode1, "c"),
@@ -1902,6 +1965,15 @@ will_build_packages() :- build(X).
 1 { attr("node_platform", PackageNode, Platform) : allowed_platform(Platform) } 1
   :- attr("node", PackageNode).
 
+error(100, "'{0} platform={1}' is not compatible with this machine (platform={2})", Package, Platform, Allowed)
+  :- attr("node_platform", node(X, Package), Platform),
+     not allowed_platform(Platform),
+     allowed_platform(Allowed).
+
+% The error above explains the situation; the generic multiple-values error would only add noise.
+multiple_values_explained(node(X, Package), "node_platform")
+  :- attr("node_platform", node(X, Package), Platform), not allowed_platform(Platform).
+
 % setting platform on a node is a hard constraint
 attr("node_platform", PackageNode, Platform)
  :- attr("node", PackageNode), attr("node_platform_set", PackageNode, Platform).
@@ -1942,11 +2014,13 @@ attr("node_os", PackageNode, OS) :- attr("node_os_set", PackageNode, OS), attr("
 % Each node has only one target chosen among the known targets
 1 { attr("node_target", PackageNode, Target) : target(Target) } 1 :- attr("node", PackageNode).
 
-% If a node must satisfy a target constraint, enforce it
+% If a node must satisfy a target constraint, enforce it. A target unknown to this machine is
+% reported by a dedicated error below, so don't repeat the mismatch for it here.
 error(10, "'{0} target={1}' cannot satisfy constraint 'target={2}'", Package, Target, Constraint)
   :- attr("node_target", node(X, Package), Target),
      attr("node_target_satisfies", node(X, Package), Constraint),
-     not target_satisfies(Constraint, Target).
+     not target_satisfies(Constraint, Target),
+     not multiple_values_explained(node(X, Package), "node_target").
 
 % If a node has a target and the target satisfies a constraint, then the target
 % associated with the node satisfies the same constraint
@@ -2020,6 +2094,10 @@ error(100, "'{0} target={1}' is not compatible with this machine", Package, Targ
      attr("node_target", node(X, Package), Target),
      not target(Target).
 
+% The error above explains the situation; the generic multiple-values error would only add noise.
+multiple_values_explained(node(X, Package), "node_target")
+  :- attr("node_target", node(X, Package), Target), not target(Target).
+
 %-----------------------------------------------------------------------------
 % Compiler flags
 %-----------------------------------------------------------------------------
@@ -2052,8 +2130,17 @@ error(100, "Cannot set multiple {0} values for {1} from cli", FlagType, Package)
   attr("node", node(ID, PackageName)).
 % you can't choose an installed hash for a dev spec
 :- attr("hash", PackageNode, Hash), attr("variant_value", PackageNode, "dev_path", _).
-% You can't install a hash, if it is not installed
-:- attr("hash", node(ID, Package), Hash), not installed_hash(Package, Hash).
+% You can't install a hash, if it is not installed, or imposable by a spec being reused
+:- attr("hash", node(ID, Package), Hash),
+   not installed_hash(Package, Hash),
+   not imposable_hash(Package, Hash).
+
+% Hashes the solver knows about only because they belong to the DAG of a spec that can be
+% reused. Since they are not in the choice rule above, they cannot be selected by an arbitrary
+% node, but the spec owning them can still impose them. This is what keeps the dependencies of
+% a compiler available when "concretizer:reuse" excludes them: compilers installed by Spack are
+% always reusable, their dependencies are not reusable on their own.
+#defined imposable_hash/2.
 
 % hash_attrs are versions, but can_splice_attr are usually node_version_satisfies
 hash_attr(Hash, "node_version_satisfies", PackageName, Constraint) :-
@@ -2078,14 +2165,14 @@ imposed_constraint(Hash, Attr, PackageName, A1, A2) :-
 imposed_constraint(Hash, Attr, PackageName, A1, A2, A3) :- hash_attr(Hash, Attr, PackageName, A1, A2, A3).
 imposed_constraint(Hash, "hash", PackageName, Hash) :- installed_hash(PackageName, Hash).
 
-% If a compiler is not used as a library, we just enforce "run" dependency, so we
-% can get by with a much smaller search space.
+% If a compiler does not need to impose its link dependencies, we just enforce "run"
+% dependency, so we can get by with a much smaller search space.
 avoid_link_dependency(Hash, DepName) :-
   hash_attr(Hash, "depends_on", PackageName, DepName, "link"),
   not hash_attr(Hash, "depends_on", PackageName, DepName, "run"),
   hash_attr(Hash, "hash", DepName, DepHash),
   compiler_package(PackageName),
-  not compiler_used_as_lib(PackageName, Hash).
+  not compiler_imposes_link_deps(PackageName, Hash).
 
 % When a compiler is not used as a library, its transitive run-type dependencies are unified in the
 % build environment (they appear in PATH etc.), but their pure link-type dependencies are NOT. This
@@ -2096,7 +2183,7 @@ avoid_link_dependency(Hash, DepName) :-
 % Base case: direct run dep of a non-library compiler
 compiler_non_lib_run_dep(DepHash, DepName) :-
   compiler_package(CompilerName),
-  not compiler_used_as_lib(CompilerName, CompilerHash),
+  not compiler_imposes_link_deps(CompilerName, CompilerHash),
   hash_attr(CompilerHash, "depends_on", CompilerName, DepName, "run"),
   hash_attr(CompilerHash, "hash", DepName, DepHash).
 
@@ -2249,7 +2336,6 @@ build_priority(PackageNode, concr_offset) :- concrete(PackageNode), attr("node",
 
 opt_criterion(0, "high", "", 0, "requirement weight").
 
-opt_criterion(12, "built", "fixed", 0, "deprecated versions used").
 opt_criterion(11, "built", "fixed", 0, "version badness (roots)").
 opt_criterion(10, "built", "fixed", 0, "variant penalty (roots)").
 opt_criterion(9, "built", "fixed", 0, "default values of variants not being used (roots)").
@@ -2267,7 +2353,6 @@ opt_criterion(2, "hinge", "", 0, "number of packages to build (vs. reuse)").
 opt_criterion(1, "hinge", "", 0, "number of nodes from the same package").
 opt_criterion(0, "hinge", "", 0, "build unification sets").
 
-opt_criterion(12, "concr", "fixed", 0, "deprecated versions used").
 opt_criterion(11, "concr", "fixed", 0, "version badness (roots)").
 opt_criterion(10, "concr", "fixed", 0, "variant penalty (roots)").
 opt_criterion(9, "concr", "fixed", 0, "default values of variants not being used (roots)").
@@ -2287,8 +2372,9 @@ opt_criterion(5, "low", "", 0, "target mismatches (reused nodes)").
 opt_criterion(4, "low", "", 0, "version badness (runtimes)").
 opt_criterion(3, "low", "", 0, "non-preferred targets (runtimes)").
 opt_criterion(2, "low", "", 0, "providers on edges").
-opt_criterion(1, "low", "", 0, "version badness on edges").
-opt_criterion(0, "low", "", 0, "penalty on symmetric duplicates").
+% Before "version badness on edges", whose cost does not depend on how duplicates are numbered
+opt_criterion(1, "low", "", 0, "penalty on symmetric duplicates").
+opt_criterion(0, "low", "", 0, "version badness on edges").
 
 %----------------------------------------------------------------------------
 % Show optimization criteria
@@ -2367,15 +2453,6 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
       opt_priority(Priority, _, _, _, "build unification sets")
 }.
 
-% Minimize the number of deprecated versions being used
-#minimize {
-    1@Priority, PackageNode  
-    : attr("deprecated", PackageNode, _),
-      not external(PackageNode),
-      build_priority(PackageNode, BuildPriority),
-      opt_priority(Priority, BuildPriority, _, _, "deprecated versions used")
-}.
-
 % Minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
@@ -2384,12 +2461,6 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
     Weight@Priority, PackageNode
     : attr("root", PackageNode),
       version_weight(PackageNode, Weight),
-      build_priority(PackageNode, BuildPriority),
-      opt_priority(Priority, BuildPriority, _, _, "version badness (roots)");
-    
-    Penalty@Priority, PackageNode
-    : attr("root", PackageNode),
-      version_deprecation_penalty(PackageNode, Penalty),
       build_priority(PackageNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, _, "version badness (roots)")
 }.
@@ -2435,11 +2506,17 @@ opt_priority(Priority, low_offset, "low", "", Description) :-
       opt_priority(Priority, BuildPriority, _, _, "variant penalty (non-roots)")
 }.
 
-% Minimize the weights of all the other providers (mpi, lapack, etc.)
+% Minimize the weights of all the other providers (mpi, lapack, etc.).
+% The penalty for a provider that is not a root, when a root could provide the virtual,
+% must be larger than any provider weight.
 #minimize{
     Weight@Priority, ProviderNode,X,Virtual
     : provider_weight(ProviderNode, node(X, Virtual), Weight),
       not language(Virtual), not language_runtime(Virtual),
+      build_priority(ProviderNode, BuildPriority),
+      opt_priority(Priority, BuildPriority, _, _, "preferred providers (excluded compilers and language runtimes)");
+    1000@Priority, ProviderNode,Virtual,"not a root"
+    : provider_not_among_roots(ProviderNode, Virtual),
       build_priority(ProviderNode, BuildPriority),
       opt_priority(Priority, BuildPriority, _, _, "preferred providers (excluded compilers and language runtimes)")
 }.
@@ -2468,13 +2545,6 @@ compiler_penalty(PackageNode, C-1) :-
 #minimize{
     Weight@Priority, node(X, Package)
     : version_weight(node(X, Package), Weight),
-      not attr("root", node(X, Package)),
-      not runtime(Package),
-      build_priority(node(X, Package), BuildPriority),
-      opt_priority(Priority, BuildPriority, _, _, "version badness (non roots)");
-
-    Penalty@Priority, node(X, Package)
-    : version_deprecation_penalty(node(X, Package), Penalty),
       not attr("root", node(X, Package)),
       not runtime(Package),
       build_priority(node(X, Package), BuildPriority),
@@ -2552,11 +2622,31 @@ compiler_penalty(PackageNode, C-1) :-
       opt_priority(Priority, _, _, _, "providers on edges")
 }.
 
-% Try to use latest versions of nodes as much as possible
+% weight_shifted(Weight, Shifted, I) holds for Shifted = Weight / 2**I, with integer division
+weight_shifted(Weight, Weight, 0) :- pkg_fact(_, version_declared(_, Weight)).
+weight_shifted(Weight, Shifted / 2, I + 1) :- weight_shifted(Weight, Shifted, I), Shifted > 1.
+
+% weight_bit(Weight, I) holds if bit I of Weight is set
+weight_bit(Weight, I) :- weight_shifted(Weight, Shifted, I), Shifted \ 2 = 1.
+
+version_weight_bit(node(X, Package), I)
+  :- version_weight(node(X, Package), Weight),
+     multiple_unification_sets(Package),
+     weight_bit(Weight, I).
+
+% Try to use latest versions of nodes as much as possible.
+%
+% A node has a single version weight, so summing 2**I over its bits gives
+% the same cost as summing the weight. The weights are encoded as bits to
+% reduce the size of the grounded program.
+%
+% For a node with V possible versions and P possible parents:
+% - Minimizing the weight grounds V * P elements.
+% - Minimizing the bits grounds about log2(V) * P elements
+% because all the versions with bit I set map to the same version_weight_bit/2 atom.
 #minimize{
-    Weight@Priority, ParentNode,node(X, Package)
-    : version_weight(node(X, Package), Weight),
-      multiple_unification_sets(Package),
+    2 ** I@Priority, ParentNode,node(X, Package),I
+    : version_weight_bit(node(X, Package), I),
       not attr("root", node(X, Package)),
       depends_on(ParentNode, node(X, Package)),
       opt_priority(Priority, _, _, _, "version badness on edges")

@@ -10,7 +10,7 @@ import pytest
 import spack.concretize
 from spack.config import Configuration
 from spack.fetch_strategy import HgFetchStrategy
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.version import Version
@@ -72,12 +72,12 @@ def test_fetch(
             assert h() == t.revision
 
 
-def test_hg_extra_fetch(tmp_path: pathlib.Path):
+def test_hg_extra_fetch(tmp_path: pathlib.Path, config):
     """Ensure a fetch after expanding is effectively a no-op."""
     testpath = str(tmp_path)
 
     fetcher = HgFetchStrategy(hg="file:///not-a-real-hg-repo")
-    with Stage(fetcher, path=testpath) as stage:
+    with stage_from_config(fetcher, path=testpath, config=config) as stage:
         source_path = stage.source_path
         mkdirp(source_path)
         fetcher.fetch()

@@ -5,6 +5,7 @@ import contextlib
 import filecmp
 import glob
 import io
+import json
 import os
 import pathlib
 import shutil
@@ -25,6 +26,7 @@ import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.solver.asp
+import spack.spec
 import spack.stage
 import spack.store
 import spack.util.environment
@@ -34,6 +36,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml
 from spack.active_environment import active_environment
 from spack.cmd.env import _env_create
+from spack.concretize_ui import SolveKind
 from spack.config import Configuration, substitute_path_variables
 from spack.environment import depfile
 from spack.main import SpackCommand, SpackCommandError
@@ -43,6 +46,7 @@ from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
+from spack.test.utilities import RecordingUI
 from spack.traverse import traverse_nodes
 from spack.util import tty
 from spack.util.executable import Executable
@@ -735,6 +739,15 @@ def test_remove_before_concretize(mutable_config):
         assert not e.concretized_roots
 
 
+def test_remove_spec_with_toolchain(tmp_path: pathlib.Path):
+    """Manifest entries are toolchain-expanded like the spec on the command line before matching"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text("spack:\n  toolchains:\n    tc: '%c=gcc'\n  specs: [mpileaks %tc]\n")
+    with ev.Environment(tmp_path):
+        remove("mpileaks %tc")
+    assert "mpileaks" not in manifest.read_text()
+
+
 def test_remove_command():
     env("create", "test")
     assert "test" in env("list")
@@ -1095,7 +1108,7 @@ def test_init_from_env_no_spackfile(tmp_path):
 def test_init_from_yaml_relative_includes(tmp_path: pathlib.Path):
     files = [
         "relative_copied/packages.yaml",
-        "./relative_copied/compilers.yaml",
+        "./relative_copied/mirrors.yaml",
         "repos.yaml",
         "./config.yaml",
     ]
@@ -2331,6 +2344,13 @@ def test_concretize_include_concrete_env():
     """
     test1, _, combined = setup_combined_multiple_env()
 
+    # Nothing changed, so writing the combined environment leaves its lockfile alone
+    with open(combined.lock_path, "rb") as f:
+        lockfile_before = f.read()
+    combined.write()
+    with open(combined.lock_path, "rb") as f:
+        assert f.read() == lockfile_before
+
     # Update test1 environment
     with test1:
         add("mpileaks")
@@ -2347,6 +2367,8 @@ def test_concretize_include_concrete_env():
     combined.concretize()
     combined.write()
     assert Spec("mpileaks") in {x.root for x in combined.included_concretized_roots[test1.path]}
+    with open(combined.lock_path, "rb") as f:
+        assert f.read() != lockfile_before
 
 
 def test_concretize_nested_include_concrete_envs():
@@ -3014,7 +3036,7 @@ def test_stack_combinatorial_view(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() and current_dir.is_dir()
 
 
@@ -3027,7 +3049,7 @@ def test_stack_view_select(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is spec.satisfies("target=x86_64")
 
 
@@ -3040,7 +3062,7 @@ def test_stack_view_exclude(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not spec.satisfies("callpath")
 
 
@@ -3057,7 +3079,7 @@ def test_stack_view_select_and_exclude(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3077,7 +3099,7 @@ def test_view_link_roots(
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             expected_exists = spec in test.roots() and (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3159,7 +3181,7 @@ def test_view_link_all(installed_environment, template_combinatorial_env, tmp_pa
         for spec in traverse_nodes(test.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() == (
                 spec.satisfies("target=x86_64") and not spec.satisfies("callpath")
             )
@@ -3298,7 +3320,7 @@ def test_stack_view_multiple_views(installed_environment, tmp_path: pathlib.Path
         for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = comb_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = comb_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not spec.satisfies("target=core2")
 
 
@@ -3392,11 +3414,11 @@ def test_concretize_user_specs_together(mutable_config):
         e.remove("mpich")
         e.add("mpich2")
 
-        exc_cls = spack.error.UnsatisfiableSpecError
+        # Concretizing without invalidating the concrete spec for mpileaks keeps its provider
+        e.concretize()
+        assert e.matching_spec("mpileaks").satisfies("^mpich")
+        assert e.matching_spec("mpich2")
 
-        # Concretizing without invalidating the concrete spec for mpileaks fails
-        with pytest.raises(exc_cls):
-            e.concretize()
         e.concretize(force=True)
 
         assert all("mpich2" in spec for _, spec in e.concretized_specs())
@@ -3663,8 +3685,8 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_modules_exist_after_env_install(installed_environment):
-    with installed_environment(
+def test_modules_exist_after_env_install(environment_from_manifest, install_mockery, mock_fetch):
+    environment_from_manifest(
         """
 spack:
   specs:
@@ -3680,7 +3702,9 @@ spack:
       roots:
         tcl: without_view
 """
-    ) as e:
+    )
+    with ev.read("test") as e:
+        install("--fake")
         specs = e.all_specs()
         for module_set in ("uses_view", "without_view"):
             modules = glob.glob(f"{e.path}/{module_set}/**/*/*")
@@ -3754,7 +3778,7 @@ def test_virtual_spec_concretize_together(mutable_config):
 @pytest.mark.parametrize(
     "unify,method_to_fail",
     [
-        (True, (spack.concretize, "concretize_together")),
+        (True, (spack.concretize, "_concretize_together")),
         ("when_possible", (spack.solver.asp.Solver, "solve_in_rounds")),
         # An earlier failure so that we test the case where the internal state
         # has been changed, but the pointer to the internal variables has not change.
@@ -4126,6 +4150,11 @@ def test_read_legacy_lockfile_and_reconcretize(
     env("create", "test", str(legacy_lockfile_path))
     test = ev.read("test")
     assert len(test.specs_by_hash) == 1
+
+    # Legacy lockfiles are keyed by other hashes, so they are rewritten in the current format
+    test.write()
+    with open(test.lock_path, encoding="utf-8") as f:
+        assert json.load(f)["_meta"]["specfile-version"] == spack.spec.SPECFILE_FORMAT_VERSION
 
     single_root = next(iter(test.specs_by_hash.values()))
 
@@ -4655,7 +4684,7 @@ spack:
 
         for spec in traverse_nodes(e.concrete_roots(), deptype=("link", "run")):
             # no specs will exist in the included view projection
-            base_dir = view_dir / f"{spec.architecture.target}"
+            base_dir = view_dir / f"{spec.target}"
             included_dir = base_dir / f"{spec.name}-{spec.version}-from-view"
             assert not included_dir.exists()
 
@@ -4663,7 +4692,7 @@ spack:
             # are also not cmake (excluded in the environment view) should exist
             if spec.name == "gcc-runtime":
                 continue
-            current_dir = view_dir / f"{spec.architecture.target}" / f"{spec.name}-{spec.version}"
+            current_dir = view_dir / f"{spec.target}" / f"{spec.name}-{spec.version}"
             assert current_dir.exists() is not (
                 spec.satisfies("cmake") or spec.satisfies("target=core2")
             )
@@ -5072,3 +5101,81 @@ def test_exists_consistent_with_all_environment_names(
 
     listed = "myenv" in ev.all_environment_names()
     assert ev.exists("myenv") == listed
+
+
+def test_concretization_reports_groups(environment_from_manifest):
+    """Tests that each group of user specs is reported to the frontend."""
+    e = environment_from_manifest("""
+spack:
+  specs:
+  - libelf
+  - group: apps1
+    specs:
+    - pkg-a
+  - group: apps2
+    specs:
+    - pkg-b
+""")
+    ui = RecordingUI()
+    with e:
+        e.concretize(ui=ui)
+
+    # "default" is concretized first, the groups that don't need each other follow in any order
+    assert ui.groups[0] == ("default", SolveKind.SEPARATELY, 1, 1)
+    assert set(ui.groups[1:]) == {
+        ("apps1", SolveKind.SEPARATELY, 1, 1),
+        ("apps2", SolveKind.SEPARATELY, 1, 1),
+    }
+    assert ui.groups_ended == 3
+    assert (ui.started, ui.ended) == (1, 1)
+
+
+def test_concretization_reports_a_group_with_nothing_to_do(environment_from_manifest):
+    """Tests that re-concretizing an environment still reports each group, including the ones
+    that are solved already.
+    """
+    e = environment_from_manifest("""
+spack:
+  specs:
+  - libelf
+  - group: apps1
+    specs:
+    - pkg-a
+""")
+    with e:
+        e.concretize()
+        e.write()
+
+        ui = RecordingUI()
+        e.concretize(ui=ui)
+
+    # Nothing is left to solve, but both groups are still opened and closed
+    assert set(ui.groups) == {
+        ("default", SolveKind.SEPARATELY, 0, 1),
+        ("apps1", SolveKind.SEPARATELY, 0, 1),
+    }
+    assert ui.groups_ended == 2
+    assert not ui.concretized
+    assert (ui.started, ui.ended) == (1, 1)
+
+
+@pytest.mark.parametrize("unify", [True, "when_possible", False])
+def test_reported_total_ignores_specs_that_were_kept(unify, mutable_config, mock_packages):
+    """Tests that adding a spec to an already concretized environment announces a total of one,
+    whatever 'concretizer:unify' prescribes. The specs that were kept go through the solve for
+    'unify: true' and 'when_possible', and a frontend counting them would run past 100%.
+    """
+    mutable_config.set("concretizer:unify", unify)
+    e = ev.create("test")
+    e.add("libelf")
+    e.concretize()
+    e.write()
+
+    e.add("mpileaks")
+    ui = RecordingUI()
+    e.concretize(ui=ui)
+
+    total = ui.groups[0][2]
+    assert total == 1
+    assert [count for _, _, count, _ in ui.concretized] == [1]
+    assert [abstract.name for abstract, _, _, _ in ui.concretized] == ["mpileaks"]

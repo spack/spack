@@ -14,14 +14,13 @@ import fcntl
 import functools
 import io
 import os
-import re
 import selectors
 import signal
 import tempfile
 import termios
 import tty
 import warnings
-from multiprocessing import Pipe, Process
+from multiprocessing import Pipe
 from multiprocessing.connection import Connection
 from typing import Callable, MutableMapping, Optional, Tuple
 
@@ -37,10 +36,10 @@ from spack.installer.base import (
     BuildChannels,
     JobServerBase,
     Makeflags,
-    ProcessExitNotifier,
     StdinReader,
     Tee,
 )
+from spack.util.executable import jobserver_auth
 from spack.util.tty.log import _is_background_tty, ignore_signal
 
 
@@ -182,17 +181,6 @@ class PosixTerminalState(BaseTerminalState):
         return not _is_background_tty(sys.stdin)
 
 
-class PosixExitNotifier(ProcessExitNotifier):
-    """Process-exit notifier for POSIX: the multiprocessing sentinel fd is selector-watchable."""
-
-    def __init__(self, proc: Process) -> None:
-        self.proc = proc
-
-    @property
-    def fileobj(self) -> int:
-        return self.proc.sentinel
-
-
 def create_build_channels() -> BuildChannels:
     """Create the channel pairs of a build. The state and output read ends are non-blocking so
     the selector-based loop never blocks. The worker also receives the control write end, used to
@@ -269,7 +257,7 @@ class PipeMakeflags(Makeflags):
 
     Args:
         fifo_path: path of the jobserver FIFO to open
-        flag: "--jobserver-auth" (gmake >= 4.0) or "--jobserver-fds" (gmake < 4.0)
+        flag: "--jobserver-auth" (gmake >= 4.2) or "--jobserver-fds" (gmake < 4.2)
     """
 
     __slots__ = ("fifo_path", "flag")
@@ -317,7 +305,7 @@ class PosixJobServer(JobServerBase):
     def makeflags(self, gmake: Optional[spack.spec.Spec]) -> Makeflags:
         if not gmake or gmake.satisfies("@4.4:"):
             return FifoMakeflags(self.fifo_path, self.num_jobs)
-        flag = "--jobserver-auth" if gmake.satisfies("@4.0:") else "--jobserver-fds"
+        flag = "--jobserver-auth" if gmake.satisfies("@4.2:") else "--jobserver-fds"
         return PipeMakeflags(self.fifo_path, flag)
 
     def update_selector(self, selector: selectors.BaseSelector, wake: bool) -> None:
@@ -413,14 +401,8 @@ def get_jobserver_config(makeflags: Optional[str] = None) -> Optional[str]:
         makeflags: MAKEFLAGS string to parse. If None, reads from os.environ.
     """
     makeflags = os.environ.get("MAKEFLAGS", "") if makeflags is None else makeflags
-    if not makeflags:
-        return None
-    # In case of multiple --jobserver-* flags, the last one wins, regardless of its format.
-    matches = re.findall(r" --jobserver-[^=]+=([^ ]+)", makeflags)
-    if not matches:
-        return None
-    last_match = matches[-1]
-    return last_match[5:] if last_match.startswith("fifo:") else None
+    auth = jobserver_auth(makeflags)
+    return auth[5:] if auth and auth.startswith("fifo:") else None
 
 
 def create_jobserver_fifo(num_jobs: int) -> Tuple[int, int, str]:

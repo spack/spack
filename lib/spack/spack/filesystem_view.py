@@ -43,9 +43,6 @@ from spack.util.link_tree import (
 from spack.util.string import comma_or
 from spack.util.tty.color import colorize
 
-__all__ = ["FilesystemView", "YamlFilesystemView"]
-
-
 _projections_path = ".spack/projections.yaml"
 
 
@@ -604,7 +601,7 @@ class YamlFilesystemView(FilesystemView):
     def print_conflict(self, spec_active, spec_specified, level="error"):
         "Singular print function for spec conflicts."
         cprint = getattr(tty, level)
-        color = sys.stdout.isatty()
+        color = tty.color.get_color_when()
         linked = tty.color.colorize("   (@gLinked@.)", color=color)
         specified = tty.color.colorize("(@rSpecified@.)", color=color)
         cprint(
@@ -661,7 +658,7 @@ class YamlFilesystemView(FilesystemView):
                 for abbrv, s in zip(abbreviated, specs):
                     prefix = ""
                     if self.verbose:
-                        prefix = colorize("@K{%s}" % s.dag_hash(7))
+                        prefix = colorize("@#{%s}" % s.dag_hash(7))
                     print(prefix + (format % (abbrv, self.get_projection_for_spec(s))))
         else:
             tty.warn(self._croot + "No packages found.")
@@ -844,14 +841,14 @@ def get_spec_from_file(filename) -> Optional[spack.spec.Spec]:
 
 
 def colorize_root(root):
-    colorize = ft.partial(tty.color.colorize, color=sys.stdout.isatty())
+    colorize = ft.partial(tty.color.colorize, color=tty.color.get_color_when())
     pre, post = map(colorize, "@M[@. @M]@.".split())
     return f"{pre}{root}{post}"
 
 
 def colorize_spec(spec):
-    "Colorize spec output if in TTY."
-    if sys.stdout.isatty():
+    "Colorize spec output unless colors are turned off."
+    if tty.color.get_color_when():
         return spec.cshort_spec
     else:
         return spec.short_spec

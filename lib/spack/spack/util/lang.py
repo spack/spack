@@ -21,7 +21,6 @@ from typing import (
     Dict,
     Generic,
     Iterable,
-    Iterator,
     List,
     Mapping,
     Optional,
@@ -426,40 +425,6 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     return cls
 
 
-K = TypeVar("K")
-V = TypeVar("V")
-
-
-@lazy_lexicographic_ordering
-class HashableMap(typing.MutableMapping[K, V]):
-    """This is a hashable, comparable dictionary.  Hash is performed on
-    a tuple of the values in the dictionary."""
-
-    __slots__ = ("dict",)
-
-    def __init__(self):
-        self.dict: Dict[K, V] = {}
-
-    def __getitem__(self, key: K) -> V:
-        return self.dict[key]
-
-    def __setitem__(self, key: K, value: V) -> None:
-        self.dict[key] = value
-
-    def __iter__(self) -> Iterator[K]:
-        return iter(self.dict)
-
-    def __len__(self) -> int:
-        return len(self.dict)
-
-    def __delitem__(self, key: K) -> None:
-        del self.dict[key]
-
-    def _cmp_iter(self):
-        for _, v in sorted(self.dict.items()):
-            yield v
-
-
 def match_predicate(*args):
     """Utility function for making string matching predicates.
 
@@ -681,33 +646,6 @@ def pretty_duration(seconds: float) -> str:
         return f"{m}m{s:02d}s"
     h, m = divmod(m, 60)
     return f"{h}h{m:02d}m"
-
-
-class ObjectWrapper:
-    """Base class that wraps an object. Derived classes can add new behavior
-    while staying undercover.
-
-    This class is modeled after the stackoverflow answer:
-    * http://stackoverflow.com/a/1445289/771663
-    """
-
-    def __init__(self, wrapped_object):
-        wrapped_cls = type(wrapped_object)
-        wrapped_name = wrapped_cls.__name__
-
-        # If the wrapped object is already an ObjectWrapper, or a derived class
-        # of it, adding type(self) in front of type(wrapped_object)
-        # results in an inconsistent MRO.
-        #
-        # TODO: the implementation below doesn't account for the case where we
-        # TODO: have different base classes of ObjectWrapper, say A and B, and
-        # TODO: we want to wrap an instance of A with B.
-        if type(self) not in wrapped_cls.__mro__:
-            self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
-        else:
-            self.__class__ = type(wrapped_name, (wrapped_cls,), {})
-
-        self.__dict__ = wrapped_object.__dict__
 
 
 class Singleton:

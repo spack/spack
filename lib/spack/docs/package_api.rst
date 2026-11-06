@@ -37,6 +37,16 @@ Spack version |spack_version| supports package repositories with a Package API v
 Changelog
 ---------
 
+**v2.7** *(Spack v1.3.0)*
+
+* Added the ``fixes`` argument to the :func:`~spack.package.patch` directive, also accepted on patches passed to :func:`~spack.package.depends_on`.
+  It lists the labels of the :func:`~spack.package.deprecated` directives of the patched package that the patch fixes.
+
+**v2.6** *(Spack v1.3.0)*
+
+* Added the :func:`~spack.package.deprecated` directive.
+  The concretizer raises a concretization error when a selected deprecation is not allowed by ``deprecation:allow`` in :ref:`packages.yaml <package-deprecations-config>`.
+
 **v2.5** *(Spack v1.2.0)*
 
 * Added ``cuda-lang`` and ``hip-lang`` as language virtuals, analogous to ``c``, ``cxx``, and ``fortran``.

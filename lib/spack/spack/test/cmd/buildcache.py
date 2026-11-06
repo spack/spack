@@ -9,7 +9,7 @@ import pathlib
 import shutil
 import urllib.parse
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pytest
 
@@ -18,16 +18,19 @@ import spack.buildcache_migrate as migrate
 import spack.buildcache_prune
 import spack.cmd.buildcache
 import spack.concretize
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.main
 import spack.mirrors.mirror
 import spack.spec
+import spack.store
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.active_environment import active_environment
 from spack.old_installer import PackageInstaller
 from spack.paths import test_path
+from spack.test.installer.conftest import create_dag
 from spack.url_buildcache import (
     BuildcacheComponent,
     URLBuildcacheEntry,
@@ -52,7 +55,9 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 @pytest.fixture()
 def mock_get_specs(database, monkeypatch):
     specs = database.query_local()
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
+    monkeypatch.setattr(
+        spack.binary_distribution, "update_cache_and_get_specs", lambda *args, **kwargs: specs
+    )
 
 
 @pytest.fixture()
@@ -65,7 +70,9 @@ def mock_get_specs_multiarch(database, monkeypatch):
             spec.architecture = spack.spec.ArchSpec("linux-rhel7-x86_64")
             break
 
-    monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: specs)
+    monkeypatch.setattr(
+        spack.binary_distribution, "update_cache_and_get_specs", lambda *args, **kwargs: specs
+    )
 
 
 @pytest.mark.db
@@ -369,7 +376,7 @@ def _mock_uploader(tmp_path: pathlib.Path):
             )
             self.pushed = []
 
-        def push(self, specs: List[spack.spec.Spec]):
+        def push(self, specs: List[spack.spec.Spec], *, config):
             self.pushed.extend(s.name for s in specs)
             return [], []
 
@@ -448,6 +455,17 @@ def test_correct_specs_are_pushed(
 
     # Ensure no duplicates
     assert len(set(uploader.pushed)) == len(uploader.pushed)
+
+
+@pytest.mark.parametrize("build_deps,expected", [(True, {"b", "c"}), (False, {"c"})])
+def test_specs_to_be_packaged_only_dependencies_keeps_requested_dependencies(build_deps, expected):
+    """a --build--> b, a --link--> c, where a and b are requested. b is a dependency of a, so it is
+    packaged with --only dependencies, as long as build dependencies are."""
+    specs = create_dag(nodes=["a", "b", "c"], edges=[("a", "b", "build"), ("a", "c", "link")])
+    packaged = spack.cmd.buildcache._specs_to_be_packaged(
+        [specs["a"], specs["b"]], "dependencies", build_deps
+    )
+    assert {s.name for s in packaged} == expected
 
 
 @pytest.mark.parametrize("signed", [True, False])
@@ -534,12 +552,12 @@ def test_best_effort_vs_fail_fast_when_dep_not_installed(tmp_path: pathlib.Path,
 
     # nothing should be pushed due to --fail-fast.
     assert not os.listdir(tmp_path)
-    assert not spack.binary_distribution.update_cache_and_get_specs()
+    assert not spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
 
     with pytest.raises(spack.cmd.buildcache.PackageNotInstalledError):
         buildcache("push", "--update-index", "my-mirror", "mpileaks^mpich")
 
-    specs = spack.binary_distribution.update_cache_and_get_specs()
+    specs = spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
 
     # everything but mpich should be pushed
     mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
@@ -559,7 +577,7 @@ def test_allow_missing_when_dep_not_installed(tmp_path: pathlib.Path, mutable_da
     # There should be warnings but no errors
     buildcache("push", "--update-index", "--allow-missing", "my-mirror", "mpileaks^mpich")
 
-    specs = spack.binary_distribution.update_cache_and_get_specs()
+    specs = spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
 
     # Everything but mpich should be pushed
     mpileaks = mutable_database.query_local("mpileaks^mpich")[0]
@@ -588,7 +606,7 @@ def test_push_without_build_deps(
     buildcache(
         "push", "--update-index", "--without-build-dependencies", "my-mirror", f"/{s.dag_hash()}"
     )
-    assert spack.binary_distribution.update_cache_and_get_specs() == [s]
+    assert spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG) == [s]
 
 
 @pytest.fixture(scope="function")
@@ -680,7 +698,7 @@ def test_install_v2_layout(
     assert "deprecated" in output
 
 
-def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
+def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config, mock_packages):
     """Make sure first unsigned migration results in usable buildcache,
     leaving the previous layout in place. Also test that a subsequent one
     doesn't need to migrate anything, and that using --delete-existing
@@ -706,6 +724,13 @@ def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
 
     assert "libdwarf" in output and "libelf" in output
 
+    # Migrated spec files are not labeled as the current format
+    manifests = list(test_mirror_path.glob("v3/manifests/spec/**/*.manifest.json"))
+    assert manifests
+    for manifest in manifests:
+        media_types = {b["mediaType"] for b in json.loads(manifest.read_text())["data"]}
+        assert "application/vnd.spack.spec.v5+json" in media_types
+
     output = buildcache("migrate", "--unsigned", "--delete-existing", "--yes-to-all", "my-mirror")
 
     # A second migration of the same mirror indicates neither spec
@@ -717,7 +742,7 @@ def test_basic_migrate_unsigned(v2_buildcache_layout, mutable_config):
     assert not os.path.exists(build_cache_path)
 
 
-def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_config):
+def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_config, mock_packages):
     """Test a signed migration requires a signing key, requires the public
     key originally used to sign the pkgs, fails and prints reasonable messages
     if those requirements are unmet, and eventually succeeds when they are met."""
@@ -756,7 +781,7 @@ def test_basic_migrate_signed(v2_buildcache_layout, mock_gnupghome, mutable_conf
     assert "libdwarf" in output and "libelf" in output
 
 
-def test_unsigned_migrate_of_signed_mirror(v2_buildcache_layout, mutable_config):
+def test_unsigned_migrate_of_signed_mirror(v2_buildcache_layout, mutable_config, mock_packages):
     """Test spack can do an unsigned migration of a signed buildcache by
     ignoring signatures and skipping re-signing."""
 
@@ -1035,34 +1060,35 @@ def test_buildcache_prune_new_specs_race_condition(
     assert web_util.url_exists(manifest_url)
 
 
-def create_env_from_concrete_spec(spec: spack.spec.Spec):
+def create_env_from_concrete_spec(spec: Optional[spack.spec.Spec]):
     """Build cache index view source is current active environment"""
     # Create a unique environment for this spec only
-    env_name = f"specenv-{spec.dag_hash()}"
+    env_name = f"specenv-{spec.dag_hash()}" if spec else "nospec-env"
     if not ev.exists(env_name):
         env("create", "--without-view", env_name)
 
     e = ev.environment_from_name_or_dir(env_name)
-    with e:
-        add(f"{spec.name}/{spec.dag_hash()}")
-        # This should handle updating the environment to mark all packages as installed
-        install()
+    if spec:
+        with e:
+            add(f"{spec.name}/{spec.dag_hash()}")
+            # This should handle updating the environment to mark all packages as installed
+            install()
     return e
 
 
-def args_for_active_env(spec: spack.spec.Spec):
+def args_for_active_env(spec: Optional[spack.spec.Spec]):
     """Build cache index view source is an active environment"""
     env = create_env_from_concrete_spec(spec)
     return [env, []]
 
 
-def args_for_env_by_path(spec: spack.spec.Spec):
+def args_for_env_by_path(spec: Optional[spack.spec.Spec]):
     """Build cache index view source is an environment path"""
     env = create_env_from_concrete_spec(spec)
     return [nullcontext(), [env.path]]
 
 
-def args_for_env_by_name(spec: spack.spec.Spec):
+def args_for_env_by_name(spec: Optional[spack.spec.Spec]):
     """Build cache index view source is a managed environment name"""
     env = create_env_from_concrete_spec(spec)
     return [nullcontext(), [env.name]]
@@ -1209,6 +1235,40 @@ def test_buildcache_create_view_append(
 
     # Test append to empty index view
     context, extra_args = source_args(mpileaks_specs[0])
+    with context:
+        command_args = [
+            "update-index",
+            "-y",
+            "--append",
+            "--name",
+            "test_view",
+            "my-mirror",
+        ] + extra_args
+        buildcache(*command_args)
+
+    hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert hashes_in_view == mpileaks_0_hashes
+
+    # Test duplicate append (no new specs)
+    context, extra_args = source_args(mpileaks_specs[0])
+    with context:
+        command_args = [
+            "update-index",
+            "-y",
+            "--append",
+            "--name",
+            "test_view",
+            "my-mirror",
+        ] + extra_args
+        buildcache(*command_args)
+
+    hashes_in_view = read_specs_in_index(mirror_directory, "test_view")
+    # Assert all of the hashes for mpileaks_0_hashes exist in the view, and no other hashes
+    assert hashes_in_view == mpileaks_0_hashes
+
+    # Test empty env append
+    context, extra_args = source_args(None)
     with context:
         command_args = [
             "update-index",
@@ -1524,3 +1584,22 @@ def test_buildcache_push_group_requires_active_env(tmp_path: pathlib.Path):
 
     with pytest.raises(spack.main.SpackCommandError):
         buildcache("push", "--unsigned", "--group", "default", str(mirror_dir), fail_on_error=True)
+
+
+def test_buildcache_install_writes_module_files(
+    temporary_mirror, install_mockery, tcl_module_filename
+):
+    """Tests that buildcache install writes the module file of each spec it installs."""
+    install("--fake", "--no-cache", "dependent-install")
+    buildcache("push", "--unsigned", temporary_mirror, "dependent-install")
+    buildcache("update-index", temporary_mirror)
+    installed = spack.store.STORE.db.query()
+    uninstall("-y", "--all")
+    assert not any(os.path.exists(tcl_module_filename(s)) for s in installed)
+
+    buildcache("install", "--unsigned", "dependent-install")
+
+    assert {s.dag_hash() for s in spack.store.STORE.db.query()} == {
+        s.dag_hash() for s in installed
+    }
+    assert all(os.path.exists(tcl_module_filename(s)) for s in installed)

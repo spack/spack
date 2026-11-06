@@ -8,6 +8,7 @@ import spack.config
 import spack.store
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.concretize_ui import HeadlessUI, TerminalUI
 from spack.graph import DAGWithDependencyTypes, SimpleDAG, graph_ascii, graph_dot, static_graph_dot
 from spack.util import tty
 
@@ -76,7 +77,9 @@ def graph(parser, args):
             specs = env.all_matching_specs(*args.specs)
 
     else:
-        specs = spack.cmd.parse_specs(args.specs, concretize=not args.static)
+        # Machine-readable output goes to stdout, so concretization must not print anything there
+        ui = HeadlessUI() if args.dot else TerminalUI()
+        specs = spack.cmd.parse_specs(args.specs, concretize=not args.static, ui=ui)
 
     if not specs:
         tty.die("no spec matching the query")

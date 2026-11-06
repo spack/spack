@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import re
+import sys
 import urllib.error
 from contextlib import contextmanager
 
@@ -63,8 +64,10 @@ def test_buildcache_push_command(mutable_database: Database):
         # Now it should be installed again
         assert mutable_database.installed(spec)
 
-        # And let's check that the bin/mpileaks executable is there
-        assert os.path.exists(os.path.join(spec.prefix, "bin", "mpileaks"))
+        # And let's check that the bin/mpileaks executable is there (fake installs create
+        # executables with a .exe extension on Windows)
+        exe_suffix = ".exe" if sys.platform == "win32" else ""
+        assert os.path.exists(os.path.join(spec.prefix, "bin", f"mpileaks{exe_suffix}"))
 
 
 def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):

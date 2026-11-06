@@ -4,8 +4,9 @@
 """Tests formatting of spec strings"""
 
 import spack.concretize
+import spack.spec
 from spack.enums import PartStyle
-from spack.spec import DIM_COLOR, HIGHLIGHT_COLOR, VARIANT_COLOR, VERSION_COLOR
+from spack.spec import DIM_COLOR, HIGHLIGHT_COLOR, VARIANT_COLOR, VERSION_COLOR, Spec
 from spack.util.tty.color import colorize
 
 
@@ -199,3 +200,63 @@ def test_architecture_style_fn_receives_correct_part(config, mock_packages):
         architecture_style_fn=record_part,
     )
     assert received_parts == ["platform", "os", "target"]
+
+
+def test_abstract_spec_str_roundtrips_namespace(config, mock_packages):
+    """Ensure that abstract specs (anonymous or not) round-trip and canonicalize the namespace"""
+    named = Spec("foo namespace=bar")
+    assert str(named) == "bar.foo"
+    assert Spec(str(named)).namespace == "bar"
+
+    anonymous = Spec("namespace=bar")
+    assert str(anonymous) == "namespace=bar"
+    assert Spec(str(anonymous)).namespace == "bar"
+
+    dep = Spec("pkg-a ^builtin_mock.pkg-b")
+    assert str(dep) == "pkg-a ^builtin_mock.pkg-b"
+
+    concrete = spack.concretize.concretize_one("mpileaks")
+    assert concrete.namespace == "builtin_mock"
+    assert str(concrete).startswith("mpileaks@")
+
+
+def test_namespace_of_anonymous_spec_on_slow_path():
+    """Colored output takes the slow format path instead of _format_default. The namespace
+    of an anonymous spec renders as a single namespace= token on both paths."""
+    anonymous = Spec("namespace=bar")
+    expected = colorize(f"{VARIANT_COLOR} namespace=bar@.", color=True)
+    assert anonymous.format(color=True) == expected
+
+    named = Spec("foo namespace=bar")
+    assert named.format(color=True) == "bar.foo"
+
+
+def test_color_reaches_dependencies_of_transitive_dependencies():
+    """The recursion into transitive dependencies passes `color` along."""
+    s = Spec("root ^dep@2 %compiler@3")
+    colored = s._format_dependencies(color=True)
+    assert colored == colorize(
+        f"^dep{VERSION_COLOR}@@2@. %compiler{VERSION_COLOR}@@3@.", color=True
+    )
+    assert s._format_dependencies(color=False) == "^dep@2 %compiler@3"
+
+
+def test_variants_of_concrete_spec_abbreviate_patches(config, mock_packages):
+    """A concrete spec renders its patch checksums as 7-character prefixes with a single =,
+    a weaker constraint it satisfies; the full checksums remain available through its hash.
+    An abstract spec prints its variants exactly, so its string form round-trips."""
+    concrete = spack.concretize.concretize_one("patch")
+    checksums = concrete.variants["patches"].values
+    assert checksums
+    prefixes = "patches=" + ",".join(c[:7] for c in checksums)
+    assert prefixes in concrete.format("{variants}")
+    assert "patches:=" not in concrete.format("{variants}")
+    assert prefixes in concrete.format()
+    assert concrete.format("{variants.patches}") == prefixes
+    styled = concrete.format("{variants}", variant_style_fn=_always_variant(PartStyle.NORMAL))
+    assert prefixes in styled
+    assert "patches:=" not in styled
+    assert concrete.satisfies(Spec(concrete.format(spack.spec.DISPLAY_FORMAT)))
+
+    abstract = Spec(f"patches:={','.join(checksums)}")
+    assert abstract.format("{variants}") == f"patches:={','.join(checksums)}"

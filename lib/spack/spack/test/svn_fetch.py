@@ -10,7 +10,7 @@ import pytest
 import spack.concretize
 from spack.config import Configuration
 from spack.fetch_strategy import SvnFetchStrategy
-from spack.stage import Stage
+from spack.stage import stage_from_config
 from spack.util.executable import which
 from spack.util.filesystem import mkdirp, touch, working_dir
 from spack.version import Version
@@ -77,14 +77,14 @@ def test_fetch(
             assert h() == t.revision
 
 
-def test_svn_extra_fetch(tmp_path: pathlib.Path):
+def test_svn_extra_fetch(tmp_path: pathlib.Path, config):
     """Ensure a fetch after downloading is effectively a no-op."""
     testpath = str(tmp_path)
 
     fetcher = SvnFetchStrategy(svn="file:///not-a-real-svn-repo")
     assert fetcher is not None
 
-    with Stage(fetcher, path=testpath) as stage:
+    with stage_from_config(fetcher, path=testpath, config=config) as stage:
         assert stage is not None
 
         source_path = stage.source_path

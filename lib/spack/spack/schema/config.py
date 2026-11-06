@@ -231,7 +231,7 @@ properties: Dict[str, Any] = {
             "installer": {
                 "type": "string",
                 "enum": ["old", "new"],
-                "description": "Which installer to use. The new installer is experimental.",
+                "description": "Which installer to use. The old installer is deprecated.",
             },
             "sandbox": {
                 "type": "object",
@@ -239,8 +239,9 @@ properties: Dict[str, Any] = {
                 "additionalProperties": False,
                 "properties": {
                     "enable": {
-                        "type": "boolean",
-                        "description": "Enable or disable the build sandbox.",
+                        "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["auto"]}],
+                        "description": "Enable or disable the build sandbox. With auto, the "
+                        "sandbox is used when the kernel supports it.",
                     },
                     "allow_network": {
                         "type": "boolean",

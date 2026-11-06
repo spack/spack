@@ -127,15 +127,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     for opt, help_comment in options:
         subparser.add_argument(opt, action="store_true", help=help_comment)
 
-    # deprecated for the more generic --by-name, but still here until we can remove it
-    subparser.add_argument(
-        "--variants-by-name",
-        dest="by_name",
-        action=arguments.DeprecatedStoreTrueAction,
-        help=argparse.SUPPRESS,
-        removed_in="a future Spack release",
-        instructions="use --by-name instead",
-    )
     arguments.add_common_arguments(subparser, ["spec"])
 
 
@@ -158,7 +149,7 @@ def format_deptype(depflag: int) -> str:
 
 class DependencyFormatter(Formatter):
     def format_name(self, dep: spack.dependency.Dependency) -> str:
-        return dep.spec._long_spec(color=color.get_color_when())
+        return dep.spec.clong_spec
 
     def format_values(self, dep: spack.dependency.Dependency) -> str:
         return str(format_deptype(dep.depflag))
@@ -201,7 +192,7 @@ def print_dependency_suggestion(pkg: PackageBase) -> None:
             # skip if user specified, or already saw a value (e.g. many +mpi and ~mpi)
             if name in spec.variants or name in pkg.spec.variants:
                 continue
-            spec.variants[name] = spack.variant.BoolValuedVariant(name, not val)
+            spec.variants.set(spack.variant.BoolValuedVariant(name, not val))
 
         # if there is new stuff to add beyond the input
         if spec.variants:
@@ -325,9 +316,7 @@ def print_tests(pkg: PackageBase, args: Namespace) -> None:
 
 
 def _fmt_when(when: "spack.spec.Spec", indent: int) -> str:
-    return color.colorize(
-        f"{indent * ' '}@B{{when}} {color.cescape(when._long_spec(color=color.get_color_when()))}"
-    )
+    return color.colorize(f"{indent * ' '}@B{{when}} {color.cescape(when.clong_spec)}")
 
 
 def _fmt_variant_value(v: Any) -> str:
@@ -605,7 +594,7 @@ def print_versions(pkg: PackageBase, args: Namespace) -> None:
         for v in reversed(sorted(versions)):
             if pkg.has_code:
                 url = get_url(v)
-            if pkg.versions[v].get("deprecated", False):
+            if spack.package_base.deprecated_version(pkg, v):
                 deprecated.append((v, url))
             else:
                 safe.append((v, url))

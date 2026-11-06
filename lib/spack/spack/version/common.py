@@ -20,7 +20,13 @@ STRING_TO_PRERELEASE = {"alpha": ALPHA, "beta": BETA, "rc": RC, "final": FINAL}
 
 
 def is_git_version(string: str) -> bool:
-    return string.startswith("git.") or is_git_commit_sha(string) or "=" in string[1:]
+    """``git.<ref>``, ``<sha>`` or ``<ref>=<version or range>``"""
+    if string.startswith("git."):
+        return True
+    ref, sep, _ = string.partition("=")
+    if not sep:
+        return is_git_commit_sha(ref)
+    return bool(ref) and ":" not in ref
 
 
 class VersionError(spack.error.SpackError):

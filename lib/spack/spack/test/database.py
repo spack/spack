@@ -271,7 +271,7 @@ def test_recursive_upstream_dbs(
         db_a.add(spec["x"])
 
         upstream_dbs_from_scratch = spack.store._construct_upstream_dbs_from_install_roots(
-            [roots[1], roots[2]]
+            [roots[1], roots[2]], config=spack.config.CONFIG
         )
         db_a_from_scratch = Database(roots[0], upstream_dbs=upstream_dbs_from_scratch)
 
@@ -422,6 +422,9 @@ def _mock_remove(spec, db):
 
 
 def test_default_queries(database):
+    # Executables carry a .exe extension on Windows
+    exe_suffix = ".exe" if sys.platform == "win32" else ""
+
     # Testing a package whose name *doesn't* start with 'lib'
     # to ensure the library has 'lib' prepended to the name
     rec = database.get_record("zmpi")
@@ -438,7 +441,7 @@ def test_default_queries(database):
 
     command = spec["zmpi"].command
     assert isinstance(command, Executable)
-    assert command.name == "zmpi"
+    assert command.name == "zmpi" + exe_suffix
     assert os.path.exists(command.path)
 
     # Testing a package whose name *does* start with 'lib'
@@ -457,7 +460,7 @@ def test_default_queries(database):
 
     command = spec["libelf"].command
     assert isinstance(command, Executable)
-    assert command.name == "libelf"
+    assert command.name == "libelf" + exe_suffix
     assert os.path.exists(command.path)
 
 
@@ -582,6 +585,26 @@ def test_try_write_transaction_does_not_flush_on_exception(mutable_database: Dat
 
     with db.read_transaction():
         assert db.query("mpileaks")
+
+
+def test_failed_write_transaction_without_index_is_not_written_later(
+    tmp_path: pathlib.Path, mock_packages, config
+):
+    """Tests that a failed transaction on a database without an index is dropped, instead of
+    being written by the next transaction."""
+    db = Database(str(tmp_path))
+    spec = spack.concretize.concretize_one("pkg-a")
+
+    with pytest.raises(ValueError):
+        with db.write_transaction():
+            db._add(spec, explicit=True, allow_missing=True)
+            raise ValueError("interrupted transaction")
+
+    with db.write_transaction():
+        pass
+
+    with db.read_transaction():
+        assert not db.query()
 
 
 def test_try_read_transaction(mutable_database: Database, monkeypatch):
@@ -1042,13 +1065,15 @@ def test_prefix_write_lock_error(mutable_database_store: Store, monkeypatch):
 
 
 @pytest.mark.regression("26600")
-def test_database_works_with_empty_dir(tmp_path: pathlib.Path):
+def test_database_works_with_empty_dir(tmp_path: pathlib.Path, request):
     # Create the lockfile and failures directory otherwise
     # we'll get a permission error on Database creation
     db_dir = tmp_path / ".spack-db"
     db_dir.mkdir()
     (db_dir / spack.database._LOCK_FILE).touch()
     (db_dir / "failures").mkdir()
+    # Restore write permissions even if the test fails
+    request.addfinalizer(lambda: tmp_path.chmod(mode=0o755))
     tmp_path.chmod(mode=0o555)
     db = Database(str(tmp_path))
     with db.read_transaction():
@@ -1199,6 +1224,53 @@ def test_error_message_when_using_too_new_db(database: Database, monkeypatch):
         Database(database.root)._read()
 
 
+def test_explicit_upgrade_error_when_using_too_old_db(database: Database, monkeypatch):
+    """When the on-disk database is older than what Spack expects and a reindex is not
+    requested, reading it should raise ExplicitDatabaseUpgradeError telling the user to
+    run `spack reindex`.
+    """
+    next_version = vn.Version(f"{spack.database._DB_VERSION[0] + 1}")
+    monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError) as exc_info:
+        Database(database.root)._read()
+
+    err = exc_info.value
+    assert err.expected_version == next_version
+    assert str(err.root) == str(database.root)
+    assert "spack reindex" in err.long_message
+
+
+def test_older_readable_db_is_read_in_place_and_refuses_writes(
+    mutable_database: Database, bumped_db_version
+):
+    """An older index that is readable as is can be queried, but is only written after an
+    explicit reindex."""
+    current, next_version = bumped_db_version
+
+    def version_on_disk() -> str:
+        with open(mutable_database._index_path, encoding="utf-8") as f:
+            return json.load(f)["database"]["version"]
+
+    db = Database(mutable_database.root, layout=mutable_database.layout)
+    assert db.query_local()
+
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError):
+        db.ensure_latest_db_version()
+
+    with pytest.raises(spack.database.ExplicitDatabaseUpgradeError):
+        with db.write_transaction():
+            pass
+
+    assert version_on_disk() == str(current)
+
+    db.reindex()
+    assert version_on_disk() == str(next_version)
+
+    db.ensure_latest_db_version()
+    with db.write_transaction():
+        pass
+
+
 @pytest.mark.parametrize(
     "lock_cfg",
     [spack.database.NO_LOCK, spack.database.NO_TIMEOUT, spack.database.DEFAULT_LOCK_CFG, None],
@@ -1322,7 +1394,7 @@ def test_query_with_predicate_fn(database):
 
 
 @pytest.mark.regression("49964")
-def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
+def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path, mock_packages):
     """Tests that we can query a reindexed database from before compilers as dependencies,
     and get appropriate results for %<compiler> and similar selections.
     """
@@ -1342,6 +1414,25 @@ def test_querying_reindexed_database_specfilev5(tmp_path: pathlib.Path):
     assert len(specs) == 8
     assert len([x for x in specs if x.external]) == 2
     assert len([x for x in specs if x.original_spec_format() < 5]) == 8
+
+
+def test_database_v8_reconstructs_provided_virtuals(database, tmp_path: pathlib.Path):
+    """A v8 database does not record provided virtuals, so they are reconstructed on read."""
+    data = json.loads(pathlib.Path(database._index_path).read_text(encoding="utf-8"))
+    data["database"]["version"] = "8"
+    for record in data["database"]["installs"].values():
+        record["spec"].pop("provided_virtuals", None)
+        record["spec"]["annotations"]["original_specfile_version"] = 5
+
+    index_json = tmp_path / spack.database._DB_DIRNAME / spack.database.INDEX_JSON_FILE
+    index_json.parent.mkdir(parents=True)
+    index_json.write_text(json.dumps(data))
+
+    db = Database(str(tmp_path))
+    mpich = db.query_one("mpich")
+    assert mpich is not None and mpich.provided_virtuals == (spack.spec.Spec("mpi@:3"),)
+    expected = {s.dag_hash() for s in database.query("mpi")}
+    assert expected and {s.dag_hash() for s in db.query("mpi")} == expected
 
 
 def test_database_installed(

@@ -5,6 +5,8 @@ import argparse
 import warnings
 
 import spack.audit
+import spack.caches
+import spack.config
 import spack.repo
 import spack.util.tty.colify
 import spack.util.tty.color as cl
@@ -59,6 +61,15 @@ def configs(parser, args):
         _process_reports(reports)
 
 
+def _ensure_repos_are_valid() -> None:
+    """Exit with an error if any configured package repository cannot be constructed."""
+    descriptors = spack.repo.RepoDescriptors.from_config(spack.config.CONFIG)
+    _, errors = descriptors.construct(cache=spack.caches.MISC_CACHE)
+    if errors:
+        details = "\n".join(f"  {path}: {error}" for path, error in errors.items())
+        tty.die(f"cannot audit packages, some repositories could not be constructed:\n{details}")
+
+
 def packages(parser, args):
     pkgs = args.name or spack.repo.PATH.all_package_names()
     reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
@@ -108,6 +119,8 @@ def audit(parser, args):
         "packages-https": packages_https,
         "list": list,
     }
+    if args.subcommand not in ("configs", "list"):
+        _ensure_repos_are_valid()
     subcommands[args.subcommand](parser, args)
 
 

@@ -20,11 +20,30 @@ spack:
     install_status: false
 
   packages:
+
+    expat:
+      deprecation:
+        allow:
+          - labels: [version_deprecated]
+
     python:
       buildable: false
+      # Python deprecation cycles are very fast, each new patch version deprecates
+      # the previous ones
+      deprecation:
+        allow:
+          - labels: [version_deprecated]
       externals:
         - spec: "{{ python_spec }}"
           prefix: "{{ python_prefix }}"
+
+    python-venv:
+      buildable: false
+
+    py-pytest:
+      deprecation:
+        allow:
+          - labels: [version_deprecated]
 
     py-typed-ast:
       require: "+wheel"

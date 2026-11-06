@@ -174,7 +174,7 @@ def download_and_trust_key():
     with open(fingerprint_file, "r", encoding="utf-8") as f:
         fingerprint, key_endpoint = f.readline().strip("\n").split(";")
     fingerprint = fingerprint.strip().upper()
-    with spack.stage.Stage(key_endpoint) as stage:
+    with spack.stage.stage_from_config(key_endpoint, config=spack.config.CONFIG) as stage:
         try:
             stage.fetch()
         except spack.error.FetchError as e:

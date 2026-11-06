@@ -56,9 +56,9 @@ def url_and_build_system(request, tmp_path: pathlib.Path):
         yield url, system
 
 
-def test_build_systems(url_and_build_system):
+def test_build_systems(url_and_build_system, config):
     url, build_system = url_and_build_system
-    with spack.stage.Stage(url) as stage:
+    with spack.stage.stage_from_config(url, config=config) as stage:
         stage.fetch()
         guesser = spack.cmd.create.BuildSystemAndLanguageGuesser()
         guesser(stage.archive_file, url)

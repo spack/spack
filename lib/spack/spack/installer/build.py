@@ -32,6 +32,7 @@ import spack.config
 import spack.error
 import spack.hooks
 import spack.mirrors.mirror
+import spack.repo
 import spack.sandbox
 import spack.spec
 import spack.store
@@ -39,6 +40,7 @@ import spack.url_buildcache
 import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
+import spack.util.timer
 import spack.util.tty
 from spack.installer.base import (
     ExitCode,
@@ -47,18 +49,14 @@ from spack.installer.base import (
     IpcChannel,
     JobServerBase,
     Makeflags,
-    ProcessExitNotifier,
 )
-from spack.old_installer import _do_fake_install, dump_packages
 from spack.subprocess_context import GlobalStateMarshaler
 from spack.util.executable import ProcessError
 
 if sys.platform == "win32":
-    from spack.installer.windows import WindowsSentinelBridge as ExitNotifier
     from spack.installer.windows import WindowsTee as Tee
     from spack.installer.windows import create_build_channels, make_state_stream
 else:
-    from spack.installer.posix import PosixExitNotifier as ExitNotifier
     from spack.installer.posix import PosixTee as Tee
     from spack.installer.posix import create_build_channels, make_state_stream
 
@@ -79,14 +77,9 @@ class ProcessLike(Protocol):
     @property
     def pid(self) -> Optional[int]: ...
 
-    @property
-    def exitcode(self) -> Optional[int]: ...
-
     def terminate(self) -> None: ...
 
     def kill(self) -> None: ...
-
-    def is_alive(self) -> bool: ...
 
     def join(self, timeout: Optional[float] = None) -> None: ...
 
@@ -102,10 +95,10 @@ class ChildInfo:
         "output_r_conn",
         "state_r_conn",
         "control_w_conn",
-        "notifier",
         "log_path",
         "prefix_lock",
         "state_buffer",
+        "exit_code",
     )
 
     def __init__(
@@ -115,7 +108,6 @@ class ChildInfo:
         output_r_conn: IpcChannel,
         state_r_conn: IpcChannel,
         control_w_conn: IpcChannel,
-        notifier: ProcessExitNotifier,
         log_path: str,
     ) -> None:
         self.proc = proc
@@ -123,13 +115,14 @@ class ChildInfo:
         self.output_r_conn = output_r_conn
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
-        self.notifier = notifier
         self.log_path = log_path
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
         # Buffer for partially received state data from this child. Kept as raw bytes and split on
         # b"\n": the newline byte cannot occur inside a multi-byte UTF-8 sequence, so framing is
         # safe without decoding partial reads.
         self.state_buffer = b""
+        #: Exit code reported by the build as its last state message.
+        self.exit_code: Optional[int] = None
 
     def release_prefix_lock(self) -> None:
         if self.prefix_lock is not None:
@@ -140,16 +133,13 @@ class ChildInfo:
         self.prefix_lock = None
 
     def register_with_selector(self, selector: selectors.BaseSelector, build_id: str) -> None:
-        """Register output, state, and sentinel channels with the selector."""
+        """Register output and state channels with the selector."""
         selector.register(self.output_r_conn, selectors.EVENT_READ, FdInfo(build_id, "output"))
         selector.register(self.state_r_conn, selectors.EVENT_READ, FdInfo(build_id, "state"))
-        selector.register(
-            self.notifier.fileobj, selectors.EVENT_READ, FdInfo(build_id, "sentinel")
-        )
 
     def close(self, selector: selectors.BaseSelector) -> int:
-        """Unregister and close file descriptors, and join the child process.
-        Returns the exit code of the child process."""
+        """Unregister and close file descriptors, and join the child process. Returns the exit code
+        the build reported, or ``BUILD_ERROR`` if it exited without reporting one."""
         try:
             selector.unregister(self.output_r_conn)
         except (KeyError, OSError):
@@ -158,20 +148,123 @@ class ChildInfo:
             selector.unregister(self.state_r_conn)
         except (KeyError, OSError):
             pass
-        try:
-            selector.unregister(self.notifier.fileobj)
-        except (KeyError, ValueError, OSError):
-            pass
         self.output_r_conn.close()
         self.state_r_conn.close()
         self.control_w_conn.close()
-        self.notifier.close()
         self.proc.join()
-        exit_code = self.proc.exitcode
-        assert exit_code is not None, "Finished build should have exit code set"
         if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
             self.proc.close()
-        return exit_code
+        return ExitCode.BUILD_ERROR if self.exit_code is None else self.exit_code
+
+
+def dump_packages(spec: spack.spec.Spec, path: str) -> None:
+    """
+    Dump all package information for a spec and its dependencies.
+
+    This creates a package repository within path for every namespace in the
+    spec DAG, and fills the repos with package files and patch files for every
+    node in the DAG.
+
+    Args:
+        spec: the Spack spec whose package information is to be dumped
+        path: the path to the build packages directory
+    """
+    fs.mkdirp(path)
+
+    # Copy in package.py files from any dependencies.
+    # Note that we copy them in as they are in the *install* directory
+    # NOT as they are in the repository, because we want a snapshot of
+    # how *this* particular build was done.
+    for node in spec.traverse(deptype="all"):
+        assert node.namespace is not None
+        if node is not spec:
+            # Locate the dependency package in the install tree and find
+            # its provenance information.
+            source = spack.store.STORE.layout.build_packages_path(node)
+            source_repo_root = os.path.join(source, node.namespace)
+
+            # If there's no provenance installed for the package, skip it.
+            # If it's external, skip it because it either:
+            # 1) it wasn't built with Spack, so it has no Spack metadata
+            # 2) it was built by another Spack instance, and we do not
+            # (currently) use Spack metadata to associate repos with externals
+            # built by other Spack instances.
+            # Spack can always get something current from the builtin repo.
+            if node.external or not os.path.isdir(source_repo_root):
+                continue
+
+            # Create a source repo and get the pkg directory out of it.
+            try:
+                source_repo = spack.repo.from_path(source_repo_root)
+                source_pkg_dir = source_repo.dirname_for_package_name(node.name)
+            except spack.repo.RepoError as err:
+                spack.util.tty.debug(f"Failed to create source repo for {node.name}: {str(err)}")
+                source_pkg_dir = None
+                spack.util.tty.warn(f"Warning: Couldn't copy in provenance for {node.name}")
+
+        # Create a destination repository
+        pkg_api = spack.repo.PATH.get_repo(node.namespace).package_api
+        repo_root = os.path.join(path, node.namespace) if pkg_api < (2, 0) else path
+        repo = spack.repo.create_or_construct(
+            repo_root, namespace=node.namespace, package_api=pkg_api
+        )
+
+        # Get the location of the package in the dest repo.
+        dest_pkg_dir = repo.dirname_for_package_name(node.name)
+        if node is spec:
+            spack.repo.PATH.dump_provenance(node, dest_pkg_dir)
+        elif source_pkg_dir:
+            fs.install_tree(source_pkg_dir, dest_pkg_dir)
+
+
+def _do_fake_install(pkg: "spack.package_base.PackageBase") -> None:
+    """Make a fake install directory with fake executables, headers, and libraries."""
+    command = pkg.name
+    header = pkg.name
+    library = pkg.name
+
+    # Avoid double 'lib' for packages whose names already start with lib
+    if not pkg.name.startswith("lib"):
+        library = "lib" + library
+
+    plat_shared = ".dll" if sys.platform == "win32" else ".so"
+    plat_static = ".lib" if sys.platform == "win32" else ".a"
+    dso_suffix = ".dylib" if sys.platform == "darwin" else plat_shared
+    # Windows tells executables apart by extension, so a fake command without one would not
+    # be an executable as far as e.g. PackageBase.command is concerned
+    exe_suffix = ".exe" if sys.platform == "win32" else ""
+
+    # Install fake command
+    fs.mkdirp(pkg.prefix.bin)
+    executable = lambda path, flags: os.open(path, flags, 0o700)
+    open(os.path.join(pkg.prefix.bin, command + exe_suffix), "wb", opener=executable).close()
+
+    # Install fake header file
+    fs.mkdirp(pkg.prefix.include)
+    fs.touch(os.path.join(pkg.prefix.include, header + ".h"))
+
+    # Install fake shared and static libraries
+    fs.mkdirp(pkg.prefix.lib)
+    for suffix in [dso_suffix, plat_static]:
+        fs.touch(os.path.join(pkg.prefix.lib, library + suffix))
+
+    # Install fake man page
+    fs.mkdirp(pkg.prefix.man.man1)
+
+    packages_dir = spack.store.STORE.layout.build_packages_path(pkg.spec)
+    dump_packages(pkg.spec, packages_dir)
+
+
+def _write_timer_json(
+    pkg: "spack.package_base.PackageBase", timer: spack.util.timer.Timer, cache: bool
+) -> None:
+    extra_attributes = {"name": pkg.name, "cache": cache, "hash": pkg.spec.dag_hash()}
+    try:
+        with open(pkg.times_log_path, "w", encoding="utf-8") as timelog:
+            timer.write_json(timelog, extra_attributes=extra_attributes)
+    except Exception as e:
+        spack.util.tty.debug(str(e))
+        return
 
 
 def send_state(state: str, state_pipe: io.TextIOWrapper) -> None:
@@ -192,11 +285,18 @@ def send_installed_from_binary_cache(state_pipe: io.TextIOWrapper) -> None:
     state_pipe.write("\n")
 
 
+def send_exit(exit_code: int, state_pipe: io.TextIOWrapper) -> None:
+    """Send the exit code: the last message, sent after the build's last write to its prefix."""
+    json.dump({"exit": exit_code}, state_pipe, separators=(",", ":"))
+    state_pipe.write("\n")
+
+
 def install_from_buildcache(
     mirrors: List[spack.url_buildcache.MirrorMetadata],
     spec: spack.spec.Spec,
     unsigned: Optional[bool],
     state_stream: io.TextIOWrapper,
+    timer: spack.util.timer.BaseTimer = spack.util.timer.NULL_TIMER,
 ) -> bool:
     # Skip if no configured mirror accepts this spec (select/exclude filters)
     if not any(
@@ -207,9 +307,10 @@ def install_from_buildcache(
 
     send_state("fetching from build cache", state_stream)
     try:
-        tarball_stage = spack.binary_distribution.download_tarball(
-            spec.build_spec, unsigned, mirrors
-        )
+        with timer.measure("fetch"):
+            tarball_stage = spack.binary_distribution.download_tarball(
+                spec.build_spec, unsigned, mirrors
+            )
     except spack.binary_distribution.NoConfiguredBinaryMirrors:
         return False
 
@@ -217,15 +318,14 @@ def install_from_buildcache(
         return False
 
     send_state("relocating", state_stream)
-    spack.binary_distribution.extract_tarball(spec, tarball_stage, force=False)
+    with timer.measure("install"):
+        spack.binary_distribution.extract_tarball(spec, tarball_stage, force=False, timer=timer)
 
     if spec.spliced:  # overwrite old metadata with new
         spack.store.STORE.layout.write_spec(spec, spack.store.STORE.layout.spec_file_path(spec))
 
     # now a block of curious things follow that should be fixed.
     pkg = spec.package
-    if hasattr(pkg, "_post_buildcache_install_hook"):
-        pkg._post_buildcache_install_hook()
     pkg.installed_from_binary_cache = True
 
     # inform also the parent that this package was installed from binary cache.
@@ -352,9 +452,11 @@ def worker_function(
         global_state: Global state to restore
     """
     spec, log_path = request.spec, request.log_path
+    state_stream = make_state_stream(state)
 
     # TODO: don't start a build for external packages
     if spec.external:
+        send_exit(ExitCode.SUCCESS, state_stream)
         return
 
     global_state.restore()
@@ -366,6 +468,14 @@ def worker_function(
 
         # Reset SIGTSTP to default in case the parent had a custom handler.
         signal.signal(signal.SIGTSTP, signal.SIG_DFL)
+
+        # Under forkserver/spawn Python drops CLOEXEC. We don't want to expose these fds to the
+        # build. Notably the state fd should be closed, since its EOF signals to the parent process
+        # that the build has finished, and that should not be delayed by daemons that keep the fd
+        # open, such as sccache or bazel, which exit only after a certain period of inactivity.
+        for channel in (state, parent, tee_control_r, tee_control_w):
+            if channel is not None:
+                os.set_inheritable(channel.fileno(), False)
 
     def handle_sigterm(signum, frame):
         # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
@@ -412,7 +522,6 @@ def worker_function(
     sys.stderr = os.fdopen(
         sys.stderr.fileno(), "w", buffering=1, encoding=_stderr_enc, closefd=False
     )
-    state_stream = make_state_stream(state)
     exit_code = ExitCode.SUCCESS
 
     try:
@@ -430,7 +539,6 @@ def worker_function(
         exit_code = ExitCode.BUILD_ERROR
     finally:
         tee.close()
-        state_stream.close()
 
     if exit_code == ExitCode.SUCCESS:
         # Try to install the compressed log file
@@ -446,6 +554,7 @@ def worker_function(
             except Exception:
                 pass  # don't fail the build just because log compression failed
 
+    send_exit(exit_code, state_stream)
     sys.exit(exit_code)
 
 
@@ -517,12 +626,16 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
 
 
 def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> None:
-    if not config.get("enable", False):
+    enable = config.get("enable", False)
+    if not enable:
         return
 
     try:
         sandbox = spack.sandbox.get_sandbox()
     except spack.sandbox.SandboxError as e:
+        if enable == "auto":
+            spack.util.tty.msg(f"Building without sandbox: {e}")
+            return
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
     for dep in spec.traverse(root=False):
@@ -548,24 +661,34 @@ def _enable_sandbox(config: dict, spec: spack.spec.Spec, stage_path: str) -> Non
     for p in config.get("allow_write", []):
         sandbox.allow_write(p)
 
+    block_network = not config.get("allow_network", True)
+    if block_network and enable == "auto" and not sandbox.supports_network_blocking:
+        spack.util.tty.msg("Building without network sandbox: not supported by the kernel")
+        block_network = False
+
     try:
-        sandbox.apply(block_network=not config.get("allow_network", True))
+        sandbox.apply(block_network=block_network)
     except spack.sandbox.SandboxError as e:
         raise spack.error.InstallError(f"Cannot enable build sandbox: {e}") from e
 
 
-def _rewire_no_db(spec: spack.spec.Spec, explicit: bool) -> None:
+def _rewire_no_db(
+    spec: spack.spec.Spec, timer: spack.util.timer.BaseTimer = spack.util.timer.NULL_TIMER
+) -> None:
     """Rewire a spliced spec from its build_spec prefix, without writing to the database."""
     tmpdir = tempfile.mkdtemp()
     try:
-        tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
-        spack.binary_distribution.create_tarball(spec.build_spec, tarball)
-        spack.hooks.pre_install(spec)
-        spack.binary_distribution.extract_buildcache_tarball(tarball, destination=spec.prefix)
-        spack.binary_distribution.relocate_package(spec)
+        with timer.measure("setup"):
+            tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
+            spack.binary_distribution.create_tarball(spec.build_spec, tarball)
+        with timer.measure("pre-install"):
+            spack.hooks.pre_install(spec)
+        with timer.measure("extract"):
+            spack.binary_distribution.extract_buildcache_tarball(tarball, destination=spec.prefix)
+        with timer.measure("relocate"):
+            spack.binary_distribution.relocate_package(spec)
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
-    spack.hooks.post_install(spec, explicit)
 
 
 def _install(
@@ -578,16 +701,19 @@ def _install(
     pkg = spec.package
     pkg.run_tests = request.run_tests
 
+    # timer for install phases, dumped to install_times.json on success
+    timer = spack.util.timer.Timer()
+
     if request.fake:
         store.layout.create_install_directory(spec)
         _do_fake_install(pkg)
-        spack.hooks.post_install(spec, explicit)
+        _post_install(pkg, spec, explicit, timer, cache=False)
         return
 
     # Try to install from buildcache, unless user asked for source only
     if install_policy != "source_only":
-        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream):
-            spack.hooks.post_install(spec, explicit)
+        if install_from_buildcache(request.mirrors, spec, request.unsigned, state_stream, timer):
+            _post_install(pkg, spec, explicit, timer, cache=True)
             return
         elif install_policy == "cache_only":
             send_state("no binary available", state_stream)
@@ -597,7 +723,8 @@ def _install(
     if spec.build_spec is not spec:
         if install_policy == "source_only":
             send_state("rewiring", state_stream)
-            _rewire_no_db(spec, explicit)
+            _rewire_no_db(spec, timer)
+            _post_install(pkg, spec, explicit, timer, cache=False)
             return
         # Binary cache was the only option; signal miss for force_source expansion.
         send_state("no binary available", state_stream)
@@ -642,10 +769,11 @@ def _install(
 
         send_state("staging", state_stream)
 
-        if not request.skip_patch:
-            pkg.do_patch()
-        else:
-            pkg.do_stage()
+        with timer.measure("stage"):
+            if not request.skip_patch:
+                pkg.do_patch()
+            else:
+                pkg.do_stage()
 
         os.chdir(stage.source_path)
 
@@ -674,7 +802,8 @@ def _install(
             old_debug = spack.util.tty.debug_level()
             spack.util.tty.set_debug(1)
             try:
-                phase.execute()
+                with timer.measure(phase.name):
+                    phase.execute()
             finally:
                 spack.util.tty.set_debug(old_debug)
             if stop_at is not None and phase.name == stop_at:
@@ -682,7 +811,25 @@ def _install(
                 raise spack.error.StopPhase(f"Stopping at '{stop_at}'")
 
         _archive_build_metadata(pkg)
+        _post_install(pkg, spec, explicit, timer, cache=False)
+
+
+def _post_install(
+    pkg: "spack.package_base.PackageBase",
+    spec: spack.spec.Spec,
+    explicit: bool,
+    timer: spack.util.timer.Timer,
+    cache: bool = False,
+) -> None:
+    # Do post install (and potentially post binary install) hooks
+    with timer.measure("post-install"):
+        if cache:
+            if hasattr(pkg, "_post_buildcache_install_hook"):
+                pkg._post_buildcache_install_hook()
         spack.hooks.post_install(spec, explicit)
+
+    timer.stop()
+    _write_timer_json(pkg, timer, cache)
 
 
 def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
@@ -714,13 +861,7 @@ def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
     channels.close_child_ends()
 
     return ChildInfo(
-        proc,
-        spec,
-        channels.output_r,
-        channels.state_r,
-        channels.control_w,
-        ExitNotifier(proc),
-        request.log_path,
+        proc, spec, channels.output_r, channels.state_r, channels.control_w, request.log_path
     )
 
 

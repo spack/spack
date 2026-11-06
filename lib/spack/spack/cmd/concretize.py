@@ -8,6 +8,7 @@ import spack.binary_distribution
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.environment as ev
+from spack.concretize_ui import TerminalUI
 from spack.util import tty
 from spack.util.string import plural
 
@@ -42,7 +43,7 @@ def concretize(parser, args):
         tests = False
 
     with env.write_transaction():
-        concretized_specs = env.concretize(tests=tests)
+        concretized_specs = env.concretize(tests=tests, ui=TerminalUI())
         if not args.quiet:
             if concretized_specs:
                 tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}:")

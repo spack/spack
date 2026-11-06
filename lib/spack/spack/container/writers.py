@@ -7,8 +7,9 @@ convenience functions.
 
 import copy
 import shlex
+import warnings
 from collections import namedtuple
-from typing import Optional
+from typing import Callable, Dict, Optional
 
 import spack.vendor.jsonschema
 
@@ -28,7 +29,7 @@ from .images import (
 )
 
 #: Caches all the writers that are currently supported
-_writer_factory = {}
+_writer_factory: Dict[str, Callable] = {}
 
 
 def writer(name):
@@ -157,7 +158,13 @@ class PathContext(tengine.Context):
 
     @tengine.context_property
     def depfile(self):
-        return self.container_config.get("depfile", False)
+        depfile = self.container_config.get("depfile", False)
+        if depfile:
+            warnings.warn(
+                "container:depfile is deprecated and will be removed in Spack v1.4, after which "
+                "`spack install` is always used. Remove the setting to use it now."
+            )
+        return depfile
 
     @tengine.context_property
     def run(self):

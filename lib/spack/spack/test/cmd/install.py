@@ -21,11 +21,11 @@ import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
-import spack.hash_types as ht
 import spack.hooks.sbom_generate
 import spack.old_installer
 import spack.package_base
 import spack.reporters.cdash
+import spack.store
 import spack.util.filesystem as fs
 from spack.config import Configuration
 from spack.error import SpackError, SpecSyntaxError
@@ -228,6 +228,22 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch, install_mock
 
     assert "Installing build-error" in out
     assert "See build log for details:" in out
+
+
+@pytest.mark.disable_clean_stage_check
+def test_show_log_on_error_new_installer(
+    mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config
+):
+    """The new installer dumps the build log."""
+    mutable_config.set("config:installer", "new")
+    out = install("--show-log-on-error", "build-error", fail_on_error=False)
+
+    assert isinstance(install.error, spack.error.InstallError)
+    assert install.error.pkg is None
+
+    # The whole log is shown, with the failing lines highlighted.
+    assert "checking build system type" in out
+    assert "> configure: error: cannot run C compiled programs." in out
 
 
 def test_install_overwrite(
@@ -672,7 +688,7 @@ def test_cdash_install_from_spec_json(
 
         pkg_spec = spack.concretize.concretize_one("pkg-c")
         with open(spec_json_path, "w", encoding="utf-8") as fd:
-            fd.write(pkg_spec.to_json(hash=ht.dag_hash))
+            fd.write(pkg_spec.to_json())
 
         install(
             "--log-format=cdash",
@@ -901,7 +917,7 @@ def test_install_no_add_in_env(
         # file on disk, and the spec is installed but not added as a root
         mpi_spec_json_path = tmp_path / f"{mpi_spec.name}.json"
         with open(mpi_spec_json_path, "w", encoding="utf-8") as fd:
-            fd.write(mpi_spec.to_json(hash=ht.dag_hash))
+            fd.write(mpi_spec.to_json())
 
         install(str(mpi_spec_json_path))
         assert mpi_spec not in e.roots()
@@ -1188,3 +1204,24 @@ def test_concurrent_packages_set_in_config(mutable_config: Configuration, mock_p
     spec = spack.concretize.concretize_one("pkg-a")
     installer = spack.old_installer.PackageInstaller([spec.package])
     assert installer.concurrent_packages == 3
+
+
+def test_install_succeeds_when_module_files_cannot_be_written(
+    install_mockery, mutable_config, tmp_path, installer_variant
+):
+    """Tests that an installation succeeds when its module root cannot be created, and that a
+    single warning names the module root.
+    """
+    not_a_directory = tmp_path / "file"
+    not_a_directory.write_text("")
+    root = not_a_directory / "modules"
+    mutable_config.set("modules:default:enable", ["tcl"])
+    mutable_config.set("modules:default:roots:tcl", str(root))
+
+    with pytest.warns(UserWarning, match="module files under") as warned:
+        install("--fake", "dependent-install")
+
+    messages = [str(w.message) for w in warned if "module files" in str(w.message)]
+    assert len(messages) == 1
+    assert f"module files under {root} are not updated" in messages[0]
+    assert spack.store.STORE.db.query("dependent-install")

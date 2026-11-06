@@ -19,7 +19,7 @@ import functools
 import importlib
 import pathlib
 from types import ModuleType
-from typing import Any, Optional, Tuple
+from typing import Any, Iterable, Optional, Tuple
 
 #: Process-global cache of the lazily-imported clingo module.
 _CLINGO_MODULE: Optional[ModuleType] = None
@@ -150,12 +150,21 @@ def clingo_library() -> Any:
     return importlib.import_module("clingo.core").Library()
 
 
+@functools.lru_cache(maxsize=None)
+def _v6_string_type() -> Any:
+    return importlib.import_module("clingo.symbol").SymbolType.String
+
+
 def symbol_name(sym: Any) -> Optional[str]:
     """Return ``sym.name`` if ``sym`` is a function symbol, otherwise ``None``.
 
     Non-function symbols raise ``RuntimeError`` on clingo+CFFI and ``ValueError`` on clingo 6;
     legacy clingo returns an empty string.
     """
+    if clingo_flavor() is ClingoFlavor.V6:
+        # Performance workaround: avoid hitting clingo 6's ValueError on non-functions.
+        signature = sym.signature
+        return (signature[0] or None) if signature is not None else None
     try:
         return sym.name or None
     except (RuntimeError, ValueError):
@@ -170,7 +179,10 @@ def symbol_string(sym: Any) -> str:
             return sym.string
         except RuntimeError:
             return str(sym)
-    # Legacy returns "" for non-string symbols; clingo 6 raises ValueError.
+    if clingo_flavor() is ClingoFlavor.V6:
+        # Performance workaround: avoid hitting clingo 6's ValueError on non-strings.
+        return sym.string if sym.type is _v6_string_type() else str(sym)
+    # Legacy returns "" for non-string symbols.
     try:
         return sym.string or str(sym)
     except (RuntimeError, ValueError):
@@ -198,6 +210,19 @@ class _ClingoBackend:
 
     def add_rule(self, head: Any, body: Any = (), choice: bool = False) -> None:
         self._backend.rule(head, body, choice)
+
+
+class _ClingoV6SymbolicAtoms:
+    """Adapter exposing the legacy ``SymbolicAtoms.by_signature`` on clingo 6's atom base."""
+
+    __slots__ = ("_base",)
+
+    def __init__(self, base: Any) -> None:
+        self._base = base
+
+    def by_signature(self, name: str, arity: int, positive: bool = True) -> Iterable[Any]:
+        atoms = self._base.get((name, arity, positive))
+        return () if atoms is None else atoms.values()
 
 
 class _ClingoV6Control:
@@ -228,6 +253,10 @@ class _ClingoV6Control:
 
     def backend(self) -> _ClingoBackend:
         return _ClingoBackend(self._control.backend)
+
+    @property
+    def symbolic_atoms(self) -> "_ClingoV6SymbolicAtoms":
+        return _ClingoV6SymbolicAtoms(self._control.base)
 
     @property
     def statistics(self) -> Any:

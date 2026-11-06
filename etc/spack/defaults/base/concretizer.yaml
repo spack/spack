@@ -99,6 +99,8 @@ concretizer:
 
   # If enabled, concretizations are cached in the misc_cache. The cache is keyed by the hash
   # of solver inputs, so we only need to run setup (not solve) if there is a cache hit.
+  # The cache is per-user by default, but can be shared -- see the documentation for
+  # concretization_cache:url for how to set that up.
   concretization_cache:
     enable: true
 

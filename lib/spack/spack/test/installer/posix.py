@@ -275,23 +275,23 @@ class TestJobServer:
         finally:
             js.close()
 
-    def test_makeflags_pipe_gmake_40(self):
-        """Should use pipe style for gmake 4.0-4.3."""
+    def test_makeflags_pipe_gmake_42(self):
+        """Should use pipe style for gmake 4.2-4.3."""
         js = PosixJobServer(8, makeflags="")
 
         try:
-            makeflags = js.makeflags(Spec("gmake@=4.0"))
+            makeflags = js.makeflags(Spec("gmake@=4.2"))
             assert isinstance(makeflags, PipeMakeflags)
             assert (makeflags.fifo_path, makeflags.flag) == (js.fifo_path, "--jobserver-auth")
         finally:
             js.close()
 
-    def test_makeflags_pipe_old_flag_gmake_3(self):
-        """Should use pipe style with the old --jobserver-fds flag name for gmake < 4.0."""
+    def test_makeflags_pipe_old_flag_gmake_41(self):
+        """Should use pipe style with the old --jobserver-fds flag name for gmake < 4.2."""
         js = PosixJobServer(8, makeflags="")
 
         try:
-            makeflags = js.makeflags(Spec("gmake@=3.9"))
+            makeflags = js.makeflags(Spec("gmake@=4.1"))
             assert isinstance(makeflags, PipeMakeflags)
             assert (makeflags.fifo_path, makeflags.flag) == (js.fifo_path, "--jobserver-fds")
         finally:

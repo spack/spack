@@ -202,14 +202,14 @@ repos:
 def test_config_edit(mutable_config, working_env):
     """Ensure `spack config edit` edits the right paths."""
 
-    dms = mutable_config.default_modify_scope("compilers")
+    dms = mutable_config.default_modify_scope("packages")
     dms_path = mutable_config.scopes[dms].path
     user_path = mutable_config.scopes["user"].path
 
-    comp_path = os.path.join(dms_path, "compilers.yaml")
+    packages_path = os.path.join(dms_path, "packages.yaml")
     repos_path = os.path.join(user_path, "repos.yaml")
 
-    assert config("edit", "--print-file", "compilers").strip() == comp_path
+    assert config("edit", "--print-file", "packages").strip() == packages_path
     assert config("edit", "--print-file", "repos").strip() == repos_path
 
 
@@ -242,7 +242,7 @@ def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
 
 def test_config_list():
     output = config("list")
-    assert "compilers" in output
+    assert "concretizer" in output
     assert "packages" in output
 
 

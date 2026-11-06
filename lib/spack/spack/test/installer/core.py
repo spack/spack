@@ -74,6 +74,17 @@ class TestPackageInstallerConstructor:
         assert installer.root_policy == "cache_only"
         assert installer.dependencies_policy == "cache_only"
 
+    def test_older_readable_db_fails_before_building(self, mutable_database, bumped_db_version):
+        """Nothing is built when the database needs an explicit reindex to be modified, but
+        an installer with nothing to do does not complain."""
+        installed = mutable_database.query_local("libelf")[0]
+        PackageInstaller([installed.package])
+
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        with pytest.raises(spack.error.ExplicitDatabaseUpgradeError):
+            PackageInstaller([spec.package])
+
 
 @pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root
 def test_build_failure_reported_through_event_loop(temporary_store, mock_packages):
@@ -91,6 +102,16 @@ def test_build_failure_reported_through_event_loop(temporary_store, mock_package
     assert installer.log_paths[dag_hash] in str(exc_info.value)
     failed = [e for e in ui.events if e[0] == "state_changed" and e[2] == "failed"]
     assert failed == [("state_changed", dag_hash, "failed")]
+    assert _record(temporary_store, spec) is None
+
+
+@pytest.mark.disable_clean_stage_check
+def test_build_exiting_without_exit_code_fails(temporary_store, mock_packages):
+    """Only the exit code reported by the build counts: a build that exits without one failed."""
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(exitcode=None)})
+    with pytest.raises(spack.error.InstallError):
+        _install(launcher, spec)
     assert _record(temporary_store, spec) is None
 
 
@@ -393,3 +414,38 @@ def test_change_jobs_commands_adjust_parallelism(temporary_store, mock_packages)
     initial = jobs_events[0][2]
     assert ("jobs_changed", initial + 1, initial + 1) in jobs_events
     assert jobs_events[-1][2] == initial  # target restored after the decrease
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted and failed installs keep their log files
+@pytest.mark.parametrize(
+    "root_script,expected_error",
+    [
+        (Script(), None),
+        (Script(hang=True), KeyboardInterrupt),
+        (Script(exitcode=ExitCode.BUILD_ERROR), spack.error.InstallError),
+    ],
+)
+def test_recorded_specs(root_script, expected_error, temporary_store, mock_packages):
+    """Tests that the installer lists the specs it added to the database, also when the
+    installation is interrupted or a build fails.
+    """
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: root_script})
+
+    def tick():
+        if launcher.hanging:  # the dep finished and the root build is now running
+            raise KeyboardInterrupt
+
+    installer = PackageInstaller(
+        [root.package], explicit=True, ui=DrivingUI(tick), launcher=launcher
+    )
+    if expected_error is None:
+        installer.install()
+    else:
+        with pytest.raises(expected_error):
+            installer.install()
+
+    expected = [dep.dag_hash()] if expected_error else [dep.dag_hash(), root.dag_hash()]
+    assert [s.dag_hash() for s in installer.recorded_specs] == expected
+    assert [s.dag_hash() for s in (dep, root) if _record(temporary_store, s)] == expected

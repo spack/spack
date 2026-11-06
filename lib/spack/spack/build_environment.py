@@ -36,7 +36,6 @@ import inspect
 import io
 import multiprocessing
 import os
-import re
 import signal
 import sys
 import traceback
@@ -55,6 +54,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    TextIO,
     Tuple,
     Type,
     Union,
@@ -72,6 +72,7 @@ import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.stage
@@ -84,6 +85,7 @@ from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
 from spack.util import tty
+from spack.util.ctest_log_parser import Severity
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
@@ -98,7 +100,7 @@ from spack.util.environment import (
 from spack.util.executable import Executable
 from spack.util.filesystem import join_path, symlink
 from spack.util.lang import dedupe, stable_partition
-from spack.util.log_parse import make_log_context, parse_log_events
+from spack.util.log_parse import scan_log, write_block
 from spack.util.string import plural
 from spack.util.tty.color import cescape, colorize
 
@@ -382,7 +384,7 @@ def clean_environment():
     build_lang = spack.config.CONFIG.get("config:build_language")
     if build_lang:
         # Override language-related variables. This can be used to force
-        # English compiler messages etc., which allows parse_log_events to
+        # English compiler messages etc., which allows the log parser to
         # show useful matches.
         env.set("LC_ALL", build_lang)
 
@@ -477,6 +479,26 @@ def optimization_flags(compiler, target):
     return result
 
 
+def link_dirs_of(query: spack.spec.Spec) -> List[str]:
+    """Return the library directories a build uses to link against ``query``, as returned by
+    ``spec[name]``: those of its libraries, followed by its ``lib`` and ``lib64`` subdirectories
+    that exist."""
+    link_dirs = []
+    try:
+        # Locating libraries can be time consuming, so log start and finish.
+        tty.debug(f"Collecting libraries for {query.name}")
+        link_dirs.extend(query.libs.directories)
+        tty.debug(f"Libraries for {query.name} have been collected.")
+    except NoLibrariesError:
+        tty.debug(f"No libraries found for {query.name}")
+
+    for default_lib_dir in ("lib", "lib64"):
+        default_lib_prefix = os.path.join(query.prefix, default_lib_dir)
+        if os.path.isdir(default_lib_prefix):
+            link_dirs.append(default_lib_prefix)
+    return link_dirs
+
+
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper (which have the prefix
     ``SPACK_``) and also add the compiler wrappers to PATH.
@@ -522,20 +544,7 @@ def set_wrapper_variables(pkg, env):
         # deps, so keying by name is wrong. In practice it is not problematic: we obtain the same
         # gcc-runtime / glibc here, and repeatedly add the same dirs that are later deduped.
         query = pkg.spec[dep.name]
-        dep_link_dirs = []
-        try:
-            # Locating libraries can be time consuming, so log start and finish.
-            tty.debug(f"Collecting libraries for {dep.name}")
-            dep_link_dirs.extend(query.libs.directories)
-            tty.debug(f"Libraries for {dep.name} have been collected.")
-        except NoLibrariesError:
-            tty.debug(f"No libraries found for {dep.name}")
-
-        for default_lib_dir in ("lib", "lib64"):
-            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-            if os.path.isdir(default_lib_prefix):
-                dep_link_dirs.append(default_lib_prefix)
-
+        dep_link_dirs = link_dirs_of(query)
         link_dirs[:0] = dep_link_dirs
         if dep.dag_hash() in rpath_hashes:
             rpath_dirs[:0] = dep_link_dirs
@@ -558,14 +567,16 @@ def set_wrapper_variables(pkg, env):
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
 
-    default_dynamic_linker_filter = spack.compilers.libraries.dynamic_linker_filter_for(pkg.spec)
+    default_dynamic_linker_filter = spack.compilers.libraries.dynamic_linker_filter_for(
+        pkg.spec, repo=spack.repo.PATH, cache=spack.compilers.libraries.COMPILER_CACHE
+    )
     if default_dynamic_linker_filter:
         rpath_dirs = default_dynamic_linker_filter(rpath_dirs)
 
     # Spack managed directories include the stage, store and upstream stores. We extend this with
     # their real paths to make it more robust (e.g. /tmp vs /private/tmp on macOS).
     spack_managed_dirs: Set[str] = {
-        spack.stage.get_stage_root(),
+        spack.stage.stage_root(spack.config.CONFIG),
         spack.store.STORE.db.root,
         *(db.root for db in spack.store.STORE.db.upstream_dbs),
     }
@@ -1190,6 +1201,7 @@ def _setup_pkg_and_run(
         if stderr_pipe is not None:
             os.dup2(stderr_pipe.fileno(), sys.stderr.fileno())
             stderr_pipe.close()
+        tty.clear_isatty_cache()
 
         pkg = serialized_pkg.restore()
 
@@ -1384,12 +1396,10 @@ def start_build_process(
             except Exception:
                 pass
 
-        mflags = os.environ.get("MAKEFLAGS")
-        if mflags is not None:
-            m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
-            if m:
-                jobserver_fd1 = Connection(int(m.group(1)))
-                jobserver_fd2 = Connection(int(m.group(2)))
+        jobserver_fds = spack.util.executable.jobserver_fds(os.environ.get("MAKEFLAGS", ""))
+        if jobserver_fds:
+            jobserver_fd1 = Connection(jobserver_fds[0])
+            jobserver_fd2 = Connection(jobserver_fds[1])
 
         p = BuildProcess(
             target=_setup_pkg_and_run,
@@ -1659,27 +1669,27 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
     return ChildError(msg, module, name, traceback, log, log_type, context)
 
 
-def write_log_summary(out, log_type, log, last=None):
-    errors, warnings, _ = parse_log_events(log)
-    nerr = len(errors)
-    nwar = len(warnings)
-
-    if nerr > 0:
-        if last and nerr > last:
-            errors = errors[-last:]
-            nerr = last
-
-        # If errors are found, only display errors
-        out.write("\n%s found in %s log:\n" % (plural(nerr, "error"), log_type))
-        out.write(make_log_context(errors))
-    elif nwar > 0:
-        if last and nwar > last:
-            warnings = warnings[-last:]
-            nwar = last
-
-        # If no errors are found but warnings are, display warnings
-        out.write("\n%s found in %s log:\n" % (plural(nwar, "warning"), log_type))
-        out.write(make_log_context(warnings))
+def write_log_summary(
+    out: TextIO, log_type: str, log: Union[str, TextIO, List[str]], last: Optional[int] = None
+) -> None:
+    """Print highlighted errors from a log file with surrounding context. If the log does not
+    contain errors, print warnings instead. If ``last`` is given, only show the last so many
+    excerpts from the log (which may contain more errors/warnings than ``last``)."""
+    blocks = list(scan_log(log))
+    if not blocks:
+        return
+    # If errors are found, only display blocks containing errors.
+    error_blocks = [
+        b for b in blocks if any(m.severity is Severity.ERROR for m in b.matches.values())
+    ]
+    severity = Severity.ERROR if error_blocks else Severity.WARNING
+    blocks = error_blocks or blocks
+    if last:
+        blocks = blocks[-last:]
+    num = sum(m.severity is severity for b in blocks for m in b.matches.values())
+    out.write(f"\n{plural(num, severity.name.lower())} found in {log_type} log:\n")
+    for block in blocks:
+        write_block(out, block)
 
 
 class ModuleChangePropagator:
