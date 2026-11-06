@@ -986,7 +986,7 @@ _spack_deconcretize() {
 _spack_dependencies() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -i --installed -t --transitive --deptype -V --no-expand-virtuals"
+        SPACK_COMPREPLY="-h --help -i --installed -t --transitive --deptype --format -V --no-expand-virtuals"
     else
         _all_packages
     fi
@@ -995,7 +995,7 @@ _spack_dependencies() {
 _spack_dependents() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -i --installed -t --transitive"
+        SPACK_COMPREPLY="-h --help -i --installed --format -t --transitive"
     else
         _all_packages
     fi
