@@ -16,7 +16,7 @@ import subprocess
 import sys
 from typing import List
 
-import black
+import ruff
 from docutils import nodes
 from docutils.core import publish_doctree
 from docutils.parsers.rst import Directive, directives
@@ -25,6 +25,7 @@ from ruamel.yaml import YAML
 from spack.vendor import jsonschema
 
 import spack.schema
+import spack.util.executable
 
 #: Map Spack config sections to their corresponding JSON schema
 SECTION_AND_SCHEMA = [
@@ -172,22 +173,36 @@ def _validate_schema(data: object) -> None:
             jsonschema.validate(data, schema)
 
 
-def _format_code_blocks(document: nodes.document, path: str) -> List[Warning]:
-    """Try to parse and format Python, YAML, and JSON code blocks. This does *not* update the
+def _format_code_in_file(path: str, warnings: List[Warning]) -> bool:
+    """Check and fix formatting of all python code in doc file 'path'
+    by running ruff over the entire file. Issues are corrected in place.
+    Returns True if ruff modified the file. Remaining errors are reported
+    to stderr.
+    """
+    ruff_tool = spack.util.executable.Executable(ruff.find_ruff_bin())
+    # Run Check
+    # First run for fixes, check if we needed to fix anything
+    ruff_tool("check", "--fix-only", "--exit-non-zero-on-fix", path, fail_on_error=False)
+    fix_status = ruff_tool.returncode
+    # Run format
+    ruff_tool("format", "--exit-non-zero-on-format", path, fail_on_error=False)
+    format_status = ruff_tool.returncode
+    return bool(fix_status | format_status)
+
+
+def _format_serialization_blocks(document: nodes.document, path: str) -> List[Warning]:
+    """Try to parse and format YAML and JSON code blocks. This does *not* update the
     sources, but collects issues for later reporting. Returns a list of warnings."""
     issues: List[Warning] = []
     for code_block in document.findall(nodes.literal_block):
         language = code_block.attributes.get("language", "")
-        if language not in ("python", "yaml", "json"):
+        if language not in ("yaml", "json"):
             continue
         original = code_block.astext()
         line = code_block.line if code_block.line else 0
         possible_config_data = None
-
         try:
-            if language == "python":
-                formatted = black.format_str(original, mode=black.FileMode(line_length=99))
-            elif language == "yaml":
+            if language == "yaml":
                 yaml = YAML(pure=True)
                 yaml.width = 10000  # do not wrap lines
                 yaml.preserve_quotes = True  # do not force particular quotes
@@ -278,18 +293,21 @@ def reformat_rst_file(path: str, warnings: List[Warning]) -> bool:
 
     src_lines = src.splitlines()
     document: nodes.document = publish_doctree(src, settings_overrides=DOCUTILS_SETTING)
+    modified = False
+    # json and yaml
+    warnings.extend(_format_serialization_blocks(document, path))
+    # python
+    modified |= _format_code_in_file(path, warnings)
+    # english/everything else
+    if _format_paragraphs(document, path, src_lines):
+        modified |= True
+        with open(f"{path}.tmp", "w", encoding="utf-8") as f:
+            f.write("\n".join(src_lines))
+            f.write("\n")
+        os.rename(f"{path}.tmp", path)
+        print(f"Fixed reStructuredText formatting: {path}", flush=True)
 
-    warnings.extend(_format_code_blocks(document, path))
-
-    if not _format_paragraphs(document, path, src_lines):
-        return False
-
-    with open(f"{path}.tmp", "w", encoding="utf-8") as f:
-        f.write("\n".join(src_lines))
-        f.write("\n")
-    os.rename(f"{path}.tmp", path)
-    print(f"Fixed reStructuredText formatting: {path}", flush=True)
-    return True
+    return modified
 
 
 def main(*files: str) -> None:
