@@ -474,15 +474,11 @@ The current `spack isolate --undo` removes the current isolate scope. It does no
 
 # 5. Non-writable Prefixes and Custom Configuration
 
-If the Spack prefix is not writable:
+If the Spack prefix is not writable, Spack will error
 
-- Spack cannot create a layout or isolate scope there;
+- it cannot create a layout or isolate scope there;
 - it must not claim that migration completed;
-- it must not write migration state into the prefix;
-- existing readable configuration remains in effect;
-- commands proceed using locations that can be read and configured.
-
-Migration happens before configuration is loaded and always attempts to copy resources from old default locations to new default locations. User configuration is not consulted during migration.
+- it cannot not write migration state into the prefix;
 
 When `spack isolate` runs (which skips migration), it does have full configuration loaded, but it will not see old unmigrated resources because the new defaults point to different locations:
 
