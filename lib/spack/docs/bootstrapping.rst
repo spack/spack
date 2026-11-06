@@ -51,6 +51,7 @@ Running a command that concretizes a spec, like:
 .. code-block:: console
 
    % spack solve zlib
+   ==> Bootstrapping clingo-bootstrap from pre-built binaries
    [e] cqy5gwu python@3.9 /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9 (0s)
    [+] 7xm6itd python-venv@1.0 /Users/spack/.spack/bootstrap/store/darwin-aarch64/python-venv-1.0-7xm6itd35g5wfwebvwffsmpx5ekpdfnm (0s)
    [+] sttzv6g clingo-bootstrap@spack /Users/spack/.spack/bootstrap/store/darwin-aarch64/clingo-bootstrap-spack-sttzv6ggizrkss7mjeln7pigo52i2oi4 (1s)
@@ -63,6 +64,7 @@ Users can also bootstrap all Spack's dependencies in a single command, which is 
 .. code-block:: console
 
    $ spack bootstrap now
+   ==> Bootstrapping patchelf from pre-built binaries
    [e] 7s7rcbh glibc@2.39 /usr (0s)
    [+] zif26uy gcc-runtime@10.2.1 /root/.spack/bootstrap/store/linux-aarch64/gcc-runtime-10.2.1-zif26uy22eplr37dqfcjoffkllpayilj (2s)
    [+] c7jtmhh patchelf@0.17.2 /root/.spack/bootstrap/store/linux-aarch64/patchelf-0.17.2-c7jtmhhiy7tvvissvzlzgti7gpwdskzi (1s)
