@@ -1,6 +1,6 @@
 black==26.10.1
 clingo==5.8.2
-flake8==7.3.0
+flake8==7.4.1
 isort==9.0.1
 mypy==2.3.1
 vermin==1.8.0
