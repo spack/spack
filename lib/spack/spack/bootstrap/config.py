@@ -4,9 +4,12 @@
 """Manage configuration swapping for bootstrapping purposes"""
 
 import contextlib
+import hashlib
 import os
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
+
+import spack.vendor.archspec.cpu
 
 import spack.config
 import spack.environment
@@ -41,6 +44,14 @@ def spec_for_current_python() -> str:
     """
     version_str = ".".join(str(x) for x in sys.version_info[:2])
     return f"python@{version_str}"
+
+
+def interpreter_dirname() -> str:
+    """Return a directory name that identifies the interpreter running Spack and the host"""
+    python_part = spec_for_current_python().replace("@", "")
+    arch_part = spack.vendor.archspec.cpu.host().family
+    interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
+    return f"{python_part}-{arch_part}-{interpreter_part}"
 
 
 def root_path() -> str:
@@ -152,6 +163,8 @@ def _ensure_bootstrap_configuration() -> Generator:
     ), spack.store.use_store(bootstrap_store_path, extra_data={"padded_length": 0}):
         spack.config.CONFIG.set("bootstrap", user_configuration["bootstrap"])
         spack.config.CONFIG.set("config", user_configuration["config"])
+        # Binaries verified by sha256 sum are supported only by the new installer
+        spack.config.CONFIG.set("config:installer", "new")
         spack.config.CONFIG.set("repos", user_configuration["repos"])
         with spack.modules.disable_modules(), _spack_python_interpreter():
             yield
