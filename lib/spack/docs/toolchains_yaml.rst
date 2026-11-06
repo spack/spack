@@ -29,7 +29,7 @@ Basic usage
 As an example, the following configuration file defines a toolchain named ``llvm_gfortran``:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/toolchains.yaml``
+   :caption: ``~/.config/spack/toolchains.yaml``
 
    toolchains:
      llvm_gfortran:
@@ -81,7 +81,7 @@ Different toolchains can be used independently or even in the same spec.
 Consider the following configuration:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/toolchains.yaml``
+   :caption: ``~/.config/spack/toolchains.yaml``
 
    toolchains:
      llvm_gfortran:
@@ -121,7 +121,7 @@ A common use case is to define a toolchain that also picks a specific MPI implem
 In the following example, we define a toolchain that uses ``openmpi@5`` as an MPI provider, and ``llvm@19`` as the compiler for C and C++:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/toolchains.yaml``
+   :caption: ``~/.config/spack/toolchains.yaml``
 
    toolchains:
      clang_openmpi:
@@ -137,7 +137,7 @@ The general pattern in toolchains configuration is to use a ``when`` condition t
 Notice that it's possible to achieve similar configuration with :doc:`packages.yaml <packages_yaml>`:
 
 .. code-block:: yaml
-   :caption: ~/.spack/packages.yaml
+   :caption: ~/.config/spack/packages.yaml
 
    packages:
      c:

@@ -35,7 +35,7 @@ You can either set build preferences specifically for *one* package, or you can 
 The types of settings you can customize are described in detail below.
 
 Spack's build defaults are in the default ``etc/spack/defaults/packages.yaml`` file.
-You can override them in ``~/.spack/packages.yaml`` or ``etc/spack/packages.yaml``.
+You can override them in ``~/.config/spack/packages.yaml`` or ``etc/spack/packages.yaml``.
 For more details on how this works, see :ref:`configuration-scopes`.
 
 .. _sec-external-packages:

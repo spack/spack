@@ -41,7 +41,7 @@ Here is an example ``config.yaml`` file:
        root: $data_home/installs
      build_stage:
      - $tempdir/$user/spack-stage
-     - $cache_home/stage
+     - $state_home/stage
 
 Each Spack configuration file is nested under a top-level section corresponding to its name.
 So, ``config.yaml`` starts with ``config:``, ``mirrors.yaml`` starts with ``mirrors:``, etc.
@@ -332,7 +332,7 @@ If your configurations look like this:
        root: $data_home/installs
      build_stage:
      - $tempdir/$user/spack-stage
-     - $cache_home/stage
+     - $state_home/stage
 
 
 .. code-block:: yaml
@@ -356,7 +356,7 @@ You can see the final, combined configuration with the ``spack config get <confi
        root: /some/other/directory
      build_stage:
      - $tempdir/$user/spack-stage
-     - $cache_home/stage
+     - $state_home/stage
 
 
 .. _config-prepend-append:
@@ -388,7 +388,7 @@ Spack will then append to the lower-precedence configuration under the ``root`` 
        root: /some/other/directory/my/custom/suffix
      build_stage:
      - $tempdir/$user/spack-stage
-     - $cache_home/stage
+     - $state_home/stage
 
 
 Similarly, ``+:`` can be used to *prepend* to a path or name:
@@ -438,7 +438,7 @@ Similarly,
 
 .. code-block:: yaml
    :emphasize-lines: 2
-   :caption: ``~/.spack/config.yaml``
+   :caption: ``~/.config/spack/config.yaml``
    :name: code-example-override-install-tree
 
    config:
@@ -461,7 +461,7 @@ The ``build_stage`` setting's value is an ordered list of directories:
    config:
      build_stage:
      - $tempdir/$user/spack-stage
-     - $cache_home/stage
+     - $state_home/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage`` paths:
@@ -491,7 +491,7 @@ The list in the higher-precedence scope is *prepended* to the defaults.
      - /lustre-scratch/$user/spack
      - ~/mystage
      - $tempdir/$user/spack-stage
-     - $cache_home/stage
+     - $state_home/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can *completely* override the lower-precedence scope using ``::``.
@@ -635,7 +635,7 @@ For example, to see the fully merged ``config.yaml``, you can type:
      directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
      build_stage:
      - $tempdir/$user/spack-stage
-     - $cache_home/stage
+     - $state_home/stage
      source_cache: $data_home/downloads
      misc_cache: $cache_home/$spack_instance_id/cache
      locks: true
@@ -677,7 +677,7 @@ If you do not know why Spack is behaving a certain way, this command can help yo
    /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $cache_home/stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $state_home/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $data_home/downloads
    /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $cache_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True

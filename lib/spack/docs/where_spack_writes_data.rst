@@ -50,7 +50,7 @@ The user must explicitly approve this migration, either interactively or by sett
 ``spack migrate undo`` restores use of the legacy locations by updating configuration; it does not remove files copied to the new locations.
 The original resources are still available because migration leaves them in place.
 
-Spack also independently (without prompting) copies user configuration from ``~/.spack`` to ``~/.config/spack`` and package repositories from ``~/.spack/package_repos`` to ``~/.local/state/spack/package_repos`` when the old locations contain data and the new destinations are available.
+Spack also independently (without prompting) copies user configuration from ``~/.spack`` to ``~/.config/spack`` and package repositories from ``~/.spack/package_repos`` to ``~/.local/share/spack/package_repos`` when the old locations contain data and the new destinations are available.
 This home-directory migration can occur for a fresh checkout and does not create migration state in the Spack prefix.
 The old files remain in place for use by older Spack instances.
 

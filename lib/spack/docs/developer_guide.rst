@@ -66,7 +66,7 @@ So that you can familiarize yourself with the project, we will start with a high
 
       etc/
          spack/            <- Spack config files.
-                              Can be overridden by files in ~/.spack.
+                              Can be overridden by files in ~/.config/spack.
 
       var/
          spack/
@@ -102,7 +102,7 @@ Most of the interesting parts of Spack live in ``lib/spack``.
 
 .. note::
 
-   **Package Repositories**: Built-in packages are hosted in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_ and are automatically cloned to ``~/.spack/package_repos/`` when needed.
+   **Package Repositories**: Built-in packages are hosted in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_ and are automatically cloned to ``$data_home/package_repos/`` when needed.
    The ``var/spack/test_repos/`` directory is used for unit tests only.
    See :ref:`repositories` for details on package repositories.
 
@@ -221,7 +221,7 @@ Understanding this system is important for developing Spack itself.
   Contains the ``Repo`` and ``RepoPath`` classes that handle loading and searching packages from multiple repositories.
 
 Built-in packages are stored in a separate Git repository (`spack/spack-packages <https://github.com/spack/spack-packages>`_) rather than being included directly in the Spack source tree.
-This repository is automatically cloned to ``~/.spack/package_repos/`` when needed.
+This repository is automatically cloned to ``$data_home/package_repos/`` (``~/.local/share/spack/package_repos/`` by default) when needed.
 
 Key concepts:
 

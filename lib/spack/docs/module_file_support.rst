@@ -38,7 +38,7 @@ Spack can generate both Tcl and Lua module files, either with a post-install hoo
       modules:
         default:
           roots:
-            tcl: $spack/share/spack/modules
+            tcl: $data_home/modules
 
 Once configured, you can start by generating Tcl module files for all currently installed packages:
 
@@ -169,7 +169,7 @@ You can configure the behavior of either module system separately, under a key c
 In general, the configuration options that you can use in ``modules.yaml`` will either change the layout of the module files on the filesystem, or they will affect their content.
 For the latter point it is possible to use :ref:`spec patterns <sec-specs>` to fine-tune the set of packages on which the modifications should be applied.
 
-The default module root can be overridden for any module set by changing the ``roots`` key of the configuration.
+The module root is set for each module set with the ``roots`` key of the configuration.
 For example, to install ``tcl`` modules to a custom path:
 
 .. code-block:: yaml

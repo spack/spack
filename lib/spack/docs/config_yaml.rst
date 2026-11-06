@@ -105,12 +105,12 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
    - $tempdir/$user/spack-stage
-   - $cache_home/stage
+   - $state_home/stage
 
 This can be an ordered list of paths that Spack should search when trying to find a temporary directory for the build stage.
 The list is searched in order, and Spack will use the first directory to which it has write access.
 
-Specifying `~/.spack/stage` first will ensure each user builds in their home directory.
+Specifying ``$state_home/stage`` first will ensure each user builds in their home directory.
 The historic Spack stage path `$spack/var/spack/stage` will build directly inside the Spack instance.
 See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
 
@@ -135,14 +135,14 @@ These are stored indefinitely by default and can be purged with ``spack clean --
 --------------------
 
 Temporary directory to store long-lived cache files, such as indices of packages available in repositories.
-Defaults to ``$state_home/$spack_instance_id/cache``.
+Defaults to ``$cache_home/$spack_instance_id/cache``.
 Can be purged with ``spack clean --misc-cache``.
 
 In some cases, e.g., if you work with many Spack instances or many different versions of Spack, it makes sense to have a cache per instance or per version.
 You can do that by changing the value to either:
 
-* ``~/.spack/$spack_instance_id/cache`` for per-instance caches, or
-* ``~/.spack/$spack_short_version/cache`` for per-spack-version caches.
+* ``$cache_home/$spack_instance_id/cache`` for per-instance caches (the default), or
+* ``$cache_home/$spack_short_version/cache`` for per-spack-version caches.
 
 ``verify_ssl``
 --------------------
