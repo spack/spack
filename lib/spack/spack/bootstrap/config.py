@@ -55,7 +55,13 @@ def environment_path(prefix: str = "") -> str:
     """
     python_part = spec_for_current_python().replace("@", "")
     arch_part = spack.vendor.archspec.cpu.host().family
-    interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
+    data = sys.exec_prefix.encode()
+    try:
+        # With FIPS, interpreters refuse md5 unless it is not used for security
+        digest = hashlib.md5(data, usedforsecurity=False)  # novermin
+    except TypeError:  # Python < 3.9
+        digest = hashlib.md5(data)
+    interpreter_part = digest.hexdigest()[:5]
     dirname = f"{prefix}{python_part}-{arch_part}-{interpreter_part}"
     return os.path.join(root_path(), "environments", dirname)
 
