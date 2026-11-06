@@ -1325,10 +1325,17 @@ def _provided(spec: "Spec") -> Set[str]:
     return {v.name for v in spec.provided_virtuals}
 
 
-def _used_as(root: "Spec") -> Dict[str, Set[str]]:
-    """The link/run nodes of root by hash, with the virtuals their in-edges use them as"""
+def _used_as(root: "Spec", visited: Optional[Set[str]] = None) -> Dict[str, Set[str]]:
+    """The link/run nodes of root by hash, with the virtuals their in-edges use them as. Nodes
+    in visited are not traversed: their in-edges count, their out-edges do not."""
     used_as: Dict[str, Set[str]] = {root.dag_hash(): set()}
-    for edge in root.traverse_edges(root=False, cover="edges", deptype=_NON_BUILD):
+    for edge in root.traverse_edges(
+        root=False,
+        cover="edges",
+        deptype=_NON_BUILD,
+        key=spack.traverse.by_dag_hash,
+        visited=visited,
+    ):
         used_as.setdefault(edge.spec.dag_hash(), set()).update(edge.virtuals)
     return used_as
 
@@ -1362,12 +1369,8 @@ class _Splice:
         replacement_nodes = set(replacement_used_as)
         self.targets = self._targets(target)
         # link/run nodes of the spec reachable without passing through a target
-        surviving = {
-            n.dag_hash()
-            for n in spec.traverse(
-                deptype=_NON_BUILD, key=spack.traverse.by_dag_hash, visited=set(self.targets)
-            )
-        }
+        spec_used_as_without_targets = _used_as(spec, visited=set(self.targets))
+        surviving = spec_used_as_without_targets.keys() - self.targets
         self.spec_only = surviving - replacement_nodes
         self.candidates = surviving | replacement_nodes
 
@@ -1378,7 +1381,8 @@ class _Splice:
             winners, winner_used_as = replacement_nodes, replacement_used_as
         else:
             self.losers = replacement_nodes - surviving
-            winners, winner_used_as = surviving, self.spec_used_as
+            # what the surviving nodes are used as by each other, not by the replaced targets
+            winners, winner_used_as = surviving, spec_used_as_without_targets
         self.by_name: Dict[str, str] = {}
         self.by_virtual: Dict[str, str] = {}
         for h in sorted(winners):
@@ -4940,8 +4944,9 @@ class Spec:
 
         When transitive is :data:`True`, use the dependencies from ``other`` to reconcile
         conflicting dependencies. When transitive is :data:`False`, use dependencies from self.
-        Dependencies conflict when they have the same name or are used as the same virtual. The
-        inputs are not modified; the result consists of new nodes.
+        Dependencies conflict when they have the same name or are used as the same virtual, where
+        the virtuals that replaced nodes use their dependencies as do not count. The inputs are
+        not modified; the result consists of new nodes.
 
         For example, suppose we have the following dependency graph:
 

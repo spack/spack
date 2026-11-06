@@ -229,7 +229,6 @@ def test_splicing_the_original_back_gives_the_original_spec():
     assert out.dag_hash() == spec.dag_hash()
 
 
-@pytest.mark.xfail(strict=True, reason="virtuals the target uses a node as bind its replacement")
 def test_intransitive_splice_ignores_virtuals_only_the_target_uses():
     """Intransitive splices ignore how the target used its dependencies."""
     glibc = node("glibc@2")  # shared by spec and replacement
