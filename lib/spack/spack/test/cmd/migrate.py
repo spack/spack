@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import os
 import sys
 from pathlib import Path
 
@@ -57,9 +57,9 @@ def test_migrate_undo_restores_old_layout(mock_spack_instance, monkeypatch):
 
     # Layout scope should point to old locations
     layout_text = (layout / "config.yaml").read_text(encoding="utf-8")
-    assert str(old_licenses) in layout_text
-    assert str(old_envs) in layout_text
-    assert str(old_gpg) in layout_text
+    assert os.path.join("$spack", "etc", "spack", "licenses") in layout_text
+    assert os.path.join("$spack", "var", "spack", "environments") in layout_text
+    assert os.path.join("$spack", "opt", "spack", "gpg") in layout_text
 
     # The tracked standard scopes file is not touched
     standard_scopes = (
@@ -303,9 +303,15 @@ def test_migrate_can_alternate_between_old_and_new_layout(mock_spack_instance, m
 
     # Check that config now points to old locations
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
-    assert str(old_licenses) in spack.config.CONFIG.get("config:license_dir")
-    assert str(old_envs) in spack.config.CONFIG.get("config:environments_root")
-    assert str(old_gpg) in spack.config.CONFIG.get("config:gpg_path")
+    assert str(old_licenses) in spack.config.canonicalize_path(
+        spack.config.CONFIG.get("config:license_dir")
+    )
+    assert str(old_envs) in spack.config.canonicalize_path(
+        spack.config.CONFIG.get("config:environments_root")
+    )
+    assert str(old_gpg) in spack.config.canonicalize_path(
+        spack.config.CONFIG.get("config:gpg_path")
+    )
 
     # Round 3: use-new-layout again should work
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())

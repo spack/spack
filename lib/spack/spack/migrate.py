@@ -1609,33 +1609,27 @@ def migrate_spack_prefix(old_resources):
 def _force_old_layout(to_move) -> List[str]:
     config_path = os.path.join(spack.paths.layout_scope_path, "config.yaml")
 
-    config_changes: Dict[str, Any] = {}
+    config_changes: Dict[str, Dict[str, Any]] = {"config": {}}
     retained_resources: List[str] = []
+
+    # populates config_changes with any changes from to_move
+    generate_old_layout_config(to_move, config_changes)
 
     if to_move.get("installs"):
         retained_resources.append("existing installs")
-        config_changes["install_tree"] = {"root": os.path.join("$spack", "opt", "spack")}
 
-    old_gpg_home = spack.paths.old_gpg_path.replace(spack.paths.prefix, "$spack")
-    old_gpg_keys = spack.paths.old_gpg_keys_path.replace(spack.paths.prefix, "$spack")
     if to_move.get("gpg_keys"):
-        config_changes["gpg_path"] = old_gpg_home
-        config_changes["gpg_keys_path"] = old_gpg_keys
-        retained_resources.append(f"GPG data ({old_gpg_home})")
+        retained_resources.append(f"GPG data ({spack.paths.old_gpg_path})")
 
     if to_move.get("licenses"):
-        old_licenses = spack.paths.old_licenses_path.replace(spack.paths.prefix, "$spack")
-        config_changes["license_dir"] = old_licenses
-        retained_resources.append(f"licenses ({old_licenses})")
+        retained_resources.append(f"licenses ({spack.paths.old_licenses_path})")
 
     if to_move.get("environments"):
-        old_envs = spack.paths.old_envs_path.replace(spack.paths.prefix, "$spack")
-        config_changes["environments_root"] = old_envs
-        retained_resources.append(f"environments ({old_envs})")
+        retained_resources.append(f"environments ({spack.paths.old_envs_path})")
 
     # Write config scope files to the layout scope only if we have config changes
-    if config_changes:
-        spack.config.write_config_file(config_path, {"config": config_changes})
+    if config_changes["config"]:
+        spack.config.write_config_file(config_path, config_changes)
         tty.debug(f"Wrote config.yaml to {config_path}")
     else:
         tty.debug("No config changes needed, skipping config.yaml")
@@ -1663,25 +1657,27 @@ def force_old_layout(to_move, print_message=True):
 
 
 def generate_old_layout_config(old_resources, scope_config):
-    if old_resources["installs"]:
+    if old_resources.get("installs"):
         scope_config["config"]["install_tree"] = {
-            "root": os.path.join(spack.paths.prefix, "opt", "spack")
+            "root": os.path.join("$spack", "opt", "spack")
         }
         tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
-    if old_resources["gpg_keys"]:
-        old_gpg_home = spack.paths.old_gpg_path
-        old_gpg_keys = spack.paths.old_gpg_keys_path
+    if old_resources.get("gpg_keys"):
+        old_gpg_home = spack.paths.old_gpg_path.replace(spack.paths.prefix, "$spack")
+        old_gpg_keys = spack.paths.old_gpg_keys_path.replace(spack.paths.prefix, "$spack")
         scope_config["config"]["gpg_path"] = old_gpg_home
         scope_config["config"]["gpg_keys_path"] = old_gpg_keys
         tty.debug(f"Keeping GPG data in {old_gpg_home} and {old_gpg_keys}")
 
-    if old_resources["licenses"]:
-        scope_config["config"]["license_dir"] = spack.paths.old_licenses_path
+    if old_resources.get("licenses"):
+        old_license_path = spack.paths.old_licenses_path.replace(spack.paths.prefix, "$spack")
+        scope_config["config"]["license_dir"] = old_license_path
         tty.debug(f"Keeping licenses in {spack.paths.old_licenses_path}")
 
-    if old_resources["environments"]:
-        scope_config["config"]["environments_root"] = spack.paths.old_envs_path
+    if old_resources.get("environments"):
+        old_envs_path = spack.paths.old_envs_path.replace(spack.paths.prefix, "$spack")
+        scope_config["config"]["environments_root"] = old_envs_path
         tty.debug(f"Keeping environments in {spack.paths.old_envs_path}")
 
 
