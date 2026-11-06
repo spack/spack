@@ -11,6 +11,7 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.rewiring
+from spack.binary_distribution import _SpliceAnalogs
 from spack.old_installer import PackageInstaller
 from spack.store import Store
 from spack.test.relocate import text_in_bin
@@ -180,3 +181,15 @@ def test_rewire_virtual(mock_fetch, install_mockery):
 
     # check for correct prefix paths
     check_spliced_spec_prefixes(spliced_spec)
+
+
+def test_splice_analogs(mock_packages, config):
+    """Nodes of a spliced spec map to the build spec nodes they replaced."""
+    spec = spack.concretize.concretize_one("splice-vt^splice-a")
+    spliced = spec.splice(spack.concretize.concretize_one("splice-h"), transitive=True)
+    build_spec = spliced.build_spec
+    analogs = _SpliceAnalogs(spliced)
+
+    assert analogs(spliced) is build_spec
+    assert analogs(spliced["splice-h"]) is build_spec["splice-a"]
+    assert analogs(spliced["splice-z"]) is build_spec["splice-z"]

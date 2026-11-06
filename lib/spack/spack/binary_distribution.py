@@ -2073,49 +2073,26 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def _virtuals_by_node(root: spack.spec.Spec) -> Dict[int, Set[str]]:
-    """Return the virtuals each node in the DAG of ``root`` provides, in the context of ``root``,
-    keyed by the ``id`` of the node. Same semantics as ``Spec._virtuals_provided``.
-    """
-    result: Dict[int, Set[str]] = defaultdict(set)
-    result[id(root)] = {v.name for v in root.provided_virtuals}
-    for edge in root.traverse_edges(root=False, cover="edges"):
-        result[id(edge.spec)].update(edge.virtuals)
-    return result
-
-
 class _SpliceAnalogs:
-    """Finds the node of the build spec that a node of a spliced spec replaced.
+    """Maps each node of a spliced spec to its counterpart in the build spec, by name or virtual.
 
-    Candidates are the nodes of the build spec that ``Spec._splice_match`` accepts: those with the
-    same name, and those providing a superset of the virtuals the node provides.
-
-    Among them, same name is preferred, then higher version, then the first in traversal order,
-    as in ``Spec.splice``. The index is built in a single pass over the DAGs of both specs.
-    """
+    Assumes that names and virtuals are unique among the link/run/test dependencies of the build
+    spec."""
 
     def __init__(self, spec: spack.spec.Spec) -> None:
-        # Candidates are referred to by their position in traversal order
-        self.candidates = list(spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
-        self.by_name: Dict[str, List[int]] = defaultdict(list)
-        self.by_virtual: Dict[str, Set[int]] = defaultdict(set)
-        build_spec_virtuals = _virtuals_by_node(spec.build_spec)
-        for i, d in enumerate(self.candidates):
-            self.by_name[d.name].append(i)
-            for virtual in build_spec_virtuals[id(d)]:
-                self.by_virtual[virtual].add(i)
-        self.spec_virtuals = _virtuals_by_node(spec)
+        non_build = dt.ALL & ~dt.BUILD
+        edges = list(spec.build_spec.traverse_edges(cover="edges", deptype=non_build))
+        self.by_name = {e.spec.name: e.spec for e in edges}
+        self.by_virtual = {v: e.spec for e in edges for v in e.virtuals}
+        self.used_as: Dict[int, Set[str]] = defaultdict(set)
+        for edge in spec.traverse_edges(root=False, cover="edges", deptype=non_build):
+            self.used_as[id(edge.spec)].update(edge.virtuals)
 
     def __call__(self, s: spack.spec.Spec) -> Optional[spack.spec.Spec]:
-        # For each virtual s provides, the candidates providing it
-        providers = [self.by_virtual.get(v, set()) for v in self.spec_virtuals[id(s)]]
-        # Candidates providing all virtuals of s; none if s provides no virtuals
-        common = set.intersection(*providers) if providers else set()
-        analogs = {*self.by_name.get(s.name, []), *common}
-        if not analogs:
-            return None
-        key = lambda i: (self.candidates[i].name == s.name, self.candidates[i].version, -i)
-        return self.candidates[max(analogs, key=key)]
+        if s.name in self.by_name:
+            return self.by_name[s.name]
+        analogs = {self.by_virtual.get(v) for v in self.used_as.get(id(s), ())}
+        return analogs.pop() if len(analogs) == 1 else None
 
 
 def _containing_prefix(path: bytes, prefixes: Container[bytes]) -> Optional[bytes]:
