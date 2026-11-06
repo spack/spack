@@ -4,6 +4,7 @@
 """Common basic functions used through the spack.bootstrap package"""
 
 import fnmatch
+import glob
 import importlib
 import os
 import re
@@ -56,13 +57,10 @@ def _try_import_from_store(module: str, query_spec: Union[str, "spack.spec.Spec"
     installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        # Spack v1.2 and older installed clingo binaries without their venv
-        venv = next(iter(candidate_spec.dependencies("python-venv")), None)
-        if venv is None or not spack.store.STORE.db.installed(venv):
-            continue
+        # The site-packages directories of the prefix, without importing packages from a repo
         module_paths = [
-            os.path.join(candidate_spec.prefix, venv.package.purelib),
-            os.path.join(candidate_spec.prefix, venv.package.platlib),
+            *glob.glob(os.path.join(candidate_spec.prefix, "lib*", "python*", "site-packages")),
+            *glob.glob(os.path.join(candidate_spec.prefix, "Lib", "site-packages")),
         ]
         path_before = list(sys.path)
 
