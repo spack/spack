@@ -618,3 +618,61 @@ def test_patch_reversed_patch_no_prompt(mock_packages, config, tmp_path, capfd):
     # bsd patch: "Ignoring previously applied (or reversed) patch"
     assert "previously applied" in out
     assert "Assume -R?" not in out
+
+
+def test_spack_patch_dir_env_var(mock_packages, tmp_path, monkeypatch):
+    """Test that patches can be loaded from SPACK_PATCH_DIR when the env var is set."""
+    # Create a temporary directory for patches
+    patch_dir = tmp_path / "patches"
+    patch_dir.mkdir()
+
+    # Copy a test patch to the patch directory
+    source_patch = os.path.join(data_path, "foo.patch")
+    target_patch = patch_dir / "foo.patch"
+    shutil.copyfile(source_patch, target_patch)
+
+    # Set the SPACK_PATCH_DIR environment variable
+    monkeypatch.setenv("SPACK_PATCH_DIR", str(patch_dir))
+
+    # Create a FilePatch with just the patch name (no path)
+    spec = spack.concretize.concretize_one("patch")
+    patch = spack.patch.FilePatch(spec.package, "foo.patch", level=1, working_dir=".")
+
+    # Verify that the patch path points to our SPACK_PATCH_DIR
+    assert patch.path == str(target_patch)
+    assert os.path.exists(patch.path)
+
+
+def test_spack_patch_dir_falls_back_to_package_dir(mock_packages, tmp_path, monkeypatch):
+    """Test that when a patch is not in SPACK_PATCH_DIR, it falls back to the package dir."""
+    # Create an empty patch directory
+    patch_dir = tmp_path / "patches"
+    patch_dir.mkdir()
+
+    # Set the SPACK_PATCH_DIR environment variable to the empty directory
+    monkeypatch.setenv("SPACK_PATCH_DIR", str(patch_dir))
+
+    # Create a FilePatch that doesn't exist in SPACK_PATCH_DIR
+    # This should fall back to looking in the package directory
+    spec = spack.concretize.concretize_one("patch")
+    patch = spack.patch.FilePatch(spec.package, "foo.patch", level=1, working_dir=".")
+
+    # Verify that the patch path points to the package directory
+    assert "builtin_mock" in patch.path or "mock" in patch.path
+    assert patch.path.endswith("foo.patch")
+    assert os.path.exists(patch.path)
+
+
+def test_spack_patch_dir_not_set(mock_packages, monkeypatch):
+    """Test that patches are loaded from package dir when SPACK_PATCH_DIR is not set."""
+    # Ensure SPACK_PATCH_DIR is not set
+    monkeypatch.delenv("SPACK_PATCH_DIR", raising=False)
+
+    # Create a FilePatch
+    spec = spack.concretize.concretize_one("patch")
+    patch = spack.patch.FilePatch(spec.package, "foo.patch", level=1, working_dir=".")
+
+    # Verify that the patch path points to the package directory
+    assert "builtin_mock" in patch.path or "mock" in patch.path
+    assert patch.path.endswith("foo.patch")
+    assert os.path.exists(patch.path)

@@ -195,23 +195,33 @@ class FilePatch(Patch):
         """
         self.relative_path = relative_path
 
-        # patches may be defined by relative paths to parent classes
-        # search mro to look for the file
+        # First, check if SPACK_PATCH_DIR is set and contains the patch file
         abs_path: Optional[str] = None
-        # At different times we call FilePatch on instances and classes
-        pkg_cls = pkg if isinstance(pkg, type) else pkg.__class__
-        for cls in pkg_cls.__mro__:  # type: ignore
-            if not hasattr(cls, "module"):
-                # We've gone too far up the MRO
-                break
+        spack_patch_dir = os.environ.get("SPACK_PATCH_DIR")
+        if spack_patch_dir:
+            # Try to find the patch file in SPACK_PATCH_DIR
+            candidate_path = os.path.join(spack_patch_dir, relative_path)
+            if os.path.exists(candidate_path):
+                abs_path = os.path.abspath(candidate_path)
 
-            # Cannot use pkg.package_dir because it's a property and we have
-            # classes, not instances.
-            pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
-            path = os.path.join(pkg_dir, self.relative_path)
-            if os.path.exists(path):
-                abs_path = path
-                break
+        # If not found in SPACK_PATCH_DIR, search in package directories
+        if abs_path is None:
+            # patches may be defined by relative paths to parent classes
+            # search mro to look for the file
+            # At different times we call FilePatch on instances and classes
+            pkg_cls = pkg if isinstance(pkg, type) else pkg.__class__
+            for cls in pkg_cls.__mro__:  # type: ignore
+                if not hasattr(cls, "module"):
+                    # We've gone too far up the MRO
+                    break
+
+                # Cannot use pkg.package_dir because it's a property and we have
+                # classes, not instances.
+                pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
+                path = os.path.join(pkg_dir, self.relative_path)
+                if os.path.exists(path):
+                    abs_path = path
+                    break
 
         if abs_path is None:
             msg = "FilePatch: Patch file %s for " % relative_path

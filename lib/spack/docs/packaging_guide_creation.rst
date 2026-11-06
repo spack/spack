@@ -2365,6 +2365,18 @@ The above patch file lives with the package file within the package repository d
            package.py
            ad_lustre_rwcontig_open_source.patch
 
+.. note::
+
+   You can also use the ``SPACK_PATCH_DIR`` environment variable to specify an alternative directory from which to load patch files.
+   When this variable is set, Spack will first look for the patch file in the directory specified by ``SPACK_PATCH_DIR``.
+   If the patch is not found there, Spack will fall back to looking in the package directory.
+   This is useful when you want to consolidate patches for multiple packages in a single directory.
+
+   .. code-block:: bash
+
+      export SPACK_PATCH_DIR=/path/to/patches
+      spack install mypackage
+
 URL patch file
 """"""""""""""
 
