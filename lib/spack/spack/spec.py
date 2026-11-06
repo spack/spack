@@ -2414,6 +2414,12 @@ class Spec:
         """Returns whether this Spec is being deployed as built i.e. whether it has been spliced"""
         return self.build_spec is not self
 
+    def edges_to_build_spec(self) -> Tuple[DependencySpec, ...]:
+        """The edge without dependency types to the build spec, if this spec is spliced"""
+        if not self.spliced:
+            return ()
+        return (DependencySpec(self, self.build_spec, depflag=0, virtuals=()),)
+
     @property
     def installed(self):
         """Whether the spec is installed, locally or in an upstream."""
@@ -2454,6 +2460,7 @@ class Spec:
         depth: Literal[False] = False,
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
+        build_specs: bool = ...,
     ) -> Iterable["Spec"]: ...
 
     @overload
@@ -2468,6 +2475,7 @@ class Spec:
         depth: Literal[True],
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
+        build_specs: bool = ...,
     ) -> Iterable[Tuple[int, "Spec"]]: ...
 
     def traverse(
@@ -2481,6 +2489,7 @@ class Spec:
         depth: bool = False,
         key: Callable[["Spec"], Any] = id,
         visited: Optional[Set[Any]] = None,
+        build_specs: bool = False,
     ) -> Iterable[Union["Spec", Tuple[int, "Spec"]]]:
         """Shorthand for :meth:`~spack.traverse.traverse_nodes`"""
         return spack.traverse.traverse_nodes(
@@ -2493,6 +2502,7 @@ class Spec:
             depth=depth,
             key=key,
             visited=visited,
+            build_specs=build_specs,
         )
 
     @overload
@@ -2507,6 +2517,7 @@ class Spec:
         depth: Literal[False] = False,
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
+        build_specs: bool = ...,
     ) -> Iterable[DependencySpec]: ...
 
     @overload
@@ -2521,6 +2532,7 @@ class Spec:
         depth: Literal[True],
         key: Callable[["Spec"], Any] = ...,
         visited: Optional[Set[Any]] = ...,
+        build_specs: bool = ...,
     ) -> Iterable[Tuple[int, DependencySpec]]: ...
 
     def traverse_edges(
@@ -2534,6 +2546,7 @@ class Spec:
         depth: bool = False,
         key: Callable[["Spec"], Any] = id,
         visited: Optional[Set[Any]] = None,
+        build_specs: bool = False,
     ) -> Iterable[Union[DependencySpec, Tuple[int, DependencySpec]]]:
         """Shorthand for :meth:`~spack.traverse.traverse_edges`"""
         return spack.traverse.traverse_edges(
@@ -2546,6 +2559,7 @@ class Spec:
             depth=depth,
             key=key,
             visited=visited,
+            build_specs=build_specs,
         )
 
     @property
