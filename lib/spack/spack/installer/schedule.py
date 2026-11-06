@@ -488,20 +488,12 @@ def schedule_builds(
 def _dependency_hashes(specs: List[spack.spec.Spec]) -> Set[str]:
     """DAG hashes of the dependencies, and build specs of spliced specs, of all specs reachable
     from the given specs."""
-    result: Set[str] = set()
-    visited: Set[str] = set()
-    stack = list(specs)
-    while stack:
-        spec = stack.pop()
-        if spec.dag_hash() in visited:
-            continue
-        visited.add(spec.dag_hash())
-        children = spec.dependencies()
-        if spec.spliced:
-            children.append(spec.build_spec)
-        result.update(child.dag_hash() for child in children)
-        stack.extend(children)
-    return result
+    return {
+        edge.spec.dag_hash()
+        for edge in spack.traverse.traverse_edges(
+            specs, root=False, cover="edges", key=spack.traverse.by_dag_hash, build_specs=True
+        )
+    }
 
 
 def _node_to_roots(roots: List[spack.spec.Spec]) -> Dict[str, FrozenSet[str]]:
