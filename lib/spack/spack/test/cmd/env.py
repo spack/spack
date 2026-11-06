@@ -2125,6 +2125,132 @@ def test_env_create_filter_rejects_lockfile(tmp_path: pathlib.Path):
         env("create", "--filter", _write_filter_yaml(tmp_path), "filtered", source.lock_path)
 
 
+def _write_plain_source(tmp_path: pathlib.Path) -> pathlib.Path:
+    """Create a source environment directory with no includes or relative paths."""
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    (source_dir / "spack.yaml").write_text("spack:\n  specs:\n  - libelf\n  view: false\n")
+    return source_dir
+
+
+@pytest.mark.parametrize("keep_relative", [False, True])
+@pytest.mark.parametrize("source_is_directory", [False, True])
+@pytest.mark.parametrize("relative_source", [False, True])
+def test_env_create_filter_relocates_paths_like_manifest_creation(
+    tmp_path: pathlib.Path,
+    monkeypatch,
+    keep_relative: bool,
+    source_is_directory: bool,
+    relative_source: bool,
+):
+    """Use ordinary manifest relocation rules without leaking staging paths or copying payloads."""
+    source_dir = _write_plain_source(tmp_path)
+    source_yaml = source_dir / "spack.yaml"
+    paths = {
+        "relative": "./src",
+        "outside": "../shared",
+        "absolute": str(tmp_path / "absolute"),
+        "env": "$env/from-env",
+        "braced_env": "${env}/from-env",
+        "variable": "$SPACK_FILTER_TEST_PATH",
+    }
+    monkeypatch.setenv("SPACK_FILTER_TEST_PATH", "./from-variable")
+    source_manifest = json.dumps(
+        {
+            "spack": {
+                "specs": [],
+                "view": False,
+                "develop": {
+                    name: {"spec": "libelf@0.8.13", "path": path} for name, path in paths.items()
+                },
+                "repos": paths,
+            }
+        }
+    )
+    source_yaml.write_text(source_manifest)
+    (source_dir / "src").mkdir()
+    (source_dir / "src" / "payload.txt").write_text("source-only payload")
+    filtered_dir = tmp_path / "filtered"
+    unfiltered_dir = tmp_path / "unfiltered"
+    filter_yaml = _write_filter_yaml(tmp_path)
+    options = ["--keep-relative"] if keep_relative else []
+    source_arg = source_dir if source_is_directory else source_yaml
+    source_arg = os.path.relpath(source_arg, tmp_path) if relative_source else str(source_arg)
+
+    with fs.working_dir(str(tmp_path)):
+        env(
+            "create",
+            *options,
+            "--without-view",
+            "--filter",
+            filter_yaml,
+            "-d",
+            str(filtered_dir),
+            source_arg,
+        )
+        # Filtering copies no payloads, so even a directory source should use the
+        # relocation rules for ordinary manifest creation, not whole-directory copying.
+        env("create", *options, "--without-view", "-d", str(unfiltered_dir), str(source_yaml))
+
+    for destination in (filtered_dir, unfiltered_dir):
+        expected_paths = dict(paths)
+        if not keep_relative:
+            expected_paths.update(
+                relative=str(source_dir / "src"),
+                outside=str(tmp_path / "shared"),
+                env=str(destination / "from-env"),
+                braced_env=str(destination / "from-env"),
+                variable=str(source_dir / "from-variable"),
+            )
+        created = ev.Environment(str(destination))
+        configuration = created.manifest.configuration
+        assert {name: entry["path"] for name, entry in configuration["develop"].items()} == (
+            expected_paths
+        )
+        assert configuration["repos"] == expected_paths
+    assert not (filtered_dir / "src").exists()
+    assert source_yaml.read_text() == source_manifest
+
+
+@pytest.mark.parametrize("umask", [0o022, 0o027])
+def test_env_create_filter_directory_follows_umask(tmp_path: pathlib.Path, umask: int):
+    """Create the environment directory with ordinary permissions, not mkdtemp's 0700."""
+    source_dir = _write_plain_source(tmp_path)
+    filtered_dir = tmp_path / "filtered"
+
+    old_umask = os.umask(umask)
+    try:
+        env(
+            "create",
+            "--filter",
+            _write_filter_yaml(tmp_path),
+            "-d",
+            str(filtered_dir),
+            str(source_dir),
+        )
+    finally:
+        os.umask(old_umask)
+
+    assert filtered_dir.stat().st_mode & 0o777 == 0o777 & ~umask
+
+
+def test_env_create_filter_leaves_no_staging_directory(tmp_path: pathlib.Path):
+    """Publish by rename without leaving the staging directory or failing on its cleanup."""
+    source_dir = _write_plain_source(tmp_path)
+    parent = tmp_path / "envs"
+
+    env(
+        "create",
+        "--filter",
+        _write_filter_yaml(tmp_path),
+        "-d",
+        str(parent / "filtered"),
+        str(source_dir),
+    )
+
+    assert [path.name for path in parent.iterdir()] == ["filtered"]
+
+
 @pytest.mark.parametrize("specs_filter", ["{}", "{block: [callpath]}", "{allow: [callpath]}"])
 def test_env_create_filter_defaults_to_abstract_specs(tmp_path: pathlib.Path, specs_filter: str):
     """Ignore the source concrete DAG when selecting or flattening abstract specs."""

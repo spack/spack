@@ -1081,18 +1081,34 @@ def _create_filtered_environment_in_dir(
                 f"cannot create filtered environment, {root} already exists"
             )
         root.parent.mkdir(parents=True, exist_ok=True)
-        source_dir = source_path if is_source_dir else source_path.parent
+        source_dir = (source_path if is_source_dir else source_path.parent).absolute()
 
         # Start empty rather than copying source files. Stage beside the destination
         # so the completed manifest/lockfile can be published together by a rename.
-        with tempfile.TemporaryDirectory(prefix=f".{root.name}-", dir=root.parent) as staged:
+        # Use a plain mkdir rather than tempfile: mkdtemp always creates mode 0700,
+        # which the rename would carry over, whereas mkdir honors the umask like an
+        # ordinary environment directory. Cleanup is explicit because the staged path
+        # no longer exists after a successful rename, and TemporaryDirectory raises
+        # FileNotFoundError on exit in that case on Python 3.6 and 3.7.
+        staged = root.parent / f".{root.name}-{uuid.uuid4().hex[:8]}"
+        staged.mkdir()
+        try:
             initialize_environment_dir(staged, envfile=None)
-            env = Environment(staged)
+            env = Environment(str(staged))
             _set_filtered_manifest(env, filtered_configuration)
-            # Relocate against the original source, not the temporary manifest wrapper.
-            if not keep_relative and env.path != str(source_dir):
-                _rewrite_relative_dev_paths_on_relocation(env, str(source_dir))
-                _rewrite_relative_repos_paths_on_relocation(env, str(source_dir))
+            if not keep_relative:
+                # Match ordinary creation: relative paths refer to the source, but
+                # $env refers to the destination. Substitute the final path, not staging.
+                path_config = spack.config.Configuration()
+                path_config.env_path = str(root)
+                # No payload was copied, even for a directory source, so do not use
+                # copied_env's exception for paths inside a copied environment.
+                _rewrite_relative_dev_paths_on_relocation(
+                    env, str(source_dir), path_config=path_config
+                )
+                _rewrite_relative_repos_paths_on_relocation(
+                    env, str(source_dir), path_config=path_config
+                )
 
             if filter_configuration["concrete"]:
                 _populate_filtered_lockfile(env, filtered_roots)
@@ -1103,21 +1119,35 @@ def _create_filtered_environment_in_dir(
                     f"cannot create filtered environment, {root} already exists"
                 )
             os.rename(staged, root)
+        except BaseException:
+            shutil.rmtree(staged, ignore_errors=True)
+            raise
 
-        return Environment(root)
+        return Environment(str(root))
 
 
-def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):
+def _rewrite_relative_dev_paths_on_relocation(
+    env,
+    init_file_dir,
+    copied_env=False,
+    *,
+    path_config: Optional[spack.config.Configuration] = None,
+):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
-    relative paths to absolute ones."""
+    relative paths to absolute ones.
+
+    path_config optionally supplies the final $env path when writing a staged environment.
+    """
     with env:
         dev_specs = spack.config.CONFIG.get("develop", default={}, scope=env.scope_name)
         if not dev_specs:
             return
         for name, entry in dev_specs.items():
-            dev_path = substitute_path_variables(entry["path"])
-            expanded_path = spack.config.canonicalize_path(dev_path, default_wd=init_file_dir)
+            dev_path = substitute_path_variables(entry["path"], config=path_config)
+            expanded_path = spack.config.canonicalize_path(
+                dev_path, default_wd=init_file_dir, config=path_config
+            )
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry["path"] == expanded_path:
@@ -1139,10 +1169,19 @@ def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=Fal
         env._re_read()
 
 
-def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=False):
+def _rewrite_relative_repos_paths_on_relocation(
+    env,
+    init_file_dir,
+    copied_env=False,
+    *,
+    path_config: Optional[spack.config.Configuration] = None,
+):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
-    relative repo paths to absolute ones and expand environment variables."""
+    relative repo paths to absolute ones and expand environment variables.
+
+    path_config optionally supplies the final $env path when writing a staged environment.
+    """
     with env:
         repos_specs = spack.config.CONFIG.get("repos", default={}, scope=env.scope_name)
         if not repos_specs:
@@ -1151,8 +1190,10 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=F
             # only rewrite when we have a path-based repository
             if not isinstance(entry, str):
                 continue
-            repo_path = substitute_path_variables(entry)
-            expanded_path = spack.config.canonicalize_path(repo_path, default_wd=init_file_dir)
+            repo_path = substitute_path_variables(entry, config=path_config)
+            expanded_path = spack.config.canonicalize_path(
+                repo_path, default_wd=init_file_dir, config=path_config
+            )
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry == expanded_path:
