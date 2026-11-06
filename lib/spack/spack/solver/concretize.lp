@@ -1548,6 +1548,7 @@ variant_penalty(node(NodeID, Package), Variant, Value, Penalty) :-
     not variant_default_value(node(NodeID, Package), Variant, Value),
     % variants set explicitly from a directive don't count as non-default
     not attr("variant_set", node(NodeID, Package), Variant, Value),
+    not gpu_constrained_value(node(NodeID, Package), Variant, Value),
     % variant values forced by propagation don't count as non-default
     not propagated_variant_value(node(NodeID, Package), Variant, Value).
 
@@ -2041,6 +2042,29 @@ node_target_compatible(ChildNode, ParentTarget)
     target_compatible(ParentTarget, ChildTarget).
 
 #defined target_satisfies/2.
+
+% A compatible GPU form (e.g. cuda_arch=:86) is satisfied when some value of the variant is
+% a target the constraint accepts; the value is then counted as set, not as a non-default
+gpu_constraint_met(PackageNode, Variant, Constraint)
+  :- attr("variant_value", PackageNode, Variant, Value), gpu_target_satisfies(Constraint, Value).
+
+attr("gpu_variant_satisfies", PackageNode, Variant, Constraint)
+  :- gpu_constraint_met(PackageNode, Variant, Constraint).
+
+attr("variant_set", PackageNode, Variant) :- attr("gpu_variant_satisfies", PackageNode, Variant, _).
+
+gpu_constrained_value(PackageNode, Variant, Value)
+  :- attr("gpu_variant_satisfies", PackageNode, Variant, Constraint),
+     attr("variant_value", PackageNode, Variant, Value),
+     gpu_target_satisfies(Constraint, Value).
+
+error(10, "No GPU target of '{0}' satisfies '{1}={2}' on this host", Package, Variant, Constraint)
+  :- attr("gpu_variant_satisfies", node(X, Package), Variant, Constraint),
+     not gpu_constraint_met(node(X, Package), Variant, Constraint).
+
+#defined gpu_target_satisfies/2.
+#defined gpu_target_weight/3.
+
 compiler(Compiler) :- target_supported(Compiler, _, _).
 
 % Can't use targets on node if the compiler for the node doesn't support them
@@ -2584,6 +2608,14 @@ compiler_penalty(PackageNode, C-1) :-
     Weight@Priority, node(X, Package)
     : node_target_weight(node(X, Package), Weight),
       not runtime(Package),
+      opt_priority(Priority, _, _, _, "non-preferred targets")
+}.
+
+#minimize{
+    Weight@Priority, node(X, Package), Variant, Constraint
+    : attr("gpu_variant_satisfies", node(X, Package), Variant, Constraint),
+      attr("variant_value", node(X, Package), Variant, Value),
+      gpu_target_weight(Constraint, Value, Weight),
       opt_priority(Priority, _, _, _, "non-preferred targets")
 }.
 
