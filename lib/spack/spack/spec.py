@@ -4925,9 +4925,9 @@ class Spec:
                 is a copy of ``other``.
 
         Raises:
-            SpliceError: if there is nothing to replace, or the result would not be a valid spec:
-                a dependency cycle, a virtual that is not provided, or more nodes of a name or
-                providers of a virtual than in the spec.
+            spack.spec.SpliceError: if there is nothing to replace, or the result would have a
+                dependency cycle, a virtual that is not provided, or more nodes of a name or
+                providers of a virtual than the spec.
 
         Returns: a concrete, spliced version of the current :class:`Spec`
 
