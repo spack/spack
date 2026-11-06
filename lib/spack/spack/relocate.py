@@ -179,26 +179,25 @@ def _macholib_get_paths(cur_path):
 
 
 def _set_elf_rpaths_and_interpreter(
-    target: str, rpaths: List[str], interpreter: Optional[str] = None
+    target: str, rpaths: Optional[List[str]], interpreter: Optional[str] = None
 ) -> Optional[str]:
     """Replace the original RPATH of the target with the paths passed as arguments.
 
     Args:
         target: target executable. Must be an ELF object.
-        rpaths: paths to be set in the RPATH
+        rpaths: optionally set the RPATH to these paths
         interpreter: optionally set the interpreter
 
     Returns:
         A string concatenating the stdout and stderr of the call to ``patchelf`` if it was invoked
     """
-    # Join the paths using ':' as a separator
-    rpaths_str = ":".join(rpaths)
-
     try:
         # TODO: error handling is not great here?
         # TODO: revisit the use of --force-rpath as it might be conditional
         # TODO: if we want to support setting RUNPATH from binary packages
-        args = ["--force-rpath", "--set-rpath", rpaths_str]
+        args: List[str] = []
+        if rpaths is not None:
+            args.extend(["--force-rpath", "--set-rpath", ":".join(rpaths)])
         if interpreter:
             args.extend(["--set-interpreter", interpreter])
         args.append(target)
@@ -251,7 +250,7 @@ def relocate_elf_binaries(
             )
         except elf.ElfCStringUpdatesFailed as e:
             # Fall back to `patchelf --set-rpath ... --set-interpreter ...`
-            rpaths = e.rpath.new_value.decode("utf-8").split(":") if e.rpath else []
+            rpaths = e.rpath.new_value.decode("utf-8").split(":") if e.rpath else None
             interpreter = e.pt_interp.new_value.decode("utf-8") if e.pt_interp else None
             _set_elf_rpaths_and_interpreter(path, rpaths=rpaths, interpreter=interpreter)
 
