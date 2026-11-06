@@ -13,7 +13,7 @@ from typing import Any, Dict
 
 import spack.schema.merged
 
-from .spec_list import spec_list_properties, spec_list_schema
+from .spec_list import spec_list_properties, spec_list_schema, spec_with_options_schema
 
 #: Top level key in a manifest file
 TOP_LEVEL_KEY = "spack"
@@ -89,6 +89,7 @@ properties: Dict[str, Any] = {
                             "additionalProperties": False,
                             "properties": {**group_name_and_deps, "specs": spec_list_schema},
                         },
+                        spec_with_options_schema,
                     ]
                 },
             },

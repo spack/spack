@@ -8,6 +8,7 @@ import sys
 import spack
 import spack.binary_distribution
 import spack.cmd
+import spack.environment as ev
 import spack.package_base
 import spack.spec
 import spack.store
@@ -97,7 +98,9 @@ def spec(parser, args):
     show_status = args.install_status
     if show_status:
         spack.binary_distribution.load_buildcache_index()
-        status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+        status_fn = ev.install_status_fn(
+            spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+        )
     else:
         status_fn = None
 
