@@ -156,6 +156,12 @@ For example, you can filter out the proprietary software from an environment tha
 Another use-case can arise when debugging - proprietary software can be filtered out before passing the environment to a vendor to debug.
 This feature can also be used to simplify an environment to only the portion relevant for a particular use-case (eliminating packages or config sections).
 
+.. warning::
+
+   Spec filtering does not remove every reference to excluded software from configuration.
+   Retained sections and group overrides may still contain package names, paths, or other sensitive values.
+   Review the generated manifest before sharing it; the configuration filtering limits are described below.
+
 Suppose ``licensed-env`` contains ``openblas`` and a proprietary package, ``licensed-solver``, which depends on ``libelf``.
 
 .. code-block:: yaml
@@ -263,6 +269,15 @@ If no roots remain, Spack creates an environment with no roots; in concrete mode
 
 Under ``config:``, ``allow`` lists the configuration sections to copy and ``block`` lists the sections to omit.
 Empty lists mean copy all sections and block none, respectively.
+If a section appears in both lists, ``block`` takes precedence.
+These rules match top-level section names, such as ``develop`` or ``modules``, not nested configuration paths or spec constraints.
+Except for the special handling described below, retained sections are copied whole: their contents are not filtered against ``specs:allow`` or ``specs:block``.
+Copied sections come from the source manifest, not merged global configuration or overrides from another active environment.
+This controls what is written to the new manifest; the new environment can still inherit settings from other Spack configuration scopes when used.
+
+The ``specs`` section is always rebuilt using the spec filter, even if ``config:allow`` omits ``specs`` or ``config:block`` names it.
+Explicit ``--with-view`` or ``--without-view`` options override the copied or filtered ``view`` setting.
+Omitting ``view`` through the config filter does not itself disable views; use ``--without-view`` for that.
 
 Filtered environments never copy configuration ``include:`` entries or their files.
 If the source has includes, add ``include`` to ``config:block``; otherwise Spack stops with an error.
@@ -275,6 +290,7 @@ Unlike copying an entire unfiltered environment directory, filtering does not co
 
 The ``packages`` setting further controls entries within the copied ``packages:`` section.
 It defaults to ``all``.
+It has no effect if the whole ``packages`` section was excluded by ``config:allow`` or ``config:block``.
 Set it to ``externals_only`` to retain only package entries that declare externals, or use ``allow`` and ``block`` to select package names:
 
 .. code-block:: yaml
@@ -285,9 +301,59 @@ Set it to ``externals_only`` to retain only package entries that declare externa
        block: [libelf]
 
 An empty ``packages:allow`` list allows all package entries; an empty ``packages:block`` list blocks none.
+These lists match literal package-entry names; ``all`` in a list selects the ``packages:all`` entry rather than acting as a wildcard.
 Each retained entry is copied whole, including all of its externals.
+``externals_only`` selects entries containing an ``externals`` key, even an empty list; it does not filter individual external specs or versions.
 The ``packages`` filter still applies, but ``specs:block`` removes matching package entries even if that filter would retain them.
-It does not rewrite references to blocked specs inside other package entries.
+This removal uses the package name in each block constraint: blocking ``licensed-solver@1.0`` removes the entire ``packages:licensed-solver`` entry, not just that version.
+``specs:allow`` does not restrict which package configuration entries are copied.
+References to blocked specs inside other package entries are not rewritten.
+
+**Current Filtering Limits**
+
+The filter does not recursively remove spec references from arbitrary configuration.
+In particular, the following content can remain even when it mentions a blocked package:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 75
+
+   * - Retained content
+     - Current behavior
+   * - ``definitions``
+     - Copied unchanged, including entries naming excluded packages.
+       Abstract root selection uses expanded definitions and matrices, but the retained ``definitions`` section is not pruned.
+   * - ``develop``
+     - Package entries and their spec constraints are not pruned.
+       Only the path relocation described above is applied unless ``--keep-relative`` is used.
+   * - ``concretizer``
+     - Reuse include/exclude lists, reuse sources, splice rules, and other settings are copied unchanged.
+       No constraints are added to prevent future concretization from selecting a blocked package.
+   * - ``modules`` and ``view``
+     - Spec selectors, include/exclude lists, defaults, and projection rules are not rewritten to match the retained roots.
+       Explicit view options can replace the copied ``view`` configuration as described above.
+   * - Fields inside retained ``packages`` entries
+     - Requirements, provider preferences, compiler preferences, and external lists are copied unchanged, even if they refer to excluded packages.
+   * - Spec-group ``override`` mappings
+     - Copied unchanged along with the group's metadata, even for an empty group.
+       Top-level config and package filters do not recurse into these mappings.
+   * - Other configuration sections
+     - Copied whole when selected by the config filter.
+       Path-based ``repos`` entries receive relocation handling, but other embedded paths and spec references are not generally rewritten.
+
+For example, ``specs:block: [licensed-solver]`` does not remove ``develop:licensed-solver`` or a requirement for ``^licensed-solver`` inside ``packages:openblas``.
+To omit whole sections whose contents should not be copied, name them in ``config:block``:
+
+.. code-block:: yaml
+
+   filter:
+     specs:
+       block: [licensed-solver]
+     config:
+       block: [include, definitions, develop, modules]
+
+This removes those top-level sections, not similarly named settings inside group overrides.
+Review retained sections and overrides separately; the filter is not a general-purpose configuration sanitization tool.
 
 **Formatting Specs**
 
