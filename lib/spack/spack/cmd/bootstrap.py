@@ -27,13 +27,11 @@ section = "admin"
 level = "long"
 
 
-# Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v2.2/bootstrap-buildcache.tar.gz"
-
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
 
-#: Metadata of the bootstrapping source whose binaries are in the tarball
+#: Metadata of the bootstrapping source whose binaries are in a tarball, that can be added to a
+#: local mirror
 BINARY_METADATA = "$spack/share/spack/bootstrap/github-actions-v2/metadata.yaml"
 
 # Metadata for a generated source mirror
@@ -395,11 +393,14 @@ def _mirror(args):
         spack.util.tty.set_msg_enabled(True)
 
     if args.binary_packages:
+        with open(spack.config.canonicalize_path(BINARY_METADATA), encoding="utf-8") as f:
+            metadata = spack.util.spack_yaml.load(f)
+        tarball = metadata["info"]["tarball"]
         msg = 'Adding binary packages from "{0}" to the mirror at {1}'
-        spack.util.tty.msg(msg.format(BINARY_TARBALL, mirror_dir))
+        spack.util.tty.msg(msg.format(tarball, mirror_dir))
         spack.util.tty.set_msg_enabled(False)
         stage = spack.stage.stage_from_config(
-            BINARY_TARBALL, path=tempfile.mkdtemp(), config=spack.config.CONFIG
+            tarball, path=tempfile.mkdtemp(), config=spack.config.CONFIG
         )
         stage.create()
         stage.fetch()
@@ -426,13 +427,10 @@ def _mirror(args):
     _, rel_directory = write_metadata(subdir="sources", metadata=SOURCE_METADATA)
     instructions += cmd.format("local-sources", rel_directory)
     if args.binary_packages:
-        with open(spack.config.canonicalize_path(BINARY_METADATA), encoding="utf-8") as f:
-            metadata = spack.util.spack_yaml.load(f)
         metadata["description"] = "Buildcache copied from a public tarball available on GitHub."
         # This is a misnomer since it's not a URL; but file urls cannot
         # represent relative paths, so we have to live with it for now.
         metadata["info"]["url"] = os.path.join("..", "..", LOCAL_MIRROR_DIR)
-        metadata["info"]["tarball"] = BINARY_TARBALL
         _, rel_directory = write_metadata(subdir="binaries", metadata=metadata)
         instructions += cmd.format("local-binaries", rel_directory)
     print(instructions)

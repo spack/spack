@@ -6,6 +6,7 @@ info:
   url: oci://ghcr.io/spack/bootstrap-buildcache-v2.2
   homepage: https://github.com/spack/spack-bootstrap-mirrors
   releases: https://github.com/spack/spack-bootstrap-mirrors/releases
+  tarball: https://github.com/spack/spack-bootstrap-mirrors/releases/download/v2.2/bootstrap-buildcache.tar.gz
 # sha256 sum of the binary of each node, by DAG hash
 sha256:
   25dprxujaujfwj7nkshafphsv5igm64w: 7313843c3445e910798b6621a989b2881c65b1cbafd80b883cba697b7d9d608f

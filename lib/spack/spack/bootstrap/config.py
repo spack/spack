@@ -46,12 +46,17 @@ def spec_for_current_python() -> str:
     return f"python@{version_str}"
 
 
-def interpreter_dirname() -> str:
-    """Return a directory name that identifies the interpreter running Spack and the host"""
+def environment_path(prefix: str = "") -> str:
+    """Return the path of a bootstrapping environment for the interpreter running Spack.
+
+    Args:
+        prefix: prefix of the directory name, which otherwise identifies the interpreter
+    """
     python_part = spec_for_current_python().replace("@", "")
     arch_part = spack.vendor.archspec.cpu.host().family
     interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
-    return f"{python_part}-{arch_part}-{interpreter_part}"
+    dirname = f"{prefix}{python_part}-{arch_part}-{interpreter_part}"
+    return os.path.join(root_path(), "environments", dirname)
 
 
 def root_path() -> str:
