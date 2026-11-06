@@ -21,8 +21,9 @@ import spack.store
 from spack.error import ExplicitDatabaseUpgradeError
 from spack.util import tty
 
-#: Name of the configuration scope that is present only in the bootstrapping configuration
-_SCOPE_NAME = "bootstrap"
+#: Name of the configuration scope that is present only in the bootstrapping configuration. The
+#: leading underscore marks it as reserved for Spack.
+SCOPE_NAME = "_bootstrap"
 
 
 def is_bootstrapping() -> bool:
@@ -30,7 +31,7 @@ def is_bootstrapping() -> bool:
 
     The answer is read from the configuration, which installer child processes inherit.
     """
-    return _SCOPE_NAME in spack.config.CONFIG.scopes
+    return SCOPE_NAME in spack.config.CONFIG.scopes
 
 
 def spec_for_current_python() -> str:
@@ -145,7 +146,7 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     config_scopes: MutableSequence["spack.config.ConfigScope"] = [
         spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)
     ]
-    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, (_SCOPE_NAME, _config_path()))
+    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, (SCOPE_NAME, _config_path()))
     for name, path in configuration_paths:
         generic_scope = spack.config.DirectoryConfigScope(name, path)
         config_scopes.append(generic_scope)
