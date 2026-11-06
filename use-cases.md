@@ -448,7 +448,7 @@ Expected `--reuse-old` behavior:
 - explicit old repository destinations remain unchanged;
 - new repositories without explicit destinations use the isolated location defaults.
 
-`--reuse-old --overwrite` is rejected because preserving and replacing the same target are contradictory operations. `--reuse-old` is also rejected when the layout scope already contains `config.yaml`; isolation does not merge generated settings into an existing layout configuration.
+`--reuse-old --overwrite` is rejected because preserving and replacing the same target are contradictory operations.
 
 ## 4.4 Isolation and the layout scope
 
