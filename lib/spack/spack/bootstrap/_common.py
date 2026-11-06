@@ -60,6 +60,7 @@ def _try_import_from_store(module: str, query_spec: Union[str, "spack.spec.Spec"
         # The site-packages directories of the prefix, without importing packages from a repo
         module_paths = [
             *glob.glob(os.path.join(candidate_spec.prefix, "lib*", "python*", "site-packages")),
+            # The layout on Windows
             *glob.glob(os.path.join(candidate_spec.prefix, "Lib", "site-packages")),
         ]
         path_before = list(sys.path)
