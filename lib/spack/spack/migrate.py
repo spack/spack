@@ -52,7 +52,7 @@ def detect_old_resources() -> Dict[str, bool]:
             tty.die(
                 f"Spack encountered a permission error at {e.filename} while attempting to read "
                 "old storage locations to migrate data. Fix the permissions or contact an admin "
-                "of this Spack instance to run `spack migrate`."
+                "of this Spack instance to run spack migration."
             )
 
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
@@ -1745,14 +1745,14 @@ def perform_migration():
                         tty.die(
                             f"PermissionError accessing {e.filename}. Writing to the Spack prefix "
                             "is required to migrate your Spack data. Fix the permissions or "
-                            "contact someone with permissions to run `spack migrate`."
+                            "contact someone with permissions to run the spack migration."
                         )
         except spack.util.lock.LockPermissionError:
             # Read-only prefix
             tty.die(
                 "The spack prefix is not writable. "
                 "Writing to the Spack prefix is required to migrate to new data storage locations."
-                " Contact an admin of the Spack instance to run `spack migrate`."
+                " Contact an admin of the Spack instance to run the spack migration."
             )
         except spack.util.lock.LockTimeoutError as e:
             # Some other migration process is taking too long, bail vs. hang
