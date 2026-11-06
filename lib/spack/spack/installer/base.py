@@ -10,6 +10,7 @@ import io
 import os
 import re
 import selectors
+import signal
 import socket
 import sys
 import threading
@@ -50,10 +51,18 @@ class ExitCode:
 #: while the terminal is headless (there is no signal for it).
 HEADLESS_WAKE_INTERVAL = 1.0
 
-#: Selector data keys registered by the terminal and dispatched by the event loop
+#: Selector data keys dispatched by the event loop
 STDIN_EVENT = "stdin"
 SIGWINCH_EVENT = "sigwinch"
 JOBSERVER_EVENT = "jobserver"
+SIGNAL_EVENT = "signal"
+
+#: Signals on which the event loop stops and cleans up
+if sys.platform == "win32":
+    # Windows cannot send SIGTERM to another process, it terminates the process instead
+    TERMINATION_SIGNALS = ()
+else:
+    TERMINATION_SIGNALS = (signal.SIGTERM, signal.SIGHUP)
 
 
 class BuildChannels(NamedTuple):
