@@ -4,13 +4,14 @@
 
 import json
 import os
+import re
 
 import pytest
 
 import spack.concretize
 import spack.spec
 import spack.variant
-from spack.hooks.sbom_generate import generate_spdx_2_3, post_install, sbom_path
+from spack.hooks.sbom_generate import generate_spdx_2_3, post_install, sbom_path, spdx_package_id
 
 
 def test_sbom_generated_with_post_install(mock_packages, install_mockery):
@@ -449,3 +450,32 @@ def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
     assert dep_entry["versionInfo"] == str(dep.version)
     assert dep_entry["downloadLocation"] == "https://example.com/callpath.tar.gz"
     assert dep_entry["checksums"] == [{"algorithm": "SHA256", "checksumValue": "b" * 64}]
+
+
+@pytest.mark.parametrize(
+    "version,expected",
+    [
+        ("=1.2.3", "SPDXRef-PACKAGE-pkg-1.2.3"),
+        ("=2023_03_1", "SPDXRef-PACKAGE-pkg-2023-03-1"),
+        (f"git.{'a' * 40}=main", f"SPDXRef-PACKAGE-pkg-git.{'a' * 40}-main"),
+    ],
+)
+def test_spdx_package_id_uses_only_allowed_characters(version, expected):
+    """SPDX IDs contain only letters, numbers, "." and "-" (SPDX 2.3, clause 7.2)."""
+    assert spdx_package_id(spack.spec.Spec(f"pkg@{version}")) == expected
+
+
+def test_sbom_ids_are_valid_spdx(mock_packages, install_mockery):
+    """Every SPDX ID written to the SBOM, and every reference to one, is valid."""
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    generate_spdx_2_3(spec)
+
+    with open(sbom_path(spec, "spdx-2.3"), encoding="utf-8") as f:
+        sbom = json.load(f)
+
+    ids = {sbom["SPDXID"]} | {pkg["SPDXID"] for pkg in sbom["packages"]}
+    for rel in sbom["relationships"]:
+        assert rel["spdxElementId"] in ids
+        assert rel["relatedSpdxElement"] in ids
+    for spdx_id in ids:
+        assert re.fullmatch(r"SPDXRef-[A-Za-z0-9.\-]+", spdx_id)
