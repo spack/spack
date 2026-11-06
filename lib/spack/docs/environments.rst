@@ -545,6 +545,8 @@ Use ``--json`` for a machine-readable output.
 The exit status is 0 whenever the comparison succeeds, so the differences can be shown, for instance in a CI log, without failing the job.
 With ``--exit-code``, the exit status is 4 if the two environments differ and 0 if they do not.
 
+Environments that include concrete environments (see :ref:`environment_include_concrete`) can be compared only if the included root specs, and the concrete specs they produced, are the same in both.
+
 To compare two specs instead of two environments, use ``spack diff --specs`` (see :ref:`cmd-spack-diff`).
 
 

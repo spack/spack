@@ -884,3 +884,41 @@ def test_diff_exit_code_tells_whether_specs_differ(install_mockery, mock_fetch, 
 
     diff_cmd("--specs", "--exit-code", before, after, fail_on_error=False)
     assert diff_cmd.returncode == spack.cmd.diff.EXIT_DIFFERENT
+
+
+def _including(base: str, specs: str = "[]") -> str:
+    """Manifest of an environment that includes the lockfile of the named environment base."""
+    lockfile = os.path.join(ev.root(base), ev.lockfile_name)
+    return f"spack:\n  include:\n  - {lockfile}\n  specs: {specs}\n"
+
+
+@_needs_environments
+@pytest.mark.parametrize("as_lockfile", [False, True])
+def test_diff_refuses_environments_including_different_concrete_environments(
+    concretized_env, as_lockfile
+):
+    """Two environments including different concrete environments cannot be compared yet."""
+    concretized_env("base1", PINNED.format("2.3"))
+    concretized_env("base2", PINNED.format("2.2"))
+    concretized_env("combined1", _including("base1"))
+    concretized_env("combined2", _including("base2"))
+    after = os.path.join(ev.root("combined2"), ev.lockfile_name) if as_lockfile else "combined2"
+
+    with pytest.raises(ev.SpackEnvironmentError, match="include different concrete environments"):
+        diff_cmd("--exit-code", "combined1", after)
+
+
+@_needs_environments
+def test_diff_compares_environments_including_the_same_concrete_environment(concretized_env):
+    """When both environments include the same concrete environment, their own roots are
+    compared."""
+    concretized_env("base", PINNED.format("2.3"))
+    concretized_env("combined1", _including("base", "[libelf]"))
+    concretized_env("combined2", _including("base"))
+
+    output = diff_cmd("--exit-code", "combined1", "combined2", fail_on_error=False)
+
+    assert diff_cmd.returncode == spack.cmd.diff.EXIT_DIFFERENT
+    assert "Input specs only in before" in output
+    assert "libelf" in output
+    assert "mpileaks" not in output

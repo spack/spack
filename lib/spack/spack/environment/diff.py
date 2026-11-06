@@ -12,7 +12,7 @@ Only the first layer is specific to environments. The second is the generic spec
 ``spack.spec_diff``, which this module drives once per common input spec.
 """
 
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple
 
 import spack.environment.environment as ev
 import spack.spec_diff
@@ -97,23 +97,20 @@ def _concretized_user_specs(env: ev.Environment) -> Dict[ev.UserSpecId, Spec]:
     }
 
 
-def _assert_comparable(
-    env: ev.Environment, concretized: Iterable[ev.UserSpecId], label: Optional[str] = None
+def _assert_concretized(
+    env: ev.Environment, concretized: Iterable[ev.UserSpecId], label: str
 ) -> None:
-    """Raise if an environment is in a state this module cannot answer for.
+    """Raise if an environment has input specs without a concrete spec.
 
     Args:
         env: environment to check
         concretized: user specs of the environment that have a concrete spec
-        label: how to name the environment in errors, when its own name would not mean anything
-            to the caller
+        label: how to name the environment in errors
 
     Raises:
         spack.environment.environment.SpackEnvironmentError: if the environment is not fully
-            concretized, or was concretized before the package hash entered the dag hash
+            concretized
     """
-    label = label or env.name
-
     # Also catches specs added since the last concretization
     pending = sorted(str(x.spec) for x in env._all_user_specs_with_group().difference(concretized))
     if pending:
@@ -122,6 +119,49 @@ def _assert_comparable(
             "input specs not concretized:\n" + "\n".join(f"  {spec}" for spec in pending),
         )
 
+
+def _included_roots(env: ev.Environment) -> Set[Tuple[str, Spec, str]]:
+    """Group, user spec and DAG hash of every root of the concrete environments env includes."""
+    return {
+        (x.group, x.root, x.hash)
+        for roots in env.included_concretized_roots.values()
+        for x in roots
+    }
+
+
+def _included_paths(env: ev.Environment, label: str) -> str:
+    """Lines listing the concrete environments that env includes, for an error message."""
+    paths = sorted(path for path, roots in env.included_concretized_roots.items() if roots)
+    if not paths:
+        return f"'{label}' includes no concrete environment"
+    return f"'{label}' includes:\n" + "\n".join(f"  {path}" for path in paths)
+
+
+def _assert_same_includes(
+    env_a: ev.Environment, env_b: ev.Environment, label_a: str, label_b: str
+) -> None:
+    """Raise if the concrete environments included by two environments have different roots.
+
+    Included roots are not compared, so the result is only complete when they are the same.
+
+    Raises:
+        spack.environment.environment.SpackEnvironmentError: if the included roots differ
+    """
+    if _included_roots(env_a) != _included_roots(env_b):
+        raise ev.SpackEnvironmentError(
+            f"environments '{label_a}' and '{label_b}' include different concrete environments, "
+            f"which `spack diff` cannot compare yet",
+            f"{_included_paths(env_a, label_a)}\n{_included_paths(env_b, label_b)}",
+        )
+
+
+def _assert_package_hashes(env: ev.Environment, label: str) -> None:
+    """Raise if a node of an environment has no recorded package hash.
+
+    Raises:
+        spack.environment.environment.SpackEnvironmentError: if the environment was concretized
+            before the package hash entered the dag hash
+    """
     # Without package hashes, nodes with equal configuration cannot be told apart
     if any(not spack.spec_diff.recorded_package_hash(node) for node in env.all_specs_generator()):
         raise ev.SpackEnvironmentError(
@@ -150,13 +190,17 @@ def diff_environments(
 
     Raises:
         spack.environment.environment.SpackEnvironmentError: if either environment is not
-            comparable
+            comparable, or if the two include concrete environments with different roots
         spack.spec_diff.SpecDiffError: if two concrete DAGs cannot be compared
     """
+    label_a, label_b = label_a or env_a.name, label_b or env_b.name
     a_map = _concretized_user_specs(env_a)
     b_map = _concretized_user_specs(env_b)
-    _assert_comparable(env_a, a_map, label_a)
-    _assert_comparable(env_b, b_map, label_b)
+    _assert_concretized(env_a, a_map, label_a)
+    _assert_concretized(env_b, b_map, label_b)
+    _assert_same_includes(env_a, env_b, label_a, label_b)
+    _assert_package_hashes(env_a, label_a)
+    _assert_package_hashes(env_b, label_b)
 
     inputs = input_spec_diff(list(a_map), list(b_map))
 
