@@ -692,7 +692,8 @@ def test_a_binary_must_be_pinned_and_spliceable(
         spack.bootstrap.core._pinned_binary(spack.spec.Spec(abstract_spec), sha256)
 
 
-def test_nodes_without_pinned_binary_are_built_first(binary_index, recording_environment):
+def test_a_pinned_binary_is_installed_with_its_checksums(binary_index, recording_environment):
+    """Tests that the policy is left to the installer, which builds nodes without a binary"""
     built, _ = binary_index
     source = {
         "name": "binaries",
@@ -706,13 +707,10 @@ def test_nodes_without_pinned_binary_are_built_first(binary_index, recording_env
 
     result = spack.bootstrap.core._install_from_source(request, source)
 
-    (venv,), source_args, _ = recording_environment.installs[0]
-    assert venv.name == "python-venv"
-    assert source_args["root_policy"] == source_args["dependencies_policy"] == "source_only"
-    roots, binary_args, _ = recording_environment.installs[1]
-    assert roots == [result]
-    assert binary_args["root_policy"] == binary_args["dependencies_policy"] == "cache_only"
-    assert binary_args["binary_checksums"] == source["sha256"]
+    ((specs, installer_args, mirrors),) = recording_environment.installs
+    assert specs == [result]
+    assert installer_args == {"fail_fast": True, "binary_checksums": source["sha256"]}
+    assert mirrors == {"binaries": "https://example.com"}
 
 
 def test_clingo_is_not_concretized_by_the_regular_concretizer(mutable_config, monkeypatch):
