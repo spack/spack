@@ -1010,3 +1010,20 @@ def test_get_checksums_for_versions_all_fail(tmp_path: pathlib.Path, config):
 
     assert result.hashes == {}
     assert list(result.failures) == [v1]
+
+
+@pytest.mark.disable_clean_stage_check
+def test_get_checksums_for_versions_fallback_urls(tmp_path: pathlib.Path, config):
+    """Tests that the fallback URLs of a version are tried when its URL cannot be fetched."""
+    archive = tmp_path / "pkg-1.0.tar.gz"
+    archive.write_bytes(b"pkg 1.0")
+    v1 = StandardVersion.from_string("1.0")
+    missing_url = url_util.path_to_file_url(str(tmp_path / "missing" / "pkg-1.0.tar.gz"))
+    fallback_url = url_util.path_to_file_url(str(archive))
+
+    result = spack.stage.get_checksums_for_versions(
+        {v1: missing_url}, "pkg", fallback_urls={v1: [fallback_url]}, config=config
+    )
+
+    assert result.hashes == {v1: hashlib.sha256(b"pkg 1.0").hexdigest()}
+    assert result.failures == {}
