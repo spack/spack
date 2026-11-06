@@ -39,7 +39,7 @@ from spack.cmd.env import _env_create
 from spack.concretize_ui import SolveKind
 from spack.config import Configuration, substitute_path_variables
 from spack.environment import depfile
-from spack.environment.environment import _filtered_abstract_root_entries
+from spack.environment.environment import _filtered_abstract_root_entries, _projection_format_for
 from spack.main import SpackCommand, SpackCommandError
 from spack.old_installer import PackageInstaller
 from spack.repo import RepoPath
@@ -2439,8 +2439,35 @@ def test_env_create_filter_drops_dags_with_blocked_build_specs(
     assert pathlib.Path(source.lock_path).read_text(encoding="utf-8") == original_lockfile
 
 
-def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pathlib.Path):
-    """Accept a root projection that produces a valid spec string."""
+@pytest.mark.parametrize(
+    "projections, expected_format",
+    [
+        ({}, spack.spec.DISPLAY_FORMAT),
+        ({"libelf": "{name}"}, spack.spec.DISPLAY_FORMAT),
+        ({"all": ""}, ""),
+        ({"all": "{name}{@version}", "mpileaks": "{name}"}, "{name}"),
+        ({"mpileaks": "{name}", "all": "{name}{@version}"}, "{name}"),
+        ({"mpileaks": "{name}", "mpileaks@2.3": "{name}{@version}"}, "{name}"),
+    ],
+)
+def test_env_create_filter_projection_selection(projections, expected_format):
+    """Preserve first-match ordering and distinguish absent from explicitly empty formats."""
+    assert _projection_format_for(Spec("mpileaks@2.3"), projections) == expected_format
+
+
+@pytest.mark.parametrize(
+    "matcher, projection",
+    [
+        ("all", "{name}@{version}"),
+        ("all", "$SPACK_FILTER_TEST_PROJECTION"),
+        ("mpileaks", "$SPACK_FILTER_TEST_PROJECTION"),
+    ],
+)
+def test_env_create_filter_accepts_projection_that_formats_to_spec(
+    tmp_path: pathlib.Path, monkeypatch, matcher: str, projection: str
+):
+    """Expand root projections using Spack's rules before formatting and parsing them."""
+    monkeypatch.setenv("SPACK_FILTER_TEST_PROJECTION", "{name}@{version}")
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2450,10 +2477,10 @@ def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pat
 
     filter_yaml = _write_filter_yaml(
         tmp_path,
-        """filter:
+        f"""filter:
   concrete: true
   projections:
-    all: "{name}@{version}"
+    {matcher}: "{projection}"
 """,
     )
     env("create", "--filter", filter_yaml, "filtered", "source")
@@ -2461,6 +2488,9 @@ def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pat
     filtered = ev.read("filtered")
     assert [spec.name for spec in filtered.user_specs] == ["mpileaks"]
     assert [spec.name for spec in filtered.concrete_roots()] == ["mpileaks"]
+    original_root = source.concrete_roots()[0]
+    assert filtered.manifest["spack"]["specs"] == [original_root.format("{name}@{version}")]
+    assert filtered.concrete_roots()[0].dag_hash() == original_root.dag_hash()
 
     with open(filtered.lock_path, encoding="utf-8") as stream:
         lockfile = filtered._read_lockfile(stream)

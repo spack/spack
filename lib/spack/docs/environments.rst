@@ -304,6 +304,8 @@ For example, retain versions and variants for ``openblas``, but only names and v
 
 The first matching non-``all`` entry is used; ``all`` is the fallback regardless of where it appears in the mapping.
 With this fallback, a concrete ``libelf@0.8.13`` root is written as ``libelf@0.8.13``, without its compiler or architecture details.
+Projection formats use Spack's standard variable expansion: configuration variables, environment variables, and a leading ``~`` are expanded before spec formatting.
+For example, ``all: "$FILTER_SPEC_FORMAT"`` uses the format stored in ``FILTER_SPEC_FORMAT``; the resulting formatted text must still be a valid spec.
 Projections change the root spec strings, not the concrete hashes or dependency edges retained in the lockfile.
 Different concrete roots must not project to the same string; include a hash in the projection if needed to distinguish them.
 With ``concrete: false``, projections are ignored and retained abstract specs are always serialized using ``str(spec)``.

@@ -43,6 +43,7 @@ import spack.filesystem_view as fsv
 import spack.installer_dispatch
 import spack.package_base
 import spack.paths
+import spack.projections
 import spack.repo
 import spack.schema.env
 import spack.schema.filter
@@ -566,23 +567,11 @@ def _read_filter_configuration(filter_file: Union[str, pathlib.Path]) -> Dict[st
     return _normalized_filter_configuration(data["filter"])
 
 
-def _matches_any_spec(spec: Spec, patterns: Sequence[Union[str, Spec]]) -> bool:
-    """Match alternatives as spec constraints, not package-name or text patterns."""
-    return any(
-        spec.satisfies(pattern if isinstance(pattern, Spec) else Spec(pattern))
-        for pattern in patterns
-    )
-
-
 def _projection_format_for(spec: Spec, projections: Dict[str, str]) -> str:
-    """Choose the first matching root format, falling back to the default."""
-    # Normalization inserts "all" first, but it must not shadow specific matchers.
-    for matcher, format_string in projections.items():
-        if matcher == "all":
-            continue
-        if spec.satisfies(Spec(matcher)):
-            return format_string
-    return projections.get("all", spack.spec.DISPLAY_FORMAT)
+    """Use Spack's projection selection and variable expansion, with a root-format fallback."""
+    projection = spack.projections.get_projection(projections, spec)
+    # Only a missing match uses the default; preserve an explicitly empty format.
+    return spack.spec.DISPLAY_FORMAT if projection is None else projection
 
 
 def _validated_filter_projection(spec: Spec, format_string: str) -> str:
@@ -632,7 +621,9 @@ def _allowed_concrete_root_entries(
         if dag_hash in visited_hashes:
             continue
         visited_hashes.add(dag_hash)
-        if not allow_patterns or _matches_any_spec(concrete_spec, allow_patterns):
+        if not allow_patterns or any(
+            concrete_spec.satisfies(pattern) for pattern in allow_patterns
+        ):
             # Accept the intact sub-DAG, without requiring further allow matches below it.
             allowed_roots_by_hash[dag_hash] = concrete_spec
         else:
@@ -781,7 +772,9 @@ def _filtered_abstract_root_entries(
         if spec_id in visited_spec_ids:
             continue
         visited_spec_ids.add(spec_id)
-        if not allow_patterns or _matches_any_spec(abstract_spec, allow_patterns):
+        if not allow_patterns or any(
+            abstract_spec.satisfies(pattern) for pattern in allow_patterns
+        ):
             # Keep the existing node and its whole sub-DAG. Do not search below
             # this match: its dependencies need not individually match allow.
             allowed_roots_by_id[spec_id] = abstract_spec
@@ -793,7 +786,11 @@ def _filtered_abstract_root_entries(
     retained_roots_by_id: Dict[int, Spec] = {}
     for spec_id, abstract_spec in allowed_roots_by_id.items():
         blocking_spec = next(
-            (node for node in abstract_spec.traverse() if _matches_any_spec(node, block_patterns)),
+            (
+                node
+                for node in abstract_spec.traverse()
+                if any(node.satisfies(pattern) for pattern in block_patterns)
+            ),
             None,
         )
         if blocking_spec is None:
@@ -1034,7 +1031,7 @@ def _create_filtered_environment_in_dir(
         # Includes can supply arbitrary settings or concrete graphs. Require explicit
         # permission to discard ordinary includes; never copy their referenced files.
         if (
-            source_env.manifest[TOP_LEVEL_KEY].get(manifest_include_name)
+            source_env.manifest.configuration.get(manifest_include_name)
             and manifest_include_name not in filter_configuration["config"]["block"]
         ):
             raise SpackEnvironmentError(
@@ -1042,7 +1039,7 @@ def _create_filtered_environment_in_dir(
                 "'include' to filter:config:block to drop them"
             )
         # Legacy concrete includes are always excluded by normalization, even if allowed.
-        if lockfile_include_key in source_env.manifest[TOP_LEVEL_KEY]:
+        if lockfile_include_key in source_env.manifest.configuration:
             tty.warn("filtered environments do not copy include_concrete entries")
         filtered_roots: Sequence[Tuple[str, Spec, str]] = []
         filtered_specs: List[Union[str, Dict[str, Any]]]
@@ -1076,7 +1073,7 @@ def _create_filtered_environment_in_dir(
         # Read only source-local YAML, not effective configuration from the active
         # environment or global scopes, which may contain unrelated overrides.
         filtered_configuration = _filtered_configuration(
-            source_env.manifest[TOP_LEVEL_KEY], filter_configuration, filtered_specs, with_view
+            source_env.manifest.configuration, filter_configuration, filtered_specs, with_view
         )
         root = pathlib.Path(root).absolute()
         if os.path.lexists(root):
