@@ -219,7 +219,6 @@ def test_splice_ignores_build_only_dependencies():
     assert out["glib"].dependencies(deptype="build") == [python_2]
 
 
-@pytest.mark.xfail(strict=True, reason="nodes rewired to their build dependencies stay spliced")
 def test_splicing_the_original_back_gives_the_original_spec():
     """Splicing the original back undoes the splice."""
     zlib_1 = node("zlib@1")
