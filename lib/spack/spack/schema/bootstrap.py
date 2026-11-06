@@ -12,7 +12,7 @@ _source_schema: Dict[str, Any] = {
     "properties": {
         "name": {
             "type": "string",
-            "description": "Name of the bootstrap source (e.g., 'github-actions-v0.6', "
+            "description": "Name of the bootstrap source (e.g., 'github-actions-v2', "
             "'spack-install')",
         },
         "metadata": {
