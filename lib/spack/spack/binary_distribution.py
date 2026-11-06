@@ -2333,17 +2333,14 @@ def extract_buildcache_tarball(tarfile_path: str, destination: str) -> None:
         )
 
 
-def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=timer.NULL_TIMER):
+def extract_tarball(spec, tarball_stage: spack.stage.Stage, timer=timer.NULL_TIMER):
     """
     extract binary tarball for given package into install area
     """
     timer.start("extract")
 
     if os.path.exists(spec.prefix):
-        if force:
-            shutil.rmtree(spec.prefix)
-        else:
-            raise NoOverwriteException(str(spec.prefix))
+        raise NoOverwriteException(str(spec.prefix))
 
     # Create the install prefix
     perms = spack.package_prefs.package_permissions(spack.config.CONFIG, spec.name)
@@ -2415,40 +2412,6 @@ def _ensure_common_prefix(tar: tarfile.TarFile) -> str:
         raise ValueError(f"Tarball does not contain a common prefix {pkg_prefix}")
 
     return pkg_prefix
-
-
-def install_root_node(spec: spack.spec.Spec, unsigned=False, force: bool = False) -> bool:
-    """Install the root node of a concrete spec from a buildcache.
-
-    Args:
-        spec: spec to be installed (note that only the root node will be installed)
-        unsigned: if True allows installing unsigned binaries
-        force: force installation if the spec is already present in the local store
-
-    Returns:
-        ``True`` if the node was installed, ``False`` if it was skipped
-    """
-    # Early termination
-    if spec.external or not spec.concrete:
-        warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
-        return False
-    elif spack.store.STORE.db.installed(spec) and not force:
-        warnings.warn("Package for spec {0} already installed.".format(spec.format()))
-        return False
-
-    tarball_stage = download_tarball(spec.build_spec, unsigned)
-    if not tarball_stage:
-        msg = 'download of binary cache file for spec "{0}" failed'
-        raise RuntimeError(msg.format(spec.build_spec.format()))
-
-    # don't print long padded paths while extracting/relocating binaries
-    with spack.store.filter_padding():
-        tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
-        extract_tarball(spec, tarball_stage, force)
-        spec.package.windows_establish_runtime_linkage()
-        spack.hooks.post_install(spec, False)
-        spack.store.STORE.db.add(spec)
-    return True
 
 
 def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorMetadata]:
