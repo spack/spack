@@ -185,6 +185,16 @@ class TestCopyTree:
             assert os.path.realpath("dest/f/2") == os.path.abspath("dest/a/b/2")
             assert os.path.realpath("dest/2") == os.path.abspath("dest/1")
 
+    def test_symlinks_true_regex_characters(self, stage):
+        """Test that absolute links are redirected when the source path has regex characters."""
+
+        with fs.working_dir(str(stage)):
+            fs.touchp("c++/1")
+            fs.symlink(os.path.abspath("c++/1"), "c++/2")
+            fs.copy_tree("c++", "dest", symlinks=True)
+
+            assert os.path.realpath("dest/2") == os.path.abspath("dest/1")
+
     def test_symlinks_true_ignore(self, stage):
         """Test copying when specifying relative paths that should be ignored"""
         with fs.working_dir(str(stage)):
