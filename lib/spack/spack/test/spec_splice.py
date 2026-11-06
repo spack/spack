@@ -203,3 +203,28 @@ def test_transitive_splice_resolves_virtual_clash_with_a_shared_node():
     out = spec.splice(replacement, transitive=True)
 
     assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
+
+
+@pytest.mark.xfail(strict=True, reason="nodes rewired to their build dependencies stay spliced")
+def test_splicing_the_original_back_gives_the_original_spec():
+    zlib_1 = node("zlib@1")
+    hdf5 = node("hdf5@1", (zlib_1, "link"))
+    spec = node("netcdf-c@1", (hdf5, "link"))
+    zlib_2 = node("zlib@2")
+
+    out = spec.splice(zlib_2, transitive=True).splice(zlib_1, transitive=True)
+
+    assert out.dag_hash() == spec.dag_hash()
+
+
+@pytest.mark.xfail(strict=True, reason="virtuals the target uses a node as bind its replacement")
+def test_intransitive_splice_ignores_virtuals_only_the_target_uses():
+    glibc = node("glibc@2")  # shared by spec and replacement
+    libxml2_1 = node("libxml2@1", (glibc, "link", "iconv", "libc"))
+    spec = node("fontconfig@1", (glibc, "link", "libc"), (libxml2_1, "link"))
+    libiconv = node("libiconv@1")
+    replacement = node("libxml2@2", (glibc, "link", "libc"), (libiconv, "link", "iconv"))
+
+    out = spec.splice(replacement, transitive=False)
+
+    assert out["libxml2"].edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
