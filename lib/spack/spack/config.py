@@ -920,6 +920,7 @@ class Configuration:
 
         parts = process_config_path(path)
         section = parts.pop(0)
+        scope = scope or self.default_modify_scope(section)
 
         section_data = self.get_config(section, scope=scope)
 

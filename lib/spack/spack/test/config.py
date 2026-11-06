@@ -188,6 +188,13 @@ def test_write_to_same_priority_file(mock_low_high_config, external_specs):
     check_externals_config(mock_low_high_config, b_packages["packages"], *external_specs.b)
 
 
+def test_set_path_does_not_copy_lower_scopes(mock_low_high_config):
+    mock_low_high_config.set("config", {"build_jobs": 2, "dirty": True}, scope="low")
+    mock_low_high_config.set("config:build_jobs", 4)
+    assert mock_low_high_config.get_config("config", scope="high") == {"build_jobs": 4}
+    assert mock_low_high_config.get("config:dirty") is True
+
+
 #
 # Sample repo data and tests
 #
