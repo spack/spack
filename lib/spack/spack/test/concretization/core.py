@@ -3843,6 +3843,39 @@ def test_reuse_when_input_specifies_build_dep(install_mockery, mutable_config: C
         assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
 
 
+@pytest.mark.xfail(sys.platform == "win32", reason="issues with install mockery")
+@pytest.mark.parametrize("request_str", ["%gcc", "%gcc@9", "%c=gcc", "%c=gcc@9", "%c"])
+def test_reuse_when_input_specifies_virtual_on_build_dep(
+    request_str, install_mockery, mutable_config: Configuration
+):
+    """Tests that a spec can be reused when the input requests its compiler through the virtual
+    it provides, e.g. %c=gcc, even though build dependencies of reused specs are trimmed.
+    """
+    pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9 %gcc@9"))
+    PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
+    mutable_config.set("packages:pkg-b:buildable", False)
+
+    with mutable_config.override("concretizer:reuse", True):
+        result = spack.concretize.concretize_one(f"pkg-b {request_str}")
+        assert pkgb_old.dag_hash() == result.dag_hash()
+
+
+@pytest.mark.xfail(sys.platform == "win32", reason="issues with install mockery")
+@pytest.mark.parametrize("request_str", ["%c=llvm", "%c=gcc@10", "%cxx=gcc"])
+def test_no_reuse_when_input_specifies_wrong_virtual_on_build_dep(
+    request_str, install_mockery, mutable_config: Configuration
+):
+    """Tests that a reused spec is rejected if its compiler doesn't match a request made
+    through a virtual."""
+    pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9 %gcc@9"))
+    PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
+    mutable_config.set("packages:pkg-b:buildable", False)
+
+    with mutable_config.override("concretizer:reuse", True):
+        with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+            spack.concretize.concretize_one(f"pkg-b {request_str}")
+
+
 @pytest.mark.regression("49847")
 def test_reuse_when_requiring_build_dep(install_mockery, mutable_config: Configuration):
     """Test that we can reuse a spec when specifying build dependencies in requirements"""
