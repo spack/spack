@@ -206,6 +206,16 @@ def test_breadth_first_traversal_reverse(abstract_specs_dt_diamond):
     ]
 
 
+def test_traversal_reverse_covers_edges_once():
+    # a -> b -> c -> d and b -> d: b is reached twice from d
+    dag = create_dag(
+        nodes=["a", "b", "c", "d"],
+        edges=[("a", "b", "all"), ("b", "c", "all"), ("b", "d", "all"), ("c", "d", "all")],
+    )
+    edges = traverse.traverse_edges([dag["d"]], direction="parents", cover="edges", root=False)
+    assert len(list(edges)) == 4
+
+
 def test_breadth_first_traversal_multiple_input_specs(abstract_specs_dt_diamond):
     # With DFS, the branch dt-diamond -> dt-diamond-left -> dt-diamond-bottom
     # is followed, with BFS, dt-diamond-bottom should be traced through the second
