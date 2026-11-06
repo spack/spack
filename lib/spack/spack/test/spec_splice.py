@@ -106,9 +106,9 @@ def test_intransitive_splice_of_provider_that_depends_on_the_target_package():
     zmpi = node("zmpi@2", (node("glibc@1"), "link"))
     replacement = node("libiconv@2", (zmpi, "link"))
 
-    out = spec.splice(replacement, transitive=False)
-
-    assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
+    # libiconv@2 replaces libiconv@1, the node of its name, and needs glibc@2: a cycle
+    with pytest.raises(SpliceError):
+        spec.splice(replacement, transitive=False)
 
 
 @pytest.mark.xfail(strict=True, reason="impossible splices are accepted")
