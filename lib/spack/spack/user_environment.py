@@ -4,6 +4,7 @@
 import os
 import re
 import sys
+from typing import List, Optional
 
 import spack.build_environment
 import spack.config
@@ -57,6 +58,7 @@ def unconditional_environment_modifications(view):
 
     for subdir, vars in prefix_inspections(sys.platform).items():
         full_subdir = os.path.join(view.root, subdir)
+        full_subdir = spack.config.canonicalize_path(full_subdir)
         for var in vars:
             env.prepend_path(var, full_subdir)
 
@@ -79,8 +81,76 @@ def project_env_mods(
             mod.value = prefix_regex.sub(lambda m: prefix_to_prefix[m.group(0)], mod.value)
 
 
+def prefix_inspections_environment_modifications(
+    specs: List[spack.spec.Spec], topo_ordered: Optional[List] = None
+):
+    """Generate environment modifications based on prefix inspections.
+    Args:
+        specs: List of specs to generate modifications for
+        topo_ordered: Optional pre-computed topologically ordered list of specs.
+            If not provided, will be computed from specs.
+
+    Returns:
+        EnvironmentModifications object containing all prefix inspection modifications
+    """
+    env = environment.EnvironmentModifications()
+
+    spec_list = (
+        topo_ordered
+        if topo_ordered
+        else list(traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo"))
+    )
+
+    # Static environment changes (prefix inspections)
+    for s in reversed(spec_list):
+        static = environment.inspect_path(
+            s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
+        )
+        env.extend(static)
+    return env
+
+
+def spec_environment_modifications(
+    specs: List[spack.spec.Spec],
+    view=None,
+    set_package_py_globals: bool = True,
+    repo=None,
+    topo_ordered: Optional[List] = None,
+):
+    """Generate environment modifications from specs' package.py setup methods.
+    Args:
+        specs: List of specs to generate modifications for
+        view: Optional view to apply projections from
+        set_package_py_globals: Whether to set package.py global variables
+        repo: Optional cached repository to use
+        topo_ordered: Optional pre-computed topologically ordered list of specs.
+            If not provided, will be computed from specs.
+    Returns:
+        EnvironmentModifications object containing all spec modifications
+    """
+    env_mods = environment.EnvironmentModifications()
+
+    topo_ordered = (
+        topo_ordered
+        if topo_ordered
+        else list(traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo"))
+    )
+
+    # Dynamic environment changes (setup_run_environment etc)
+    setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)
+    if set_package_py_globals:
+        setup_context.set_all_package_py_globals()
+    env_mods.extend(setup_context.get_env_modifications(cached_repo=repo))
+
+    # Apply view projections if any.
+    if view:
+        project_env_mods(*topo_ordered, view=view, env=env_mods)
+
+    return env_mods
+
+
 def environment_modifications_for_specs(
-    *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True
+    *specs: spack.spec.Spec, view=None, set_package_py_globals: bool = True, repo=None
 ):
     """List of environment (shell) modifications to be processed for spec.
 
@@ -93,27 +163,53 @@ def environment_modifications_for_specs(
         set_package_py_globals: whether or not to set the global variables in the
             package.py files (this may be problematic when using buildcaches that have
             been built on a different but compatible OS)
+        repo: optional repo to use when spec is not in builtin repo
     """
-    env = environment.EnvironmentModifications()
     topo_ordered = list(
         traverse.traverse_nodes(specs, root=True, deptype=("run", "link"), order="topo")
     )
+    env = prefix_inspections_environment_modifications(
+        specs=list(specs), topo_ordered=topo_ordered
+    )
 
-    # Static environment changes (prefix inspections)
-    for s in reversed(topo_ordered):
-        static = environment.inspect_path(
-            s.prefix, prefix_inspections(s.platform), exclude=environment.is_system_path
-        )
-        env.extend(static)
-
-    # Dynamic environment changes (setup_run_environment etc)
-    setup_context = spack.build_environment.SetupContext(*specs, context=Context.RUN)
-    if set_package_py_globals:
-        setup_context.set_all_package_py_globals()
-    env.extend(setup_context.get_env_modifications())
-
-    # Apply view projections if any.
-    if view:
-        project_env_mods(*topo_ordered, view=view, env=env)
+    env_mods = spec_environment_modifications(
+        list(specs),
+        view=view,
+        set_package_py_globals=set_package_py_globals,
+        repo=repo,
+        topo_ordered=topo_ordered,
+    )
+    env.extend(env_mods)
 
     return env
+
+
+def write_shell_script(shell_script_path: str, mods: str, shell: str):
+    """Write a shell script with proper header and modifications.
+
+    Args:
+        shell_script_path: Path to the shell script
+        mods: Shell modifications to write to the script
+        shell: Shell type (used to determine comment character)
+    """
+    from datetime import datetime
+
+    import spack.util.filesystem as fs
+    import spack.util.tty as tty
+
+    comments = "::" if shell == "bat" else "###"
+
+    try:
+        # Ensure directory exists for the script
+        os.makedirs(os.path.dirname(shell_script_path), exist_ok=True)
+
+        header = (
+            f"{comments} This file is auto-generated by Spack. Do not edit this file directly.\n"
+            f"{comments} Generated on: {datetime.now().strftime('%Y-%m-%d')}\n\n"
+        )
+        with fs.write_tmp_and_move(shell_script_path, encoding="utf-8") as f:
+            f.write(header)
+            f.write(mods)
+    except Exception as e:
+        tty.error(f"Error generating {shell_script_path}: {e}")
+        raise e

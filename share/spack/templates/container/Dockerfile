@@ -38,7 +38,8 @@ RUN find -L {{ paths.view }}/* -type f -exec readlink -f '{}' \; | \
 
 # Modifications to the environment that are necessary to run
 RUN cd {{ paths.environment }} && \
-    spack env activate --sh -d . > activate.sh
+    spack env activate --sh --fresh -d . > activate.sh && \
+    spack env deactivate --sh --fresh -d . > deactivate.sh
 
 {% endblock build_stage %}
 {% endif %}

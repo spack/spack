@@ -116,7 +116,7 @@ class TestConcretizePreferences:
         update_packages("multivalue-variant", "variants", "foo=bar")
         assert_variant_values("multivalue-variant foo=*", foo=("bar",))
 
-    def test_preferred_target(self, mutable_mock_repo):
+    def test_preferred_target(self):
         """Test preferred targets are applied correctly"""
         spec = concretize("mpich")
         default = str(spec.target)
