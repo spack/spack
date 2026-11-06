@@ -1363,7 +1363,7 @@ def migrate_home() -> Dict[str, bool]:
     if user_config_migrated or package_repos_migrated:
         parts = ["Spack migrated home directory resources:"]
         if user_config_migrated:
-            parts.append("  - Copied user configuration from ~/.spack to ~/.config/spack.")
+            parts.append(f"  - Copied user config from ~/.spack to {migration_config_home()}.")
         if package_repos_migrated:
             parts.append(
                 "  - Copied package repositories from ~/.spack to the shared data location."
