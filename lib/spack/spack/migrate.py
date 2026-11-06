@@ -1653,6 +1653,9 @@ def force_old_layout(to_move, print_message=True):
         f.write("Migration completed\n")
     tty.debug(f"Wrote migration completion marker: {marker_path}")
 
+    if not print_message:
+        continue
+
     parts = ["No Spack-internal resources were migrated"]
     if retained_resources:
         parts.append("  - Retained: " + ", ".join(retained_resources) + ".")

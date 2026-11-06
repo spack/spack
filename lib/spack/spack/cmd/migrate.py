@@ -331,7 +331,7 @@ def _undo(args):
     # does not hold .migration-lock because all other spack commands would
     # have to hold it for their entire duration to safely interact (which
     # seems expensive for something that would be used rarely).
-    spack.migrate.force_old_layout(old_resources)
+    spack.migrate.force_old_layout(old_resources, print_message=False)
 
     tty.msg("  Updated layout scope to point to old locations")
 
