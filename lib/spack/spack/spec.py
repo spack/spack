@@ -1462,14 +1462,21 @@ class _Splice:
             return copies[h]
 
         def build(h: str) -> "Spec":
-            if not changed[h]:
-                return copy(self.nodes[h])
             if h not in output:
-                output[h] = new = self.nodes[h].copy(deps=False)
-                new.clear_caches(keep_package_hash=True)
-                new._build_spec = self.nodes[h].build_spec
-                for child, (depflag, virtuals) in edges[h].items():
-                    _add_edge(new, build(child), depflag, virtuals, like[(h, child)])
+                node = self.nodes[h]
+                children = {c: build(c) for c in edges[h]}
+                rewired = {children[c].dag_hash(): e for c, e in edges[h].items()}
+                # With the link/run edges of the input node or of its build spec, it is that node
+                for existing in (node, node.build_spec):
+                    if rewired == _link_edges(existing):
+                        output[h] = copy(existing)
+                        break
+                else:
+                    output[h] = new = node.copy(deps=False)
+                    new.clear_caches(keep_package_hash=True)
+                    new._build_spec = node.build_spec
+                    for child, (depflag, virtuals) in edges[h].items():
+                        _add_edge(new, children[child], depflag, virtuals, like[(h, child)])
             return output[h]
 
         return build(self.spec.dag_hash())

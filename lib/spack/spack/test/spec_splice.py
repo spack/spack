@@ -217,7 +217,6 @@ def test_transitive_splice_resolves_virtual_clash_with_a_shared_node():
     assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
 
 
-@pytest.mark.xfail(strict=True, reason="nodes rewired to their build dependencies stay spliced")
 def test_splicing_the_original_back_gives_the_original_spec():
     """Splicing the original back undoes the splice."""
     zlib_1 = node("zlib@1")
