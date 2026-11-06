@@ -281,7 +281,7 @@ def test_nested_use_of_context_manager(mutable_config):
 
 
 def test_bootstrapping_state_is_part_of_the_configuration(mutable_config, monkeypatch):
-    """is_bootstrapping() holds in installer child processes, which restore the configuration"""
+    """is_bootstrapping() should be propagated to installer child processes"""
     with spack.bootstrap.ensure_bootstrap_configuration():
         bootstrap_config = spack.config.CONFIG
     assert not spack.bootstrap.is_bootstrapping()
