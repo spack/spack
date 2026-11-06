@@ -3480,13 +3480,23 @@ def post_process_concretization_result(
     specs.update(new_specs)
 
 
+def _has_splice_target(spec: spack.spec.Spec, target: spack.spec.Spec) -> bool:
+    """True if spec or a link/run dependency matches target by name or virtual"""
+    for edge in spec.traverse_edges(deptype=dt.LINK | dt.RUN, cover="edges"):
+        if edge.spec.name != target.name and target.name not in edge.virtuals:
+            continue
+        if edge.spec.satisfies(target):
+            return True
+    return False
+
+
 def execute_explicit_splices(
     specs: SpecDict, *, context: "spack.context.SpackContext"
 ) -> SpecDict:
     splice_config = context.config.get("concretizer:splice:explicit", [])
     splice_triples = []
     for splice_set in splice_config:
-        target = splice_set["target"]
+        target = spack.spec.Spec(splice_set["target"])
         replacement = spack.spec.Spec(splice_set["replacement"])
 
         if not replacement.abstract_hash:
@@ -3503,16 +3513,11 @@ def execute_explicit_splices(
     for key, spec in specs.items():
         current_spec = spec
         for target, replacement, transitive in splice_triples:
-            if target in current_spec:
-                # matches root or non-root
-                # e.g. mvapich2%gcc
-
+            if _has_splice_target(current_spec, target):
                 # The first iteration, we need to replace the abstract hash
                 if not replacement.concrete:
                     spack.hash_lookup.replace_hash(replacement, context=context)
-                current_spec = current_spec.splice(
-                    replacement, transitive, target=spack.spec.Spec(target)
-                )
+                current_spec = current_spec.splice(replacement, transitive, target=target)
         new_key = NodeId(id=key.id, pkg=current_spec.name)
         new_specs[new_key] = current_spec
 
