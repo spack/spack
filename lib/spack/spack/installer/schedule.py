@@ -238,7 +238,7 @@ class BuildGraph:
             return
 
         # Enqueue any parents and remove edges to the installed child
-        for parent in parents:
+        for parent in sorted(parents):
             children = self.parent_to_child[parent]
             children.remove(dag_hash)
             if not children:
