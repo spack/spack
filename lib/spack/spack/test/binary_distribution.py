@@ -630,7 +630,8 @@ def test_update_sbang(tmp_path: pathlib.Path, temporary_mirror, mock_fetch, inst
 
 
 def test_install_from_buildcache_trusts_pinned_sha256(install_mockery, temporary_mirror):
-    """An unsigned binary is installed when its sha256 is pinned, and a wrong pin raises"""
+    """Unsigned binaries can be installed from a build cache iff a trusted and valid SHA256
+    checksum is provided. This is used for bootstrapping where GPG verification is not possible."""
     install_cmd("--fake", "--no-cache", "libelf")
     buildcache_cmd("push", "--unsigned", temporary_mirror, "libelf")
     spec = spack.concretize.concretize_one("libelf")
