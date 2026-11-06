@@ -21,7 +21,7 @@ import spack.tengine
 import spack.util.gpg
 from spack.util import tty
 
-from .config import interpreter_dirname, root_path, spec_for_current_python, store_path
+from .config import environment_path, root_path, spec_for_current_python, store_path
 from .core import _add_externals_if_missing
 
 
@@ -46,11 +46,7 @@ class BootstrapEnvironment(spack.environment.Environment):
     @classmethod
     def environment_root(cls) -> pathlib.Path:
         """Environment root directory"""
-        return pathlib.Path(
-            spack.config.canonicalize_path(
-                os.path.join(root_path(), "environments", interpreter_dirname())
-            )
-        )
+        return pathlib.Path(environment_path())
 
     @classmethod
     def bootstrap_gpg_home(cls) -> pathlib.Path:

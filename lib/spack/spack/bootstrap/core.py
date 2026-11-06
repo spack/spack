@@ -27,8 +27,10 @@ import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.detection
+import spack.enums
 import spack.environment
 import spack.error
+import spack.externals
 import spack.mirrors.mirror
 import spack.repo
 import spack.spec
@@ -36,6 +38,7 @@ import spack.store
 import spack.user_environment
 import spack.util.executable
 import spack.util.gpg
+import spack.util.libc
 import spack.util.spack_yaml
 import spack.util.url
 import spack.version
@@ -49,8 +52,8 @@ from ._common import (
     _root_spec,
     _try_import_from_store,
 )
-from .clingo import ClingoBootstrapConcretizer, host_externals
-from .config import interpreter_dirname, root_path, spec_for_current_python
+from .clingo import ClingoBootstrapConcretizer
+from .config import environment_path, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -64,6 +67,7 @@ ConfigDictionary = Dict[str, Any]
 ResultT = TypeVar("ResultT")
 
 _SOURCE_ONLY = {"root_policy": "source_only", "dependencies_policy": "source_only"}
+_CACHE_ONLY = {"root_policy": "cache_only", "dependencies_policy": "cache_only"}
 
 
 class BootstrapRequest(Generic[ResultT]):
@@ -138,9 +142,21 @@ def _mirror_scope(source: ConfigDictionary) -> spack.config.InternalConfigScope:
     }
     if source["type"] == "buildcache":
         # Pinned binaries can be of versions that were deprecated after they were built
-        allow = [{"labels": ["version_deprecated"]}]
+        allow = [{"labels": [spack.enums.LEGACY_DEPRECATION_LABEL]}]
         data["packages"] = {"all": {"deprecation": {"allow": allow}}}
     return spack.config.InternalConfigScope(f"bootstrap-{source['name']}-{uuid.uuid4()}", data)
+
+
+def host_externals() -> List[spack.spec.Spec]:
+    """Return the externals for the interpreter running Spack and for its libc, which replace
+    those of the host where a binary was built."""
+    externals: List[spack.externals.ExternalDict] = [
+        {"spec": spec_for_current_python(), "prefix": sys.exec_prefix}
+    ]
+    libc = spack.util.libc.libc_from_current_python_process()
+    if libc:
+        externals.append({"spec": str(libc), "prefix": libc.external_path})
+    return spack.externals.ExternalSpecsParser(externals, repo=spack.repo.PATH).all_specs()
 
 
 def _python_venv(prototype: spack.spec.Spec, python: spack.spec.Spec) -> spack.spec.Spec:
@@ -187,8 +203,8 @@ def _pinned_binary(abstract_spec: spack.spec.Spec, sha256: Dict[str, str]) -> sp
 
 def _core_environment() -> spack.environment.Environment:
     """Return the environment recording the core dependencies installed for this interpreter"""
-    path = os.path.join(root_path(), "environments", f"core-{interpreter_dirname()}")
-    if os.path.exists(os.path.join(path, spack.environment.manifest_name)):
+    path = environment_path(prefix="core-")
+    if spack.environment.is_env_dir(path):
         return spack.environment.Environment(path)
     return spack.environment.create_in_dir(path, with_view=False)
 
@@ -212,10 +228,9 @@ def _install_from_source(
                 for s in concrete_spec.traverse(root=False, deptype=dt.LINK | dt.RUN)
                 if not s.external and s.build_spec.dag_hash() not in sha256
             ]
-            cache_only = {"root_policy": "cache_only", "dependencies_policy": "cache_only"}
             installs = [
                 (from_sources, _SOURCE_ONLY),
-                ([concrete_spec], {**cache_only, "binary_checksums": sha256}),
+                ([concrete_spec], {**_CACHE_ONLY, "binary_checksums": sha256}),
             ]
         else:
             # If we compile code from sources detecting a few build tools
@@ -419,14 +434,9 @@ def _add_externals_if_missing() -> None:
     )
 
 
-def clingo_root_spec(platform: Optional[str] = None, target: Optional[str] = None) -> str:
-    """Return the root spec used to bootstrap clingo.
-
-    Args:
-        platform: platform the binary will run on. Defaults to the host platform.
-        target: target family the binary will run on. Defaults to the host target family.
-    """
-    return _root_spec("clingo-bootstrap@spack+python", platform=platform, target=target)
+def clingo_root_spec() -> str:
+    """Return the root spec used to bootstrap clingo"""
+    return _root_spec("clingo-bootstrap@spack+python")
 
 
 def _concretize_clingo(abstract_spec: spack.spec.Spec) -> spack.spec.Spec:

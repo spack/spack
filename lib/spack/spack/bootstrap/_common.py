@@ -203,19 +203,14 @@ def _executables_in_store(
     return None
 
 
-def _root_spec(spec_str: str, platform: Optional[str] = None, target: Optional[str] = None) -> str:
-    """Add the platform and target to a spec used during bootstrapping.
+def _root_spec(spec_str: str) -> str:
+    """Add the host platform and target to a spec used during bootstrapping.
 
     Args:
         spec_str: spec to be bootstrapped. Must be without platform and target.
-        platform: platform the software will run on. Defaults to the host platform.
-        target: target family the software will run on. Defaults to the host target family.
     """
-    if platform is None:
-        platform = str(spack.platforms.host())
-    if target is None:
-        target = str(spack.vendor.archspec.cpu.host().family)
-
+    platform = str(spack.platforms.host())
+    target = spack.vendor.archspec.cpu.host().family
     spec_str += f" platform={platform} target={target}"
 
     tty.debug(f"[BOOTSTRAP ROOT SPEC] {spec_str}")
