@@ -276,6 +276,37 @@ Setting it to ``false`` will not show any progress information.
 To work properly, this requires your terminal to reset its title after Spack has finished its work; otherwise, Spack's status information will remain in the terminal's title indefinitely.
 Most terminals should already be set up this way and clear Spack's status information.
 
+``plugins``
+-----------
+
+Select an installer UI plugin by entry-point name under ``config:plugins:ui``.
+Plugins are standard Python packages installed in the Python environment used to run Spack.
+For example:
+
+.. code-block:: yaml
+
+   config:
+     plugins:
+       ui: suite-ui
+
+Install an editable plugin package and select its UI with:
+
+.. code-block:: console
+
+   $ python -m pip install -e /path/to/my-suite
+   $ spack config add config:plugins:ui:suite-ui
+
+Use ``null``, omit a selection, or select ``default`` to use the corresponding built-in component.
+For example, restore the default UI with:
+
+.. code-block:: console
+
+   $ spack config add config:plugins:ui:default
+
+The initial use of the plugin framework is customization of the installer's terminal UI.
+Other uses may be added in the future.
+See :ref:`spack_plugin_system` for entry-point groups, contracts, compatibility fallback, and complete package examples.
+
 ``aliases``
 -----------
 
