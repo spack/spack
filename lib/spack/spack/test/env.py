@@ -13,6 +13,7 @@ import pytest
 
 import spack.config
 import spack.environment as ev
+import spack.main
 import spack.package_base
 import spack.platforms
 import spack.solver.asp
@@ -24,7 +25,7 @@ from spack.environment import SpackEnvironmentConfigError
 from spack.environment.environment import CURRENT_LOCKFILE_VERSION, EnvironmentManifestFile
 from spack.environment.list import UndefinedReferenceError
 from spack.traverse import traverse_nodes
-from spack.util.lang import Singleton, ensure_unwrapped
+from spack.util.lang import Singleton, ensure_unwrapped, nullcontext
 
 pytestmark = [
     pytest.mark.not_on_windows("Envs are not supported on windows"),
@@ -1111,7 +1112,7 @@ spack:
     )
 
     e = ev.Environment(env_path)
-    with e.manifest.use_config():
+    with e:
         assert not mutable_config.get("config:verify_ssl")
         python_reqs = mutable_config.get("packages")["python"]["require"]
         req_specs = {x["spec"] for x in python_reqs}
@@ -2367,3 +2368,116 @@ class TestLockfileWrites:
             e.concretize()
             e.write()
         assert roots() == {"mpileaks"}
+
+
+@pytest.mark.parametrize("another_active", [True, False])
+def test_edit_environment_that_is_not_active(
+    another_active, tmp_path: pathlib.Path, mutable_config
+):
+    """Tests that editing an environment that is not active expands its user specs with its own
+    definitions, also when another environment defining the same names is active.
+    """
+    active_dir, edited_dir = tmp_path / "active", tmp_path / "edited"
+    active_dir.mkdir()
+    edited_dir.mkdir()
+    (active_dir / "spack.yaml").write_text(
+        "spack: {definitions: [{base: [zlib, bzip2]}], specs: [$base]}"
+    )
+    (edited_dir / "spack.yaml").write_text(
+        "spack: {definitions: [{base: [cmake]}], specs: [$base]}"
+    )
+    with ev.Environment(active_dir) if another_active else nullcontext():
+        e = ev.Environment(edited_dir)
+        e.add("gmake")
+        assert [str(s) for s in e.user_specs] == ["cmake", "gmake"]
+
+
+def test_write_transaction_uses_scopes_pushed_after_loading(
+    tmp_path: pathlib.Path, mutable_config
+):
+    """Tests that a write transaction expands the user specs with the configuration scopes
+    pushed after the environment was loaded, like those of -C and -c on the command line.
+    """
+    (tmp_path / "spack.yaml").write_text("spack: {specs: [mpileaks %mytc]}")
+    e = ev.Environment(tmp_path)
+    toolchains = {"mytc": "%c=gcc"}
+    mutable_config.push_scope(
+        spack.config.InternalConfigScope("custom", {"toolchains": toolchains}),
+        priority=ConfigScopePriority.CUSTOM,
+    )
+    with e.write_transaction():
+        assert e.user_specs.specs == spack.spec.parse("mpileaks %mytc", toolchains=toolchains)
+
+
+def test_env_variable_in_include_is_the_including_environment(
+    tmp_path: pathlib.Path, mutable_config
+):
+    """Tests that ``$env`` in the include paths of an environment is the path of that
+    environment, also when another environment is active.
+    """
+    active_dir, loaded_dir = tmp_path / "active", tmp_path / "loaded"
+    for env_dir, spec in ((active_dir, "zlib"), (loaded_dir, "cmake")):
+        env_dir.mkdir()
+        (env_dir / "spack.yaml").write_text("spack: {include: [$env/defs.yaml], specs: [$base]}")
+        (env_dir / "defs.yaml").write_text(f"definitions: [{{base: [{spec}]}}]")
+
+    with ev.Environment(active_dir):
+        e = ev.Environment(loaded_dir)
+        assert [str(s) for s in e.user_specs] == ["cmake"]
+
+
+@pytest.mark.parametrize("active", [True, False])
+def test_write_transaction_reads_included_files_again(
+    active, tmp_path: pathlib.Path, mutable_config
+):
+    """Tests that a write transaction reads again the included files of an environment, and
+    its include list, when they were changed after the environment was loaded.
+    """
+    (tmp_path / "first.yaml").write_text("definitions: [{base: [zlib]}]")
+    (tmp_path / "second.yaml").write_text("definitions: [{base: [cmake]}]")
+    (tmp_path / "spack.yaml").write_text("spack: {include: [first.yaml], specs: [$base]}")
+    e = ev.Environment(tmp_path)
+
+    with e if active else nullcontext():
+        (tmp_path / "spack.yaml").write_text("spack: {include: [second.yaml], specs: [$base]}")
+        with e.write_transaction():
+            assert [str(s) for s in e.user_specs] == ["cmake"]
+
+        (tmp_path / "second.yaml").write_text("definitions: [{base: [bzip2]}]")
+        with e.write_transaction():
+            assert [str(s) for s in e.user_specs] == ["bzip2"]
+
+
+def test_env_variable_in_view_root_is_the_environment_of_the_view(
+    tmp_path: pathlib.Path, mutable_config
+):
+    """Tests that ``$env`` in the view root of an environment is the path of that environment,
+    also when another environment is active.
+    """
+    active_dir, loaded_dir = tmp_path / "active", tmp_path / "loaded"
+    for env_dir in (active_dir, loaded_dir):
+        env_dir.mkdir()
+        (env_dir / "spack.yaml").write_text("spack: {specs: [zlib], view: $env/myview}")
+
+    assert ev.Environment(loaded_dir).default_view.root == str(loaded_dir / "myview")
+    with ev.Environment(active_dir):
+        assert ev.Environment(loaded_dir).default_view.root == str(loaded_dir / "myview")
+
+
+@pytest.mark.parametrize("relative", [True, False])
+def test_env_variable_in_includes_of_a_command_line_environment_is_the_active_one(
+    relative, tmp_path: pathlib.Path, mutable_config
+):
+    """Tests that ``$env`` in the include paths of an environment given with ``-C`` is the path
+    of the active environment.
+    """
+    project, shared = tmp_path / "project", tmp_path / "shared"
+    project.mkdir()
+    shared.mkdir()
+    (project / "spack.yaml").write_text("spack: {specs: []}")
+    (project / "local.yaml").write_text("config: {build_jobs: 3}")
+    (shared / "spack.yaml").write_text("spack: {include: [$env/local.yaml]}")
+
+    with fs.working_dir(str(tmp_path)), ev.Environment(project):
+        spack.main.add_command_line_scopes(mutable_config, ["shared" if relative else str(shared)])
+        assert mutable_config.get("config:build_jobs") == 3
