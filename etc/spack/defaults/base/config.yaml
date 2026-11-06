@@ -58,7 +58,7 @@ config:
   # (i.e., ``$TMP` or ``$TMPDIR``).
   #
   # Another option that prevents conflicts and potential permission issues is
-  # to specify `$user_cache_path/stage`, which ensures each user builds in their
+  # to specify `$state_home/stage`, which ensures each user builds in their
   # home directory.
   #
   # If you do Spack builds inside of allocations and want stages to persist

@@ -466,15 +466,7 @@ The defining scope is not removed merely because it defines `include::`; inherit
 
 ## 4.5 Updating command completion while isolated
 
-When developing an isolated Spack instance, command completion should be regenerated using the normal, non-isolated scope graph and without an active environment. This prevents the generated completion files from incorporating isolated or environment-specific configuration scopes.
-
-Run:
-
-```console
-SPACK_DISABLE_ISOLATION=1 spack -E commands --update-completion
-```
-
-`SPACK_DISABLE_ISOLATION` causes the top-level include to skip the isolate scope for this invocation. `-E` tells Spack not to activate an environment. Neither setting changes the persistent isolation configuration; they only affect this command invocation.
+When developing an isolated Spack instance, command completion should be regenerated using the normal, non-isolated scope graph and without an active environment.
 
 ## 4.6 Isolation undo
 
