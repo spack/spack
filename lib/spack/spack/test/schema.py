@@ -257,11 +257,13 @@ def test_spack_schemas_are_valid():
 
 
 def test_filter_schema_accepts_valid_configuration():
-    """Accept valid filter settings and both package filter forms."""
+    """Accept the filter structure, including package-name lists and named package modes."""
     v = spack.schema.Validator(spack.schema.filter.schema)
     v.validate(
         {
             "filter": {
+                # Schema validation accepts format strings, even path-like ones; creation
+                # separately checks that concrete projections produce valid, unambiguous specs.
                 "projections": {
                     "all": "{name}@{version}",
                     "mpileaks": "{name}@{version}/{hash:7}",
@@ -274,6 +276,7 @@ def test_filter_schema_accepts_valid_configuration():
             }
         }
     )
+    # Named modes are alternatives to the allow/block mapping, not nested external filters.
     v.validate({"filter": {"packages": "all"}})
     v.validate({"filter": {"packages": "externals_only"}})
 
@@ -285,9 +288,11 @@ def test_filter_schema_accepts_valid_configuration():
         {"filter": {"unknown": []}},
         {"filter": {"flatten": "yes"}},
         {"filter": {"specs": {"allow": True}}},
+        # Mode names are exact: neither a shorthand nor a disable mode is supported.
         {"filter": {"packages": "externals"}},
         {"filter": {"packages": "none"}},
         {"filter": {"packages": {"allow": True}}},
+        # Package filters select whole entries; they do not contain per-external filter rules.
         {"filter": {"packages": {"externals": {"block": True}}}},
         {"filter": {"packages": {"externals": {"allow": ["cmake"]}}}},
         {"filter": {"packages": {"unknown": []}}},
@@ -295,7 +300,7 @@ def test_filter_schema_accepts_valid_configuration():
     ],
 )
 def test_filter_schema_rejects_invalid_configuration(data):
-    """Reject unknown keys and invalid filter setting types."""
+    """Reject unknown keys, unsupported package modes, and invalid filter setting types."""
     v = spack.schema.Validator(spack.schema.filter.schema)
     with pytest.raises(jsonschema.ValidationError):
         v.validate(data)
