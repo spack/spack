@@ -1608,7 +1608,6 @@ def migrate_spack_prefix(old_resources):
 
 def _force_old_layout(to_move) -> List[str]:
     config_path = os.path.join(spack.paths.layout_scope_path, "config.yaml")
-    filesystem.mkdirp(spack.paths.layout_scope_path, default_perms="parents")
 
     config_changes: Dict[str, Any] = {}
     retained_resources: List[str] = []
@@ -1636,8 +1635,7 @@ def _force_old_layout(to_move) -> List[str]:
 
     # Write config scope files to the layout scope only if we have config changes
     if config_changes:
-        with open(config_path, "w", encoding="utf-8") as f:
-            syaml.dump({"config": config_changes}, f)
+        spack.config.write_config_file(config_path, {"config": config_changes})
         tty.debug(f"Wrote config.yaml to {config_path}")
     else:
         tty.debug("No config changes needed, skipping config.yaml")

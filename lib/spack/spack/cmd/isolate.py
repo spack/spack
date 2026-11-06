@@ -7,10 +7,11 @@ import sys
 from argparse import ArgumentParser
 from typing import Dict, List
 
+import spack.config
 import spack.migrate
 import spack.paths
 import spack.util.spack_yaml as syaml
-from spack.util import tty
+from spack.util import filesystem, tty
 
 description = "isolate the current spack instance from the home directory"
 section = "config"
@@ -41,8 +42,7 @@ def _isolate_include_config(new_user_path):
     include_data = syaml.syaml_dict([(include_key, include_list)])
 
     include_yaml_path = os.path.join(spack.paths.isolate_scope_path, "include.yaml")
-    with open(include_yaml_path, "w", encoding="utf-8") as f:
-        syaml.dump_config(include_data, f)
+    spack.config.write_config_file(include_yaml_path, include_data)
 
 
 def _isolate_locations_config(isolate_target: str) -> Dict[str, List[str]]:
@@ -67,20 +67,20 @@ def _setup_isolate_scope(new_user_path, overwrite: bool, reuse_old: bool) -> str
             pass
         elif overwrite:
             shutil.rmtree(spack.paths.isolate_scope_path)
-            os.makedirs(spack.paths.isolate_scope_path)
+            filesystem.mkdirp(spack.paths.isolate_scope_path, default_perms="parents")
         elif not reuse_old:
             tty.die(
                 "An isolation already exists for this Spack instance:"
                 " see --help for --overwrite/--reuse-old options"
             )
     else:
-        os.makedirs(spack.paths.isolate_scope_path, exist_ok=True)
+        filesystem.mkdirp(spack.paths.isolate_scope_path, default_perms="parents")
 
     # For --self, the isolate scope is also the target, so user config additions go to
     # its `user` subdirectory rather than the scope directory itself.
     if is_self:
         user_redirect_path = os.path.join(spack.paths.isolate_scope_path, "user")
-        os.makedirs(user_redirect_path, exist_ok=True)
+        filesystem.mkdirp(user_redirect_path, default_perms="parents")
         final_user_path = user_redirect_path
     else:
         final_user_path = new_user_path
@@ -99,7 +99,7 @@ def _ensure_destination_setup(destination: str, overwrite: bool):
             shutil.rmtree(destination)
         else:
             tty.die(f"Isolation destination: {destination} already exists")
-    os.mkdir(destination)
+    filesystem.mkdirp(destination, default_perms="parents")
     return os.path.abspath(destination)
 
 
@@ -145,7 +145,7 @@ def _do_isolate(args):
     if os.path.exists(args.path):
         test_file = os.path.join(args.path, ".spack-write-test")
         try:
-            with open(test_file, "w", encoding="utf-8") as f:
+            with open(test_file, "w", encoding="utf-8"):
                 pass
             os.remove(test_file)
         except (OSError, PermissionError) as e:
@@ -211,9 +211,7 @@ def _do_isolate(args):
         tty.msg(f"Keeping existing {config_path}")
         return
 
-    os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    with open(config_path, "w", encoding="utf-8") as f:
-        syaml.dump(scope_config, f)
+    spack.config.write_config_file(config_path, scope_config)
 
 
 def _undo_isolate():

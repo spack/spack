@@ -1897,6 +1897,20 @@ def read_config_file(
         raise ConfigFileError(str(e)) from e
 
 
+def write_config_file(path: str, data: Dict[str, Any]) -> None:
+    """Write a configuration file, creating its directory if needed.
+
+    A newly written scope should be as readable as the directory it is created in rather than as
+    readable as the current umask happens to allow. The directory inherits the permission bits of
+    its nearest existing parent, and the file gets the directory's bits without the execute bits.
+    """
+    directory = os.path.dirname(path)
+    filesystem.mkdirp(directory, default_perms="parents")
+    with open(path, "w", encoding="utf-8") as f:
+        syaml.dump_config(data, f)
+    os.chmod(path, os.stat(directory).st_mode & 0o666)
+
+
 def _mark_internal(data, name):
     """Add a simple name mark to raw YAML/JSON data.
 
