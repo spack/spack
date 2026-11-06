@@ -2113,7 +2113,7 @@ def test_env_create_filter_requires_source(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_rejects_lockfile(tmp_path: pathlib.Path):
-    """Reject lockfiles as sources for filtered environment creation."""
+    """Reject a standalone lockfile even when it belongs to a valid source environment."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2141,6 +2141,8 @@ def test_env_create_filter_defaults_to_abstract_specs(tmp_path: pathlib.Path, sp
     env("create", "--filter", filter_yaml, "filtered", "source")
 
     filtered = ev.read("filtered")
+    # callpath exists only in the concrete DAG, not as an explicit manifest dependency.
+    # Neither blocking nor flattening can discover it; allowing only it selects nothing.
     expected = [] if "allow" in specs_filter else ["mpileaks"]
     assert [str(spec) for spec in filtered.user_specs] == expected
     assert not filtered.concrete_roots()
@@ -2175,6 +2177,7 @@ def test_env_create_filter_preserves_concrete_roots(tmp_path: pathlib.Path):
 
 def test_env_create_filter_can_promote_dependency_of_excluded_root(tmp_path: pathlib.Path):
     """Select an allowed sub-DAG below an unmatched root, even if that ancestor is blocked."""
+    # Blocking applies to the selected callpath DAG, not its discarded mpileaks ancestor.
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2206,10 +2209,12 @@ def test_env_create_filter_can_promote_dependency_of_excluded_root(tmp_path: pat
 @pytest.mark.parametrize(
     "allowed, blocked, selected_names",
     [
+        # Stop at the first allowed node on each path, retaining its entire sub-DAG.
         ("mpileaks, callpath, libelf", "", {"mpileaks"}),
         ("callpath, libdwarf, libelf", "", {"callpath"}),
         ("libelf", "", {"libelf"}),
         ("callpath", "mpileaks", {"callpath"}),
+        # A blocked candidate is not searched again for otherwise allowed descendants.
         ("mpileaks, callpath", "mpileaks", set()),
         ("callpath, libelf", "libdwarf", set()),
         ("externaltool", "", set()),
@@ -2227,6 +2232,7 @@ def test_env_create_filter_selects_allowed_subdags(
     source.write()
     selected = [spec for spec in source.all_specs() if spec.name in selected_names]
     expected = {node.dag_hash() for spec in selected for node in spec.traverse()}
+    # Flattening changes root membership, not which surviving DAG nodes are retained.
     expected_roots = expected if flatten else {spec.dag_hash() for spec in selected}
 
     filter_yaml = _write_filter_yaml(
@@ -2253,6 +2259,7 @@ def test_env_create_filter_selects_allowed_subdags(
 @pytest.mark.parametrize("flatten", [False, True])
 def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, flatten: bool):
     """Keep group metadata and concrete roots when filtering grouped specs."""
+    # Seed each group's concrete root directly to isolate filtering from grouped solving.
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         """spack:
@@ -2299,6 +2306,7 @@ def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, fla
         for entry in filtered.concretized_roots
     ]
     assert roots_by_group[:2] == [("base", "libelf"), ("apps", "mpileaks")]
+    # Only new roots enter default; flattening must not duplicate existing grouped roots.
     promoted = [name for group, name in roots_by_group if group == "default"]
     assert ("callpath" in promoted) == flatten
     assert not any(name in ("libelf", "mpileaks") for name in promoted)
@@ -2308,7 +2316,9 @@ def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, fla
 @pytest.mark.parametrize(
     "specs_filter, selected_names",
     [
+        # Reject all of mpileaks, rather than salvaging unblocked descendants by flattening.
         ("block: [callpath]", {"externaltool"}),
+        # Allowing mpileaks keeps dependencies that do not themselves match the allow list.
         ("allow: [mpileaks, libelf, libdwarf]", {"mpileaks"}),
     ],
 )
@@ -2344,6 +2354,7 @@ def test_env_create_filter_preserves_surviving_dags(
     if specs_filter.startswith("block:"):
         assert "Dropping filtered root mpileaks" in env.output
         assert "excluded spec" in env.output
+    # Hash membership alone would miss an in-place edge edit with a cached DAG hash.
     for spec in filtered.all_specs():
         assert {
             (edge.spec.dag_hash(), edge.depflag, edge.virtuals)
@@ -2361,6 +2372,7 @@ def test_env_create_filter_preserves_surviving_dags(
 
 def test_env_create_filter_drops_root_with_excluded_dependency(tmp_path: pathlib.Path):
     """Drop a concrete root when its dependencies include a blocked spec."""
+    # libelf survives as an independent root even though it also occurs below mpileaks.
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2391,6 +2403,8 @@ def test_env_create_filter_drops_dags_with_blocked_build_specs(
     """Drop whole DAGs with blocked build provenance, preserving surviving lockfile references."""
     original = spack.concretize.concretize_one("mpileaks ^libelf@0.8.13")
     replacement = spack.concretize.concretize_one("libelf@0.8.12")
+    # The runtime DAG uses 0.8.12, but build provenance still refers to the original 0.8.13
+    # DAG. The constrained mpileaks block must inspect that provenance, not just runtime deps.
     spliced = original.splice(replacement, transitive=True)
     env("create", "source")
     source = ev.read("source")
@@ -2412,6 +2426,7 @@ def test_env_create_filter_drops_dags_with_blocked_build_specs(
     assert lockfile["concrete_specs"]
     assert spliced.dag_hash() not in {spec.dag_hash() for spec in filtered.concrete_roots()}
     assert "Dropping filtered root mpileaks" in env.output
+    # externaltool keeps the output nonempty; every serialized edge must still resolve.
     for node in lockfile["concrete_specs"].values():
         for dependency in node.get("dependencies", []):
             assert dependency["hash"] in lockfile["concrete_specs"]
@@ -2450,12 +2465,13 @@ def test_env_create_filter_accepts_projection_that_formats_to_spec(tmp_path: pat
     with open(filtered.lock_path, encoding="utf-8") as stream:
         lockfile = filtered._read_lockfile(stream)
 
+    # Projected text also becomes the lockfile's abstract root spec, so it must parse there.
     root_specs = [Spec(root["spec"]) for root in lockfile["roots"]]
     assert [spec.name for spec in root_specs] == ["mpileaks"]
 
 
 def test_env_create_filter_rejects_projection_that_formats_to_path(tmp_path: pathlib.Path):
-    """Reject a root projection that produces a path instead of a spec."""
+    """Reject a path-style projection at creation time, even though the schema allows strings."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2477,6 +2493,7 @@ def test_env_create_filter_rejects_projection_that_formats_to_path(tmp_path: pat
 
 def test_env_create_filter_rejects_duplicate_projected_roots(tmp_path: pathlib.Path):
     """Reject projections that make distinct concrete roots indistinguishable."""
+    # Seed two versions without a unified solve: both project to libelf but have distinct hashes.
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text("spack:\n  specs: [libelf@0.8.12, libelf@0.8.13]\n")
     source = ev.create("source", spack_yaml)
@@ -2491,11 +2508,14 @@ def test_env_create_filter_rejects_duplicate_projected_roots(tmp_path: pathlib.P
     )
     with pytest.raises(ev.SpackEnvironmentError, match="matches multiple concrete roots"):
         env("create", "--filter", filter_yaml, "filtered", "source")
+    # A projection collision must fail before publishing a managed environment.
     assert not pathlib.Path(ev.root("filtered")).exists()
 
 
 def test_env_create_filter_drops_include_concrete_even_when_allowed(tmp_path: pathlib.Path):
     """Omit include_concrete even when the config filter allows it."""
+    # Unlike ordinary include entries, legacy include_concrete is dropped with a warning,
+    # without requiring an explicit block; retaining it could reintroduce unfiltered specs.
     env("create", "included")
     included = ev.read("included")
     with included:
@@ -2531,8 +2551,9 @@ def test_env_create_filter_drops_include_concrete_even_when_allowed(tmp_path: pa
 
 
 def test_env_create_filter_drops_blocked_abstract_dependency(tmp_path: pathlib.Path):
-    """Drop an abstract root that depends on a blocked spec."""
+    """Drop an abstract root with a blocked explicit dependency, without consulting recipes."""
     spack_yaml = tmp_path / "spack.yaml"
+    # This deliberately synthetic dependency only needs to parse, not concretize.
     spack_yaml.write_text("spack:\n  specs: [zlib ^licensed-solver, libelf]\n")
     filter_yaml = _write_filter_yaml(tmp_path, "filter:\n  specs:\n    block: [licensed-solver]\n")
     env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
@@ -2543,11 +2564,13 @@ def test_env_create_filter_drops_blocked_abstract_dependency(tmp_path: pathlib.P
 @pytest.mark.parametrize(
     "allowed, blocked, selected_specs",
     [
+        # An empty allow list selects original roots; a matching root stops the search below it.
         ("", "", ["mpileaks@2.3+debug ^callpath@1.0 ^libelf@0.8.13"]),
         ("mpileaks, callpath", "", ["mpileaks@2.3+debug ^callpath@1.0 ^libelf@0.8.13"]),
         ("callpath, libelf", "", ["callpath@1.0", "libelf@0.8.13"]),
         ("callpath@1.0", "mpileaks", ["callpath@1.0"]),
         ("callpath, libelf", "libelf", ["callpath@1.0"]),
+        # Reject the selected mpileaks DAG outright, even when flattening could expose libelf.
         ("mpileaks, libelf", "callpath", []),
         ("", "mpileaks", []),
         ("callpath@2.0", "", []),
@@ -2556,7 +2579,7 @@ def test_env_create_filter_drops_blocked_abstract_dependency(tmp_path: pathlib.P
 def test_env_create_filter_selects_abstract_subdags(
     tmp_path: pathlib.Path, flatten: bool, allowed: str, blocked: str, selected_specs
 ):
-    """Filter explicit dependencies in order and serialize without concrete projections."""
+    """Select explicit sub-DAGs, block whole candidates, then flatten only survivors."""
     spack_yaml = tmp_path / "spack.yaml"
     source_manifest = "spack:\n  specs: [mpileaks@2.3+debug ^callpath@1.0 ^libelf@0.8.13]\n"
     spack_yaml.write_text(source_manifest)
@@ -2574,6 +2597,8 @@ def test_env_create_filter_selects_abstract_subdags(
     )
     env("create", "--filter", filter_yaml, "filtered", str(spack_yaml))
 
+    # str(spec) preserves constraints that the deliberately lossy {name} projection would erase.
+    # The two ^ dependencies are explicit siblings, not a DAG inferred from package recipes.
     selected_roots = [Spec(spec_string) for spec_string in selected_specs]
     expected = {
         str(node) for spec in selected_roots for node in (spec.traverse() if flatten else [spec])
@@ -2593,6 +2618,7 @@ def test_env_create_filter_selects_abstract_subdags(
         (["callpath", "libdwarf"], [], {"callpath"}),
         (["callpath", "libdwarf"], ["mpileaks"], {"callpath"}),
         (["mpileaks", "libelf"], ["callpath"], set()),
+        # Reject callpath via libdwarf, but select libelf independently through the mpich path.
         (["callpath", "libelf"], ["libdwarf"], {"libelf"}),
         (["callpath", "libelf"], [], {"callpath", "libelf"}),
         (["libelf"], [], {"libelf"}),
@@ -2602,6 +2628,7 @@ def test_env_create_filter_nested_abstract_subdags(
     monkeypatch, flatten: bool, allowed, blocked, selected_names
 ):
     """Keep explicit nested DAGs intact and deduplicate shared promoted dependencies."""
+    # libelf is reachable along two paths; a first match on one must not hide the other path.
     abstract_root = Spec.from_literal(
         {"mpileaks": {"callpath": {"libdwarf": {"libelf": None}}, "mpich": {"libelf": None}}}
     )
@@ -2616,11 +2643,12 @@ def test_env_create_filter_nested_abstract_subdags(
         str(node) for spec in selected_roots for node in (spec.traverse() if flatten else [spec])
     }
     assert set(filtered_specs) == expected
+    # Newly promoted entries are unique by output string, even when reached more than once.
     assert len(filtered_specs) == len(expected)
 
 
 def test_env_create_filter_blocks_external_concrete_specs_with_specs_block(tmp_path: pathlib.Path):
-    """Block external concrete roots with a specs block filter."""
+    """Apply specs blocking to external DAG nodes, not just to packages built by Spack."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2645,7 +2673,7 @@ def test_env_create_filter_blocks_external_concrete_specs_with_specs_block(tmp_p
 
 
 def test_env_create_filter_includes_versioned_external_concrete_specs(tmp_path: pathlib.Path):
-    """Retain versioned external roots during concrete filtering."""
+    """Retain the selected external root's concrete version during filtering."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2668,7 +2696,7 @@ def test_env_create_filter_includes_versioned_external_concrete_specs(tmp_path: 
 
 
 def test_env_create_filter_blocks_versioned_external_concrete_specs(tmp_path: pathlib.Path):
-    """Exclude versioned external roots that match a specs block filter."""
+    """Match version constraints against external concrete roots when applying specs blocks."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2694,6 +2722,8 @@ def test_env_create_filter_blocks_versioned_external_concrete_specs(tmp_path: pa
 
 def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
     """Filter roots and configuration from a concrete source environment."""
+    # Persist package settings in the source scope rather than inheriting active configuration.
+    # cmake is configuration-only, while libelf is also a concrete root.
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2744,7 +2774,8 @@ def test_env_create_filter_from_concrete_env(tmp_path: pathlib.Path):
 
 @pytest.mark.parametrize("flatten", [False, True])
 def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path, flatten: bool):
-    """Drop lockfile includes when creating a filtered environment."""
+    """Drop a blocked lockfile include without promoting its roots, even when flattening."""
+    # cmake belongs only to the included lockfile, not the source's own root DAGs.
     env("create", "included")
     included = ev.read("included")
     with included:
@@ -2786,7 +2817,7 @@ def test_env_create_filter_drops_lockfile_includes(tmp_path: pathlib.Path, flatt
 
 
 def _write_source_with_include(tmp_path: pathlib.Path) -> pathlib.Path:
-    """Create a source environment with a relative config include."""
+    """Create a relative include whose mirror exposes accidental config copying on activation."""
     source_dir = tmp_path / "source"
     source_dir.mkdir()
     (source_dir / "common.yaml").write_text(
@@ -2811,7 +2842,8 @@ def _write_source_with_include(tmp_path: pathlib.Path) -> pathlib.Path:
 def test_env_create_filter_rejects_includes_it_cannot_filter(
     tmp_path: pathlib.Path, filter_config: str
 ):
-    """Require an explicit block for every source configuration include."""
+    """Require an explicit config block of include, not just filters on its contents."""
+    # A retained include could bypass filtering; blocking mirrors does not filter common.yaml.
     source_dir = _write_source_with_include(tmp_path)
     filter_yaml = _write_filter_yaml(tmp_path, f"filter:\n  {filter_config}")
     filtered_dir = tmp_path / "filtered"
@@ -2825,6 +2857,7 @@ def test_env_create_filter_rejects_includes_it_cannot_filter(
 def test_env_create_filter_drops_blocked_includes(tmp_path: pathlib.Path, concrete: bool):
     """Omit blocked includes and unrelated source files from the destination."""
     source_dir = _write_source_with_include(tmp_path)
+    # Synthetic sentinels catch directory-copy leaks, including hidden generated content.
     (source_dir / "license.dat").write_text("private")
     (source_dir / ".spack-env" / "logs").mkdir(parents=True)
     (source_dir / ".spack-env" / "logs" / "licensed-solver.log").write_text("private")
@@ -2844,18 +2877,19 @@ def test_env_create_filter_drops_blocked_includes(tmp_path: pathlib.Path, concre
     assert not (filtered_dir / "common.yaml").exists()
     assert not (filtered_dir / "license.dat").exists()
     assert not (filtered_dir / ".spack-env" / "logs").exists()
+    # Dropping the include must also remove its effective configuration on activation.
     with filtered:
         assert "internal" not in spack.config.CONFIG.get("mirrors")
     assert bool(filtered.concrete_roots()) == concrete
 
 
 def test_env_create_filter_removes_partial_destination(tmp_path: pathlib.Path, monkeypatch):
-    """Remove a partial destination when filtered manifest creation fails."""
+    """Clean up staging and leave no published destination when manifest creation fails."""
     source_dir = _write_source_with_include(tmp_path)
     filtered_dir = tmp_path / "filtered"
 
     def fail(*args):
-        """Simulate a failure while setting the filtered manifest."""
+        """Fail after staging is initialized but before the destination can be published."""
         raise RuntimeError("manifest failure")
 
     monkeypatch.setattr(ev.environment, "_set_filtered_manifest", fail)
@@ -2869,11 +2903,13 @@ def test_env_create_filter_removes_partial_destination(tmp_path: pathlib.Path, m
             str(source_dir),
         )
     assert not filtered_dir.exists()
+    # Temporary siblings are an implementation detail, but must not survive a failed creation.
     assert not list(tmp_path.glob(".filtered-*"))
 
 
 def test_env_create_filter_preserves_existing_destination(tmp_path: pathlib.Path):
     """Leave an existing destination untouched when creation is rejected."""
+    # Even a directory that is not an environment is user-owned and must not be replaced.
     source_dir = _write_source_with_include(tmp_path)
     filtered_dir = tmp_path / "filtered"
     filtered_dir.mkdir()
@@ -2892,7 +2928,7 @@ def test_env_create_filter_preserves_existing_destination(tmp_path: pathlib.Path
 
 
 def test_env_create_filter_blocked_spec_drops_package_entry(tmp_path: pathlib.Path):
-    """Remove package settings for a blocked spec."""
+    """Remove a blocked package's settings even when it is absent from the source roots."""
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         "spack:\n  specs: [libelf]\n  packages:\n"
@@ -2918,6 +2954,7 @@ def test_env_create_filter_copies_only_source_concretizer(
         tmp_path, "filter:\n  concrete: false\n  config:\n    allow: [concretizer]\n"
     )
 
+    # Active overrides must neither replace manifest values nor fill in absent source sections.
     with mutable_config.override("concretizer", {"force": True, "reuse": True}):
         env("create", "--filter", filter_yaml, "filtered", str(source_dir))
 
@@ -2926,7 +2963,7 @@ def test_env_create_filter_copies_only_source_concretizer(
 
 
 def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):
-    """Keep only packages with externals in externals-only mode."""
+    """Keep package entries with externals, independently of which specs are source roots."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -2963,7 +3000,7 @@ def test_env_create_filter_packages_externals_only(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_packages_include_all_by_default(tmp_path: pathlib.Path):
-    """Keep every allowed package entry by default."""
+    """Default to all source package settings, including global and non-external entries."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -3001,7 +3038,8 @@ def test_env_create_filter_packages_include_all_by_default(tmp_path: pathlib.Pat
 
 
 def test_env_create_filter_packages_allow_block_entries(tmp_path: pathlib.Path):
-    """Apply package allow and block lists to source package settings."""
+    """Apply package-name allow lists, with blocks taking precedence over allowed names."""
+    # cmake is both allowed and blocked; libelf is omitted from allow; all is a literal key.
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -3047,7 +3085,7 @@ def test_env_create_filter_packages_allow_block_entries(tmp_path: pathlib.Path):
 def test_env_create_filter_packages_externals_only_excludes_non_external_entries(
     tmp_path: pathlib.Path,
 ):
-    """Exclude package entries without externals in externals-only mode."""
+    """Exclude global compiler and require-only settings while retaining external packages."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -3091,6 +3129,7 @@ def test_env_create_filter_packages_externals_only_preserves_external_entries(
     tmp_path: pathlib.Path,
 ):
     """Preserve all external definitions for an included package."""
+    # externaltool is not a root: copy its whole entry, not just an external chosen by a solve.
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -3129,7 +3168,7 @@ def test_env_create_filter_packages_externals_only_preserves_external_entries(
 
 
 def test_env_create_filter_packages_allow_block_external_package_entries(tmp_path: pathlib.Path):
-    """Apply package allow and block lists to external package entries."""
+    """Block an entire allowed package entry, including every external version it defines."""
     env("create", "source")
     source = ev.read("source")
     with source:
@@ -3212,6 +3251,7 @@ def test_env_create_filter_from_manifest_preserves_grouped_specs(
     tmp_path: pathlib.Path, flatten: bool, allow_dependencies: bool
 ):
     """Preserve root occurrences and group metadata while promoting dependencies to default."""
+    # Repeated original entries are intentional: only newly promoted strings are deduplicated.
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         """spack:
@@ -3244,10 +3284,13 @@ def test_env_create_filter_from_manifest_preserves_grouped_specs(
     filtered = ev.read("filtered")
     filtered_yaml = filtered.manifest["spack"]
 
+    # Selection alone can promote callpath; flattening is not required for that promotion.
+    # libelf is already emitted in base, so it must never be added to default as well.
     expected_promoted = ["callpath"] if allow_dependencies or flatten else []
     assert [str(spec) for spec in filtered.user_specs] == expected_promoted
     assert [str(spec) for spec in filtered.user_specs_by(group="base")] == ["libelf", "libelf"]
     app_specs = [] if allow_dependencies else [str(Spec("mpileaks ^callpath ^libelf"))] * 2
+    # Preserve apps and its needs edge even if selection removes every spec in that group.
     assert filtered_yaml["specs"] == expected_promoted + [
         {
             "group": "base",
@@ -3288,7 +3331,7 @@ def test_env_create_filter_reads_filter_from_file(tmp_path: pathlib.Path):
 
 
 def test_env_create_filter_manifest_requires_non_concrete(tmp_path: pathlib.Path):
-    """Reject concrete filtering when the source is only a manifest."""
+    """Require an environment directory for concrete filtering, rather than solving a manifest."""
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
         """spack:

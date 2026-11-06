@@ -157,7 +157,11 @@ def _env_create(
             environment file, otherwise they may be made absolute if the new
             environment is in a different location
         include_concrete: list of the included concrete environments
-        filter_file: optional filter configuration file
+        filter_file: optional filter configuration file; requires an init_file source
+            and cannot be combined with include_concrete. Defaults to manifest-only
+            filtering, even if the source has a lockfile. With concrete: true, the
+            source must be an environment directory with a lockfile; retained DAGs
+            preserve their hashes without reconcretization.
     """
     if not dir:
         env = ev.create(
