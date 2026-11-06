@@ -5,9 +5,11 @@
 import os
 import pathlib
 import sys
+from types import SimpleNamespace
 
 import pytest
 
+import spack.user_environment
 from spack.paths import spack_root
 from spack.util import environment
 from spack.util.environment import (
@@ -587,3 +589,15 @@ def test_sourcing_file_with_spaces(tmp_path):
 
     assert env["FROM_SPACED_PATH"] == "yes"
     assert env["FROM_SPACED_ARG"] == "arg with space"
+
+
+def test_project_env_mods_prefers_longest_prefix():
+    """A prefix that starts with another prefix is projected as a whole."""
+    curl = SimpleNamespace(prefix="/s/tools/curl", external=False)
+    curl_zlib = SimpleNamespace(prefix="/s/tools/curl-zlib", external=False)
+    views = {"/s/tools/curl": "/view/curl", "/s/tools/curl-zlib": "/view/zlib"}
+    view = SimpleNamespace(get_projection_for_spec=lambda s: views[s.prefix])
+    env = EnvironmentModifications()
+    env.set("PATHS", "/s/tools/curl-zlib/bin:/s/tools/curl/bin:/s/tools/curl")
+    spack.user_environment.project_env_mods(curl, curl_zlib, view=view, env=env)
+    assert env.env_modifications[0].value == "/view/zlib/bin:/view/curl/bin:/view/curl"
