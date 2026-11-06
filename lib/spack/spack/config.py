@@ -2346,12 +2346,6 @@ def freeze(home_vars):
     _frozen_home = home_vars
 
 
-def is_frozen():
-    """Indicates that config-based variables have been set in place in
-    such a way that applying new configuration to them would be ignored."""
-    return bool(_frozen_home)
-
-
 def collect():
     return {
         "data": _resolve_location_var("data"),
