@@ -718,6 +718,20 @@ def test_a_pinned_binary_is_installed_with_its_checksums(binary_index, recording
     assert mirrors == {"binaries": "https://example.com"}
 
 
+def test_a_buildcache_source_without_checksums_asks_for_regeneration(mutable_config):
+    """Tests the error for a mirror created by ``spack bootstrap mirror`` of an older Spack"""
+    source = {
+        "name": "local-binaries",
+        "type": "buildcache",
+        "metadata": "/metadata",
+        "info": {"url": "https://example.com"},
+    }
+    request = spack.bootstrap.core.BootstrapRequest.for_executables(["foo"], "py-extension1")
+
+    with pytest.raises(RuntimeError, match="run that command again"):
+        spack.bootstrap.core._install_from_source(request, source)
+
+
 def test_clingo_is_not_concretized_by_the_regular_concretizer(mutable_config, monkeypatch):
     """Among the binaries we have clingo, so we can't concretize that with clingo."""
     requests: List[Any] = []
