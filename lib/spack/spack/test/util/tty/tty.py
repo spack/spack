@@ -93,3 +93,16 @@ def test_info(capfd, monkeypatch, msg, trace, wrap):
         assert msg in out
 
     assert out.count("\n") == num_newlines
+
+
+def test_band_fills_the_width_with_dashes():
+    """Tests that dashes run out to the requested width."""
+    line = tty.band("label", 40, indent=2)
+    assert line == "  -- label " + "-" * 29
+    assert len(line) == 40
+
+
+def test_band_draws_a_short_rule_when_there_is_no_room_for_one():
+    """Tests that a label wider than the width still gets a rule, overflowing the width."""
+    line = tty.band("a label wider than the width it is given", 20, indent=2)
+    assert line == "  -- a label wider than the width it is given ------"

@@ -502,6 +502,53 @@ This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the user, and can be included in ``.bashrc`` files, etc.
 The ``loads`` file may also be copied out of the environment, renamed, etc.
 
+.. _cmd-spack-diff-environments:
+
+Comparing Environments
+^^^^^^^^^^^^^^^^^^^^^^
+
+``spack diff`` compares two concrete environments.
+Each argument is the name of a managed environment, an environment directory, or a lockfile.
+The second argument is taken to be the later state of the first.
+
+A common use is to check what a new concretization changed.
+Keep a copy of the lockfile, modify the environment and concretize it again, then compare the copy with the environment:
+
+.. code-block:: console
+
+   $ cp myenv/spack.lock before.lock
+   $ spack -e myenv add zstd
+   $ spack -e myenv config add 'packages:zlib-ng:require:"@2.1"'
+   $ spack -e myenv concretize -f
+   $ spack diff before.lock myenv
+
+     before: before.lock
+     after:  myenv
+
+     -- Input specs only in after ------
+     zstd
+
+     -- Node differences -------------
+     zlib-ng  (from libpng, libtiff)
+         before: zlib-ng@2.3.3/qvle4ur
+         after:  zlib-ng@2.1.7/mikxqkw
+
+The output lists the input specs that are in only one of the two environments.
+For the input specs in both, it lists each node whose configuration differs, with the input specs it is reached from.
+Packages whose recipe differs between the two environments are listed in a separate section.
+In a terminal, a version that goes back and a variant that lands on a non-default value are highlighted.
+
+By default, a node is reported where a difference first appears, and the nodes below it are not compared.
+Use ``--no-prune`` to report every node that differs.
+Use ``--json`` for a machine-readable output.
+
+The exit status is 0 whenever the comparison succeeds, so the differences can be shown, for instance in a CI log, without failing the job.
+With ``--exit-code``, the exit status is 4 if the two environments differ and 0 if they do not.
+
+Environments that include concrete environments (see :ref:`environment_include_concrete`) can be compared only if the included root specs, and the concrete specs they produced, are the same in both.
+
+To compare two specs instead of two environments, use ``spack diff --specs`` (see :ref:`cmd-spack-diff`).
+
 
 .. index::
    single: include concrete
