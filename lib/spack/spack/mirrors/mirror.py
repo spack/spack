@@ -146,10 +146,8 @@ class Mirror:
     def signed(self) -> bool:
         # TODO: OCI support signing
         # Only checking for fetch, push is handled by OCI implementation
-        if is_oci_url(self.fetch_url):
-            return False
-
-        return isinstance(self._data, str) or self._data.get("signed", True)
+        default = not is_oci_url(self.fetch_url)
+        return default if isinstance(self._data, str) else self._data.get("signed", default)
 
     @property
     def autopush(self) -> bool:

@@ -701,6 +701,14 @@ def test_mirror_add_set_signed(mutable_config: Configuration):
     assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "signed": True}
 
 
+def test_mirror_add_oci_unsigned(mutable_config: Configuration):
+    mirror("add", "example", "oci://example.com/image")
+    assert mutable_config.get("mirrors:example") == {
+        "url": "oci://example.com/image",
+        "signed": False,
+    }
+
+
 def test_mirror_add_set_autopush(mutable_config: Configuration):
     # Add mirror without autopush
     mirror("add", "example", "http://example.com")
