@@ -1339,7 +1339,7 @@ class Environment:
 
     def _sync_speclists(self):
         self._spec_lists_parser = SpecListParser(
-            toolchains=spack.config.CONFIG.get("toolchains", {})
+            aliases=spack.spec.LocalAliases.from_config(spack.config.CONFIG)
         )
         self.spec_lists = {}
         self.spec_lists.update(
@@ -3383,12 +3383,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             ValueError: if no equivalent match is found
         """
-        toolchains = spack.config.CONFIG.get("toolchains", {})
-        wanted = spack.spec.parse(user_spec, toolchains=toolchains)
+        # both sides are user input: expand aliases in both before comparing
+        aliases = spack.spec.LocalAliases.from_config(spack.config.CONFIG)
+        wanted = spack.spec.parse_one_or_raise(user_spec, aliases=aliases)
         result = [
             yaml_spec_str
             for yaml_spec_str in self.configuration["specs"]
-            if spack.spec.parse(yaml_spec_str, toolchains=toolchains) == wanted
+            if spack.spec.parse_one_or_raise(yaml_spec_str, aliases=aliases) == wanted
         ]
 
         if not result:

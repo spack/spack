@@ -110,6 +110,7 @@ from spack.util import lang, tty
 from .enums import PropagationPolicy
 
 if TYPE_CHECKING:
+    import spack.config
     import spack.package_base
     import spack.patch
 
@@ -641,29 +642,9 @@ class ArchSpec:
         return self._os
 
     @os.setter
-    def os(self, value):
-        # The OS of the architecture spec will update the platform field
-        # if the OS is set to one of the reserved OS types so that the
-        # default OS type can be resolved.  Since the reserved OS
-        # information is only available for the host machine, the platform
-        # will assumed to be the host machine's platform.
-        value = str(value) if value is not None else None
-
-        if value in spack.platforms.Platform.reserved_oss:
-            curr_platform = str(spack.platforms.host())
-            self.platform = self.platform or curr_platform
-
-            if self.platform != curr_platform:
-                raise ValueError(
-                    "Can't set arch spec OS to reserved value '%s' when the "
-                    "arch platform (%s) isn't the current platform (%s)"
-                    % (value, self.platform, curr_platform)
-                )
-
-            spec_platform = spack.platforms.by_name(self.platform)
-            value = str(spec_platform.default_operating_system())
-
-        self._os = value
+    def os(self, value: object) -> None:
+        # default_os is kept as is: LocalAliases.expand() resolves it
+        self._os = str(value) if value is not None else None
 
     @property
     def target(self):
@@ -671,37 +652,16 @@ class ArchSpec:
         return self._target
 
     @target.setter
-    def target(self, value):
-        # The target of the architecture spec will update the platform field
-        # if the target is set to one of the reserved target types so that
-        # the default target type can be resolved.  Since the reserved target
-        # information is only available for the host machine, the platform
-        # will assumed to be the host machine's platform.
-
-        def target_or_none(t):
-            if isinstance(t, spack.vendor.archspec.cpu.Microarchitecture):
-                return t
-            if t and t != "None":
-                return _make_microarchitecture(t)
-            return None
-
-        value = target_or_none(value)
-
-        if str(value) in spack.platforms.Platform.reserved_targets:
-            curr_platform = str(spack.platforms.host())
-            self.platform = self.platform or curr_platform
-
-            if self.platform != curr_platform:
-                raise ValueError(
-                    "Can't set arch spec target to reserved value '%s' when "
-                    "the arch platform (%s) isn't the current platform (%s)"
-                    % (value, self.platform, curr_platform)
-                )
-
-            spec_platform = spack.platforms.by_name(self.platform)
-            value = spec_platform.default_target()
-
-        self._target = value
+    def target(
+        self, value: Optional[Union[str, spack.vendor.archspec.cpu.Microarchitecture]]
+    ) -> None:
+        # default_target is kept as is: LocalAliases.expand() resolves it
+        if isinstance(value, spack.vendor.archspec.cpu.Microarchitecture):
+            self._target: Optional[spack.vendor.archspec.cpu.Microarchitecture] = value
+        elif value and value != "None":
+            self._target = _make_microarchitecture(value)
+        else:
+            self._target = None
 
     def satisfies(self, other: "ArchSpec") -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
@@ -5242,22 +5202,88 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
         )
 
 
-def parse(text: str, *, toolchains: Optional[Dict] = None) -> List[Spec]:
+class LocalAliases:
+    """Aliases defined outside Spack and package repos: toolchains from config, and
+    ``default_os`` and ``default_target`` from the host. They are expanded only in user input,
+    so that specs in package repos do not depend on the site or the machine.
+    """
+
+    __slots__ = ("toolchains", "_toolchain_cache")
+
+    def __init__(self, *, toolchains: Optional[Dict] = None) -> None:
+        self.toolchains = toolchains or {}
+        #: toolchain name -> parsed toolchain spec, filled lazily
+        self._toolchain_cache: Dict[str, Spec] = {}
+
+    @staticmethod
+    def from_config(config: "spack.config.Configuration") -> "LocalAliases":
+        return LocalAliases(toolchains=config.get("toolchains"))
+
+    def expand(self, spec: Spec) -> None:
+        """Expand the aliases in a spec, in place."""
+        if self.toolchains:
+            expand_toolchains(spec, self.toolchains, _cache=self._toolchain_cache)
+        _resolve_host_aliases(spec)
+
+
+def _resolve_host_aliases(spec: Spec) -> None:
+    """Replace ``os=default_os`` and ``target=default_target`` by the host's defaults."""
+    for node in spec.traverse():
+        arch = node.architecture
+        if arch is None:
+            continue
+        is_os = arch.os in spack.platforms.Platform.reserved_oss
+        is_target = str(arch.target) in spack.platforms.Platform.reserved_targets
+        if not is_os and not is_target:
+            continue
+        host = spack.platforms.host()
+        if arch.platform is None:
+            arch.platform = str(host)
+        elif arch.platform != str(host):
+            raise spack.error.SpecError(
+                f"cannot use default_os or default_target in '{node}': its platform "
+                f"{arch.platform} is not the current platform {host}"
+            )
+        if is_os:
+            arch.os = str(host.default_operating_system())
+        if is_target:
+            arch.target = host.default_target()
+
+
+def parse(
+    text: str, *, aliases: Optional[LocalAliases] = None, specfiles: bool = False
+) -> List[Spec]:
     """Parse text into a list of specs
 
     Args:
         text: text to be parsed
-        toolchains: optional toolchain definitions to expand after parsing
+        aliases: local aliases to expand, for user input
+        specfiles: whether spec files are read, for the command line
 
     Return:
         List of specs
     """
-    specs = spack.spec_parser.SpecParser(text, Spec).all_specs()
-    if toolchains:
-        cache: Dict[str, Spec] = {}
+    specs = spack.spec_parser.SpecParser(text, Spec, specfiles=specfiles).all_specs()
+    if aliases is not None:
         for spec in specs:
-            expand_toolchains(spec, toolchains, _cache=cache)
+            aliases.expand(spec)
     return specs
+
+
+def parse_one_or_raise(
+    text: str, *, aliases: Optional[LocalAliases] = None, specfiles: bool = False
+) -> Spec:
+    """Parse exactly one spec from text and return it, or raise
+
+    Args:
+        text: text to be parsed
+        aliases: local aliases to expand, for user input
+        specfiles: whether spec files are read, for the command line
+    """
+    result = spack.spec_parser.parse_one_or_raise(text, Spec, specfiles=specfiles)
+    if aliases is not None:
+        aliases.expand(result)
+    return result
 
 
 def _parse_toolchain_config(toolchain_config: Union[str, List[Dict]]) -> Spec:

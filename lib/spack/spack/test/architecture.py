@@ -11,7 +11,7 @@ import spack.concretize
 import spack.error
 import spack.operating_systems
 import spack.platforms
-from spack.spec import ArchSpec, Spec
+from spack.spec import ArchSpec, LocalAliases, parse_one_or_raise
 
 
 @pytest.fixture(scope="module")
@@ -60,7 +60,7 @@ def test_user_input_combination(config, target_str, os_str):
     """Test for all the valid user input combinations that both the target and
     the operating system match.
     """
-    spec = Spec(f"libelf os={os_str} target={target_str}")
+    spec = parse_one_or_raise(f"libelf os={os_str} target={target_str}", aliases=LocalAliases())
     expected_os = TEST_PLATFORM.default_os if os_str == "default_os" else os_str
     expected_target = TEST_PLATFORM.default if target_str == "default_target" else target_str
     assert spec.architecture.os == str(TEST_PLATFORM.operating_system(expected_os))
