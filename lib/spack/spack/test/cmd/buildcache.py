@@ -500,9 +500,11 @@ def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_fla
     ).install()
 
 
-def test_skip_no_redistribute(mock_packages, config):
+def test_skip_no_redistribute(mock_packages, config, capfd):
     specs = list(spack.concretize.concretize_one("no-redistribute-dependent").traverse())
     filtered = spack.cmd.buildcache._skip_no_redistribute_for_public(specs)
+    # the user must be told without --debug that specs were skipped
+    assert "cannot be redistributed" in capfd.readouterr().err
     assert not any(s.name == "no-redistribute" for s in filtered)
     assert any(s.name == "no-redistribute-dependent" for s in filtered)
 
