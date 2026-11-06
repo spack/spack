@@ -207,18 +207,18 @@ If openblas' concrete spec is ``openblas@0.3.33``, the new ``spack.yaml`` contai
    spack:
      specs: [openblas@0.3.33]
 
-Alternatively, to make matching dependencies roots too, add ``flatten: true`` when creating ``no-license-env``:
+Alternatively, to retain ``libelf`` without its parent ``licensed-solver``, select it with an allow list:
 
 .. code-block:: yaml
 
    filter:
      concrete: true
-     flatten: true
      specs:
+       allow: [openblas, libelf]
        block: [licensed-solver]
 
-With this filter, the same creation command promotes all matching dependencies to roots, including ``libelf`` from ``licensed-solver``.
-Assuming it was concretized as ``libelf@0.8.13``, the new ``specs:`` section includes these entries (compiler and architecture details and other promoted dependencies omitted):
+With this filter, Spack walks past the unmatched ``licensed-solver`` root and keeps ``libelf`` and its dependencies.
+Assuming it was concretized as ``libelf@0.8.13``, the new ``specs:`` section includes these entries (compiler and architecture details omitted):
 
 .. code-block:: yaml
 
@@ -233,18 +233,30 @@ An empty ``allow`` list keeps all specs; an empty ``block`` list removes none.
 If both are set, ``block`` takes precedence.
 
 With ``concrete: false`` (the default), the source may be an environment directory or just a manifest file.
-Spack filters its listed specs, rejecting roots that explicitly mention a blocked dependency, and does not write a lockfile for the new environment.
+Spack filters only the manifest's abstract specs and their explicitly represented dependencies, even if the source has a lockfile.
+It writes retained specs using ``str(spec)``, preserving their constraints rather than filling in resolved versions or other concrete details.
+It does not use projections, discover implicit dependencies from package recipes, or write a lockfile for the new environment.
+Concretizing the new manifest later may introduce implicit dependencies that match the block list; the filter does not constrain future concretization.
 
 With ``concrete: true``, the source must be an environment directory containing ``spack.yaml`` and ``spack.lock``.
-``specs:allow`` selects root candidates (original roots and, with ``flatten: true``, promoted dependencies), not the other nodes in their dependency trees.
-Selected roots keep their dependencies, including build-spec provenance, unless ``specs:block`` matches a node.
-If a root depends on a blocked spec, Spack drops the root and logs which spec caused the decision.
-This also applies to promoted roots when ``flatten: true``.
+Spack filters its concrete DAGs, including their resolved dependencies and build-spec provenance.
 The retained DAGs keep their original hashes; Spack does not concretize the new environment during creation.
 
-By default, retained roots keep their groups and unblocked dependencies.
-To make matching dependencies roots too, set ``flatten: true``; the promoted specs go in the default group, as with ``libelf`` in the example.
-If no roots remain, Spack warns and creates an environment with no roots.
+In either mode, starting at each original root, Spack walks the available DAG until it reaches a node matching ``specs:allow``.
+It selects that node and its entire sub-DAG without requiring its dependencies to match the allow list, and stops searching that path.
+If the original root matches, its whole DAG is selected; an empty allow list selects all original DAGs.
+Selected dependencies become roots even without ``flatten: true``.
+
+After collecting the allowed sub-DAGs, Spack applies ``specs:block``.
+If a selected node or any of its dependencies matches a blocked spec, Spack drops that entire sub-DAG and logs which spec caused the decision.
+In concrete mode, these checks also cover build-spec provenance.
+It does not search a rejected sub-DAG again for allowed descendants.
+
+Retained original roots keep their groups; selected dependencies go in the default group.
+To make every dependency in the surviving sub-DAGs a root too, set ``flatten: true``.
+Flattening happens only after the block checks and does not rescue dependencies from rejected sub-DAGs.
+These additional roots go in the default group and need not match the allow list themselves.
+If no roots remain, Spack creates an environment with no roots; in concrete mode, it also emits a warning.
 
 **Copying Configuration**
 
@@ -273,10 +285,28 @@ Each retained entry is copied whole, including all of its externals.
 The ``packages`` filter still applies, but ``specs:block`` removes matching package entries even if that filter would retain them.
 It does not rewrite references to blocked specs inside other package entries.
 
+**Formatting Specs**
+
 In concrete mode, the optional ``projections`` setting controls how selected roots are written as spec strings in the new ``spack.yaml``.
-Its keys are spec constraints; ``all`` provides a fallback and defaults to Spack's standard format.
+Its keys are spec constraints; ``all`` provides a fallback and defaults to Spack's standard display format.
 Each format must produce a valid spec string.
 Original roots are intentionally written as projected concrete specs rather than their original abstract strings.
+
+For example, retain versions and variants for ``openblas``, but only names and versions for other roots:
+
+.. code-block:: yaml
+
+   filter:
+     concrete: true
+     projections:
+       openblas: "{name}{@version}{variants}"
+       all: "{name}{@version}"
+
+The first matching non-``all`` entry is used; ``all`` is the fallback regardless of where it appears in the mapping.
+With this fallback, a concrete ``libelf@0.8.13`` root is written as ``libelf@0.8.13``, without its compiler or architecture details.
+Projections change the root spec strings, not the concrete hashes or dependency edges retained in the lockfile.
+Different concrete roots must not project to the same string; include a hash in the projection if needed to distinguish them.
+With ``concrete: false``, projections are ignored and retained abstract specs are always serialized using ``str(spec)``.
 
 .. _cmd-spack-env-activate:
 .. _cmd-spack-env-deactivate:

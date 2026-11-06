@@ -559,14 +559,6 @@ def _matches_any_spec(spec: Spec, patterns: Sequence[Union[str, Spec]]) -> bool:
     )
 
 
-def _spec_is_allowed(
-    spec: Spec, allow: Sequence[Union[str, Spec]], block: Sequence[Union[str, Spec]]
-) -> bool:
-    """Select a spec only when allowed and not blocked."""
-    allowed = not allow or _matches_any_spec(spec, allow)
-    return allowed and not _matches_any_spec(spec, block)
-
-
 def _projection_format_for(spec: Spec, projections: Dict[str, str]) -> str:
     """Choose the first matching root format, falling back to the default."""
     for matcher, format_string in projections.items():
@@ -598,14 +590,34 @@ def _validated_filter_projection(spec: Spec, format_string: str) -> str:
     return projected
 
 
-def _filtered_concrete_root_entries(
+def _allowed_concrete_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Tuple[str, Spec, str]]:
-    """Select original roots, optionally promoting dependencies to default-group roots."""
-    allow = [Spec(pattern) for pattern in filter_configuration["specs"]["allow"]]
-    block = [Spec(pattern) for pattern in filter_configuration["specs"]["block"]]
-    original_hashes = {entry.hash for entry in source_env.concretized_roots}
-    roots = [
+    """Select the first allowed nodes on each path and keep their complete DAGs.
+
+    Do not apply blocks here: a blocked allowed node must reject its whole DAG in
+    the next phase, rather than cause this traversal to search its descendants.
+    """
+    allow_patterns = [Spec(pattern) for pattern in filter_configuration["specs"]["allow"]]
+    allowed_roots_by_hash: Dict[str, Spec] = {}
+    visited_hashes: Set[str] = set()
+    # Unlike concrete_roots(), these entries omit roots from included lockfiles.
+    specs_to_visit = [
+        source_env.specs_by_hash[entry.hash] for entry in reversed(source_env.concretized_roots)
+    ]
+    while specs_to_visit:
+        concrete_spec = specs_to_visit.pop()
+        dag_hash = concrete_spec.dag_hash()
+        if dag_hash in visited_hashes:
+            continue
+        visited_hashes.add(dag_hash)
+        if not allow_patterns or _matches_any_spec(concrete_spec, allow_patterns):
+            allowed_roots_by_hash[dag_hash] = concrete_spec
+        else:
+            specs_to_visit.extend(reversed(concrete_spec.dependencies()))
+
+    original_root_hashes = {entry.hash for entry in source_env.concretized_roots}
+    root_entries = [
         (
             _validated_filter_projection(
                 source_env.specs_by_hash[entry.hash],
@@ -617,42 +629,39 @@ def _filtered_concrete_root_entries(
             entry.group,
         )
         for entry in source_env.concretized_roots
-        if _spec_is_allowed(source_env.specs_by_hash[entry.hash], allow, block)
+        if entry.hash in allowed_roots_by_hash
     ]
 
-    if filter_configuration["flatten"]:
-        # Match against the original DAG: constraints can refer to dependencies.
-        roots.extend(
-            (
-                _validated_filter_projection(
-                    concrete, _projection_format_for(concrete, filter_configuration["projections"])
-                ),
-                concrete,
-                DEFAULT_USER_SPEC_GROUP,
-            )
-            for concrete in source_env.all_specs_generator()
-            if concrete.dag_hash() not in original_hashes
-            and _spec_is_allowed(concrete, allow, block)
+    root_entries.extend(
+        (
+            _validated_filter_projection(
+                concrete_spec,
+                _projection_format_for(concrete_spec, filter_configuration["projections"]),
+            ),
+            concrete_spec,
+            DEFAULT_USER_SPEC_GROUP,
         )
+        for dag_hash, concrete_spec in allowed_roots_by_hash.items()
+        if dag_hash not in original_root_hashes
+    )
 
-    return roots
+    return root_entries
 
 
-def _filtered_concrete_dags(
-    filtered_roots: Sequence[Tuple[str, Spec, str]], filter_configuration: Dict[str, Any]
+def _block_and_flatten_concrete_roots(
+    allowed_root_entries: Sequence[Tuple[str, Spec, str]], filter_configuration: Dict[str, Any]
 ) -> List[Tuple[str, Spec, str]]:
-    """Keep roots whose dependency and build-spec DAGs contain no excluded nodes."""
-    block = [Spec(pattern) for pattern in filter_configuration["specs"]["block"]]
-    blocked_reason: Dict[str, Optional[Spec]] = {}
-    result = []
-    projected: Dict[str, str] = {}
-    for abstract, concrete, group in filtered_roots:
+    """Reject blocked DAGs, then optionally flatten the surviving DAGs."""
+    block_patterns = [Spec(pattern) for pattern in filter_configuration["specs"]["block"]]
+    blocking_spec_by_hash: Dict[str, Optional[Spec]] = {}
+    retained_root_entries = []
+    for projected_spec, concrete_root, group in allowed_root_entries:
         # Check children before their parent, and reuse each result across roots.
-        pending = [(concrete, False)]
-        while pending:
-            node, after_children = pending.pop()
-            key = node.dag_hash()
-            if key in blocked_reason:
+        nodes_to_check = [(concrete_root, False)]
+        while nodes_to_check:
+            node, after_children = nodes_to_check.pop()
+            dag_hash = node.dag_hash()
+            if dag_hash in blocking_spec_by_hash:
                 continue
             children = node.dependencies()
             # Build specs are also written to the lockfile.
@@ -660,51 +669,132 @@ def _filtered_concrete_dags(
                 children.append(node.build_spec)
             if not after_children:
                 # Revisit this node after its children have been checked.
-                pending.append((node, True))
-                pending.extend((child, False) for child in children)
+                nodes_to_check.append((node, True))
+                nodes_to_check.extend((child, False) for child in children)
                 continue
 
-            reason = node if any(node.satisfies(pattern) for pattern in block) else None
-            if reason is None:
+            blocking_spec = (
+                node if any(node.satisfies(pattern) for pattern in block_patterns) else None
+            )
+            if blocking_spec is None:
                 for child in children:
-                    reason = blocked_reason[child.dag_hash()]
-                    if reason is not None:
+                    blocking_spec = blocking_spec_by_hash[child.dag_hash()]
+                    if blocking_spec is not None:
                         break
-            blocked_reason[key] = reason
-        excluded = blocked_reason[concrete.dag_hash()]
-        if excluded is None:
-            key = concrete.dag_hash()
-            if abstract in projected and projected[abstract] != key:
-                raise SpackEnvironmentError(
-                    f"filter projection {abstract!r} matches multiple concrete roots; "
-                    "use a projection with a hash"
-                )
-            projected[abstract] = key
-            result.append((abstract, concrete, group))
+            blocking_spec_by_hash[dag_hash] = blocking_spec
+        blocking_spec = blocking_spec_by_hash[concrete_root.dag_hash()]
+        if blocking_spec is None:
+            retained_root_entries.append((projected_spec, concrete_root, group))
         else:
             # Keeping a partial root would leave the lockfile incomplete.
-            tty.msg(f"Dropping filtered root {abstract}: excluded spec {excluded}")
-    return result
+            tty.msg(f"Dropping filtered root {projected_spec}: excluded spec {blocking_spec}")
+
+    if filter_configuration["flatten"]:
+        # Promote every surviving dependency, not just allow-list matches. Flattening
+        # before the block checks would rescue descendants of rejected DAGs.
+        retained_roots = [concrete_root for _, concrete_root, _ in retained_root_entries]
+        retained_root_hashes = {concrete_root.dag_hash() for concrete_root in retained_roots}
+        retained_root_entries.extend(
+            (
+                _validated_filter_projection(
+                    concrete_spec,
+                    _projection_format_for(concrete_spec, filter_configuration["projections"]),
+                ),
+                concrete_spec,
+                DEFAULT_USER_SPEC_GROUP,
+            )
+            for concrete_spec in traverse.traverse_nodes(retained_roots, key=traverse.by_dag_hash)
+            if concrete_spec.dag_hash() not in retained_root_hashes
+        )
+
+    hash_by_projection: Dict[str, str] = {}
+    for projected_spec, concrete_root, _ in retained_root_entries:
+        dag_hash = concrete_root.dag_hash()
+        if projected_spec in hash_by_projection and hash_by_projection[projected_spec] != dag_hash:
+            raise SpackEnvironmentError(
+                f"filter projection {projected_spec!r} matches multiple concrete roots; "
+                "use a projection with a hash"
+            )
+        hash_by_projection[projected_spec] = dag_hash
+    return retained_root_entries
 
 
 def _filtered_abstract_root_entries(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Union[str, Dict[str, Any]]]:
-    """Select allowed abstract roots with no blocked dependencies."""
-    block = [Spec(pattern) for pattern in filter_configuration["specs"]["block"]]
-    group_specs = {
-        group: [
-            str(spec)
-            for spec in source_env.user_specs_by(group=group)
-            if _spec_is_allowed(
-                spec,
-                filter_configuration["specs"]["allow"],
-                filter_configuration["specs"]["block"],
-            )
-            and not any(node.satisfies(pattern) for node in spec.traverse() for pattern in block)
-        ]
+    """Select allowed explicit sub-DAGs, reject blocked DAGs, then flatten survivors.
+
+    Only inspect manifest specs, even if the source has a lockfile. Serialize with
+    str(spec), without projections or implicit dependencies from package recipes.
+
+    For an explicit A -> B -> C graph with allow: [B], selection makes B a new
+    root with C still attached. Flattening additionally makes C a root; it is not
+    required to promote B after dropping its unmatched ancestor A.
+    """
+    allow_patterns = [Spec(pattern) for pattern in filter_configuration["specs"]["allow"]]
+    block_patterns = [Spec(pattern) for pattern in filter_configuration["specs"]["block"]]
+    original_root_entries = [
+        (spec, group)
         for group in source_env.manifest.groups()
-    }
+        for spec in source_env.user_specs_by(group=group)
+    ]
+    # Visit shared nodes once by identity, without concrete hashes or conflating
+    # distinct abstract nodes that happen to serialize to the same string.
+    allowed_roots_by_id: Dict[int, Spec] = {}
+    visited_spec_ids: Set[int] = set()
+    # Reverse the stack inputs so depth-first traversal preserves source ordering.
+    specs_to_visit = [spec for spec, _ in reversed(original_root_entries)]
+    while specs_to_visit:
+        abstract_spec = specs_to_visit.pop()
+        spec_id = id(abstract_spec)
+        if spec_id in visited_spec_ids:
+            continue
+        visited_spec_ids.add(spec_id)
+        if not allow_patterns or _matches_any_spec(abstract_spec, allow_patterns):
+            # Keep the existing node and its whole sub-DAG. Do not search below
+            # this match: its dependencies need not individually match allow.
+            allowed_roots_by_id[spec_id] = abstract_spec
+        else:
+            specs_to_visit.extend(reversed(abstract_spec.dependencies()))
+
+    # Check each selected root and all its descendants before flattening. A block
+    # rejects that entire candidate; it must not restart allow selection below it.
+    retained_roots_by_id: Dict[int, Spec] = {}
+    for spec_id, abstract_spec in allowed_roots_by_id.items():
+        blocking_spec = next(
+            (node for node in abstract_spec.traverse() if _matches_any_spec(node, block_patterns)),
+            None,
+        )
+        if blocking_spec is None:
+            retained_roots_by_id[spec_id] = abstract_spec
+        else:
+            tty.msg(f"Dropping filtered root {abstract_spec}: excluded spec {blocking_spec}")
+
+    # Emit surviving original roots first, preserving their order, repeated
+    # occurrences, and groups. Selected dependencies are handled separately below.
+    group_specs: Dict[str, List[str]] = {group: [] for group in source_env.manifest.groups()}
+    for abstract_spec, group in original_root_entries:
+        if id(abstract_spec) in retained_roots_by_id:
+            group_specs[group].append(str(abstract_spec))
+
+    # Even without flattening, an allowed dependency below an unmatched original
+    # root must become a new root to retain its sub-DAG. Flattening additionally
+    # promotes every descendant, but only from candidates that passed block checks.
+    retained_roots = list(retained_roots_by_id.values())
+    promoted_specs = (
+        traverse.traverse_nodes(retained_roots)
+        if filter_configuration["flatten"]
+        else retained_roots
+    )
+    # Deduplicate new manifest entries by their output text, including against
+    # roots already emitted in any group. New roots belong to the default group.
+    emitted_specs = {spec_string for specs in group_specs.values() for spec_string in specs}
+    for abstract_spec in promoted_specs:
+        spec_string = str(abstract_spec)
+        if spec_string not in emitted_specs:
+            group_specs[DEFAULT_USER_SPEC_GROUP].append(spec_string)
+            emitted_specs.add(spec_string)
+
     return _filtered_grouped_specs(source_env, group_specs)
 
 
@@ -905,12 +995,14 @@ def _create_filtered_environment_in_dir(
                     "cannot create a concrete filtered environment from an environment "
                     "without a spack.lock"
                 )
-            filtered_roots = _filtered_concrete_root_entries(source_env, filter_configuration)
-            filtered_roots = _filtered_concrete_dags(filtered_roots, filter_configuration)
+            filtered_roots = _allowed_concrete_root_entries(source_env, filter_configuration)
+            filtered_roots = _block_and_flatten_concrete_roots(
+                filtered_roots, filter_configuration
+            )
             if not filtered_roots:
                 tty.warn(
-                    "filtered environment has no roots; only matching roots with no excluded "
-                    "dependencies are kept (use filter:flatten to promote dependencies)"
+                    "filtered environment has no roots; only allowed DAGs with no excluded "
+                    "specs are kept"
                 )
             filtered_specs = _filtered_concrete_root_specs(source_env, filtered_roots)
         else:
