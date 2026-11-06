@@ -47,11 +47,11 @@ def spec_for_current_python() -> str:
     return f"python@{version_str}"
 
 
-def environment_path(prefix: str = "") -> str:
+def environment_path(label: str = "") -> str:
     """Return the path of a bootstrapping environment for the interpreter running Spack.
 
     Args:
-        prefix: prefix of the directory name, which otherwise identifies the interpreter
+        label: distinguishes environments for the same interpreter, and starts the directory name
     """
     python_part = spec_for_current_python().replace("@", "")
     arch_part = spack.vendor.archspec.cpu.host().family
@@ -62,7 +62,9 @@ def environment_path(prefix: str = "") -> str:
     except TypeError:  # Python < 3.9
         digest = hashlib.md5(data)
     interpreter_part = digest.hexdigest()[:5]
-    dirname = f"{prefix}{python_part}-{arch_part}-{interpreter_part}"
+    dirname = f"{python_part}-{arch_part}-{interpreter_part}"
+    if label:
+        dirname = f"{label}-{dirname}"
     return os.path.join(root_path(), "environments", dirname)
 
 
