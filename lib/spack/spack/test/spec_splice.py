@@ -59,7 +59,6 @@ def checked_splice(spec: Spec, replacement: Spec, *, transitive: bool) -> Spec:
     return out
 
 
-@pytest.mark.xfail(strict=True, reason="stale hashes, #53303")
 def test_splice_hashes_are_those_of_the_spliced_dag():
     """The result has correct hashes."""
     zlib = node("zlib@1")
@@ -72,7 +71,6 @@ def test_splice_hashes_are_those_of_the_spliced_dag():
     assert out.dag_hash() == recomputed_hash(out)
 
 
-@pytest.mark.xfail(strict=True, reason="split edges, #53303")
 def test_splice_keeps_build_link_edges_of_unspliced_nodes():
     """Unchanged nodes keep their build edges."""
     zlib = node("zlib@1")
@@ -87,7 +85,6 @@ def test_splice_keeps_build_link_edges_of_unspliced_nodes():
     assert [e.depflag for e in edges] == [dt.BUILD | dt.LINK]
 
 
-@pytest.mark.xfail(strict=True, reason="re-added build edges point into the input spec")
 def test_splice_does_not_modify_its_input():
     """Splicing does not modify the inputs."""
     zlib = node("zlib@1")
@@ -101,7 +98,6 @@ def test_splice_does_not_modify_its_input():
     assert [e.parent for e in zlib.edges_from_dependents()] == [hdf5]
 
 
-@pytest.mark.xfail(strict=True, reason="unrelated providers replaced, #53304")
 def test_splice_keeps_other_providers_of_virtuals_the_replacement_can_provide():
     """Splicing replaces only the target."""
     glibc = node("glibc@1")
@@ -132,9 +128,6 @@ def test_splice_replaces_provider_by_one_with_another_backend(transitive):
     assert out["suite-sparse"]["libblastrampoline"] == lbt_mkl
 
 
-@pytest.mark.xfail(
-    strict=True, reason="the root counts as provider of what its package can provide"
-)
 def test_intransitive_splice_does_not_make_the_root_a_provider():
     """A node provides only what its parents use it as."""
     hwloc = node("hwloc@1")
@@ -147,7 +140,6 @@ def test_intransitive_splice_does_not_make_the_root_a_provider():
     assert [d.name for d in out["hwloc"].dependencies()] == ["mpich"]
 
 
-@pytest.mark.xfail(strict=True, reason="impossible splices are accepted")
 def test_intransitive_splice_rejects_dependency_cycle():
     """Splicing rejects cycles."""
     hwloc_1 = node("hwloc@1")
@@ -161,7 +153,20 @@ def test_intransitive_splice_rejects_dependency_cycle():
         spec.splice(replacement, transitive=False)
 
 
-@pytest.mark.xfail(strict=True, reason="impossible splices are accepted")
+def test_splice_target_disambiguates():
+    """The target selects the node to replace."""
+    libiconv = node("libiconv@1")
+    linux_headers = node("linux-headers@1")
+    glibc_2 = node("glibc@2", (libiconv, "link"), (linux_headers, "link"))
+    spec = node("gettext@1", (glibc_2, "link", "iconv"))
+    glibc_1 = node("glibc@1")
+    replacement = node("libiconv@2", (glibc_1, "link"))
+
+    out = spec.splice(replacement, transitive=False, target=Spec("glibc"))
+
+    assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
+
+
 @pytest.mark.parametrize("transitive", [True, False])
 def test_splice_rejects_replacement_depending_on_an_ancestor(transitive):
     """Splicing rejects two nodes of one package."""
@@ -174,7 +179,6 @@ def test_splice_rejects_replacement_depending_on_an_ancestor(transitive):
         spec.splice(replacement, transitive=transitive)
 
 
-@pytest.mark.xfail(strict=True, reason="impossible splices are accepted")
 @pytest.mark.parametrize("transitive", [True, False])
 def test_splice_rejects_replacement_whose_dag_provides_what_the_target_is_used_as(transitive):
     """Splicing rejects two providers of one virtual."""
@@ -187,7 +191,6 @@ def test_splice_rejects_replacement_whose_dag_provides_what_the_target_is_used_a
         spec.splice(replacement, transitive=transitive)
 
 
-@pytest.mark.xfail(strict=True, reason="intransitive splices record half-spliced build specs")
 def test_intransitive_splice_records_installed_build_specs():
     """The build spec is the installed spec."""
     zlib = node("zlib@1")
@@ -200,7 +203,6 @@ def test_intransitive_splice_records_installed_build_specs():
     assert recomputed_hash(out.build_spec) == spec.dag_hash()
 
 
-@pytest.mark.xfail(strict=True, reason="build-only deps are copied and matched as link/run deps")
 def test_splice_ignores_build_only_dependencies():
     """Splicing ignores build dependencies."""
     python_2 = node("python@2")
