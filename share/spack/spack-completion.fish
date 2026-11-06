@@ -1632,7 +1632,7 @@ complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -f -a s
 complete -c spack -n '__fish_spack_using_command env deactivate' -l pwsh -d 'print pwsh commands to activate the environment'
 
 # spack env create
-set -g __fish_spack_optspecs_spack_env_create h/help d/dir keep-relative without-view with-view= include-concrete=
+set -g __fish_spack_optspecs_spack_env_create h/help d/dir keep-relative without-view with-view= include-concrete= filter=
 complete -c spack -n '__fish_spack_using_command_pos 0 env create' -f -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command env create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command env create' -s h -l help -d 'show this help message and exit'
@@ -1646,6 +1646,8 @@ complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -f 
 complete -c spack -n '__fish_spack_using_command env create' -l with-view -r -d 'maintain view at WITH_VIEW (vs. environment'"'"'s directory)'
 complete -c spack -n '__fish_spack_using_command env create' -l include-concrete -r -f -a include_concrete
 complete -c spack -n '__fish_spack_using_command env create' -l include-concrete -r -d 'copy concrete specs from INCLUDE_CONCRETE'"'"'s environment'
+complete -c spack -n '__fish_spack_using_command env create' -l filter -r -f -a filter_file
+complete -c spack -n '__fish_spack_using_command env create' -l filter -r -d 'create a filtered environment using the filter config in FILTER_FILE'
 
 # spack env remove
 set -g __fish_spack_optspecs_spack_env_remove h/help y/yes-to-all f/force
