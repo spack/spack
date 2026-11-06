@@ -268,6 +268,9 @@ Filtered environments never copy configuration ``include:`` entries or their fil
 If the source has includes, add ``include`` to ``config:block``; otherwise Spack stops with an error.
 Even ``config:allow: [include]`` cannot retain them.
 Files unrelated to the filtered manifest are not copied from the source directory.
+As with ordinary manifest-based creation, relative ``develop`` and path-based ``repos`` entries are rewritten against the original source directory by default.
+Use ``--keep-relative`` to preserve path strings verbatim, as in unfiltered creation.
+Unlike copying an entire unfiltered environment directory, filtering does not copy development trees or repositories; with ``--keep-relative``, their paths must already make sense at the destination.
 ``include_concrete`` is always dropped with a warning.
 
 The ``packages`` setting further controls entries within the copied ``packages:`` section.
