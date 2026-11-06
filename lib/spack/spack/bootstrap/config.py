@@ -18,13 +18,16 @@ import spack.store
 from spack.error import ExplicitDatabaseUpgradeError
 from spack.util import tty
 
-#: Reference counter for the bootstrapping configuration context manager
-_REF_COUNT = 0
+#: Name of the configuration scope that is present only in the bootstrapping configuration
+_SCOPE_NAME = "bootstrap"
 
 
 def is_bootstrapping() -> bool:
-    """Return True if we are in a bootstrapping context, False otherwise."""
-    return _REF_COUNT > 0
+    """Return True if we are in a bootstrapping context, False otherwise.
+
+    The answer is read from the configuration, which installer child processes inherit.
+    """
+    return _SCOPE_NAME in spack.config.CONFIG.scopes
 
 
 def spec_for_current_python() -> str:
@@ -89,15 +92,11 @@ def _config_path() -> str:
 def ensure_bootstrap_configuration() -> Generator:
     """Swap the current configuration for the one used to bootstrap Spack.
 
-    The context manager is reference counted to ensure we don't swap multiple
-    times if there's nested use of it in the stack. One compelling use case
-    is bootstrapping patchelf during the bootstrap of clingo.
+    Nested use does not swap again. One compelling use case is bootstrapping patchelf during
+    the bootstrap of clingo.
     """
-    global _REF_COUNT  # pylint: disable=global-statement
-    already_swapped = bool(_REF_COUNT)
-    _REF_COUNT += 1
     try:
-        if already_swapped:
+        if is_bootstrapping():
             yield
         else:
             with _ensure_bootstrap_configuration():
@@ -107,8 +106,6 @@ def ensure_bootstrap_configuration() -> Generator:
         if e._long_message:
             e._long_message = e._long_message.replace("spack reindex", "spack -b reindex")
         raise
-    finally:
-        _REF_COUNT -= 1
 
 
 def _read_and_sanitize_configuration() -> Dict[str, Any]:
@@ -132,7 +129,7 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     config_scopes: MutableSequence["spack.config.ConfigScope"] = [
         spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)
     ]
-    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, ("bootstrap", _config_path()))
+    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, (_SCOPE_NAME, _config_path()))
     for name, path in configuration_paths:
         generic_scope = spack.config.DirectoryConfigScope(name, path)
         config_scopes.append(generic_scope)
