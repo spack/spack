@@ -1614,22 +1614,22 @@ def _force_old_layout(to_move) -> List[str]:
 
     if to_move.get("installs"):
         retained_resources.append("existing installs")
-        config_changes["install_tree"] = {"root": os.path.join(spack.paths.prefix, "opt", "spack")}
+        config_changes["install_tree"] = {"root": os.path.join("$spack", "opt", "spack")}
 
-    old_gpg_home = spack.paths.old_gpg_path
-    old_gpg_keys = spack.paths.old_gpg_keys_path
+    old_gpg_home = spack.paths.old_gpg_path.replace(spack.paths.prefix, "$spack")
+    old_gpg_keys = spack.paths.old_gpg_keys_path.replace(spack.paths.prefix, "$spack")
     if to_move.get("gpg_keys"):
         config_changes["gpg_path"] = old_gpg_home
         config_changes["gpg_keys_path"] = old_gpg_keys
         retained_resources.append(f"GPG data ({old_gpg_home})")
 
     if to_move.get("licenses"):
-        old_licenses = spack.paths.old_licenses_path
+        old_licenses = spack.paths.old_licenses_path.replace(spack.paths.prefix, "$spack")
         config_changes["license_dir"] = old_licenses
         retained_resources.append(f"licenses ({old_licenses})")
 
     if to_move.get("environments"):
-        old_envs = spack.paths.old_envs_path
+        old_envs = spack.paths.old_envs_path.replace(spack.paths.prefix, "$spack")
         config_changes["environments_root"] = old_envs
         retained_resources.append(f"environments ({old_envs})")
 
