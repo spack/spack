@@ -4,6 +4,7 @@
 """Tests for the installer.core module: the PackageInstaller event loop."""
 
 import os
+import signal
 import sys
 
 import pytest
@@ -11,7 +12,7 @@ import pytest
 import spack.error
 import spack.spec
 from spack.config import Configuration
-from spack.installer.base import ExitCode
+from spack.installer.base import TERMINATION_SIGNALS, ExitCode
 from spack.installer.core import PackageInstaller, read_connection, write_connection
 from spack.installer.ui import ChangeJobs, SetEcho
 from spack.store import Store
@@ -348,6 +349,82 @@ def test_keyboard_interrupt_terminates_builds_and_flushes_db(temporary_store, mo
     assert launcher.hanging[0].terminated
     assert _record(temporary_store, dep) is not None
     assert _record(temporary_store, root) is None
+
+
+def _skip_if_handled_by_test_runner():
+    if any(signal.getsignal(sig) is not signal.SIG_DFL for sig in TERMINATION_SIGNALS):
+        pytest.skip("termination signals are handled by the test runner")
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+@pytest.mark.parametrize("signum", TERMINATION_SIGNALS, ids=lambda s: s.name)
+def test_termination_signal_terminates_builds(signum, temporary_store, mock_packages):
+    """A termination signal ends the event loop, which terminates the running builds, restores the
+    default handlers, and raises TerminatedBySignal."""
+    _skip_if_handled_by_test_runner()
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(hang=True)})
+
+    def tick():
+        if launcher.hanging:
+            os.kill(os.getpid(), signum)
+
+    with pytest.raises(spack.error.TerminatedBySignal) as e:
+        _install(launcher, spec, ui=DrivingUI(tick))
+
+    assert e.value.signum == signum
+    assert launcher.hanging[0].terminated
+    assert all(signal.getsignal(s) is signal.SIG_DFL for s in TERMINATION_SIGNALS)
+
+
+@pytest.mark.not_on_windows("Windows has no termination signals to handle")
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+def test_termination_signal_while_starting_build(temporary_store, mock_packages):
+    """A termination signal while a build is started terminates that build."""
+    _skip_if_handled_by_test_runner()
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(hang=True)})
+
+    def launch(request, jobserver):
+        child = launcher(request, jobserver)
+        os.kill(os.getpid(), signal.SIGTERM)
+        return child
+
+    with pytest.raises(spack.error.TerminatedBySignal):
+        _install(launch, spec)
+
+    assert launcher.hanging[0].terminated
+
+
+@pytest.mark.not_on_windows("Windows has no termination signals to handle")
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+def test_termination_signal_during_cleanup(temporary_store, mock_packages):
+    """A termination signal during the cleanup after another exception does not interrupt the
+    cleanup, and is raised after it."""
+    _skip_if_handled_by_test_runner()
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: Script(hang=True)})
+
+    def tick():
+        if launcher.hanging:
+            build = launcher.hanging[0]
+            terminate = build.terminate
+
+            def signal_and_terminate():
+                os.kill(os.getpid(), signal.SIGTERM)
+                terminate()
+
+            build.terminate = signal_and_terminate
+            raise KeyboardInterrupt
+
+    with pytest.raises(spack.error.TerminatedBySignal) as e:
+        _install(launcher, root, ui=DrivingUI(tick))
+
+    assert isinstance(e.value.__context__, KeyboardInterrupt)
+    assert launcher.hanging[0].terminated
+    assert _record(temporary_store, dep) is not None
+    assert signal.getsignal(signal.SIGTERM) is signal.SIG_DFL
 
 
 @pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root

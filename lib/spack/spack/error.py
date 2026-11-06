@@ -19,6 +19,14 @@ class SpackAPIWarning(UserWarning):
     """Warning that formats with file and line number."""
 
 
+class TerminatedBySignal(BaseException):
+    """Raised on a termination signal, so that cleanup runs before Spack exits by that signal."""
+
+    def __init__(self, signum: int) -> None:
+        super().__init__(signum)
+        self.signum = signum
+
+
 class SpackError(Exception):
     """This is the superclass for all Spack errors.
     Subclasses can be found in the modules they have to do with.
