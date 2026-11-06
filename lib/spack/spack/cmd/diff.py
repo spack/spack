@@ -18,7 +18,9 @@ import spack.error
 import spack.hash_lookup
 import spack.spec
 import spack.spec_diff
+import spack.store
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 import spack.variant
 from spack.active_environment import active_environment
 from spack.environment import diff as env_diff_core
@@ -103,6 +105,46 @@ def _is_lockfile(path: str) -> bool:
     return isinstance(meta, dict) and meta.get("file-type") == "spack-lockfile"
 
 
+def _is_specfile(path: str) -> bool:
+    """Whether a file is a JSON or YAML spec file, decided by its content."""
+    try:
+        with open(path, "r", encoding="utf-8") as stream:
+            data = sjson.load(stream) if path.endswith(".json") else syaml.load(stream)
+    except (OSError, ValueError, spack.error.SpackError):
+        return False
+    return isinstance(data, dict) and isinstance(data.get("spec"), dict)
+
+
+#: Extensions of the files an argument can name: lockfiles, manifests and spec files
+_FILE_EXTENSIONS = (".lock", ".json", ".yaml", ".yml")
+
+
+def _not_an_environment(argument: str, path: str) -> ev.SpackEnvironmentError:
+    """Error for an argument that is neither a file, an environment directory, nor a name."""
+    if os.path.isdir(path):
+        if os.path.isfile(os.path.join(path, ev.lockfile_name)):
+            lockfile = os.path.join(argument, ev.lockfile_name)
+            hint = f"to compare the lockfile it contains, pass '{lockfile}'"
+        else:
+            hint = f"an environment directory contains a '{ev.manifest_name}' file"
+        return ev.SpackEnvironmentError(f"'{argument}' is not an environment directory", hint)
+
+    if argument.endswith(_FILE_EXTENSIONS):
+        return ev.SpackEnvironmentError(f"no such file: '{argument}'")
+
+    return ev.SpackEnvironmentError(
+        f"no environment, environment directory, or lockfile named '{argument}'",
+        "to compare two specs, use `spack diff --specs`",
+    )
+
+
+def _replace_paths(text: str, paths: Tuple[str, ...], argument: str) -> str:
+    """Replace every occurrence of the given paths in an error text with the argument."""
+    for path in paths:
+        text = text.replace(path, argument)
+    return text
+
+
 def _open_environment_to_diff(
     stack: contextlib.ExitStack, argument: str
 ) -> Tuple[ev.Environment, Dict[str, Optional[str]]]:
@@ -127,9 +169,17 @@ def _open_environment_to_diff(
         except ev.SpackEnvironmentError as e:
             # Parse the file only on failure, to word the error
             if _is_lockfile(path):
-                raise
+                # The error names the temporary copy, which is deleted before it is printed
+                copies = (os.path.join(root, "env", ev.lockfile_name), init_file)
+                long_message = e.long_message
+                raise ev.SpackEnvironmentError(
+                    _replace_paths(e.message, copies, argument),
+                    _replace_paths(long_message, copies, argument) if long_message else None,
+                ) from e
             hint = f"pass an environment name, a directory, or a '{ev.lockfile_name}' file"
-            if os.path.basename(path) == ev.manifest_name:
+            if _is_specfile(path):
+                hint = "to compare two spec files, use `spack diff --specs`"
+            elif os.path.basename(path) == ev.manifest_name:
                 directory = os.path.dirname(argument) or "."
                 hint = f"to compare the environment it describes, pass '{directory}'"
             raise ev.SpackEnvironmentError(f"'{argument}' is not a Spack lockfile", hint) from e
@@ -137,10 +187,7 @@ def _open_environment_to_diff(
         return env, {"name": None, "path": os.path.abspath(path)}
 
     if not ev.is_env_dir(path) and not ev.exists(argument):
-        raise ev.SpackEnvironmentError(
-            f"no environment, environment directory, or lockfile named '{argument}'",
-            "to compare two specs, use `spack diff --specs`",
-        )
+        raise _not_an_environment(argument, path)
     env = ev.environment_from_name_or_dir(argument)
     return env, {"name": env.name, "path": env.path}
 
@@ -175,7 +222,24 @@ def _installed_spec(spec: spack.spec.Spec, env: Optional[ev.Environment]) -> spa
     spack.hash_lookup.replace_hash(spec)
     if spec.concrete:
         return spec
-    return spack.cmd.disambiguate_spec(spec, env)
+    hashes = env.all_hashes() if env else None
+    # An environment argument parses as a spec, so it would be reported as not installed
+    kind = _environment_kind(str(spec))
+    if kind and not spack.store.STORE.db.query(spec, hashes=hashes):
+        raise spack.error.SpackError(
+            f"Spec '{spec}' matches no installed packages.",
+            f"'{spec}' is {kind}: to compare two environments, drop `--specs`",
+        )
+    return spack.cmd.disambiguate_spec_from_hashes(spec, hashes)
+
+
+def _environment_kind(argument: str) -> Optional[str]:
+    """How to name what an argument refers to, if it can be compared without ``--specs``."""
+    if ev.exists(argument) or ev.is_env_dir(argument):
+        return "an environment"
+    if os.path.isfile(argument) and _is_lockfile(argument):
+        return "a lockfile"
+    return None
 
 
 def _diff_specs(args) -> bool:

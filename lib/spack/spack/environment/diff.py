@@ -12,6 +12,7 @@ Only the first layer is specific to environments. The second is the generic spec
 ``spack.spec_diff``, which this module drives once per common input spec.
 """
 
+import shlex
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple
 
 import spack.environment.environment as ev
@@ -97,6 +98,13 @@ def _concretized_user_specs(env: ev.Environment) -> Dict[ev.UserSpecId, Spec]:
     }
 
 
+def _concretize_command(label: str, *flags: str) -> Optional[str]:
+    """Command concretizing the environment that label names, or None if it names none."""
+    if not (ev.exists(label) or ev.is_env_dir(label)):
+        return None
+    return " ".join(["spack", "-e", shlex.quote(label), "concretize", *flags])
+
+
 def _assert_concretized(
     env: ev.Environment, concretized: Iterable[ev.UserSpecId], label: str
 ) -> None:
@@ -114,10 +122,11 @@ def _assert_concretized(
     # Also catches specs added since the last concretization
     pending = sorted(str(x.spec) for x in env._all_user_specs_with_group().difference(concretized))
     if pending:
-        raise ev.SpackEnvironmentError(
-            f"environment '{label}' is not concretized. Run `spack concretize` first",
-            "input specs not concretized:\n" + "\n".join(f"  {spec}" for spec in pending),
-        )
+        hint = "input specs not concretized:\n" + "\n".join(f"  {spec}" for spec in pending)
+        command = _concretize_command(label)
+        if command:
+            hint += f"\nRun `{command}` first."
+        raise ev.SpackEnvironmentError(f"environment '{label}' is not concretized", hint)
 
 
 def _included_roots(env: ev.Environment) -> Set[Tuple[str, Spec, str]]:
@@ -164,10 +173,15 @@ def _assert_package_hashes(env: ev.Environment, label: str) -> None:
     """
     # Without package hashes, nodes with equal configuration cannot be told apart
     if any(not spack.spec_diff.recorded_package_hash(node) for node in env.all_specs_generator()):
+        command = _concretize_command(label, "--force")
+        if command:
+            hint = f"Re-concretize it with `{command}` first."
+        else:
+            hint = "Concretize the environment it was written from again, and compare the result."
         raise ev.SpackEnvironmentError(
             f"environment '{label}' was concretized by a version of Spack that did not record "
             f"package hashes (its lockfile predates them), so it cannot be compared",
-            "Re-concretize it with `spack concretize --force` first.",
+            hint,
         )
 
 
