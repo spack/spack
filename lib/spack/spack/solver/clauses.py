@@ -91,6 +91,12 @@ class SpecClauseGenerator:
         self._pkg_classes: Dict[str, Type[spack.package_base.PackageBase]] = {}
         #: Cache for is_virtual()
         self._virtual_names: Dict[str, bool] = {}
+        #: Cache for spack.variant.definitions_to_validate()
+        self._variant_definitions: Dict[
+            Tuple[str, str], List[Tuple[spack.spec.Spec, vt.Variant]]
+        ] = {}
+        #: (package, values, intersecting definitions) already recorded
+        self._recorded_variant_values: Set[Tuple[str, Tuple, Tuple[vt.Variant, ...]]] = set()
 
     def record_version_constraint(self, name: str, versions) -> None:
         """Record that `versions` was requested for package `name`."""
@@ -235,9 +241,20 @@ class SpecClauseGenerator:
         """Ensure the values of the variant *can* be valid for the package, and record them as
         possible values of the definitions that accept them. Accounts for int/str/etc., where
         valid values can't be listed in the package."""
-        for variant_def in vt.prevalidate_variant_value(self.pkg_class(name), variant, spec):
+        definitions = self._variant_definitions.get((name, variant.name))
+        if definitions is None:
+            definitions = vt.definitions_to_validate(self.pkg_class(name), variant.name)
+            self._variant_definitions[(name, variant.name)] = definitions
+
+        intersecting = tuple(vdef for when, vdef in definitions if spec.intersects(when))
+        key = (name, variant.values, intersecting)
+        if key in self._recorded_variant_values:
+            return
+
+        for variant_def in vt.accepting_definitions(name, variant, intersecting):
             for value in variant.values:
                 self.record_variant_value(name, variant_def, value)
+        self._recorded_variant_values.add(key)
 
     def _flag_clauses(
         self, spec: spack.spec.Spec, f, *, name: str, context: Optional[SourceContext]
