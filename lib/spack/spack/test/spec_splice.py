@@ -232,7 +232,6 @@ def test_splicing_the_original_back_gives_the_original_spec():
     assert out.dag_hash() == spec.dag_hash()
 
 
-@pytest.mark.xfail(strict=True, reason="the replacement gets the providers of the target")
 def test_intransitive_splice_keeps_provider_of_virtual_only_the_target_used():
     """The replacement keeps its provider of a virtual that no remaining node uses."""
     glibc = node("glibc@2")  # shared by spec and replacement
