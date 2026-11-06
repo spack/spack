@@ -94,6 +94,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    bootstrapping
    command_index
    extensions
+   plugins
    pipelines
    signing
    gpu_configuration

@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spack-streaming-ui"
+version = "0.1.0"
+description = "Streaming installer UI plugin example for Spack"
+
+[project.entry-points."spack.plugins.ui"]
+streaming = "spack.installer.streaming.ui:setup"
+
+[tool.setuptools]
+packages = ["spack.installer.streaming"]
+
+[tool.setuptools.package-dir]
+"spack.installer.streaming" = "."

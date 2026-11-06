@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import warnings
-from typing import TYPE_CHECKING, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 from spack.vendor.typing_extensions import Literal
 
 import spack.config
+import spack.plugins
 import spack.sandbox
 
 if TYPE_CHECKING:
@@ -66,13 +67,15 @@ def create_installer(
     if use_old_installer:
         from spack.old_installer import PackageInstaller  # type: ignore
 
-        extra = {}
+        extra: Dict[str, Any] = {}
     else:
         from spack.installer import PackageInstaller  # type: ignore
 
         extra = {"show_log_on_error": show_log_on_error}
 
-    return PackageInstaller(
+    return spack.plugins.create_plugin(
+        "installer",
+        PackageInstaller,
         packages,
         dirty=dirty,
         explicit=explicit,

@@ -436,10 +436,7 @@ class TerminalUI(InstallerUI):
 
             # Stop tracking the finished build's logs.
             if build_id == self.tracked_build_id:
-                if not self.overview_mode:
-                    self.toggle()
-                if self.verbose:
-                    self.tracked_build_id = ""
+                self._tracked_build_finished(state)
 
         self.dirty = True
         self._update_terminal_title()
@@ -449,6 +446,12 @@ class TerminalUI(InstallerUI):
             line = "".join(self._generate_line_components(build_info, static=True, now=now))
             self.stdout.write(line + "\n")
             self.stdout.flush()
+
+    def _tracked_build_finished(self, state: str) -> None:
+        if not self.overview_mode:
+            self.toggle()
+        if self.verbose:
+            self.tracked_build_id = ""
 
     def _parse_log_summary(self, build_info: BuildInfo) -> None:
         """Store the interesting parts of a failed build's log."""
@@ -510,6 +513,11 @@ class TerminalUI(InstallerUI):
         if not self.dirty and not finalize:
             return
 
+        self._render_overview(now=now, has_unfinished=has_unfinished, finalize=finalize)
+
+    def _render_overview(
+        self, *, now: float, has_unfinished: bool, finalize: bool = False
+    ) -> None:
         # Build the overview output in a buffer and print all at once to avoid flickering.
         buffer = io.StringIO()
 
@@ -537,6 +545,8 @@ class TerminalUI(InstallerUI):
             # active_area_rows. Set to 0 to force newlines instead of cursor movement.
             self.active_area_rows = 0
 
+        self._render_persisted_rows(buffer, now)
+
         # Then a header followed by the active builds. This is the "mutable" part of the display.
         self.total_lines = 0
 
@@ -554,6 +564,7 @@ class TerminalUI(InstallerUI):
                 f"  {self.color.CYAN}v{self.color.RESET}: logs"
                 f"  {self.color.CYAN}n{self.color.RESET}/{self.color.CYAN}p{self.color.RESET}:"
                 " next/prev"
+                f"{self._overview_header_suffix()}"
             )
             if coloring.clen(long_header) < max_width:
                 self._println(buffer, long_header)
@@ -567,9 +578,13 @@ class TerminalUI(InstallerUI):
             self._println(buffer, "Waiting for other Spack install process...")
 
         displayed_builds = (
-            [b for b in self.builds.values() if self._is_displayed(b)]
+            [
+                b
+                for b in self.builds.values()
+                if self._show_in_overview(b) and self._is_displayed(b)
+            ]
             if self.search_term
-            else self.builds.values()
+            else [b for b in self.builds.values() if self._show_in_overview(b)]
         )
         len_builds = len(displayed_builds)
 
@@ -603,6 +618,15 @@ class TerminalUI(InstallerUI):
 
         if finalize:
             self._update_terminal_title(True)
+
+    def _render_persisted_rows(self, buffer: io.StringIO, now: float) -> None:
+        pass
+
+    def _show_in_overview(self, build: BuildInfo) -> bool:
+        return True
+
+    def _overview_header_suffix(self) -> str:
+        return ""
 
     def _println(self, buffer: io.StringIO, line: str = "", force_newline: bool = False) -> None:
         """Print a line to the buffer, handling line clearing and cursor movement."""
@@ -671,6 +695,11 @@ class TerminalUI(InstallerUI):
         yield f"{name_color}{build_info.name}{self.color.RESET}"
         yield f"{self.color.CYAN}@{build_info.version}{self.color.RESET}"
 
+        yield from self._generate_state_components(build_info, now)
+
+    def _generate_state_components(
+        self, build_info: BuildInfo, now: float
+    ) -> Generator[str, None, None]:
         # progress or state
         if build_info.progress_percent is not None:
             yield " fetching"
