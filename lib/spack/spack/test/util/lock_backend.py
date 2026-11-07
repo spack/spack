@@ -50,8 +50,6 @@ from spack.util.filesystem import getuid, touch, working_dir
 if sys.platform != "win32":
     import fcntl
 
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
-
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import
@@ -584,6 +582,7 @@ def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
                 pass
 
 
+@pytest.mark.not_on_windows("EROFS and fcntl are POSIX-only")
 def test_read_lock_on_read_only_filesystem(tmp_path: pathlib.Path, monkeypatch):
     """A read lock still succeeds when open() fails with EROFS (read-only filesystem)."""
     lockfile = tmp_path / "lockfile"
@@ -624,6 +623,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
+@pytest.mark.not_on_windows("Windows directories can't be made read-only")
 @pytest.mark.skipif(False if sys.platform == "win32" else getuid() == 0, reason="user is root")
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
@@ -673,7 +673,8 @@ def test_upgrade_read_to_write(private_lock_path):
     lock.release_read()
     assert lock._reads == 0
     assert lock._writes == 0
-    assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
+    if sys.platform != "win32":  # Windows closes the file so that it can be deleted
+        assert not lock.backend._file_ref.fh.closed  # recycle the file handle for next lock
 
 
 def test_release_write_downgrades_to_shared(private_lock_path):
@@ -726,6 +727,8 @@ def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
         # upgrade to write here
         with pytest.raises(lk.LockROFileError):
             lock.acquire_write()
+
+        lock.release_read()
 
 
 class ComplexAcquireAndRelease:
@@ -1390,6 +1393,7 @@ def test_downgrade_write_fails(tmp_path: pathlib.Path):
         lock.release_read()
 
 
+@pytest.mark.not_on_windows("fcntl is POSIX-only")
 @pytest.mark.parametrize(
     "err_num,err_msg",
     [

@@ -469,9 +469,7 @@ def test_005_db_exists(database):
     index_file = os.path.join(database.root, ".spack-db", spack.database.INDEX_JSON_FILE)
     lock_file = os.path.join(database.root, ".spack-db", spack.database._LOCK_FILE)
     assert os.path.exists(str(index_file))
-    # Lockfiles not currently supported on Windows
-    if sys.platform != "win32":
-        assert os.path.exists(str(lock_file))
+    assert os.path.exists(str(lock_file))
 
     with open(index_file, encoding="utf-8") as fd:
         index_object = json.load(fd)
