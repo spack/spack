@@ -11,6 +11,7 @@ The following examples _do not_ constitute security vulnerabilities:
 * **Vulnerabilities in Spack packages.** See https://github.com/spack/spack-packages/security instead.
 * **Vulnerabilities in the underlying operating system.** Spack relies on a number of [system dependencies](https://spack.readthedocs.io/en/latest/installing_prerequisites.html) such as Python, git, and tar. Older versions of these dependencies may contain vulnerabilities, and users should not use Spack if they do not trust the operating system it is running on.
 * **Intentionally disabling or bypassing security features.** For example, the use of `spack install --no-checksum` or manually tampering with the download URL or checksum is not considered secure and is a user-mistake instead of a security vulnerability.
+* **Bugs that require running Spack with elevated privileges.** Spack should generally work without root/admin permissions. A package bug that requires running Spack with root access should be reported as a normal bug, not a security vulnerability.
 
 When in doubt, open a vulnerability report and check with us.
 
@@ -28,7 +29,11 @@ This list is not exhaustive, and we encourage you to report when in doubt.
 
 Spack installs software from source by executing the build system of a package. This build system can execute arbitrary code that may write to locations outside of the expected build stage or installation prefix. Please enable our experimental [build isolation and sandboxing](https://spack.readthedocs.io/en/latest/installing.html#build-isolation-and-sandboxing-linux) to prevent this kind of security issue.
 
-Spack guarantees the security of our `builtin` package repository. However, third-party package repositories are not maintained by Spack maintainers. In particular, Spack executes all package files in order to generate dependency metadata, not just the packages you request. We are working on metadata caching and sandboxing to resolve this. Until then, ensure you only use third-party package repositories from organizations you trust.
+Spack guarantees the security of our `builtin` package repository. However, third-party package repositories are not maintained by Spack maintainers. In particular, Spack executes all package files in order to generate dependency metadata, not just the packages you request. We are working on metadata caching and sandboxing to resolve this. Until then, you should only use third-party package repositories from organizations you trust.
+
+Some commands like `spack python` expose a full Python interpreter. These commands are designed to execute arbitrary code, this is not a mistake. Do not expose this part of the API to remote users you do not trust, e.g., via a web server.
+
+An installation prefix with loose permissions could allow attackers to plant symlinks, thus causing Spack to write to arbitrary locations on disk. Always minimize the number of users trusted with write/execute permissions on the installation prefix.
 
 ## Reporting a Vulnerability
 
