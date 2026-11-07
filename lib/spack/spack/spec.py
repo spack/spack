@@ -1505,12 +1505,14 @@ class _Splice:
         return changed
 
     def _validate(self, edges, changed: Dict[str, bool]) -> None:
-        """The replacement is used, edge virtuals are provided, and no name or virtual has more
-        nodes in the result than in the spec, or more than one"""
+        """The replacement is used, changed nodes can be relocated, edge virtuals are provided,
+        and no name or virtual has more nodes in the result than in the spec, or more than one"""
         if self.replacement.dag_hash() not in changed:
             raise SpliceError(f"{self.error}: the replacement would not be used")
         used_as: Dict[str, Set[str]] = {h: set() for h in changed}
         for h in changed:
+            if changed[h]:
+                self._validate_relocation(h, edges[h])
             for child, (_, virtuals) in edges[h].items():
                 missing = set(virtuals) - _provided(self.nodes[child])
                 if missing:
@@ -1530,6 +1532,43 @@ class _Splice:
             for key, n in count(used_as).items():
                 if n > max(1, before[key]):
                     raise SpliceError(f"{self.error}: the result would have {n} {kind} {key}")
+
+    def _validate_relocation(self, h: str, edges) -> None:
+        """Binaries of node h refer to the link/run dependencies of its build spec. Relocation, see
+        spack.binary_distribution, maps each to the dependency of the result used as the same
+        virtuals, or else of the same name, so that must be exactly one, and each dependency must
+        be the image of one."""
+        parent = self.nodes[h].name
+        mapped: Set[str] = set()
+        for e in self.nodes[h].build_spec.edges_to_dependencies(depflag=_NON_BUILD):
+            wanted = set(e.virtuals)
+            images = [
+                c
+                for c, (_, virtuals) in edges.items()
+                if (
+                    not wanted.isdisjoint(virtuals)
+                    if wanted
+                    else self.nodes[c].name == e.spec.name
+                )
+            ]
+            if not images:
+                raise SpliceError(
+                    f"{self.error}: relocation of {parent} cannot map {e.spec.name} by name or "
+                    "virtual"
+                )
+            if len(images) > 1:
+                names = " and ".join(sorted(self.nodes[c].name for c in images))
+                raise SpliceError(
+                    f"{self.error}: relocation of {parent} cannot map {e.spec.name} to {names} "
+                    "at once"
+                )
+            mapped.add(images[0])
+        unmapped = edges.keys() - mapped
+        if unmapped:
+            name = self.nodes[min(unmapped)].name
+            raise SpliceError(
+                f"{self.error}: relocation of {parent} cannot map a dependency to {name}"
+            )
 
 
 def _select_edges(
@@ -4937,8 +4976,9 @@ class Spec:
 
         Raises:
             spack.spec.SpliceError: if there is nothing to replace, or the result would have a
-                dependency cycle, a virtual that is not provided, or more nodes of a name or
-                providers of a virtual than the spec.
+                dependency cycle, a virtual that is not provided, more nodes of a name or
+                providers of a virtual than the spec, or a node whose dependencies relocation
+                cannot map from those of its build spec.
 
         Returns: a concrete, spliced version of the current :class:`Spec`
 
