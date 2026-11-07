@@ -15,6 +15,8 @@ PROVIDES = {
     "mpich": ("mpi",),
     "openmpi": ("mpi",),
     "charmpp": ("mpi",),
+    "openblas": ("blas", "lapack"),
+    "intel-oneapi-mkl": ("blas", "lapack"),
 }
 
 
@@ -228,3 +230,29 @@ def test_intransitive_splice_ignores_virtuals_only_the_target_uses():
     out = spec.splice(replacement, transitive=False)
 
     assert out["libxml2"].edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
+
+
+@pytest.mark.xfail(strict=True, reason="edges are split by virtual")
+def test_splice_rejects_moving_part_of_an_edge():
+    glibc = node("glibc@2")
+    libxml2 = node("libxml2@1", (glibc, "link", "libc"))
+    spec = node("libxslt@1", (glibc, "link", "libc", "iconv"), (libxml2, "link"))
+    libiconv = node("libiconv@1")
+    replacement = node("libxml2@2", (glibc, "link", "libc"), (libiconv, "link", "iconv"))
+
+    # libxslt would link libiconv for iconv, but its binary takes iconv from glibc
+    with pytest.raises(SpliceError):
+        spec.splice(replacement, transitive=True)
+
+
+@pytest.mark.xfail(strict=True, reason="dependencies by name are replaced by other packages")
+@pytest.mark.parametrize("transitive", [True, False])
+def test_splice_rejects_replacing_a_dependency_by_name_with_another_package(transitive):
+    openblas = node("openblas@1")
+    suite_sparse = node("suite-sparse@1", (openblas, "link", "blas", "lapack"))
+    spec = node("julia@1", (openblas, "link"), (suite_sparse, "link"))
+    replacement = node("intel-oneapi-mkl@1")
+
+    # julia needs openblas, not just blas and lapack
+    with pytest.raises(SpliceError):
+        spec.splice(replacement, transitive=transitive)
