@@ -246,7 +246,6 @@ def test_intransitive_splice_keeps_provider_of_virtual_only_the_target_used():
     assert out["libxml2"].edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
 
 
-@pytest.mark.xfail(strict=True, reason="edges are split by virtual")
 def test_splice_rejects_moving_part_of_an_edge():
     """Relocation maps each old dependency to one new dependency."""
     glibc = node("glibc@2")
@@ -275,7 +274,6 @@ def test_splice_rejects_provider_switch_if_the_old_provider_stays():
         spec.splice(replacement, transitive=True)
 
 
-@pytest.mark.xfail(strict=True, reason="dependencies by name are replaced by other packages")
 @pytest.mark.parametrize("transitive", [True, False])
 def test_splice_rejects_replacing_a_dependency_by_name_with_another_package(transitive):
     """A dependency by name keeps its package."""
