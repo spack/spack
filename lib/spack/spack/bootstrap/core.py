@@ -1,29 +1,21 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Bootstrap Spack core dependencies from binaries.
+"""Bootstrap Spack core dependencies.
 
-This module contains logic to bootstrap software required by Spack from binaries served in the
-bootstrapping mirrors. The logic is quite different from an installation done from a Spack user,
-because of the following reasons:
+Core dependencies are installed by the regular installer into the bootstrap store, from the first
+configured source that provides them. They are recorded in an environment per interpreter, whose
+lockfile is written without the concretizer, since clingo may be among the software to install:
 
-1. The binaries are all compiled on the same OS for a given platform (e.g. they are compiled on
-   ``centos7`` on ``linux``), but they will be installed and used on the host OS. They are also
-   targeted at the most generic architecture possible. That makes the binaries difficult to reuse
-   with other specs in an environment without ad-hoc logic.
-2. Bootstrapping has a fallback procedure where we try to install software by default from the
-   most recent binaries, and proceed to older versions of the mirror, until we try building from
-   sources as a last resort. This allows us not to be blocked on architectures where we don't
-   have binaries readily available, but is also not compatible with the working of environments
-   (they don't have fallback procedures).
-3. Among the binaries we have clingo, so we can't concretize that with clingo :-)
-4. clingo, GnuPG and patchelf binaries need to be verified by sha256 sum (all the other binaries
-   we might add on top of that in principle can be verified with GPG signatures).
+1. From a buildcache source, the lockfile holds a spec from the index of the mirror. Its nodes
+   are installed from binaries that are verified by the sha256 sums of the source metadata, while
+   the externals of the build host (python, libc) are spliced for those of this host.
+2. From a source that builds from sources, the spec is concretized from a prototype (clingo), or
+   by the concretizer.
 """
 
 import copy
 import functools
-import json
 import os
 import sys
 import uuid
@@ -33,9 +25,11 @@ import spack.binary_distribution
 import spack.compilers.libraries
 import spack.concretize
 import spack.config
+import spack.deptypes as dt
 import spack.detection
+import spack.environment
 import spack.error
-import spack.installer_dispatch
+import spack.externals
 import spack.mirrors.mirror
 import spack.repo
 import spack.spec
@@ -43,6 +37,7 @@ import spack.store
 import spack.user_environment
 import spack.util.executable
 import spack.util.gpg
+import spack.util.libc
 import spack.util.spack_yaml
 import spack.util.url
 import spack.version
@@ -57,7 +52,7 @@ from ._common import (
     _try_import_from_store,
 )
 from .clingo import ClingoBootstrapConcretizer
-from .config import spec_for_current_python
+from .config import SCOPE_NAME, environment_path, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -69,6 +64,8 @@ ConfigDictionary = Dict[str, Any]
 
 #: Whatever a bootstrapper's store probe returns on success
 ResultT = TypeVar("ResultT")
+
+_SOURCE_ONLY = {"root_policy": "source_only", "dependencies_policy": "source_only"}
 
 
 class BootstrapRequest(Generic[ResultT]):
@@ -83,15 +80,12 @@ class BootstrapRequest(Generic[ResultT]):
     def __init__(
         self,
         abstract_spec: spack.spec.Spec,
-        metadata_name: str,
         probe: Callable[[spack.spec.Spec], Optional[ResultT]],
         installer_args: Dict[str, Any],
         concretize: Callable[[spack.spec.Spec], spack.spec.Spec],
     ) -> None:
         #: Spec to be installed to satisfy this request
         self.abstract_spec = abstract_spec
-        #: Name of the buildcache metadata file for this software
-        self.metadata_name = metadata_name
         #: Returns the software from the store, or None if it is not usable from there
         self.probe = probe
         #: Extra arguments for the installer, when building from sources
@@ -116,13 +110,8 @@ class BootstrapRequest(Generic[ResultT]):
         """
         return BootstrapRequest(
             abstract_spec=spack.spec.Spec(abstract_spec_str + " ^" + spec_for_current_python()),
-            metadata_name=module,
             probe=functools.partial(_try_import_from_store, module),
-            installer_args={
-                "fail_fast": True,
-                "root_policy": "source_only",
-                "dependencies_policy": "source_only",
-            },
+            installer_args=_SOURCE_ONLY,
             concretize=concretize or spack.concretize.concretize_one,
         )
 
@@ -131,153 +120,132 @@ class BootstrapRequest(Generic[ResultT]):
         cls, executables: Sequence[str], abstract_spec_str: str
     ) -> "BootstrapRequest[ExecutableInfo]":
         """Return a request for executables to be found in the PATH."""
-        abstract_spec = spack.spec.Spec(abstract_spec_str)
         return BootstrapRequest(
-            abstract_spec=abstract_spec,
-            metadata_name=abstract_spec.name,
+            abstract_spec=spack.spec.Spec(abstract_spec_str),
             probe=functools.partial(_executables_in_store, executables),
             installer_args={},
             concretize=spack.concretize.concretize_one,
         )
 
 
-class Bootstrapper:
-    """Interface for "core" software bootstrappers"""
-
-    def __init__(self, conf: ConfigDictionary) -> None:
-        self.name = conf["name"]
-        self.metadata_dir = spack.config.canonicalize_path(conf["metadata"])
-
-        # Check for relative paths, and turn them into absolute paths
-        # root is the metadata_dir
-        maybe_url = conf["info"]["url"]
-        if spack.util.url.is_path_instead_of_url(maybe_url) and not os.path.isabs(maybe_url):
-            maybe_url = os.path.join(self.metadata_dir, maybe_url)
-        self.url = spack.mirrors.mirror.Mirror(maybe_url).fetch_url
-
-        #: Mirror scope to be pushed onto the bootstrapping configuration when using
-        #: this bootstrapper
-        self.mirror_scope = spack.config.InternalConfigScope(
-            f"bootstrap-{self.name}-{uuid.uuid4()}", {"mirrors:": {self.name: self.url}}
-        )
-
-    def try_to_bootstrap(self, request: BootstrapRequest[ResultT]) -> Optional[ResultT]:
-        """Try to make the requested software available, from this source.
-
-        Args:
-            request: software to be bootstrapped, and the probe that tests for it
-
-        Return:
-            What the probe of the request returned, or None if bootstrapping failed
-        """
-        raise NotImplementedError("subclasses must implement try_to_bootstrap")
+def _mirror_scope(source: ConfigDictionary) -> spack.config.InternalConfigScope:
+    """Return a configuration scope to install from a bootstrapping source, whose mirror is the
+    only one"""
+    url = source["info"]["url"]
+    # A relative path is relative to the metadata directory
+    if spack.util.url.is_path_instead_of_url(url) and not os.path.isabs(url):
+        url = os.path.join(spack.config.canonicalize_path(source["metadata"]), url)
+    data: Dict[str, Any] = {
+        "mirrors:": {source["name"]: spack.mirrors.mirror.Mirror(url).fetch_url}
+    }
+    if source["type"] == "buildcache":
+        # Allow any deprecation, since a pinned binary may be of a version deprecated later
+        data["packages"] = {"all": {"deprecation": {"allow": [{"severity": "critical"}]}}}
+    return spack.config.InternalConfigScope(f"bootstrap-{source['name']}-{uuid.uuid4()}", data)
 
 
-def _matching_entries(bincache_data, abstract_spec: spack.spec.Spec) -> List[Any]:
-    """Return the metadata entries whose spec provides the abstract spec, in metadata order.
+def host_externals() -> List[spack.spec.Spec]:
+    """Return the externals for the interpreter running Spack and for its libc, which replace
+    those of the host where a binary was built."""
+    externals: List[spack.externals.ExternalDict] = [
+        {"spec": spec_for_current_python(), "prefix": sys.exec_prefix}
+    ]
+    libc = spack.util.libc.libc_from_current_python_process()
+    if libc:
+        externals.append({"spec": str(libc), "prefix": libc.external_path})
+    return spack.externals.ExternalSpecsParser(externals, repo=spack.repo.PATH).all_specs()
+
+
+def _python_venv(prototype: spack.spec.Spec, python: spack.spec.Spec) -> spack.spec.Spec:
+    """Return a concrete python-venv like the prototype, for another interpreter"""
+    venv = prototype.copy(deps=False)
+    venv._mark_concrete(False)
+    venv.architecture = python.architecture
+    edge = prototype.edges_to_dependencies("python")[0]
+    venv.add_dependency_edge(python, depflag=edge.depflag, virtuals=edge.virtuals)
+    spack.spec.assign_hashes([venv], repo=spack.repo.PATH)
+    return venv
+
+
+def _pinned_binary(abstract_spec: spack.spec.Spec, sha256: Dict[str, str]) -> spack.spec.Spec:
+    """Return a spec from the index of the configured mirror that provides the abstract spec.
+
+    Every node of the spec is pinned by a sha256 sum, except for the externals of the build host,
+    which are spliced for those of this host, and a venv, which is created anew for the python of
+    this host.
 
     Args:
-        bincache_data: content of a buildcache metadata file
         abstract_spec: spec to be bootstrapped
+        sha256: expected sha256 sum of the binary of each pinned node, by DAG hash
     """
-    return [
-        entry
-        for entry in bincache_data["verified"]
-        if spack.spec.Spec(entry["spec"]).satisfies(abstract_spec)
-    ]
+    host = {s.name: s for s in host_externals()}
+    index = spack.binary_distribution.update_cache_and_get_specs(config=spack.config.CONFIG)
+    candidates = [s for s in index if s.dag_hash() in sha256 and s.satisfies(abstract_spec)]
+    for candidate in sorted(candidates, key=lambda s: s.version, reverse=True):
+        result = candidate
+        for node in candidate.traverse(root=False, deptype=dt.LINK | dt.RUN):
+            if node.name == "python-venv" and "python" in host:
+                result = result.splice(_python_venv(node, host["python"]), transitive=True)
+            elif node.external and node.name in host:
+                # The abstract spec selects the version of python, libc must be at least as recent
+                if node.name != "python" and host[node.name].version < node.version:
+                    break
+                result = result.splice(host[node.name], transitive=False)
+            elif node.external or node.dag_hash() not in sha256:
+                break
+        else:
+            return result
+    raise RuntimeError(f'no pinned binary provides "{abstract_spec}"')
 
 
-class BuildcacheBootstrapper(Bootstrapper):
-    """Install the software needed during bootstrapping from a buildcache."""
+def _core_environment() -> spack.environment.Environment:
+    """Return the environment recording the core dependencies installed for this interpreter"""
+    path = environment_path(label="core")
+    if spack.environment.is_env_dir(path):
+        return spack.environment.Environment(path)
+    return spack.environment.create_in_dir(path, with_view=False)
 
-    def _read_metadata(self, package_name: str) -> Any:
-        """Return metadata about the given package."""
-        json_filename = f"{package_name}.json"
-        json_dir = self.metadata_dir
-        json_path = os.path.join(json_dir, json_filename)
-        with open(json_path, encoding="utf-8") as stream:
-            data = json.load(stream)
-        return data
 
-    def _install_by_hash(self, pkg_hash: str, pkg_sha256: str) -> None:
-        # The caller is inside ensure_bootstrap_configuration, which already selects the platform
-        query = spack.binary_distribution.BinaryCacheQuery(
-            all_architectures=True, config=spack.config.CONFIG
+def _install_from_source(
+    request: BootstrapRequest[ResultT], source: ConfigDictionary
+) -> Optional[ResultT]:
+    """Try to make the requested software available from a bootstrapping source.
+
+    Return:
+        What the probe of the request returned, or None if the software is not usable
+    """
+    from_binaries = source["type"] == "buildcache"
+    if from_binaries and "sha256" not in source:
+        raise RuntimeError(
+            f"the metadata in {source['metadata']} does not list the sha256 sums of the binaries. "
+            "If it was created by `spack bootstrap mirror` of an older Spack, run that command "
+            "again to regenerate the mirror."
         )
-        for match in spack.store.find([f"/{pkg_hash}"], multiple=False, query_fn=query):
-            spack.binary_distribution.install_root_node(
-                # allow_missing is true since when bootstrapping clingo we truncate runtime
-                # deps such as gcc-runtime, since we link libstdc++ statically, and the other
-                # further runtime deps are loaded by the Python interpreter. This just silences
-                # warnings about missing dependencies.
-                match,
-                unsigned=True,
-                force=True,
-                sha256=pkg_sha256,
-                allow_missing=True,
-            )
 
-    def _install_and_test(
-        self, request: BootstrapRequest[ResultT], bincache_data
-    ) -> Optional[ResultT]:
-        # Ensure we see only the buildcache being used to bootstrap
-        with spack.config.CONFIG.override(self.mirror_scope):
-            # This index is currently needed to get the compiler used to build some
-            # specs that we know by dag hash.
-            spack.binary_distribution.BINARY_INDEX.regenerate_spec_cache()
-            index = spack.binary_distribution.update_cache_and_get_specs(
-                config=spack.config.CONFIG
-            )
+    kind = "pre-built binaries" if from_binaries else "sources"
+    tty.msg(f"Bootstrapping {request.abstract_spec.name} from {kind}")
+    tty.debug(f"[BOOTSTRAP] Using the source {source['name']}")
+    with spack.config.CONFIG.override(_mirror_scope(source)):
+        if from_binaries:
+            concrete_spec = _pinned_binary(request.abstract_spec, source["sha256"])
+            # Nodes without a checksum, like the venv for this python, are built from sources
+            installer_args: Dict[str, Any] = {"binary_checksums": source["sha256"]}
+        else:
+            # If we compile code from sources detecting a few build tools
+            # might reduce compilation time by a fair amount
+            _add_externals_if_missing()
+            concrete_spec = request.concretize(request.abstract_spec)
+            installer_args = request.installer_args
 
-            if not index:
-                raise RuntimeError("The binary index is empty")
+        env = _core_environment()
+        with env.write_transaction():
+            if any(x.root == request.abstract_spec for x in env.concretized_roots):
+                env.deconcretize_by_user_spec(request.abstract_spec)
+            env.add_concrete_spec(request.abstract_spec, concrete_spec)
+            env.write(regenerate=False)
+            env.install_specs([concrete_spec], fail_fast=True, **installer_args)
 
-            for item in _matching_entries(bincache_data, request.abstract_spec):
-                for _, pkg_hash, pkg_sha256 in item["binaries"]:
-                    self._install_by_hash(pkg_hash, pkg_sha256)
-
-                result = request.probe(request.abstract_spec)
-                if result:
-                    return result
-        return None
-
-    def try_to_bootstrap(self, request: BootstrapRequest[ResultT]) -> Optional[ResultT]:
-        tty.debug(f"Bootstrapping {request.metadata_name} from pre-built binaries")
-        return self._install_and_test(request, self._read_metadata(request.metadata_name))
-
-
-class SourceBootstrapper(Bootstrapper):
-    """Install the software needed during bootstrapping from sources."""
-
-    def try_to_bootstrap(self, request: BootstrapRequest[ResultT]) -> Optional[ResultT]:
-        tty.debug(f"Bootstrapping {request.metadata_name} from sources")
-
-        # If we compile code from sources detecting a few build tools
-        # might reduce compilation time by a fair amount
-        _add_externals_if_missing()
-
-        # Try to build and install from sources
-        concrete_spec = request.concretize(request.abstract_spec)
-
-        tty.debug(f"[BOOTSTRAP] Try installing '{request.abstract_spec}' from sources")
-        with spack.config.CONFIG.override(self.mirror_scope):
-            spack.installer_dispatch.create_installer(
-                [concrete_spec.package], **request.installer_args
-            ).install()
-
-        return request.probe(concrete_spec)
-
-
-#: Map a bootstrapper type to the corresponding class
-_bootstrap_methods: Dict[str, Type[Bootstrapper]] = {
-    "buildcache": BuildcacheBootstrapper,
-    "install": SourceBootstrapper,
-}
-
-
-def create_bootstrapper(conf: ConfigDictionary) -> Bootstrapper:
-    """Return a bootstrap object built according to the configuration argument"""
-    return _bootstrap_methods[conf["type"]](conf)
+    return request.probe(concrete_spec)
 
 
 def source_is_enabled(conf: ConfigDictionary) -> bool:
@@ -351,7 +319,7 @@ def _bootstrap_or_raise(
 
     for current_config in sources:
         with exception_handler.forward(current_config["name"], Exception):
-            result = create_bootstrapper(current_config).try_to_bootstrap(request)
+            result = _install_from_source(request, current_config)
             if result:
                 return result
 
@@ -455,21 +423,16 @@ def _add_externals_if_missing() -> None:
     # System git is typically deprecated, so mark as non-buildable to force it as external
     non_buildable_externals = {k: externals.pop(k) for k in ("git",) if k in externals}
     spack.detection.update_configuration(
-        externals, config=spack.config.CONFIG, scope="bootstrap", buildable=True
+        externals, config=spack.config.CONFIG, scope=SCOPE_NAME, buildable=True
     )
     spack.detection.update_configuration(
-        non_buildable_externals, config=spack.config.CONFIG, scope="bootstrap", buildable=False
+        non_buildable_externals, config=spack.config.CONFIG, scope=SCOPE_NAME, buildable=False
     )
 
 
-def clingo_root_spec(platform: Optional[str] = None, target: Optional[str] = None) -> str:
-    """Return the root spec used to bootstrap clingo.
-
-    Args:
-        platform: platform the binary will run on. Defaults to the host platform.
-        target: target family the binary will run on. Defaults to the host target family.
-    """
-    return _root_spec("clingo-bootstrap@spack+python", platform=platform, target=target)
+def clingo_root_spec() -> str:
+    """Return the root spec used to bootstrap clingo"""
+    return _root_spec("clingo-bootstrap@spack+python")
 
 
 def _concretize_clingo(abstract_spec: spack.spec.Spec) -> spack.spec.Spec:

@@ -4,9 +4,12 @@
 """Manage configuration swapping for bootstrapping purposes"""
 
 import contextlib
+import hashlib
 import os
 import sys
 from typing import Any, Dict, Generator, MutableSequence, Sequence
+
+import spack.vendor.archspec.cpu
 
 import spack.config
 import spack.environment
@@ -18,13 +21,17 @@ import spack.store
 from spack.error import ExplicitDatabaseUpgradeError
 from spack.util import tty
 
-#: Reference counter for the bootstrapping configuration context manager
-_REF_COUNT = 0
+#: Name of the configuration scope that is present only in the bootstrapping configuration. The
+#: leading underscore marks it as reserved for Spack.
+SCOPE_NAME = "_bootstrap"
 
 
 def is_bootstrapping() -> bool:
-    """Return True if we are in a bootstrapping context, False otherwise."""
-    return _REF_COUNT > 0
+    """Return True if we are in a bootstrapping context, False otherwise.
+
+    The answer is read from the configuration, which installer child processes inherit.
+    """
+    return SCOPE_NAME in spack.config.CONFIG.scopes
 
 
 def spec_for_current_python() -> str:
@@ -38,6 +45,27 @@ def spec_for_current_python() -> str:
     """
     version_str = ".".join(str(x) for x in sys.version_info[:2])
     return f"python@{version_str}"
+
+
+def environment_path(label: str = "") -> str:
+    """Return the path of a bootstrapping environment for the interpreter running Spack.
+
+    Args:
+        label: distinguishes environments for the same interpreter, and starts the directory name
+    """
+    python_part = spec_for_current_python().replace("@", "")
+    arch_part = spack.vendor.archspec.cpu.host().family
+    data = sys.exec_prefix.encode()
+    try:
+        # With FIPS, interpreters refuse md5 unless it is not used for security
+        digest = hashlib.md5(data, usedforsecurity=False)  # novermin
+    except TypeError:  # Python < 3.9
+        digest = hashlib.md5(data)
+    interpreter_part = digest.hexdigest()[:5]
+    dirname = f"{python_part}-{arch_part}-{interpreter_part}"
+    if label:
+        dirname = f"{label}-{dirname}"
+    return os.path.join(root_path(), "environments", dirname)
 
 
 def root_path() -> str:
@@ -89,15 +117,11 @@ def _config_path() -> str:
 def ensure_bootstrap_configuration() -> Generator:
     """Swap the current configuration for the one used to bootstrap Spack.
 
-    The context manager is reference counted to ensure we don't swap multiple
-    times if there's nested use of it in the stack. One compelling use case
-    is bootstrapping patchelf during the bootstrap of clingo.
+    Nested use does not swap again. One compelling use case is bootstrapping patchelf during
+    the bootstrap of clingo.
     """
-    global _REF_COUNT  # pylint: disable=global-statement
-    already_swapped = bool(_REF_COUNT)
-    _REF_COUNT += 1
     try:
-        if already_swapped:
+        if is_bootstrapping():
             yield
         else:
             with _ensure_bootstrap_configuration():
@@ -107,8 +131,6 @@ def ensure_bootstrap_configuration() -> Generator:
         if e._long_message:
             e._long_message = e._long_message.replace("spack reindex", "spack -b reindex")
         raise
-    finally:
-        _REF_COUNT -= 1
 
 
 def _read_and_sanitize_configuration() -> Dict[str, Any]:
@@ -132,7 +154,7 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     config_scopes: MutableSequence["spack.config.ConfigScope"] = [
         spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS)
     ]
-    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, ("bootstrap", _config_path()))
+    configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, (SCOPE_NAME, _config_path()))
     for name, path in configuration_paths:
         generic_scope = spack.config.DirectoryConfigScope(name, path)
         config_scopes.append(generic_scope)
@@ -155,6 +177,8 @@ def _ensure_bootstrap_configuration() -> Generator:
     ), spack.store.use_store(bootstrap_store_path, extra_data={"padded_length": 0}):
         spack.config.CONFIG.set("bootstrap", user_configuration["bootstrap"])
         spack.config.CONFIG.set("config", user_configuration["config"])
+        # Binaries verified by sha256 sum are supported only by the new installer
+        spack.config.CONFIG.set("config:installer", "new")
         spack.config.CONFIG.set("repos", user_configuration["repos"])
         with spack.modules.disable_modules(), _spack_python_interpreter():
             yield

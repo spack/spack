@@ -37,7 +37,6 @@ runs:
         if [ "${{ inputs.bootstrap }}" = "now" ]; then
             spack bootstrap now
         else
-            spack bootstrap disable github-actions-v0.6
             spack bootstrap disable github-actions-v2
         fi
   - name: Smoke tests
