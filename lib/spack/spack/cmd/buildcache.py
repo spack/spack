@@ -424,7 +424,7 @@ def _skip_no_redistribute_for_public(specs: List[Spec]) -> List[Spec]:
             removed_specs.append(spec)
     if removed_specs:
         colified_output = colify.colified([s.name for s in removed_specs], indent=4)
-        tty.debug(
+        tty.warn(
             "The following specs will not be added to the binary cache"
             " because they cannot be redistributed:\n"
             f"{colified_output}\n"
