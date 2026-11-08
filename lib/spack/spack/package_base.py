@@ -1175,7 +1175,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 resource.fetcher, os.path.join(self.name, pretty_resource_name)
             ),
             mirrors=spack.mirrors.mirror.MirrorCollection(source=True).values(),
-            path=self.path,
         )
 
     def _download_search(self):
