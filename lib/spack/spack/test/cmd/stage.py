@@ -6,6 +6,7 @@ import pathlib
 
 import pytest
 
+import spack.concretize
 import spack.database
 import spack.environment as ev
 import spack.package_base
@@ -54,6 +55,15 @@ def check_stage_path(monkeypatch, tmp_path: pathlib.Path):
 def test_stage_path(check_stage_path):
     """Verify that --path only works with single specs."""
     stage("--path={0}".format(check_stage_path), "trivial-install-test-package")
+
+
+def test_stage_path_resource_has_own_stage(tmp_path: pathlib.Path):
+    """A custom stage path applies to the package only; resources must not share it."""
+    pkg = spack.concretize.concretize_one("simple-resource").package
+    pkg.path = str(tmp_path / "x")
+    root_stage, resource_stage = pkg.stage
+    assert root_stage.path == pkg.path
+    assert resource_stage.path != root_stage.path
 
 
 def test_stage_path_errors_multiple_specs(check_stage_path):
