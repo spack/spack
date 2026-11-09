@@ -469,6 +469,9 @@ def worker_function(
         # Reset SIGTSTP to default in case the parent had a custom handler.
         signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
+        # Detach from the event loop's wakeup fd, which fork inherits
+        signal.set_wakeup_fd(-1)
+
         # Under forkserver/spawn Python drops CLOEXEC. We don't want to expose these fds to the
         # build. Notably the state fd should be closed, since its EOF signals to the parent process
         # that the build has finished, and that should not be delayed by daemons that keep the fd
@@ -477,14 +480,15 @@ def worker_function(
             if channel is not None:
                 os.set_inheritable(channel.fileno(), False)
 
-    def handle_sigterm(signum, frame):
-        # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
+    def raise_after_children_exit(signum, frame):
+        # This handler sends the SIGTERM signal to child processes (cmake, make, etc). We wait
         # for all child processes to exit before raising KeyboardInterrupt. This ensures all
         # __exit__ and finally blocks run after the child processes have stopped, meaning that we
         # get to clean up the prefix without risking that the child process writes to it
         # afterwards.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         if sys.platform != "win32":
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
             os.killpg(0, signal.SIGTERM)
             try:
                 while True:
@@ -494,7 +498,12 @@ def worker_function(
 
         raise KeyboardInterrupt("Installation interrupted")
 
-    signal.signal(signal.SIGTERM, handle_sigterm)
+    signal.signal(signal.SIGTERM, raise_after_children_exit)
+
+    # For SIGHUP we respect SIG_IGN (e.g. nohup). The value SIG_IGN is inherited in all
+    # multiprocessing start methods.
+    if sys.platform != "win32" and signal.getsignal(signal.SIGHUP) is not signal.SIG_IGN:
+        signal.signal(signal.SIGHUP, raise_after_children_exit)
 
     makeflags.apply(os.environ)
 

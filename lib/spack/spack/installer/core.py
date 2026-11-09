@@ -14,7 +14,7 @@ import signal
 import sys
 import tempfile
 import time
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Set, Union
 
 import spack.binary_distribution
 import spack.config
@@ -33,8 +33,10 @@ import spack.util.tty
 from spack.installer.base import (
     JOBSERVER_EVENT,
     OUTPUT_BUFFER_SIZE,
+    SIGNAL_EVENT,
     SIGWINCH_EVENT,
     STDIN_EVENT,
+    TERMINATION_SIGNALS,
     BaseTerminalState,
     ExitCode,
     FdInfo,
@@ -154,6 +156,53 @@ class NullReportData(ReportData):
         self, reports: Dict[str, spack.report.RequestRecord], build_graph: "BuildGraph"
     ) -> None:
         pass
+
+
+class SignalEvents:
+    """Turns signals with the default action into event loop events, so that they never interrupt
+    its bookkeeping. The wakeup fd receives one byte per signal, its number, and wakes up select().
+    Other signals with Python handlers write to it too."""
+
+    def __init__(self, signals: Iterable[signal.Signals]) -> None:
+        self.handled = [s for s in signals if signal.getsignal(s) is signal.SIG_DFL]
+        self.read_fd = -1
+        self.write_fd = -1
+        self.old_wakeup_fd = -1
+
+    def setup(self, selector: selectors.BaseSelector) -> None:
+        if not self.handled:
+            return
+        # Set the wakeup fd before the handlers, so that every handled signal wakes up select()
+        self.read_fd, self.write_fd = os.pipe()
+        os.set_blocking(self.read_fd, False)
+        os.set_blocking(self.write_fd, False)
+        selector.register(self.read_fd, selectors.EVENT_READ, SIGNAL_EVENT)
+        self.old_wakeup_fd = signal.set_wakeup_fd(self.write_fd)
+        for sig in self.handled:
+            # A no-op: the C handler writes the signal number to the wakeup fd
+            signal.signal(sig, lambda signum, frame: None)
+
+    def read(self) -> bytes:
+        """Return the numbers of the signals received since the last read."""
+        try:
+            return os.read(self.read_fd, 65536)
+        except BlockingIOError:
+            return b""
+
+    def teardown(self, signals: Iterable[int]) -> int:
+        """Restore the handlers and close the pipe. Return the first of ``signals`` received since
+        the last read, or 0."""
+        # Safe to reset to SIG_DFL, since only signals that had it are handled
+        for sig in self.handled:
+            signal.signal(sig, signal.SIG_DFL)
+        if self.write_fd < 0:
+            return 0
+        # Read and close the pipe only after it is no longer the wakeup fd
+        signal.set_wakeup_fd(self.old_wakeup_fd)
+        received = self.read()
+        os.close(self.read_fd)
+        os.close(self.write_fd)
+        return next((s for s in received if s in signals), 0)
 
 
 def _signal_children(running_builds: Dict[str, ChildInfo], sig: signal.Signals) -> None:
@@ -348,7 +397,12 @@ class PackageInstaller:
         failures: List[spack.spec.Spec] = []
         finished_builds: List[str] = []
 
+        signal_events = SignalEvents(TERMINATION_SIGNALS)
+        terminated = 0
+
         try:
+            signal_events.setup(selector)
+
             # Try to schedule builds immediately. The first job does not require a token.
             blocked = False
             if self.pending_builds:
@@ -416,6 +470,10 @@ class PackageInstaller:
                         assert terminal is not None
                         terminal.drain_sigwinch()
                         self.ui.on_resize()
+                    elif data == SIGNAL_EVENT:
+                        for signum in signal_events.read():
+                            if signum in TERMINATION_SIGNALS:
+                                terminated = terminated or signum
                     elif data == JOBSERVER_EVENT and not jobserver.has_target_parallelism():
                         jobserver.maybe_discard_tokens()
                         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
@@ -425,6 +483,10 @@ class PackageInstaller:
                     self._handle_finished_build(
                         build_id, current_time, jobserver, selector, failures, database_actions
                     )
+
+                # Stop before starting more builds; the cleanup terminates the running ones
+                if terminated:
+                    break
 
                 if failures and self.fail_fast:
                     # Terminate other builds to actually fail fast. We continue in the event loop
@@ -466,6 +528,23 @@ class PackageInstaller:
             if terminal is not None:
                 terminal.teardown_input()
 
+            # Send SIGTERM to running builds and release their jobserver tokens; this is a no-op in
+            # the successful case. It does not wait: builds are joined after the DB flush.
+            for child in self.running_builds.values():
+                try:
+                    child.proc.terminate()
+                except Exception:
+                    pass
+                try:
+                    jobserver.release()
+                except Exception:
+                    pass
+
+            # An exception between SIGCONT and on_resume after Ctrl-Z leaves the builds stopped,
+            # and stopped builds do not handle the SIGTERM above until they are continued.
+            if sys.platform != "win32":
+                _signal_children(self.running_builds, signal.SIGCONT)
+
             # Flush any not-yet-written successful builds to the DB; save the exception on error
             # to be re-raised after best-effort cleanup.
             db_exc = None
@@ -479,22 +558,16 @@ class PackageInstaller:
                 except Exception as e:
                     db_exc = e
 
-            # Send SIGTERM to running builds and release their jobserver tokens; this is a no-op in
-            # the successful case.
-            for child in self.running_builds.values():
-                try:
-                    child.proc.terminate()
-                except Exception:
-                    pass
-                try:
-                    jobserver.release()
-                except Exception:
-                    pass
-
             # Wait for the builds to exit, kill those that do not, and reap them all.
             try:
-                for build_id in self._wait_for_exit(timeout=30):
-                    self.running_builds[build_id].proc.kill()
+                stuck = self._wait_for_exit(timeout=30)
+                if sys.platform == "win32":
+                    for build_id in stuck:
+                        self.running_builds[build_id].proc.kill()
+                else:
+                    # Unlike kill(), this also kills the build's children, which could otherwise
+                    # keep writing to the prefix after its lock is released.
+                    _signal_children({b: self.running_builds[b] for b in stuck}, signal.SIGKILL)
                 for child in self.running_builds.values():
                     child.proc.join()
             except Exception:
@@ -525,11 +598,17 @@ class PackageInstaller:
                 jobserver.close()
             except Exception:
                 pass
+            terminated = signal_events.teardown(TERMINATION_SIGNALS) or terminated
 
             # Restore output settings. On Linux this is a no-op. On Windows this disables
             # VT100 processing and must happen after the final render.
             if terminal is not None:
                 terminal.teardown_output()
+
+            # A termination signal, also one received during cleanup, takes precedence over other
+            # exceptions
+            if terminated:
+                raise spack.error.TerminatedBySignal(terminated)
 
             # Re-raise the DB exception if any.
             if db_exc is not None:
