@@ -15,6 +15,7 @@ import stat
 import tempfile
 import uuid
 import warnings
+from collections import defaultdict
 from collections.abc import KeysView
 from itertools import zip_longest
 from typing import (
@@ -845,11 +846,13 @@ def _filtered_roots_from_manifest(
             group_specs[DEFAULT_USER_SPEC_GROUP].append(spec_string)
             emitted_specs.add(spec_string)
 
-    return _filtered_grouped_specs(source_env, group_specs)
+    return _filtered_grouped_specs(source_env, group_specs, filter_configuration)
 
 
 def _filtered_grouped_specs(
-    source_env: "Environment", group_specs: Dict[str, List[str]]
+    source_env: "Environment",
+    group_specs: Dict[str, List[str]],
+    filter_configuration: Dict[str, Any],
 ) -> List[Union[str, Dict[str, Any]]]:
     """Build manifest entries from filtered roots while retaining group settings."""
     specs: List[Union[str, Dict[str, Any]]] = []
@@ -873,7 +876,9 @@ def _filtered_grouped_specs(
 
         override = source_env.manifest._config_override.get(group)
         if override is not None:
-            group_entry["override"] = copy.deepcopy(override)
+            filtered_override = _filtered_configuration_sections(override, filter_configuration)
+            if filtered_override:
+                group_entry["override"] = filtered_override
 
         specs.append(group_entry)
 
@@ -881,15 +886,17 @@ def _filtered_grouped_specs(
 
 
 def _filtered_roots_from_concrete_specs(
-    source_env: "Environment", filtered_roots: Sequence[Tuple[str, Spec, str]]
+    source_env: "Environment",
+    filtered_roots: Sequence[Tuple[str, Spec, str]],
+    filter_configuration: Dict[str, Any],
 ) -> List[Union[str, Dict[str, Any]]]:
     """Convert retained concrete roots into grouped manifest entries."""
     # The first tuple element is already projected and validated. Reusing the source
     # abstract text here would lose the projection chosen for the retained concrete DAG.
-    group_specs: Dict[str, List[str]] = {group: [] for group in source_env.manifest.groups()}
+    group_specs: Dict[str, List[str]] = defaultdict(list)
     for abstract, _, group in filtered_roots:
         group_specs[group].append(abstract)
-    return _filtered_grouped_specs(source_env, group_specs)
+    return _filtered_grouped_specs(source_env, group_specs, filter_configuration)
 
 
 def _filter_packages_configuration(
@@ -926,17 +933,10 @@ def _filter_packages_configuration(
     }
 
 
-def _filtered_manifest_contents(
-    source_configuration: Dict[str, Any],
-    filter_configuration: Dict[str, Any],
-    specs: Sequence[Union[str, Dict[str, Any]]],
-    with_view: Optional[Union[str, pathlib.Path, bool]],
+def _filtered_configuration_sections(
+    source_configuration: Dict[str, Any], filter_configuration: Dict[str, Any]
 ) -> Dict[str, Any]:
-    """Build a manifest from the selected specs and source-local configuration.
-
-    The input is the source manifest, not merged active configuration. Copy retained
-    values so destination changes cannot mutate source settings or nested YAML data.
-    """
+    """Filter source-local sections for either a manifest or a group override."""
     allowed_sections = set(filter_configuration["config"]["allow"])
     blocked_sections = set(filter_configuration["config"]["block"])
     filtered: Dict[str, Any] = {}
@@ -962,6 +962,17 @@ def _filtered_manifest_contents(
         if filtered_packages:
             filtered["packages"] = filtered_packages
 
+    return filtered
+
+
+def _filtered_manifest_contents(
+    source_configuration: Dict[str, Any],
+    filter_configuration: Dict[str, Any],
+    specs: Sequence[Union[str, Dict[str, Any]]],
+    with_view: Optional[Union[str, pathlib.Path, bool]],
+) -> Dict[str, Any]:
+    """Build a manifest from the selected specs and source-local configuration."""
+    filtered = _filtered_configuration_sections(source_configuration, filter_configuration)
     # Root selection is controlled by specs rules, independently of config rules.
     filtered["specs"] = specs
 
@@ -1066,7 +1077,9 @@ def _create_filtered_environment_in_dir(
             filtered_roots = _filtered_concrete_specs_from_lockfile(
                 source_env, filter_configuration, is_source_dir=is_source_dir
             )
-            filtered_specs = _filtered_roots_from_concrete_specs(source_env, filtered_roots)
+            filtered_specs = _filtered_roots_from_concrete_specs(
+                source_env, filtered_roots, filter_configuration
+            )
         else:
             filtered_specs = _filtered_roots_from_manifest(source_env, filter_configuration)
 

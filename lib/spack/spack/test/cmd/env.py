@@ -39,7 +39,11 @@ from spack.cmd.env import _env_create
 from spack.concretize_ui import SolveKind
 from spack.config import Configuration, substitute_path_variables
 from spack.environment import depfile
-from spack.environment.environment import _filtered_roots_from_manifest, _projection_format_for
+from spack.environment.environment import (
+    _filtered_roots_from_manifest,
+    _normalized_filter_configuration,
+    _projection_format_for,
+)
 from spack.main import SpackCommand, SpackCommandError
 from spack.old_installer import PackageInstaller
 from spack.repo import RepoPath
@@ -2439,6 +2443,71 @@ def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, fla
     assert {spec.name for spec in filtered.all_specs()} >= {"libelf", "mpileaks", "callpath"}
 
 
+@pytest.mark.parametrize("concrete", [False, True])
+@pytest.mark.parametrize(
+    "rules, expected_override",
+    [
+        ({"config": {"block": ["packages"]}}, {"config": {"verify_ssl": False}, "view": False}),
+        (
+            {"config": {"allow": ["config", "packages"], "block": ["packages"]}},
+            {"config": {"verify_ssl": False}},
+        ),
+        ({"config": {"block": ["config", "packages", "view"]}}, None),
+        (
+            {"config": {"allow": ["packages"]}, "packages": {"allow": ["libelf"]}},
+            {"packages": {"libelf": {"buildable": False}}},
+        ),
+        (
+            {"config": {"allow": ["packages"]}, "packages": {"block": ["cmake"]}},
+            {"packages": {"libelf": {"buildable": False}}},
+        ),
+        (
+            {"config": {"allow": ["packages"]}, "packages": "externals_only"},
+            {"packages": {"cmake": {"externals": []}}},
+        ),
+        (
+            {"config": {"allow": ["packages"]}, "specs": {"block": ["cmake@1.0"]}},
+            {"packages": {"libelf": {"buildable": False}}},
+        ),
+    ],
+)
+def test_env_create_filter_filters_group_overrides(
+    tmp_path: pathlib.Path, concrete: bool, rules, expected_override
+):
+    """Filter override sections and package entries without injecting manifest-only fields."""
+    spack_yaml = tmp_path / "spack.yaml"
+    override = {
+        "config": {"verify_ssl": False},
+        "view": False,
+        "packages": {"libelf": {"buildable": False}, "cmake": {"externals": []}},
+    }
+    spack_yaml.write_text(
+        json.dumps(
+            {"spack": {"specs": [{"group": "apps", "specs": ["libelf"], "override": override}]}}
+        )
+    )
+    source = ev.create("source", spack_yaml)
+    if concrete:
+        source.add_concrete_spec(
+            Spec("libelf"), spack.concretize.concretize_one("libelf"), group="apps"
+        )
+        source.write()
+    original_manifest = pathlib.Path(source.manifest_path).read_text()
+    filter_yaml = _write_filter_yaml(
+        tmp_path, json.dumps({"filter": {"concrete": concrete, **rules}})
+    )
+    env("create", "--without-view", "--filter", filter_yaml, "filtered", "source")
+    filtered = ev.read("filtered")
+    group = next(entry for entry in filtered.manifest["spack"]["specs"] if isinstance(entry, dict))
+    if expected_override is None:
+        assert "override" not in group
+    else:
+        assert group["override"] == expected_override
+    assert filtered.manifest.configuration["view"] is False
+    assert pathlib.Path(source.manifest_path).read_text() == original_manifest
+    assert source.manifest._config_override["apps"] == override
+
+
 def test_env_create_filter_concrete_requires_lockfile(tmp_path: pathlib.Path):
     """Validate concrete source prerequisites before creating the destination."""
     source_dir = _write_plain_source(tmp_path)
@@ -2808,7 +2877,10 @@ def test_env_create_filter_nested_abstract_subdags(
     # Adding a spec through the manifest would serialize and flatten this nested fixture.
     monkeypatch.setattr(source, "user_specs_by", lambda *, group: [abstract_root])
     filtered_specs = _filtered_roots_from_manifest(
-        source, {"specs": {"allow": allowed, "block": blocked}, "flatten": flatten}
+        source,
+        _normalized_filter_configuration(
+            {"specs": {"allow": allowed, "block": blocked}, "flatten": flatten}
+        ),
     )
     selected_roots = [node for node in abstract_root.traverse() if node.name in selected_names]
     expected = {

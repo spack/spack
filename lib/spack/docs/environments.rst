@@ -269,6 +269,7 @@ Under ``config:``, ``allow`` lists the configuration sections to copy and ``bloc
 Empty lists mean copy all sections and block none, respectively.
 If a section appears in both lists, ``block`` takes precedence.
 These rules match top-level section names, such as ``develop`` or ``modules``, not nested configuration paths or spec constraints.
+The same section and package-entry filtering rules apply to each spec group's ``override`` mapping.
 Except for the special handling described below, retained sections are copied whole: their contents are not filtered against ``specs:allow`` or ``specs:block``.
 Copied sections come from the source manifest, not merged global configuration or overrides from another active environment.
 This controls what is written to the new manifest; the new environment can still inherit settings from other Spack configuration scopes when used.
@@ -333,8 +334,8 @@ In particular, the following content can remain even when it mentions a blocked 
    * - Fields inside retained ``packages`` entries
      - Requirements, provider preferences, compiler preferences, and external lists are copied unchanged, even if they refer to excluded packages.
    * - Spec-group ``override`` mappings
-     - Copied unchanged along with the group's metadata, even for an empty group.
-       Top-level config and package filters do not recurse into these mappings.
+     - Sections and package entries follow the same filters as the manifest.
+       Contents of retained sections are not recursively sanitized, and empty filtered overrides are omitted.
    * - Other configuration sections
      - Copied whole when selected by the config filter.
        Path-based ``repos`` entries receive relocation handling, but other embedded paths and spec references are not generally rewritten.
@@ -350,7 +351,7 @@ To omit whole sections whose contents should not be copied, name them in ``confi
      config:
        block: [include, definitions, develop, modules]
 
-This removes those top-level sections, not similarly named settings inside group overrides.
+This removes those sections from the manifest and from group overrides.
 Review retained sections and overrides separately; the filter is not a general-purpose configuration sanitization tool.
 
 **Formatting Specs**
