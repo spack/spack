@@ -1686,15 +1686,15 @@ def perform_migration():
 
     This runs before the CONFIG singleton is created, so migration functions
     cannot rely on CONFIG being available.
-    """
-    # Returns True iff config was migrated
-    # Because this rewrites config, it should either run first thing (before config
-    # is loaded) or last (right before termination of the process)
-    old_resources = detect_old_resources()
 
+    Returns True iff config was migrated.
+
+    This method rewrites config. It must be run either before config is loaded or immediately prior
+    to exiting (terminating the process).
+    """
     if os.path.exists(spack.paths.isolate_scope_path):
-        if any(old_resources.values()):
-            if not os.path.exists(os.path.join(spack.paths.isolate_scope_path, "layout")):
+        if not os.path.exists(os.path.join(spack.paths.isolate_scope_path, "layout")):
+            if any(detect_old_resources().values()):
                 # TODO: could automate logic in the `spack isolate`` command to run here:
                 # - generate layout config in etc/spack/isolate/
                 # - infer whether user ran with --self or --path (and in the latter case,
@@ -1721,6 +1721,7 @@ def perform_migration():
     if migration_done():
         return config_migrated
 
+    old_resources = detect_old_resources()
     if any(old_resources.values()):
         lock_path = _migration_lock_path()
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
