@@ -741,7 +741,7 @@ def _block_and_flatten_concrete_roots(
     return retained_root_entries
 
 
-def _filtered_abstract_root_entries(
+def _filtered_roots_from_manifest(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Union[str, Dict[str, Any]]]:
     """Select allowed explicit sub-DAGs, reject blocked DAGs, then flatten survivors.
@@ -858,7 +858,7 @@ def _filtered_grouped_specs(
     return specs
 
 
-def _filtered_concrete_root_specs(
+def _filtered_roots_from_concrete_specs(
     source_env: "Environment", filtered_roots: Sequence[Tuple[str, Spec, str]]
 ) -> List[Union[str, Dict[str, Any]]]:
     """Convert retained concrete roots into grouped manifest entries."""
@@ -904,7 +904,7 @@ def _filter_packages_configuration(
     }
 
 
-def _filtered_configuration(
+def _filtered_manifest_contents(
     source_configuration: Dict[str, Any],
     filter_configuration: Dict[str, Any],
     specs: Sequence[Union[str, Dict[str, Any]]],
@@ -981,7 +981,7 @@ def _filtered_source_environment(
         yield Environment(temp_dir), source_path, False
 
 
-def _set_filtered_manifest(env: "Environment", configuration: Dict[str, Any]) -> None:
+def _write_filtered_manifest(env: "Environment", configuration: Dict[str, Any]) -> None:
     """Write the filtered manifest and reload its configuration."""
     # Replace, rather than merge with, the initialized manifest: its default view
     # and concretizer settings must not reintroduce sections the filter omitted.
@@ -992,7 +992,7 @@ def _set_filtered_manifest(env: "Environment", configuration: Dict[str, Any]) ->
     env._re_read()
 
 
-def _populate_filtered_lockfile(
+def _write_filtered_lockfile(
     env: "Environment", filtered_roots: Sequence[Tuple[str, Spec, str]]
 ) -> None:
     """Register projected roots against their original DAGs and write the lockfile."""
@@ -1066,13 +1066,13 @@ def _create_filtered_environment_in_dir(
                     "filtered environment has no roots; only allowed DAGs with no excluded "
                     "specs are kept"
                 )
-            filtered_specs = _filtered_concrete_root_specs(source_env, filtered_roots)
+            filtered_specs = _filtered_roots_from_concrete_specs(source_env, filtered_roots)
         else:
-            filtered_specs = _filtered_abstract_root_entries(source_env, filter_configuration)
+            filtered_specs = _filtered_roots_from_manifest(source_env, filter_configuration)
 
         # Read only source-local YAML, not effective configuration from the active
         # environment or global scopes, which may contain unrelated overrides.
-        filtered_configuration = _filtered_configuration(
+        filtered_manifest_contents = _filtered_manifest_contents(
             source_env.manifest.configuration, filter_configuration, filtered_specs, with_view
         )
         root = pathlib.Path(root).absolute()
@@ -1095,23 +1095,19 @@ def _create_filtered_environment_in_dir(
         try:
             initialize_environment_dir(staged, envfile=None)
             env = Environment(str(staged))
-            _set_filtered_manifest(env, filtered_configuration)
+            _write_filtered_manifest(env, filtered_manifest_contents)
             if not keep_relative:
                 # Match ordinary creation: relative paths refer to the source, but
                 # $env refers to the destination. Substitute the final path, not staging.
-                path_config = spack.config.Configuration()
-                path_config.env_path = str(root)
+                config = spack.config.Configuration()
+                config.env_path = str(root)
                 # No payload was copied, even for a directory source, so do not use
                 # copied_env's exception for paths inside a copied environment.
-                _rewrite_relative_dev_paths_on_relocation(
-                    env, str(source_dir), path_config=path_config
-                )
-                _rewrite_relative_repos_paths_on_relocation(
-                    env, str(source_dir), path_config=path_config
-                )
+                _rewrite_relative_dev_paths_on_relocation(env, str(source_dir), config=config)
+                _rewrite_relative_repos_paths_on_relocation(env, str(source_dir), config=config)
 
             if filter_configuration["concrete"]:
-                _populate_filtered_lockfile(env, filtered_roots)
+                _write_filtered_lockfile(env, filtered_roots)
 
             # Recheck before publication in case the destination appeared during staging.
             if os.path.lexists(root):
@@ -1127,26 +1123,22 @@ def _create_filtered_environment_in_dir(
 
 
 def _rewrite_relative_dev_paths_on_relocation(
-    env,
-    init_file_dir,
-    copied_env=False,
-    *,
-    path_config: Optional[spack.config.Configuration] = None,
+    env, init_file_dir, copied_env=False, *, config: Optional[spack.config.Configuration] = None
 ):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative paths to absolute ones.
 
-    path_config optionally supplies the final $env path when writing a staged environment.
+    config optionally supplies the final $env path when writing a staged environment.
     """
     with env:
         dev_specs = spack.config.CONFIG.get("develop", default={}, scope=env.scope_name)
         if not dev_specs:
             return
         for name, entry in dev_specs.items():
-            dev_path = substitute_path_variables(entry["path"], config=path_config)
+            dev_path = substitute_path_variables(entry["path"], config=config)
             expanded_path = spack.config.canonicalize_path(
-                dev_path, default_wd=init_file_dir, config=path_config
+                dev_path, default_wd=init_file_dir, config=config
             )
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
@@ -1170,17 +1162,13 @@ def _rewrite_relative_dev_paths_on_relocation(
 
 
 def _rewrite_relative_repos_paths_on_relocation(
-    env,
-    init_file_dir,
-    copied_env=False,
-    *,
-    path_config: Optional[spack.config.Configuration] = None,
+    env, init_file_dir, copied_env=False, *, config: Optional[spack.config.Configuration] = None
 ):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative repo paths to absolute ones and expand environment variables.
 
-    path_config optionally supplies the final $env path when writing a staged environment.
+    config optionally supplies the final $env path when writing a staged environment.
     """
     with env:
         repos_specs = spack.config.CONFIG.get("repos", default={}, scope=env.scope_name)
@@ -1190,9 +1178,9 @@ def _rewrite_relative_repos_paths_on_relocation(
             # only rewrite when we have a path-based repository
             if not isinstance(entry, str):
                 continue
-            repo_path = substitute_path_variables(entry, config=path_config)
+            repo_path = substitute_path_variables(entry, config=config)
             expanded_path = spack.config.canonicalize_path(
-                repo_path, default_wd=init_file_dir, config=path_config
+                repo_path, default_wd=init_file_dir, config=config
             )
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)

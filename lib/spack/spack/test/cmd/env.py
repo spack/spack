@@ -39,7 +39,7 @@ from spack.cmd.env import _env_create
 from spack.concretize_ui import SolveKind
 from spack.config import Configuration, substitute_path_variables
 from spack.environment import depfile
-from spack.environment.environment import _filtered_abstract_root_entries, _projection_format_for
+from spack.environment.environment import _filtered_roots_from_manifest, _projection_format_for
 from spack.main import SpackCommand, SpackCommandError
 from spack.old_installer import PackageInstaller
 from spack.repo import RepoPath
@@ -2791,7 +2791,7 @@ def test_env_create_filter_nested_abstract_subdags(
     source = ev.create("source")
     # Adding a spec through the manifest would serialize and flatten this nested fixture.
     monkeypatch.setattr(source, "user_specs_by", lambda *, group: [abstract_root])
-    filtered_specs = _filtered_abstract_root_entries(
+    filtered_specs = _filtered_roots_from_manifest(
         source, {"specs": {"allow": allowed, "block": blocked}, "flatten": flatten}
     )
     selected_roots = [node for node in abstract_root.traverse() if node.name in selected_names]
@@ -3048,7 +3048,7 @@ def test_env_create_filter_removes_partial_destination(tmp_path: pathlib.Path, m
         """Fail after staging is initialized but before the destination can be published."""
         raise RuntimeError("manifest failure")
 
-    monkeypatch.setattr(ev.environment, "_set_filtered_manifest", fail)
+    monkeypatch.setattr(ev.environment, "_write_filtered_manifest", fail)
     with pytest.raises(RuntimeError, match="manifest failure"):
         env(
             "create",
