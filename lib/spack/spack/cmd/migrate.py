@@ -142,14 +142,16 @@ def _dot_spack_references() -> Tuple[List[str], List[str]]:
     if root and _under_old_dotspack(spack.config.canonicalize_path(root)):
         fatal.append(f"config:install_tree:root = {root}")
 
-    # Two things are only known after resolution and so are not visible as strings in the
-    # merged configuration: the user scope's directory (its include entry may have been
-    # redirected by SPACK_USER_CONFIG_PATH / XDG_CONFIG_HOME), and the data/state/cache
-    # locations (config:locations:* holds variable strings, not paths).
+    # The next sections are paths that are only known with some non-config resolution for
+    # environment variable overrides: The user scope, gpghome, and locations:*
     user_scope = spack.config.CONFIG.scopes.get("user")
     user_path = getattr(user_scope, "path", None)
     if user_path and _under_old_dotspack(user_path):
         fatal.append(f"user configuration scope = {user_path}")
+
+    gnupghome = os.getenv("SPACK_GNUPGHOME")
+    if gnupghome and _under_old_dotspack(gnupghome):
+        other.append(f"SPACK_GNUPGHOME = {gnupghome}")
 
     for kind in ("data", "state", "cache"):
         resolved = spack.config._resolve_location_var(kind)
