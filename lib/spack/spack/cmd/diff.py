@@ -33,6 +33,9 @@ description = "compare two concrete environments, or two specs"
 section = "query"
 level = "long"
 
+#: Exit status of ``spack diff --exit-code`` when the two inputs differ
+EXIT_DIFFERENT = 4
+
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     specs = subparser.add_argument(
@@ -58,6 +61,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="report every differing node, instead of reporting the node where a difference "
         "first appears and skipping the subgraph below it",
     )
+    exit_code = subparser.add_argument(
+        "--exit-code",
+        action="store_true",
+        default=False,
+        help=f"exit with status {EXIT_DIFFERENT} if the two inputs differ, and 0 otherwise",
+    )
     subparser.add_argument(
         "inputs",
         nargs=argparse.REMAINDER,
@@ -68,19 +77,19 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
     # The inputs take the rest of the command line, so options written after them end up there
     subparser.set_defaults(
-        option_strings={"-h", "--help"}.union(*(x.option_strings for x in (specs, json, no_prune)))
+        option_strings={"-h", "--help"}.union(
+            *(x.option_strings for x in (specs, json, no_prune, exit_code))
+        )
     )
 
 
-def diff(parser, args) -> None:
+def diff(parser, args) -> int:
     misplaced = [x for x in args.inputs if x in args.option_strings]
     if misplaced:
         kind = "specs" if args.compare_specs else "environments"
         args.subparser.error(f"options must come before the two {kind}: {', '.join(misplaced)}")
-    if args.compare_specs:
-        _diff_specs(args)
-    else:
-        _diff_environments(args)
+    equivalent = _diff_specs(args) if args.compare_specs else _diff_environments(args)
+    return EXIT_DIFFERENT if args.exit_code and not equivalent else 0
 
 
 #: Above this many input specs reaching the same divergent node, report a count instead of a list
@@ -188,8 +197,8 @@ def _open_environment_to_diff(
     raise _not_an_environment(argument, path)
 
 
-def _diff_environments(args) -> None:
-    """Compare two environments."""
+def _diff_environments(args) -> bool:
+    """Compare two environments, and return whether they are equivalent."""
     if len(args.inputs) != 2:
         args.subparser.error("you must provide two environments to compare")
     before, after = args.inputs
@@ -208,6 +217,8 @@ def _diff_environments(args) -> None:
             print(sjson.dumps({**result.as_dict(), "environments": identities}))
         else:
             EnvironmentDiffRenderer(result, before, after).render()
+
+        return result.equivalent
 
 
 def _concrete_spec(spec: spack.spec.Spec, env: Optional[ev.Environment]) -> spack.spec.Spec:
@@ -237,8 +248,8 @@ def _environment_kind(argument: str) -> Optional[str]:
     return None
 
 
-def _diff_specs(args) -> None:
-    """Compare two concrete specs."""
+def _diff_specs(args) -> bool:
+    """Compare two concrete specs, and return whether they are equivalent."""
     specs = spack.cmd.parse_specs(args.inputs)
     if len(specs) != 2:
         args.subparser.error("you must provide two specs to compare")
@@ -256,6 +267,8 @@ def _diff_specs(args) -> None:
     else:
         name_format = "{name}{@version}{/hash:7}"
         SpecDiffRenderer(result, before.cformat(name_format), after.cformat(name_format)).render()
+
+    return result.equivalent
 
 
 def _variant_default(node: spack.spec.Spec, key: str) -> Optional[spack.variant.VariantValue]:

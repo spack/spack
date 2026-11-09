@@ -1523,7 +1523,7 @@ complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -d 'traverse nodes of the graph to mark everything up to the root as a develop spec'
 
 # spack diff
-set -g __fish_spack_optspecs_spack_diff h/help s/specs json no-prune
+set -g __fish_spack_optspecs_spack_diff h/help s/specs json no-prune exit-code
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' $__fish_spack_force_files -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -d 'show this help message and exit'
@@ -1533,6 +1533,8 @@ complete -c spack -n '__fish_spack_using_command diff' -l json -f -a dump_json
 complete -c spack -n '__fish_spack_using_command diff' -l json -d 'dump json output instead of pretty printing'
 complete -c spack -n '__fish_spack_using_command diff' -l no-prune -f -a prune
 complete -c spack -n '__fish_spack_using_command diff' -l no-prune -d 'report every differing node, instead of reporting the node where a difference first appears and skipping the subgraph below it'
+complete -c spack -n '__fish_spack_using_command diff' -l exit-code -f -a exit_code
+complete -c spack -n '__fish_spack_using_command diff' -l exit-code -d 'exit with status 4 if the two inputs differ, and 0 otherwise'
 
 # spack docs
 set -g __fish_spack_optspecs_spack_docs h/help

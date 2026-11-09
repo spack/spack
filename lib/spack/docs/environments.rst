@@ -547,6 +547,9 @@ Next to each node, the output lists the input specs it was reached from, like ``
 The comparison does not go below a node whose configuration differs.
 In a terminal, versions that go back and variants set to a non-default value are highlighted.
 
+By default, the exit status is 0 whenever the comparison succeeds, so the differences can be shown in a CI log without failing the job.
+With ``--exit-code``, the exit status is 4 if the two environments differ, and 0 if they do not.
+
 Environments that include concrete environments (see :ref:`environment_include_concrete`) can be compared only if the included root specs, and the concrete specs they produced, are the same in both.
 
 
