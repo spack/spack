@@ -535,6 +535,7 @@ The output has a section for each kind of difference.
 The first sections compare the input specs, which are the specs listed under ``specs:`` in ``spack.yaml``:
 
 * input specs in only one of the two environments;
+* input specs written differently in the two environments;
 * virtual input specs provided by a different package in each environment.
 
 The last sections instead compare the concrete specs:

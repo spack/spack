@@ -377,7 +377,7 @@ def _render(
     """Render divergences and unresolved common input specs the way `spack diff` does."""
     common = [x.root for x in divergences] + list(unresolved)
     result = env_diff_core.EnvironmentDiff(
-        inputs=env_diff_core.InputDiff(only_in_a=[], only_in_b=[], common=common),
+        inputs=env_diff_core.InputDiff(only_in_a=[], only_in_b=[], common=common, changed=[]),
         providers=[],
         divergences=list(divergences),
         unresolved=list(unresolved),
@@ -920,6 +920,41 @@ def test_diff_lists_a_virtual_input_provided_by_another_package(concretized_env)
 
     result = sjson.load(diff_cmd("--json", "test1", "test2"))
     assert [(x["a"]["name"], x["b"]["name"]) for x in result["providers"]] == [("mpich", "zmpi")]
+    assert result["divergences"] == []
+
+
+@_needs_environments
+def test_diff_pairs_the_inputs_of_a_changed_toolchain(concretized_env):
+    """Editing a toolchain pairs each input spec using it, and compares their nodes."""
+    with_toolchain = (
+        "spack:\n  toolchains:\n    tc: 'cflags={0} %c=gcc'\n  specs: [mpileaks %tc]\n"
+    )
+    concretized_env("test1", with_toolchain.format("-O2"))
+    concretized_env("test2", with_toolchain.format("-O3"))
+
+    output = diff_cmd("test1", "test2")
+
+    assert "Input specs only in" not in output
+    assert "Input specs changed" in output
+    assert "before: mpileaks cflags=-O2 %c=gcc\n" in output
+    assert "after:  mpileaks cflags=-O3 %c=gcc\n" in output
+    assert "mpileaks  (from mpileaks cflags=-O3 %c=gcc)" in output
+    assert "after:  mpileaks cflags=-O3 /" in output
+
+
+@_needs_environments
+def test_diff_pairs_inputs_of_one_package_by_their_concrete_spec(concretized_env):
+    """Input specs of the same package written differently are paired by the concrete spec they
+    produced."""
+    content = "spack:\n  concretizer:\n    unify: false\n  specs: [{0}, {1}]\n"
+    concretized_env("test1", content.format("mpileaks@2.3", "mpileaks@2.2"))
+    concretized_env("test2", content.format("'mpileaks@2.3:'", "'mpileaks@:2.2'"))
+
+    result = sjson.load(diff_cmd("--json", "test1", "test2"))
+
+    pairs = [(x["before"]["spec"], x["after"]["spec"]) for x in result["changed"]]
+    assert pairs == [("mpileaks@2.3", "mpileaks@2.3:"), ("mpileaks@2.2", "mpileaks@:2.2")]
+    assert result["only_in_a"] == result["only_in_b"] == []
     assert result["divergences"] == []
 
 

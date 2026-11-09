@@ -29,6 +29,7 @@ def test_input_spec_diff(mock_packages, config):
     assert result.common == [mpileaks]
     assert result.only_in_a == [libelf]
     assert result.only_in_b == [zlib]
+    assert result.changed == []
 
 
 def test_input_spec_diff_distinguishes_groups(mock_packages, config):
@@ -43,6 +44,7 @@ def test_input_spec_diff_distinguishes_groups(mock_packages, config):
     assert result.common == [in_default]
     assert result.only_in_a == [in_group]
     assert result.only_in_b == []
+    assert result.changed == []
 
 
 def test_environment_diff_as_dict_is_canonical_and_omits_environment_identity(
@@ -58,7 +60,7 @@ def test_environment_diff_as_dict_is_canonical_and_omits_environment_identity(
     libelf = ev.UserSpecId("default", spack.spec.Spec("libelf"))
     result = diff.EnvironmentDiff(
         # only_in_a is passed out of canonical order, to prove as_dict imposes one
-        inputs=diff.InputDiff(only_in_a=[zlib, libelf], only_in_b=[], common=[root]),
+        inputs=diff.InputDiff(only_in_a=[zlib, libelf], only_in_b=[], common=[root], changed=[]),
         providers=[],
         divergences=[diff.UserSpecDivergence(root, nodes)],
         unresolved=[],
@@ -72,6 +74,7 @@ def test_environment_diff_as_dict_is_canonical_and_omits_environment_identity(
         "only_in_a",
         "only_in_b",
         "common",
+        "changed",
         "providers",
         "unresolved",
         "divergences",

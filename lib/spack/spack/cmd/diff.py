@@ -511,6 +511,21 @@ class EnvironmentDiffRenderer(_DiffRenderer):
                     [[_format_root(root)] for root in env_diff_core.sorted_roots(only)],
                 )
 
+        if result.inputs.changed:
+            self._section(
+                "@*{Input specs changed}",
+                [
+                    [
+                        _with_group(change.after.spec.name, change.after.group),
+                        f"    {self.tag_before}{change.before.spec}",
+                        f"    {self.tag_after}{change.after.spec}",
+                    ]
+                    for change in sorted(
+                        result.inputs.changed, key=lambda x: env_diff_core.root_sort_key(x.after)
+                    )
+                ],
+            )
+
         if result.providers:
             self._section(
                 "@*{Input specs provided by another package}",

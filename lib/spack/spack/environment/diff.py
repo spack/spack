@@ -3,21 +3,21 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Compare two concrete environments.
 
-The input specs of the two environments are compared first, then the concrete DAGs of each input
-spec in both are compared with ``spack.spec_diff``.
+Input specs are first matched across the two environments, then the concrete DAGs of each matched
+pair are compared with ``spack.spec_diff``.
 """
 
 import shlex
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Hashable, Iterable, List, NamedTuple, Optional, Set, Tuple
 
 import spack.environment.environment as ev
 import spack.spec_diff
 from spack.spec import Spec
-from spack.util.lang import stable_partition
+from spack.util.lang import index_by, stable_partition
 
 
 class UserSpecDivergence(NamedTuple):
-    """The divergent nodes found for an input spec in both environments."""
+    """The divergent nodes found for an input spec matched in both environments."""
 
     root: ev.UserSpecId
     nodes: List[spack.spec_diff.NodeDivergence]
@@ -31,24 +31,32 @@ class ProviderChange(NamedTuple):
     spec_b: Spec
 
 
+class InputChange(NamedTuple):
+    """An input spec written differently in the two environments, paired by what it produced."""
+
+    before: ev.UserSpecId
+    after: ev.UserSpecId
+
+
 class InputDiff(NamedTuple):
     """Comparison of the input specs of two environments."""
 
     only_in_a: List[ev.UserSpecId]
     only_in_b: List[ev.UserSpecId]
     common: List[ev.UserSpecId]
+    changed: List[InputChange]
 
 
 class EnvironmentDiff(NamedTuple):
     """Full result of comparing two concrete environments."""
 
-    #: Splits the input specs into common ones and ones in only one environment
+    #: Matches the input specs of the two environments
     inputs: InputDiff
-    #: Common input specs provided by a different package on each side, not compared further
+    #: Matched input specs provided by a different package on each side, not compared further
     providers: List[ProviderChange]
-    #: Common input specs whose concrete DAGs differ, with the nodes where they diverge
+    #: Matched input specs whose concrete DAGs differ, with the nodes where they diverge
     divergences: List[UserSpecDivergence]
-    #: Common input specs whose concrete roots differ, with no node to point at as the cause
+    #: Matched input specs whose concrete roots differ, with no node to point at as the cause
     unresolved: List[ev.UserSpecId]
 
     @property
@@ -57,6 +65,7 @@ class EnvironmentDiff(NamedTuple):
         return not (
             self.inputs.only_in_a
             or self.inputs.only_in_b
+            or self.inputs.changed
             or self.providers
             or self.divergences
             or self.unresolved
@@ -72,6 +81,10 @@ class EnvironmentDiff(NamedTuple):
             "only_in_a": _roots_to_dict(self.inputs.only_in_a),
             "only_in_b": _roots_to_dict(self.inputs.only_in_b),
             "common": _roots_to_dict(self.inputs.common),
+            "changed": [
+                {"before": _root_to_dict(change.before), "after": _root_to_dict(change.after)}
+                for change in sorted(self.inputs.changed, key=lambda x: root_sort_key(x.after))
+            ],
             "providers": [
                 {
                     "root": _root_to_dict(change.root),
@@ -94,13 +107,37 @@ class EnvironmentDiff(NamedTuple):
         }
 
 
+def _unique_by(
+    roots: List[ev.UserSpecId],
+    concrete: Dict[ev.UserSpecId, Spec],
+    spec_key: Callable[[Spec], Hashable],
+) -> Dict[Hashable, ev.UserSpecId]:
+    """Map each key that exactly one input spec has within its group to that input spec."""
+    by_key = index_by(roots, lambda root: (root.group, spec_key(concrete[root])))
+    return {key: matches[0] for key, matches in by_key.items() if len(matches) == 1}
+
+
 def input_spec_diff(
     roots_a: Dict[ev.UserSpecId, Spec], roots_b: Dict[ev.UserSpecId, Spec]
 ) -> InputDiff:
     """Compare the input specs of two environments, each mapped to its concrete root."""
     common, only_in_a = stable_partition(list(roots_a), lambda root: root in roots_b)
     only_in_b = [root for root in roots_b if root not in roots_a]
-    return InputDiff(only_in_a=only_in_a, only_in_b=only_in_b, common=common)
+
+    changed: List[InputChange] = []
+    for spec_key in (lambda spec: spec.dag_hash(), lambda spec: spec.name):
+        unique_b = _unique_by(only_in_b, roots_b, spec_key)
+        pairs = [
+            InputChange(root, unique_b[key])
+            for key, root in _unique_by(only_in_a, roots_a, spec_key).items()
+            if key in unique_b
+        ]
+        paired = {x.before for x in pairs} | {x.after for x in pairs}
+        only_in_a = [root for root in only_in_a if root not in paired]
+        only_in_b = [root for root in only_in_b if root not in paired]
+        changed.extend(pairs)
+
+    return InputDiff(only_in_a=only_in_a, only_in_b=only_in_b, common=common, changed=changed)
 
 
 def _concretized_user_specs(env: ev.Environment) -> Dict[ev.UserSpecId, Spec]:
@@ -218,8 +255,11 @@ def diff_environments(
     # Input specs share most of their graph, so the same node pair is reached from many of them
     cache: spack.spec_diff.ComparisonCache = {}
 
-    for root in inputs.common:
-        concrete_a = a_map[root]
+    # A changed input is reported under how the second environment writes it
+    pairs = [(root, root) for root in inputs.common]
+    pairs.extend((change.before, change.after) for change in inputs.changed)
+    for root_a, root in pairs:
+        concrete_a = a_map[root_a]
         concrete_b = b_map[root]
         # Only a virtual input can be two different packages, and they are not comparable
         if concrete_a.name != concrete_b.name:
