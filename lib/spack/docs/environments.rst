@@ -150,6 +150,11 @@ Changing ``environment_root`` can therefore also be used to make a whole group o
 Creating Filtered Environments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. note::
+
+   Environment filtering is experimental. The filter interface may change as
+   support for includes and broader configuration filtering is added.
+
 Spack can create a new environment by filtering an existing one.
 This is useful for continuous integration on environments containing licensed or proprietary software.
 For example, you can filter out the proprietary software from an environment that will be passed to untrusted CI resources.

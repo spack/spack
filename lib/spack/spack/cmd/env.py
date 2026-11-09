@@ -101,7 +101,7 @@ def env_create_setup_parser(subparser):
         "--filter",
         dest="filter_file",
         metavar="FILTER_FILE",
-        help="create a filtered environment using the filter config in FILTER_FILE",
+        help="create a filtered environment using the filter config in FILTER_FILE (experimental)",
     )
 
 
