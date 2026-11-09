@@ -192,12 +192,12 @@ def _looks_like_dot_spack_path(value: str) -> bool:
     """Whether a config string resolves under ``~/.spack``, as a path or a ``file://`` URL."""
     if value.startswith("file://"):
         value = value[len("file://") :]
-    if not (os.path.isabs(value) or value.startswith("~")):
+
+    # Resolved path expands user as well
+    resolved = spack.config.substitute_path_variables(value)
+    if not os.path.isabs(resolved):
         return False
-    try:
-        return _under_old_dotspack(spack.config.canonicalize_path(value))
-    except Exception:
-        return False
+    return _under_old_dotspack(resolved)
 
 
 def _cleanup_old(args) -> None:
