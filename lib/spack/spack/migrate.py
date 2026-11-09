@@ -869,8 +869,16 @@ def _migrate_user_config() -> bool:
 
     Respects XDG_CONFIG_HOME but skips migration if SPACK_USER_CONFIG_PATH is set.
     """
-    # If SPACK_USER_CONFIG_PATH is set, don't migrate - user has explicit override
+    # User has set new variable for config location -- don't migrate in face of explicit override
+    if os.getenv("SPACK_CONFIG_HOME"):
+        return False
+
+    # User has set old variable for config location -- don't migrate in face of explicit override
     if os.getenv("SPACK_USER_CONFIG_PATH"):
+        return False
+
+    # User has set variable to ignore local config -- don't migrate
+    if os.getenv("SPACK_DISABLE_LOCAL_CONFIG"):
         return False
 
     old_location = os.path.expanduser("~/.spack")
@@ -1382,7 +1390,8 @@ def migration_config_home() -> str:
     2. Default XDG_CONFIG_HOME location: ~/.config/spack
 
     This does not use config, since migration happens before config is fully loaded.
-    Does not check SPACK_USER_CONFIG_PATH - if that's set, caller should skip migration.
+    Does not check SPACK_CONFIG_HOME/SPACK_USER_CONFIG_PATH - if that's set, caller should skip
+    migration.
     """
     xdg_config = os.getenv("XDG_CONFIG_HOME")
     if xdg_config:
