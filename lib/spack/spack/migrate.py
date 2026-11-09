@@ -739,8 +739,8 @@ def migrate_with_staging(
         return False
 
     finally:
-        # Clean up staging directory if it still exists
-        if os.path.exists(staging_path):
+        # Clean up staging directory if it still exists and we own the lock for it
+        if lock_acquired and os.path.exists(staging_path):
             shutil.rmtree(staging_path, ignore_errors=True)
 
         if lock_acquired and lock is not None:
