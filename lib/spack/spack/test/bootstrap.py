@@ -715,3 +715,15 @@ def test_source_failures_include_their_traceback_when_the_flag_is_set(
     assert "boom" in message
     assert 'File "' in message and "try_to_bootstrap" in message
     assert "spack --backtrace" not in message
+
+
+def test_env_variable_is_resolved_during_bootstrap(active_mock_environment):
+    """$env in user config must still expand in the bootstrap configuration."""
+    env_path = active_mock_environment.path
+    spack.config.CONFIG.set("config:build_stage", ["$env/build_stage"])
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.config.CONFIG.env_path == env_path
+        stage = spack.config.CONFIG.get("config:build_stage")
+        assert spack.config.canonicalize_path(stage[0]) == str(
+            pathlib.Path(env_path) / "build_stage"
+        )
