@@ -255,69 +255,159 @@ def test_migration_skips_user_config_when_spack_user_config_path_set(
     assert (old_config / "config.yaml").exists(), "Old config should remain untouched"
 
 
-def test_config_path_migration_applies_all_path_rewrite_rules(tmp_path):
-    """Config migration applies the four path-handling scenarios.
-
-    Absolute paths outside ``include:`` remain unchanged, absolute paths inside
-    ``include:`` are rewritten, relative paths outside ``include:`` become
-    absolute, and relative paths inside ``include:`` remain relative if they
-    point inside the config directory, or become absolute if they point outside.
+def test_config_path_migration_relative_paths_in_known_keys(tmp_path):
+    """Relative paths in the keys that name on-disk state (repos, mirrors, includes,
+    environments_root, license_dir) are made absolute against the OLD config dir, because
+    the data they name stays in ~/.spack. Every other string is left alone.
     """
-    old_config_dir = tmp_path / ".spack"
-    new_config_dir = tmp_path / ".config" / "spack"
-    old_config_dir.mkdir(parents=True)
+    old = tmp_path / ".spack"
+    new = tmp_path / ".config" / "spack"
+    old.mkdir(parents=True)
 
-    absolute_included = old_config_dir / "included-absolute"
-    absolute_included.mkdir()
-    relative_included = old_config_dir / "included-relative.yaml"
-    relative_included.write_text("packages: {}\n", encoding="utf-8")
-    absolute_external = tmp_path / "external"
-    absolute_external.mkdir()
-    relative_local = old_config_dir / "local.yaml"
-    relative_local.write_text("config: {}\n", encoding="utf-8")
-
-    # Relative include that points outside the config dir
-    shared_cfg = tmp_path / "shared-cfg"
-    shared_cfg.mkdir()
-
-    config_path = old_config_dir / "config.yaml"
+    config_path = old / "config.yaml"
     config_path.write_text(
         syaml.dump(
             {
                 "config": {
-                    # Absolute paths outside include sections are unchanged.
-                    "source_cache": str(absolute_external),
-                    # Relative paths outside include sections become absolute.
-                    "repos": "local.yaml",
+                    "environments_root": "envs",
+                    "license_dir": "licenses",
+                    # absolute path into ~/.spack that is NOT an old default: untouched
+                    "source_cache": str(old / "my-sources"),
+                    # not a path-valued key that we track, it's trivially regenerable
+                    "misc_cache": "$cache_home/x",
                 },
+                "repos": {
+                    "plain": "myrepo/spack_repo/plain",
+                    "dest": {"git": "https://example.com/r.git", "destination": "clones/dest"},
+                    "already_abs": "/elsewhere/spack_repo/abs",
+                    "variable": "$spack/var/spack/repos/spack_repo/builtin_mock",
+                },
+                "mirrors": {
+                    "relmir": "mirror",
+                    "urlmir": "file://mirror2",  # a URL, not a relative path
+                    "dictmir": {"fetch": "fetchmir", "push": {"url": "pushmir"}},
+                    "remote": "https://mirror.example.com/",
+                },
+                "modules": {"default": {"tcl": {"projections": {"zlib": "../leafs/{name}"}}}},
                 "include": [
-                    # Absolute paths under the old config root are rewritten.
-                    {"path": str(absolute_included)},
-                    # Relative include paths pointing inside stay relative.
-                    {"path": "included-relative.yaml"},
-                    # Relative include paths pointing outside become absolute.
-                    {"path": "../shared-cfg"},
+                    "included-relative.yaml",
+                    {"path": "../shared-cfg", "optional": True},
+                    str(old / "abs-include.yaml"),
                 ],
             }
         ),
         encoding="utf-8",
     )
 
-    migrated = spack.migrate.process_config_file_paths(
-        str(config_path), str(old_config_dir), str(new_config_dir)
-    )
+    migrated = spack.migrate.process_config_file_paths(str(config_path), str(old), str(new))
 
     assert migrated is not None
-    # Absolute path outside config dir: unchanged
-    assert migrated["config"]["source_cache"] == str(absolute_external)
-    # Relative path (no ../): stays relative (file will be copied)
-    assert migrated["config"]["repos"] == "local.yaml"
-    # Absolute path inside old config: rewritten to new config location
-    assert migrated["include"][0]["path"] == str(new_config_dir / "included-absolute")
-    # Relative include inside config: stays relative
-    assert migrated["include"][1]["path"] == "included-relative.yaml"
-    # Relative path with ../: made absolute
-    assert migrated["include"][2]["path"] == str(shared_cfg)
+    cfg = migrated["config"]
+    assert cfg["environments_root"] == str(old / "envs")
+    assert cfg["license_dir"] == str(old / "licenses")
+    assert cfg["source_cache"] == str(old / "my-sources")
+    assert cfg["misc_cache"] == "$cache_home/x"
+
+    repos = migrated["repos"]
+    assert repos["plain"] == str(old / "myrepo" / "spack_repo" / "plain")
+    assert repos["dest"]["destination"] == str(old / "clones" / "dest")
+    assert repos["already_abs"] == "/elsewhere/spack_repo/abs"
+    assert repos["variable"] == "$spack/var/spack/repos/spack_repo/builtin_mock"
+
+    mirrors = migrated["mirrors"]
+    assert mirrors["relmir"] == str(old / "mirror")
+    assert mirrors["urlmir"] == "file://mirror2"
+    assert mirrors["dictmir"]["fetch"] == str(old / "fetchmir")
+    assert mirrors["dictmir"]["push"]["url"] == str(old / "pushmir")
+    assert mirrors["remote"] == "https://mirror.example.com/"
+
+    # a projection is not a path
+    assert migrated["modules"]["default"]["tcl"]["projections"]["zlib"] == "../leafs/{name}"
+
+    inc = migrated["include"]
+    assert inc[0] == str(old / "included-relative.yaml")
+    assert inc[1]["path"] == str((tmp_path / "shared-cfg").resolve()) or inc[1]["path"] == str(
+        tmp_path / "shared-cfg"
+    )
+    assert inc[1]["optional"] is True
+    assert inc[2] == str(old / "abs-include.yaml")
+
+
+def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
+    """Only configuration files are copied from ~/.spack; data the user keeps there (install
+    trees, repos, mirrors, caches, and anything uncopyable) stays where it is and is
+    reached through the rewritten references."""
+    home_dir, _ = mock_spack_instance
+    old = pathlib.Path(home_dir) / ".spack"
+    old.mkdir()
+    (old / "config.yaml").write_text(
+        "config:\n  environments_root: envs\n  install_tree:\n    root: store\n", encoding="utf-8"
+    )
+    (old / "repos.yaml").write_text("repos:\n  mine: myrepo\n", encoding="utf-8")
+    # nested config in a platform dir
+    (old / "linux").mkdir()
+    (old / "linux" / "packages.yaml").write_text("packages: {}\n", encoding="utf-8")
+    # data of every kind that must NOT be copied
+    (old / "store" / ".spack-db").mkdir(parents=True)
+    (old / "store" / ".spack-db" / "index.json").write_text("{}", encoding="utf-8")
+    (old / "myrepo" / "packages").mkdir(parents=True)
+    (old / "myrepo" / "repo.yaml").write_text("repo:\n  namespace: mine\n", encoding="utf-8")
+    (old / "envs" / "e1").mkdir(parents=True)
+    (old / "envs" / "e1" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    (old / "srccache").mkdir()
+    (old / "srccache" / "big.tar.gz").write_bytes(b"\0" * 4096)
+    (old / "README").write_text("notes\n", encoding="utf-8")
+    (old / "dangling").symlink_to(old / "nowhere")
+    ro = old / "ro"
+    ro.mkdir()
+    (ro / "f").write_text("x", encoding="utf-8")
+    ro.chmod(0o555)
+    # a directory alias stays a link, so it keeps tracking v2
+    (old / "v2").mkdir()
+    (old / "v2" / "x.yaml").write_text("config: {}\n", encoding="utf-8")
+    (old / "current").symlink_to("v2")
+    # a yaml that is a link outside the config dir stays a link to that content
+    outside_dir = pathlib.Path(home_dir) / "other" / "spack"
+    outside_dir.mkdir(parents=True)
+    (outside_dir / "mirrors.yaml").write_text("mirrors: {}\n", encoding="utf-8")
+    (old / "mirrors.yaml").symlink_to("../other/spack/mirrors.yaml")
+    # a directory link into dotfiles, relative: must be made absolute to still resolve
+    (old / "shared").symlink_to("../other/spack")
+    # an absolute link into ~/.spack itself: still valid, left alone
+    (old / "alias.yaml").symlink_to(old / "config.yaml")
+
+    try:
+        result = spack.migrate.migrate_home()
+    finally:
+        ro.chmod(0o755)
+
+    assert result["user_config"] is True
+    new = pathlib.Path(spack.migrate.migration_config_home())
+    regular = sorted(
+        str(p.relative_to(new)) for p in new.rglob("*") if p.is_file() and not p.is_symlink()
+    )
+    assert regular == ["config.yaml", "linux/packages.yaml", "repos.yaml", "v2/x.yaml"]
+    links = {str(p.relative_to(new)): os.readlink(p) for p in new.rglob("*") if p.is_symlink()}
+    assert links == {
+        # relative, stays inside: verbatim
+        "current": "v2",
+        # relative, leaves ~/.spack: made absolute so it still resolves
+        "mirrors.yaml": str(outside_dir / "mirrors.yaml"),
+        "shared": str(outside_dir),
+        # absolute into ~/.spack: left alone, the target is still there
+        "alias.yaml": str(old / "config.yaml"),
+    }
+    for link in links:
+        assert (new / link).exists(), f"{link} dangles"
+    assert "file:///x" in (new / "mirrors.yaml").read_text(encoding="utf-8")
+    # the references point back at ~/.spack
+    cfg = syaml.load((new / "config.yaml").read_text(encoding="utf-8"))
+    assert cfg["config"]["environments_root"] == str(old / "envs")
+    assert cfg["config"]["install_tree"]["root"] == "store"  # not a relative-path key: untouched
+    repos = syaml.load((new / "repos.yaml").read_text(encoding="utf-8"))
+    assert repos["repos"]["mine"] == str(old / "myrepo")
+    # nothing about uncopyable data was warned, since none of it was attempted
+    assert "Not copying" not in capsys.readouterr().err
 
 
 def test_config_path_migration_rewrites_old_defaults(tmp_path):
@@ -359,12 +449,12 @@ def test_config_path_migration_rewrites_old_defaults(tmp_path):
     assert migrated["config"]["misc_cache"] == "$cache_home/$spack_instance_id/cache"
     assert migrated["config"]["test_stage"] == "$state_home/test-stage"
     assert migrated["config"]["build_stage"][1] == "$state_home/stage"
-    # same directory under a different key -> ordinary config-home rewrite
-    assert migrated["config"]["source_cache"] == str(new / "cache")
-    assert migrated["config"]["template_dirs"][0] == str(new / "bootstrap")
-    assert migrated["config"]["template_dirs"][1] == str(new / "stage" / "sub")
-    # sub-path of a default -> ordinary rewrite
-    assert migrated["config"]["extensions"][0] == str(new / "bootstrap" / "store")
+    # same directory under a different key -> a user choice, left alone (~/.spack is retained)
+    assert migrated["config"]["source_cache"] == str(old / "cache")
+    assert migrated["config"]["template_dirs"][0] == str(old / "bootstrap")
+    assert migrated["config"]["template_dirs"][1] == str(old / "stage" / "sub")
+    # sub-path of a default -> also left alone
+    assert migrated["config"]["extensions"][0] == str(old / "bootstrap" / "store")
     # variable-form values are not touched
     assert migrated["config"]["build_stage"][0] == "$tempdir/$user/spack-stage"
 
@@ -393,11 +483,12 @@ def test_config_path_migration_instance_misc_cache(tmp_path, instance_dir, expec
 
     migrated = spack.migrate.process_config_file_paths(str(config_path), str(old), str(new))
 
-    assert migrated is not None
     if expected_is_default:
+        assert migrated is not None
         assert migrated["config"]["misc_cache"] == "$cache_home/$spack_instance_id/cache"
     else:
-        assert migrated["config"]["misc_cache"] == str(new / instance_dir / "cache")
+        # not a default: a user choice into ~/.spack, left alone -> nothing to rewrite
+        assert migrated is None
 
 
 def test_config_path_migration_override_key(tmp_path):

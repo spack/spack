@@ -10,8 +10,9 @@ import shutil
 import sys
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import spack.config
 import spack.error
 import spack.paths
 import spack.util.hash
@@ -298,32 +299,48 @@ def _process_yaml_files_in_directory(
     staging_dir: str,
     processor_func: Callable[[str, str, str], Optional[Dict[str, Any]]],
     new_dir: str,
-    excluded_toplevel_dirs: Optional[Set[str]] = None,
 ) -> None:
-    """Walk directory tree, find YAML files, and process them.
+    """Walk a directory tree, copying its YAML files (processed) and its symlinks (as is).
+
+    Symlinks are not followed: a link is re-created as a link in the staging directory,
+    whether it points at a file or a directory, so that aliases (``current -> v2``) and
+    links into a dotfiles checkout stay live rather than becoming frozen copies. A link's
+    target is copied verbatim; the caller fixes up targets that would no longer resolve
+    (see :func:`_rewrite_symlinks_after_copy`).
 
     Args:
         old_dir: Source directory to walk
         staging_dir: Staging directory where processed files are written
         processor_func: Function(yaml_file_path, old_dir, new_dir) -> modified_data or None
         new_dir: Target directory (passed to processor_func)
-        excluded_toplevel_dirs: Set of directory names to skip at the first level
     """
-    if excluded_toplevel_dirs is None:
-        excluded_toplevel_dirs = set()
-
     for root, dirs, files in os.walk(old_dir, followlinks=False):
-        # Skip excluded toplevel directories
-        if root == old_dir:
-            dirs[:] = [d for d in dirs if d not in excluded_toplevel_dirs]
+        # A directory holding an environment manifest or a package repository is data the
+        # user keeps here, not configuration of this scope: do not descend into it.
+        if root != old_dir and any(f in files for f in ("spack.yaml", "spack.lock", "repo.yaml")):
+            dirs[:] = []
+            continue
+
+        # Directory symlinks are reported in ``dirs`` but not descended into (followlinks is
+        # False); re-create them as links.
+        for name in dirs:
+            old_path = os.path.join(root, name)
+            if os.path.islink(old_path):
+                _copy_symlink(
+                    old_path, os.path.join(staging_dir, os.path.relpath(old_path, old_dir))
+                )
 
         for filename in files:
-            if not (filename.endswith(".yaml") or filename.endswith(".yml")):
+            if not filename.endswith((".yaml", ".yml")):
                 continue
 
             old_path = os.path.join(root, filename)
             rel_path = os.path.relpath(old_path, old_dir)
             staging_file_path = os.path.join(staging_dir, rel_path)
+
+            if os.path.islink(old_path):
+                _copy_symlink(old_path, staging_file_path)
+                continue
 
             try:
                 modified_data = processor_func(old_path, old_dir, new_dir)
@@ -338,7 +355,16 @@ def _process_yaml_files_in_directory(
                 else:
                     shutil.copy2(old_path, staging_file_path)
             except (syaml.SpackYAMLError, OSError) as e:
-                tty.debug(f"Skipping {rel_path} during migration: {e}")
+                tty.warn(f"Not copying {rel_path} to the new configuration location: {e}")
+
+
+def _copy_symlink(old_path: str, staging_path: str) -> None:
+    """Re-create the symlink at ``old_path`` as ``staging_path`` with the same target."""
+    try:
+        os.makedirs(os.path.dirname(staging_path), exist_ok=True)
+        os.symlink(os.readlink(old_path), staging_path)
+    except OSError as e:
+        tty.warn(f"Not copying symlink {old_path} to the new configuration location: {e}")
 
 
 #: Config entries whose Spack <= 1.2 default lived under ``~/.spack``, and where that default
@@ -350,11 +376,11 @@ def _process_yaml_files_in_directory(
 #: environment variables keep applying after migration.
 #:
 #: Those subtrees are regenerable data, not configuration, so the home migration does not copy
-#: them (see ``_EXCLUDED_TOPLEVEL_ENTRIES_CONFIG``). A user config file may still spell out the
+#: them (it copies only YAML files). A user config file may still spell out the
 #: old default as an absolute path, e.g. ``bootstrap:root: /home/me/.spack/bootstrap`` as
 #: written by ``spack bootstrap root --set``. Only when a value *is* the old default for its own
 #: key is it rewritten to the new default. Any other absolute path under ``~/.spack`` is a
-#: user choice and is rewritten to the config home like everything else that was copied.
+#: user choice and is left alone: ``~/.spack`` is retained, so it still names what it did.
 #:
 #: The old defaults are fixed in Spack 1.2 and never change; the new defaults should match
 #: ``etc/spack/defaults``.
@@ -390,17 +416,90 @@ def _relocate_old_default(key_path: List[Union[str, Index]], rel_to_old: str) ->
     return None
 
 
+#: Configuration entries whose string values are paths to persistent on-disk state that a
+#: user may have placed under ``~/.spack`` and referred to by a path *relative to the config
+#: file*. Relative paths in Spack configuration resolve against the directory of the file
+#: they are written in, so once the file moves to ``~/.config/spack`` such a reference would
+#: point at nothing. The home migration does not copy the referenced data (see
+#: ``_prepare_config_staging``), so these values are made absolute against ``~/.spack``,
+#: where the data still is.
+#:
+#: Each entry is a key path from the top of the file; ``*`` matches any dict key or list index
+#: _select_from_config returns all matches the calling code is responsible for filtering further
+_RELATIVE_PATH_CONFIG_KEYS: List[List[str]] = [
+    # repos: {name: path}  or  {name: {destination: path}}
+    ["repos", "*"],
+    ["repos", "*", "destination"],
+    # mirrors: {name: url}  or  {name: {url:, fetch:, push:}} (strings or {url: ...})
+    ["mirrors", "*"],
+    ["mirrors", "*", "url"],
+    ["mirrors", "*", "fetch"],
+    ["mirrors", "*", "push"],
+    ["mirrors", "*", "fetch", "url"],
+    ["mirrors", "*", "push", "url"],
+    # include: [path]  or  [{path: ...}]
+    ["include", "*"],
+    ["include", "*", "path"],
+    ["config", "environments_root"],
+    ["config", "license_dir"],
+]
+
+
+def _select_from_config(data: Any, key_path: List[str]) -> List[Tuple[List[Union[str, Index]], Any]]:
+    """All ``(concrete_key_path, value)`` pairs in ``data`` matching a pattern key path."""
+    if not key_path:
+        return [([], data)]
+    head, rest = key_path[0], key_path[1:]
+    out: List[Tuple[List[Union[str, Index]], Any]] = []
+
+    def descend(step: Union[str, Index], child: Any) -> None:
+        for sub, val in _select_from_config(child, rest):
+            out.append(([step] + sub, val))
+
+    if head == "*" and isinstance(data, dict):
+        for k, v in data.items():
+            descend(k, v)
+    elif head == "*" and isinstance(data, list):
+        for i, v in enumerate(data):
+            descend(Index(i), v)
+    elif isinstance(data, dict):
+        # ``key::`` override spelling is the same key
+        for k, v in data.items():
+            if str(k).rstrip(":") == head:
+                descend(k, v)
+    return out
+
+
+def _is_relative_filesystem_path(value: Any) -> bool:
+    """A plain relative path: a string that is not absolute, not a URL, not ``~``- or
+    ``$``-prefixed. Non-strings (a ``{git:, destination:}`` dict selected by a ``*``) are not."""
+    if not isinstance(value, str):
+        return False
+    if os.path.isabs(value) or value.startswith(("~", "$")):
+        return False
+    if "://" in value:  # url, not a path
+        return False
+    return True
+
+
 def process_config_file_paths(
     file_path: str, old_location: str, new_config_location: str
 ) -> Optional[Dict[str, Any]]:
-    """Rewrite paths in config files for relocation.
+    """Rewrite paths in a user configuration file for relocation to the new config home.
 
-    - Absolute paths that are the Spack 1.2 default for their config key (e.g.
-      ``bootstrap:root: ~/.spack/bootstrap``): rewrite to the new default for that key
-      (see ``_OLD_DOT_SPACK_DEFAULTS``)
-    - Other absolute paths inside old_location: rewrite to new_location
-    - Relative paths starting with ../: make absolute
-    - Other paths: leave as-is (files copied to new location)
+    Only two kinds of value are touched:
+
+    - An absolute path that is the Spack 1.2 default for its own config key (e.g.
+      ``bootstrap:root: ~/.spack/bootstrap``) is rewritten to the key's new default; see
+      ``_OLD_DOT_SPACK_DEFAULTS``. That data is regenerable and is not carried over.
+    - A *relative* path in one of the keys listed in ``_RELATIVE_PATH_CONFIG_KEYS`` is made
+      absolute against the old config directory, so that it keeps pointing at the data in
+      ``~/.spack`` (which is retained) rather than at the same relative location under
+      ``~/.config/spack`` (where nothing was copied).
+
+    Every other string is left exactly as it was: absolute paths into ``~/.spack`` still
+    name files that are still there, and strings that merely look like paths (module
+    projections, spec strings) are not paths.
 
     Returns the modified data if any paths were changed, None otherwise.
     """
@@ -410,34 +509,34 @@ def process_config_file_paths(
     if not data:
         return None
 
-    config_dir = os.path.dirname(file_path)
-    found_paths = _walk_yaml_for_paths(data, config_dir)
     modified = False
-
     old_location_norm = os.path.normpath(os.path.abspath(old_location))
-    new_config_location_norm = os.path.normpath(os.path.abspath(new_config_location))
+    # The file is read from its old location; relative paths resolve against that directory.
+    config_dir = os.path.dirname(os.path.abspath(file_path))
 
-    for key_path, original_value, abs_path in found_paths:
-        if os.path.isabs(original_value):
-            # Absolute path - rewrite if inside old_location
-            abs_path_norm = os.path.normpath(abs_path)
-            try:
-                rel_to_old = os.path.relpath(abs_path_norm, old_location_norm)
-                if not rel_to_old.startswith(".."):
-                    # Inside old_location. If this is a spelled-out old default, use the
-                    # new default; otherwise it moves with the rest of the config.
-                    new_path = _relocate_old_default(key_path, rel_to_old)
-                    if new_path is None:
-                        new_path = os.path.join(new_config_location_norm, rel_to_old)
-                    _absolutize_path_in_yaml(data, key_path, new_path)
-                    modified = True
-            except ValueError:
-                # Different drives on Windows - not inside old_location
-                pass
-        else:
-            # Relative path starting with ../ - make absolute
-            _absolutize_path_in_yaml(data, key_path, abs_path)
+    # 1. Spelled-out old defaults -> new defaults, anywhere in the file
+    for key_path, value, abs_path in _walk_yaml_for_paths(data, config_dir):
+        if not os.path.isabs(value):
+            continue
+        try:
+            rel_to_old = os.path.relpath(os.path.normpath(abs_path), old_location_norm)
+        except ValueError:  # different drives on Windows
+            continue
+        if rel_to_old.startswith(".."):
+            continue
+        new_path = _relocate_old_default(key_path, rel_to_old)
+        if new_path is not None:
+            _absolutize_path_in_yaml(data, key_path, new_path)
             modified = True
+
+    # 2. Relative paths in the known path-valued keys -> absolute, against the old location
+    for pattern in _RELATIVE_PATH_CONFIG_KEYS:
+        for key_path, value in _select_from_config(data, pattern):
+            if _is_relative_filesystem_path(value):
+                _absolutize_path_in_yaml(
+                    data, key_path, os.path.normpath(os.path.join(config_dir, value))
+                )
+                modified = True
 
     return data if modified else None
 
@@ -736,81 +835,35 @@ def _rewrite_symlinks_after_copy(staging_path, old_location, new_location, error
 
 # Directories to exclude at the first level when copying config
 # These are non-config data that Spack <= 1.2 wrote into ~/.spack
-_EXCLUDED_TOPLEVEL_ENTRIES_CONFIG = {
-    "bootstrap",
-    "cache",
-    "git_repos",
-    "package_repos",
-    "reports",
-    "test",
-    "stage",
-    "package-repository.lock",
-}
-
-
 def _prepare_config_staging(old_location, staging_path, new_location):
-    """Callback for config migration - copies files and processes config files.
+    """Callback for config migration: copy the YAML configuration files, with path rewriting.
 
-    Strategy:
-    1. Copy all non-YAML files/dirs from ~/.spack to staging (excluding certain cache dirs)
-    2. Process and copy YAML files with path rewriting
-    3. Rewrite symlinks as needed
+    Only ``*.yaml``/``*.yml`` files and symlinks are copied. Everything else under
+    ``~/.spack`` is either regenerable data (caches, bootstrap store, package repository
+    clones), or data the user put there (a local repository or mirror, an install tree)
+    which is referred to by path from the configuration and keeps working where it is,
+    since ``~/.spack`` is retained.
+    See :func:`process_config_file_paths` for how such references are kept valid.
     """
-
-    # Helper to skip YAML files during directory copy
-    def ignore_yaml_files(directory, contents):
-        return [name for name in contents if name.endswith(".yaml") or name.endswith(".yml")]
-
-    # Create the stage directory
     os.makedirs(staging_path, exist_ok=True)
-
-    # First pass: copy non-YAML files and directories
-    for item in os.listdir(old_location):
-        old_item_path = os.path.join(old_location, item)
-        staging_item_path = os.path.join(staging_path, item)
-
-        # Skip excluded names
-        if item in _EXCLUDED_TOPLEVEL_ENTRIES_CONFIG:
-            tty.debug(f"Skipping excluded item: {item}")
-            continue
-
-        # Skip YAML files (process separately)
-        if item.endswith(".yaml") or item.endswith(".yml"):
-            continue
-
-        # Copy everything else
-        try:
-            if os.path.isdir(old_item_path):
-                # Copy directory but ignore YAML files inside
-                shutil.copytree(
-                    old_item_path, staging_item_path, symlinks=True, ignore=ignore_yaml_files
-                )
-            else:
-                shutil.copy2(old_item_path, staging_item_path)
-        except OSError as e:
-            tty.debug(f"Skipping {item} during migration: {e}")
-            raise
-
-    # Second pass: process and copy YAML files
     _process_yaml_files_in_directory(
-        old_location,
-        staging_path,
-        process_config_file_paths,
-        new_location,
-        _EXCLUDED_TOPLEVEL_ENTRIES_CONFIG,
+        old_location, staging_path, process_config_file_paths, new_location
     )
 
     if not os.listdir(staging_path):
         # Caught by migrate_with_staging
         raise MigrationStagingError("no user config to migrate")
 
-    # Third pass: rewrite symlinks
-    symlink_rewrites = _rewrite_symlinks_after_copy(staging_path, old_location, new_location)
-    if symlink_rewrites:
-        tty.warn("Rewrote symlinks during migration:")
-        for link_path, old_target, new_target in symlink_rewrites:
-            rel_link = os.path.relpath(link_path, staging_path)
-            tty.warn(f"  {rel_link}: {old_target} -> {new_target}")
+    # Symlinks were copied with their targets verbatim. A relative target that leaves the
+    # old directory (``-> ../dotfiles/spack``) would resolve somewhere else from the new
+    # location; make it absolute. An absolute target into the old directory is left alone:
+    # the file it names is still there.
+    rewrites = _rewrite_symlinks_after_copy(
+        staging_path, old_location, old_location, error_on_rewrite=False
+    )
+    for link_path, old_target, new_target in rewrites:
+        rel_link = os.path.relpath(link_path, staging_path)
+        tty.debug(f"Rewrote symlink {rel_link}: {old_target} -> {new_target}")
 
 
 def _old_package_repos_lock() -> spack.util.lock.Lock:
@@ -850,18 +903,17 @@ def _prepare_gpg_staging(old_path, staging_path, marker_name):
 
 
 def _has_user_config_to_migrate(old_location: str) -> bool:
-    """Returns True iff there are config files to migrate.
+    """Whether ``~/.spack`` holds any configuration file (``*.yaml``/``*.yml``) to migrate.
 
-    True if any files or non-excluded dirs in ~/.spack
-    Allows _migrate_user_config to exit early in the trivial case.
+    Lets ``_migrate_user_config`` exit early for the common case of a ``~/.spack`` that only
+    holds caches and package repository clones.
     """
     if not os.path.isdir(old_location):
         return False
-
-    for item in os.listdir(old_location):
-        if item not in _EXCLUDED_TOPLEVEL_ENTRIES_CONFIG:
-            return True
-    return False
+    # Only a top-level file can be a scope's configuration; anything deeper is only reached
+    # through an include from such a file.
+    with os.scandir(old_location) as entries:
+        return any(e.name.endswith((".yaml", ".yml")) for e in entries)
 
 
 def _migrate_user_config() -> bool:
@@ -1667,9 +1719,7 @@ def force_old_layout(to_move, print_message=True):
 
 def generate_old_layout_config(old_resources, scope_config):
     if old_resources.get("installs"):
-        scope_config["config"]["install_tree"] = {
-            "root": os.path.join("$spack", "opt", "spack")
-        }
+        scope_config["config"]["install_tree"] = {"root": os.path.join("$spack", "opt", "spack")}
         tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
 
     if old_resources.get("gpg_keys"):

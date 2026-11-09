@@ -122,22 +122,19 @@ If the old install tree was configured explicitly at a custom location, that con
 
 Migration happens at config module load time, before the CONFIG singleton exists. This means migration cannot check user configuration to decide whether to migrate resources. When the user approves migration, Spack copies resources from old default locations to the fixed new default locations, regardless of effective `config:locations` or resource-specific configuration. Existing custom configuration remains authoritative after migration.
 
-### Path detection and rewriting strategy
+### What is copied, and how paths are kept valid
 
-Configuration migration uses a simplified path detection approach:
+User configuration migration copies **only configuration files** (`*.yaml`, `*.yml`) from `~/.spack` to the new config home, preserving their relative layout (so `~/.spack/linux/packages.yaml` becomes `~/.config/spack/linux/packages.yaml`). Symlinked directories are followed, so an alias such as `current -> v2` yields its files under both names. Directories that hold an environment manifest or a package repository (`spack.yaml`, `spack.lock`, `repo.yaml`) are data the user keeps in `~/.spack`, not configuration of the scope, and are not descended into.
 
-1. **Path detection**: Identifies paths by their form rather than by config key:
-   - Absolute paths (detected with `os.path.isabs()` - works for Unix `/...` and Windows `C:\...`)
-   - Relative paths starting with `../`
+Nothing else is copied. Everything that is not a configuration file is either regenerable (caches, the bootstrap store, package repository clones) or user data that the configuration refers to by path (a local repository or mirror, an install tree, a license directory). Because `~/.spack` is retained, that data keeps working where it is; the migration only has to keep the references to it valid.
 
-2. **File copying**: Copies all non-YAML files and directories from source to destination (excluding cache directories: `reports`, `test`, `git_repos`, `package_repos`, `bootstrap`). This preserves any files referenced by simple relative paths (like `repos: local-repo`).
+Two kinds of value in the copied files are rewritten:
 
-3. **Path rewriting**: Processes YAML files:
-   - Absolute paths inside old location: rewrite to new location
-   - Relative paths with `../`: make absolute
-   - Other paths: leave as-is (files were copied)
+1. **Spelled-out old defaults.** An absolute path that is the Spack 1.2 default for its own key (e.g. `bootstrap:root: ~/.spack/bootstrap`, `config:misc_cache: ~/.spack/cache`, as written by `spack bootstrap root --set` or `spack config add`) is replaced by the key's new default, as a config-variable string (`$state_home/bootstrap`, `$cache_home/$spack_instance_id/cache`), so that `config:locations` and the `SPACK_*_HOME`/`XDG_*_HOME` variables keep applying. That data is regenerable and is not carried over.
 
-This approach avoids false positives (strings that aren't paths) and handles user-chosen keys (like custom repo or mirror names) without needing to maintain a whitelist of config keys.
+2. **Relative paths in path-valued keys.** Relative paths in Spack configuration resolve against the directory of the file they are written in, so a value like `repos: {mine: myrepo}` or `config: {environments_root: envs}` would point at nothing once the file lives in `~/.config/spack`. For the keys whose values are paths to on-disk state — `repos:*` (and `destination`), `mirrors:*` (and `url`/`fetch`/`push`), `include:*`, `config:environments_root`, `config:license_dir` — a relative value is made absolute against `~/.spack`, where the data still is.
+
+Every other string is left exactly as written. An absolute path into `~/.spack` under any other key is a user choice that still names what it did; a string that merely looks like a path (a module projection, a spec) is not one. No general "does this look like a path" heuristic is applied.
 
 Migration of Spack prefix resources is skipped when:
 
@@ -211,7 +208,7 @@ These references cannot be safely migrated because:
 
 **Why environment rules differ from user config migration:**
 
-User config migration (section 3.8) copies entire directory contents (excluding cache directories and YAML files initially), then processes YAML files with path rewriting. Simple relative paths continue to work because the referenced files were copied. Only absolute paths and `../` paths need rewriting.
+User config migration (section 3.8) copies only configuration files, and keeps references to data in `~/.spack` valid by making the relative paths in known path-valued keys absolute against `~/.spack`, which is retained. The data itself is never moved.
 
 Environment migration relocates the entire environment directory as a unit and blocks migration if there are external references that would break. Paths inside the environment are rewritten; paths outside the environment are only allowed if they're also outside the environments root. Environment migration must be more conservative because it doesn't copy the entire environments root—only individual environment directories.
 
@@ -319,7 +316,7 @@ to have their personal `~/.spack` configuration automatically migrated on first 
 
 Home directory migration runs at config module load time whenever the above conditions are met, before `$spack` prefix migration is evaluated.
 
-**Unparseable files**: If a YAML file in `~/.spack` cannot be parsed (e.g., backup directories with broken syntax), it is skipped during migration with a debug message. Only valid, parseable YAML files are migrated to `~/.config/spack`. This prevents migration from failing completely due to files that Spack would have ignored anyway.
+**Unparseable or unreadable files**: If a YAML file in `~/.spack` cannot be parsed (e.g., a backup with broken syntax) or cannot be read or copied, it is skipped with a warning naming the file. Only valid, readable YAML files are migrated to `~/.config/spack`. This prevents migration from failing completely due to files that Spack would have ignored anyway.
 
 `~/.spack` is retained after migration because older Spack instances may still reference it.
 
