@@ -984,9 +984,10 @@ def _main(argv=None):
     # This part of `main()` handles migration from the old configs (Spack 1.2 and earlier)
     # ------------------------------------------------------------------------------------
 
-    # We do not reuse cmd_string, because aliases are not evaluated here
-    cmd_string = args.command or ""
-    if cmd_string != "isolate":
+    # We do not fully parse, we only have the spack args parsed at this point
+    # Do not perform migration for non-commands (e.g. --help).
+    cmd_array = args.command or []
+    if cmd_array and cmd_array[0] != "isolate":
         spack.migrate.perform_migration()
 
     # ------------------------------------------------------------------------
