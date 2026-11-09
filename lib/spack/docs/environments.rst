@@ -190,8 +190,7 @@ The new environment has no ``spack.lock``, and its ``spack.yaml`` has this ``spe
    spack:
      specs: [openblas]
 
-To remove ``licensed-solver`` from the concrete specs as well, suppose ``licensed-env`` has a ``spack.lock``.
-Add ``concrete: true`` to the filter:
+To filter the ``spack.lock`` file and include it in the created environment, add ``concrete: true`` to the filter:
 
 .. code-block:: yaml
 
@@ -237,7 +236,7 @@ Assuming it was concretized as ``libelf@0.8.13``, the new ``specs:`` section inc
 The filter file has a top-level ``filter:`` section.
 Under ``specs:``, ``allow`` lists specs to keep and ``block`` lists specs to remove.
 An empty ``allow`` list keeps all specs; an empty ``block`` list removes none.
-If both are set, ``block`` takes precedence.
+If a spec is included in both lists, the ``block`` list takes precedence.
 
 With ``concrete: false`` (the default), the source may be an environment directory or just a manifest file.
 Spack filters only the manifest's abstract specs and their explicitly represented dependencies, even if the source has a lockfile.
@@ -252,12 +251,11 @@ The retained DAGs keep their original hashes; Spack does not concretize the new 
 In either mode, starting at each original root, Spack walks the available DAG until it reaches a node matching ``specs:allow``.
 It selects that node and its entire sub-DAG without requiring its dependencies to match the allow list, and stops searching that path.
 If the original root matches, its whole DAG is selected; an empty allow list selects all original DAGs.
-Selected dependencies become roots even without ``flatten: true``.
+Selected dependencies are listed as roots of the created environment, even without ``flatten: true``.
 
 After collecting the allowed sub-DAGs, Spack applies ``specs:block``.
-If a selected node or any of its dependencies matches a blocked spec, Spack drops that entire sub-DAG and logs which spec caused the decision.
-In concrete mode, these checks also cover build-spec provenance.
-It does not search a rejected sub-DAG again for allowed descendants.
+If a selected spec or any of its dependencies or build_spec matches a blocked spec, Spack drops that spec from the created environment.
+It does not search a rejected spec again for allowed descendants.
 
 Retained original roots keep their groups; selected dependencies go in the default group.
 To make every dependency in the surviving sub-DAGs a root too, set ``flatten: true``.
@@ -322,7 +320,7 @@ In particular, the following content can remain even when it mentions a blocked 
      - Current behavior
    * - ``definitions``
      - Copied unchanged, including entries naming excluded packages.
-       Abstract root selection uses expanded definitions and matrices, but the retained ``definitions`` section is not pruned.
+       The ``specs`` list will no longer include references to the definitions list, but the retained ``definitions`` section is not pruned.
    * - ``develop``
      - Package entries and their spec constraints are not pruned.
        Only the path relocation described above is applied unless ``--keep-relative`` is used.
@@ -362,7 +360,7 @@ Its keys are spec constraints; ``all`` provides a fallback and defaults to Spack
 Each format must produce a valid spec string.
 Original roots are intentionally written as projected concrete specs rather than their original abstract strings.
 
-For example, retain versions and variants for ``openblas``, but only names and versions for other roots:
+For example, to retain versions and variants for ``openblas``, but only names and versions for other roots:
 
 .. code-block:: yaml
 
