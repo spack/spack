@@ -365,6 +365,7 @@ nitpick_ignore = [
     ("py:class", "posix.DirEntry"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
+    ("py:class", "spack.cmd.diff._DiffRenderer"),
     ("py:class", "spack.directives._Patch"),
     ("py:class", "spack.repo._PrependFileLoader"),
     # Spack classes that intersphinx is unable to resolve

@@ -658,123 +658,49 @@ You can use this with tools like `jq <https://jqlang.org/>`_ to quickly create J
 ``spack diff``
 ^^^^^^^^^^^^^^
 
-It's often the case that you have two versions of a spec that you need to disambiguate.
-Let's say that we've installed two variants of ``zlib``, one with and one without the optimize variant:
+It's often the case that you have two installations of a spec that you need to tell apart.
+Let's say that we've installed ``zlib-ng`` twice, once with the default ``+opt`` and once without optimizations:
 
 .. code-block:: spec
 
-   $ spack install zlib
-   $ spack install zlib -optimize
+   $ spack install zlib-ng
+   $ spack install zlib-ng~opt
 
-When we do ``spack find``, we see the two versions.
-
-.. code-block:: spec
-
-    $ spack find zlib
-    ==> 2 installed packages
-    -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
-    zlib@1.2.11  zlib@1.2.11
-
-
-Let's say we want to uninstall ``zlib``.
-We run the command and quickly encounter a problem because two versions are installed.
+When we later try to uninstall ``zlib-ng@2.3.3``, Spack reports that two installations match, and tells them apart only by their hash:
 
 .. code-block:: spec
 
-    $ spack uninstall zlib
-    ==> Error: zlib matches multiple packages:
+    $ spack uninstall zlib-ng@2.3.3
+    ==> Error: zlib-ng@2.3.3 matches multiple packages:
 
-        -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
-        efzjziy zlib@1.2.11  sl7m27m zlib@1.2.11
+        -- linux-ubuntu24.04-alderlake / %c,cxx=gcc@15.2.0 --------------
+        msml6ni zlib-ng@2.3.3  qvle4ur zlib-ng@2.3.3
 
     ==> Error: You can either:
         a) use a more specific spec, or
         b) specify the spec by its hash (e.g. `spack uninstall /hash`), or
         c) use `spack uninstall --all` to uninstall ALL matching specs.
 
-Oh no!
-We can see from the above that we have two different versions of ``zlib`` installed, and the only difference between the two is the hash.
-This is a good use case for ``spack diff``, which can easily show us the "diff" or set difference between properties for two packages.
-Let's try it out.
-Because the only difference we see in the ``spack find`` view is the hash, let's use ``spack diff`` to look for more detail.
-We will provide the two hashes:
+To pick the right hash, we first need to know how the two specs differ.
+``spack diff`` shows it:
 
-.. code-block:: diff
+.. code-block:: console
 
-    $ spack diff /efzjziy /sl7m27m
+    $ spack diff /qvle4ur /msml6ni
 
-    --- zlib@1.2.11efzjziyc3dmb5h5u5azsthgbgog5mj7g
-    +++ zlib@1.2.11sl7m27mzkbejtkrajigj3a3m37ygv4u2
-    @@ variant_value @@
-    -  zlib optimize False
-    +  zlib optimize True
+      before: zlib-ng@2.3.3/qvle4ur
+      after:  zlib-ng@2.3.3/msml6ni
 
+      -- Node differences -----------
+      zlib-ng
+          before: zlib-ng+opt/qvle4ur
+          after:  zlib-ng~opt/msml6ni
 
-The output is colored and written in the style of a git diff.
-This means that you can copy and paste it into a GitHub markdown as a code block with language "diff" and it will render nicely!
-Here is an example:
+The output lists each node whose configuration differs, as a spec holding only what differs on that node, followed by the packages whose recipe differs.
+Here, the only difference is the ``opt`` variant, and ``/msml6ni`` is the installation built without optimizations.
 
-.. code-block:: diff
-
-    --- zlib@1.2.11/efzjziyc3dmb5h5u5azsthgbgog5mj7g
-    +++ zlib@1.2.11/sl7m27mzkbejtkrajigj3a3m37ygv4u2
-    @@ variant_value @@
-    -  zlib optimize False
-    +  zlib optimize True
-
-Awesome!
-Now let's read the diff.
-It tells us that our first ``zlib`` was built with ``~optimize`` (``False``) and the second was built with ``+optimize`` (``True``).
-You can't see it in the docs here, but the output above is also colored based on the content being an addition (+) or subtraction (-).
-
-This is a small example, but you will be able to see differences for any attributes on the installation spec.
-Running ``spack diff A B`` means we'll see which spec attributes are on ``B`` but not on ``A`` (green) and which are on ``A`` but not on ``B`` (red).
-Here is another example with an additional difference type, ``version``:
-
-.. code-block:: diff
-
-   $ spack diff python@2.7.8 python@3.8.11
-
-   --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
-   +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
-   @@ variant_value @@
-   -  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
-   +  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
-   @@ version @@
-   -  openssl 1.0.2u
-   +  openssl 1.1.1k
-   -  python 2.7.8
-   +  python 3.8.11
-
-Let's say that we were only interested in one kind of attribute above, ``version``.
-We can ask the command to only output this attribute.
-To do this, you'd add the ``--attribute`` for attribute parameter, which defaults to all.
-Here is how you would filter to show just versions:
-
-.. code-block:: diff
-
-    $ spack diff --attribute version python@2.7.8 python@3.8.11
-
-    --- python@2.7.8/tsxdi6gl4lihp25qrm4d6nys3nypufbf
-    +++ python@3.8.11/yjtseru4nbpllbaxb46q7wfkyxbuvzxx
-    @@ version @@
-    -  openssl 1.0.2u
-    +  openssl 1.1.1k
-    -  python 2.7.8
-    +  python 3.8.11
-
-And you can add as many attributes as you'd like with multiple ``--attribute`` arguments (for lots of attributes, you can use ``-a`` for short).
-Finally, if you want to view the data as JSON (and possibly pipe into an output file), just add ``--json``:
-
-
-.. code-block:: spec
-
-    $ spack diff --json python@2.7.8 python@3.8.11
-
-
-This data will be much longer because along with the differences for ``A`` vs.
-``B`` and ``B`` vs.
-``A``, the JSON output also shows the intersection.
+Each of the two arguments must match exactly one installed spec or, when an environment is active, exactly one of its concrete specs, installed or not.
+A hash is looked up as in other commands, so it can also refer to a spec outside the active environment, or to one that is not installed.
 
 
 Using Installed Packages
