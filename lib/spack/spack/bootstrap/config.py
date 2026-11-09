@@ -147,12 +147,15 @@ def _ensure_bootstrap_configuration() -> Generator:
     spack.store.ensure_singleton_created()
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
+    env_path = spack.config.CONFIG.env_path
     with spack.environment.no_active_environment(), spack.platforms.use_platform(
         spack.platforms.real_host()
     ), spack.config.use_configuration(
         # Default configuration scopes excluding command line and builtin
         *_bootstrap_config_scopes()
     ), spack.store.use_store(bootstrap_store_path, extra_data={"padded_length": 0}):
+        # User settings copied below may contain $env, so keep it resolvable
+        spack.config.CONFIG.env_path = env_path
         spack.config.CONFIG.set("bootstrap", user_configuration["bootstrap"])
         spack.config.CONFIG.set("config", user_configuration["config"])
         spack.config.CONFIG.set("repos", user_configuration["repos"])
