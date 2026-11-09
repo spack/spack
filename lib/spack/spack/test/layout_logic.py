@@ -399,6 +399,8 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     }
     for link in links:
         assert (new / link).exists(), f"{link} dangles"
+    # editing the linked-to file is seen through the link: it is live, not a copy
+    (outside_dir / "mirrors.yaml").write_text("mirrors:\n  m: file:///x\n", encoding="utf-8")
     assert "file:///x" in (new / "mirrors.yaml").read_text(encoding="utf-8")
     # the references point back at ~/.spack
     cfg = syaml.load((new / "config.yaml").read_text(encoding="utf-8"))

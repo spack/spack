@@ -445,7 +445,9 @@ _RELATIVE_PATH_CONFIG_KEYS: List[List[str]] = [
 ]
 
 
-def _select_from_config(data: Any, key_path: List[str]) -> List[Tuple[List[Union[str, Index]], Any]]:
+def _select_from_config(
+    data: Any, key_path: List[str]
+) -> List[Tuple[List[Union[str, Index]], Any]]:
     """All ``(concrete_key_path, value)`` pairs in ``data`` matching a pattern key path."""
     if not key_path:
         return [([], data)]

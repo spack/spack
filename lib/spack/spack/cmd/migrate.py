@@ -36,8 +36,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         description=(
             "Permanently delete ~/.spack. Reports its contents and any references to it in"
             " the active configuration, then asks for confirmation. Refuses, even with"
-            " --yes, while config:install_tree:root points inside ~/.spack; uninstalling"
-            " packages does not lift this, the install tree must be moved."
+            " --yes, while the install tree or active user config point inside ~/.spack."
+            " uninstalling packages does not lift this, the install tree must be moved."
         ),
     )
     cleanup.add_argument(
@@ -149,7 +149,7 @@ def _dot_spack_references() -> Tuple[List[str], List[str]]:
     user_scope = spack.config.CONFIG.scopes.get("user")
     user_path = getattr(user_scope, "path", None)
     if user_path and _under_old_dotspack(user_path):
-        other.append(f"user configuration scope = {user_path}")
+        fatal.append(f"user configuration scope = {user_path}")
 
     for kind in ("data", "state", "cache"):
         resolved = spack.config._resolve_location_var(kind)
