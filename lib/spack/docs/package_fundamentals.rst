@@ -682,11 +682,11 @@ When we later try to uninstall ``zlib-ng@2.3.3``, Spack reports that two install
         c) use `spack uninstall --all` to uninstall ALL matching specs.
 
 To pick the right hash, we first need to know how the two specs differ.
-``spack diff`` shows it:
+``spack diff --specs`` shows it:
 
 .. code-block:: console
 
-    $ spack diff /qvle4ur /msml6ni
+    $ spack diff --specs /qvle4ur /msml6ni
 
       before: zlib-ng@2.3.3/qvle4ur
       after:  zlib-ng@2.3.3/msml6ni
@@ -701,6 +701,8 @@ Here, the only difference is the ``opt`` variant, and ``/msml6ni`` is the instal
 
 Each of the two arguments must match exactly one installed spec or, when an environment is active, exactly one of its concrete specs, installed or not.
 A hash is looked up as in other commands, so it can also refer to a spec outside the active environment, or to one that is not installed.
+
+Without ``--specs``, ``spack diff`` compares two concrete environments (see :ref:`cmd-spack-diff-environments`).
 
 
 Using Installed Packages

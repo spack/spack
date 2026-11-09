@@ -502,6 +502,52 @@ This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the user, and can be included in ``.bashrc`` files, etc.
 The ``loads`` file may also be copied out of the environment, renamed, etc.
 
+.. _cmd-spack-diff-environments:
+
+Comparing Environments
+^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack diff`` command shows how two concrete environments differ.
+
+A common use is in continuous integration, where an environment is concretized for each pull request and its lockfile is kept as an artifact of the job.
+When a pull request rebuilds more specs than expected, its lockfile can be compared with the one from its base branch:
+
+.. code-block:: console
+
+   $ spack diff base/spack.lock pr/spack.lock
+
+     before: base/spack.lock
+     after:  pr/spack.lock
+
+     -- Node differences -------------
+     zlib-ng  (from libpng, libtiff)
+         before: zlib-ng@2.3.3/nic37xs
+         after:  zlib-ng@2.2.5/6jjbrpt
+
+In this example, the pull request constrains the ``libtiff`` recipe to ``zlib-ng@:2.2``, and the pipeline rebuilds ``libpng`` as well.
+The output shows the cause: ``zlib-ng`` went back to version 2.2.5, and it is a dependency of both ``libpng`` and ``libtiff``.
+The hashes of ``libpng`` and ``libtiff`` change too, but only the node whose own configuration differs is reported.
+
+The first argument is the state before a change, and the second is the state after it.
+Each of them can be the name of a managed environment, an environment directory, or a lockfile.
+
+The output has a section for each kind of difference.
+The first sections compare the input specs, which are the specs listed under ``specs:`` in ``spack.yaml``:
+
+* input specs in only one of the two environments;
+* virtual input specs provided by a different package in each environment.
+
+The last sections instead compare the concrete specs:
+
+* nodes whose configuration differs, one section per group when the environments define groups;
+* packages whose recipe differs.
+
+Next to each node, the output lists the input specs it was reached from, like ``libpng`` and ``libtiff`` in the example above.
+The comparison does not go below a node whose configuration differs.
+In a terminal, versions that go back and variants set to a non-default value are highlighted.
+
+Environments that include concrete environments (see :ref:`environment_include_concrete`) can be compared only if the included root specs, and the concrete specs they produced, are the same in both.
+
 
 .. index::
    single: include concrete

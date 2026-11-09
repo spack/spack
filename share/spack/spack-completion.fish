@@ -375,7 +375,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dependents -d 'sh
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a deprecate -d 'replace one package with another via symlinks'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a dev-build -d 'build package from code in current working directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a develop -d 'add a spec to an environment'"'"'s develop: section'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a diff -d 'compare two specs'
+complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a diff -d 'compare two concrete environments, or two specs'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a docs -d 'open spack documentation in a web browser'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a edit -d 'open package files in ``$EDITOR``'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a env -d 'manage environments'
@@ -1523,10 +1523,12 @@ complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -d 'traverse nodes of the graph to mark everything up to the root as a develop spec'
 
 # spack diff
-set -g __fish_spack_optspecs_spack_diff h/help json no-prune
-complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' -f -a '(__fish_spack_installed_specs)'
+set -g __fish_spack_optspecs_spack_diff h/help s/specs json no-prune
+complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' $__fish_spack_force_files -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command diff' -s s -l specs -f -a compare_specs
+complete -c spack -n '__fish_spack_using_command diff' -s s -l specs -d 'compare two specs instead of two environments'
 complete -c spack -n '__fish_spack_using_command diff' -l json -f -a dump_json
 complete -c spack -n '__fish_spack_using_command diff' -l json -d 'dump json output instead of pretty printing'
 complete -c spack -n '__fish_spack_using_command diff' -l no-prune -f -a prune
