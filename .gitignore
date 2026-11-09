@@ -17,6 +17,8 @@ CLAUDE.md
 # Auto-migration markers
 .migration-done
 .migration-lock
+# Data written inside spack after `spack isolate --self`
+/.isolate/
 
 # Configuration: Ignore everything in /etc/spack,
 # except defaults and site scopes that ship with spack
