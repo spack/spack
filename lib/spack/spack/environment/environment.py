@@ -428,8 +428,7 @@ def create_in_dir(
     if init_file and exists(str(init_file)):
         init_file = read(str(init_file)).path
 
-    # Ordinary initialization may copy the source directory. Filtering instead
-    # stages only selected content and publishes it after validation succeeds.
+    # Ordinary initialization may copy the source directory; filtering does not.
     if filter_file is not None:
         return _create_filtered_environment_in_dir(
             root,
@@ -741,6 +740,29 @@ def _block_and_flatten_concrete_roots(
     return retained_root_entries
 
 
+def _filtered_concrete_specs_from_lockfile(
+    source_env: "Environment", filter_configuration: Dict[str, Any], *, is_source_dir: bool
+) -> List[Tuple[str, Spec, str]]:
+    """Validate the concrete source, select intact DAGs, block, then flatten."""
+    if not is_source_dir:
+        raise SpackEnvironmentError(
+            "cannot create a concrete filtered environment from a manifest file; "
+            "use an environment directory instead"
+        )
+    if not os.path.exists(source_env.lock_path):
+        raise SpackEnvironmentError(
+            "cannot create a concrete filtered environment from an environment "
+            f"without a {lockfile_name}"
+        )
+    filtered_roots = _allowed_concrete_root_entries(source_env, filter_configuration)
+    filtered_roots = _block_and_flatten_concrete_roots(filtered_roots, filter_configuration)
+    if not filtered_roots:
+        tty.warn(
+            "filtered environment has no roots; only allowed DAGs with no excluded specs are kept"
+        )
+    return filtered_roots
+
+
 def _filtered_roots_from_manifest(
     source_env: "Environment", filter_configuration: Dict[str, Any]
 ) -> List[Union[str, Dict[str, Any]]]:
@@ -998,8 +1020,7 @@ def _write_filtered_lockfile(
     """Register projected roots against their original DAGs and write the lockfile."""
     for abstract_spec, concrete_spec, group in filtered_roots:
         env.add_concrete_spec(Spec(abstract_spec), concrete_spec, group=group)
-    # Serialize the existing graphs without solving again or generating a view in
-    # the temporary destination, whose path will change when it is published.
+    # Serialize existing graphs without solving again or generating a view.
     env.write(regenerate=False)
 
 
@@ -1012,7 +1033,7 @@ def _create_filtered_environment_in_dir(
     keep_relative: bool,
     include_concrete: Optional[List[str]],
 ) -> "Environment":
-    """Build a filtered environment in a temporary directory before publishing it."""
+    """Validate and select source content before creating the final environment."""
     if init_file is None:
         raise SpackEnvironmentError("cannot create a filtered environment without a source")
 
@@ -1023,9 +1044,6 @@ def _create_filtered_environment_in_dir(
         )
 
     with _filtered_source_environment(init_file) as source_info:
-        source_env: "Environment"
-        source_path: pathlib.Path
-        is_source_dir: bool
         source_env, source_path, is_source_dir = source_info
         filter_configuration = _read_filter_configuration(filter_file)
         # Includes can supply arbitrary settings or concrete graphs. Require explicit
@@ -1045,27 +1063,9 @@ def _create_filtered_environment_in_dir(
         filtered_specs: List[Union[str, Dict[str, Any]]]
 
         if filter_configuration["concrete"]:
-            if not is_source_dir:
-                raise SpackEnvironmentError(
-                    "cannot create a concrete filtered environment from a manifest file; "
-                    "use an environment directory instead"
-                )
-            if not (source_path / lockfile_name).exists():
-                raise SpackEnvironmentError(
-                    "cannot create a concrete filtered environment from an environment "
-                    "without a spack.lock"
-                )
-            # Select full allowed sub-DAGs before rejecting blocked candidates and
-            # flattening survivors. Reordering these steps changes which roots survive.
-            filtered_roots = _allowed_concrete_root_entries(source_env, filter_configuration)
-            filtered_roots = _block_and_flatten_concrete_roots(
-                filtered_roots, filter_configuration
+            filtered_roots = _filtered_concrete_specs_from_lockfile(
+                source_env, filter_configuration, is_source_dir=is_source_dir
             )
-            if not filtered_roots:
-                tty.warn(
-                    "filtered environment has no roots; only allowed DAGs with no excluded "
-                    "specs are kept"
-                )
             filtered_specs = _filtered_roots_from_concrete_specs(source_env, filtered_roots)
         else:
             filtered_specs = _filtered_roots_from_manifest(source_env, filter_configuration)
@@ -1083,63 +1083,44 @@ def _create_filtered_environment_in_dir(
         root.parent.mkdir(parents=True, exist_ok=True)
         source_dir = (source_path if is_source_dir else source_path.parent).absolute()
 
-        # Start empty rather than copying source files. Stage beside the destination
-        # so the completed manifest/lockfile can be published together by a rename.
-        # Use a plain mkdir rather than tempfile: mkdtemp always creates mode 0700,
-        # which the rename would carry over, whereas mkdir honors the umask like an
-        # ordinary environment directory. Cleanup is explicit because the staged path
-        # no longer exists after a successful rename, and TemporaryDirectory raises
-        # FileNotFoundError on exit in that case on Python 3.6 and 3.7.
-        staged = root.parent / f".{root.name}-{uuid.uuid4().hex[:8]}"
-        staged.mkdir()
+        # Exclusive mkdir honors the umask and never claims an existing destination.
         try:
-            initialize_environment_dir(staged, envfile=None)
-            env = Environment(str(staged))
+            root.mkdir()
+        except FileExistsError as e:
+            raise SpackEnvironmentError(
+                f"cannot create filtered environment, {root} already exists"
+            ) from e
+        try:
+            initialize_environment_dir(root, envfile=None)
+            env = Environment(str(root))
             _write_filtered_manifest(env, filtered_manifest_contents)
             if not keep_relative:
-                # Match ordinary creation: relative paths refer to the source, but
-                # $env refers to the destination. Substitute the final path, not staging.
-                config = spack.config.Configuration()
-                config.env_path = str(root)
-                # No payload was copied, even for a directory source, so do not use
-                # copied_env's exception for paths inside a copied environment.
-                _rewrite_relative_dev_paths_on_relocation(env, str(source_dir), config=config)
-                _rewrite_relative_repos_paths_on_relocation(env, str(source_dir), config=config)
+                # The helpers activate the final environment, so $env names its final
+                # path. No payload was copied, including for a directory source.
+                _rewrite_relative_dev_paths_on_relocation(env, str(source_dir))
+                _rewrite_relative_repos_paths_on_relocation(env, str(source_dir))
 
             if filter_configuration["concrete"]:
                 _write_filtered_lockfile(env, filtered_roots)
-
-            # Recheck before publication in case the destination appeared during staging.
-            if os.path.lexists(root):
-                raise SpackEnvironmentError(
-                    f"cannot create filtered environment, {root} already exists"
-                )
-            os.rename(staged, root)
         except BaseException:
-            shutil.rmtree(staged, ignore_errors=True)
+            shutil.rmtree(root, ignore_errors=True)
             raise
 
-        return Environment(str(root))
+        return env
 
 
-def _rewrite_relative_dev_paths_on_relocation(
-    env, init_file_dir, copied_env=False, *, config: Optional[spack.config.Configuration] = None
-):
+def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative paths to absolute ones.
-
-    config optionally supplies the final $env path when writing a staged environment.
     """
     with env:
         dev_specs = spack.config.CONFIG.get("develop", default={}, scope=env.scope_name)
         if not dev_specs:
             return
         for name, entry in dev_specs.items():
-            dev_path = substitute_path_variables(entry["path"], config=config)
-            expanded_path = spack.config.canonicalize_path(
-                dev_path, default_wd=init_file_dir, config=config
-            )
+            dev_path = substitute_path_variables(entry["path"])
+            expanded_path = spack.config.canonicalize_path(dev_path, default_wd=init_file_dir)
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry["path"] == expanded_path:
@@ -1161,14 +1142,10 @@ def _rewrite_relative_dev_paths_on_relocation(
         env._re_read()
 
 
-def _rewrite_relative_repos_paths_on_relocation(
-    env, init_file_dir, copied_env=False, *, config: Optional[spack.config.Configuration] = None
-):
+def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=False):
     """When initializing the environment from a manifest file and we plan
     to store the environment in a different directory, we have to rewrite
     relative repo paths to absolute ones and expand environment variables.
-
-    config optionally supplies the final $env path when writing a staged environment.
     """
     with env:
         repos_specs = spack.config.CONFIG.get("repos", default={}, scope=env.scope_name)
@@ -1178,10 +1155,8 @@ def _rewrite_relative_repos_paths_on_relocation(
             # only rewrite when we have a path-based repository
             if not isinstance(entry, str):
                 continue
-            repo_path = substitute_path_variables(entry, config=config)
-            expanded_path = spack.config.canonicalize_path(
-                repo_path, default_wd=init_file_dir, config=config
-            )
+            repo_path = substitute_path_variables(entry)
+            expanded_path = spack.config.canonicalize_path(repo_path, default_wd=init_file_dir)
 
             # Skip if the substituted and expanded path is the same (e.g. when absolute)
             if entry == expanded_path:

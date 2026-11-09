@@ -2143,7 +2143,7 @@ def test_env_create_filter_relocates_paths_like_manifest_creation(
     source_is_directory: bool,
     relative_source: bool,
 ):
-    """Use ordinary manifest relocation rules without leaking staging paths or copying payloads."""
+    """Use ordinary manifest relocation rules without copying source payloads."""
     source_dir = _write_plain_source(tmp_path)
     source_yaml = source_dir / "spack.yaml"
     paths = {
@@ -2234,8 +2234,8 @@ def test_env_create_filter_directory_follows_umask(tmp_path: pathlib.Path, umask
     assert filtered_dir.stat().st_mode & 0o777 == 0o777 & ~umask
 
 
-def test_env_create_filter_leaves_no_staging_directory(tmp_path: pathlib.Path):
-    """Publish by rename without leaving the staging directory or failing on its cleanup."""
+def test_env_create_filter_creates_only_destination(tmp_path: pathlib.Path):
+    """Create directly in the destination without leaving temporary siblings."""
     source_dir = _write_plain_source(tmp_path)
     parent = tmp_path / "envs"
 
@@ -2437,6 +2437,22 @@ def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, fla
     assert ("callpath" in promoted) == flatten
     assert not any(name in ("libelf", "mpileaks") for name in promoted)
     assert {spec.name for spec in filtered.all_specs()} >= {"libelf", "mpileaks", "callpath"}
+
+
+def test_env_create_filter_concrete_requires_lockfile(tmp_path: pathlib.Path):
+    """Validate concrete source prerequisites before creating the destination."""
+    source_dir = _write_plain_source(tmp_path)
+    filtered_dir = tmp_path / "filtered"
+    with pytest.raises(ev.SpackEnvironmentError, match="without a spack.lock"):
+        env(
+            "create",
+            "--filter",
+            _write_filter_yaml(tmp_path, "filter:\n  concrete: true\n"),
+            "-d",
+            str(filtered_dir),
+            str(source_dir),
+        )
+    assert not filtered_dir.exists()
 
 
 @pytest.mark.parametrize(
@@ -3039,26 +3055,54 @@ def test_env_create_filter_drops_blocked_includes(tmp_path: pathlib.Path, concre
     assert bool(filtered.concrete_roots()) == concrete
 
 
-def test_env_create_filter_removes_partial_destination(tmp_path: pathlib.Path, monkeypatch):
-    """Clean up staging and leave no published destination when manifest creation fails."""
+@pytest.mark.parametrize(
+    "failed_step",
+    [
+        "initialize_environment_dir",
+        "_write_filtered_manifest",
+        "_rewrite_relative_dev_paths_on_relocation",
+        "_rewrite_relative_repos_paths_on_relocation",
+        "_write_filtered_lockfile",
+    ],
+)
+def test_env_create_filter_removes_partial_destination(
+    tmp_path: pathlib.Path, monkeypatch, failed_step: str
+):
+    """Remove a newly created destination when initialization, relocation, or writing fails."""
     source_dir = _write_source_with_include(tmp_path)
     filtered_dir = tmp_path / "filtered"
+    concrete = failed_step == "_write_filtered_lockfile"
+    if concrete:
+        source = ev.Environment(source_dir)
+        source.concretize()
+        source.write()
+    original_initialize = ev.environment.initialize_environment_dir
 
-    def fail(*args):
-        """Fail after staging is initialized but before the destination can be published."""
-        raise RuntimeError("manifest failure")
+    def fail(*args, **kwargs):
+        """Fail only after this operation has successfully created its destination."""
+        if failed_step == "initialize_environment_dir" and pathlib.Path(args[0]) != filtered_dir:
+            return original_initialize(*args, **kwargs)
+        assert filtered_dir.is_dir()
+        raise RuntimeError("creation failure")
 
-    monkeypatch.setattr(ev.environment, "_write_filtered_manifest", fail)
-    with pytest.raises(RuntimeError, match="manifest failure"):
+    monkeypatch.setattr(ev.environment, failed_step, fail)
+    original_config = spack.config.CONFIG
+    original_env_path = original_config.env_path
+    with pytest.raises(RuntimeError, match="creation failure"):
         env(
             "create",
             "--filter",
-            _write_filter_yaml(tmp_path, "filter:\n  config:\n    block: [include]\n"),
+            _write_filter_yaml(
+                tmp_path,
+                f"filter:\n  concrete: {str(concrete).lower()}\n  config:\n    block: [include]\n",
+            ),
             "-d",
             str(filtered_dir),
             str(source_dir),
         )
     assert not filtered_dir.exists()
+    assert spack.config.CONFIG is original_config
+    assert spack.config.CONFIG.env_path == original_env_path
     # Temporary siblings are an implementation detail, but must not survive a failed creation.
     assert not list(tmp_path.glob(".filtered-*"))
 
@@ -3081,6 +3125,50 @@ def test_env_create_filter_preserves_existing_destination(tmp_path: pathlib.Path
             str(source_dir),
         )
     assert (filtered_dir / "keep.txt").read_text() == "untouched"
+
+
+def test_env_create_filter_preserves_racing_destination(tmp_path: pathlib.Path, monkeypatch):
+    """Never clean up a destination created by another actor before our exclusive mkdir."""
+    source_dir = _write_plain_source(tmp_path)
+    filtered_dir = tmp_path / "filtered"
+    original_mkdir = pathlib.Path.mkdir
+
+    def racing_mkdir(path, *args, **kwargs):
+        if path == filtered_dir:
+            original_mkdir(path)
+            (path / "keep.txt").write_text("untouched")
+        return original_mkdir(path, *args, **kwargs)
+
+    monkeypatch.setattr(pathlib.Path, "mkdir", racing_mkdir)
+    with pytest.raises(ev.SpackEnvironmentError, match="already exists"):
+        env(
+            "create",
+            "--filter",
+            _write_filter_yaml(tmp_path),
+            "-d",
+            str(filtered_dir),
+            str(source_dir),
+        )
+    assert (filtered_dir / "keep.txt").read_text() == "untouched"
+
+
+def test_env_create_filter_preserves_dangling_destination(tmp_path: pathlib.Path):
+    """A dangling symlink is still caller-owned and must not be replaced or removed."""
+    source_dir = _write_plain_source(tmp_path)
+    filtered_dir = tmp_path / "filtered"
+    target = tmp_path / "missing"
+    filtered_dir.symlink_to(target)
+    with pytest.raises(ev.SpackEnvironmentError, match="already exists"):
+        env(
+            "create",
+            "--filter",
+            _write_filter_yaml(tmp_path),
+            "-d",
+            str(filtered_dir),
+            str(source_dir),
+        )
+    assert filtered_dir.is_symlink()
+    assert filtered_dir.readlink() == target
 
 
 def test_env_create_filter_blocked_spec_drops_package_entry(tmp_path: pathlib.Path):
