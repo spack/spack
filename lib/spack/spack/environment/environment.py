@@ -605,18 +605,19 @@ def _allowed_concrete_root_entries(
     the next phase, rather than cause this traversal to search its descendants.
 
     Entries pair a projected manifest string with the unchanged concrete spec and
-    its output group. A selected dependency becomes a root even without flattening.
+    its source group. A selected dependency becomes a root even without flattening.
     """
     allow_patterns = [Spec(pattern) for pattern in filter_configuration["specs"]["allow"]]
     # Shared concrete DAGs have stable hashes, even when represented by different objects.
-    allowed_roots_by_hash: Dict[str, Spec] = {}
+    allowed_roots_by_hash: Dict[str, Tuple[Spec, str]] = {}
     visited_hashes: Set[str] = set()
     # Unlike concrete_roots(), these entries omit roots from included lockfiles.
     specs_to_visit = [
-        source_env.specs_by_hash[entry.hash] for entry in reversed(source_env.concretized_roots)
+        (source_env.specs_by_hash[entry.hash], entry.group)
+        for entry in reversed(source_env.concretized_roots)
     ]
     while specs_to_visit:
-        concrete_spec = specs_to_visit.pop()
+        concrete_spec, group = specs_to_visit.pop()
         dag_hash = concrete_spec.dag_hash()
         if dag_hash in visited_hashes:
             continue
@@ -625,9 +626,9 @@ def _allowed_concrete_root_entries(
             concrete_spec.satisfies(pattern) for pattern in allow_patterns
         ):
             # Accept the intact sub-DAG, without requiring further allow matches below it.
-            allowed_roots_by_hash[dag_hash] = concrete_spec
+            allowed_roots_by_hash[dag_hash] = (concrete_spec, group)
         else:
-            specs_to_visit.extend(reversed(concrete_spec.dependencies()))
+            specs_to_visit.extend((spec, group) for spec in reversed(concrete_spec.dependencies()))
 
     # Emit original root entries first, retaining their order and group membership.
     original_root_hashes = {entry.hash for entry in source_env.concretized_roots}
@@ -646,8 +647,7 @@ def _allowed_concrete_root_entries(
         if entry.hash in allowed_roots_by_hash
     ]
 
-    # A match below an unmatched root needs its own manifest entry. Put these new
-    # roots in the default group, without duplicating retained original roots.
+    # Shared newly selected roots belong to the first source group that reaches them.
     root_entries.extend(
         (
             _validated_filter_projection(
@@ -655,9 +655,9 @@ def _allowed_concrete_root_entries(
                 _projection_format_for(concrete_spec, filter_configuration["projections"]),
             ),
             concrete_spec,
-            DEFAULT_USER_SPEC_GROUP,
+            group,
         )
-        for dag_hash, concrete_spec in allowed_roots_by_hash.items()
+        for dag_hash, (concrete_spec, group) in allowed_roots_by_hash.items()
         if dag_hash not in original_root_hashes
     )
 
@@ -710,22 +710,26 @@ def _block_and_flatten_concrete_roots(
             tty.msg(f"Dropping filtered root {projected_spec}: excluded spec {blocking_spec}")
 
     if filter_configuration["flatten"]:
-        # Promote every surviving dependency, not just allow-list matches. Flattening
-        # before the block checks would rescue descendants of rejected DAGs.
-        retained_roots = [concrete_root for _, concrete_root, _ in retained_root_entries]
-        retained_root_hashes = {concrete_root.dag_hash() for concrete_root in retained_roots}
-        retained_root_entries.extend(
-            (
-                _validated_filter_projection(
-                    concrete_spec,
-                    _projection_format_for(concrete_spec, filter_configuration["projections"]),
-                ),
-                concrete_spec,
-                DEFAULT_USER_SPEC_GROUP,
-            )
-            for concrete_spec in traverse.traverse_nodes(retained_roots, key=traverse.by_dag_hash)
-            if concrete_spec.dag_hash() not in retained_root_hashes
-        )
+        # Only flatten surviving DAGs, keeping original roots ahead of new entries.
+        emitted_hashes = {root.dag_hash() for _, root, _ in retained_root_entries}
+        for _, concrete_root, group in list(retained_root_entries):
+            for concrete_spec in concrete_root.traverse(key=traverse.by_dag_hash):
+                dag_hash = concrete_spec.dag_hash()
+                if dag_hash in emitted_hashes:
+                    continue
+                retained_root_entries.append(
+                    (
+                        _validated_filter_projection(
+                            concrete_spec,
+                            _projection_format_for(
+                                concrete_spec, filter_configuration["projections"]
+                            ),
+                        ),
+                        concrete_spec,
+                        group,
+                    )
+                )
+                emitted_hashes.add(dag_hash)
 
     # Check the final root set, including flattened dependencies. Identical text
     # may represent the same DAG in multiple groups, but not two different DAGs.
@@ -785,12 +789,12 @@ def _filtered_roots_from_manifest(
     ]
     # Visit shared nodes once by identity, without concrete hashes or conflating
     # distinct abstract nodes that happen to serialize to the same string.
-    allowed_roots_by_id: Dict[int, Spec] = {}
+    allowed_roots_by_id: Dict[int, Tuple[Spec, str]] = {}
     visited_spec_ids: Set[int] = set()
     # Reverse the stack inputs so depth-first traversal preserves source ordering.
-    specs_to_visit = [spec for spec, _ in reversed(original_root_entries)]
+    specs_to_visit = list(reversed(original_root_entries))
     while specs_to_visit:
-        abstract_spec = specs_to_visit.pop()
+        abstract_spec, group = specs_to_visit.pop()
         spec_id = id(abstract_spec)
         if spec_id in visited_spec_ids:
             continue
@@ -800,14 +804,14 @@ def _filtered_roots_from_manifest(
         ):
             # Keep the existing node and its whole sub-DAG. Do not search below
             # this match: its dependencies need not individually match allow.
-            allowed_roots_by_id[spec_id] = abstract_spec
+            allowed_roots_by_id[spec_id] = (abstract_spec, group)
         else:
-            specs_to_visit.extend(reversed(abstract_spec.dependencies()))
+            specs_to_visit.extend((spec, group) for spec in reversed(abstract_spec.dependencies()))
 
     # Check each selected root and all its descendants before flattening. A block
     # rejects that entire candidate; it must not restart allow selection below it.
-    retained_roots_by_id: Dict[int, Spec] = {}
-    for spec_id, abstract_spec in allowed_roots_by_id.items():
+    retained_roots_by_id: Dict[int, Tuple[Spec, str]] = {}
+    for spec_id, (abstract_spec, group) in allowed_roots_by_id.items():
         blocking_spec = next(
             (
                 node
@@ -817,7 +821,7 @@ def _filtered_roots_from_manifest(
             None,
         )
         if blocking_spec is None:
-            retained_roots_by_id[spec_id] = abstract_spec
+            retained_roots_by_id[spec_id] = (abstract_spec, group)
         else:
             tty.msg(f"Dropping filtered root {abstract_spec}: excluded spec {blocking_spec}")
 
@@ -828,23 +832,18 @@ def _filtered_roots_from_manifest(
         if id(abstract_spec) in retained_roots_by_id:
             group_specs[group].append(str(abstract_spec))
 
-    # Even without flattening, an allowed dependency below an unmatched original
-    # root must become a new root to retain its sub-DAG. Flattening additionally
-    # promotes every descendant, but only from candidates that passed block checks.
-    retained_roots = list(retained_roots_by_id.values())
-    promoted_specs = (
-        traverse.traverse_nodes(retained_roots)
-        if filter_configuration["flatten"]
-        else retained_roots
-    )
-    # Deduplicate new manifest entries by their output text, including against
-    # roots already emitted in any group. New roots belong to the default group.
+    # Deduplicate only new entries by text. Source roots always take priority,
+    # and shared promoted nodes inherit the first source group that reaches them.
     emitted_specs = {spec_string for specs in group_specs.values() for spec_string in specs}
-    for abstract_spec in promoted_specs:
-        spec_string = str(abstract_spec)
-        if spec_string not in emitted_specs:
-            group_specs[DEFAULT_USER_SPEC_GROUP].append(spec_string)
-            emitted_specs.add(spec_string)
+    for abstract_root, group in retained_roots_by_id.values():
+        promoted_specs = (
+            abstract_root.traverse() if filter_configuration["flatten"] else [abstract_root]
+        )
+        for abstract_spec in promoted_specs:
+            spec_string = str(abstract_spec)
+            if spec_string not in emitted_specs:
+                group_specs[group].append(spec_string)
+                emitted_specs.add(spec_string)
 
     return _filtered_grouped_specs(source_env, group_specs, filter_configuration)
 

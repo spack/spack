@@ -2387,7 +2387,10 @@ def test_env_create_filter_selects_allowed_subdags(
 
 
 @pytest.mark.parametrize("flatten", [False, True])
-def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, flatten: bool):
+@pytest.mark.parametrize("allow_dependencies", [False, True])
+def test_env_create_filter_preserves_concrete_groups(
+    tmp_path: pathlib.Path, flatten: bool, allow_dependencies: bool
+):
     """Keep group metadata and concrete roots when filtering grouped specs."""
     # Seed each group's concrete root directly to isolate filtering from grouped solving.
     spack_yaml = tmp_path / "spack.yaml"
@@ -2415,7 +2418,9 @@ def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, fla
     source.write()
 
     filter_yaml = _write_filter_yaml(
-        tmp_path, f"filter:\n  concrete: true\n  flatten: {str(flatten).lower()}\n"
+        tmp_path,
+        f"filter:\n  concrete: true\n  flatten: {str(flatten).lower()}\n"
+        f"  specs:\n    allow: {'[callpath]' if allow_dependencies else '[]'}\n",
     )
     env("create", "--filter", filter_yaml, "filtered", "source")
 
@@ -2425,22 +2430,94 @@ def test_env_create_filter_preserves_concrete_groups(tmp_path: pathlib.Path, fla
         for entry in filtered.manifest["spack"]["specs"]
         if isinstance(entry, dict)
     }
-    assert [Spec(spec).name for spec in groups["base"]["specs"]] == ["libelf"]
+    base_names = [Spec(spec).name for spec in groups["base"]["specs"]]
+    if allow_dependencies:
+        assert not base_names
+    else:
+        assert base_names[0] == "libelf"
+        assert (len(base_names) > 1) == flatten
     assert groups["base"]["explicit"] is False
     assert groups["base"]["override"] == {"config": {"verify_ssl": False}}
-    assert [Spec(spec).name for spec in groups["apps"]["specs"]] == ["mpileaks"]
+    app_names = [Spec(spec).name for spec in groups["apps"]["specs"]]
+    assert app_names[0] == ("callpath" if allow_dependencies else "mpileaks")
     assert groups["apps"]["needs"] == ["base"]
 
     roots_by_group = [
         (entry.group, filtered.specs_by_hash[entry.hash].name)
         for entry in filtered.concretized_roots
     ]
-    assert roots_by_group[:2] == [("base", "libelf"), ("apps", "mpileaks")]
-    # Only new roots enter default; flattening must not duplicate existing grouped roots.
-    promoted = [name for group, name in roots_by_group if group == "default"]
-    assert ("callpath" in promoted) == flatten
-    assert not any(name in ("libelf", "mpileaks") for name in promoted)
-    assert {spec.name for spec in filtered.all_specs()} >= {"libelf", "mpileaks", "callpath"}
+    assert not any(group == "default" for group, _ in roots_by_group)
+    assert ("callpath" in app_names) == (allow_dependencies or flatten)
+    if not allow_dependencies:
+        assert [
+            (group, name) for group, name in roots_by_group if name in ("libelf", "mpileaks")
+        ] == [("base", "libelf"), ("apps", "mpileaks")]
+        assert "libelf" not in app_names
+    # Empty needed groups must survive and remain valid even without their original roots.
+    assert ev.environment.EnvironmentConcretizer(filtered)._order_groups() == [
+        "default",
+        "base",
+        "apps",
+    ]
+    assert {spec.name for spec in filtered.all_specs()} >= {"libelf", "callpath"}
+
+
+@pytest.mark.parametrize("concrete", [False, True])
+@pytest.mark.parametrize("flatten", [False, True])
+@pytest.mark.parametrize("dependency_is_root", [False, True])
+def test_env_create_filter_promoted_group_ownership(
+    tmp_path: pathlib.Path, concrete: bool, flatten: bool, dependency_is_root: bool
+):
+    """First-source ownership must not replace a dependency's later original memberships."""
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        json.dumps(
+            {
+                "spack": {
+                    "view": False,
+                    "specs": [
+                        {"group": "first", "specs": ["mpileaks ^libelf"], "needs": ["later"]},
+                        {
+                            "group": "later",
+                            "specs": ["libelf", "libelf"]
+                            if dependency_is_root
+                            else ["callpath ^libelf"],
+                        },
+                    ],
+                }
+            }
+        )
+    )
+    source = ev.create("source", spack_yaml)
+    if concrete:
+        root = spack.concretize.concretize_one("mpileaks")
+        source.add_concrete_spec(Spec("mpileaks ^libelf"), root, group="first")
+        later_spec = root["libelf"] if dependency_is_root else root["callpath"]
+        source.add_concrete_spec(
+            Spec("libelf" if dependency_is_root else "callpath ^libelf"), later_spec, group="later"
+        )
+        source.write()
+    filter_yaml = _write_filter_yaml(
+        tmp_path,
+        f"filter:\n  concrete: {str(concrete).lower()}\n  flatten: {str(flatten).lower()}\n"
+        "  specs:\n    allow: [libelf]\n",
+    )
+    env("create", "--filter", filter_yaml, "filtered", "source")
+    filtered = ev.read("filtered")
+    first = [spec.name for spec in filtered.user_specs_by(group="first")]
+    later = [spec.name for spec in filtered.user_specs_by(group="later")]
+    assert not filtered.user_specs
+    assert ev.environment.EnvironmentConcretizer(filtered)._order_groups() == [
+        "default",
+        "later",
+        "first",
+    ]
+    if dependency_is_root:
+        assert "libelf" not in first
+        assert later.count("libelf") == (1 if concrete else 2)
+    else:
+        assert first[0] == "libelf"
+        assert not later
 
 
 @pytest.mark.parametrize("concrete", [False, True])
@@ -3566,7 +3643,7 @@ def test_env_create_filter_from_manifest(tmp_path: pathlib.Path):
 def test_env_create_filter_from_manifest_preserves_grouped_specs(
     tmp_path: pathlib.Path, flatten: bool, allow_dependencies: bool
 ):
-    """Preserve root occurrences and group metadata while promoting dependencies to default."""
+    """Preserve root occurrences and group metadata while inheriting promotion groups."""
     # Repeated original entries are intentional: only newly promoted strings are deduplicated.
     spack_yaml = tmp_path / "spack.yaml"
     spack_yaml.write_text(
@@ -3601,20 +3678,19 @@ def test_env_create_filter_from_manifest_preserves_grouped_specs(
     filtered_yaml = filtered.manifest["spack"]
 
     # Selection alone can promote callpath; flattening is not required for that promotion.
-    # libelf is already emitted in base, so it must never be added to default as well.
+    # libelf is already emitted in base, so it must never be added to apps as well.
     expected_promoted = ["callpath"] if allow_dependencies or flatten else []
-    assert [str(spec) for spec in filtered.user_specs] == expected_promoted
+    assert not filtered.user_specs
     assert [str(spec) for spec in filtered.user_specs_by(group="base")] == ["libelf", "libelf"]
     app_specs = [] if allow_dependencies else [str(Spec("mpileaks ^callpath ^libelf"))] * 2
-    # Preserve apps and its needs edge even if selection removes every spec in that group.
-    assert filtered_yaml["specs"] == expected_promoted + [
+    assert filtered_yaml["specs"] == [
         {
             "group": "base",
             "specs": ["libelf", "libelf"],
             "explicit": False,
             "override": {"config": {"verify_ssl": False}},
         },
-        {"group": "apps", "specs": app_specs, "needs": ["base"]},
+        {"group": "apps", "specs": app_specs + expected_promoted, "needs": ["base"]},
     ]
     assert not os.path.exists(filtered.lock_path)
 

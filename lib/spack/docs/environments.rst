@@ -257,10 +257,13 @@ After collecting the allowed sub-DAGs, Spack applies ``specs:block``.
 If a selected spec or any of its dependencies or build_spec matches a blocked spec, Spack drops that spec from the created environment.
 It does not search a rejected spec again for allowed descendants.
 
-Retained original roots keep their groups; selected dependencies go in the default group.
+Retained original roots keep their groups; selected dependencies inherit their source root's group.
+When a newly selected dependency is shared across groups, the first source group reached by the traversal owns it.
+An independently retained original root always keeps its original group memberships instead.
 To make every dependency in the surviving sub-DAGs a root too, set ``flatten: true``.
 Flattening happens only after the block checks and does not rescue dependencies from rejected sub-DAGs.
-These additional roots go in the default group and need not match the allow list themselves.
+These additional roots inherit the group of the retained root they are flattened from and need not match the allow list themselves.
+Empty named groups are retained so that other groups' ``needs`` references remain valid.
 If no roots remain, Spack creates an environment with no roots; in concrete mode, it also emits a warning.
 
 **Copying Configuration**
