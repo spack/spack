@@ -12,6 +12,7 @@ from spack.spec import Spec, SpliceError
 PROVIDES = {
     "glibc": ("libc", "iconv"),
     "libiconv": ("iconv",),
+    "libblastrampoline": ("blas", "lapack"),
     "mpich": ("mpi",),
     "openmpi": ("mpi",),
     "charmpp": ("mpi",),
@@ -92,6 +93,24 @@ def test_splice_keeps_other_providers_of_virtuals_the_replacement_can_provide():
     out = spec.splice(replacement, transitive=True)
 
     assert sorted(d.name for d in out.dependencies()) == ["glibc", "libiconv"]
+
+
+@pytest.mark.parametrize("transitive", [True, False])
+def test_splice_replaces_provider_by_one_with_another_backend(transitive):
+    """A replacement of the same package brings its own dependencies."""
+    openblas = node("openblas@1")
+    lbt_openblas = node("libblastrampoline@5", (openblas, "link"))  # provider=openblas
+    suite_sparse = node("suite-sparse@1", (lbt_openblas, "link", "blas", "lapack"))
+    spec = node("petsc@1", (suite_sparse, "link"), (lbt_openblas, "link", "blas", "lapack"))
+    mkl = node("intel-oneapi-mkl@1")
+    lbt_mkl = node("libblastrampoline@5", (mkl, "link"))  # provider=mkl
+
+    out = spec.splice(lbt_mkl, transitive=transitive)
+
+    # petsc and suite-sparse link libblastrampoline, whatever it forwards to
+    names = sorted(n.name for n in out.traverse(root=False, deptype=("link", "run")))
+    assert names == ["intel-oneapi-mkl", "libblastrampoline", "suite-sparse"]
+    assert out["suite-sparse"]["libblastrampoline"] == lbt_mkl
 
 
 @pytest.mark.xfail(
