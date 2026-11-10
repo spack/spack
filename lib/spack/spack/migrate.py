@@ -59,8 +59,14 @@ def detect_old_resources() -> Dict[str, bool]:
 
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
 
+    # A `.spack-db/` with no index has never recorded an install: a read-only command on a
+    # fresh clone creates the directory and a lock file, nothing more. Only the index counts.
+    db_dir = os.path.join(opt_spack, ".spack-db")
+    has_db = os.path.exists(os.path.join(db_dir, "index.json"))
+    ignore_in_opt = ["gpg"] if has_db else ["gpg", ".spack-db"]
+
     return {
-        "installs": _has_entries(opt_spack, ignore=["gpg"]),
+        "installs": _has_entries(opt_spack, ignore=ignore_in_opt),
         "gpg_keys": _has_entries(spack.paths.old_gpg_path)
         or _has_entries(spack.paths.old_gpg_keys_path),
         "licenses": _has_entries(spack.paths.old_licenses_path),

@@ -1332,6 +1332,23 @@ def test_gpg_migration_publishes_nothing_if_keys_dir_would_be_refused(tmp_path):
     assert not new_home.exists()
 
 
+def test_detect_old_installs_ignores_empty_database_dir(mock_spack_instance):
+    """A read-only command on a fresh clone creates ``opt/spack/.spack-db/`` with only a lock
+    file; that is not an install tree. An index, or any installed prefix, is."""
+    _, base_prefix = mock_spack_instance
+    db = pathlib.Path(base_prefix) / "opt" / "spack" / ".spack-db"
+    db.mkdir(parents=True)
+    (db / "lock").touch()
+    assert spack.migrate.detect_old_resources()["installs"] is False
+
+    (db / "index.json").write_text("{}", encoding="utf-8")
+    assert spack.migrate.detect_old_resources()["installs"] is True
+
+    (db / "index.json").unlink()
+    (db.parent / "zlib-1.3-abc").mkdir()
+    assert spack.migrate.detect_old_resources()["installs"] is True
+
+
 def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     """When no old resources exist in $spack, migration doesn't touch the spack prefix.
 
