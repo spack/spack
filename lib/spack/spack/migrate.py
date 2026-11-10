@@ -600,6 +600,11 @@ def _is_nonempty_directory(path: str) -> bool:
         return False
 
 
+def _same_link(path: str, other: str) -> bool:
+    """Whether ``path`` is a symlink resolving to the same place as ``other``."""
+    return os.path.islink(path) and os.path.realpath(path) == os.path.realpath(other)
+
+
 def _make_marker_verifier(marker_name: str):
     def verify_with_marker(dest_path):
         if not os.path.exists(dest_path):
@@ -654,14 +659,28 @@ def _migrate_symlinked_root(old_path: str, new_path: str, description: str) -> b
     The link is what the user set up (``licenses -> /site/licenses``,
     ``~/.spack -> ~/dotfiles/spack``); the data lives where it points. Copying through it
     would freeze the data at today's contents and detach it from the user's source of truth.
-    An existing destination is accepted only if it is already a link to the same target.
+
+    Returns True only if the link was created by this call. A destination that is already
+    that link, or a populated directory, means nothing needs doing (False, quietly, as for
+    any other resource); an empty directory is replaced by the link; a file or a link to
+    somewhere else is left alone with a warning.
     """
     target = os.path.realpath(old_path)
     if os.path.lexists(new_path):
         if os.path.islink(new_path) and os.path.realpath(new_path) == target:
-            return True
-        tty.warn(f"Cannot migrate {description}: {new_path} exists and is not a link to {target}")
-        return False
+            tty.debug(f"{new_path} is already a link to {target}, nothing to migrate")
+            return False
+        if os.path.isdir(new_path) and not os.listdir(new_path):
+            os.rmdir(new_path)
+        elif os.path.isdir(new_path):
+            # populated by the user, or by another instance: theirs, and already in use
+            tty.debug(f"{new_path} already has files, not linking it to {target}")
+            return False
+        else:
+            tty.warn(
+                f"Cannot migrate {description}: {new_path} exists and is not a link to {target}"
+            )
+            return False
     try:
         filesystem.mkdirp(os.path.dirname(new_path))
         os.symlink(target, new_path)
@@ -1045,11 +1064,16 @@ def _migrate_user_config() -> bool:
 
     # ret is False both when the copy could not be done and when nothing needed doing because
     # the destination was already populated (before we looked, or by another process while we
-    # waited for the lock). Only the former is fatal.
-    if (not ret) and not _is_nonempty_directory(new_location):
+    # waited for the lock) or is already a link to the old location. Only the former is fatal.
+    if (
+        (not ret)
+        and not _is_nonempty_directory(new_location)
+        and not _same_link(new_location, old_location)
+    ):
         tty.die(
-            f"Failed to migrate Spack config directory. Fix permissions on {new_location} or "
-            "set SPACK_USER_CONFIG_PATH=~/.spack to use the old location"
+            f"Failed to migrate Spack config directory to {new_location} (see any warning"
+            " above). Fix the problem, or set SPACK_USER_CONFIG_PATH=~/.spack to use the old"
+            " location"
         )
 
     return ret

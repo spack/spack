@@ -1328,15 +1328,17 @@ def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
     (site / "intel.lic").write_text("site", encoding="utf-8")
     (site / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
 
-    # licenses
+    # licenses; an empty destination directory is replaced by the link
     src = tmp_path / "licenses"
     src.symlink_to(site)
     dst = tmp_path / "new" / "licenses"
+    dst.mkdir(parents=True)
     assert spack.migrate._migrate_licenses(str(src), str(dst))
     assert dst.is_symlink() and dst.resolve() == site.resolve()
     (site / "later.lic").write_text("x", encoding="utf-8")
     assert (dst / "later.lic").exists()
-    assert spack.migrate._migrate_licenses(str(src), str(dst))  # idempotent
+    # already in place: nothing to do, and nothing to report as migrated
+    assert not spack.migrate._migrate_symlinked_root(str(src), str(dst), "licenses")
 
     # an environment, through migrate_with_staging
     old_envs = tmp_path / "old-envs"
@@ -1350,7 +1352,35 @@ def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
 
     # destination occupied by something that is not that link
     (tmp_path / "new" / "other").mkdir()
+    (tmp_path / "new" / "other" / "x.lic").write_text("x", encoding="utf-8")
     assert not spack.migrate._migrate_licenses(str(src), str(tmp_path / "new" / "other"))
+    assert not (tmp_path / "new" / "other").is_symlink()
+
+
+def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkeypatch, capsys):
+    """``~/.spack -> ~/dotfiles/spack``: the first run links ``~/.config/spack`` to the same
+    place and says so; later runs find the link and say nothing. An empty ``~/.config/spack``
+    (created by hand, or by a tool like stow) is replaced by the link rather than being
+    reported as a permissions problem."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    for var in ("SPACK_CONFIG_HOME", "SPACK_USER_CONFIG_PATH", "SPACK_DISABLE_LOCAL_CONFIG"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.setattr(spack.migrate, "_migrate_package_repositories", lambda: False)
+    dotfiles = tmp_path / "dotfiles" / "spack"
+    dotfiles.mkdir(parents=True)
+    (dotfiles / "config.yaml").write_text("config:\n  build_jobs: 7\n", encoding="utf-8")
+    (tmp_path / ".spack").symlink_to(dotfiles)
+    new = tmp_path / ".config" / "spack"
+    new.mkdir(parents=True)
+
+    assert spack.migrate.migrate_home()["user_config"] is True
+    assert new.is_symlink() and new.resolve() == dotfiles.resolve()
+    assert "Copied user config" in capsys.readouterr().err
+
+    assert spack.migrate.migrate_home()["user_config"] is False
+    assert capsys.readouterr().err == ""
+    assert new.is_symlink()
 
 
 def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path):
