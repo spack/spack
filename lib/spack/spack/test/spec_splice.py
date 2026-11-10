@@ -271,7 +271,7 @@ def test_splice_rejects_moving_part_of_an_edge():
     libiconv = node("libiconv@1")
     replacement = node("libxml2@2", (glibc, "link", "libc"), (libiconv, "link", "iconv"))
 
-    # libxslt would link libiconv for iconv, but its binary takes iconv from glibc
+    # libxslt has one glibc prefix, which would have to become both glibc and libiconv
     with pytest.raises(SpliceError):
         spec.splice(replacement, transitive=True)
 
