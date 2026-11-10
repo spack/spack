@@ -1390,7 +1390,8 @@ def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path):
 
 def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkeypatch, capsys):
     """``~/.spack -> ~/dotfiles/spack``: the first run links ``~/.config/spack`` to the same
-    place and says so; later runs find the link and say nothing. An empty ``~/.config/spack``
+    place, says so, and lists any spelled-out Spack 1.2 defaults in the linked files without
+    touching them; later runs find the link and say nothing. An empty ``~/.config/spack``
     (created by hand, or by a tool like stow) is replaced by the link rather than being
     reported as a permissions problem."""
     monkeypatch.setenv("HOME", str(tmp_path))
@@ -1405,9 +1406,23 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
     new = tmp_path / ".config" / "spack"
     new.mkdir(parents=True)
 
+    # a spelled-out Spack 1.2 default is reported, not rewritten: the file is the user's
+    (dotfiles / "bootstrap.yaml").write_text(
+        f"bootstrap:\n  root: {tmp_path / '.spack' / 'bootstrap'}\n", encoding="utf-8"
+    )
+    # a non-default path under ~/.spack, and a relative one, are not Spack's business
+    (dotfiles / "repos.yaml").write_text(
+        f"repos:\n  a: myrepo\n  b: {tmp_path / '.spack' / 'other'}\n", encoding="utf-8"
+    )
+    before = {p.name: p.read_text(encoding="utf-8") for p in dotfiles.iterdir()}
+
     assert spack.migrate.migrate_home()["user_config"] is True
     assert new.is_symlink() and new.resolve() == dotfiles.resolve()
-    assert "Migrated user config" in capsys.readouterr().err
+    err = capsys.readouterr().err
+    assert "Migrated user config" in err
+    assert "bootstrap:root" in err and "$state_home/bootstrap" in err
+    assert "repos" not in err
+    assert {p.name: p.read_text(encoding="utf-8") for p in dotfiles.iterdir()} == before
 
     assert spack.migrate.migrate_home()["user_config"] is False
     assert capsys.readouterr().err == ""

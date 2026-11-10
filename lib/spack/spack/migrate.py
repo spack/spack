@@ -514,6 +514,63 @@ def _is_relative_filesystem_path(value: Any) -> bool:
     return True
 
 
+def _spelled_out_old_defaults(
+    data: Any, config_dir: str, old_location: str
+) -> List[Tuple[List[Union[str, Index]], str, str]]:
+    """Values in ``data`` that spell out the Spack 1.2 default under ``old_location`` for
+    their own config key, as ``(key_path, value, new_default)``; see
+    ``_OLD_DOT_SPACK_DEFAULTS``."""
+    old_location_norm = os.path.normpath(os.path.abspath(old_location))
+    found = []
+    for key_path, value, abs_path in _walk_yaml_for_paths(data, config_dir):
+        if not os.path.isabs(value):
+            continue
+        try:
+            rel_to_old = os.path.relpath(os.path.normpath(abs_path), old_location_norm)
+        except ValueError:  # different drives on Windows
+            continue
+        if rel_to_old.startswith(".."):
+            continue
+        new_default = _relocate_old_default(key_path, rel_to_old)
+        if new_default is not None:
+            found.append((key_path, value, new_default))
+    return found
+
+
+def _warn_about_old_defaults_in_linked_config(old_location: str) -> None:
+    """``~/.spack`` is a symlink and its target is now the user config scope as it is; the
+    path rewriting of a copied configuration (``_OLD_DOT_SPACK_DEFAULTS``) does not apply
+    to files Spack does not own. Tell the user which values still spell out a Spack 1.2
+    default so they can update them."""
+    lines = []
+    with os.scandir(old_location) as entries:
+        files = sorted(e.path for e in entries if e.name.endswith((".yaml", ".yml")))
+    for path in files:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = syaml.load(f)
+        except (OSError, syaml.SpackYAMLError):
+            continue
+        if not data:
+            continue
+        for key_path, value, new_default in _spelled_out_old_defaults(
+            data, os.path.dirname(path), old_location
+        ):
+            key = ":".join(str(k) for k in key_path if not isinstance(k, Index))
+            lines.append(
+                f"  {os.path.realpath(path)}: {key} = {value} (new default: {new_default})"
+            )
+    if lines:
+        tty.warn(
+            f"{old_location} is a symlink, so {os.path.realpath(old_location)} is used as the"
+            " user configuration as it is. These values spell out Spack 1.2 defaults; the"
+            " directories they name are regenerable and Spack 1.3 puts them elsewhere by"
+            " default. Update or remove them if you do not want to keep using the old"
+            " locations:",
+            *lines,
+        )
+
+
 def process_config_file_paths(
     file_path: str, old_location: str, new_config_location: str
 ) -> Optional[Dict[str, Any]]:
@@ -542,24 +599,13 @@ def process_config_file_paths(
         return None
 
     modified = False
-    old_location_norm = os.path.normpath(os.path.abspath(old_location))
     # The file is read from its old location; relative paths resolve against that directory.
     config_dir = os.path.dirname(os.path.abspath(file_path))
 
     # 1. Spelled-out old defaults -> new defaults, anywhere in the file
-    for key_path, value, abs_path in _walk_yaml_for_paths(data, config_dir):
-        if not os.path.isabs(value):
-            continue
-        try:
-            rel_to_old = os.path.relpath(os.path.normpath(abs_path), old_location_norm)
-        except ValueError:  # different drives on Windows
-            continue
-        if rel_to_old.startswith(".."):
-            continue
-        new_path = _relocate_old_default(key_path, rel_to_old)
-        if new_path is not None:
-            _absolutize_path_in_yaml(data, key_path, new_path)
-            modified = True
+    for key_path, _, new_path in _spelled_out_old_defaults(data, config_dir, old_location):
+        _absolutize_path_in_yaml(data, key_path, new_path)
+        modified = True
 
     # 2. Relative paths in the known path-valued keys -> absolute, against the old location
     for pattern in _RELATIVE_PATH_CONFIG_KEYS:
@@ -1103,6 +1149,8 @@ def _migrate_user_config() -> bool:
         outcome = _migrate_symlinked_root(old_location, new_location, "user config")
         ret = outcome == DestinationCheck.PROCEED
         failed = outcome == DestinationCheck.FAIL
+        if ret:
+            _warn_about_old_defaults_in_linked_config(old_location)
     else:
         ret = migrate_with_staging(
             old_path=old_location,
