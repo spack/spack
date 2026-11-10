@@ -1,3 +1,44 @@
+# v1.3.0 (unreleased)
+
+## Major new features
+
+1. **Spack no longer writes into its own prefix**
+
+   Installed packages, environments, caches, GPG keys, licenses and the bootstrap store
+   now live in XDG-style per-user directories (`~/.local/share/spack`,
+   `~/.local/state/spack`, `~/.cache/spack`) that are shared by every Spack instance of a
+   user, and user configuration lives in `~/.config/spack`. The roots are configurable
+   with `config:locations:{data,state,cache}` and the `$data_home`, `$state_home` and
+   `$cache_home` substitutions, or with the `SPACK_DATA_HOME`, `SPACK_STATE_HOME`,
+   `SPACK_CACHE_HOME` and `SPACK_CONFIG_HOME` environment variables (the `XDG_*_HOME`
+   variables are honored too). See
+   [the docs](https://spack.readthedocs.io/en/latest/where_spack_writes_data.html).
+
+   A Spack instance updated from 1.2 or earlier keeps its installs where they are and, on
+   the first command, asks whether to copy its environments, GPG data and licenses to the
+   new locations (`SPACK_AUTOMIGRATE_YES=1` answers yes in scripts). Configuration in
+   `~/.spack` is copied to `~/.config/spack` without asking. Nothing is deleted;
+   `spack migrate undo`, `spack migrate use-new-layout` and `spack migrate cleanup-old`
+   manage the result afterwards.
+
+   `spack isolate` is built on the same mechanism and gained `--reuse-old` for
+   isolations made with older versions.
+
+## Deprecations and potentially breaking changes
+
+1. **`$user_cache_path` is now an alias for `$cache_home`** (`~/.cache/spack`), not
+   `~/.spack`. `SPACK_USER_CACHE_PATH` is still honored, but only as a candidate for
+   `config:locations:cache`: it no longer moves the bootstrap store, package repositories
+   or test stages, which follow `$state_home` and `$data_home`.
+2. **Module roots have no default.** `modules:<set>:roots:tcl` / `lmod` must be set
+   before module files can be generated, and `setup-env.sh` adds only configured roots to
+   `MODULEPATH`.
+3. **The source cache moved** to `config:source_cache: $data_home/downloads`. The old
+   `$spack/var/spack/cache` of an updated instance is neither migrated nor cleaned; delete
+   it by hand to reclaim the space.
+4. `spack gpg init` imports keys from `config:gpg_keys_path` (`$data_home/gpg-keys`);
+   `$spack/var/spack/gpg` is gone.
+
 # v1.2.0 (2026-06-21)
 
 `v1.2.0` is a major feature release. The main changes you'll notice are the **new,
