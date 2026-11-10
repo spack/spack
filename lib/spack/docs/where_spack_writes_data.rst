@@ -121,7 +121,8 @@ A clone that cannot be copied is named in a warning and Spack clones it afresh a
 The ``spack migrate`` command
 -----------------------------
 
-``spack migrate`` manages the state left behind by the migration described above. It has three actions:
+``spack migrate`` manages the state left behind by the migration described above.
+It has three actions:
 
 ``spack migrate undo``
   Point all resources back at their legacy locations under ``$spack`` by updating the layout scope.
