@@ -1107,6 +1107,26 @@ def test_remigration_summary_excludes_envs_with_differing_manifests(
 
 
 @pytest.mark.parametrize(
+    "var,func",
+    [
+        ("SPACK_DATA_HOME", spack.migrate.migration_data_home),
+        ("XDG_DATA_HOME", spack.migrate.migration_data_home),
+        ("XDG_CONFIG_HOME", spack.migrate.migration_config_home),
+    ],
+)
+def test_migration_home_vars_expand_tilde_and_reject_relative(monkeypatch, var, func):
+    """``~`` in the XDG/SPACK home variables is expanded; a relative value is a hard error
+    rather than a copy into the current working directory."""
+    suffix = "" if var == "SPACK_DATA_HOME" else os.sep + "spack"
+    monkeypatch.setenv(var, "~/mine")
+    assert func() == os.path.join(os.path.expanduser("~"), "mine") + suffix
+
+    monkeypatch.setenv(var, "relative/dir")
+    with pytest.raises(SystemExit):
+        func()
+
+
+@pytest.mark.parametrize(
     "value,approved",
     [("1", True), ("true", True), ("TRUE", True), ("0", False), ("no", False), ("", False)],
 )

@@ -1509,9 +1509,22 @@ def migration_config_home() -> str:
     """
     xdg_config = os.getenv("XDG_CONFIG_HOME")
     if xdg_config:
-        return os.path.join(xdg_config, "spack")
+        return _absolute_home_var("XDG_CONFIG_HOME", os.path.join(xdg_config, "spack"))
 
     return os.path.join(os.path.expanduser("~"), ".config", "spack")
+
+
+def _absolute_home_var(var: str, value: str) -> str:
+    """Expand ``~`` in a location taken from environment variable ``var`` and insist that
+    the result is absolute. A relative location would silently land in the current working
+    directory; ``config:locations`` rejects it too, once configuration is loaded."""
+    expanded = os.path.normpath(os.path.expanduser(value))
+    if not os.path.isabs(expanded):
+        tty.die(
+            f"{var}={os.environ[var]!r} is not an absolute path. Spack's data, state and "
+            "config locations must be absolute; fix or unset the variable."
+        )
+    return expanded
 
 
 def migration_data_home() -> str:
@@ -1526,11 +1539,11 @@ def migration_data_home() -> str:
     """
     spack_data = os.getenv("SPACK_DATA_HOME")
     if spack_data:
-        return spack_data
+        return _absolute_home_var("SPACK_DATA_HOME", spack_data)
 
     xdg_data = os.getenv("XDG_DATA_HOME")
     if xdg_data:
-        return os.path.join(xdg_data, "spack")
+        return _absolute_home_var("XDG_DATA_HOME", os.path.join(xdg_data, "spack"))
 
     return os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
 
