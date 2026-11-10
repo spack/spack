@@ -103,7 +103,7 @@ Spack used to place some generated artifacts like gpg keys, etc. in the spack pr
 
 **User approval is required** to migrate resources from the Spack prefix (environments, licenses, GPG data). In interactive sessions, Spack prompts the user to approve or decline migration. In non-interactive contexts (scripts, automation), migration is automatically declined and resources remain at their old locations. Home directory resources (`~/.spack`) are migrated automatically without a prompt.
 
-"Interactive" means the process has a controlling terminal and is in its foreground process group. The prompt is shown on, and the answer read from, that terminal (`/dev/tty`) rather than stdin/stderr, so it still works when the shell integration captures Spack's output (`spack env activate` in fish, `$(spack ...)`) or when stderr is piped (`2>&1 | tee log`). Processes without a controlling terminal (cron, CI, `ssh -T`, containers without `-t`) or running in the background (`spack ... &`) are treated as non-interactive. `SPACK_AUTOMIGRATE_YES=1` (or `true`) approves without a terminal; any other value does not.
+"Interactive" means the process has a controlling terminal and is in its foreground process group. The prompt is shown on, and the answer read from, that terminal (`/dev/tty`) rather than stdin/stderr, so it still works when the shell integration captures Spack's output (`spack env activate` in fish, `$(spack ...)`) or when stderr is piped (`2>&1 | tee log`). Processes without a controlling terminal (cron, CI, `ssh -T`, containers without `-t`) or running in the background (`spack ... &`) are treated as non-interactive. `SPACK_AUTOMIGRATE_YES=1` (or `true`) approves without a terminal; any other value does not. When migration is declined, the message that reports the retained resources tells the user to run `spack migrate use-new-layout` to migrate later.
 
 The `.migration-done` file is the completion marker. Once it exists, later invocations must load any decisions recorded in `$spack/etc/spack/layout/` and must not repeat migration evaluation. Migration-related files are written into the Spack prefix only after old `$spack` resources are detected. The layout scope is created when `$spack` prefix migration runs, but `config.yaml` is written there only when old-resource paths need to be recorded. A fresh instance creates no migration lock, layout scope, or `.migration-done` marker.
 
@@ -142,7 +142,7 @@ Migration of Spack prefix resources is skipped when:
 
 - The old resource location doesn't exist;
 - The command being invoked is `spack isolate` (detected from raw `sys.argv`);
-- The isolate scope directory `$spack/etc/spack/isolate` exists (indicating a prior `spack isolate` call);
+- `$spack/etc/spack/isolate/include.yaml` exists (indicating a prior `spack isolate` call);
 - Migration has already completed (`.migration-done` marker exists);
 - The user declines migration when prompted (interactive);
 - The process is non-interactive and has no explicit approval.
@@ -164,9 +164,10 @@ The existence of `.migration-done` marker means that migration evaluation has co
 
 - If the user approves migration, Spack attempts to copy license entries from the old default location (`$spack/etc/spack/licenses`) to the fixed new default location (`~/.local/share/spack/licenses`), regardless of effective `config:locations` or `config:license_dir` settings.
 - Entries are processed in sorted (alphabetical) order for deterministic behavior across platforms.
-- Entries are copied individually; old licenses remain in place.
+- Entries are copied individually; old licenses remain in place. If the old license directory is itself a symlink, the new one is created as a link to the same target and nothing is copied.
 - Symlinks are copied as symlinks (not dereferenced), preserving their targets. This includes symlinks pointing back into the old license directory or to external locations. Since old license files are never deleted, these symlinks continue to work after migration.
-- Migration stops at the first collision or failure; successfully copied entries before that point remain at both old and new locations.
+- An entry that already exists at the destination is accepted if it is the same: files are compared byte for byte, symlinks by resolved target, directories as a whole (an entry-by-entry recursive comparison; a subdirectory that gained a file is a conflict, not merged). A file on one side and a symlink on the other never match.
+- Migration stops at the first collision or failure, with a warning naming the entry and what differs and pointing at `spack migrate use-new-layout`; successfully copied entries before that point remain at both old and new locations.
 - Migration does not use a destination lock because license files may be edited outside Spack.
 - If migration is abandoned or incomplete, the old license directory is recorded in layout scope.
 - If all licenses copy successfully, no layout entry is written (new location used by default).
@@ -214,40 +215,9 @@ User config migration (section 3.8) copies only configuration files, and keeps r
 
 Environment migration relocates the entire environment directory as a unit and blocks migration if there are external references that would break. Paths inside the environment are rewritten; paths outside the environment are only allowed if they're also outside the environments root. Environment migration must be more conservative because it doesn't copy the entire environments root—only individual environment directories.
 
-### Develop spec dev_path rewriting
+### Develop specs
 
-Environments may contain concrete specs with `dev_path` variants (from `spack develop`). These paths are stored in the lock file (`spack.lock`) and include the spec's DAG hash, which depends on the `dev_path` value. During migration, lock files are skipped because rewriting them would require rehashing specs, which in turn requires loading the package repository—infrastructure that isn't available during config module load.
-
-Instead, migration uses a deferred fix-up approach:
-
-**During migration:**
-- After copying an environment, migration writes a marker file `.spack-needs-dev-path-migration` containing:
-  - `old_env_path`: The original environment directory path
-  - `new_env_path`: The destination environment directory path
-  - `migrated_at`: ISO timestamp
-
-**On first environment load after migration:**
-- When `Environment._read()` loads the environment, it checks for the marker file
-- If present, `_fix_dev_paths_after_migration()`:
-  1. Reads the old environment path from the marker
-  2. Iterates through all develop specs in `spack.yaml`
-  3. For each develop spec whose path is inside the old environment directory:
-     - Computes the equivalent path in the new environment location
-     - Finds the corresponding concrete spec with the `dev_path` variant
-  4. Calls `apply_develop()` with the new paths, which:
-     - Mutates the concrete specs with new `dev_path` variants
-     - Calls `spack.spec.rehash_mutated()` to recompute DAG hashes for modified specs and their dependents
-     - Updates `specs_by_hash` with the new hashes
-  5. Writes the environment (persisting changes to `spack.lock`)
-  6. Removes the marker file (ensuring this only happens once)
-
-This approach:
-- Preserves the existing concrete solve (no full reconcretization required)
-- Correctly updates all DAG hashes using the existing `apply_develop()` machinery
-- Happens automatically and transparently on first environment activation
-- Only affects develop specs with paths inside the relocated environment directory
-
-Develop specs with paths outside the environment directory are not modified.
+Environments may contain concrete specs with `dev_path` variants (from `spack develop`). These paths are stored in the lock file (`spack.lock`) and are part of the spec's DAG hash, so relocating them would require rehashing, which in turn requires loading the package repository, which is not available at config module load time. Environment migration therefore does not rewrite lock files: if any environment's `spack.lock` contains `dev_path`, no environment is migrated (the same all-or-nothing rule as for environments with installs inside them), and the old environments root is recorded in layout scope. The user can copy the other environments by hand (`spack env create --dir`) or remove the develop specs and run `spack migrate use-new-layout`.
 
 ## 3.5 GPG data
 
@@ -257,7 +227,7 @@ If the user approves migration, Spack migrates both the GPG keyring and the GPG 
 - Fixed new default locations: `~/.local/share/spack/gpg` and `~/.local/share/spack/gpg-keys`.
 - When migration proceeds, it copies from old to new regardless of effective `config:locations`, `config:gpg_path`, or `config:gpg_keys_path` settings.
 - If `SPACK_GNUPGHOME` is set, migration instead preserves that explicit GPG home and the old import-keys directory; it does not copy GPG data to the new defaults.
-- Destinations must not already exist; keyrings are never merged.
+- Destinations must not already exist; keyrings are never merged. A keyring or keys directory that is itself a symlink is migrated by re-creating the link.
 - Each directory is copied to a private sibling staging directory (the keyring with mode `0700`) and atomically renamed into place before the next directory is processed. The keys directory (public keys to import) goes first, then the keyring (which holds secret keys): if the keyring migration then fails, what has been published is public keys, not a keyring that another instance could end up signing with.
 - Transient GnuPG files are not copied: agent sockets (`S.*`), lock files (`*.lock`), the RNG seed (`random_seed`) and keyring backups (`*~`). None hold key material; sockets cannot be copied and lock files would block gpg in the new home. Symlinks are preserved as symlinks; relative links that leave the directory are made absolute and absolute links into the old directory are repointed, so a keyring assembled from links keeps working.
 - If the second migration fails after the first has been published, layout configuration points both GPG paths to their retained locations. A later attempt from the same Spack instance recognizes its marker in the first destination and can resume with the second directory.
@@ -284,18 +254,20 @@ After a migration attempt completes (marked by `.migration-done`):
 - Old resources are already at their old locations (migration copied them, leaving originals in place).
 - No file restoration is needed.
 - Undo simply writes layout scope entries pointing to all old locations.
+- `spack migrate undo` and `spack migrate use-new-layout` hold `$spack/.migration-lock` while they run, and stop if the set of old resources changed while they waited for it.
 - New locations may be left in place for other Spack instances to use, or manually removed if desired.
 
 ## 3.8 Home directory migration
 
 User configuration and package repositories in `~/.spack` are automatically migrated to the new XDG locations (`~/.config/spack` and `~/.local/share/spack/package_repos`). Home directory migration is independent of `$spack` prefix migration: the `.migration-done` marker only prevents re-evaluation of `$spack` prefix resources, not home directory resources. This allows multiple users sharing the same Spack instance to each migrate their own home configurations when they first use the shared instance.
 
-Home directory migration is skipped if `$spack/etc/spack/isolate` exists (created by `spack isolate`), since isolation establishes a separate configuration baseline.
+Home directory migration is skipped if `$spack/etc/spack/isolate/include.yaml` exists (created by `spack isolate`), since isolation establishes a separate configuration baseline.
 
 This migration runs at config module load time (before the CONFIG singleton exists) when:
 
 - The command being invoked is not `spack isolate` (detected from raw `sys.argv`).
-- The isolate scope directory `$spack/etc/spack/isolate` does not exist (which would indicate a prior `spack isolate` call).
+- `$spack/etc/spack/isolate/include.yaml` does not exist (which would indicate a prior `spack isolate` call).
+- None of `SPACK_CONFIG_HOME`, `SPACK_USER_CONFIG_PATH`, `SPACK_DISABLE_LOCAL_CONFIG` is set.
 - `~/.spack` exists and contains configuration files.
 - `~/.config/spack` either does not exist or is empty.
 
@@ -322,6 +294,8 @@ Home directory migration runs at config module load time whenever the above cond
 
 `~/.spack` is retained after migration because older Spack instances may still reference it.
 
+If `~/.spack` is itself a symlink (to a dotfiles checkout), `~/.config/spack` is created as a link to the same target and nothing is rewritten; Spack warns once, listing the values that still spell out Spack 1.2 defaults and what the new default is.
+
 ### XDG environment variable support
 
 Home directory migration respects XDG Base Directory environment variables when determining migration targets. This ensures migration is consistent with runtime configuration path resolution.
@@ -330,9 +304,9 @@ Home directory migration respects XDG Base Directory environment variables when 
 
 The migration target is determined by the following precedence (checked in order):
 
-1. **`SPACK_USER_CONFIG_PATH`**: If set, migration is **skipped entirely**. This environment variable indicates an explicit user override of the config location, so Spack respects that decision and does not migrate `~/.spack` files. The user's existing configuration at the custom location is used as-is.
+1. **`SPACK_CONFIG_HOME` or `SPACK_USER_CONFIG_PATH`**: If either is set, migration is **skipped entirely**. These environment variables indicate an explicit user override of the config location, so Spack respects that decision and does not migrate `~/.spack` files. The user's existing configuration at the custom location is used as-is. `SPACK_DISABLE_LOCAL_CONFIG` also skips it.
 
-2. **`XDG_CONFIG_HOME`**: If set and `SPACK_USER_CONFIG_PATH` is not, config is migrated to `$XDG_CONFIG_HOME/spack`.
+2. **`XDG_CONFIG_HOME`**: If set and neither of the above is, config is migrated to `$XDG_CONFIG_HOME/spack`.
 
 3. **Default**: If neither variable is set, config is migrated to `~/.config/spack` (the XDG default for config home).
 
@@ -498,7 +472,7 @@ Auto-migration is designed to be safe when multiple Spack instances run concurre
 
 Auto-migration of `$spack` prefix resources uses a per-prefix migration lock (`$spack/.migration-lock`) to coordinate concurrent Spack instances using that prefix:
 
-- **Migration lock acquisition**: Each Spack process attempts to acquire the lock before migration. If the lock cannot be acquired because the prefix is not writable, that process skips migration and proceeds with existing configuration. If the prefix is writable but lock acquisition times out, Spack terminates the command rather than waiting indefinitely or proceeding while another migration may still be active.
+- **Migration lock acquisition**: Each Spack process attempts to acquire the lock before migration. If the lock cannot be acquired because the prefix is not writable, Spack terminates the command with an error (see section 5). If the prefix is writable but lock acquisition times out, Spack terminates the command rather than waiting indefinitely or proceeding while another migration may still be active.
 
 - **Double-check after lock**: After acquiring the lock, the process re-checks whether `.migration-done` exists because another process may have completed migration while this one waited for the lock.
 
@@ -577,7 +551,7 @@ There are two scenarios where we know migration is complete:
   - **Reduces contention**: Only one process performs migration work; others wait and see `.migration-done` marker
   - **More efficient**: No wasted work from multiple processes all attempting the same migrations
   - **Simpler reasoning**: One process handles the entire migration atomically
-  - **Covers licenses**: License migration currently has no destination lock (relies on hash comparison), so the global lock prevents races there
+  - **Covers licenses**: License migration currently has no destination lock (relies on content comparison), so the global lock prevents races there
 
 ### Fault tolerance for interrupted migrations
 
@@ -587,7 +561,7 @@ If a migration process succeeds in copying a resource but crashes before writing
 
 - **Environments**: Each environment directory gets a `.migration-<hash>` marker after copying. If an environment with the same name exists at the destination with our marker, it's our prior copy (skip it). Without our marker, it's a collision (stop migration).
 
-- **Licenses**: File content hashes are compared. If a license file exists at the destination with matching hash, it's either our prior copy or an identical file (both fine, continue). If the hash differs, it's a collision (stop migration).
+- **Licenses**: Contents are compared byte for byte. If a license file exists at the destination with identical content, it's either our prior copy or an identical file (both fine, continue). If the content differs, it's a collision (stop migration).
 
 ### The migration-done marker
 
