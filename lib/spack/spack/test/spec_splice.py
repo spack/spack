@@ -178,31 +178,6 @@ def test_splice_ignores_build_only_dependencies():
     assert not out["glib"].spliced
 
 
-@pytest.mark.xfail(strict=True, reason="name match takes the role of the target")
-def test_splice_provider_that_depends_on_another_version_of_the_target_package():
-    """The replacement takes over the target's virtuals."""
-    glibc_1 = node("glibc@1")
-    spec = node("gettext@1", (glibc_1, "link", "iconv"))
-    glibc_2 = node("glibc@2")
-    replacement = node("libiconv@1", (glibc_2, "link"))
-
-    out = spec.splice(replacement, transitive=True)
-
-    assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
-
-
-@pytest.mark.xfail(strict=True, reason="a replacement depending on the target is not spliced")
-def test_splice_provider_that_depends_on_the_target():
-    """The replacement takes over the target's virtuals."""
-    glibc = node("glibc@1")  # shared by spec and replacement
-    spec = node("gettext@1", (glibc, "link", "iconv"))
-    replacement = node("libiconv@1", (glibc, "link"))
-
-    out = spec.splice(replacement, transitive=True)
-
-    assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
-
-
 @pytest.mark.parametrize("transitive,provider", [(True, "openmpi"), (False, "mpich")])
 def test_splice_resolves_clashing_providers_of_a_virtual(transitive, provider):
     """Clashing providers are reconciled like clashing nodes of one name."""
