@@ -1505,14 +1505,12 @@ class _Splice:
         return changed
 
     def _validate(self, edges, changed: Dict[str, bool]) -> None:
-        """The replacement is used, changed nodes can be relocated, edge virtuals are provided,
-        and no name or virtual has more nodes in the result than in the spec, or more than one"""
+        """The replacement is used, edge virtuals are provided, no name or virtual has more nodes
+        in the result than in the spec, or more than one, and changed nodes can be relocated"""
         if self.replacement.dag_hash() not in changed:
             raise SpliceError(f"{self.error}: the replacement would not be used")
         used_as: Dict[str, Set[str]] = {h: set() for h in changed}
         for h in changed:
-            if changed[h]:
-                self._validate_relocation(h, edges)
             for child, (_, virtuals) in edges[h].items():
                 missing = set(virtuals) - _provided(self.nodes[child])
                 if missing:
@@ -1532,6 +1530,10 @@ class _Splice:
             for key, n in count(used_as).items():
                 if n > max(1, before[key]):
                     raise SpliceError(f"{self.error}: the result would have {n} {kind} {key}")
+
+        for h in changed:
+            if changed[h]:
+                self._validate_relocation(h, edges)
 
     def _names_below(self, h: str, edges) -> Set[str]:
         """Names of the link/run dependencies of node h in the result"""
