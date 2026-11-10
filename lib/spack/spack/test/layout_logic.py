@@ -871,7 +871,8 @@ def test_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch
     else:
         assert (new_gpg / "new-keyring-file").read_text(encoding="utf-8") == "new"
         assert not (new_gpg / "old-keyring-file").exists()
-        assert not new_gpg_keys.exists()
+        # the keys dir is migrated before the keyring; public keys left behind are harmless
+        assert (new_gpg_keys / "old-public-key").read_text(encoding="utf-8") == "old"
         assert spack.config.canonicalize_path(config.get("config:gpg_path")) == str(old_gpg)
         assert spack.config.canonicalize_path(config.get("config:gpg_keys_path")) == str(
             old_gpg_keys
@@ -926,9 +927,7 @@ def test_gpg_migration_skips_transient_files(tmp_path):
         migrated = spack.migrate.migrate_with_staging(
             old_path=str(old),
             new_path=str(new),
-            prepare_staging_callback=lambda o, s, n: spack.migrate._prepare_gpg_staging(
-                o, s, n, ".migration-test"
-            ),
+            prepare_staging_callback=spack.migrate._make_gpg_stager(".migration-test"),
             lock_name=".gpg-test.lock",
             staging_name=".gpg-test-staging",
             description="GPG home",
@@ -1386,9 +1385,11 @@ def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path):
     assert (dst / "b.lic").read_text(encoding="utf-8") == "key"
 
 
-def test_gpg_migration_publishes_nothing_if_keys_dir_would_be_refused(tmp_path):
-    """Another instance already migrated its gpg-keys. This instance's keyring (with secret
-    keys) must not be published into the shared data home when its keys dir is refused."""
+def test_gpg_migration_keys_dir_goes_before_the_keyring(tmp_path):
+    """The keys directory (public keys) is migrated before the home (secret keys). If another
+    instance owns the keys destination, nothing is published; if it owns the home
+    destination, only public keys have been published, and a later run picks up where it
+    left off."""
     old_home = tmp_path / "old" / "gpg"
     old_keys = tmp_path / "old" / "gpg-keys"
     old_home.mkdir(parents=True)
@@ -1397,13 +1398,24 @@ def test_gpg_migration_publishes_nothing_if_keys_dir_would_be_refused(tmp_path):
     (old_keys / "key.pub").write_bytes(b"pub")
     new_home = tmp_path / "new" / "gpg"
     new_keys = tmp_path / "new" / "gpg-keys"
+    args = (str(old_home), str(new_home), str(old_keys), str(new_keys))
+
     new_keys.mkdir(parents=True)
     (new_keys / ".migration-other").write_text("another instance\n", encoding="utf-8")
-
-    ok = spack.migrate._migrate_gpg(str(old_home), str(new_home), str(old_keys), str(new_keys))
-
-    assert not ok
+    assert not spack.migrate._migrate_gpg(*args)
     assert not new_home.exists()
+
+    shutil.rmtree(new_keys)
+    new_home.mkdir(parents=True)
+    (new_home / ".migration-other").write_text("another instance\n", encoding="utf-8")
+    assert not spack.migrate._migrate_gpg(*args)
+    assert (new_keys / "key.pub").read_bytes() == b"pub"
+    assert not (new_home / "pubring.kbx").exists()
+
+    shutil.rmtree(new_home)
+    assert spack.migrate._migrate_gpg(*args)
+    assert (new_home / "pubring.kbx").read_bytes() == b"secret"
+    assert spack.migrate._migrate_gpg(*args)  # idempotent
 
 
 def test_detect_old_installs_ignores_the_database(mock_spack_instance):

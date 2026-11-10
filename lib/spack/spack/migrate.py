@@ -974,21 +974,25 @@ def _prepare_package_repo_staging(old_path, staging_path, new_path):
 _GPG_TRANSIENT_PATTERNS = ("S.*", "*.lock", "random_seed", "*~")
 
 
-def _prepare_gpg_staging(old_path, staging_path, new_path, marker_name):
-    """Callback for GPG migration - copy directory, fix up symlinks, set permissions, add
-    marker. Relative symlinks leaving the directory are made absolute and absolute links into
-    the old directory are repointed, so that a keyring assembled from links keeps working."""
-    shutil.copytree(
-        old_path,
-        staging_path,
-        symlinks=True,
-        ignore=shutil.ignore_patterns(*_GPG_TRANSIENT_PATTERNS),
-    )
-    for link, old, new in _rewrite_symlinks_after_copy(staging_path, old_path, new_path):
-        tty.debug(f"Rewrote GPG symlink {os.path.relpath(link, staging_path)}: {old} -> {new}")
-    os.chmod(staging_path, 0o700)
-    with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
-        f.write(f"Migrated from {spack.paths.prefix}\n")
+def _make_gpg_stager(marker_name: str):
+    """Build the staging callback for a GPG directory: copy it without GnuPG's transient
+    files, fix up symlinks so that a keyring assembled from links keeps working, set
+    permissions, and add the migration marker."""
+
+    def prepare_gpg_staging(old_path, staging_path, new_path):
+        shutil.copytree(
+            old_path,
+            staging_path,
+            symlinks=True,
+            ignore=shutil.ignore_patterns(*_GPG_TRANSIENT_PATTERNS),
+        )
+        for link, old, new in _rewrite_symlinks_after_copy(staging_path, old_path, new_path):
+            tty.debug(f"Rewrote GPG symlink {os.path.relpath(link, staging_path)}: {old} -> {new}")
+        os.chmod(staging_path, 0o700)
+        with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
+            f.write(f"Migrated from {spack.paths.prefix}\n")
+
+    return prepare_gpg_staging
 
 
 def _has_user_config_to_migrate(old_location: str) -> bool:
@@ -1139,55 +1143,38 @@ def _migration_source_hash() -> str:
 def _migrate_gpg(
     old_gpg_home: str, target_gpg_home: str, old_gpg_keys: str, target_gpg_keys: str
 ) -> bool:
-    """Migrate both GPG home (keyring) and GPG keys directories.
+    """Migrate both the GPG keys directory (public keys to import) and the GPG home (the
+    keyring, including secret keys).
 
-    Returns True only if both migrations succeed. If either fails, both should
-    be configured to their old locations.
+    Returns True only if both migrations succeed; on failure both are configured to their
+    old locations. The keys directory goes first: if it is refused (another instance owns
+    the destination), nothing has been published. If the home then fails, what is left
+    behind is a directory of public keys, not a keyring.
     """
-    # Check if sources exist - if neither exists, nothing to migrate
-    gpg_home_exists = os.path.exists(old_gpg_home)
-    gpg_keys_exists = os.path.exists(old_gpg_keys)
-
-    if not gpg_home_exists and not gpg_keys_exists:
-        return True
-
-    # Compute marker name for this spack instance
-    source_hash = _migration_source_hash()
-    marker_name = f".migration-{source_hash}"
+    marker_name = f".migration-{_migration_source_hash()}"
     verify_with_marker = _make_marker_verifier(marker_name)
+    stage = _make_gpg_stager(marker_name)
 
-    # The keyring (secret keys) is published first. If the keys directory is going to be
-    # refused, do not publish anything: a keyring left behind by a failed migration would
-    # become the default keyring of whichever instance owns the destination.
-    if gpg_keys_exists and verify_with_marker(target_gpg_keys) == DestinationCheck.FAIL:
-        return False
-
-    if gpg_home_exists:
-        success = migrate_with_staging(
-            old_path=old_gpg_home,
-            new_path=target_gpg_home,
-            prepare_staging_callback=lambda old, staging, new: _prepare_gpg_staging(
-                old, staging, new, marker_name
-            ),
-            lock_name=".gpg-home-migration.lock",
-            staging_name=".spack-gpg-home-staging",
-            description="GPG home",
-            verify_destination_callback=verify_with_marker,
-        )
-        if not success:
-            return False
-
-    # Only proceed to gpg_keys if gpg_home succeeded (or didn't exist)
-    if gpg_keys_exists:
-        return migrate_with_staging(
+    if os.path.exists(old_gpg_keys):
+        if not migrate_with_staging(
             old_path=old_gpg_keys,
             new_path=target_gpg_keys,
-            prepare_staging_callback=lambda old, staging, new: _prepare_gpg_staging(
-                old, staging, new, marker_name
-            ),
+            prepare_staging_callback=stage,
             lock_name=".gpg-keys-migration.lock",
             staging_name=".spack-gpg-keys-staging",
             description="GPG keys",
+            verify_destination_callback=verify_with_marker,
+        ):
+            return False
+
+    if os.path.exists(old_gpg_home):
+        return migrate_with_staging(
+            old_path=old_gpg_home,
+            new_path=target_gpg_home,
+            prepare_staging_callback=stage,
+            lock_name=".gpg-home-migration.lock",
+            staging_name=".spack-gpg-home-staging",
+            description="GPG home",
             verify_destination_callback=verify_with_marker,
         )
 
