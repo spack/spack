@@ -677,7 +677,7 @@ def migrate_with_staging(
 
         # Check destination and verify we can write to it
         # If the new path is a link but still a valid target, we track the final location as well
-        final_destination = os.realpath(new_path) if os.path.islink(new_path) else new_path
+        final_destination = os.path.realpath(new_path) if os.path.islink(new_path) else new_path
         try:
             if os.path.lexists(final_destination):
                 if os.path.isdir(final_destination) and not os.listdir(final_destination):
@@ -691,7 +691,7 @@ def migrate_with_staging(
 
             # Verify we have permissions to create new_path by testing with makedirs
             # This creates the directory so os.rename() will work later
-            os.makedirs(final_destinaton, exist_ok=True)
+            os.makedirs(final_destination, exist_ok=True)
             # Remove it immediately so os.rename() from staging will work
             os.rmdir(final_destination)
 
@@ -954,7 +954,10 @@ def _migrate_user_config() -> bool:
         verify_destination_callback=can_migrate_to_location,
     )
 
-    if (not ret) and _is_nonempty_directory(old_location):
+    # ret is False both when the copy could not be done and when nothing needed doing because
+    # the destination was already populated (before we looked, or by another process while we
+    # waited for the lock). Only the former is fatal.
+    if (not ret) and not _is_nonempty_directory(new_location):
         tty.die(
             f"Failed to migrate Spack config directory. Fix permissions on {new_location} or "
             "set SPACK_USER_CONFIG_PATH=~/.spack to use the old location"
