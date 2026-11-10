@@ -722,6 +722,21 @@ Spack provides three environment variables that allow you to override or opt out
    Spack will then only consider its own defaults and ``site`` configuration locations
    (including the ``spack``, ``layout``, and ``isolate`` scopes).
 
+And three that move the default data locations, as the first candidates in ``config:locations`` (see :ref:`locations_config`):
+
+.. envvar:: SPACK_DATA_HOME
+.. envvar:: SPACK_STATE_HOME
+.. envvar:: SPACK_CACHE_HOME
+
+   Override ``$data_home``, ``$state_home`` and ``$cache_home`` respectively (``~/.local/share/spack``, ``~/.local/state/spack`` and ``~/.cache/spack`` by default).
+   The XDG variables ``XDG_DATA_HOME``, ``XDG_STATE_HOME`` and ``XDG_CACHE_HOME`` (with ``/spack`` appended) are honored at lower precedence, as is ``XDG_CONFIG_HOME`` for the ``user`` scope.
+   A leading ``~`` is expanded; a relative path is an error.
+
+.. envvar:: SPACK_USER_CACHE_PATH
+
+   Before Spack 1.3, the location of all per-user data (``~/.spack`` by default).
+   Still honored as a candidate for ``$cache_home`` only, below ``SPACK_CACHE_HOME``: it no longer moves the bootstrap store, package repositories or test stages, which follow ``$state_home`` and ``$data_home``.
+
 Isolating Spack instances
 -------------------------
 

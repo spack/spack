@@ -35,10 +35,13 @@ This section contains sub-keys ``data``, ``state``, and ``cache``.
 These settings are used to change where Spack writes data.
 See :ref:`where-spack-writes-data`.
 
-Each of these settings accepts a list of values.
+Each of these settings accepts a list of values (or a single string).
 Variable substitution is run on each entry in the list, and if all variables resolve and result in an absolute path, the entry is used.
 Entries that resolve to a relative path raise an error, while entries with unset variables fall through to the next entry.
 If you want an unset variable to be treated as an error, use ``::`` to ensure no default entries are used.
+
+The defaults try ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME`` and ``SPACK_CACHE_HOME``, then the ``XDG_*_HOME`` variables, then the XDG default directories (see :ref:`local-config-overrides`).
+If a setting is left without any entry, for instance by a ``config::`` override of the whole section, the XDG default directory is used; ``install_tree:root``, ``source_cache``, ``misc_cache``, ``gpg_path``, ``gpg_keys_path`` and ``environments_root`` likewise fall back to their default paths under it.
 
 ``install_tree:root``
 ---------------------

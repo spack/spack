@@ -27,7 +27,7 @@ In order of priority (highest first):
 2. Data-category config keys: set ``config:locations:{data,state,cache}`` to redirect everything that uses the corresponding substitution.
    See :ref:`locations config <locations_config>` for details.
 
-3. Env vars for individual homes: - ``SPACK_DATA_HOME``, ``SPACK_STATE_HOME``, or ``SPACK_CACHE_HOME``.
+3. Env vars for individual homes: :envvar:`SPACK_DATA_HOME`, :envvar:`SPACK_STATE_HOME`, or :envvar:`SPACK_CACHE_HOME`, then ``XDG_DATA_HOME``, ``XDG_STATE_HOME`` or ``XDG_CACHE_HOME``.
    The default configuration allows these environment variables to influence the associated config variable.
 
 Path substitutions
@@ -183,6 +183,10 @@ The location table
 | config files         |           |            |            | x [#wheretable-3]_ |
 +----------------------+-----------+------------+------------+--------------------+
 | package repos        | x         |            |            |                    |
++----------------------+-----------+------------+------------+--------------------+
+| build reports        |           |            | x          |                    |
++----------------------+-----------+------------+------------+--------------------+
+| git version lookups  |           |            | x          |                    |
 +----------------------+-----------+------------+------------+--------------------+
 
 .. [#wheretable-1] ``state_home`` is used as a backup, but Spack prefers to write into the user's temp dir if it's available.
