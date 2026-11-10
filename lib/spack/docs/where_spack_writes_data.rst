@@ -46,9 +46,24 @@ Migration of ``$spack``-internal data for older instances
 ----------------------------------------------------------
 
 If a user ``git pull``s into a pre-1.3 Spack instance, Spack will prompt to update where some artifacts are stored to match the new default layout.
-The user must explicitly approve this migration, either interactively or by setting the ``SPACK_AUTOMIGRATE_YES`` environment variable to ``1`` or ``true``.
+The user must explicitly approve this migration, either interactively or by setting the ``SPACK_AUTOMIGRATE_YES`` environment variable to ``1`` or ``true`` (any other value does not approve).
 ``spack migrate undo`` restores use of the legacy locations by updating configuration; it does not remove files copied to the new locations.
 The original resources are still available because migration leaves them in place.
+
+The check runs at the start of every Spack command except ``spack isolate``, and it is skipped for ``spack --help`` and ``spack --version``.
+It runs before configuration is loaded, so the copies go to the fixed default locations (``~/.local/share/spack``, or ``SPACK_DATA_HOME``/``XDG_DATA_HOME`` if set), regardless of ``config:locations`` or any resource-specific setting.
+
+The prompt is written to and read from the controlling terminal (``/dev/tty``), not standard input or error, so it works when Spack's output is captured, e.g. by shell integration (``spack env activate``), ``$(spack ...)``, or ``2>&1 | tee log``.
+It times out after 60 seconds, and an empty answer means "no".
+A process without a controlling terminal (cron, CI, ``ssh -T``, a container without ``-t``) or running in the background declines automatically.
+Declining is recorded as a decision: configuration is written that keeps using the legacy locations, Spack prints how to migrate later (``spack migrate use-new-layout``), and the prompt is not shown again.
+
+The decision is recorded in the Spack prefix: ``$spack/.migration-done`` marks that a decision was made, ``$spack/.migration-lock`` serializes concurrent commands while one of them is deciding, and ``$spack/etc/spack/layout/`` holds a configuration scope that points at any resource that remains in its legacy location (installs always; environments, GPG data and licenses only when they could not be copied).
+None of these files is created unless legacy resources exist in the prefix.
+If the prefix is not writable and legacy resources are present, Spack stops with an error: the instance's administrator must run the migration (or ``spack migrate undo``) once.
+A command that waits more than two minutes for another process to finish deciding stops with an error rather than guessing.
+
+If ``SPACK_GNUPGHOME`` is set, the GPG keyring and keys directory are not copied: the variable is an explicit choice of keyring, and the layout scope keeps pointing ``config:gpg_path`` and ``config:gpg_keys_path`` at the legacy locations.
 
 Spack also independently (without prompting) copies user configuration from ``~/.spack`` to ``~/.config/spack`` and package repositories from ``~/.spack/package_repos`` to ``~/.local/share/spack/package_repos`` when the old locations contain data and the new destinations are available.
 This home-directory migration can occur for a fresh checkout and does not create migration state in the Spack prefix.
@@ -67,6 +82,8 @@ The ``spack migrate`` command
 
 ``spack migrate use-new-layout``
   Remove the layout scope and re-run the migration of ``$spack``-internal resources, for example after declining the prompt on the first run.
+
+Both actions hold the migration lock, so a Spack command started meanwhile waits for them to finish (up to two minutes) and then uses the result; they stop if another process changed the migration state while they were waiting for the lock.
 
 ``spack migrate cleanup-old``
   Permanently delete ``~/.spack``.
