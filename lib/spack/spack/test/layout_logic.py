@@ -675,6 +675,24 @@ def test_env_migration_resolves_relative_paths_from_the_included_file(tmp_path):
     assert "staging" not in (site / "spack.yaml").read_text(encoding="utf-8")
 
 
+def test_env_migration_unwritable_data_home_is_retained_not_fatal(tmp_path, capsys):
+    """A read-only environments destination is reported for what it is and the environments
+    are retained, instead of surfacing as a "spack prefix is not writable" error."""
+    old_envs = tmp_path / "old"
+    (old_envs / "e").mkdir(parents=True)
+    (old_envs / "e" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    new_envs = tmp_path / "new"
+    new_envs.mkdir()
+    new_envs.chmod(0o500)
+    try:
+        ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    finally:
+        new_envs.chmod(0o700)
+
+    assert not ok
+    assert f"Cannot migrate environments to {new_envs}" in capsys.readouterr().err
+
+
 def test_env_migration_rollback_removes_read_only_copies(tmp_path):
     """When one environment blocks migration, copies already made are removed even if they
     contain read-only directories (copied permissions), and so is the failed staging dir.

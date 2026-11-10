@@ -1295,7 +1295,13 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
     lock_acquired = False
     try:
-        lock.acquire_write()
+        try:
+            lock.acquire_write()
+        except spack.util.lock.LockPermissionError as e:
+            # The data home is not writable: like any other failure to copy, the
+            # environments are retained where they are. This is not a prefix problem.
+            tty.warn(f"Cannot migrate environments to {dst_dir}: {e}")
+            return False, differing
         lock_acquired = True
 
         # Check occupied destinations before copying any new environments. This
