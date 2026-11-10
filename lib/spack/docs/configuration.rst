@@ -778,7 +778,7 @@ A handful of additional environment variables influence Spack's runtime behavior
 
    Set by ``setup-env.sh`` (and friends) to the root of the Spack checkout.
    Used in shell integrations and may be referenced by users in paths such as
-   ``$SPACK_ROOT/var/spack/environments``.
+   ``$SPACK_ROOT/etc/spack``.
 
 .. envvar:: SPACK_PYTHON
 
@@ -790,6 +790,8 @@ A handful of additional environment variables influence Spack's runtime behavior
    Set by ``spack env activate`` to the path of the active environment.
    Unset by ``spack env deactivate``.
    Read by Spack itself and useful for shell prompts and scripts.
+   If it names the pre-1.3 location of a :ref:`migrated environment
+   <migrated-environments>`, Spack uses the migrated copy.
 
 .. envvar:: SPACK_COLOR
 

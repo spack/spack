@@ -287,7 +287,7 @@ The same rule applies to the ``install`` and ``uninstall`` commands.
 
   $ spack install zlib@1.2.8
   [+] yfc7epf zlib@1.2.8 ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x (12s)
-  ==> Updating view at ~/spack/var/spack/environments/myenv/.spack-env/view
+  ==> Updating view at ~/.local/share/spack/environments/myenv/.spack-env/view
 
   $ spack find
   ==> In environment myenv
