@@ -1130,37 +1130,71 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
     # circular imports during module load time
     VIEW_MARKER_FILE = ".spack-view"
 
-    def ignore_views(directory, names):
-        """Exclude view directories during environment copy.
+    def _is_old_view_pair(directory: str, link_name: str) -> bool:
+        """Whether ``directory/link_name`` is an old-format view link, i.e. a symlink into
+        the sibling container ``directory/._<link_name>/<hash>``.
+
+        Spack < 1.3 (``ViewDescriptor._next_root``) built the view for a root ``<dir>/<name>``
+        at ``<dir>/._<name>/<content hash>`` and made ``<dir>/<name>`` an absolute symlink to
+        it. The target is resolved lexically, so a link whose hash directory has already been
+        removed still counts.
+        """
+        link = os.path.join(directory, link_name)
+        if not os.path.islink(link):
+            return False
+        target = os.path.relpath(os.path.realpath(link), os.path.realpath(directory))
+        return target.split(os.sep)[0] == f"._{link_name}"
+
+    def make_ignore_views(env_root: str):
+        """Build the ``shutil.copytree`` ignore callback for copying the environment at
+        ``env_root``, excluding its view directories.
 
         Skips:
-        - .spack-env directories (always - contains default views at .spack-env/view)
-        - ._view at environment root only (old format pre-June 2026: symlinks to ._view/<hash>/)
+        - .spack-env directories (always - contains the default view, in either format)
+        - At the environment root, an old-format view: the link ``<name>`` into the container
+          ``._<name>/`` and the container itself, as a pair (``view: <env>/view`` gave
+          ``view -> <env>/._view/<hash>``; ``view: {x: {root: <env>/myview}}`` gave
+          ``myview -> <env>/._myview/<hash>``). A ``._x/`` with no partner link is copied.
         - Directories with .spack-view marker anywhere (custom-location views, June 2026+)
 
         spack.lock is copied
 
         Note: Skipping .spack-env also excludes cached repos and locks as a side effect.
         """
-        ignored = []
-        is_env_root = os.path.normpath(directory) == os.path.normpath(src_dir)
 
-        for name in names:
-            path = os.path.join(directory, name)
+        def ignore_views(directory, names):
+            ignored = []
+            is_env_root = os.path.normpath(directory) == os.path.normpath(env_root)
+            name_set = set(names)
 
-            # Always skip .spack-env directory (contains default views)
-            if name == ".spack-env":
-                ignored.append(name)
-                tty.debug(f"Excluding .spack-env directory: {path}")
-            # Skip ._view ONLY at environment root (old format container)
-            elif is_env_root and name == "._view":
-                ignored.append(name)
-                tty.debug(f"Excluding root-level ._view directory: {path}")
-            # Skip custom-location views with marker file (anywhere in tree)
-            elif os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
-                ignored.append(name)
-                tty.debug(f"Excluding view directory with marker: {path}")
-        return ignored
+            for name in names:
+                path = os.path.join(directory, name)
+
+                # Always skip .spack-env directory (contains default views)
+                if name == ".spack-env":
+                    ignored.append(name)
+                    tty.debug(f"Excluding .spack-env directory: {path}")
+                # Ignore if it's an old-style view symlink
+                elif is_env_root and _is_old_view_pair(directory, name):
+                    ignored.append(name)
+                    tty.debug(f"Excluding old-format view link: {path}")
+                # This is a directory that held the hashed contents for an old-style view symlink
+                elif (
+                    is_env_root
+                    and name.startswith("._")
+                    and name[2:] in name_set
+                    and os.path.isdir(path)
+                    and _is_old_view_pair(directory, name[2:])
+                ):
+                    ignored.append(name)
+                    tty.debug(f"Excluding old-format view container: {path}")
+                # Skip custom-location views with marker file (anywhere in tree)
+                elif os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
+                    ignored.append(name)
+                    tty.debug(f"Excluding view directory with marker: {path}")
+            return ignored
+
+        return ignore_views
 
     # Define staging callback for environment migration
     def prepare_env_staging(old_path, staging_path, new_path):
@@ -1176,7 +1210,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
         if os.path.islink(old_path):
             raise MigrationStagingError(f"Environment directory {old_path} is a symlink")
 
-        shutil.copytree(old_path, staging_path, symlinks=True, ignore=ignore_views)
+        shutil.copytree(old_path, staging_path, symlinks=True, ignore=make_ignore_views(old_path))
 
         # Check for problematic symlinks (raises MigrationStagingError if found)
         _rewrite_symlinks_after_copy(staging_path, old_path, new_path, error_on_rewrite=True)

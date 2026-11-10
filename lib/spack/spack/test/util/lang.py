@@ -5,13 +5,9 @@
 import os
 import pathlib
 import re
-import select
 import subprocess
 import sys
-import time
 from datetime import datetime, timedelta
-from types import ModuleType
-from typing import Optional
 
 import pytest
 

@@ -934,6 +934,59 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     assert (old_envs / "test-env-1" / "spack.yaml").exists()
 
 
+def test_env_migration_drops_old_layout_view_links(tmp_path):
+    """Views are not copied. Spack < 1.3 built a view rooted at ``<env>/<name>`` in the
+    container ``<env>/._<name>/<hash>`` with an absolute symlink ``<env>/<name>`` to it. Link
+    and container are left behind as a pair; anything else at the env root is kept.
+    """
+    old_envs = tmp_path / "old"
+    new_envs = tmp_path / "new"
+
+    def make_env(name, link_name=None, target=None, make_target=True):
+        env = old_envs / name
+        env.mkdir(parents=True)
+        (env / "spack.yaml").write_text("spack:\n  specs: [zlib]\n", encoding="utf-8")
+        if link_name:
+            if os.path.isabs(target):
+                target = str(env / target.lstrip(os.sep))
+            if make_target:
+                (env / target / "bin").mkdir(parents=True)
+                (env / target / "bin" / "tool").write_text("x", encoding="utf-8")
+            (env / link_name).symlink_to(target)
+        return env
+
+    def copied(name):
+        return {p.name for p in (new_envs / name).iterdir() if not p.name.startswith(".migration")}
+
+    make_env("default", "view", "/._view/abc123")  # view: <env>/view
+    make_env("custom", "myview", "/._myview/abc123")  # view: {x: {root: <env>/myview}}
+    make_env("relative", "view", "._view/abc123")
+    make_env("dangling", "view", "/._view/abc123", make_target=False)
+    (old_envs / "dangling" / "._view").mkdir()  # hash dir already removed, container remains
+    # root-level link into something that merely starts with ._ is not a view
+    make_env("other", "link", "._viewer")
+    # a container with no partner link is not recognized, and is copied
+    orphan = make_env("orphan")
+    (orphan / "._view" / "abc123").mkdir(parents=True)
+
+    ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+
+    assert ok and differing == []
+    for name, link_name in (
+        ("default", "view"),
+        ("custom", "myview"),
+        ("relative", "view"),
+        ("dangling", "view"),
+    ):
+        assert copied(name) == {"spack.yaml"}, f"{name}: {copied(name)}"
+        # the source is untouched
+        assert (old_envs / name / link_name).is_symlink()
+        assert (old_envs / name / f"._{link_name}").is_dir()
+    assert copied("other") == {"spack.yaml", "link", "._viewer"}
+    assert (new_envs / "other" / "link").is_symlink()
+    assert copied("orphan") == {"spack.yaml", "._view"}
+
+
 def test_remigration_keeps_previously_migrated_env_and_warns_if_manifests_differ(
     mock_spack_instance, capsys
 ):
