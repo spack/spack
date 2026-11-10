@@ -237,8 +237,14 @@ def process_env_file_paths(
     Raises:
         spack.error.SpackError: If environment has external references that prevent migration
     """
-    with open(file_path, "r", encoding="utf-8") as f:
-        data = syaml.load(f)
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = syaml.load(f)
+    except syaml.SpackYAMLError as e:
+        # Not every *.yaml in an environment is Spack configuration: templates (Jinja), CI
+        # fragments, user notes. Spack never read this file, so copy it as it is.
+        tty.debug(f"Not rewriting paths in {file_path}, it is not YAML: {e}")
+        return None
 
     if not data:
         return None

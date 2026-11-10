@@ -644,6 +644,22 @@ def test_env_migration_allows_env_relative_paths_that_stay_inside(path):
     spack.migrate._check_for_escaping_env_variables({"spack": {"include": [path]}}, "spack.yaml")
 
 
+def test_env_migration_copies_unparseable_yaml_verbatim(tmp_path):
+    """A ``*.yaml`` file that is not YAML (a Jinja template, say) is not Spack config; it
+    is copied as it is and does not block the environment."""
+    old_envs = tmp_path / "old"
+    env = old_envs / "myenv"
+    env.mkdir(parents=True)
+    (env / "spack.yaml").write_text("spack:\n  specs: [zlib]\n", encoding="utf-8")
+    template = "{% if gpu %}\nspack:\n  specs: [cuda]\n{% endif %}\n"
+    (env / "template.yaml").write_text(template, encoding="utf-8")
+
+    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(tmp_path / "new"))
+
+    assert ok
+    assert (tmp_path / "new" / "myenv" / "template.yaml").read_text(encoding="utf-8") == template
+
+
 def test_env_migration_keeps_relative_paths_that_stay_inside(tmp_path):
     """A relative path with ``..`` that resolves inside the env is neither refused nor
     rewritten (rule 2), while a non-path string containing ``..`` is left alone."""
