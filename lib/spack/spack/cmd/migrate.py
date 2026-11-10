@@ -11,7 +11,6 @@ from typing import List, Tuple
 import spack.config
 import spack.migrate
 import spack.paths
-import spack.util.lock
 from spack.util import tty
 
 description = "manage migration of Spack resources"
@@ -298,8 +297,12 @@ def _use_new_layout(args):
     # Hold the migration lock across removing the decision and making the new one, so that
     # a command started meanwhile waits for the result rather than deciding for itself
     # (see perform_migration).
-    lock = spack.util.lock.Lock(spack.migrate._migration_lock_path(), default_timeout=120)
-    with spack.util.lock.WriteTransaction(lock):
+    with spack.migrate.migration_lock():
+        if spack.migrate.detect_old_resources() != old_resources:
+            tty.die(
+                "Another process migrated while this process waited for the migration lock"
+                " Re-run if still desired"
+            )
         if os.path.exists(layout_scope_path):
             tty.msg(f"Removing layout scope: {layout_scope_path}")
             shutil.rmtree(layout_scope_path)
@@ -334,13 +337,15 @@ def _undo(args):
         tty.msg("  - Update layout scope to use old locations")
         return
 
-    tty.msg("Undoing migration...")
+    with spack.migrate.migration_lock():
+        if spack.migrate.detect_old_resources() != old_resources:
+            tty.die(
+                "Another process migrated while this process waited for the migration lock."
+                " Re-run if still desired"
+            )
 
-    # In the context of prompted migration, this is locked, but this command
-    # does not hold .migration-lock because all other spack commands would
-    # have to hold it for their entire duration to safely interact (which
-    # seems expensive for something that would be used rarely).
-    spack.migrate.force_old_layout(old_resources, print_message=False)
+        tty.msg("Undoing migration...")
+        spack.migrate.force_old_layout(old_resources, print_message=False)
 
     tty.msg("  Updated layout scope to point to old locations")
 

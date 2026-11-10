@@ -1379,7 +1379,7 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
 
     assert spack.migrate.migrate_home()["user_config"] is True
     assert new.is_symlink() and new.resolve() == dotfiles.resolve()
-    assert "Copied user config" in capsys.readouterr().err
+    assert "Migrated user config" in capsys.readouterr().err
 
     assert spack.migrate.migrate_home()["user_config"] is False
     assert capsys.readouterr().err == ""

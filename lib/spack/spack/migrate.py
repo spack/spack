@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This module implements the migration from Spack@:1.2 config layout to Spack@1.3: layout."""
 
+import contextlib
 import filecmp
 import os
 import re
@@ -1155,6 +1156,26 @@ def _migration_lock_path() -> str:
     return os.path.join(spack.paths.prefix, ".migration-lock")
 
 
+@contextlib.contextmanager
+def migration_lock():
+    """Take the migration lock and yield in a try/except block that catches locking errors."""
+    lock_path = _migration_lock_path()
+    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+    try:
+        with spack.util.lock.WriteTransaction(lock):
+            yield
+    except spack.util.lock.LockPermissionError:
+        # Read-only prefix
+        tty.die(
+            "The spack prefix is not writable. "
+            "Writing to the Spack prefix is required to migrate Spack data locations."
+            " Contact an admin of the Spack instance to run the spack migration."
+        )
+    except spack.util.lock.LockTimeoutError as e:
+        # Some other migration process is taking too long, bail vs. hang
+        tty.die(f"Timed out waiting for migration lock: {e}")
+
+
 def migration_done_marker_path() -> str:
     """Path to the marker file indicating migration is complete."""
     return os.path.join(spack.paths.prefix, ".migration-done")
@@ -1934,38 +1955,27 @@ def perform_migration():
 
     old_resources = detect_old_resources()
     if any(old_resources.values()):
-        lock_path = _migration_lock_path()
-        lock = spack.util.lock.Lock(lock_path, default_timeout=120)
-        try:
-            with spack.util.lock.WriteTransaction(lock):
-                if not migration_done():
-                    # Waiting for user input inside the lock prevents other
-                    # instances from progressing, but prevents a scenario where
-                    # user says "Y" and then a separate non-tty process subverts
-                    # that
-                    try:
-                        user_allows_it = _prompt_for_prefix_migration(old_resources)
-                        if user_allows_it:
-                            migrate_spack_prefix(old_resources)
-                        else:
-                            force_old_layout(old_resources)
-                    except PermissionError as e:
-                        tty.die(
-                            f"PermissionError accessing {e.filename}. Writing to the Spack prefix "
-                            "is required to migrate your Spack data. Fix the permissions or "
-                            "contact someone with permissions to run the spack migration."
-                        )
-        except spack.util.lock.LockPermissionError:
-            # Read-only prefix
-            tty.die(
-                "The spack prefix is not writable. "
-                "Writing to the Spack prefix is required to migrate to new data storage locations."
-                " Contact an admin of the Spack instance to run the spack migration."
-            )
-        except spack.util.lock.LockTimeoutError as e:
-            # Some other migration process is taking too long, bail vs. hang
-            tty.die(f"Timed out waiting for migration lock: {e}")
+        with migration_lock():
+            # If it was migrated while we were waiting on the lock, return
+            if migration_done():
+                return config_migrated
 
+            # Waiting for user input inside the lock prevents other
+            # instances from progressing, but prevents a scenario where
+            # user says "Y" and then a separate non-tty process subverts
+            # that
+            try:
+                user_allows_it = _prompt_for_prefix_migration(old_resources)
+                if user_allows_it:
+                    migrate_spack_prefix(old_resources)
+                else:
+                    force_old_layout(old_resources)
+            except PermissionError as e:
+                tty.die(
+                    f"PermissionError accessing {e.filename}. Writing to the Spack prefix "
+                    "is required to migrate your Spack data. Fix the permissions or "
+                    "contact someone with permissions to run the spack migration."
+                )
     return config_migrated
 
 
