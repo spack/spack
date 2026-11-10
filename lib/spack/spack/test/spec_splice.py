@@ -153,18 +153,18 @@ def test_intransitive_splice_rejects_dependency_cycle():
         spec.splice(replacement, transitive=False)
 
 
-def test_splice_target_disambiguates():
-    """The target selects the node to replace."""
-    libiconv = node("libiconv@1")
-    linux_headers = node("linux-headers@1")
-    glibc_2 = node("glibc@2", (libiconv, "link"), (linux_headers, "link"))
-    spec = node("gettext@1", (glibc_2, "link", "iconv"))
-    glibc_1 = node("glibc@1")
-    replacement = node("libiconv@2", (glibc_1, "link"))
+@pytest.mark.parametrize("target", ["mpi", "mpich", "mpich@1"])
+def test_splice_target(target):
+    """The target is a virtual, or a spec that the nodes to replace satisfy."""
+    mpich = node("mpich@1")
+    hdf5 = node("hdf5@1", (mpich, "link", "mpi"))
+    spec = node("netcdf-c@1", (hdf5, "link"), (mpich, "link", "mpi"))
+    openmpi = node("openmpi@1")
 
-    out = spec.splice(replacement, transitive=False, target=Spec("glibc"))
+    out = spec.splice(openmpi, transitive=True, target=Spec(target))
 
-    assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
+    assert out.edges_to_dependencies(virtuals="mpi")[0].spec == openmpi
+    assert out["hdf5"].edges_to_dependencies(virtuals="mpi")[0].spec == openmpi
 
 
 @pytest.mark.parametrize("transitive", [True, False])
