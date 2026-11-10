@@ -1360,6 +1360,34 @@ def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
     assert not (tmp_path / "new" / "other").is_symlink()
 
 
+def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path):
+    """``prod -> myenv`` among the environments is an alias for a sibling that is migrated
+    too; the alias is re-created relative so it reads the migrated copy. A link to somewhere
+    outside stays absolute. Both are recognized on a re-run."""
+    old_envs = tmp_path / "old"
+    new_envs = tmp_path / "new"
+    checkout = tmp_path / "checkout"
+    for env in (old_envs / "myenv" / "sub", checkout):
+        env.mkdir(parents=True)
+    for env in (old_envs / "myenv", old_envs / "myenv" / "sub", checkout):
+        (env / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    (old_envs / "prod").symlink_to("myenv")
+    (old_envs / "prod2").symlink_to(old_envs / "myenv")
+    (old_envs / "deep").symlink_to(old_envs / "myenv" / "sub")
+    (old_envs / "external").symlink_to(checkout)
+
+    for _ in range(2):
+        ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+        assert ok and differing == []
+
+    assert os.readlink(new_envs / "prod") == "myenv"
+    assert os.readlink(new_envs / "prod2") == "myenv"
+    assert os.readlink(new_envs / "deep") == os.path.join("myenv", "sub")
+    assert (new_envs / "deep").resolve() == (new_envs / "myenv" / "sub").resolve()
+    assert os.path.isabs(os.readlink(new_envs / "external"))
+    assert (new_envs / "external").resolve() == checkout.resolve()
+
+
 def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkeypatch, capsys):
     """``~/.spack -> ~/dotfiles/spack``: the first run links ``~/.config/spack`` to the same
     place and says so; later runs find the link and say nothing. An empty ``~/.config/spack``
