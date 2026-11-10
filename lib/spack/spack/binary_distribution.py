@@ -2077,7 +2077,8 @@ class _SpliceAnalogs:
     """Maps each node of a spliced spec to its counterpart in the build spec, by name or virtual.
 
     Assumes that names and virtuals are unique among the link/run/test dependencies of the build
-    spec."""
+    spec. A provider of the build spec that is still a dependency is its own counterpart, not
+    that of the node now used as its virtual."""
 
     def __init__(self, spec: spack.spec.Spec) -> None:
         non_build = dt.ALL & ~dt.BUILD
@@ -2085,14 +2086,19 @@ class _SpliceAnalogs:
         self.by_name = {e.spec.name: e.spec for e in edges}
         self.by_virtual = {v: e.spec for e in edges for v in e.virtuals}
         self.used_as: Dict[int, Set[str]] = defaultdict(set)
+        self.names: Set[str] = set()
         for edge in spec.traverse_edges(root=False, cover="edges", deptype=non_build):
             self.used_as[id(edge.spec)].update(edge.virtuals)
+            self.names.add(edge.spec.name)
 
     def __call__(self, s: spack.spec.Spec) -> Optional[spack.spec.Spec]:
         if s.name in self.by_name:
             return self.by_name[s.name]
         analogs = {self.by_virtual.get(v) for v in self.used_as.get(id(s), ())}
-        return analogs.pop() if len(analogs) == 1 else None
+        analog = analogs.pop() if len(analogs) == 1 else None
+        if analog is None or analog.name in self.names:
+            return None
+        return analog
 
 
 def _containing_prefix(path: bytes, prefixes: Container[bytes]) -> Optional[bytes]:

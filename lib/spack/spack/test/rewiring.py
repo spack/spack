@@ -11,6 +11,7 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.rewiring
+import spack.spec
 from spack.binary_distribution import _SpliceAnalogs
 from spack.old_installer import PackageInstaller
 from spack.store import Store
@@ -193,3 +194,26 @@ def test_splice_analogs(mock_packages, config):
     assert analogs(spliced) is build_spec
     assert analogs(spliced["splice-h"]) is build_spec["splice-a"]
     assert analogs(spliced["splice-z"]) is build_spec["splice-z"]
+
+
+def test_splice_analogs_of_provider_that_is_still_a_dependency():
+    """A node used as a virtual is not the counterpart of a provider that is still there."""
+
+    def node(name, *edges):
+        spec = spack.spec.Spec(name)
+        for child, *virtuals in edges:
+            spec._add_dependency(child, depflag=dt.LINK, virtuals=tuple(virtuals))
+        return spec
+
+    # the old libxml2 took iconv from glibc, the new one takes it from libiconv
+    glibc = node("glibc")
+    old_libxml2 = node("libxml2", (glibc, "libc", "iconv"))
+    libiconv = node("libiconv")
+    new_libxml2 = node("libxml2", (glibc, "libc"), (libiconv, "iconv"))
+    spliced = node("fontconfig", (glibc, "libc"), (new_libxml2,))
+    spliced.build_spec = node("fontconfig", (glibc, "libc"), (old_libxml2,))
+    analogs = _SpliceAnalogs(spliced)
+
+    assert analogs(new_libxml2) is old_libxml2
+    assert analogs(glibc) is glibc
+    assert analogs(libiconv) is None
