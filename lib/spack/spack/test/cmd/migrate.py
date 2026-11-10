@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -9,6 +10,7 @@ import pytest
 
 import spack.config
 import spack.main
+import spack.migrate
 import spack.util.tty
 
 sp_migrate = spack.main.SpackCommand("migrate")
@@ -253,6 +255,49 @@ def test_migrate_cleanup_old_reports_removal_failures(mock_spack_instance, monke
         assert "blob" in sp_migrate.output
     finally:
         locked.chmod(0o755)
+
+
+def test_migrate_use_new_layout_holds_the_migration_lock(mock_spack_instance, monkeypatch):
+    """The layout scope and marker are removed and re-created under the migration lock, so a
+    command started meanwhile waits rather than finding no decision and making its own."""
+    _, base_prefix = mock_spack_instance
+    old_envs = Path(base_prefix) / "var" / "spack" / "environments"
+    (old_envs / "demo").mkdir(parents=True)
+    (old_envs / "demo" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    lock_path = spack.migrate._migration_lock_path()
+    held_during_migration = []
+    real_migrate = spack.migrate.migrate_spack_prefix
+
+    def check_lock_then_migrate(old_resources):
+        # Spack's locks are reentrant within a process: probe from another one
+        probe = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import sys, fcntl\n"
+                "try:\n"
+                "    fcntl.lockf(open(sys.argv[1], 'r+'), fcntl.LOCK_EX | fcntl.LOCK_NB)\n"
+                "    print('free')\n"
+                "except FileNotFoundError:\n"
+                "    print('free')\n"
+                "except OSError:\n"
+                "    print('held')\n",
+                lock_path,
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        held_during_migration.append(probe.stdout.strip())
+        real_migrate(old_resources)
+
+    monkeypatch.setattr(spack.migrate, "migrate_spack_prefix", check_lock_then_migrate)
+    sp_migrate("use-new-layout")
+
+    assert held_during_migration == ["held"]
+    assert spack.migrate.migration_done()
 
 
 def test_migrate_can_alternate_between_old_and_new_layout(mock_spack_instance, monkeypatch):

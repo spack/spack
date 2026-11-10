@@ -11,6 +11,7 @@ from typing import List, Tuple
 import spack.config
 import spack.migrate
 import spack.paths
+import spack.util.lock
 from spack.util import tty
 
 description = "manage migration of Spack resources"
@@ -293,7 +294,12 @@ def _use_new_layout(args):
             tty.msg(f"Would remove layout scope: {layout_scope_path}")
         tty.msg("Would trigger migration to new XDG layout")
         return
-    else:
+
+    # Hold the migration lock across removing the decision and making the new one, so that
+    # a command started meanwhile waits for the result rather than deciding for itself
+    # (see perform_migration).
+    lock = spack.util.lock.Lock(spack.migrate._migration_lock_path(), default_timeout=120)
+    with spack.util.lock.WriteTransaction(lock):
         if os.path.exists(layout_scope_path):
             tty.msg(f"Removing layout scope: {layout_scope_path}")
             shutil.rmtree(layout_scope_path)
@@ -301,7 +307,7 @@ def _use_new_layout(args):
         if os.path.exists(marker_path):
             os.remove(marker_path)
 
-    spack.migrate.migrate_spack_prefix(old_resources)
+        spack.migrate.migrate_spack_prefix(old_resources)
 
 
 def _undo(args):
