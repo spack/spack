@@ -230,14 +230,15 @@ Creating and Trusting GPG keys
 
 Spack has support for signing and verifying packages using GPG keys.
 A separate keyring is used for Spack, so any keys available in the user's home directory are not used.
+The keyring lives in ``config:gpg_path`` (``$data_home/gpg`` by default), unless :envvar:`SPACK_GNUPGHOME` is set.
 
 ``spack gpg init``
 ^^^^^^^^^^^^^^^^^^
 
 When Spack is first installed, its keyring is empty.
-Keys stored in :file:`var/spack/gpg` are the default keys for a Spack installation.
-These keys may be imported by running ``spack gpg init``.
-This will import the default keys into the keyring as trusted keys.
+``spack gpg init`` imports every ``*.key`` file under ``config:gpg_keys_path`` (``$data_home/gpg-keys`` by default) into the keyring as a trusted key.
+That directory is where a site can place keys that every user of the data location should trust; a fresh Spack checkout has no keys in it.
+For a Spack instance upgraded from 1.2 or earlier, the keyring and keys directory stay under ``$spack`` (``opt/spack/gpg`` and ``var/spack/gpg``) until they are :ref:`migrated <where_spack_writes_data>`.
 
 Trusting keys
 ^^^^^^^^^^^^^

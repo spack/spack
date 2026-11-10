@@ -65,6 +65,27 @@ A command that waits more than two minutes for another process to finish decidin
 
 If ``SPACK_GNUPGHOME`` is set, the GPG keyring and keys directory are not copied: the variable is an explicit choice of keyring, and the layout scope keeps pointing ``config:gpg_path`` and ``config:gpg_keys_path`` at the legacy locations.
 
+How each resource is copied
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Every copy is staged next to its destination and renamed into place, so another Spack instance never sees a half-copied resource.
+A resource whose legacy directory is itself a symbolic link (``$spack/etc/spack/licenses -> /site/licenses``) is migrated by re-creating the link at the new location; its content is not copied.
+
+**GPG data.**
+The keys directory (``$spack/var/spack/gpg``, public keys imported by ``spack gpg init``) is copied first, then the keyring (``$spack/opt/spack/gpg``).
+Both must succeed, or both stay in the legacy locations.
+A destination that already exists is never merged with: if another Spack instance already put a keyring at ``$data_home/gpg``, this instance keeps its own in ``$spack``.
+GnuPG's transient files (agent sockets, ``*.lock``, ``random_seed``, keyring backups ``*~``) are not copied.
+
+**Licenses.**
+The entries of ``$spack/etc/spack/licenses`` are copied one by one, in alphabetical order, into ``$data_home/licenses``, which may already hold licenses from another instance.
+An entry that already exists at the destination with the same content is accepted; symbolic links are copied as links.
+At the first entry that exists with different content (a subdirectory is compared as a whole), the copy stops with a warning that names the difference, the entries copied so far are left at the destination, and the legacy directory stays configured.
+Resolve the difference by hand and run ``spack migrate use-new-layout``.
+
+**Environments.**
+See :ref:`migrated-environments`.
+
 Spack also independently (without prompting) copies user configuration from ``~/.spack`` to ``~/.config/spack`` and package repositories from ``~/.spack/package_repos`` to ``~/.local/share/spack/package_repos`` when the old locations contain data and the new destinations are available.
 This home-directory migration can occur for a fresh checkout and does not create migration state in the Spack prefix.
 The old files remain in place for use by older Spack instances.
