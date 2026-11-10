@@ -1242,6 +1242,54 @@ def test_prefix_migration_prompt_needs_controlling_terminal(monkeypatch):
     assert "No response received" in terminal.getvalue()
 
 
+def test_license_dir_symlink_is_migrated_as_a_symlink(tmp_path):
+    """A license dir pointing at a site-wide store stays a pointer: a copy would freeze it."""
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "intel.lic").write_text("site", encoding="utf-8")
+    src = tmp_path / "licenses"
+    src.symlink_to(site)
+    dst = tmp_path / "new" / "licenses"
+
+    assert spack.migrate._migrate_licenses(str(src), str(dst))
+    assert dst.is_symlink() and dst.resolve() == site.resolve()
+    (site / "later.lic").write_text("x", encoding="utf-8")
+    assert (dst / "later.lic").exists()
+    assert spack.migrate._migrate_licenses(str(src), str(dst))  # idempotent
+
+
+def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path):
+    """Existing destination entries are compared byte-for-byte and like-for-like (a file never
+    matches a symlink); links the user already had in the destination are not rewritten,
+    while copied links leaving the license dir are made absolute."""
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "intel.lic").write_text("key", encoding="utf-8")
+    src = tmp_path / "src"
+    dst = tmp_path / "dst"
+    src.mkdir()
+    dst.mkdir()
+
+    # byte difference that decode(errors="replace") would hide
+    (src / "a.lic").write_bytes(b"key\xff")
+    (dst / "a.lic").write_bytes(b"key\xfe")
+    assert not spack.migrate._migrate_licenses(str(src), str(dst))
+    (dst / "a.lic").write_bytes(b"key\xff")
+
+    # same content, but a file in the source and a link in the destination
+    (src / "b.lic").write_text("key", encoding="utf-8")
+    (dst / "b.lic").symlink_to(site / "intel.lic")
+    assert not spack.migrate._migrate_licenses(str(src), str(dst))
+    (dst / "b.lic").unlink()
+
+    (src / "out.lic").symlink_to(os.path.join("..", "site", "intel.lic"))
+    (dst / "mine.lic").symlink_to(os.path.join("..", "site", "intel.lic"))
+    assert spack.migrate._migrate_licenses(str(src), str(dst))
+    assert os.readlink(dst / "mine.lic") == os.path.join("..", "site", "intel.lic")
+    assert os.path.isabs(os.readlink(dst / "out.lic"))
+    assert (dst / "b.lic").read_text(encoding="utf-8") == "key"
+
+
 def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     """When no old resources exist in $spack, migration doesn't touch the spack prefix.
 

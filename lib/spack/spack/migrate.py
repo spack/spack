@@ -790,7 +790,9 @@ def migrate_with_staging(
             lock.release_write()
 
 
-def _rewrite_symlinks_after_copy(staging_path, old_location, new_location, error_on_rewrite=False):
+def _rewrite_symlinks_after_copy(
+    staging_path, old_location, new_location, error_on_rewrite=False, only=None
+):
     """Rewrite or detect problematic symlinks in staging directory after copying.
 
     Rules:
@@ -803,6 +805,7 @@ def _rewrite_symlinks_after_copy(staging_path, old_location, new_location, error
         old_location: Original source directory
         new_location: Target directory for migration
         error_on_rewrite: If True, raise MigrationStagingError instead of rewriting
+        only: Restrict to these top-level entries of ``staging_path`` (default: all)
 
     Returns:
         A list of (link_path, old_target, new_target) tuples for reporting.
@@ -814,6 +817,9 @@ def _rewrite_symlinks_after_copy(staging_path, old_location, new_location, error
     old_location_real = os.path.realpath(old_location)
 
     for root, dirs, files in os.walk(staging_path, followlinks=False):
+        if only is not None and root == staging_path:
+            dirs[:] = [d for d in dirs if d in only]
+            files = [f for f in files if f in only]
         for name in list(dirs) + list(files):
             path = os.path.join(root, name)
 
@@ -1400,6 +1406,23 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     if not os.path.exists(src_dir):
         return True
 
+    # A license dir that is itself a symlink (to a site-wide license store, say) is kept
+    # as a symlink: a copy would freeze the licenses at today's contents.
+    if os.path.islink(src_dir):
+        target = os.path.realpath(src_dir)
+        if os.path.lexists(dst_dir):
+            if os.path.islink(dst_dir) and os.path.realpath(dst_dir) == target:
+                return True
+            tty.warn(f"License migration stopped: {dst_dir} exists and is not a link to {target}")
+            return False
+        try:
+            filesystem.mkdirp(os.path.dirname(dst_dir))
+            os.symlink(target, dst_dir)
+        except OSError as e:
+            tty.warn(f"License migration stopped: could not link {dst_dir} -> {target}: {e}")
+            return False
+        return True
+
     src_entries = sorted(os.listdir(src_dir))
     if not src_entries:
         return True
@@ -1411,6 +1434,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
         return False
 
     copied = []
+    pre_existing = set(os.listdir(dst_dir))
 
     for entry in src_entries:
         src_path = os.path.join(src_dir, entry)
@@ -1427,16 +1451,10 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                         )
                         copied.append(entry)
                         continue
+                elif os.path.islink(src_path) != os.path.islink(dst_path):
+                    pass  # a file on one side and a link on the other never match
                 elif os.path.isfile(src_path) and os.path.isfile(dst_path):
-                    with open(src_path, "rb") as f:
-                        src_hash = spack.util.hash.b32_hash(
-                            f.read().decode("utf-8", errors="replace")
-                        )
-                    with open(dst_path, "rb") as f:
-                        dst_hash = spack.util.hash.b32_hash(
-                            f.read().decode("utf-8", errors="replace")
-                        )
-                    if src_hash == dst_hash:
+                    if filecmp.cmp(src_path, dst_path, shallow=False):
                         tty.debug(
                             f"License file {entry} already exists with matching content, skipping"
                         )
@@ -1470,10 +1488,11 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
             return False
 
     # Rewrite relative symlinks that point out of the license dir, since those would dangle after
-    # migration
+    # migration. Only entries this run copied are touched; what the user already had at the
+    # destination is theirs.
+    new_entries = [e for e in copied if e not in pre_existing]
     try:
-        # License migration doesn't use a stage dir, so the destination/stage are the same
-        rewrites = _rewrite_symlinks_after_copy(dst_dir, src_dir, dst_dir)
+        rewrites = _rewrite_symlinks_after_copy(dst_dir, src_dir, dst_dir, only=new_entries)
     except OSError as e:
         tty.warn(f"License migration: could not rewrite symlinks in {dst_dir}: {e}")
         return False
