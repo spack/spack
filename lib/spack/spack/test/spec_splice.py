@@ -210,15 +210,16 @@ def test_splicing_the_original_back_gives_the_original_spec():
     assert out.dag_hash() == spec.dag_hash()
 
 
-@pytest.mark.xfail(strict=True, reason="virtuals the target uses a node as bind its replacement")
-def test_intransitive_splice_ignores_virtuals_only_the_target_uses():
-    """Intransitive splices ignore how the target used its dependencies."""
+@pytest.mark.xfail(strict=True, reason="the replacement gets the providers of the target")
+def test_intransitive_splice_keeps_provider_of_virtual_only_the_target_used():
+    """The replacement keeps its provider of a virtual that no remaining node uses."""
     glibc = node("glibc@2")  # shared by spec and replacement
     libxml2_1 = node("libxml2@1", (glibc, "link", "iconv", "libc"))
     spec = node("fontconfig@1", (glibc, "link", "libc"), (libxml2_1, "link"))
     libiconv = node("libiconv@1")
     replacement = node("libxml2@2", (glibc, "link", "libc"), (libiconv, "link", "iconv"))
 
+    # only libxml2@1 took iconv from glibc
     out = spec.splice(replacement, transitive=False)
 
     assert out["libxml2"].edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
