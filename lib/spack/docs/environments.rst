@@ -152,8 +152,8 @@ Creating Filtered Environments
 
 .. note::
 
-   Environment filtering is experimental. The filter interface may change as
-   support for includes and broader configuration filtering is added.
+   Environment filtering is experimental.
+   The filter interface may change as support for includes and broader configuration filtering is added.
 
 Spack can create a new environment by filtering an existing one.
 This is useful for continuous integration on environments containing licensed or proprietary software.
