@@ -63,6 +63,9 @@ mkdir -p "$BOOTSTRAP"
 
 export SPACK_SYSTEM_CONFIG_PATH="$TMP_DIR/sys_conf"
 export SPACK_USER_CONFIG_PATH="$TMP_DIR/user_conf"
+# SPACK_CONFIG_HOME takes precedence over SPACK_USER_CONFIG_PATH for the user scope and
+# would also keep home migration from being skipped; point it at the same directory.
+export SPACK_CONFIG_HOME="$SPACK_USER_CONFIG_PATH"
 mkdir -p "$SPACK_USER_CONFIG_PATH"
 # We redirect the default locations and we explicitly redirect the individual entries
 # This ensures new locations are moved by default, and specific entries are moved even
