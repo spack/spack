@@ -109,19 +109,16 @@ def test_intransitive_splice_does_not_make_the_root_a_provider():
     assert [d.name for d in out["hwloc"].dependencies()] == ["mpich"]
 
 
-@pytest.mark.xfail(
-    strict=True, reason="intransitive splice recurses forever", raises=RecursionError
-)
-def test_intransitive_splice_of_provider_that_depends_on_the_target_package():
+@pytest.mark.xfail(strict=True, reason="impossible splices are accepted")
+def test_intransitive_splice_rejects_dependency_cycle():
     """Splicing rejects cycles."""
-    libiconv = node("libiconv@1")
-    linux_headers = node("linux-headers@1")
-    glibc_2 = node("glibc@2", (libiconv, "link"), (linux_headers, "link"))
-    spec = node("gettext@1", (glibc_2, "link", "iconv"))
-    glibc_1 = node("glibc@1")
-    replacement = node("libiconv@2", (glibc_1, "link"))
+    hwloc_1 = node("hwloc@1")
+    openmpi = node("openmpi@1", (hwloc_1, "link"))
+    spec = node("hdf5@1", (openmpi, "link", "mpi"))
+    openmpi_internal_hwloc = node("openmpi@1")
+    replacement = node("hwloc@2", (openmpi_internal_hwloc, "link", "mpi"))  # hwloc +netloc
 
-    # libiconv@2 replaces libiconv@1, the node of its name, and needs glibc@2: a cycle
+    # hwloc@2 would use the openmpi of the spec, which depends on hwloc
     with pytest.raises(SpliceError):
         spec.splice(replacement, transitive=False)
 
