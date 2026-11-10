@@ -215,24 +215,6 @@ def test_splice_ignores_build_only_dependencies():
     assert out["glib"].dependencies(deptype="build") == [python_2]
 
 
-@pytest.mark.parametrize("transitive,provider", [(True, "openmpi"), (False, "mpich")])
-def test_splice_resolves_clashing_providers_of_a_virtual(transitive, provider):
-    """Clashing providers are reconciled like clashing nodes of one name."""
-    mpich = node("mpich@1")
-    hdf5_1 = node("hdf5@1", (mpich, "link", "mpi"))
-    spec = node("netcdf-c@1", (hdf5_1, "link"), (mpich, "link", "mpi"))
-    openmpi = node("openmpi@1")
-    replacement = node("hdf5@2", (openmpi, "link", "mpi"))
-
-    out = checked_splice(spec, replacement, transitive=transitive)
-
-    # the caller vouches that either can stand in for the other, as with the MPI ABI
-    providers = {
-        e.spec.name for n in out.traverse() for e in n.edges_to_dependencies(virtuals="mpi")
-    }
-    assert providers == {provider}
-
-
 @pytest.mark.xfail(strict=True, reason="nodes rewired to their build dependencies stay spliced")
 def test_splicing_the_original_back_gives_the_original_spec():
     """Splicing the original back undoes the splice."""
@@ -288,3 +270,22 @@ def test_splice_rejects_replacing_a_dependency_by_name_with_another_package(tran
     # julia needs openblas, not just blas and lapack
     with pytest.raises(SpliceError):
         spec.splice(replacement, transitive=transitive)
+
+
+@pytest.mark.parametrize("transitive,provider", [(True, "openmpi"), (False, "mpich")])
+def test_splice_resolves_clashing_providers_of_a_virtual(transitive, provider):
+    """Clashing providers are reconciled like clashing nodes of one name."""
+    mpich = node("mpich@1")
+    hdf5_1 = node("hdf5@1", (mpich, "link", "mpi"))
+    spec = node("netcdf-c@1", (hdf5_1, "link"), (mpich, "link", "mpi"))
+    openmpi = node("openmpi@1")
+    replacement = node("hdf5@2", (openmpi, "link", "mpi"))
+
+    out = checked_splice(spec, replacement, transitive=transitive)
+
+    # Right if the providers are ABI-compatible, like mpich and openmpi with the MPI ABI. Spack
+    # cannot tell: openblas and mkl both provide blas, and cannot stand in for each other.
+    providers = {
+        e.spec.name for n in out.traverse() for e in n.edges_to_dependencies(virtuals="mpi")
+    }
+    assert providers == {provider}
