@@ -314,7 +314,8 @@ Sometimes, the functionality you desire can be added to an existing command.
 Also, remember to add unit tests for your command.
 If it is not used very frequently, changes to the rest of Spack can cause your command to break without sufficient unit tests to prevent this from happening.
 
-Whenever you add/remove/rename a command or flags for an existing command, make sure to update Spack's `Bash tab completion script <https://github.com/spack/spack/blob/develop/share/spack/spack-completion.bash>`_.
+Whenever you add/remove/rename a command or flags for an existing command, make sure to update Spack's `Bash tab completion script <https://github.com/spack/spack/blob/develop/share/spack/spack-completion.bash>`_ by running ``spack -E commands --update-completion``.
+The scripts list the names of the configuration scopes, so run this from a checkout that is not isolated with ``spack isolate``; ``-E`` keeps an active environment's scope out of the list.
 
 
 Writing Hooks

@@ -52,7 +52,10 @@ Once module files are in place, add the Tcl module directory to your module path
 
 .. code-block:: console
 
-   $ module use $SPACK_ROOT/share/spack/modules/$(spack arch)
+   $ module use ~/.local/share/spack/modules/$(spack arch)
+
+Spack's shell integration (``setup-env.sh`` and friends) does this for you when it is sourced: it adds the configured ``tcl`` root of the ``default`` module set, for each compatible architecture, to ``MODULEPATH``.
+When no root is configured, it adds nothing.
 
 You can now browse and load the available modules:
 
@@ -60,7 +63,7 @@ You can now browse and load the available modules:
 
    $ module avail
 
-   ------------------------------------------------------------ <spack-root>/share/spack/modules/linux-ubuntu24.04-skylake ------------------------------------------------------------
+   ------------------------------------------------------------ ~/.local/share/spack/modules/linux-ubuntu24.04-skylake ------------------------------------------------------------
    bison/3.8.2-gcc-13.3.0-hs4pc4c                        flex/2.6.3-gcc-13.3.0-jz6pfzf            libevent/2.1.12-gcc-13.3.0-5k3sh64    openmpi/5.0.10-gcc-13.3.0-fjv7c7n
    ca-certificates-mozilla/2026-03-19-none-none-som6bt4  gcc-runtime/13.3.0-none-none-5opaxqi     libpciaccess/0.17-gcc-13.3.0-rcke4u2  openssh/10.3p1-gcc-13.3.0-bwrgshz
    cmake/3.31.11-gcc-13.3.0-g2bzgpi                      gromacs/2026.1-gcc-13.3.0-lyxhacq        libxcrypt/4.5.2-gcc-13.3.0-2snor6m    openssl/3.6.1-gcc-13.3.0-fhuz67z
