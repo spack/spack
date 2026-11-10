@@ -720,6 +720,36 @@ def test_env_migration_rollback_removes_read_only_copies(tmp_path):
     assert [p.name for p in new_envs.iterdir() if p.name != ".lock"] == []
 
 
+def test_env_migration_rewrites_paths_spelled_through_a_symlinked_prefix(tmp_path):
+    """``~/spack -> /clone``: an include written as ``~/spack/var/.../own/jobs.yaml`` is
+    inside the env being moved and must be rewritten; the same spelling into a sibling env
+    is refused."""
+    clone = tmp_path / "clone"
+    link = tmp_path / "spack-link"
+    old_envs = clone / "var" / "spack" / "environments"
+    old_envs.mkdir(parents=True)
+    link.symlink_to(clone)
+    linked_envs = link / "var" / "spack" / "environments"
+    for name, target in (("own", "own"), ("sib", "own")):
+        (old_envs / name).mkdir()
+        (old_envs / name / "jobs.yaml").write_text("config:\n  build_jobs: 7\n", encoding="utf-8")
+        (old_envs / name / "spack.yaml").write_text(
+            f"spack:\n  specs: []\n  include: [{linked_envs / target / 'jobs.yaml'}]\n",
+            encoding="utf-8",
+        )
+    new_envs = tmp_path / "new"
+
+    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    assert not ok  # sib refers into own
+
+    shutil.rmtree(old_envs / "sib")
+    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    assert ok
+    manifest = (new_envs / "own" / "spack.yaml").read_text(encoding="utf-8")
+    assert str(new_envs / "own" / "jobs.yaml") in manifest
+    assert "spack-link" not in manifest
+
+
 def test_env_migration_copies_unparseable_yaml_verbatim(tmp_path):
     """A ``*.yaml`` file that is not YAML (a Jinja template, say) is not Spack config; it
     is copied as it is and does not block the environment."""

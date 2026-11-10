@@ -264,8 +264,10 @@ def process_env_file_paths(
     _check_for_escaping_env_variables(data, rel_file)
 
     # Relative paths are resolved as they would have been in the old location; rewritten
-    # absolute paths point at the final destination
+    # absolute paths point at the final destination. Containment is decided on resolved
+    # paths, so that a value spelled through a symlink (``~/spack -> /clone``) still counts.
     old_env_norm = os.path.normpath(os.path.abspath(old_env_dir))
+    old_env_real = os.path.realpath(old_env_dir)
     new_env_norm = os.path.normpath(os.path.abspath(new_env_dir))
     old_config_dir = os.path.join(old_env_norm, os.path.dirname(rel_file))
 
@@ -273,11 +275,11 @@ def process_env_file_paths(
     modified = False
 
     for key_path, original_value, abs_path in found_paths:
-        abs_path_norm = os.path.normpath(os.path.abspath(abs_path))
+        abs_path_norm = os.path.realpath(abs_path)
 
         # Check if path is inside the env being moved
         try:
-            rel_to_old_env = os.path.relpath(abs_path_norm, old_env_norm)
+            rel_to_old_env = os.path.relpath(abs_path_norm, old_env_real)
             inside_env = not rel_to_old_env.startswith("..")
         except ValueError:
             # Different drives on Windows
@@ -303,7 +305,7 @@ def process_env_file_paths(
             # Absolute path outside env - check if it's in envs root (sibling reference)
             if old_envs_root:
                 try:
-                    envs_root_norm = os.path.normpath(os.path.abspath(old_envs_root))
+                    envs_root_norm = os.path.realpath(old_envs_root)
                     rel_to_envs_root = os.path.relpath(abs_path_norm, envs_root_norm)
                     inside_envs_root = not rel_to_envs_root.startswith("..")
                 except ValueError:
