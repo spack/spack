@@ -840,10 +840,12 @@ def test_gpg_migration_skips_transient_files(tmp_path):
         sock = socket.socket(socket.AF_UNIX)
         sock.bind(str(old / name))
         sockets.append(sock)
-    # a symlinked keyring component must stay a symlink, not become a copy
+    # a symlinked keyring component must stay a symlink, not become a copy; a relative one
+    # leaving the directory is made absolute so it still resolves from the new location
     shared = tmp_path / "shared-trustdb.gpg"
     shared.write_bytes(b"shared")
     (old / "trustdb-link.gpg").symlink_to(shared)
+    (old / "trustdb-rel.gpg").symlink_to(os.path.relpath(shared, old))
 
     new = tmp_path / "new-gpg"
     try:
@@ -851,7 +853,7 @@ def test_gpg_migration_skips_transient_files(tmp_path):
             old_path=str(old),
             new_path=str(new),
             prepare_staging_callback=lambda o, s, n: spack.migrate._prepare_gpg_staging(
-                o, s, ".migration-test"
+                o, s, n, ".migration-test"
             ),
             lock_name=".gpg-test.lock",
             staging_name=".gpg-test-staging",
@@ -870,6 +872,8 @@ def test_gpg_migration_skips_transient_files(tmp_path):
     assert (new / "openpgp-revocs.d" / "deadbeef.rev").read_bytes() == b"revoke"
     assert (new / ".migration-test").exists()
     assert (new / "trustdb-link.gpg").is_symlink()
+    assert (new / "trustdb-rel.gpg").is_symlink()
+    assert (new / "trustdb-rel.gpg").read_bytes() == b"shared"
     assert os.stat(new).st_mode & 0o777 == 0o700
 
     for transient in (
@@ -1288,6 +1292,26 @@ def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path):
     assert os.readlink(dst / "mine.lic") == os.path.join("..", "site", "intel.lic")
     assert os.path.isabs(os.readlink(dst / "out.lic"))
     assert (dst / "b.lic").read_text(encoding="utf-8") == "key"
+
+
+def test_gpg_migration_publishes_nothing_if_keys_dir_would_be_refused(tmp_path):
+    """Another instance already migrated its gpg-keys. This instance's keyring (with secret
+    keys) must not be published into the shared data home when its keys dir is refused."""
+    old_home = tmp_path / "old" / "gpg"
+    old_keys = tmp_path / "old" / "gpg-keys"
+    old_home.mkdir(parents=True)
+    old_keys.mkdir()
+    (old_home / "pubring.kbx").write_bytes(b"secret")
+    (old_keys / "key.pub").write_bytes(b"pub")
+    new_home = tmp_path / "new" / "gpg"
+    new_keys = tmp_path / "new" / "gpg-keys"
+    new_keys.mkdir(parents=True)
+    (new_keys / ".migration-other").write_text("another instance\n", encoding="utf-8")
+
+    ok = spack.migrate._migrate_gpg(str(old_home), str(new_home), str(old_keys), str(new_keys))
+
+    assert not ok
+    assert not new_home.exists()
 
 
 def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
