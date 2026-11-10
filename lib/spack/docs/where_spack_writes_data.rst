@@ -87,8 +87,34 @@ Resolve the difference by hand and run ``spack migrate use-new-layout``.
 See :ref:`migrated-environments`.
 
 Spack also independently (without prompting) copies user configuration from ``~/.spack`` to ``~/.config/spack`` and package repositories from ``~/.spack/package_repos`` to ``~/.local/share/spack/package_repos`` when the old locations contain data and the new destinations are available.
-This home-directory migration can occur for a fresh checkout and does not create migration state in the Spack prefix.
+This home-directory migration can occur for a fresh checkout and does not create migration state in the Spack prefix, so each user of a shared Spack instance gets it the first time they run that instance.
 The old files remain in place for use by older Spack instances.
+
+.. _home-migration:
+
+Migration of ``~/.spack``
+-------------------------
+
+**User configuration.**
+Only the configuration files (``*.yaml``, ``*.yml``, and symbolic links) under ``~/.spack`` are copied to ``~/.config/spack``, keeping their relative layout (``~/.spack/linux/packages.yaml`` becomes ``~/.config/spack/linux/packages.yaml``).
+A directory that holds an environment (``spack.yaml`` or ``spack.lock``) or a package repository (``repo.yaml``) is data rather than configuration and is not descended into.
+A file that cannot be parsed or read is skipped with a warning.
+Everything else in ``~/.spack`` is either regenerable (caches, the bootstrap store, package repository clones) or data that the configuration refers to by path, and keeps working where it is.
+
+Two kinds of values are rewritten in the copies, so that the configuration means the same thing in its new location:
+
+* An absolute path that spells out the Spack 1.2 default for its own setting (``bootstrap:root: ~/.spack/bootstrap``, ``config:misc_cache: ~/.spack/cache``, ``config:test_stage: ~/.spack/test``, ``~/.spack/stage`` in ``config:build_stage``, as written by ``spack bootstrap root --set`` or ``spack config add``) is replaced by the new default (``$state_home/bootstrap``, ``$cache_home/$spack_instance_id/cache``, ...).
+* A relative path in ``repos``, ``mirrors``, ``include``, ``config:environments_root`` or ``config:license_dir`` is made absolute against ``~/.spack``, where the data still is, since relative paths resolve against the directory of the file they are written in.
+
+Any other string is left as it is: an absolute path into ``~/.spack`` under some other setting is a choice that still names what it did.
+
+The copy is skipped when the user scope has been pointed elsewhere with :envvar:`SPACK_CONFIG_HOME` or ``SPACK_USER_CONFIG_PATH``, or disabled with :envvar:`SPACK_DISABLE_LOCAL_CONFIG`; it goes to ``$XDG_CONFIG_HOME/spack`` if that variable is set.
+A ``~/.config/spack`` that already exists and is not empty is left alone: nothing is merged into it.
+If ``~/.spack`` is itself a symbolic link (to a dotfiles checkout, say), ``~/.config/spack`` is created as a link to the same target and nothing is rewritten; Spack instead prints the values that still spell out 1.2 defaults, once, for you to update.
+
+**Package repositories.**
+Each clone under ``~/.spack/package_repos`` is copied to the same name under ``$data_home/package_repos``, unless a clone of that name is already there (the name is a hash of the remote URL, so it is the same repository).
+A clone that cannot be copied is named in a warning and Spack clones it afresh at the new location when needed; to keep using the old clone, point ``repos:<name>:destination`` at it.
 
 .. _spack-migrate-command:
 
@@ -114,8 +140,12 @@ Both actions hold the migration lock, so a Spack command started meanwhile waits
   Only the active configuration is inspected.
   Inactive environments, conditional configuration scopes, other Spack instances, and anything outside Spack's configuration are not checked; it is up to you to make sure nothing else depends on the directory.
 
-  If ``config:install_tree:root`` resolves to a directory under ``~/.spack``, ``cleanup-old`` refuses to proceed **even with** ``--yes``, because deleting the directory would delete your installed packages and the next ``spack install`` would silently recreate the store there.
+  If ``config:install_tree:root`` resolves to a directory under ``~/.spack``, or the active ``user`` configuration scope is under ``~/.spack``, ``cleanup-old`` refuses to proceed **even with** ``--yes``, because deleting the directory would delete your installed packages (and the next ``spack install`` would silently recreate the store there) or the configuration Spack is running with.
   Uninstalling the packages does not lift this restriction: the configured install tree must be moved out of ``~/.spack`` first, or the directory removed by hand.
+  It also refuses to act on a ``~/.spack`` that is a symbolic link.
+
+  Every other reference is only reported: any configuration value that resolves to a path under ``~/.spack`` (a mirror, a repository, a license directory, ...), ``config:locations`` and ``SPACK_GNUPGHOME``.
+  The report is the safety net and you make the call; if unsure, keep the directory.
 
 Using ``spack isolate`` to avoid migration prompts
 ---------------------------------------------------
