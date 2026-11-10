@@ -241,9 +241,10 @@ def _cleanup_old(args) -> None:
     # ---- hard stop: the install tree cannot be regenerated ----
     if fatal:
         tty.die(
-            "Refusing to remove ~/.spack: it holds the current install tree.",
+            "Refusing to remove ~/.spack: it holds the current install tree or the active user"
+            " configuration.",
             *[f"  - {r}" for r in fatal],
-            "Point config:install_tree:root to another directory or remove it manually.",
+            "Point the setting(s) above at another directory, or remove ~/.spack manually.",
         )
 
     if args.dry_run:

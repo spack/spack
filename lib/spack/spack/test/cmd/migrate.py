@@ -198,7 +198,7 @@ def test_migrate_cleanup_old_reports_references(mock_spack_instance, monkeypatch
 
 
 def test_migrate_cleanup_old_user_scope_reference(mock_spack_instance, monkeypatch):
-    """A user scope still pointing at ~/.spack is reported."""
+    """A user scope still pointing at ~/.spack is reported and is a hard stop, even with --yes."""
     home_dir, base_prefix = mock_spack_instance
     old_user, _ = _setup_cleanup_old(home_dir)
     standard_scopes = Path(base_prefix) / "etc" / "spack" / "standard_scopes"
@@ -207,10 +207,13 @@ def test_migrate_cleanup_old_user_scope_reference(mock_spack_instance, monkeypat
     include_path.write_text(include_text.replace("~/.config/spack", "~/.spack"), encoding="utf-8")
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
-    out = sp_migrate("cleanup-old", "--dry-run")
+    with pytest.raises(spack.main.SpackCommandError):
+        sp_migrate("cleanup-old", "--yes")
 
+    out = sp_migrate.output
     assert "still refers" in out
     assert "user configuration scope" in out
+    assert "active user configuration" in out
     assert old_user.exists()
 
 
