@@ -1321,8 +1321,9 @@ def test_prefix_migration_prompt_needs_controlling_terminal(monkeypatch):
 
 def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
     """A resource whose root is a symlink (licenses -> site store, an env -> a checkout) is
-    migrated by re-creating the link: a copy would freeze the data. Idempotent, and a
-    destination that is anything else is refused."""
+    migrated by re-creating the link: a copy would freeze the data. A second migration finds
+    the link and counts the resource as migrated; a destination that is anything else is
+    refused."""
     site = tmp_path / "site"
     site.mkdir()
     (site / "intel.lic").write_text("site", encoding="utf-8")
@@ -1337,18 +1338,20 @@ def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
     assert dst.is_symlink() and dst.resolve() == site.resolve()
     (site / "later.lic").write_text("x", encoding="utf-8")
     assert (dst / "later.lic").exists()
-    # already in place: nothing to do, and nothing to report as migrated
-    assert not spack.migrate._migrate_symlinked_root(str(src), str(dst), "licenses")
+    # already in place: still migrated (e.g. `spack migrate use-new-layout` after `undo`)
+    assert spack.migrate._migrate_licenses(str(src), str(dst))
+    assert dst.is_symlink()
 
-    # an environment, through migrate_with_staging
+    # an environment, through migrate_with_staging and the marker verifier
     old_envs = tmp_path / "old-envs"
     old_envs.mkdir()
     (old_envs / "linked").symlink_to(site)
     new_envs = tmp_path / "new-envs"
-    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
-    assert ok
-    assert (new_envs / "linked").is_symlink()
-    assert (new_envs / "linked").resolve() == site.resolve()
+    for _ in range(2):
+        ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+        assert ok and differing == []
+        assert (new_envs / "linked").is_symlink()
+        assert (new_envs / "linked").resolve() == site.resolve()
 
     # destination occupied by something that is not that link
     (tmp_path / "new" / "other").mkdir()

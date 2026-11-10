@@ -605,10 +605,20 @@ def _same_link(path: str, other: str) -> bool:
     return os.path.islink(path) and os.path.realpath(path) == os.path.realpath(other)
 
 
-def _make_marker_verifier(marker_name: str):
+def _make_marker_verifier(marker_name: str, old_path: Optional[str] = None):
+    """Build a destination verifier that recognizes this instance's migration marker.
+
+    ``old_path`` is the source the destination would have been migrated from; a destination
+    that is a symlink to the same place as ``old_path`` was made by
+    :func:`_migrate_symlinked_root` (links carry no marker) and counts as already migrated.
+    """
+
     def verify_with_marker(dest_path):
-        if not os.path.exists(dest_path):
+        if not os.path.lexists(dest_path):
             return DestinationCheck.PROCEED
+        if old_path is not None and _same_link(dest_path, old_path):
+            tty.debug(f"Already migrated as a link: {dest_path}")
+            return DestinationCheck.SKIP
         marker_path = os.path.join(dest_path, marker_name)
         if os.path.exists(marker_path):
             tty.debug(f"Already migrated from this spack instance (found marker {marker_name})")
@@ -653,42 +663,42 @@ def _remove_tree(path: str, what: str) -> None:
     shutil.rmtree(path, onerror=on_error)
 
 
-def _migrate_symlinked_root(old_path: str, new_path: str, description: str) -> bool:
+def _migrate_symlinked_root(old_path: str, new_path: str, description: str) -> DestinationCheck:
     """Migrate a resource whose root is itself a symlink by re-creating the link.
 
     The link is what the user set up (``licenses -> /site/licenses``,
     ``~/.spack -> ~/dotfiles/spack``); the data lives where it points. Copying through it
     would freeze the data at today's contents and detach it from the user's source of truth.
 
-    Returns True only if the link was created by this call. A destination that is already
-    that link, or a populated directory, means nothing needs doing (False, quietly, as for
-    any other resource); an empty directory is replaced by the link; a file or a link to
-    somewhere else is left alone with a warning.
+    Returns ``PROCEED`` if the link was created by this call, ``SKIP`` if the destination is
+    already that link (nothing to do: the resource is migrated), and ``FAIL`` otherwise. An
+    empty destination directory is replaced by the link; a populated one is left alone
+    quietly, as it is the user's or another instance's; a file or a link to somewhere else
+    is left alone with a warning.
     """
     target = os.path.realpath(old_path)
     if os.path.lexists(new_path):
         if os.path.islink(new_path) and os.path.realpath(new_path) == target:
             tty.debug(f"{new_path} is already a link to {target}, nothing to migrate")
-            return False
+            return DestinationCheck.SKIP
         if os.path.isdir(new_path) and not os.listdir(new_path):
             os.rmdir(new_path)
         elif os.path.isdir(new_path):
-            # populated by the user, or by another instance: theirs, and already in use
             tty.debug(f"{new_path} already has files, not linking it to {target}")
-            return False
+            return DestinationCheck.FAIL
         else:
             tty.warn(
                 f"Cannot migrate {description}: {new_path} exists and is not a link to {target}"
             )
-            return False
+            return DestinationCheck.FAIL
     try:
         filesystem.mkdirp(os.path.dirname(new_path))
         os.symlink(target, new_path)
     except OSError as e:
         tty.warn(f"Cannot migrate {description}: could not link {new_path} -> {target}: {e}")
-        return False
+        return DestinationCheck.FAIL
     tty.debug(f"{description.capitalize()} migrated as a symlink: {new_path} -> {target}")
-    return True
+    return DestinationCheck.PROCEED
 
 
 def migrate_with_staging(
@@ -723,7 +733,8 @@ def migrate_with_staging(
         return False
 
     if os.path.islink(old_path):
-        return _migrate_symlinked_root(old_path, new_path, description)
+        # created now, or already in place: either way the resource is migrated
+        return _migrate_symlinked_root(old_path, new_path, description) != DestinationCheck.FAIL
 
     # Verify destination before locking. This will almost always trigger an early
     # return (skip locking). Marker-based verifiers check for already-migrated
@@ -1052,24 +1063,27 @@ def _migrate_user_config() -> bool:
     if not _has_user_config_to_migrate(old_location):
         return False
 
-    ret = migrate_with_staging(
-        old_path=old_location,
-        new_path=new_location,
-        prepare_staging_callback=_prepare_config_staging,
-        lock_name=".spack-user-config-migration.lock",
-        staging_name=".spack-config-staging",
-        description="user config",
-        verify_destination_callback=can_migrate_to_location,
-    )
+    if os.path.islink(old_location):
+        # Reported as migrated only when the link is made now; later runs are quiet
+        outcome = _migrate_symlinked_root(old_location, new_location, "user config")
+        ret = outcome == DestinationCheck.PROCEED
+        failed = outcome == DestinationCheck.FAIL
+    else:
+        ret = migrate_with_staging(
+            old_path=old_location,
+            new_path=new_location,
+            prepare_staging_callback=_prepare_config_staging,
+            lock_name=".spack-user-config-migration.lock",
+            staging_name=".spack-config-staging",
+            description="user config",
+            verify_destination_callback=can_migrate_to_location,
+        )
+        # ret is False both when the copy could not be done and when nothing needed doing
+        # because the destination was already populated (before we looked, or by another
+        # process while we waited for the lock). Only the former is fatal.
+        failed = not ret and not _is_nonempty_directory(new_location)
 
-    # ret is False both when the copy could not be done and when nothing needed doing because
-    # the destination was already populated (before we looked, or by another process while we
-    # waited for the lock) or is already a link to the old location. Only the former is fatal.
-    if (
-        (not ret)
-        and not _is_nonempty_directory(new_location)
-        and not _same_link(new_location, old_location)
-    ):
+    if failed:
         tty.die(
             f"Failed to migrate Spack config directory to {new_location} (see any warning"
             " above). Fix the problem, or set SPACK_USER_CONFIG_PATH=~/.spack to use the old"
@@ -1176,7 +1190,6 @@ def _migrate_gpg(
     behind is a directory of public keys, not a keyring.
     """
     marker_name = f".migration-{_migration_source_hash()}"
-    verify_with_marker = _make_marker_verifier(marker_name)
     stage = _make_gpg_stager(marker_name)
 
     if os.path.exists(old_gpg_keys):
@@ -1187,7 +1200,7 @@ def _migrate_gpg(
             lock_name=".gpg-keys-migration.lock",
             staging_name=".spack-gpg-keys-staging",
             description="GPG keys",
-            verify_destination_callback=verify_with_marker,
+            verify_destination_callback=_make_marker_verifier(marker_name, old_gpg_keys),
         ):
             return False
 
@@ -1199,7 +1212,7 @@ def _migrate_gpg(
             lock_name=".gpg-home-migration.lock",
             staging_name=".spack-gpg-home-staging",
             description="GPG home",
-            verify_destination_callback=verify_with_marker,
+            verify_destination_callback=_make_marker_verifier(marker_name, old_gpg_home),
         )
 
     return True
@@ -1219,7 +1232,6 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
 
     source_hash = _migration_source_hash()
     marker_name = f".migration-{source_hash}"
-    verify_with_marker = _make_marker_verifier(marker_name)
 
     try:
         filesystem.mkdirp(dst_dir)
@@ -1391,6 +1403,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
         for entry in intersection + remainder:
             src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
+            verify_with_marker = _make_marker_verifier(marker_name, src_path)
             previously_migrated = verify_with_marker(dst_path) == DestinationCheck.SKIP
             success = migrate_with_staging(
                 old_path=src_path,
@@ -1462,7 +1475,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
         return True
 
     if os.path.islink(src_dir):
-        return _migrate_symlinked_root(src_dir, dst_dir, "licenses")
+        return _migrate_symlinked_root(src_dir, dst_dir, "licenses") != DestinationCheck.FAIL
 
     src_entries = sorted(os.listdir(src_dir))
     if not src_entries:
