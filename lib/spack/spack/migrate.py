@@ -1485,6 +1485,16 @@ def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
     return True
 
 
+def _entry_kind(path: str) -> str:
+    """``symlink``, ``directory`` or ``file``, for messages (a symlink is reported as such
+    whatever it points to)."""
+    if os.path.islink(path):
+        return "a symlink"
+    if os.path.isdir(path):
+        return "a directory"
+    return "a file"
+
+
 def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     """Copy licenses individually without claiming to lock out manual edits.
 
@@ -1526,8 +1536,13 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                         )
                         copied.append(entry)
                         continue
+                    reason = (
+                        f"both are symlinks, but {src_path} points to "
+                        f"{os.readlink(src_path)} and {dst_path} points to "
+                        f"{os.readlink(dst_path)}"
+                    )
                 elif os.path.islink(src_path) != os.path.islink(dst_path):
-                    pass  # a file on one side and a link on the other never match
+                    reason = f"{_entry_kind(src_path)} vs. {_entry_kind(dst_path)}"
                 elif os.path.isfile(src_path) and os.path.isfile(dst_path):
                     if filecmp.cmp(src_path, dst_path, shallow=False):
                         tty.debug(
@@ -1535,6 +1550,7 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                         )
                         copied.append(entry)
                         continue
+                    reason = "both are files, but their contents differ"
                 elif os.path.isdir(src_path) and os.path.isdir(dst_path):
                     # For directories, check if trees are identical
                     if _dirs_identical(src_path, dst_path):
@@ -1544,8 +1560,17 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
                         )
                         copied.append(entry)
                         continue
-                # Hash mismatch or type mismatch - stop migration
-                raise FileExistsError(dst_path)
+                    reason = "both are directories, but their contents differ"
+                else:
+                    reason = f"{_entry_kind(src_path)} vs. {_entry_kind(dst_path)}"
+                tty.warn(
+                    f"License migration stopped: {entry} already exists at {dst_dir} and is"
+                    f" not the same as the one in {src_dir} ({reason}). Copied licenses: "
+                    f"{', '.join(copied) if copied else 'none'}. The old license directory"
+                    f" will remain configured; copied files may remain in {dst_dir}. Resolve"
+                    f" the difference, then run `spack migrate use-new-layout`."
+                )
+                return False
 
             if os.path.isdir(src_path):
                 shutil.copytree(src_path, dst_path, symlinks=True)

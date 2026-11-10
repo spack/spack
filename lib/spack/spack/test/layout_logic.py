@@ -1386,10 +1386,11 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
     assert new.is_symlink()
 
 
-def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path):
+def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path, capsys):
     """Existing destination entries are compared byte-for-byte and like-for-like (a file never
-    matches a symlink); links the user already had in the destination are not rewritten,
-    while copied links leaving the license dir are made absolute."""
+    matches a symlink), and a mismatch says what differs; links the user already had in the
+    destination are not rewritten, while copied links leaving the license dir are made
+    absolute."""
     site = tmp_path / "site"
     site.mkdir()
     (site / "intel.lic").write_text("key", encoding="utf-8")
@@ -1402,12 +1403,17 @@ def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path):
     (src / "a.lic").write_bytes(b"key\xff")
     (dst / "a.lic").write_bytes(b"key\xfe")
     assert not spack.migrate._migrate_licenses(str(src), str(dst))
+    err = capsys.readouterr().err
+    assert f"a.lic already exists at {dst}" in err
+    assert "both are files, but their contents differ" in err
+    assert "spack migrate use-new-layout" in err
     (dst / "a.lic").write_bytes(b"key\xff")
 
     # same content, but a file in the source and a link in the destination
     (src / "b.lic").write_text("key", encoding="utf-8")
     (dst / "b.lic").symlink_to(site / "intel.lic")
     assert not spack.migrate._migrate_licenses(str(src), str(dst))
+    assert "a file vs. a symlink" in capsys.readouterr().err
     (dst / "b.lic").unlink()
 
     (src / "out.lic").symlink_to(os.path.join("..", "site", "intel.lic"))
