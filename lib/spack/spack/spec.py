@@ -1393,6 +1393,11 @@ class _Splice:
             for t in self.targets:
                 self.by_virtual.update(dict.fromkeys(self.spec_used_as[t], replacement.dag_hash()))
 
+        #: nodes of the result -> their dependents
+        self.parents: Dict[str, List[str]] = collections.defaultdict(list)
+        #: name -> nodes of the result that have a dependency of that name below them
+        self.above: Dict[str, Set[str]] = {}
+
     def _targets(self, target: Optional["Spec"]) -> Set[str]:
         """The link/run nodes of the spec to replace"""
         nodes = self.spec_used_as
@@ -1495,6 +1500,8 @@ class _Splice:
                 raise SpliceError(f"{self.error}: the result would have a dependency cycle")
             if h not in changed:
                 on_stack.add(h)
+                for c in edges[h]:
+                    self.parents[c].append(h)
                 # a list, not any(): every child is visited to detect cycles
                 children = [visit(c) for c in edges[h]]
                 changed[h] = any(children) or edges[h] != _link_edges(self.nodes[h])
@@ -1535,16 +1542,17 @@ class _Splice:
             if changed[h]:
                 self._validate_relocation(h, edges)
 
-    def _names_below(self, h: str, edges) -> Set[str]:
-        """Names of the link/run dependencies of node h in the result"""
-        seen: Set[str] = set()
-        stack = list(edges[h])
-        while stack:
-            child = stack.pop()
-            if child not in seen:
-                seen.add(child)
-                stack.extend(edges[child])
-        return {self.nodes[child].name for child in seen}
+    def _has_below(self, h: str, name: str) -> bool:
+        """Whether node h of the result has a link/run dependency of that name, direct or not"""
+        if name not in self.above:
+            self.above[name] = above = set()
+            stack = [x for x in self.parents if self.nodes[x].name == name]
+            while stack:
+                for parent in self.parents[stack.pop()]:
+                    if parent not in above:
+                        above.add(parent)
+                        stack.append(parent)
+        return h in self.above[name]
 
     def _validate_relocation(self, h: str, edges) -> None:
         """Binaries of node h refer to the link/run dependencies of its build spec. Relocation, see
@@ -1578,7 +1586,7 @@ class _Splice:
                 )
             mapped.add(images[0])
             image = self.nodes[images[0]].name
-            if image != e.spec.name and e.spec.name in self._names_below(h, edges):
+            if image != e.spec.name and self._has_below(h, e.spec.name):
                 raise SpliceError(
                     f"{self.error}: relocation of {parent} cannot map {e.spec.name} to {image}, "
                     f"as {e.spec.name} remains a dependency"
