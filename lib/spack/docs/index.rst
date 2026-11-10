@@ -77,6 +77,7 @@ If you're new to Spack and want to start using it, see :doc:`getting_started`, o
    packages_yaml
    toolchains_yaml
    build_settings
+   slurm-targets
    repositories
    mirrors
    chain
