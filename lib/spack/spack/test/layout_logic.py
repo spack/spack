@@ -585,6 +585,8 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
     "path_factory,expected_error",
     [
         (lambda old_envs: "../shared.yaml", "relative path.*outside the environment"),
+        (lambda old_envs: "./../shared.yaml", "relative path.*outside the environment"),
+        (lambda old_envs: "sub/../../shared.yaml", "relative path.*outside the environment"),
         (
             lambda old_envs: str(old_envs / "sibling/config.yaml"),
             "absolute path.*sibling location.*environments root",
@@ -640,6 +642,27 @@ def test_env_migration_blocks_external_references(tmp_path, path_factory, expect
 def test_env_migration_allows_env_relative_paths_that_stay_inside(path):
     """``..`` under ``$env`` is fine as long as it never climbs above the environment."""
     spack.migrate._check_for_escaping_env_variables({"spack": {"include": [path]}}, "spack.yaml")
+
+
+def test_env_migration_keeps_relative_paths_that_stay_inside(tmp_path):
+    """A relative path with ``..`` that resolves inside the env is neither refused nor
+    rewritten (rule 2), while a non-path string containing ``..`` is left alone."""
+    old_env = tmp_path / "old" / "myenv"
+    (old_env / "sub").mkdir(parents=True)
+    (old_env / "spack.yaml").write_text(
+        syaml.dump({"spack": {"specs": ["zlib"], "include": ["sub/../local.yaml"]}}),
+        encoding="utf-8",
+    )
+    staging = tmp_path / "staging"
+    shutil.copytree(old_env, staging)
+    result = spack.migrate.process_env_file_paths(
+        str(staging / "spack.yaml"),
+        str(old_env),
+        str(staging),
+        str(old_env.parent),
+        tmp_path / "new",
+    )
+    assert result is None
 
 
 @pytest.mark.parametrize("conflict", ["environments", "gpg"])

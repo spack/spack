@@ -115,6 +115,14 @@ def _check_for_escaping_env_variables(data: Any, file_context: str = "") -> None
                     depth += 1
 
 
+def _looks_like_path(value: str) -> bool:
+    """Whether a YAML string is a path reference worth checking: absolute, or relative and
+    climbing above its own directory (``../x``, ``./../x``, ``a/../../x``)."""
+    if os.path.isabs(value):
+        return True
+    return os.path.normpath(value).split(os.sep)[0] == os.pardir
+
+
 def _walk_yaml_for_paths(
     data: Any, config_file_dir: str, key_path: Optional[List[Union[str, Index]]] = None
 ) -> List[Tuple[List[Union[str, Index]], str, str]]:
@@ -122,7 +130,8 @@ def _walk_yaml_for_paths(
 
     Identifies paths as:
     - Absolute paths (os.path.isabs() - handles / on Unix and C:\\ on Windows)
-    - Relative paths starting with ../
+    - Relative paths that climb above their directory once normalized (``../x``, ``./../x``,
+      ``a/../../x``)
 
     Args:
         data: YAML data structure to walk
@@ -143,8 +152,7 @@ def _walk_yaml_for_paths(
                 nested = _walk_yaml_for_paths(value, config_file_dir, key_path + [key])
                 results.extend(nested)
             elif isinstance(value, str):
-                # Check if string looks like a path
-                if os.path.isabs(value) or value.startswith("../"):
+                if _looks_like_path(value):
                     abs_path = _resolve_and_check_path(value, config_file_dir)
                     if abs_path:
                         results.append((key_path + [key], value, abs_path))
@@ -155,8 +163,7 @@ def _walk_yaml_for_paths(
                 nested = _walk_yaml_for_paths(item, config_file_dir, key_path + [Index(idx)])
                 results.extend(nested)
             elif isinstance(item, str):
-                # Check if string looks like a path
-                if os.path.isabs(item) or item.startswith("../"):
+                if _looks_like_path(item):
                     abs_path = _resolve_and_check_path(item, config_file_dir)
                     if abs_path:
                         results.append((key_path + [Index(idx)], item, abs_path))
