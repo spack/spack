@@ -2543,7 +2543,7 @@ def test_env_create_filter_filters_group_overrides(
             Spec("libelf"), spack.concretize.concretize_one("libelf"), group="apps"
         )
         source.write()
-    original_manifest = pathlib.Path(source.manifest_path).read_text()
+    original_manifest = pathlib.Path(source.manifest_path).read_text(encoding="utf-8")
     filter_yaml = _write_filter_yaml(
         tmp_path, json.dumps({"filter": {"concrete": concrete, **rules}})
     )
@@ -2555,7 +2555,7 @@ def test_env_create_filter_filters_group_overrides(
     else:
         assert group["override"] == expected_override
     assert filtered.manifest.configuration["view"] is False
-    assert pathlib.Path(source.manifest_path).read_text() == original_manifest
+    assert pathlib.Path(source.manifest_path).read_text(encoding="utf-8") == original_manifest
     assert source.manifest._config_override["apps"] == override
 
 
