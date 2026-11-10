@@ -196,7 +196,9 @@ def test_fetch(
                 s.package.do_stage()
         with working_dir(s.package.stage.source_path):
             assert os.path.exists("configure")
-            assert is_exe("configure")
+            # Not an executable on Windows
+            if sys.platform != "win32":
+                assert is_exe("configure")
 
             with open("configure", encoding="utf-8") as f:
                 contents = f.read()

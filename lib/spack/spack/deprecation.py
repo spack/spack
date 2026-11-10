@@ -9,21 +9,25 @@ directive, with a reason, a severity, and the advisory labels it refers to.
 Which deprecations are tolerated is defined by ``packages:<name>:deprecation:allow``, a list of
 selectors falling back to ``packages:all`` and finally to the legacy ``config:deprecated`` flag.
 A directive without labels is skipped when at least one selector matches it, and a directive
-with labels when each of its labels is matched by at least one selector.
-
-This module centralizes that policy so the concretization-time gate and the install-time gate
-cannot drift.
+with labels when each of its labels is matched by at least one selector, or fixed by a patch
+applied to the spec (``patch(..., fixes=[...])``).
 """
 
 import warnings
-from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, List, NamedTuple, Optional, Set
+from typing import TYPE_CHECKING, Dict, FrozenSet, Iterable, List, NamedTuple, Optional, Set, Tuple
 
 import spack.config
 import spack.deptypes as dt
 import spack.error
 import spack.repo
 import spack.traverse
-from spack.enums import ConfigScopePriority, Deprecation, DeprecationReason, DeprecationSeverity
+from spack.enums import (
+    LEGACY_DEPRECATION_LABEL,
+    ConfigScopePriority,
+    Deprecation,
+    DeprecationReason,
+    DeprecationSeverity,
+)
 
 if TYPE_CHECKING:
     import spack.spec
@@ -218,6 +222,8 @@ class Policy:
     def disallowed(self, spec: "spack.spec.Spec") -> List[Violation]:
         """Returns the list of deprecation-policy violations for a spec. External specs are
         exempted since they are not under Spack's control.
+
+        A label fixed by a patch applied to the spec is not a violation.
         """
         if spec.external:
             return []
@@ -228,14 +234,40 @@ class Policy:
             return []
 
         violations = []
+        fixed: Optional[Set[str]] = None
         for constraint, entries in pkg_cls.deprecations.items():
             if not spec.satisfies(constraint):
                 continue
             for entry in entries:
                 refused = self.refused(spec.name, entry)
+                if refused is not None and can_be_fixed(refused.labels):
+                    if fixed is None:
+                        fixed = fixed_labels(spec, repo=self.repo)
+                    labels = tuple(x for x in refused.labels if x not in fixed)
+                    refused = refused._replace(labels=labels) if labels else None
+
                 if refused is not None:
                     violations.append(Violation(constraint, refused))
+
         return violations
+
+
+def can_be_fixed(labels: Tuple[str, ...]) -> bool:
+    """Return True if a patch may fix one of the labels. The label Spack records for
+    ``version(..., deprecated=True)`` is never fixed, since ``patch(fixes=...)`` refuses it.
+    """
+    return any(x != LEGACY_DEPRECATION_LABEL for x in labels)
+
+
+def fixed_labels(spec: "spack.spec.Spec", *, repo: spack.repo.RepoPath) -> Set[str]:
+    """Return the deprecation labels fixed by the patches applied to a concrete spec. The set is
+    empty when the patches cannot be looked up in ``repo``.
+    """
+    try:
+        patches = spec._patches_from(repo)
+    except (spack.error.SpecError, spack.repo.RepoError):
+        return set()
+    return {label for patch in patches for label in patch.fixes}
 
 
 def deprecated_spec_str(pkg_name: str, constraint: "spack.spec.Spec") -> str:
@@ -246,11 +278,10 @@ def deprecated_spec_str(pkg_name: str, constraint: "spack.spec.Spec") -> str:
     return constraint_str if constraint.name else f"{pkg_name}{constraint_str}"
 
 
-def deprecation_attributes_str(reason: str, severity: str, labels: Iterable[str]) -> str:
+def deprecation_attributes_str(entry: Deprecation) -> str:
     """Format the attributes of a refused deprecation, as they are written in a selector."""
-    result = f"reason: {reason}, severity: {severity}"
-    labels_str = ", ".join(labels)
-    return f"{result}, labels: {labels_str}" if labels_str else result
+    result = f"reason: {entry.reason.value}, severity: {entry.severity.name.lower()}"
+    return f"{result}, labels: {', '.join(entry.labels)}" if entry.labels else result
 
 
 def reusable(
@@ -316,9 +347,7 @@ def _format_violations(spec: "spack.spec.Spec", violations: List[Violation]) -> 
     lines = [f"    {spec.cshort_spec}"]
     for constraint, entry in violations:
         spec_str = deprecated_spec_str(spec.name, constraint)
-        attributes = deprecation_attributes_str(
-            entry.reason.value, entry.severity.name.lower(), entry.labels
-        )
+        attributes = deprecation_attributes_str(entry)
         lines.append(
             f"        {spec_str} is deprecated ({attributes}); not allowed by "
             f"'packages:{spec.name}:deprecation:allow'"

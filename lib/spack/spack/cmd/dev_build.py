@@ -12,6 +12,7 @@ import spack.cmd.common.arguments
 import spack.concretize
 import spack.config
 import spack.installer_dispatch
+import spack.modules
 import spack.repo
 import spack.store
 from spack.cmd.common import arguments
@@ -132,7 +133,7 @@ def dev_build(self, args):
     elif args.test == "root":
         tests = [spec.name for spec in specs]
 
-    spack.installer_dispatch.create_installer(
+    installer = spack.installer_dispatch.create_installer(
         [spec.package],
         tests=tests,
         keep_prefix=args.keep_prefix,
@@ -142,7 +143,11 @@ def dev_build(self, args):
         stop_before=args.before,
         skip_patch=args.skip_patch,
         stop_at=args.until,
-    ).install()
+    )
+    try:
+        installer.install()
+    finally:
+        spack.modules.write_module_files(installer.recorded_specs)
 
     # drop into the build environment of the package?
     if args.shell is not None:

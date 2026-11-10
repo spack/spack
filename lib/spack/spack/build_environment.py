@@ -36,7 +36,6 @@ import inspect
 import io
 import multiprocessing
 import os
-import re
 import signal
 import sys
 import traceback
@@ -480,6 +479,26 @@ def optimization_flags(compiler, target):
     return result
 
 
+def link_dirs_of(query: spack.spec.Spec) -> List[str]:
+    """Return the library directories a build uses to link against ``query``, as returned by
+    ``spec[name]``: those of its libraries, followed by its ``lib`` and ``lib64`` subdirectories
+    that exist."""
+    link_dirs = []
+    try:
+        # Locating libraries can be time consuming, so log start and finish.
+        tty.debug(f"Collecting libraries for {query.name}")
+        link_dirs.extend(query.libs.directories)
+        tty.debug(f"Libraries for {query.name} have been collected.")
+    except NoLibrariesError:
+        tty.debug(f"No libraries found for {query.name}")
+
+    for default_lib_dir in ("lib", "lib64"):
+        default_lib_prefix = os.path.join(query.prefix, default_lib_dir)
+        if os.path.isdir(default_lib_prefix):
+            link_dirs.append(default_lib_prefix)
+    return link_dirs
+
+
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper (which have the prefix
     ``SPACK_``) and also add the compiler wrappers to PATH.
@@ -525,20 +544,7 @@ def set_wrapper_variables(pkg, env):
         # deps, so keying by name is wrong. In practice it is not problematic: we obtain the same
         # gcc-runtime / glibc here, and repeatedly add the same dirs that are later deduped.
         query = pkg.spec[dep.name]
-        dep_link_dirs = []
-        try:
-            # Locating libraries can be time consuming, so log start and finish.
-            tty.debug(f"Collecting libraries for {dep.name}")
-            dep_link_dirs.extend(query.libs.directories)
-            tty.debug(f"Libraries for {dep.name} have been collected.")
-        except NoLibrariesError:
-            tty.debug(f"No libraries found for {dep.name}")
-
-        for default_lib_dir in ("lib", "lib64"):
-            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-            if os.path.isdir(default_lib_prefix):
-                dep_link_dirs.append(default_lib_prefix)
-
+        dep_link_dirs = link_dirs_of(query)
         link_dirs[:0] = dep_link_dirs
         if dep.dag_hash() in rpath_hashes:
             rpath_dirs[:0] = dep_link_dirs
@@ -1390,12 +1396,10 @@ def start_build_process(
             except Exception:
                 pass
 
-        mflags = os.environ.get("MAKEFLAGS")
-        if mflags is not None:
-            m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
-            if m:
-                jobserver_fd1 = Connection(int(m.group(1)))
-                jobserver_fd2 = Connection(int(m.group(2)))
+        jobserver_fds = spack.util.executable.jobserver_fds(os.environ.get("MAKEFLAGS", ""))
+        if jobserver_fds:
+            jobserver_fd1 = Connection(jobserver_fds[0])
+            jobserver_fd2 = Connection(jobserver_fds[1])
 
         p = BuildProcess(
             target=_setup_pkg_and_run,

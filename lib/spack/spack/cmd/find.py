@@ -246,7 +246,7 @@ def make_env_decorator(env):
         if any(spec.dag_hash() == r.dag_hash() for r in roots):
             return color.colorize(f"@*{{{fmt}}}")
         elif spec in removed:
-            return color.colorize(f"@K{{{fmt}}}")
+            return color.colorize(f"@#{{{fmt}}}")
         else:
             return fmt
 
@@ -282,7 +282,7 @@ def display_env(env, args, decorator, results, status_fn=None):
         status = status[:-2]
 
         if args.long or args.very_long:
-            hash = color.colorize(f"@K{{{hash[: 7 if args.long else None]}}}")
+            hash = color.colorize(f"@#{{{hash[: 7 if args.long else None]}}}")
             return f"{status} {hash} {string}"
         else:
             return f"{status} {string}"

@@ -47,7 +47,7 @@ from typing import (
 from spack.vendor.typing_extensions import Literal
 
 from spack.util import lang, tty
-from spack.util.executable import Executable
+from spack.util.executable import Executable, resolve_exe
 from spack.util.lang import dedupe, fnmatch_translate_multiple, memoized
 from spack.util.path import path_to_os_path, sanitize_win_longpath, system_path_filter
 
@@ -925,8 +925,11 @@ def install_tree(
 @system_path_filter
 def is_exe(path) -> bool:
     """Returns :obj:`True` iff the specified path exists, is a regular file, and has executable
-    permissions for the current process."""
-    return os.path.isfile(path) and os.access(path, os.X_OK)
+    permissions for the current process.
+
+    On Windows the extension may be omitted from ``path``, in which case the extensions in
+    ``PATHEXT`` are tried; see :func:`spack.util.executable.resolve_exe`."""
+    return resolve_exe(path) is not None
 
 
 def has_shebang(path) -> bool:
@@ -1930,14 +1933,13 @@ def _find_max_depth(
     regex = re.compile(fnmatch_translate_multiple(filename_only_patterns))
     # Ordered dictionary that keeps track of what pattern found which files
     matched_paths: Dict[str, List[str]] = {f"pattern_{i}": [] for i, _ in enumerate(globs)}
-    # Ensure returned paths are always absolute
-    roots = [os.path.abspath(r) for r in roots]
     # Breadth-first search queue. Each element is a tuple of (depth, dir)
     dir_queue: Deque[Tuple[int, str]] = collections.deque()
     # Set of visited directories. Each element is a tuple of (inode, device)
     visited_dirs: Set[Tuple[int, int]] = set()
 
-    for root in roots:
+    # Ensure returned paths are always absolute
+    for root in (os.path.abspath(r) for r in roots):
         try:
             stat_root = os.stat(root)
         except OSError as e:

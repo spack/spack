@@ -46,7 +46,7 @@ import pathlib
 import pickle
 import re
 import warnings
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from urllib.request import urlopen
 
 import spack.builder
@@ -55,6 +55,7 @@ import spack.enums
 import spack.package_base
 import spack.patch
 import spack.repo
+import spack.schema.modules
 import spack.spec
 import spack.util.crypto
 import spack.util.lang
@@ -63,10 +64,10 @@ import spack.variant
 from spack.util.string import plural
 
 #: Map an audit tag to a list of callables implementing checks
-CALLBACKS = {}
+CALLBACKS: Dict[str, "AuditClass"] = {}
 
 #: Map a group of checks to the list of related audit tags
-GROUPS = collections.defaultdict(list)
+GROUPS: Dict[str, List[str]] = collections.defaultdict(list)
 
 
 class Error:
@@ -192,6 +193,11 @@ config_packages = AuditClass(
 #: Sanity checks on packages.yaml
 config_repos = AuditClass(
     group="configs", tag="CFG-REPOS", description="Sanity checks on repositories", kwargs=()
+)
+
+#: Sanity checks on modules.yaml
+config_modules = AuditClass(
+    group="configs", tag="CFG-MODULES", description="Sanity checks on modules.yaml", kwargs=()
 )
 
 
@@ -337,6 +343,37 @@ def _ensure_no_folders_without_package_py(error_cls):
     return errors
 
 
+@config_modules
+def _ensure_templates_apply_to_folded_installations(error_cls):
+    """With variants defined in tcl module files, the installations of a package version share
+    one module file, so a template must be set for them all"""
+    errors = []
+    modules_yaml = spack.config.CONFIG.get_config("modules")
+    # The keys that are not options of the tcl section are spec constraints
+    option_keys = spack.schema.modules.tcl_configuration["properties"]
+    for set_name, module_set in modules_yaml.items():
+        if set_name == "prefix_inspections":
+            continue
+        tcl_yaml = module_set.get("tcl", {})
+        if tcl_yaml.get("variants", "none") == "none":
+            continue
+        for constraint, rules in tcl_yaml.items():
+            if constraint in option_keys or "template" not in rules:
+                continue
+            # Installations of different versions never share a module file, so a constraint
+            # on the package name and version applies to the whole module file
+            if spack.spec.constrains_only_name_and_versions(spack.spec.Spec(constraint)):
+                continue
+            summary = (
+                f"Setting a template for '{constraint}' in the tcl configuration of the "
+                f"'{set_name}' module set, while 'variants: {tcl_yaml['variants']}' folds "
+                "the installations of a package version into one module file. Set the "
+                "template for the package or package version instead"
+            )
+            errors.append(_make_config_error(rules, summary, error_cls=error_cls))
+    return errors
+
+
 def _make_config_error(config_data, summary, error_cls):
     s = io.StringIO()
     s.write("Occurring in the following file:\n")
@@ -471,6 +508,49 @@ def _check_patch_urls(pkgs, error_cls):
                                 [patch.url],
                             )
                         )
+
+    return errors
+
+
+@package_directives
+def _patch_fixes_are_deprecation_labels(pkgs, error_cls):
+    """Reports labels in 'patch(fixes=...)' that no deprecated() directive of the patched
+    package declares.
+    """
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
+        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
+
+        fixing_patches_by_target = collections.defaultdict(list)
+        fixing_patches_by_target[pkg_name] = [
+            x for patches in pkg_cls.patches.values() for x in patches if x.fixes
+        ]
+        for deps_by_name in pkg_cls.dependencies.values():
+            for dep_name, dep in deps_by_name.items():
+                for patches in (dep.patches or {}).values():
+                    fixing_patches_by_target[dep_name].extend(x for x in patches if x.fixes)
+
+        for target, patches in fixing_patches_by_target.items():
+            if not patches or not spack.repo.PATH.exists(target):
+                continue
+            target_cls = spack.repo.PATH.get_pkg_class(target)
+            labels = {
+                label
+                for entries in target_cls.deprecations.values()
+                for entry in entries
+                for label in entry.labels
+            }
+            for patch in patches:
+                for label in patch.fixes:
+                    if label in labels:
+                        continue
+                    name = getattr(patch, "relative_path", None) or patch.path_or_url
+                    summary = (
+                        f"{pkg_name}: patch '{name}' fixes '{label}', which is not a label of "
+                        f"any deprecated() directive of '{target}'"
+                    )
+                    errors.append(error_cls(summary, [f"in {filename}"]))
 
     return errors
 

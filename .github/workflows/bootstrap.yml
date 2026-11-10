@@ -12,6 +12,10 @@ concurrency:
   group: bootstrap-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
+# Default permissions for this workflow are restrictive; individual jobs can overwrite if they need additional access.
+permissions:
+  contents: read
+
 jobs:
   distros-clingo-sources:
     if: github.repository == 'spack/spack'
@@ -108,10 +112,10 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: ["macos-15-intel", "macos-latest", "ubuntu-latest"]
+        runner: ["macos-15-intel", "macos-latest", "ubuntu-24.04"]
     steps:
       - name: Setup macOS
-        if: ${{ matrix.runner != 'ubuntu-latest' }}
+        if: ${{ matrix.runner != 'ubuntu-24.04' }}
         run: brew install tree
       - name: Remove system executables
         run: |

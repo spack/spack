@@ -5,9 +5,9 @@
 %=============================================================================
 % This logic program adds detailed error messages to Spack's concretizer
 %
-% Note that functions used in rule bodies here need to have a corresponding
-% #show line in display.lp, otherwise they won't be passed through to the
-% error solve.
+% Note that functions used in rule bodies here need to be shown in display.lp
+% or listed in DIAGNOSTIC_SIGNATURES in asp.py, otherwise they won't be passed
+% through to the error solve.
 %=============================================================================
 
 #program error_messages.

@@ -29,6 +29,12 @@ def test_get_bad_extension():
     assert result is None
 
 
+def test_extension_dot_is_literal():
+    """Tests that the dot inside an extension matches a dot only"""
+    assert spack.util.url.extension_from_path("Foo.tarXgz") is None
+    assert spack.util.url.strip_extension("Foo.tarXgz") == "Foo.tarXgz"
+
+
 @pytest.mark.parametrize(
     "url,expected",
     [

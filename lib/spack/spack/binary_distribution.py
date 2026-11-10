@@ -7,6 +7,7 @@ import concurrent.futures
 import contextlib
 import copy
 import datetime
+import functools
 import hashlib
 import io
 import itertools
@@ -30,8 +31,10 @@ from typing import (
     IO,
     Any,
     Callable,
+    Container,
     Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
     NamedTuple,
@@ -42,6 +45,7 @@ from typing import (
     cast,
 )
 
+import spack.build_environment
 import spack.caches
 import spack.config
 import spack.database
@@ -53,6 +57,7 @@ import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.package_prefs
 import spack.paths
 import spack.platforms
 import spack.spec
@@ -61,6 +66,7 @@ import spack.store
 import spack.user_environment
 import spack.util.archive
 import spack.util.crypto
+import spack.util.environment
 import spack.util.filesystem as fsys
 import spack.util.gpg
 import spack.util.lang
@@ -84,7 +90,6 @@ from spack.oci.oci import (
     upload_blob_with_retry,
     upload_manifest_with_retry,
 )
-from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import stage_from_config
 from spack.util import file_cache, timer, tty
@@ -101,12 +106,15 @@ from .url_buildcache import (
     InvalidMetadataFile,
     ListMirrorSpecsError,
     MirrorMetadata,
+    NoSuchBlobException,
     NoVerifyException,
     URLBuildcacheEntry,
     get_entries_from_cache,
     get_url_buildcache_class,
     get_valid_spec_file,
+    validate_checksum,
 )
+from .vendor.jsonschema.exceptions import ValidationError
 from .vendor.typing_extensions import TypedDict
 
 
@@ -221,7 +229,7 @@ class BinaryIndexCache:
         self._last_fetch_times: Dict[MirrorMetadata, _LastFetch] = {}
 
         #: Dictionary mapping DAG hashes of specs to Spec objects
-        self._known_specs: Dict[str, spack.spec.Spec] = {}
+        self.known_specs: Dict[str, spack.spec.Spec] = {}
         #: Dictionary mapping DAG hashes of specs to a list of mirrors where they can be found
         self._mirrors_for_spec: Dict[str, Set[MirrorMetadata]] = defaultdict(set)
         #: URLs of binary mirrors that had no buildcache index during the last update()
@@ -253,7 +261,7 @@ class BinaryIndexCache:
         if clear_existing:
             self._specs_already_associated = set()
             self._mirrors_for_spec = defaultdict(set)
-            self._known_specs = {}
+            self.known_specs = {}
 
         for mirror_metadata in self._local_index_cache:
             cache_entry = self._local_index_cache[mirror_metadata]
@@ -282,6 +290,8 @@ class BinaryIndexCache:
                             f"'{mirror_metadata.url}'. {e.database_version_message}"
                         )
                         return
+                else:
+                    warnings.warn("Stale index in cache, consider running `spack clean -m`")
 
             spec_list = [
                 s
@@ -295,12 +305,12 @@ class BinaryIndexCache:
                 mirrors = self._mirrors_for_spec[dag_hash]
 
                 mirrors.add(mirror_metadata.strip_view())
-                if dag_hash not in self._known_specs:
-                    self._known_specs[dag_hash] = spec
+                if dag_hash not in self.known_specs:
+                    self.known_specs[dag_hash] = spec
 
     def get_all_built_specs(self) -> List[spack.spec.Spec]:
         """Returns a list of all concrete specs known to be available in a binary cache."""
-        return list(self._known_specs.values())
+        return list(self.known_specs.values())
 
     def find_built_spec(self, spec: spack.spec.Spec) -> List[MirrorMetadata]:
         """Returns a list of MirrorMetadata objects indicating which mirrors have the given
@@ -334,13 +344,19 @@ class BinaryIndexCache:
 
         if spec_dag_hash not in self._mirrors_for_spec:
             self._mirrors_for_spec[spec_dag_hash] = set(found_list)
-            self._known_specs[spec_dag_hash] = spec
+            self.known_specs[spec_dag_hash] = spec
         else:
             current_list = self._mirrors_for_spec[spec_dag_hash]
             for new_entry in found_list:
                 current_list.add(new_entry.strip_view())
 
-    def update(self, with_cooldown: bool = False, *, config: spack.config.Configuration) -> None:
+    def update(
+        self,
+        mirror_metadata: Optional[MirrorMetadata] = None,
+        with_cooldown: bool = False,
+        *,
+        config: spack.config.Configuration,
+    ) -> None:
         """Make sure local cache of buildcache index files is up to date.
         If the same mirrors are configured as the last time this was called
         and none of the remote buildcache indices have changed, calling this
@@ -351,18 +367,31 @@ class BinaryIndexCache:
         on disk under ``_index_cache_root``).
 
         Args:
+            mirror_metadata: Specific mirror to update the cached index for
             with_cooldown: skip mirrors whose index was fetched recently (within the TTL).
-            config: configuration to read the mirror list and TTL from."""
+            config: configuration to read the mirror list and TTL from.
+        """
         self._init_local_index_cache()
-        self.mirrors_without_index = set()
 
-        supported_mirror_versions = {
-            (m.fetch_url, m.fetch_view): m.supported_layout_versions
-            for m in spack.mirrors.mirror.MirrorCollection(binary=True, config=config).values()
-        }
+        if mirror_metadata:
+            if mirror_metadata.url in self.mirrors_without_index:
+                self.mirrors_without_index.remove(mirror_metadata.url)
+            supported_mirror_versions = {
+                (mirror_metadata.url, mirror_metadata.view): [mirror_metadata.version]
+            }
+            clear_cache = False
+            regenerate_cache = False
+        else:
+            self.mirrors_without_index = set()
+            supported_mirror_versions = {
+                (m.fetch_url, m.fetch_view): m.supported_layout_versions
+                for m in spack.mirrors.mirror.MirrorCollection(binary=True, config=config).values()
+            }
 
-        # If we have a cached index for a mirror which is no longer configured, remove it
-        clear_cache, regenerate_cache = self._remove_stale_cache_entries(supported_mirror_versions)
+            # If we have a cached index for a mirror which is no longer configured, remove it
+            clear_cache, regenerate_cache = self._remove_stale_cache_entries(
+                supported_mirror_versions
+            )
 
         # Fetch or update the other indexes
         errors, all_failed = [], True
@@ -475,7 +504,36 @@ class BinaryIndexCache:
 
         return clear, regenerate
 
-    def _fetch_and_cache_index(self, mirror_metadata: MirrorMetadata, cache_entry={}):
+    def get_index_handler(self, mirror_metadata: MirrorMetadata, cache_entry={}) -> "IndexHandler":
+        """Get the index fetcher for a mirror metadata"""
+        mirror_url = mirror_metadata.url
+        scheme = urllib.parse.urlparse(mirror_url).scheme
+        if not cache_entry:
+            self._init_local_index_cache()
+            cache_entry = self._local_index_cache.get(str(mirror_metadata), {})
+
+        if scheme == "oci":
+            # TODO: Actually etag and OCI are not mutually exclusive...
+            return OCIIndexHandler(mirror_metadata, cache_entry.get("index_hash", None))
+        elif cache_entry.get("etag"):
+            if mirror_metadata.version < 3:
+                return EtagIndexHandlerV2(mirror_metadata, cache_entry["etag"])
+            else:
+                return EtagIndexHandler(mirror_metadata, cache_entry["etag"])
+
+        else:
+            if mirror_metadata.version < 3:
+                return DefaultIndexHandlerV2(
+                    mirror_metadata, local_hash=cache_entry.get("index_hash", None)
+                )
+            else:
+                return DefaultIndexHandler(
+                    mirror_metadata, local_hash=cache_entry.get("index_hash", None)
+                )
+
+    def _fetch_and_cache_index(
+        self, mirror_metadata: MirrorMetadata, cache_entry={}, force: bool = False
+    ):
         """Fetch a buildcache index file from a remote mirror and cache it.
 
         If we already have a cached index from this mirror, then we first
@@ -493,6 +551,12 @@ class BinaryIndexCache:
             FetchIndexError
             BuildcacheIndexNotExists
         """
+        # Ensure the on-disk cache has been loaded into memory before this call (or any
+        # earlier call for this mirror, e.g. from get_index_handler) writes a fresh entry
+        # into self._local_index_cache. Otherwise a later, redundant load would silently
+        # discard that fresh entry and replace it with whatever is on disk at that point.
+        self._init_local_index_cache()
+
         mirror_url = mirror_metadata.url
         mirror_view = mirror_metadata.view
         layout_version = mirror_metadata.version
@@ -506,8 +570,11 @@ class BinaryIndexCache:
             if not web_util.url_exists(index_url):
                 raise BuildcacheIndexNotExists(f"Index not found in cache {index_url}")
 
-        fetcher: IndexHandler = get_index_fetcher(scheme, mirror_metadata, cache_entry)
-        result = fetcher.conditional_fetch()
+        if not cache_entry:
+            cache_entry = self._local_index_cache.get(str(mirror_metadata), {})
+
+        handler: "IndexHandler" = self.get_index_handler(mirror_metadata, cache_entry)
+        result = handler.conditional_fetch(force=force)
 
         # Nothing to do
         if result.fresh:
@@ -516,7 +583,7 @@ class BinaryIndexCache:
         # Persist new index.json
         url_hash = compute_hash(str(mirror_metadata))
         cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
-        with self._index_file_cache.write_transaction(cache_key) as (old, new):
+        with self._index_file_cache.write_transaction(cache_key) as (_, new):
             new.write(result.data)
 
         self._local_index_cache[str(mirror_metadata)] = {
@@ -527,12 +594,23 @@ class BinaryIndexCache:
 
         # clean up the old cache_key if necessary
         old_cache_key = cache_entry.get("index_path", None)
-        if old_cache_key:
+        if old_cache_key and old_cache_key != cache_key:
             self._index_file_cache.remove(old_cache_key)
 
         # We fetched an index and updated the local index cache, we should
         # regenerate the spec cache as a result.
         return True
+
+    @contextlib.contextmanager
+    def read_index(self, mirror_metadata: MirrorMetadata) -> Iterator[Optional[IO[str]]]:
+        self._init_local_index_cache()
+        cache_entry = self._local_index_cache.get(str(mirror_metadata), {})
+        try:
+            cache_key = cache_entry["index_path"]
+            with self._index_file_cache.read_transaction(cache_key) as f:
+                yield f
+        except KeyError:
+            yield None
 
 
 def binary_index_location(*, config: spack.config.Configuration):
@@ -574,16 +652,19 @@ def file_matches(f: IO[bytes], regex: spack.util.lang.PatternBytes) -> bool:
         f.seek(0)
 
 
-def specs_to_relocate(spec: spack.spec.Spec) -> List[spack.spec.Spec]:
+def specs_to_relocate(
+    spec: spack.spec.Spec, include_externals: bool = False
+) -> List[spack.spec.Spec]:
     """Return the set of specs that may be referenced in the install prefix of the provided spec.
-    We currently include non-external transitive link and direct run dependencies."""
+    We currently include transitive link and direct run dependencies, and externals among them
+    only if ``include_externals`` is True."""
     specs = [
         s
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link", order="breadth", key=traverse.by_dag_hash),
             spec.dependencies(deptype="run"),
         )
-        if not s.external
+        if include_externals or not s.external
     ]
     return list(spack.util.lang.dedupe(specs, key=lambda s: s.dag_hash()))
 
@@ -665,15 +746,21 @@ def select_signing_key() -> str:
     return str(keys[0])
 
 
-def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: str = ""):
+def _url_push_index(
+    mirror_metadata: MirrorMetadata, db: BuildCacheDatabase, if_match: Optional[str] = None
+):
     """Generate the index, compute its hash, and push the files to the mirror"""
-    index_json_path = os.path.join(temp_dir, spack.database.INDEX_JSON_FILE)
-    with open(index_json_path, "w", encoding="utf-8") as f:
-        db._write_to_file(f)
+    # Ensure the database file is up-to-date
+    db._write()
+    index_json_path = db._index_path.as_posix()
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    manifest_name = url_util.join(name, "index") if name else "index"
-    manifest_url = cache_class.get_index_url(cache_prefix, name)
+    cache_prefix = mirror_metadata.url
+    manifest_name = (
+        url_util.join(mirror_metadata.view, "index") if mirror_metadata.view else "index"
+    )
+    manifest_url = cache_class.get_index_url(cache_prefix, mirror_metadata.view)
+
     try:
         old = cache_class(cache_prefix, allow_unsigned=True).read_manifest(manifest_url).data
     except Exception as e:  # missing or unreadable: start from scratch
@@ -681,108 +768,198 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str, name: 
         old = []
 
     record = cache_class.push_blob_from_file(
-        index_json_path, cache_prefix, BuildcacheComponent.INDEX
+        index_json_path, cache_prefix, BuildcacheComponent.INDEX, compression="none"
     )
     # Keep records of other formats so other Spack versions keep their snapshot
     kept = [r for r in old if r.media_type != record.media_type]
     manifest = BuildcacheManifest(CURRENT_BUILD_CACHE_LAYOUT_VERSION, [record, *kept])
-    cache_class.push_manifest(
-        cache_prefix, manifest_name, manifest, temp_dir, component_type=BuildcacheComponent.INDEX
-    )
-    cache_class.maybe_push_layout_json(cache_prefix)
+    with tempfile.TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
+        cache_class.push_manifest(
+            cache_prefix,
+            manifest_name,
+            manifest,
+            tmpdir,
+            component_type=BuildcacheComponent.INDEX,
+            if_match=if_match,
+        )
+    cache_class.maybe_push_layout_json(mirror_metadata.url)
 
 
-def _read_specs_and_push_index(
+def _read_specs(
     file_list: List[str],
-    read_method: Callable[[str], URLBuildcacheEntry],
-    name: str,
+    read_method: Callable[[str], Optional[spack.spec.Spec]],
     filter_fn: Callable[[str], bool],
-    cache_prefix: str,
     db: BuildCacheDatabase,
-    temp_dir: str,
-    *,
-    timer=timer.NULL_TIMER,
 ):
-    """Read listed specs, generate the index, and push it to the mirror.
+    """Read filtered listed specs into a database to generate an index
 
     Args:
         file_list: List of urls or file paths pointing at spec files to read
         read_method: A function taking a single argument, either a url or a file path,
             and which reads the spec file at that location, and returns the spec.
-        cache_prefix: prefix of the build cache on s3 where index should be pushed.
         db: A spack database used for adding specs and then writing the index.
-        temp_dir: Location to write index.json and hash for pushing
     """
-    with timer.measure("read"):
-        for file in file_list:
-            # All supported versions of build caches put the hash as the last
-            # parameter before the extension
-            try:
-                x = file.split("/")[-1].split("-")[-1].split(".")[0]
-            except IndexError:
-                raise GenerateIndexError(f"Malformed metadata file name detected {file}")
+    for file in file_list:
+        # All supported versions of build caches put the hash as the last
+        # parameter before the extension
+        try:
+            spec_hash = URLBuildcacheEntry.hash_from_manifest_name(file)
 
-            if not filter_fn(x):
-                continue
+        except (IndexError, ValueError):
+            # If unable to parse the spec information from the file name continue.
+            warnings.warn(f"Malformed metadata file name detected {file}")
+            # Could not parse the spec information from the manifest. Skip rather
+            # than abort the update.
+            continue
 
-            cache_entry: Optional[URLBuildcacheEntry] = None
-            try:
-                cache_entry = read_method(file)
-                spec_dict = cache_entry.fetch_metadata()
-                fetched_spec = spack.spec.Spec.from_dict(spec_dict)
-            except Exception as e:
-                tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
-                continue
-            finally:
-                if cache_entry:
-                    cache_entry.destroy()
-            db.add(fetched_spec)
-            db.mark(fetched_spec, "in_buildcache", True)
+        if not filter_fn(spec_hash):
+            continue
 
-    with timer.measure("push"):
-        _push_index(db, temp_dir, cache_prefix, name)
+        # If it is already in the database, mark it and continue
+        record = db.query_local_by_spec_hash(spec_hash)
+        if record:
+            db.mark(record.spec, "in_buildcache", True)
+            continue
+
+        spec = read_method(file)
+        if not spec:
+            # Couldn't read the spec from anywhere
+            warnings.warn(f"Failed to read spec from cache /{spec_hash}")
+            continue
+
+        db.add(spec)
+        db.mark(spec, "in_buildcache", True)
 
 
-def _url_generate_package_index(
-    url: str,
+def _lazy_read_spec(
+    file: str, spec_by_hash: Callable[[str], Optional[spack.spec.Spec]], read_from_cache: Callable
+) -> Optional[spack.spec.Spec]:
+    """Lazy reader that attempts to find the spec using local methods first"""
+    try:
+        spec_hash = URLBuildcacheEntry.hash_from_manifest_name(file)
+
+        # Try to look it up from a passed source
+        s = spec_by_hash(spec_hash)
+        if s:
+            return s
+
+        # Look in the cached databases
+        s = BINARY_INDEX.known_specs.get(spec_hash)
+        if s:
+            return s
+    except (IndexError, ValueError):
+        # Failure to parse the manifest means we can't just do this the fast way
+        pass
+
+    # If we can't find the spec locally, try to fetch it from the cache
+    cache_entry: Optional[URLBuildcacheEntry] = None
+    try:
+        cache_entry = read_from_cache(file)
+        spec_dict = cache_entry.fetch_metadata()
+        s = spack.spec.Spec.from_dict(spec_dict)
+        return s
+    except Exception as e:
+        # If this is transient error raise to signal for retry. We don't want to
+        # exclude otherwise valid specs from the index.
+        if web_util.is_transient_error(e):
+            raise
+
+        warnings.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+    finally:
+        if cache_entry:
+            cache_entry.destroy()
+
+    return None
+
+
+def _url_update_index(
+    mirror_metadata: MirrorMetadata,
     tmpdir: str,
-    db: Optional[BuildCacheDatabase] = None,
-    name: str = "",
+    append: bool = False,
     filter_fn: Callable[[str], bool] = lambda x: True,
+    spec_by_hash: Callable[[str], Optional[spack.spec.Spec]] = lambda x: None,
     *,
+    config: spack.config.Configuration,
     timer=timer.NULL_TIMER,
+    retry: Optional[web_util.Retry] = None,
 ):
     """Create or replace the build cache index on the given mirror.  The
     buildcache index contains an entry for each binary package under the
     cache_prefix.
 
     Args:
-        url: Base url of binary mirror.
+        mirror_metadata: Metadata for binary mirror.
+        tmpdir: Temporary directory workspace for storing update index data
 
     Return:
         None
     """
-    try:
+    load_buildcache_index()
+
+    if not retry:
+        retry = web_util.Retry()
+
+    # Iterate until success
+    for attempt in retry:
         with timer.measure("list"):
-            filename_to_mtime_mapping, read_fn = get_entries_from_cache(
-                url, component_type=BuildcacheComponent.SPEC
-            )
-        file_list = list(filename_to_mtime_mapping.keys())
-    except ListMirrorSpecsError as e:
-        raise GenerateIndexError(f"Unable to generate package index: {e}") from e
+            # Update the cache listing
+            try:
+                filename_to_mtime_mapping, read_fn = get_entries_from_cache(
+                    mirror_metadata.url, component_type=BuildcacheComponent.SPEC
+                )
+                file_list = list(filename_to_mtime_mapping.keys())
+            except ListMirrorSpecsError as e:
+                raise GenerateIndexError(f"Unable to generate package index: {e}") from e
 
-    tty.debug(f"Retrieving spec descriptor files from {url} to build index")
+        tty.debug(f"Retrieving spec descriptor files from {mirror_metadata} to build index")
 
-    if not db:
+        # Initialize a database for generating the index
         db = BuildCacheDatabase(tmpdir)
         db._write()
 
-    try:
-        _read_specs_and_push_index(
-            file_list, read_fn, name, filter_fn, url, db, str(db.database_directory), timer=timer
-        )
-    except Exception as e:
-        raise GenerateIndexError(f"Encountered problem pushing package index to {url}: {e}") from e
+        try:
+            # Update the local cached index and spec list
+            try:
+                BINARY_INDEX.update(mirror_metadata, config=config)
+            except (FetchCacheError, ValidationError):
+                warnings.warn("Failed to read the current build cache index.")
+
+            # For appending Load the current state of the index from the cache into the database
+            if append:
+                with BINARY_INDEX.read_index(mirror_metadata) as f:
+                    if f is not None:
+                        db._read_from_stream(f)
+
+            try_read_spec = functools.partial(
+                _lazy_read_spec, spec_by_hash=spec_by_hash, read_from_cache=read_fn
+            )
+
+            # Read the specs from the cache into the database db
+            with timer.measure("read"):
+                _read_specs(file_list, try_read_spec, filter_fn, db)
+
+            with timer.measure("push"):
+                index_handler = BINARY_INDEX.get_index_handler(mirror_metadata)
+                index_handler.push_index(db)
+
+            break
+        except Exception as e:
+            errmsg = f"Encountered a problem pushing package index to {mirror_metadata}"
+            # Only attempt a retry if the error is possible to recover from.
+            # Transient network errors or precondition errors (ie. IfMatch conflict requires
+            # a refresh of the index and etag).
+            retryable = False
+            if web_util.is_transient_error(e):
+                errmsg += ": transient network error"
+                retryable = True
+            elif web_util.is_precondition_error(e):
+                errmsg += ": Precondition Failed"
+                retryable = True
+            if not retryable or retry.is_last_attempt():
+                raise GenerateIndexError(errmsg) from e
+            else:
+                warnings.warn(errmsg)
+                tty.info(f"Retrying update index {mirror_metadata}")
 
 
 def generate_key_index(mirror_url: str, tmpdir: str) -> None:
@@ -1023,8 +1200,10 @@ class Uploader:
         self._executor.__exit__(*args)
         self._tmpdir.__exit__(*args)
 
-    def push_or_raise(self, specs: List[spack.spec.Spec]) -> List[spack.spec.Spec]:
-        skipped, errors = self.push(specs)
+    def push_or_raise(
+        self, specs: List[spack.spec.Spec], *, config: spack.config.Configuration
+    ) -> List[spack.spec.Spec]:
+        skipped, errors = self.push(specs, config=config)
         if errors:
             raise PushToBuildCacheError(
                 f"Failed to push {len(errors)} specs to {self.mirror.push_url}:\n"
@@ -1035,7 +1214,7 @@ class Uploader:
         return skipped
 
     def push(
-        self, specs: List[spack.spec.Spec]
+        self, specs: List[spack.spec.Spec], *, config: spack.config.Configuration
     ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
         raise NotImplementedError
 
@@ -1057,7 +1236,7 @@ class OCIUploader(Uploader):
         self.base_image = ImageReference.from_string(base_image) if base_image else None
 
     def push(
-        self, specs: List[spack.spec.Spec]
+        self, specs: List[spack.spec.Spec], *, config: spack.config.Configuration
     ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
         skipped, base_images, checksums, upload_errors = _oci_push(
             target_image=self.target_image,
@@ -1108,7 +1287,7 @@ class URLUploader(Uploader):
         self.signing_key = signing_key
 
     def push(
-        self, specs: List[spack.spec.Spec]
+        self, specs: List[spack.spec.Spec], *, config: spack.config.Configuration
     ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
         return _url_push(
             specs,
@@ -1118,6 +1297,7 @@ class URLUploader(Uploader):
             signing_key=self.signing_key,
             tmpdir=self.tmpdir,
             executor=self.executor,
+            config=config,
         )
 
 
@@ -1188,6 +1368,8 @@ def _url_push(
     update_index: bool,
     tmpdir: str,
     executor: concurrent.futures.Executor,
+    *,
+    config: spack.config.Configuration,
 ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
     """Pushes to the provided build cache, and returns a list of skipped specs that were already
     present (when force=False), and a list of errors. Does not raise on error."""
@@ -1266,8 +1448,7 @@ def _url_push(
 
     if update_index:
         index_tmpdir = os.path.join(tmpdir, "index")
-        os.mkdir(index_tmpdir)
-        _url_generate_package_index(out_url, index_tmpdir)
+        _url_update_index(MirrorMetadata(out_url), index_tmpdir, config=config)
 
     return skipped, errors
 
@@ -1937,6 +2118,44 @@ class _SpliceAnalogs:
         return self.candidates[max(analogs, key=key)]
 
 
+def _containing_prefix(path: bytes, prefixes: Container[bytes]) -> Optional[bytes]:
+    """Return the element of ``prefixes`` that is ``path`` or one of its parent directories"""
+    while path not in prefixes:
+        parent = os.path.dirname(path)
+        if parent == path:  # path is / or windows equivalent
+            return None
+        path = parent
+    return path
+
+
+class _SplicedRpaths:
+    """RPATH transform for a binary of a spliced spec, applied before prefix substitution.
+
+    Entries under a replaced prefix are replaced by the directories it maps to, which may be none,
+    and entries under an external prefix are moved after all others, as in a build. Duplicate
+    entries are dropped.
+    """
+
+    def __init__(self, replaced: Dict[str, List[str]], externals: Iterable[str]) -> None:
+        self.replaced = {
+            p.encode("utf-8"): [d.encode("utf-8") for d in dirs] for p, dirs in replaced.items()
+        }
+        self.externals = {p.encode("utf-8") for p in externals}
+
+    def __call__(self, rpaths: List[bytes]) -> List[bytes]:
+        result: List[bytes] = []
+        for rpath in rpaths:
+            replaced_prefix = _containing_prefix(rpath, self.replaced)
+            if replaced_prefix is not None:
+                result.extend(self.replaced[replaced_prefix])
+            else:
+                result.append(rpath)
+        external, spack_built = spack.util.lang.stable_partition(
+            result, lambda r: _containing_prefix(r, self.externals) is not None
+        )
+        return list(spack.util.lang.dedupe(spack_built + external))
+
+
 def relocate_package(spec: spack.spec.Spec) -> None:
     """Relocate binaries and text files in the given spec prefix, based on its buildinfo file."""
     spec_prefix = str(spec.prefix)
@@ -1974,9 +2193,12 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # If the spec is spliced, we need to handle the simultaneous mapping from the old install_tree
     # to the new install_tree and from the build_spec to the spliced spec. Nodes the splice did
     # not change keep their hash. For the others, the old prefix is the one of their analog: the
-    # node of the build_spec they replaced.
-    relocation_specs = specs_to_relocate(spec)
+    # node of the build_spec they replaced. Externals are included so that a spliced-in external
+    # gets a mapping from the old prefix of its analog.
+    relocation_specs = specs_to_relocate(spec, include_externals=True)
     splice_analogs = _SpliceAnalogs(spec) if spec.spliced else None
+    matched_old_hashes = set()
+    spliced_externals: Dict[str, spack.spec.Spec] = {}
     for s in relocation_specs:
         analog = s
         if splice_analogs is not None and s.dag_hash() not in hash_to_old_prefix:
@@ -1984,8 +2206,39 @@ def relocate_package(spec: spack.spec.Spec) -> None:
 
         lookup_dag_hash = analog.dag_hash()
         if lookup_dag_hash in hash_to_old_prefix:
+            matched_old_hashes.add(lookup_dag_hash)
             old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
             prefix_to_prefix[old_dep_prefix] = str(s.prefix)
+            if s.external and analog is not s:
+                spliced_externals[old_dep_prefix] = s
+
+    rpath_transform = None
+    if spec.spliced:
+        # Nodes of the build_spec without an analog in the spliced spec were removed by the splice
+        replaced_prefixes: Dict[str, List[str]] = {
+            old_prefix: []
+            for dag_hash, old_prefix in hash_to_old_prefix.items()
+            if dag_hash not in matched_old_hashes
+        }
+        for old_prefix, external in spliced_externals.items():
+            # A build adds no RPATH entry for externals in system prefixes
+            if spack.util.environment.is_system_path(external.prefix):
+                replaced_prefixes[old_prefix] = []
+                continue
+            dirs = spack.build_environment.link_dirs_of(external[external.name])
+            replaced_prefixes[old_prefix] = dirs
+            if not dirs:
+                warnings.warn(
+                    f"no library directory found for external {external.name} at "
+                    f"{external.prefix}, spliced into {spec.name}: its libraries will not be "
+                    f"found through RPATH"
+                )
+        external_prefixes = [
+            str(s.prefix)
+            for s in relocation_specs
+            if s.external and not spack.util.environment.is_system_path(s.prefix)
+        ]
+        rpath_transform = _SplicedRpaths(replaced_prefixes, external_prefixes)
 
     # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix[old_layout_root] = str(spack.store.STORE.layout.root)
@@ -2010,9 +2263,9 @@ def relocate_package(spec: spack.spec.Spec) -> None:
 
     platform = spack.platforms.by_name(spec.platform)
     if "macho" in platform.binary_formats:
-        relocate.relocate_macho_binaries(binaries, prefix_to_prefix)
+        relocate.relocate_macho_binaries(binaries, prefix_to_prefix, rpath_transform)
     elif "elf" in platform.binary_formats:
-        relocate.relocate_elf_binaries(binaries, prefix_to_prefix)
+        relocate.relocate_elf_binaries(binaries, prefix_to_prefix, rpath_transform)
 
     relocate.relocate_links(links, prefix_to_prefix)
     relocate.relocate_text(textfiles, prefix_to_prefix)
@@ -2094,12 +2347,9 @@ def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=t
             raise NoOverwriteException(str(spec.prefix))
 
     # Create the install prefix
-    fsys.mkdirp(
-        spec.prefix,
-        mode=get_package_dir_permissions(spec),
-        group=get_package_group(spec),
-        default_perms="parents",
-    )
+    perms = spack.package_prefs.package_permissions(spack.config.CONFIG, spec.name)
+    spack.package_prefs.warn_if_sgid_on_afs(spec.prefix, perms.dir_mode)
+    fsys.mkdirp(spec.prefix, mode=perms.dir_mode, group=perms.group, default_perms="parents")
 
     tarfile_path = tarball_stage.save_filename
 
@@ -2174,7 +2424,7 @@ def install_root_node(
     force: bool = False,
     sha256: Optional[str] = None,
     allow_missing: bool = False,
-) -> None:
+) -> bool:
     """Install the root node of a concrete spec from a buildcache.
 
     Checking the sha256 sum of a node before installation is usually needed only
@@ -2187,19 +2437,29 @@ def install_root_node(
         force: force installation if the spec is already present in the local store
         sha256: optional sha256 of the binary package, to be checked before installation
         allow_missing: when true, allows installing a node with missing dependencies
+
+    Returns:
+        ``True`` if the node was installed, ``False`` if it was skipped
     """
     # Early termination
     if spec.external or not spec.concrete:
         warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
-        return
+        return False
     elif spack.store.STORE.db.installed(spec) and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
-        return
+        return False
 
     tarball_stage = download_tarball(spec.build_spec, unsigned)
     if not tarball_stage:
         msg = 'download of binary cache file for spec "{0}" failed'
         raise RuntimeError(msg.format(spec.build_spec.format()))
+
+    if sha256:
+        try:
+            validate_checksum(tarball_stage.save_filename, "sha256", sha256)
+        except spack.error.NoChecksumException:
+            tarball_stage.destroy()
+            raise
 
     # don't print long padded paths while extracting/relocating binaries
     with spack.store.filter_padding():
@@ -2208,19 +2468,7 @@ def install_root_node(
         spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, allow_missing=allow_missing)
-
-
-def install_single_spec(spec, unsigned=False, force=False):
-    """Install a single concrete spec from a buildcache.
-
-    Args:
-        spec (spack.spec.Spec): spec to be installed
-        unsigned (bool): if True allows installing unsigned binaries
-        force (bool): force installation if the spec is already present in the
-            local store
-    """
-    for node in spec.traverse(root=True, order="post", deptype=("link", "run")):
-        install_root_node(node, unsigned=unsigned, force=force)
+    return True
 
 
 def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorMetadata]:
@@ -2630,7 +2878,10 @@ FetchIndexResult = collections.namedtuple("FetchIndexResult", "etag hash data fr
 
 
 class IndexHandler:
-    def conditional_fetch(self) -> FetchIndexResult:
+    def __init__(self, mirror_metadata: MirrorMetadata):
+        self.mirror_metadata = mirror_metadata
+
+    def conditional_fetch(self, force: bool = False) -> FetchIndexResult:
         raise NotImplementedError(f"{self.__class__.__name__} is abstract")
 
     def get_index_manifest(self, manifest_response) -> BlobRecord:
@@ -2638,16 +2889,17 @@ class IndexHandler:
         cache_class = get_url_buildcache_class(CURRENT_BUILD_CACHE_LAYOUT_VERSION)
         try:
             result = io.TextIOWrapper(manifest_response, encoding="utf-8").read()
+
+            manifest = BuildcacheManifest.from_dict(
+                # Currently we do not sign buildcache index, but we could
+                cache_class.verify_and_extract_manifest(result, verify=False)
+            )
+            blob_record = manifest.get_blob_records(
+                cache_class.component_to_media_types(BuildcacheComponent.INDEX)
+            )[0]
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {manifest_response.url} is invalid", e) from e
 
-        manifest = BuildcacheManifest.from_dict(
-            # Currently we do not sign buildcache index, but we could
-            cache_class.verify_and_extract_manifest(result, verify=False)
-        )
-        blob_record = manifest.get_blob_records(
-            cache_class.component_to_media_types(BuildcacheComponent.INDEX)
-        )[0]
         return blob_record
 
     def fetch_index_blob(
@@ -2674,11 +2926,19 @@ class IndexHandler:
 
         return (computed_hash, blob_result)
 
+    def push_index(self, db: BuildCacheDatabase):
+        """Push a database as the index back to the cache"""
+        if spack.oci.image.is_oci_url(self.mirror_metadata.url):
+            raise NotImplementedError(f"{self.__class__.__name__} is not implemented for OCI")
+
+        _url_push_index(self.mirror_metadata, db)
+
 
 class DefaultIndexHandlerV2(IndexHandler):
-    """Fetcher for index.json, using separate index.json.hash as cache invalidation strategy"""
+    """Handler for index.json, using separate index.json.hash as cache invalidation strategy"""
 
     def __init__(self, mirror_metadata, local_hash, urlopen=web_util.urlopen):
+        super().__init__(mirror_metadata)
         self.url = mirror_metadata.url
         self.local_hash = local_hash
         self.urlopen = urlopen
@@ -2700,12 +2960,12 @@ class DefaultIndexHandlerV2(IndexHandler):
             return None
         return remote_hash.decode("utf-8")
 
-    def conditional_fetch(self) -> FetchIndexResult:
+    def conditional_fetch(self, force: bool = False) -> FetchIndexResult:
         # Do an intermediate fetch for the hash
         # and a conditional fetch for the contents
 
         # Early exit if our cache is up to date.
-        if self.local_hash and self.local_hash == self.get_remote_hash():
+        if not force and self.local_hash and self.local_hash == self.get_remote_hash():
             return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise, download index.json
@@ -2722,9 +2982,7 @@ class DefaultIndexHandlerV2(IndexHandler):
             except (ValueError, OSError) as e:
                 raise FetchIndexError(f"Remote index {url_index} is invalid") from e
 
-            # For now we only handle etags on http(s), since 304 error handling
-            # in s3:// is not there yet.
-            if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
+            if urllib.parse.urlparse(self.url).scheme not in ("http", "https", "s3"):
                 etag = None
             else:
                 etag = web_util.parse_etag(
@@ -2747,17 +3005,21 @@ class DefaultIndexHandlerV2(IndexHandler):
 
 
 class EtagIndexHandlerV2(IndexHandler):
-    """Fetcher for index.json, using ETags headers as cache invalidation strategy"""
+    """Handler for index.json, using ETags headers as cache invalidation strategy"""
 
     def __init__(self, mirror_metadata, etag, urlopen=web_util.urlopen):
+        super().__init__(mirror_metadata)
+
         self.url = mirror_metadata.url
         self.etag = etag
         self.urlopen = urlopen
 
-    def conditional_fetch(self) -> FetchIndexResult:
+    def conditional_fetch(self, force: bool = False) -> FetchIndexResult:
         # Just do a conditional fetch immediately
         url = url_util.join(self.url, "build_cache", spack.database.INDEX_JSON_FILE)
-        headers = {"User-Agent": web_util.SPACK_USER_AGENT, "If-None-Match": f'"{self.etag}"'}
+        headers = {"User-Agent": web_util.SPACK_USER_AGENT}
+        if not force:
+            headers.update({"If-None-Match": f'"{self.etag}"'})
 
         try:
             response = self.urlopen(urllib.request.Request(url, headers=headers))
@@ -2791,11 +3053,12 @@ class EtagIndexHandlerV2(IndexHandler):
 
 class OCIIndexHandler(IndexHandler):
     def __init__(self, mirror_metadata: MirrorMetadata, local_hash, urlopen=None) -> None:
+        super().__init__(mirror_metadata)
         self.local_hash = local_hash
         self.ref = spack.oci.image.ImageReference.from_url(mirror_metadata.url)
         self.urlopen = urlopen or spack.oci.opener.urlopen
 
-    def conditional_fetch(self) -> FetchIndexResult:
+    def conditional_fetch(self, force: bool = False) -> FetchIndexResult:
         """Download an index from an OCI registry type mirror."""
         url_manifest = self.ref.with_tag(default_index_tag).manifest_url()
         try:
@@ -2821,7 +3084,7 @@ class OCIIndexHandler(IndexHandler):
             raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
 
         # Fresh?
-        if index_digest.digest == self.local_hash:
+        if not force and index_digest.digest == self.local_hash:
             return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise fetch the blob / index.json
@@ -2844,9 +3107,10 @@ class OCIIndexHandler(IndexHandler):
 
 
 class DefaultIndexHandler(IndexHandler):
-    """Fetcher for buildcache index, cache invalidation via manifest contents"""
+    """Handler for buildcache index, cache invalidation via manifest contents"""
 
     def __init__(self, mirror_metadata: MirrorMetadata, local_hash, urlopen=web_util.urlopen):
+        super().__init__(mirror_metadata)
         self.url = mirror_metadata.url
         self.view = mirror_metadata.view
         self.layout_version = mirror_metadata.version
@@ -2854,7 +3118,7 @@ class DefaultIndexHandler(IndexHandler):
         self.urlopen = urlopen
         self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
 
-    def conditional_fetch(self) -> FetchIndexResult:
+    def conditional_fetch(self, force: bool = False) -> FetchIndexResult:
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
         url_index_manifest = cache_class.get_index_url(self.url, self.view)
 
@@ -2862,42 +3126,44 @@ class DefaultIndexHandler(IndexHandler):
             response = self.urlopen(
                 urllib.request.Request(url_index_manifest, headers=self.headers)
             )
+
+            with response:
+                index_blob_record = self.get_index_manifest(response)
+
+            # Early exit if our cache is up to date.
+            if not force and self.local_hash and self.local_hash == index_blob_record.checksum:
+                return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+
+            # Otherwise, download the index blob
+            cache_entry = cache_class(self.url, allow_unsigned=True)
+            computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
+            cache_entry.destroy()
+
+            if urllib.parse.urlparse(self.url).scheme not in ("http", "https", "s3"):
+                etag = None
+            else:
+                etag = web_util.parse_etag(
+                    response.headers.get("Etag", None) or response.headers.get("etag", None)
+                )
         except OSError as e:
             raise FetchIndexError(
                 f"Could not read index manifest from {url_index_manifest}"
             ) from e
-
-        with response:
-            index_blob_record = self.get_index_manifest(response)
-
-        # Early exit if our cache is up to date.
-        if self.local_hash and self.local_hash == index_blob_record.checksum:
-            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
-
-        # Otherwise, download the index blob
-        cache_entry = cache_class(self.url, allow_unsigned=True)
-        computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
-        cache_entry.destroy()
-
-        # For now we only handle etags on http(s), since 304 error handling
-        # in s3:// is not there yet.
-        if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
-            etag = None
-        else:
-            etag = web_util.parse_etag(
-                response.headers.get("Etag", None) or response.headers.get("etag", None)
-            )
+        except NoSuchBlobException as e:
+            raise FetchIndexError(
+                f"Could not find valid index manifest in {url_index_manifest}"
+            ) from e
 
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
 class EtagIndexHandler(IndexHandler):
-    """Fetcher for buildcache index, cache invalidation via ETags headers
+    """Handler for buildcache index, cache invalidation via ETags headers
 
     This class differs from the :class:`DefaultIndexHandler` in the following ways:
 
     1. It is provided with an etag value on creation, rather than an index checksum value. Note
-    that since we never start out with an etag, the default fetcher must have been used initially
+    that since we never start out with an etag, the default handler must have been used initially
     and determined that the etag approach is valid.
     2. It provides this etag value in the ``If-None-Match`` request header for the
     index manifest.
@@ -2907,17 +3173,20 @@ class EtagIndexHandler(IndexHandler):
     scheme to determine whether an etag should be included in the return value."""
 
     def __init__(self, mirror_metadata: MirrorMetadata, etag, urlopen=web_util.urlopen):
+        super().__init__(mirror_metadata)
         self.url = mirror_metadata.url
         self.view = mirror_metadata.view
         self.layout_version = mirror_metadata.version
         self.etag = etag
         self.urlopen = urlopen
 
-    def conditional_fetch(self) -> FetchIndexResult:
+    def conditional_fetch(self, force: bool = False) -> FetchIndexResult:
         # Do a conditional fetch of the index manifest (i.e. using If-None-Match header)
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
         manifest_url = cache_class.get_index_url(self.url, self.view)
-        headers = {"User-Agent": web_util.SPACK_USER_AGENT, "If-None-Match": f'"{self.etag}"'}
+        headers = {"User-Agent": web_util.SPACK_USER_AGENT}
+        if not force:
+            headers.update({"If-None-Match": f'"{self.etag}"'})
 
         try:
             response = self.urlopen(urllib.request.Request(manifest_url, headers=headers))
@@ -2930,16 +3199,21 @@ class EtagIndexHandler(IndexHandler):
         except OSError as e:  # URLError, socket.timeout, etc.
             raise FetchIndexError(f"Could not fetch index manifest {manifest_url}", e) from e
 
-        # We need to read the index manifest and fetch the associated blob
-        with response:
-            index_blob_record = self.get_index_manifest(response)
-            etag_header_value = response.headers.get("Etag", None) or response.headers.get(
-                "etag", None
-            )
+        # Try to fetch the index blobs if they exist.
+        try:
+            # We need to read the index manifest and fetch the associated blob
+            with response:
+                index_blob_record = self.get_index_manifest(response)
+                etag_header_value = response.headers.get("Etag", None) or response.headers.get(
+                    "etag", None
+                )
 
-        cache_entry = cache_class(self.url, allow_unsigned=True)
-        computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
-        cache_entry.destroy()
+            cache_entry = cache_class(self.url, allow_unsigned=True)
+            computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
+            cache_entry.destroy()
+        except NoSuchBlobException as e:
+            # It is possible that there is no supported database for old build caches.
+            raise FetchIndexError(f"Could not find valid index manifest in {manifest_url}") from e
 
         return FetchIndexResult(
             etag=web_util.parse_etag(etag_header_value),
@@ -2948,28 +3222,9 @@ class EtagIndexHandler(IndexHandler):
             fresh=False,
         )
 
-
-def get_index_fetcher(
-    scheme: str, mirror_metadata: MirrorMetadata, cache_entry: Dict[str, str]
-) -> IndexHandler:
-    if scheme == "oci":
-        # TODO: Actually etag and OCI are not mutually exclusive...
-        return OCIIndexHandler(mirror_metadata, cache_entry.get("index_hash", None))
-    elif cache_entry.get("etag"):
-        if mirror_metadata.version < 3:
-            return EtagIndexHandlerV2(mirror_metadata, cache_entry["etag"])
-        else:
-            return EtagIndexHandler(mirror_metadata, cache_entry["etag"])
-
-    else:
-        if mirror_metadata.version < 3:
-            return DefaultIndexHandlerV2(
-                mirror_metadata, local_hash=cache_entry.get("index_hash", None)
-            )
-        else:
-            return DefaultIndexHandler(
-                mirror_metadata, local_hash=cache_entry.get("index_hash", None)
-            )
+    def push_index(self, db: BuildCacheDatabase):
+        """Push a database as the index back to the cache"""
+        _url_push_index(self.mirror_metadata, db, if_match=self.etag)
 
 
 class NoOverwriteException(spack.error.SpackError):

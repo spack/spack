@@ -250,8 +250,8 @@ Note that ``--tests`` is passed to ``spack ci rebuild`` as part of the ``build-j
         - spack env activate --without-view .
         - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture.platform}-{architecture.target}/{name}-{version}-{hash}'"
         - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
-        - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
-        - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+        - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust -y /mnt/key/intermediate_ci_signing_key.gpg; fi
+        - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust -y /mnt/key/spack_public_key.gpg; fi
         - spack -d ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     broken-tests-packages:

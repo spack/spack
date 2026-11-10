@@ -4,6 +4,7 @@
 """Tests for the installer.core module: the PackageInstaller event loop."""
 
 import os
+import signal
 import sys
 
 import pytest
@@ -11,7 +12,7 @@ import pytest
 import spack.error
 import spack.spec
 from spack.config import Configuration
-from spack.installer.base import ExitCode
+from spack.installer.base import TERMINATION_SIGNALS, ExitCode
 from spack.installer.core import PackageInstaller, read_connection, write_connection
 from spack.installer.ui import ChangeJobs, SetEcho
 from spack.store import Store
@@ -102,6 +103,16 @@ def test_build_failure_reported_through_event_loop(temporary_store, mock_package
     assert installer.log_paths[dag_hash] in str(exc_info.value)
     failed = [e for e in ui.events if e[0] == "state_changed" and e[2] == "failed"]
     assert failed == [("state_changed", dag_hash, "failed")]
+    assert _record(temporary_store, spec) is None
+
+
+@pytest.mark.disable_clean_stage_check
+def test_build_exiting_without_exit_code_fails(temporary_store, mock_packages):
+    """Only the exit code reported by the build counts: a build that exits without one failed."""
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(exitcode=None)})
+    with pytest.raises(spack.error.InstallError):
+        _install(launcher, spec)
     assert _record(temporary_store, spec) is None
 
 
@@ -340,6 +351,82 @@ def test_keyboard_interrupt_terminates_builds_and_flushes_db(temporary_store, mo
     assert _record(temporary_store, root) is None
 
 
+def _skip_if_handled_by_test_runner():
+    if any(signal.getsignal(sig) is not signal.SIG_DFL for sig in TERMINATION_SIGNALS):
+        pytest.skip("termination signals are handled by the test runner")
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+@pytest.mark.parametrize("signum", TERMINATION_SIGNALS, ids=lambda s: s.name)
+def test_termination_signal_terminates_builds(signum, temporary_store, mock_packages):
+    """A termination signal ends the event loop, which terminates the running builds, restores the
+    default handlers, and raises TerminatedBySignal."""
+    _skip_if_handled_by_test_runner()
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(hang=True)})
+
+    def tick():
+        if launcher.hanging:
+            os.kill(os.getpid(), signum)
+
+    with pytest.raises(spack.error.TerminatedBySignal) as e:
+        _install(launcher, spec, ui=DrivingUI(tick))
+
+    assert e.value.signum == signum
+    assert launcher.hanging[0].terminated
+    assert all(signal.getsignal(s) is signal.SIG_DFL for s in TERMINATION_SIGNALS)
+
+
+@pytest.mark.not_on_windows("Windows has no termination signals to handle")
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+def test_termination_signal_while_starting_build(temporary_store, mock_packages):
+    """A termination signal while a build is started terminates that build."""
+    _skip_if_handled_by_test_runner()
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(hang=True)})
+
+    def launch(request, jobserver):
+        child = launcher(request, jobserver)
+        os.kill(os.getpid(), signal.SIGTERM)
+        return child
+
+    with pytest.raises(spack.error.TerminatedBySignal):
+        _install(launch, spec)
+
+    assert launcher.hanging[0].terminated
+
+
+@pytest.mark.not_on_windows("Windows has no termination signals to handle")
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+def test_termination_signal_during_cleanup(temporary_store, mock_packages):
+    """A termination signal during the cleanup after another exception does not interrupt the
+    cleanup, and is raised after it."""
+    _skip_if_handled_by_test_runner()
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: Script(hang=True)})
+
+    def tick():
+        if launcher.hanging:
+            build = launcher.hanging[0]
+            terminate = build.terminate
+
+            def signal_and_terminate():
+                os.kill(os.getpid(), signal.SIGTERM)
+                terminate()
+
+            build.terminate = signal_and_terminate
+            raise KeyboardInterrupt
+
+    with pytest.raises(spack.error.TerminatedBySignal) as e:
+        _install(launcher, root, ui=DrivingUI(tick))
+
+    assert isinstance(e.value.__context__, KeyboardInterrupt)
+    assert launcher.hanging[0].terminated
+    assert _record(temporary_store, dep) is not None
+    assert signal.getsignal(signal.SIGTERM) is signal.SIG_DFL
+
+
 @pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root
 def test_failed_builds_reach_on_finished(temporary_store, mock_packages):
     """The loop notifies the frontend of the failed build ids before raising InstallError."""
@@ -404,3 +491,38 @@ def test_change_jobs_commands_adjust_parallelism(temporary_store, mock_packages)
     initial = jobs_events[0][2]
     assert ("jobs_changed", initial + 1, initial + 1) in jobs_events
     assert jobs_events[-1][2] == initial  # target restored after the decrease
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted and failed installs keep their log files
+@pytest.mark.parametrize(
+    "root_script,expected_error",
+    [
+        (Script(), None),
+        (Script(hang=True), KeyboardInterrupt),
+        (Script(exitcode=ExitCode.BUILD_ERROR), spack.error.InstallError),
+    ],
+)
+def test_recorded_specs(root_script, expected_error, temporary_store, mock_packages):
+    """Tests that the installer lists the specs it added to the database, also when the
+    installation is interrupted or a build fails.
+    """
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: root_script})
+
+    def tick():
+        if launcher.hanging:  # the dep finished and the root build is now running
+            raise KeyboardInterrupt
+
+    installer = PackageInstaller(
+        [root.package], explicit=True, ui=DrivingUI(tick), launcher=launcher
+    )
+    if expected_error is None:
+        installer.install()
+    else:
+        with pytest.raises(expected_error):
+            installer.install()
+
+    expected = [dep.dag_hash()] if expected_error else [dep.dag_hash(), root.dag_hash()]
+    assert [s.dag_hash() for s in installer.recorded_specs] == expected
+    assert [s.dag_hash() for s in (dep, root) if _record(temporary_store, s)] == expected

@@ -572,7 +572,7 @@ class Database:
     ) -> None:
         """Database for Spack installations.
 
-        A Database is a cache of Specs data from ``$prefix/spec.yaml`` files
+        A Database is a cache of Specs data from ``$prefix/.spack/spec.json`` files
         in Spack installation directories.
 
         Database files (data and lock files) are stored under ``root/.spack-db``, which is
@@ -1180,6 +1180,10 @@ class Database:
         except FileNotFoundError:
             if self.is_upstream:
                 tty.warn(f"upstream not found: {self._index_path}")
+            elif self._state_is_inconsistent:
+                # Without an index, what is in memory is from the failed transaction.
+                self._data, self._installed_prefixes = {}, set()
+                self._state_is_inconsistent = False
             return
 
         with index_file as f:

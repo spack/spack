@@ -15,10 +15,17 @@ concurrency:
   group: ci-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
+# Default permissions for this workflow are restrictive; individual jobs can overwrite if they need additional access.
+permissions:
+  contents: read
+
 jobs:
   # Check which files have been updated by the PR
   changes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
       # Set job outputs to values from filter step
     outputs:
       bootstrap: ${{ steps.filter.outputs.bootstrap }}

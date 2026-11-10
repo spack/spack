@@ -788,9 +788,7 @@ def prevalidate_variant_value(
 
     # raise if there is no definition at all
     if not pkg_cls.has_variant(variant.name):
-        raise UnknownVariantError(
-            f"No such variant '{variant.name}' in package {pkg_cls.name}", [variant.name]
-        )
+        raise UnknownVariantError(f"No such variant '{variant.name}' in package {pkg_cls.name}")
 
     # do as much prevalidation as we can -- check only those
     # variants whose when constraint intersects this spec
@@ -847,10 +845,6 @@ class DuplicateVariantError(spack.error.SpecError):
 
 class UnknownVariantError(spack.error.SpecError):
     """Raised when an unknown variant occurs in a spec."""
-
-    def __init__(self, msg: str, unknown_variants: List[str]):
-        super().__init__(msg)
-        self.unknown_variants = unknown_variants
 
 
 class InconsistentValidationError(spack.error.SpecError):

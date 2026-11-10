@@ -42,6 +42,7 @@ import spack.spec
 import spack.store
 import spack.user_environment
 import spack.util.executable
+import spack.util.gpg
 import spack.util.spack_yaml
 import spack.util.url
 import spack.version
@@ -399,6 +400,7 @@ def ensure_executables_in_path_or_raise(
     executables: Sequence[str],
     abstract_spec: str,
     cmd_check: Optional[Callable[[spack.util.executable.Executable], bool]] = None,
+    path: Optional[List[str]] = None,
 ) -> spack.util.executable.Executable:
     """Ensure that some executables are in path or raise.
 
@@ -410,6 +412,7 @@ def ensure_executables_in_path_or_raise(
             command and validates it. Should return ``True`` if the executable is
             acceptable, ``False`` otherwise. Can be used to, e.g., ensure a suitable
             version of the command before accepting for bootstrapping.
+        path: directories to search instead of PATH. Defaults to PATH.
 
     Raises:
         RuntimeError: if the executables cannot be ensured to be in PATH
@@ -417,7 +420,7 @@ def ensure_executables_in_path_or_raise(
     Return:
         Executable object
     """
-    cmd = spack.util.executable.which(*executables)
+    cmd = spack.util.executable.which(*executables, path=path)
     if cmd:
         if not cmd_check or cmd_check(cmd):
             return cmd
@@ -498,7 +501,9 @@ def gnupg_root_spec() -> str:
 def ensure_gpg_in_path_or_raise() -> spack.util.executable.Executable:
     """Ensure gpg or gpg2 are in the PATH or raise."""
     return ensure_executables_in_path_or_raise(
-        executables=["gpg2", "gpg"], abstract_spec=gnupg_root_spec()
+        executables=["gpg2", "gpg"],
+        abstract_spec=gnupg_root_spec(),
+        path=spack.util.gpg.search_path(),
     )
 
 

@@ -454,7 +454,7 @@ def test_git_sparse_paths_partial_clone(
         for p in sparse_paths:
             assert os.path.isdir(p)
 
-        if git_version < Version("2.26.0.0"):
+        if git_version < Version("2.35.0.0"):
             # older versions of git should fall back to a full clone
             for p in omitted_paths:
                 assert os.path.isdir(p)

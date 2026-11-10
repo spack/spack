@@ -95,7 +95,11 @@ class BuildGraph:
         included when necessary."""
         database = store.db
         self.roots = {s.dag_hash() for s in specs}
-        self.nodes = {s.dag_hash(): s for s in specs}
+        if not install_package:
+            # Roots are pruned below, so a requested spec that another one depends on is not a
+            # root
+            self.roots.difference_update(_dependency_hashes(specs))
+        self.nodes = {s.dag_hash(): s for s in specs if s.dag_hash() in self.roots}
         self.parent_to_child: Dict[str, Set[str]] = {}
         self.child_to_parent: Dict[str, Set[str]] = {}
         overwrite_set = overwrite_set or set()
@@ -171,7 +175,7 @@ class BuildGraph:
 
         # If we're not installing the package itself, mark root specs for pruning too
         if not install_package:
-            self.pruned.update(s.dag_hash() for s in specs)
+            self.pruned.update(self.roots)
 
         # Prune specs from the build graph. Their parents become parents of their children and
         # their children become children of their parents.
@@ -479,6 +483,25 @@ def schedule_builds(
             needs_jobserver_token = True  # all subsequent jobs need a token
 
     return ScheduleResult(blocked, to_start, newly_installed, to_mark_explicit)
+
+
+def _dependency_hashes(specs: List[spack.spec.Spec]) -> Set[str]:
+    """DAG hashes of the dependencies, and build specs of spliced specs, of all specs reachable
+    from the given specs."""
+    result: Set[str] = set()
+    visited: Set[str] = set()
+    stack = list(specs)
+    while stack:
+        spec = stack.pop()
+        if spec.dag_hash() in visited:
+            continue
+        visited.add(spec.dag_hash())
+        children = spec.dependencies()
+        if spec.spliced:
+            children.append(spec.build_spec)
+        result.update(child.dag_hash() for child in children)
+        stack.extend(children)
+    return result
 
 
 def _node_to_roots(roots: List[spack.spec.Spec]) -> Dict[str, FrozenSet[str]]:

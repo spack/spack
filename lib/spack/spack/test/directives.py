@@ -480,3 +480,15 @@ def test_unspecified_reason_requires_a_message():
         class Pkg(metaclass=DirectiveMeta):
             name = "mypkg"
             deprecated("@=1.0", reason="unspecified")
+
+
+@pytest.mark.parametrize(
+    "fixes,expected",
+    [("CVE-1", "'fixes' must be a list of strings"), ([LEGACY_DEPRECATION_LABEL], "is reserved")],
+)
+def test_patch_fixes_refuses_invalid_labels(fixes, expected):
+    """Tests that fixes= refuses a bare string and the label Spack records for
+    'deprecated=True'.
+    """
+    with pytest.raises(DirectiveError, match=expected):
+        patch("x.patch", fixes=fixes)

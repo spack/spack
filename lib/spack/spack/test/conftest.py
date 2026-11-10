@@ -44,6 +44,7 @@ import spack.directives_meta
 import spack.environment as ev
 import spack.error
 import spack.extensions
+import spack.modules
 import spack.modules.common
 import spack.package_base
 import spack.paths
@@ -1605,6 +1606,32 @@ def module_configuration(request, mutable_config):
 
 
 @pytest.fixture()
+def modulefile_filename():
+    """Returns a function that writes the module file of a spec in the "default" module set
+    and returns its filename."""
+
+    def _impl(module_type, spec):
+        writer_cls = spack.modules.module_types[module_type]
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec), "default")
+        writer.write()
+        return writer.layout.filename
+
+    return _impl
+
+
+@pytest.fixture()
+def tcl_module_filename(mutable_config, mock_modules_root):
+    """Enables tcl module files in the "default" module set, under a temporary root, and returns
+    a function that computes the module file name of a spec."""
+    mutable_config.set("modules:default:enable", ["tcl"])
+
+    def _impl(spec):
+        return spack.modules.TclModulefileWriter.from_spec(spec, "default").layout.filename
+
+    return _impl
+
+
+@pytest.fixture()
 def mock_gnupghome(monkeypatch):
     # GNU PGP can't handle paths longer than 108 characters (wtf!@#$) so we
     # have to make our own tmp_path with a shorter name than pytest's.
@@ -2267,6 +2294,21 @@ def inode_cache():
     # serious issue of having a closed file descriptor in the cache.
     assert not any(f.fh.closed for f in spack.util.lock.FILE_TRACKER._descriptors.values())
     spack.util.lock.FILE_TRACKER.purge()
+
+
+@pytest.fixture(autouse=True)
+def mock_user_cache_path(tmp_path: Path, monkeypatch):
+    """Point $user_cache_path-derived locations (misc cache, BINARY_INDEX's persistent
+    index cache, etc.) at a per-test temporary directory instead of the real ~/.spack.
+
+    Without this, every test process (and, under pytest-xdist, every worker) reads and
+    writes the same real, on-disk cache concurrently, since `$user_cache_path` defaults
+    to `~/.spack` unless SPACK_USER_CACHE_PATH is set. `spack.config.replacements()`
+    resolves `$user_cache_path` lazily via `spack.paths.user_cache_path` on every
+    substitution, so patching that attribute here is picked up correctly regardless of
+    when `spack.paths` was first imported.
+    """
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path / "user_cache"))
 
 
 @pytest.fixture(autouse=True)

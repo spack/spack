@@ -110,6 +110,84 @@ def test_which(tmp_path: pathlib.Path, monkeypatch):
         assert exe.path == path
 
 
+@pytest.mark.not_on_windows("Executables are determined by file extension on Windows")
+def test_resolve_exe(tmp_path: pathlib.Path):
+    script = tmp_path / "script"
+    script.touch()
+
+    assert ex.resolve_exe(str(script)) is None
+
+    fs.set_executable(str(script))
+
+    assert ex.resolve_exe(str(script)) == str(script)
+    assert ex.resolve_exe(script) == str(script)
+
+    # directories and missing files are not executables
+    assert ex.resolve_exe(str(tmp_path)) is None
+    assert ex.resolve_exe(str(tmp_path / "does-not-exist")) is None
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_which_searches_pathext(tmp_path: pathlib.Path, monkeypatch):
+    """which() finds executables whose extension is omitted, in PATHEXT order."""
+    monkeypatch.setenv("PATH", str(tmp_path))
+    monkeypatch.setenv("PATHEXT", ".COM;.EXE;.BAT")
+
+    for name in ("script.bat", "prog.com", "prog.exe", "notes.txt", "extensionless"):
+        (tmp_path / name).touch()
+    script = ex.which("script")
+    bat_script = ex.which("script.bat")
+    assert script and script.path == str(tmp_path / "script.bat")
+    assert bat_script and bat_script.path == str(tmp_path / "script.bat")
+
+    # PATHEXT determines which extension wins when several are present...
+    prog = ex.which("prog")
+    assert prog and prog.path == str(tmp_path / "prog.com")
+
+    # ...unless the extension is given explicitly
+    prog_exe = ex.which("prog.exe")
+    assert prog_exe and prog_exe.path == str(tmp_path / "prog.exe")
+
+    # files that exist but have no extension in PATHEXT are not found
+    assert ex.which("notes.txt") is None
+    assert ex.which("extensionless") is None
+
+    # nor are files that don't exist, with or without an extension in PATHEXT
+    assert ex.which("missing.exe") is None
+    assert ex.which("missing") is None
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_windows_resolve_exe_requires_access(tmp_path: pathlib.Path, monkeypatch):
+    """A candidate the current user cannot read (and so cannot launch) is skipped, without
+    hiding the candidates after it."""
+    from spack.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        FileAccessRights,
+        SecurityDescriptor,
+    )
+
+    monkeypatch.setenv("PATHEXT", ".BAT;.EXE")
+    for name in ("script.bat", "script.exe"):
+        (tmp_path / name).touch()
+
+    unreadable = str(tmp_path / "script.bat")
+    sd = SecurityDescriptor.from_file(unreadable)
+    sd.add_ace(
+        AccessControlEntry(
+            AceType.SDDL_ACCESS_DENIED,
+            rights=FileAccessRights.FILE_READ_DATA,
+            sid=SecurityDescriptor.get_sid_for_user(),
+        ),
+        index=0,
+    )
+    sd.apply(unreadable)
+
+    assert ex.resolve_exe(str(tmp_path / "script")) == str(tmp_path / "script.exe")
+    assert ex.resolve_exe(unreadable) is None
+
+
 @pytest.fixture
 def make_script_exe(tmp_path: pathlib.Path):
     if sys.platform == "win32":
@@ -175,3 +253,33 @@ def test_exe_disallows_callable_as_output(mock_executable):
     hello = ex.Executable(path)
     with pytest.raises(ValueError):
         hello(output=lambda line: line)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="pass_fds is POSIX specific")
+def test_exe_passes_only_jobserver_fds():
+    r, w = os.pipe()
+    os.set_inheritable(r, True)
+    os.set_inheritable(w, True)
+    python = ex.Executable(sys.executable)
+    check = f"import os; os.fstat({r}); os.fstat({w})"
+    try:
+        python("-c", check, error=str, fail_on_error=False)
+        assert python.returncode != 0
+        python("-c", check, extra_env={"MAKEFLAGS": f" -j4 --jobserver-auth={r},{w}"})
+    finally:
+        os.close(r)
+        os.close(w)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="jobserver fds are POSIX specific")
+def test_jobserver_fds():
+    r, w = os.pipe()
+    try:
+        makeflags = f" -j4 --jobserver-auth={r},{w}"
+        assert ex.jobserver_fds(makeflags) == (r, w)
+        # gmake 4.4 disables the jobserver for recipes that are not recursive
+        makeflags += " --jobserver-auth=-2,-2"
+        assert ex.jobserver_fds(makeflags) == ()
+    finally:
+        os.close(r)
+        os.close(w)

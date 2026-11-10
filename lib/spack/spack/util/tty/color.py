@@ -27,8 +27,10 @@ Expression      Meaning
 ``@R``          Turn on bright red coloring
 ``@*{foo}``     Bold foo, but don't change text color
 ``@_{bar}``     Underline bar, but don't change text color
+``@#{baz}``     Faint/dimmed baz, but don't change text color
 ``@*b``         Turn on bold, blue text
 ``@_B``         Turn on bright blue text with an underline
+``@#d``         Turn on faint/dimmed default color text
 ``@.``          Revert to plain formatting
 ``@*g{green}``  Print out 'green' in bold, green text, then reset to plain.
 ``@*ggreen@.``  Print out 'green' in bold, green text, then reset to plain.
@@ -38,18 +40,20 @@ The syntax consists of:
 
 ==========  =====================================================
 color-expr  ``'@' [style] color-code '{' text '}' | '@.' | '@@'``
-style       ``'*' | '_'``
-color-code  ``[krgybmcwKRGYBMCW]``
+style       ``'*' | '_' | '#'``
+color-code  ``[krgybmcwdKRGYBMCW]``
 text        ``.*``
 ==========  =====================================================
 
-``@`` indicates the start of a color expression.  It can be followed
-by an optional ``*`` or ``_`` that indicates whether the font should be bold or
-underlined.  If ``*`` or ``_`` is not provided, the text will be plain.  Then
-an optional color code is supplied.  This can be ``[krgybmcw]`` or ``[KRGYBMCW]``,
-where the letters map to  ``black(k)``, ``red(r)``, ``green(g)``, ``yellow(y)``, ``blue(b)``,
-``magenta(m)``, ``cyan(c)``, and ``white(w)``.  Lowercase letters denote normal ANSI
-colors and capital letters denote bright ANSI colors.
+``@`` indicates the start of a color expression.  It can be followed by an
+optional ``*``, ``_`` or ``#`` that indicates whether the font should be bold,
+underlined or faint/dimmed.  If ``*``, ``_`` or ``#`` is not provided, the text
+will be plain.  Then an optional color code is supplied.  This can be
+``[krgybmcw]`` or ``[KRGYBMCW]``, where the letters map to  ``black(k)``,
+``red(r)``, ``green(g)``, ``yellow(y)``, ``blue(b)``, ``magenta(m)``,
+``cyan(c)``, ``white(w)`` and ``default(d)``.  Lowercase letters denote normal
+ANSI colors and capital letters denote bright ANSI colors.  There is no bright
+default color.
 
 Finally, the color expression can be followed by text enclosed in ``{}``.  If
 braces are present, only the text in braces is colored.  If the braces are
@@ -75,8 +79,11 @@ class ColorParseError(Exception):
         super().__init__(message)
 
 
+_RUNNING_IN_CI = os.environ.get("CI", "").lower() in ("true", "1")
+
+
 # Text styles for ansi codes
-styles = {"*": "1", "_": "4", None: "0"}  # bold  # underline  # plain
+styles = {"*": "1", "#": "2", "_": "4", None: "0"}  # bold  # faint/dimmed  # underline  # plain
 
 # Dim and bright ansi colors
 colors = {
@@ -95,8 +102,9 @@ colors = {
     "c": 36,
     "C": 96,  # cyan
     "w": 37,
-    "W": 97,
-}  # white
+    "W": 97,  # white
+    "d": 39,  # default
+}
 
 
 def get_colors(color: Optional[bool] = None):
@@ -113,6 +121,7 @@ class ColorsActive:
     MAGENTA = "\033[0;35m"
     CYAN = "\033[0;36m"
     WHITE = "\033[0;37m"
+    DEFAULT = "\033[0;39m"
 
     BLACK_BRIGHT = "\033[0;90m"
     RED_BRIGHT = "\033[0;91m"
@@ -124,20 +133,22 @@ class ColorsActive:
     WHITE_BRIGHT = "\033[0;97m"
 
     BOLD = "\033[1m"
+    # Faint does not work in some CI log viewers, fall back to bright black there
+    FAINT = "\033[2m" if not _RUNNING_IN_CI else "\033[90m"
     UNDERLINE = "\033[4m"
 
     RESET = "\033[0m"
 
 
 class ColorsInactive:
-    BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = ""
+    BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = DEFAULT = ""
     BLACK_BRIGHT = RED_BRIGHT = GREEN_BRIGHT = YELLOW_BRIGHT = ""
     BLUE_BRIGHT = MAGENTA_BRIGHT = CYAN_BRIGHT = WHITE_BRIGHT = ""
-    BOLD = UNDERLINE = RESET = ""
+    BOLD = FAINT = UNDERLINE = RESET = ""
 
 
 # Regex to be used for color formatting
-COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
+COLOR_RE = re.compile(r"@(?:(@)|(\.)|([*_#])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)")
 
 # Mapping from color arguments to values for tty.set_color
 color_when_values = {"always": True, "auto": None, "never": False}
@@ -327,8 +338,15 @@ def colorize(
             )
 
         color_number = colors.get(color_code, "")
+        style_number = styles[style]
+        if _RUNNING_IN_CI and style == "#":
+            # Faint does not work in some CI log viewers, fall back to bright black there
+            style_number = str(colors["K"])
+            # An explicit default foreground color would cancel it
+            if color_code == "d":
+                color_number = ""
         semi = ";" if color_number else ""
-        ansi_code = _escape(f"{styles[style]}{semi}{color_number}", color, enclose, zsh)
+        ansi_code = _escape(f"{style_number}{semi}{color_number}", color, enclose, zsh)
         if text:
             # must be here, not in the final return: top-level @@ is already handled by
             # the regex, and its @-results could form new @@ pairs.

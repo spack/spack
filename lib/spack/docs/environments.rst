@@ -1178,7 +1178,11 @@ The ``link_type`` defaults to ``symlink`` but can also take the value of ``hardl
    The ``link_dirs`` option controls whether directories are symlinked. This is the default
    behavior in Spack v1.2 and later. This is an optimization that significantly reduces the time
    to create views, and reduces the inode usage of the view. It only applies when ``link_type``
-   is set to ``symlink``. If you want to link only non-directory files, set ``link_dirs: false``.
+   is set to ``symlink``.
+
+   If you use tools like ``pip`` or ``uv`` on top of the view, it's recommended to set
+   ``link_dirs: false``, to avoid that these tools write through the symlinks into the Spack
+   install tree.
 
 .. tip::
 

@@ -206,6 +206,8 @@ Other Modules
 :mod:`spack.util`
   In this package are a number of utility modules for the rest of Spack.
 
+The formats of the files these modules write to disk, such as spec files, the Database, and environment lockfiles, are documented in :ref:`file-formats`.
+
 .. _package-repositories:
 
 Package Repositories
@@ -355,7 +357,7 @@ It receives the spec as its only argument.
 """"""""""""""""""""""""
 
 A ``post_uninstall`` hook runs after package uninstallation finishes.
-It receives the spec as its only argument and is primarily used for cleaning up module files during uninstall operations.
+It receives the spec as its only argument.
 
 
 Adding a New Hook Module
@@ -386,8 +388,8 @@ To implement a hook, create a Python module in ``lib/spack/spack/hooks/`` with f
 
       class _HookRunner:
           HOOK_ORDER = [
-              "spack.hooks.module_file_generation",
               "spack.hooks.licensing",
+              "spack.hooks.sbang",
               # ...
               "spack.hooks.my_hooks",  # <- Add your module here
           ]

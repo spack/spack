@@ -140,6 +140,7 @@ For example, to combine all of the commands above to add the E4S build cache and
     $ spack install --use-buildcache only <package>
 
 The ``--install`` and ``--trust`` flags install keys to the keyring and trust all downloaded keys.
+Add ``--yes-to-all`` to trust them without confirmation, for example in scripts.
 
 
 Build Cache Index Views

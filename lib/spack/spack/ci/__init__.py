@@ -307,7 +307,7 @@ def _format_pruning_message(spec: spack.spec.Spec, prune: bool, reasons: List[st
         return f"  {status}{spec.cformat(spec_fmt)} ({reason_msg})"
 
     msg = f"{spec.format(spec_fmt)} ({reason_msg})"
-    return colorize(f"  @K -   {cescape(msg)}@.")
+    return colorize(f"  @# -   {cescape(msg)}@.")
 
 
 def prune_pipeline(
@@ -648,7 +648,7 @@ def push_to_build_cache(spec: spack.spec.Spec, mirror_url: str, sign_binaries: b
     mirror = spack.mirrors.mirror.Mirror.from_url(mirror_url)
     try:
         with spack.binary_distribution.make_uploader(mirror, signing_key=signing_key) as uploader:
-            uploader.push_or_raise([spec])
+            uploader.push_or_raise([spec], config=cfg.CONFIG)
         return True
     except spack.binary_distribution.PushToBuildCacheError as e:
         tty.error(f"Problem writing to {mirror_url}: {e}")

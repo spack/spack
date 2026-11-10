@@ -37,9 +37,11 @@ import pytest
 
 import spack.concretize
 import spack.config
+import spack.context
 import spack.environment as ev
 import spack.paths
 import spack.repo
+import spack.solver.asp
 import spack.spec
 import spack.util.spack_yaml as syaml
 from spack.concretize_ui import HeadlessUI
@@ -342,3 +344,21 @@ packages:
     assert s["llvm"].external and s["llvm"].satisfies("@19.1.0")
     # the external llvm's cflags must not be injected into its dependent
     assert s.compiler_flags["cflags"] == []
+
+
+def test_reused_spec_keeps_the_order_of_its_flags(concretize_scope, test_repo):
+    """A spec read from a specfile has flags without a source, and is reused with its flags in
+    the order it was built with.
+    """
+    built = spack.concretize.concretize_one('y cflags="-g -O2 -fPIC"')
+    reusable = spack.spec.Spec.from_dict(built.to_dict())
+    context = spack.context.default()
+    solver = spack.solver.asp.Solver(context=context)
+    setup = spack.solver.asp.SpackSolverSetup(context=context)
+    result, _, _ = solver.driver.solve(
+        setup, [spack.spec.Spec("v")], reuse=list(reusable.traverse())
+    )
+
+    (root,) = result.specs
+    assert root["y"].dag_hash() == reusable.dag_hash()
+    assert root["y"].compiler_flags["cflags"] == ["-g", "-O2", "-fPIC"]

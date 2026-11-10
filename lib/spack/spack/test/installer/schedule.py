@@ -579,6 +579,32 @@ class TestBuildGraph:
         assert dep1_hash not in graph.parent_to_child
         assert dep1_hash not in graph.child_to_parent
 
+    def test_install_package_false_installs_requested_dependencies(self, temporary_store: Store):
+        """app --link--> runtime --build--> compiler --build--> tool and app --build--> cmake,
+        where compiler, cmake and app are requested and install_package=False. compiler and cmake
+        are treated like any other dependency: compiler is needed, with the source_only policy, so
+        tool is needed too, while cmake is only needed to build app from source."""
+        specs = create_dag(
+            nodes=["app", "runtime", "compiler", "tool", "cmake"],
+            edges=[
+                ("app", "runtime", "link"),
+                ("app", "cmake", "build"),
+                ("runtime", "compiler", "build"),
+                ("compiler", "tool", "build"),
+            ],
+        )
+        graph = BuildGraph(
+            specs=[specs["compiler"], specs["cmake"], specs["app"]],
+            root_policy="cache_only",
+            dependencies_policy="source_only",
+            include_build_deps=False,
+            install_package=False,
+            install_deps=True,
+            store=temporary_store,
+        )
+        assert {s.name for s in graph.nodes.values()} == {"runtime", "compiler", "tool"}
+        assert specs["compiler"].dag_hash() not in graph.roots
+
 
 @pytest.fixture
 def specs_with_test_deps():
