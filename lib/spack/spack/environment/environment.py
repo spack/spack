@@ -628,7 +628,7 @@ def _allowed_concrete_root_entries(
             # Accept the intact sub-DAG, without requiring further allow matches below it.
             allowed_roots_by_hash[dag_hash] = (concrete_spec, group)
         else:
-            specs_to_visit.extend((spec, group) for spec in reversed(concrete_spec.dependencies()))
+            specs_to_visit.extend((spec, group) for spec in concrete_spec.dependencies())
 
     # Emit original root entries first, retaining their order and group membership.
     original_root_hashes = {entry.hash for entry in source_env.concretized_roots}
@@ -791,7 +791,7 @@ def _filtered_roots_from_manifest(
     # distinct abstract nodes that happen to serialize to the same string.
     allowed_roots_by_id: Dict[int, Tuple[Spec, str]] = {}
     visited_spec_ids: Set[int] = set()
-    # Reverse the stack inputs so depth-first traversal preserves source ordering.
+    # Reverse the initial stack so traversal preserves source-root precedence.
     specs_to_visit = list(reversed(original_root_entries))
     while specs_to_visit:
         abstract_spec, group = specs_to_visit.pop()
@@ -806,7 +806,7 @@ def _filtered_roots_from_manifest(
             # this match: its dependencies need not individually match allow.
             allowed_roots_by_id[spec_id] = (abstract_spec, group)
         else:
-            specs_to_visit.extend((spec, group) for spec in reversed(abstract_spec.dependencies()))
+            specs_to_visit.extend((spec, group) for spec in abstract_spec.dependencies())
 
     # Check each selected root and all its descendants before flattening. A block
     # rejects that entire candidate; it must not restart allow selection below it.
@@ -856,7 +856,7 @@ def _filtered_grouped_specs(
     """Build manifest entries from filtered roots while retaining group settings."""
     specs: List[Union[str, Dict[str, Any]]] = []
     for group in source_env.manifest.groups():
-        filtered_group_specs = group_specs[group]
+        filtered_group_specs = group_specs.get(group, [])
 
         if group == DEFAULT_USER_SPEC_GROUP:
             specs.extend(filtered_group_specs)
