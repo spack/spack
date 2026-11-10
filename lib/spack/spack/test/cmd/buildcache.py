@@ -919,6 +919,85 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
     cache_entry.destroy()
 
 
+def test_buildcache_prune_unreadable_manifest_aborts(tmp_path, mutable_database, mock_gnupghome):
+    """If a manifest cannot be read, orphan pruning must not delete the blobs it references."""
+    mirror_url = f"file://{tmp_path}"
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+    buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    cache_entry = URLBuildcacheEntry(mirror_url=mirror_url, spec=spec, allow_unsigned=True)
+    blob_urls = [
+        URLBuildcacheEntry.get_blob_url(mirror_url=mirror_url, record=blob)
+        for blob in cache_entry.read_manifest().data
+    ]
+    cache_entry.destroy()
+
+    # Truncate the spec manifest in the mirror. It is still listed, but reading it fails,
+    # so the prune cannot tell which blobs it references.
+    manifest_url = URLBuildcacheEntry.get_manifest_url(spec, mirror_url=mirror_url)
+    pathlib.Path(url_util.local_file_path(manifest_url)).write_text("", encoding="utf-8")
+
+    with pytest.raises(spack.buildcache_prune.BuildcachePruningException) as error:
+        buildcache("prune", "my-mirror")
+
+    assert manifest_url.split("/")[-1] in str(error.value)
+    assert all(web_util.url_exists(blob_url) for blob_url in blob_urls)
+
+
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
+def test_buildcache_prune_unreadable_manifest_reports_cause(
+    tmp_path, mutable_database, mock_gnupghome
+):
+    """The abort error shows why the manifest could not be read."""
+    mirror_url = f"file://{tmp_path}"
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+    buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    manifest_path = pathlib.Path(
+        url_util.local_file_path(URLBuildcacheEntry.get_manifest_url(spec, mirror_url=mirror_url))
+    )
+    manifest_path.chmod(0)
+    try:
+        with pytest.raises(spack.buildcache_prune.BuildcachePruningException) as error:
+            buildcache("prune", "my-mirror", "--dry-run")
+    finally:
+        manifest_path.chmod(0o644)
+
+    assert "SpackWebError:" in str(error.value)
+    assert "Permission denied" in str(error.value)
+
+
+def test_buildcache_prune_skips_manifest_deleted_after_listing(
+    tmp_path, mutable_database, mock_gnupghome
+):
+    """A manifest deleted after it was listed is skipped, and its blobs are pruned as orphans."""
+    mirror_url = f"file://{tmp_path}"
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+    buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    cache_entry = URLBuildcacheEntry(mirror_url=mirror_url, spec=spec, allow_unsigned=True)
+    blob_urls = [
+        URLBuildcacheEntry.get_blob_url(mirror_url=mirror_url, record=blob)
+        for blob in cache_entry.read_manifest().data
+    ]
+    cache_entry.destroy()
+
+    test_mirror = spack.mirrors.mirror.Mirror.from_local_path(str(tmp_path))
+    manifests, read_fn, blobs = spack.buildcache_prune._fetch_manifests(test_mirror)
+
+    # Delete the spec manifest after it was listed
+    web_util.remove_url(URLBuildcacheEntry.get_manifest_url(spec, mirror_url=mirror_url))
+
+    spack.buildcache_prune.prune_orphan(
+        test_mirror, manifests, read_fn, blobs, pruning_started_at=float("inf"), dry_run=False
+    )
+
+    assert not any(web_util.url_exists(blob_url) for blob_url in blob_urls)
+
+
 @pytest.mark.parametrize("dry_run", [False, True])
 def test_buildcache_prune_direct_with_keeplist(
     tmp_path: pathlib.Path, mutable_database, mock_gnupghome, dry_run
