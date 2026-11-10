@@ -656,7 +656,9 @@ def _is_under(path: str, root: str) -> bool:
     return not rel.startswith(os.pardir)
 
 
-def _same_link(path: str, other: str, migrated_root: Optional[str] = None) -> bool:
+def _same_link_or_link_to_sibling(
+    path: str, other: str, migrated_root: Optional[str] = None
+) -> bool:
     """Whether ``path`` is a symlink to the same place as ``other``, or (when
     ``migrated_root`` is given) a relative link to the same entry under ``dirname(path)``
     as ``other`` is under ``migrated_root``."""
@@ -678,13 +680,15 @@ def _make_marker_verifier(
     ``old_path`` is the source the destination would have been migrated from; a destination
     that is a symlink to the same place as ``old_path`` was made by
     :func:`_migrate_symlinked_root` (links carry no marker) and counts as already migrated.
-    ``migrated_root`` is passed through to :func:`_same_link`.
+    ``migrated_root`` is passed through to :func:`_same_link_or_link_to_sibling`.
     """
 
     def verify_with_marker(dest_path):
         if not os.path.lexists(dest_path):
             return DestinationCheck.PROCEED
-        if old_path is not None and _same_link(dest_path, old_path, migrated_root):
+        if old_path is not None and _same_link_or_link_to_sibling(
+            dest_path, old_path, migrated_root
+        ):
             tty.debug(f"Already migrated as a link: {dest_path}")
             return DestinationCheck.SKIP
         marker_path = os.path.join(dest_path, marker_name)
