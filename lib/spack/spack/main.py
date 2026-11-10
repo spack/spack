@@ -1179,22 +1179,37 @@ def main(argv=None):
         e.die()  # gracefully die on any SpackErrors
 
     except KeyboardInterrupt:
-        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if _show_backtrace(argv):
             raise
         sys.stderr.write("\n")
         tty.error("Keyboard interrupt.")
         return signal.SIGINT.value
 
     except SystemExit as e:
-        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if _show_backtrace(argv):
             traceback.print_exc()
         return e.code
 
     except Exception as e:
-        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if _show_backtrace(argv):
             raise
         tty.error(e)
         return 3
+
+
+def _show_backtrace(argv) -> bool:
+    """Whether an error escaping ``_main`` should be shown with its backtrace.
+
+    Reading ``config:debug`` loads the configuration, which may itself be what failed
+    (e.g. a user scope path that is not a directory); then only the command line can say.
+    """
+    if spack.error.SHOW_BACKTRACE:
+        return True
+    try:
+        return bool(spack.config.CONFIG.get("config:debug"))
+    except Exception:
+        args, _ = make_argument_parser().parse_known_args(argv)
+        return bool(args.debug)
 
 
 def _handle_solver_bug(
