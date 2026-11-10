@@ -151,6 +151,8 @@ Using ``spack isolate`` to avoid migration prompts
 ---------------------------------------------------
 
 If the first spack command you run after a ``git pull`` is ``spack isolate``, spack will not prompt for migration of any resources that are in legacy locations (e.g. will not attempt to move environments out of ``$spack/var/spack/environments``).
+An isolated instance (one with ``$spack/etc/spack/isolate/include.yaml``) never migrates anything, neither from ``$spack`` nor from ``~/.spack``: the isolation's own configuration points at the legacy resources where they are.
+See :ref:`local-config-overrides` for what ``spack isolate`` writes and for upgrading an isolation made with an older Spack.
 
 .. _location-table:
 

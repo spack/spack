@@ -79,6 +79,7 @@ The directory ``$data_home/environments/myenv`` (``~/.local/share/spack/environm
 
    By default, all managed environments are stored in the ``$data_home/environments`` folder, which is shared by every Spack instance of the user.
    This location can be changed by setting the ``environments_root`` variable in ``config.yaml``.
+   Spack takes a lock (``.lock`` in that folder) while creating an environment, so concurrent ``spack env create`` commands and the migration below do not interfere.
    See :ref:`where_spack_writes_data`.
    Managed environments of a Spack instance created before 1.3 live in ``$SPACK_ROOT/var/spack/environments`` until they are :ref:`migrated <migrated-environments>`.
 
