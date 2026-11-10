@@ -147,6 +147,32 @@ You can do that by changing the value to either:
 * ``$cache_home/$spack_instance_id/cache`` for per-instance caches (the default), or
 * ``$cache_home/$spack_short_version/cache`` for per-spack-version caches.
 
+``test_stage``
+--------------
+
+Directory in which ``spack test`` runs stand-alone tests and stores their results.
+Defaults to ``$state_home/test-stage``.
+See :ref:`configure-test-stage`.
+
+``environments_root``
+---------------------
+
+Directory in which :ref:`managed environments <environments>` are created.
+Defaults to ``$data_home/environments``.
+
+``license_dir``
+---------------
+
+Directory in which Spack looks for the license files of packages that need one (see :ref:`license`).
+Defaults to ``$data_home/licenses``.
+
+``gpg_path`` and ``gpg_keys_path``
+----------------------------------
+
+The GnuPG home directory holding Spack's keyring, and the directory of public keys that ``spack gpg init`` imports into it (see :ref:`cmd-spack-gpg`).
+They default to ``$data_home/gpg`` and ``$data_home/gpg-keys``.
+``gpg_path`` is ignored when :envvar:`SPACK_GNUPGHOME` is set.
+
 ``verify_ssl``
 --------------------
 
