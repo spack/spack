@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import spack.config
 import spack.error
 import spack.paths
+import spack.util.environment
 import spack.util.hash
 import spack.util.lock
 import spack.util.spack_yaml as syaml
@@ -1536,7 +1537,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
     This can also return False if it detects that no resources are eligible for
     moving (in which case there would be no point in prompting the user for that).
     """
-    if os.getenv("SPACK_AUTOMIGRATE_YES"):
+    if spack.util.environment.env_flag("SPACK_AUTOMIGRATE_YES"):
         return True
     data_home = migration_data_home()
     resources = []

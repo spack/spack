@@ -1083,6 +1083,20 @@ def test_remigration_summary_excludes_envs_with_differing_manifests(
     assert "Migrated: environments (except foo: previously migrated, manifests differ" in err
 
 
+@pytest.mark.parametrize(
+    "value,approved",
+    [("1", True), ("true", True), ("TRUE", True), ("0", False), ("no", False), ("", False)],
+)
+def test_automigrate_yes_requires_a_true_value(monkeypatch, value, approved):
+    """``SPACK_AUTOMIGRATE_YES=0`` must not approve."""
+    monkeypatch.setenv("SPACK_AUTOMIGRATE_YES", value)
+    monkeypatch.setattr(
+        spack.util.lang, "open_controlling_terminal", lambda: contextlib.nullcontext(None)
+    )
+    resources = {"environments": True, "gpg_keys": False, "licenses": False, "installs": False}
+    assert spack.migrate._prompt_for_prefix_migration(resources, timeout=1) is approved
+
+
 def test_prefix_migration_prompt_needs_controlling_terminal(monkeypatch):
     """Without a controlling terminal the prompt is skipped and migration declined, no
     matter what stdin/stderr are. With one, the question goes to the terminal, not stderr."""
