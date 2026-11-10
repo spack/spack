@@ -158,6 +158,35 @@ error(0, Msg, startcauses, TriggerID, ID1, ConstraintID, ID2)
      unification_set(X, node(ID1, TriggerPackage)),
      build(node(ID, Package)).  % ignore conflicts for concrete packages
 
+% Name the closest dependent within the compiler version bound that a package violates. The
+% message must be the same as that of the error in concretize.lp.
+link_run_reaches(ParentNode, ChildNode) :- attr("depends_on", ParentNode, ChildNode, "link").
+link_run_reaches(ParentNode, ChildNode) :- attr("depends_on", ParentNode, ChildNode, "run").
+link_run_reaches(AncestorNode, ChildNode) :-
+  link_run_reaches(AncestorNode, ParentNode),
+  link_run_reaches(ParentNode, ChildNode).
+
+compiler_bound_source(SourceNode, node(X, Package), Compiler, SourceVersion) :-
+  error(10, "a package that links or runs {0} requires it to be compiled with {1}@{2}", Package, Compiler, VersionRange),
+  attr("depends_on", node(X, Package), node(Y, Compiler), "build"),
+  attr("version", node(Y, Compiler), Version),
+  not pkg_fact(Compiler, version_satisfies(VersionRange, Version)),
+  link_run_reaches(SourceNode, node(X, Package)),
+  attr("depends_on", SourceNode, node(Z, Compiler), "build"),
+  attr("version", node(Z, Compiler), SourceVersion),
+  pkg_fact(Compiler, version_satisfies(VersionRange, SourceVersion)).
+
+error(0, "{0} is compiled with {1}@{2}, and links or runs {3}, which is compiled with {1}@{4}", Source, Compiler, SourceVersion, Package, Version)
+  :- compiler_bound_source(node(S, Source), node(X, Package), Compiler, SourceVersion),
+     not closer_compiler_bound_source(node(S, Source), node(X, Package), Compiler),
+     attr("depends_on", node(X, Package), node(Y, Compiler), "build"),
+     attr("version", node(Y, Compiler), Version).
+
+closer_compiler_bound_source(SourceNode, PackageNode, Compiler) :-
+  compiler_bound_source(SourceNode, PackageNode, Compiler, _),
+  compiler_bound_source(OtherNode, PackageNode, Compiler, _),
+  link_run_reaches(SourceNode, OtherNode).
+
 pkg_fact(Package, version_satisfies(Constraint, Version)) :-
     pkg_fact(Package, version_order(Version, VersionIdx)),
     pkg_fact(Package, version_range(Constraint, MinIdx, MaxIdx)),
