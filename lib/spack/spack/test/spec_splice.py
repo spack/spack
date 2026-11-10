@@ -206,18 +206,22 @@ def test_splice_provider_that_depends_on_the_target():
     assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
 
 
-@pytest.mark.xfail(strict=True, reason="a provider shared by name hides a clash on its virtual")
-def test_transitive_splice_resolves_virtual_clash_with_a_shared_node():
-    """Transitive splices use the replacement's providers."""
-    glibc = node("glibc@2")  # shared by spec and replacement
-    libxml2 = node("libxml2@2")
-    spec = node("libxslt@1", (libxml2, "link"), (glibc, "link", "iconv"))
-    libiconv = node("libiconv@1")
-    replacement = node("libxml2@1", (glibc, "link"), (libiconv, "link", "iconv"))
+@pytest.mark.parametrize("transitive,provider", [(True, "openmpi"), (False, "mpich")])
+def test_splice_resolves_clashing_providers_of_a_virtual(transitive, provider):
+    """Clashing providers are reconciled like clashing nodes of one name."""
+    mpich = node("mpich@1")
+    hdf5_1 = node("hdf5@1", (mpich, "link", "mpi"))
+    spec = node("netcdf-c@1", (hdf5_1, "link"), (mpich, "link", "mpi"))
+    openmpi = node("openmpi@1")
+    replacement = node("hdf5@2", (openmpi, "link", "mpi"))
 
-    out = spec.splice(replacement, transitive=True)
+    out = spec.splice(replacement, transitive=transitive)
 
-    assert out.edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
+    # the caller vouches that either can stand in for the other, as with the MPI ABI
+    providers = {
+        e.spec.name for n in out.traverse() for e in n.edges_to_dependencies(virtuals="mpi")
+    }
+    assert providers == {provider}
 
 
 @pytest.mark.xfail(strict=True, reason="nodes rewired to their build dependencies stay spliced")
