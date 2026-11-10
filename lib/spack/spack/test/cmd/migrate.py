@@ -101,14 +101,19 @@ def _setup_cleanup_old(home_dir, new_user_config="config: {}\n"):
 def test_migrate_cleanup_old_removes_unreferenced_legacy_directory(
     mock_spack_instance, monkeypatch
 ):
-    """cleanup-old --yes removes ~/.spack when nothing fatal refers to it."""
+    """cleanup-old --yes removes ~/.spack when nothing fatal refers to it. Old config files
+    still being in ~/.spack is not a reference: only the active user scope pointing there is.
+    """
     home_dir, base_prefix = mock_spack_instance
-    old_user, _ = _setup_cleanup_old(home_dir)
+    old_user, new_user = _setup_cleanup_old(home_dir)
+    assert (old_user / "config.yaml").exists()
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    assert spack.config.CONFIG.scopes["user"].path == str(new_user)
 
     out = sp_migrate("cleanup-old", "--yes")
 
     assert not old_user.exists()
+    assert "user configuration scope" not in out
     # The report names the directory, its contents, and what was not checked
     assert "permanently delete" in out
     assert "bootstrap" in out
