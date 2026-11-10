@@ -6,6 +6,7 @@
 import pytest
 
 import spack.deptypes as dt
+import spack.traverse
 from spack.spec import Spec, SpliceError
 
 #: Virtuals each package can provide
@@ -40,6 +41,22 @@ def recomputed_hash(spec: Spec) -> str:
     return copy.dag_hash()
 
 
+def checked_splice(spec: Spec, replacement: Spec, *, transitive: bool) -> Spec:
+    """Splice, and check that the result has one node per name and one provider per virtual"""
+    out = spec.splice(replacement, transitive=transitive)
+    nodes = list(out.traverse(deptype=("link", "run"), key=spack.traverse.by_dag_hash))
+    names = [n.name for n in nodes]
+    assert len(names) == len(set(names))
+    providers = {
+        (v, e.spec.name)
+        for n in nodes
+        for e in n.edges_to_dependencies(depflag=dt.LINK | dt.RUN)
+        for v in e.virtuals
+    }
+    assert len(providers) == len({v for v, _ in providers})
+    return out
+
+
 @pytest.mark.xfail(strict=True, reason="stale hashes, #53303")
 def test_splice_hashes_are_those_of_the_spliced_dag():
     """The result has correct hashes."""
@@ -48,7 +65,7 @@ def test_splice_hashes_are_those_of_the_spliced_dag():
     spec = node("netcdf-c@1", (hdf5, "link"))
     replacement = node("zlib@2")
 
-    out = spec.splice(replacement, transitive=True)
+    out = checked_splice(spec, replacement, transitive=True)
 
     assert out.dag_hash() == recomputed_hash(out)
 
@@ -62,7 +79,7 @@ def test_splice_keeps_build_link_edges_of_unspliced_nodes():
     spec = node("netcdf-c@1", (hdf5, "link"), (curl, "link"))
     replacement = node("curl@2")
 
-    out = spec.splice(replacement, transitive=True)
+    out = checked_splice(spec, replacement, transitive=True)
 
     edges = out["hdf5"].edges_to_dependencies("zlib")
     assert [e.depflag for e in edges] == [dt.BUILD | dt.LINK]
@@ -90,7 +107,7 @@ def test_splice_keeps_other_providers_of_virtuals_the_replacement_can_provide():
     spec = node("libxml2@1", (glibc, "link"), (libiconv, "link", "iconv"))
     replacement = node("glibc@2")
 
-    out = spec.splice(replacement, transitive=True)
+    out = checked_splice(spec, replacement, transitive=True)
 
     assert sorted(d.name for d in out.dependencies()) == ["glibc", "libiconv"]
 
@@ -105,7 +122,7 @@ def test_splice_replaces_provider_by_one_with_another_backend(transitive):
     mkl = node("intel-oneapi-mkl@1")
     lbt_mkl = node("libblastrampoline@5", (mkl, "link"))  # provider=mkl
 
-    out = spec.splice(lbt_mkl, transitive=transitive)
+    out = checked_splice(spec, lbt_mkl, transitive=transitive)
 
     # petsc and suite-sparse link libblastrampoline, whatever it forwards to
     names = sorted(n.name for n in out.traverse(root=False, deptype=("link", "run")))
@@ -123,7 +140,7 @@ def test_intransitive_splice_does_not_make_the_root_a_provider():
     mpich = node("mpich@1")
     replacement = node("hwloc@2", (mpich, "link", "mpi"))  # hwloc +netloc
 
-    out = spec.splice(replacement, transitive=False)
+    out = checked_splice(spec, replacement, transitive=False)
 
     assert [d.name for d in out["hwloc"].dependencies()] == ["mpich"]
 
@@ -176,7 +193,7 @@ def test_intransitive_splice_records_installed_build_specs():
     spec = node("netcdf-c@1", (hdf5, "link"))
     replacement = node("zlib@2")
 
-    out = spec.splice(replacement, transitive=False)
+    out = checked_splice(spec, replacement, transitive=False)
 
     assert recomputed_hash(out.build_spec) == spec.dag_hash()
 
@@ -192,7 +209,7 @@ def test_splice_ignores_build_only_dependencies():
     zlib = node("zlib@1")
     replacement = node("python@3", (zlib, "link"))
 
-    out = spec.splice(replacement, transitive=True)
+    out = checked_splice(spec, replacement, transitive=True)
 
     assert not out["glib"].spliced
     assert out["glib"].dependencies(deptype="build") == [python_2]
@@ -207,7 +224,7 @@ def test_splice_resolves_clashing_providers_of_a_virtual(transitive, provider):
     openmpi = node("openmpi@1")
     replacement = node("hdf5@2", (openmpi, "link", "mpi"))
 
-    out = spec.splice(replacement, transitive=transitive)
+    out = checked_splice(spec, replacement, transitive=transitive)
 
     # the caller vouches that either can stand in for the other, as with the MPI ABI
     providers = {
@@ -224,7 +241,8 @@ def test_splicing_the_original_back_gives_the_original_spec():
     spec = node("netcdf-c@1", (hdf5, "link"))
     zlib_2 = node("zlib@2")
 
-    out = spec.splice(zlib_2, transitive=True).splice(zlib_1, transitive=True)
+    spliced = checked_splice(spec, zlib_2, transitive=True)
+    out = checked_splice(spliced, zlib_1, transitive=True)
 
     assert out.dag_hash() == spec.dag_hash()
 
@@ -239,7 +257,7 @@ def test_intransitive_splice_keeps_provider_of_virtual_only_the_target_used():
     replacement = node("libxml2@2", (glibc, "link", "libc"), (libiconv, "link", "iconv"))
 
     # only libxml2@1 took iconv from glibc
-    out = spec.splice(replacement, transitive=False)
+    out = checked_splice(spec, replacement, transitive=False)
 
     assert out["libxml2"].edges_to_dependencies(virtuals="iconv")[0].spec.name == "libiconv"
 
