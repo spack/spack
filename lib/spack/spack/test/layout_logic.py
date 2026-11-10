@@ -1294,20 +1294,38 @@ def test_prefix_migration_prompt_needs_controlling_terminal(monkeypatch):
     assert "No response received" in terminal.getvalue()
 
 
-def test_license_dir_symlink_is_migrated_as_a_symlink(tmp_path):
-    """A license dir pointing at a site-wide store stays a pointer: a copy would freeze it."""
+def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
+    """A resource whose root is a symlink (licenses -> site store, an env -> a checkout) is
+    migrated by re-creating the link: a copy would freeze the data. Idempotent, and a
+    destination that is anything else is refused."""
     site = tmp_path / "site"
     site.mkdir()
     (site / "intel.lic").write_text("site", encoding="utf-8")
+    (site / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+
+    # licenses
     src = tmp_path / "licenses"
     src.symlink_to(site)
     dst = tmp_path / "new" / "licenses"
-
     assert spack.migrate._migrate_licenses(str(src), str(dst))
     assert dst.is_symlink() and dst.resolve() == site.resolve()
     (site / "later.lic").write_text("x", encoding="utf-8")
     assert (dst / "later.lic").exists()
     assert spack.migrate._migrate_licenses(str(src), str(dst))  # idempotent
+
+    # an environment, through migrate_with_staging
+    old_envs = tmp_path / "old-envs"
+    old_envs.mkdir()
+    (old_envs / "linked").symlink_to(site)
+    new_envs = tmp_path / "new-envs"
+    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    assert ok
+    assert (new_envs / "linked").is_symlink()
+    assert (new_envs / "linked").resolve() == site.resolve()
+
+    # destination occupied by something that is not that link
+    (tmp_path / "new" / "other").mkdir()
+    assert not spack.migrate._migrate_licenses(str(src), str(tmp_path / "new" / "other"))
 
 
 def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path):

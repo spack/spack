@@ -651,6 +651,30 @@ def _remove_tree(path: str, what: str) -> None:
     shutil.rmtree(path, onerror=on_error)
 
 
+def _migrate_symlinked_root(old_path: str, new_path: str, description: str) -> bool:
+    """Migrate a resource whose root is itself a symlink by re-creating the link.
+
+    The link is what the user set up (``licenses -> /site/licenses``,
+    ``~/.spack -> ~/dotfiles/spack``); the data lives where it points. Copying through it
+    would freeze the data at today's contents and detach it from the user's source of truth.
+    An existing destination is accepted only if it is already a link to the same target.
+    """
+    target = os.path.realpath(old_path)
+    if os.path.lexists(new_path):
+        if os.path.islink(new_path) and os.path.realpath(new_path) == target:
+            return True
+        tty.warn(f"Cannot migrate {description}: {new_path} exists and is not a link to {target}")
+        return False
+    try:
+        filesystem.mkdirp(os.path.dirname(new_path))
+        os.symlink(target, new_path)
+    except OSError as e:
+        tty.warn(f"Cannot migrate {description}: could not link {new_path} -> {target}: {e}")
+        return False
+    tty.debug(f"{description.capitalize()} migrated as a symlink: {new_path} -> {target}")
+    return True
+
+
 def migrate_with_staging(
     old_path: str,
     new_path: str,
@@ -663,7 +687,8 @@ def migrate_with_staging(
     """Generic migration function for resources.
 
     Common pattern for atomic migrations:
-    1. Check source exists and has content
+    1. Check source exists and has content; a source that is itself a symlink is migrated
+       by re-creating the link (see :func:`_migrate_symlinked_root`)
     2. Verify destination (via callback) - can skip, fail, or proceed
     3. Acquire lock (unless lock_name is None, meaning caller handles locking)
     4. Re-verify destination inside lock (state may have changed)
@@ -680,6 +705,9 @@ def migrate_with_staging(
     """
     if not _is_nonempty_directory(old_path):
         return False
+
+    if os.path.islink(old_path):
+        return _migrate_symlinked_root(old_path, new_path, description)
 
     # Verify destination before locking. This will almost always trigger an early
     # return (skip locking). Marker-based verifiers check for already-migrated
@@ -1267,14 +1295,9 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
 
         Raises:
             MigrationStagingError: If the environment cannot be safely migrated due to:
-                - The env directory itself being a symlink
                 - Symlinks inside the env pointing to absolute paths within the old env
                 - Symlinks inside the env pointing outside the staging directory
         """
-        # Check if the env directory itself is a symlink
-        if os.path.islink(old_path):
-            raise MigrationStagingError(f"Environment directory {old_path} is a symlink")
-
         shutil.copytree(old_path, staging_path, symlinks=True, ignore=make_ignore_views(old_path))
 
         # Check for problematic symlinks (raises MigrationStagingError if found)
@@ -1430,22 +1453,8 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
     if not os.path.exists(src_dir):
         return True
 
-    # A license dir that is itself a symlink (to a site-wide license store, say) is kept
-    # as a symlink: a copy would freeze the licenses at today's contents.
     if os.path.islink(src_dir):
-        target = os.path.realpath(src_dir)
-        if os.path.lexists(dst_dir):
-            if os.path.islink(dst_dir) and os.path.realpath(dst_dir) == target:
-                return True
-            tty.warn(f"License migration stopped: {dst_dir} exists and is not a link to {target}")
-            return False
-        try:
-            filesystem.mkdirp(os.path.dirname(dst_dir))
-            os.symlink(target, dst_dir)
-        except OSError as e:
-            tty.warn(f"License migration stopped: could not link {dst_dir} -> {target}: {e}")
-            return False
-        return True
+        return _migrate_symlinked_root(src_dir, dst_dir, "licenses")
 
     src_entries = sorted(os.listdir(src_dir))
     if not src_entries:
@@ -1581,7 +1590,7 @@ def migration_config_home() -> str:
 
 
 def _absolute_home_var(var: str, value: str) -> str:
-    """Expand ``~`` in a location taken from environment variable ``var`` and insist that
+    """Expand ``~`` if present in a path taken from environment variable ``var`` and insist that
     the result is absolute. A relative location would silently land in the current working
     directory; ``config:locations`` rejects it too, once configuration is loaded."""
     expanded = os.path.normpath(os.path.expanduser(value))
