@@ -202,6 +202,7 @@ class InstallRecord:
         "path",
         "installed",
         "ref_count",
+        "build_ref_count",
         "explicit",
         "installation_time",
         "deprecated_for",
@@ -225,6 +226,8 @@ class InstallRecord:
         self.path = str(path) if path else None
         self.installed = bool(installed)
         self.ref_count = ref_count
+        # Build provenance is derived from the spec links on read, including for old indexes.
+        self.build_ref_count = 0
         self.explicit = explicit
         self.installation_time = installation_time or _now()
         self.deprecated_for = deprecated_for
@@ -784,9 +787,16 @@ class Database:
         if "build_spec" in spec_node_dict:
             assert spec_reader.SPEC_VERSION >= 2, "SpecfileV1 spec cannot have build_spec"
             _, bhash, _ = spec_reader.extract_build_spec_info_from_node_dict(spec_node_dict)
-            _, build_spec = self.query_by_spec_hash(bhash, data=data)
-            assert build_spec is not None, f"build_spec with hash {bhash} not found in database"
-            spec._build_spec = build_spec.spec
+            self._link_build_spec(spec, bhash, data)
+
+    def _link_build_spec(
+        self, spec: "spack.spec.Spec", build_hash: str, data: Dict[str, InstallRecord]
+    ) -> None:
+        upstream, record = self.query_by_spec_hash(build_hash, data=data)
+        assert record is not None, f"build_spec with hash {build_hash} not found in database"
+        spec.build_spec = record.spec
+        if not upstream:
+            record.build_ref_count += 1
 
     def _assign_dependencies(
         self,
@@ -1092,6 +1102,8 @@ class Database:
                 dep_record = self._data.get(dep.dag_hash())
                 if dep_record:  # dep might be upstream
                     dep_record.ref_count += 1
+            if record.spec.spliced:
+                self._link_build_spec(record.spec, record.spec.build_spec.dag_hash(), self._data)
             if record.deprecated_for:
                 self._data[record.deprecated_for].ref_count += 1
 
@@ -1105,6 +1117,7 @@ class Database:
         Does no locking.
         """
         counts: Dict[str, int] = {}
+        build_counts: Dict[str, int] = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
             for dep in rec.spec.dependencies():
@@ -1115,6 +1128,9 @@ class Database:
             if rec.deprecated_for:
                 counts.setdefault(rec.deprecated_for, 0)
                 counts[rec.deprecated_for] += 1
+            if rec.spec.spliced:
+                build_key = rec.spec.build_spec.dag_hash()
+                build_counts[build_key] = build_counts.get(build_key, 0) + 1
 
         for rec in self._data.values():
             key = rec.spec.dag_hash()
@@ -1125,6 +1141,11 @@ class Database:
                     "Invalid ref_count: %s: %d (expected %d), in DB %s"
                     % (key, found, expected, self._index_path)
                 )
+            expected_build_count = build_counts.get(key, 0)
+            assert rec.build_ref_count == expected_build_count, (
+                f"Invalid build_ref_count: {key}: {rec.build_ref_count} "
+                f"(expected {expected_build_count}), in DB {self._index_path}"
+            )
 
     def _write(self, type=None, value=None, traceback=None):
         """Write the in-memory database index to its file path.
@@ -1231,8 +1252,8 @@ class Database:
 
         key = spec.dag_hash()
         spec_pkg_hash = spec._package_hash
-        upstream, record = self.query_by_spec_hash(key)
-        if upstream and record and record.installed:
+        existing_upstream, record = self.query_by_spec_hash(key)
+        if existing_upstream and record and record.installed:
             return
 
         installation_time = installation_time or _now()
@@ -1296,16 +1317,29 @@ class Database:
                 if not upstream:
                     record.ref_count += 1
 
+            if spec.spliced:
+                self._link_build_spec(new_spec, spec.build_spec.dag_hash(), self._data)
+
             # Mark concrete once everything is built, and preserve the original hashes of concrete
             # specs.
             new_spec._mark_concrete()
             new_spec._hash = key
             new_spec._package_hash = spec_pkg_hash
 
+            if existing_upstream:
+                # Existing splices now resolve to the new local copy of their build spec.
+                for referring_record in self._data.values():
+                    referring_spec = referring_record.spec
+                    if referring_spec.spliced and referring_spec.build_spec.dag_hash() == key:
+                        self._link_build_spec(referring_spec, key, self._data)
+
         else:
-            # It is already in the database
-            self._data[key].installed = installed
-            self._data[key].installation_time = _now()
+            record = self._data[key]
+            # Reindex can retain build provenance without an install prefix.
+            if installed and self.layout and not spec.external and record.path is None:
+                record.path = path
+            record.installed = installed
+            record.installation_time = _now()
 
         self._data[key].explicit = explicit
 
@@ -1372,7 +1406,9 @@ class Database:
         else:
             return spack.spec.InstallStatus.missing
 
-    def _decrement_ref_count(self, spec: "spack.spec.Spec") -> None:
+    def _decrement_ref_count(
+        self, spec: "spack.spec.Spec", *, build_reference: bool = False
+    ) -> None:
         key = spec.dag_hash()
 
         if key not in self._data:
@@ -1381,13 +1417,31 @@ class Database:
             return
 
         rec = self._data[key]
-        rec.ref_count -= 1
+        if build_reference:
+            rec.build_ref_count -= 1
+        else:
+            rec.ref_count -= 1
 
-        if rec.ref_count == 0 and not rec.installed:
-            del self._data[key]
+        # Losing a provenance reference alone must not remove a deprecated install record.
+        if not (rec.ref_count or rec.build_ref_count or rec.installed) and not (
+            build_reference and rec.deprecated_for
+        ):
+            self._delete_record(key, rec)
 
-            for dep in spec.dependencies():
-                self._decrement_ref_count(dep)
+    def _release_deprecation(self, rec: InstallRecord) -> None:
+        if rec.deprecated_for:
+            successor = self._data[rec.deprecated_for].spec
+            rec.deprecated_for = None
+            self._decrement_ref_count(successor)
+
+    def _delete_record(self, key: str, rec: InstallRecord) -> None:
+        del self._data[key]
+        rec.spec.detach()
+        for dep in rec.spec.dependencies():
+            self._decrement_ref_count(dep)
+        if rec.spec.spliced:
+            self._decrement_ref_count(rec.spec.build_spec, build_reference=True)
+        self._release_deprecation(rec)
 
     def _increment_ref_count(self, spec: "spack.spec.Spec") -> None:
         key = spec.dag_hash()
@@ -1408,21 +1462,15 @@ class Database:
         if not rec.spec.external and rec.installed and rec.path:
             self._installed_prefixes.remove(rec.path)
 
-        if rec.ref_count > 0:
+        if rec.ref_count > 0 or rec.build_ref_count > 0:
             rec.installed = False
+            if rec.build_ref_count:
+                # Retained build metadata must not keep old installs rooted in GC.
+                rec.explicit = False
+                self._release_deprecation(rec)
             return rec.spec
 
-        del self._data[key]
-
-        # Remove any reference to this node from dependencies and
-        # decrement the reference count
-        rec.spec.detach()
-        for dep in rec.spec.dependencies():
-            self._decrement_ref_count(dep)
-
-        if rec.deprecated_for:
-            new_spec = self._data[rec.deprecated_for].spec
-            self._decrement_ref_count(new_spec)
+        self._delete_record(key, rec)
 
         # Returns the concrete spec so we know it in the case where a
         # query spec was passed in.
@@ -1927,8 +1975,19 @@ class NoUpstreamVisitor:
         return item.edge.spec.dag_hash() in self.upstream_hashes
 
     def neighbors(self, item: tr.EdgeAndDepth):
-        # Prune edges from upstream nodes, only follow database tracked dependencies
-        return [] if self.is_upstream(item) else item.edge.spec.edges_to_dependencies()
+        if self.is_upstream(item):
+            return []
+
+        spec = item.edge.spec
+        edges = spec.edges_to_dependencies()
+        if spec.spliced:
+            # Rebuild the provenance record without adding an ordinary dependency edge.
+            edges.append(
+                spack.spec.DependencySpec(
+                    parent=None, spec=spec.build_spec, depflag=0, virtuals=()
+                )
+            )
+        return edges
 
 
 class UpstreamDatabaseLockingError(SpackError):

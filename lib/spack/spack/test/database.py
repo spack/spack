@@ -19,7 +19,7 @@ import spack.config
 import spack.subprocess_context
 from spack.config import Configuration
 from spack.database import Database
-from spack.directory_layout import DirectoryLayoutError
+from spack.directory_layout import DirectoryLayout, DirectoryLayoutError
 from spack.store import Store
 
 try:
@@ -639,6 +639,206 @@ def test_026_reindex_after_deprecate(mutable_database_store: Store):
 
     mutable_database_store.reindex()
     _check_db_sanity(db)
+
+
+def _database_spec(name, *dependencies, build_spec=None):
+    spec = spack.spec.Spec(f"{name}@=1.0")
+    for dependency in dependencies:
+        spec._add_dependency(dependency, depflag=dt.LINK, virtuals=())
+    if build_spec is not None:
+        spec.build_spec = build_spec
+    spec._package_hash = f"{name}-source"
+    spec._mark_concrete()
+    return spec
+
+
+def _install_database_specs(db, layout, *specs):
+    for spec in specs:
+        spec.set_prefix(layout.path_for_spec(spec))
+        layout.create_install_directory(spec)
+        db.add(spec)
+
+
+def _remove_database_spec(db, layout, spec):
+    layout.remove_install_directory(spec)
+    db.remove(spec)
+
+
+def test_uninstall_build_spec_keeps_metadata_until_last_splice(tmp_path):
+    root = str(tmp_path)
+    layout = DirectoryLayout(root, projections={"all": "{name}-{version}-{hash}"})
+    db = Database(root, layout=layout)
+    original = _database_spec("synthetic")
+    first_dep = _database_spec("first-dep")
+    second_dep = _database_spec("second-dep")
+    first = _database_spec("synthetic", first_dep, build_spec=original)
+    second = _database_spec("synthetic", second_dep, build_spec=original)
+    _install_database_specs(db, layout, original, first_dep, second_dep, first, second)
+
+    # Start with a fresh database object so this also covers reading the on-disk index.
+    _remove_database_spec(Database(root, layout=layout), layout, original)
+    for splice in (first, second):
+        db = Database(root, layout=layout)
+        build_record = db.query_local_by_spec_hash(original.dag_hash())
+        splice_record = db.query_local_by_spec_hash(splice.dag_hash())
+        assert build_record is not None and not build_record.installed
+        assert splice_record is not None and splice_record.installed
+        assert splice_record.spec.build_spec is build_record.spec
+        _remove_database_spec(db, layout, splice)
+
+    db = Database(root, layout=layout)
+    assert db.query_local_by_spec_hash(original.dag_hash()) is None
+    assert {spec.dag_hash() for spec in db.query()} == {
+        first_dep.dag_hash(),
+        second_dep.dag_hash(),
+    }
+
+
+def test_removed_explicit_build_spec_does_not_keep_old_dependency_installed(tmp_path):
+    root = str(tmp_path)
+    layout = DirectoryLayout(root, projections={"all": "{name}-{version}-{hash}"})
+    db = Database(root, layout=layout)
+    old_dep = _database_spec("old-dep")
+    original = _database_spec("synthetic", old_dep)
+    replacement = _database_spec("replacement")
+    splice = _database_spec("synthetic", replacement, build_spec=original)
+    _install_database_specs(db, layout, old_dep, original, replacement, splice)
+    db.mark(original, "explicit", True)
+    db.mark(splice, "explicit", True)
+
+    _remove_database_spec(db, layout, original)
+
+    reopened = Database(root, layout=layout)
+    assert {spec.dag_hash() for spec in reopened.unused_specs()} == {old_dep.dag_hash()}
+    build_record = reopened.get_record(original)
+    assert not build_record.installed and build_record.build_ref_count == 1
+
+
+def test_reinstall_build_spec_restores_prefix_after_reindex(tmp_path):
+    root = str(tmp_path)
+    layout = DirectoryLayout(root, projections={"all": "{name}-{version}-{hash}"})
+    db = Database(root, layout=layout)
+    original = _database_spec("synthetic")
+    replacement = _database_spec("replacement")
+    splice = _database_spec("synthetic", replacement, build_spec=original)
+    _install_database_specs(db, layout, original, replacement, splice)
+    prefix = str(original.prefix)
+    assert db.is_occupied_install_prefix(prefix)
+
+    _remove_database_spec(db, layout, original)
+    db.reindex()
+    assert not db.is_occupied_install_prefix(prefix)
+    assert db.get_record(original).path is None
+    _install_database_specs(db, layout, original)
+
+    reopened = Database(root, layout=layout)
+    build_record = reopened.get_record(original)
+    assert build_record.installed and build_record.build_ref_count == 1
+    assert build_record.path == prefix
+    assert reopened.is_occupied_install_prefix(prefix)
+
+
+def test_reindex_recovers_build_spec_behind_uninstalled_splice(tmp_path):
+    root = str(tmp_path)
+    layout = DirectoryLayout(root, projections={"all": "{name}-{version}-{hash}"})
+    db = Database(root, layout=layout)
+    build_dep = _database_spec("build-dep")
+    original = _database_spec("synthetic", build_dep)
+    replacement = _database_spec("replacement")
+    splice = _database_spec("synthetic", replacement, build_spec=original)
+    consumer = _database_spec("consumer", splice)
+    _install_database_specs(db, layout, build_dep, original, replacement, splice, consumer)
+    _remove_database_spec(db, layout, splice)
+
+    # Reproduce the historical corrupt index without depending on the current uninstall behavior.
+    layout.remove_install_directory(original)
+    index = json.loads(db._index_path.read_text(encoding="utf-8"))
+    del index["database"]["installs"][original.dag_hash()]
+    db._index_path.write_text(json.dumps(index), encoding="utf-8")
+    Database(root, layout=layout).reindex()
+
+    db = Database(root, layout=layout)
+    original_record = db.query_local_by_spec_hash(original.dag_hash())
+    splice_record = db.query_local_by_spec_hash(splice.dag_hash())
+    assert original_record is not None and not original_record.installed
+    assert splice_record is not None and not splice_record.installed
+    assert splice_record.spec.build_spec is original_record.spec
+    assert original_record.spec["build-dep"].dag_hash() == build_dep.dag_hash()
+    assert db.query_local_by_spec_hash(consumer.dag_hash()).installed
+
+    _remove_database_spec(db, layout, consumer)
+    assert not db.query_local_by_spec_hash(build_dep.dag_hash()).spec.dependents()
+    db = Database(root, layout=layout)
+    assert db.query_local_by_spec_hash(splice.dag_hash()) is None
+    assert db.query_local_by_spec_hash(original.dag_hash()) is None
+
+
+@pytest.mark.parametrize("remove_original", [False, True], ids=["deprecated", "removed"])
+def test_releasing_build_metadata_respects_deprecation(tmp_path, remove_original):
+    root = str(tmp_path)
+    layout = DirectoryLayout(root, projections={"all": "{name}-{version}-{hash}"})
+    db = Database(root, layout=layout)
+    original = _database_spec("synthetic")
+    successor = _database_spec("successor")
+    splice = _database_spec("synthetic", successor, build_spec=original)
+    _install_database_specs(db, layout, original, successor, splice)
+    db.deprecate(original, successor)
+    if remove_original:
+        _remove_database_spec(db, layout, original)
+    _remove_database_spec(db, layout, splice)
+
+    record = db.query_local_by_spec_hash(original.dag_hash())
+    successor_record = db.query_local_by_spec_hash(successor.dag_hash())
+    if remove_original:
+        assert record is None and successor_record.ref_count == 0
+    else:
+        assert record.deprecated_for == successor.dag_hash() and successor_record.ref_count == 1
+
+
+@pytest.mark.parametrize("replace_upstream", [False, True], ids=["upstream", "local-shadow"])
+def test_splice_build_spec_in_upstream_database(tmp_path, replace_upstream):
+    upstream_root = str(tmp_path / "upstream")
+    upstream_layout = DirectoryLayout(
+        upstream_root, projections={"all": "{name}-{version}-{hash}"}
+    )
+    build_dep = _database_spec("build-dep")
+    original = _database_spec("synthetic", build_dep)
+    consumer = _database_spec("consumer", original)
+    upstream_writer = Database(upstream_root, layout=upstream_layout)
+    _install_database_specs(upstream_writer, upstream_layout, build_dep, original, consumer)
+    upstream = Database(upstream_root, is_upstream=True)
+    upstream._read()
+
+    downstream_root = str(tmp_path / "downstream")
+    downstream_layout = DirectoryLayout(
+        downstream_root, projections={"all": "{name}-{version}-{hash}"}
+    )
+    replacement = _database_spec("replacement")
+    splice = _database_spec("synthetic", replacement, build_spec=original)
+    db = Database(downstream_root, layout=downstream_layout, upstream_dbs=[upstream])
+    _install_database_specs(db, downstream_layout, replacement, splice)
+    db.reindex()
+
+    db = Database(downstream_root, layout=downstream_layout, upstream_dbs=[upstream])
+    assert db.query_local_by_spec_hash(original.dag_hash()) is None
+    assert db.query_local_by_spec_hash(build_dep.dag_hash()) is None
+    is_upstream, build_record = db.query_by_spec_hash(original.dag_hash())
+    assert is_upstream and build_record is not None and build_record.installed
+    assert db.query_local_by_spec_hash(splice.dag_hash()).spec.build_spec is build_record.spec
+
+    if replace_upstream:
+        _remove_database_spec(upstream_writer, upstream_layout, original)
+        upstream._read()
+        db = Database(downstream_root, layout=downstream_layout, upstream_dbs=[upstream])
+        _install_database_specs(db, downstream_layout, original.copy())
+        local_record = db.query_local_by_spec_hash(original.dag_hash())
+        assert local_record is not None and local_record.installed
+        assert db.query_local_by_spec_hash(splice.dag_hash()).spec.build_spec is local_record.spec
+
+    original_index = upstream_writer._index_path.read_bytes()
+    _remove_database_spec(db, downstream_layout, splice)
+    db._check_ref_counts()
+    assert upstream_writer._index_path.read_bytes() == original_index
 
 
 class ReadModify:
