@@ -627,6 +627,22 @@ def _env_manifests_match(src_env: str, dst_env: str) -> bool:
     return src_text == dst_text
 
 
+def _remove_tree(path: str, what: str) -> None:
+    """Remove a directory Spack created during migration, making read-only entries writable
+    first (copied trees keep their source permissions). Whatever still cannot be removed is
+    reported, so that a leftover is never silent."""
+
+    def on_error(func, failed_path, exc_info):
+        try:
+            os.chmod(os.path.dirname(failed_path), 0o700)
+            os.chmod(failed_path, 0o700)
+            func(failed_path)
+        except OSError as e:
+            tty.warn(f"Could not remove {what} {path}: {e}")
+
+    shutil.rmtree(path, onerror=on_error)
+
+
 def migrate_with_staging(
     old_path: str,
     new_path: str,
@@ -676,9 +692,10 @@ def migrate_with_staging(
     except OSError:
         return False
 
-    # Acquire lock only if caller didn't take responsibility for it
+    # Acquire lock only if caller didn't take responsibility for it; a caller that holds
+    # the lock itself also owns the staging directory from the start
     lock = None
-    lock_acquired = False
+    lock_acquired = lock_name is None
     if lock_name is not None:
         lock_path = os.path.join(parent, lock_name)
         lock = spack.util.lock.Lock(lock_path, default_timeout=120)
@@ -725,7 +742,7 @@ def migrate_with_staging(
 
         # Clean up stale staging directory from previous failed attempt
         if os.path.exists(staging_path):
-            shutil.rmtree(staging_path, ignore_errors=True)
+            _remove_tree(staging_path, "stale staging directory")
 
         # Callback creates staging directory and populates it
         tty.debug(f"Migrating {description} from {old_path} to {new_path}")
@@ -767,7 +784,7 @@ def migrate_with_staging(
     finally:
         # Clean up staging directory if it still exists and we own the lock for it
         if lock_acquired and os.path.exists(staging_path):
-            shutil.rmtree(staging_path, ignore_errors=True)
+            _remove_tree(staging_path, "staging directory")
 
         if lock_acquired and lock is not None:
             lock.release_write()
@@ -1338,7 +1355,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
                     differing.append(entry)
             else:
                 for done in copied:
-                    shutil.rmtree(os.path.join(dst_dir, done), ignore_errors=True)
+                    _remove_tree(os.path.join(dst_dir, done), "partially migrated environment")
                 return False, differing
 
         # All environments copied successfully - old environments remain in place

@@ -675,6 +675,33 @@ def test_env_migration_resolves_relative_paths_from_the_included_file(tmp_path):
     assert "staging" not in (site / "spack.yaml").read_text(encoding="utf-8")
 
 
+def test_env_migration_rollback_removes_read_only_copies(tmp_path):
+    """When one environment blocks migration, copies already made are removed even if they
+    contain read-only directories (copied permissions), and so is the failed staging dir.
+    A leftover without a marker would otherwise block every later attempt."""
+    old_envs = tmp_path / "old"
+    new_envs = tmp_path / "new"
+    good = old_envs / "a"
+    (good / "ro").mkdir(parents=True)
+    (good / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    (good / "ro" / "x.yaml").write_text("config: {}\n", encoding="utf-8")
+    (good / "ro").chmod(0o500)
+    bad = old_envs / "b"
+    (bad / "ro").mkdir(parents=True)
+    (bad / "spack.yaml").write_text(
+        "spack:\n  specs: []\n  include: [../../shared.yaml]\n", encoding="utf-8"
+    )
+    (bad / "ro").chmod(0o500)
+    try:
+        ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    finally:
+        (good / "ro").chmod(0o700)
+        (bad / "ro").chmod(0o700)
+
+    assert not ok
+    assert [p.name for p in new_envs.iterdir() if p.name != ".lock"] == []
+
+
 def test_env_migration_copies_unparseable_yaml_verbatim(tmp_path):
     """A ``*.yaml`` file that is not YAML (a Jinja template, say) is not Spack config; it
     is copied as it is and does not block the environment."""
