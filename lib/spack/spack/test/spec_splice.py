@@ -176,6 +176,7 @@ def test_splice_ignores_build_only_dependencies():
     out = spec.splice(replacement, transitive=True)
 
     assert not out["glib"].spliced
+    assert out["glib"].dependencies(deptype="build") == [python_2]
 
 
 @pytest.mark.parametrize("transitive,provider", [(True, "openmpi"), (False, "mpich")])
