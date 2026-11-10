@@ -236,7 +236,12 @@ Local Default Cache
 
 Spack caches resources that are downloaded as part of installations.
 The cache is a valid Spack mirror: it uses the same directory structure and naming scheme as other Spack mirrors (so it can be copied anywhere and referenced with a URL like other mirrors).
-The mirror is maintained locally (within the Spack installation directory) at :file:`var/spack/cache/`.
-It is always enabled (and is always searched first when attempting to retrieve files for an installation) but can be cleared with ``spack clean --misc-cache``; the cache directory can also be deleted manually without issue.
+The mirror is maintained locally at ``config:source_cache``, which is ``$data_home/downloads`` (``~/.local/share/spack/downloads``) by default, shared by every Spack instance of the user.
+It is always enabled (and is always searched first when attempting to retrieve files for an installation) but can be cleared with ``spack clean --downloads``; the cache directory can also be deleted manually without issue.
+
+.. note::
+
+   Spack 1.2 and earlier kept this cache in ``$spack/var/spack/cache``.
+   Since it is only a cache, it is neither moved nor cleaned when such an instance is updated: delete the directory by hand to reclaim the space, or set ``config:source_cache`` to it to keep using it.
 
 Caching includes retrieved tarball archives and source control repositories, but only resources with an associated digest or commit ID (e.g. a revision number for SVN) will be cached.
