@@ -202,7 +202,11 @@ class RuntimePropertyRecorder:
                     constraint_spec.name, constraint_spec.versions
                 )
                 args = f'"{constraint_spec.name}", "{constraint_spec.versions}"'
-                head_str = f"propagate({node_variable}, node_version_satisfies({args}))"
+                # Build dependencies are not loaded in the process of their dependent
+                head_str = (
+                    f"propagate({node_variable}, node_version_satisfies({args}), "
+                    'edge_types("link", "run"))'
+                )
                 rule = f"{head_str} :-\n{body_str}."
                 self.rules.append(rule)
 
