@@ -177,7 +177,7 @@ def test_isolate_keeps_existing_resources_in_place(isolate_paths, tmp_path):
     assert (old_install / "metadata").read_text(encoding="utf-8") == "installed"
     cfg = spack.config.create()
     spack.config.CONFIG = cfg
-    assert cfg.get("config:license_dir") == str(old_licenses)
+    assert spack.config.canonicalize_path(cfg.get("config:license_dir")) == str(old_licenses)
     assert cfg.get("config:locations:data")[0] == str(target)
 
     # This should be a noop: make sure no exceptions are raised
@@ -286,7 +286,7 @@ def test_isolate_reuse_old_self_target(isolate_paths, tmp_path, args):
     )
     assert cfg.get("config:locations:data")[0] == expected_data_location
     # ... and old install dir is used
-    assert str(cfg.get("config:install_tree:root")) == str(old_install)
+    assert spack.config.canonicalize_path(cfg.get("config:install_tree:root")) == str(old_install)
     # ... and new isolation user redirect scope is available (and is highest-precedence
     # scope for writing)
     assert cfg.highest_precedence_scope().name == "user"
@@ -447,7 +447,7 @@ def test_isolate_after_migration_keeps_retained_resources(isolate_paths, tmp_pat
     assert active.index("layout") < active.index("isolate_layout") < active.index("user")
 
     # Retained installs are still visible
-    assert str(cfg.get("config:install_tree:root")) == str(old_install)
+    assert spack.config.canonicalize_path(cfg.get("config:install_tree:root")) == str(old_install)
 
     # Successfully migrated resources were NOT re-pinned to the stale prefix copies
     assert cfg.get("config:environments_root") == "$data_home/environments"
