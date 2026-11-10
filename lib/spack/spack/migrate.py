@@ -1485,6 +1485,23 @@ def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
     return True
 
 
+def _same_target(src_link: str, dst_link: str, src_root: str, dst_root: str) -> bool:
+    """Whether two symlinks resolve to the same place, counting a target under ``src_root``
+    as the same as the corresponding target under ``dst_root``."""
+    src_target = os.path.realpath(src_link)
+    dst_target = os.path.realpath(dst_link)
+    if src_target == dst_target:
+        return True
+    src_root_real = os.path.realpath(src_root)
+    try:
+        rel = os.path.relpath(src_target, src_root_real)
+    except ValueError:  # different drives on Windows
+        return False
+    if rel.startswith(os.pardir):
+        return False
+    return dst_target == os.path.realpath(os.path.join(dst_root, rel))
+
+
 def _entry_kind(path: str) -> str:
     """``symlink``, ``directory`` or ``file``, for messages (a symlink is reported as such
     whatever it points to)."""
@@ -1528,8 +1545,10 @@ def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
             if os.path.lexists(dst_path):
                 # Check if content matches (prior copy or identical from another checkout)
                 if os.path.islink(src_path) and os.path.islink(dst_path):
-                    # For symlinks, compare targets
-                    if os.path.realpath(src_path) == os.path.realpath(dst_path):
+                    # For symlinks, compare targets. A link into the license dir itself is
+                    # repointed on copy (see _rewrite_symlinks_after_copy), so a target under
+                    # src_dir matches the same target under dst_dir.
+                    if _same_target(src_path, dst_path, src_dir, dst_dir):
                         tty.debug(
                             f"License symlink {entry} already exists with matching target, "
                             f"skipping"

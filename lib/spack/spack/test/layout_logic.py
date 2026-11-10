@@ -1386,6 +1386,27 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
     assert new.is_symlink()
 
 
+def test_license_migration_recognizes_its_own_repointed_links(tmp_path):
+    """An absolute symlink into the license dir is repointed into the new dir on copy; a
+    later run must see that as the same link, not as a conflict, while a link to a
+    different file is still one."""
+    src = tmp_path / "licenses"
+    dst = tmp_path / "new" / "licenses"
+    (src / "intel").mkdir(parents=True)
+    (src / "intel" / "license.lic").write_text("key", encoding="utf-8")
+    (src / "current.lic").symlink_to(src / "intel" / "license.lic")
+
+    assert spack.migrate._migrate_licenses(str(src), str(dst))
+    assert (dst / "current.lic").resolve() == (dst / "intel" / "license.lic").resolve()
+    assert spack.migrate._migrate_licenses(str(src), str(dst))  # re-run: same link
+    assert spack.migrate._migrate_licenses(str(src), str(dst))
+
+    (dst / "intel" / "other.lic").write_text("x", encoding="utf-8")
+    (dst / "current.lic").unlink()
+    (dst / "current.lic").symlink_to(dst / "intel" / "other.lic")
+    assert not spack.migrate._migrate_licenses(str(src), str(dst))
+
+
 def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path, capsys):
     """Existing destination entries are compared byte-for-byte and like-for-like (a file never
     matches a symlink), and a mismatch says what differs; links the user already had in the
