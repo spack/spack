@@ -4,6 +4,7 @@
 """This module implements the migration from Spack@:1.2 config layout to Spack@1.3: layout."""
 
 import filecmp
+import json
 import os
 import re
 import shutil
@@ -59,11 +60,20 @@ def detect_old_resources() -> Dict[str, bool]:
 
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
 
-    # A `.spack-db/` with no index has never recorded an install: a read-only command on a
-    # fresh clone creates the directory and a lock file, nothing more. Only the index counts.
-    db_dir = os.path.join(opt_spack, ".spack-db")
-    has_db = os.path.exists(os.path.join(db_dir, "index.json"))
-    ignore_in_opt = ["gpg"] if has_db else ["gpg", ".spack-db"]
+    # `.spack-db/` counts as an install tree only if its index records installs. A read-only
+    # command on a fresh clone creates the directory and a lock file without an index, and
+    # `spack uninstall --all` leaves an index with none. An index that cannot be read is
+    # treated as holding installs, so that they are retained rather than lost.
+    index = os.path.join(opt_spack, ".spack-db", "index.json")
+    db_has_installs = False
+    if os.path.exists(index):
+        try:
+            with open(index, "r", encoding="utf-8") as f:
+                db_has_installs = bool(json.load(f)["database"]["installs"])
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            tty.warn(f"Cannot read the installation database {index}: {e}")
+            db_has_installs = True
+    ignore_in_opt = ["gpg"] if db_has_installs else ["gpg", ".spack-db"]
 
     return {
         "installs": _has_entries(opt_spack, ignore=ignore_in_opt),
