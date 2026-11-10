@@ -38,6 +38,7 @@ import spack.spec
 import spack.store
 import spack.url_buildcache
 import spack.util.environment
+import spack.util.file_permissions as fp
 import spack.util.filesystem as fs
 import spack.util.lock
 import spack.util.timer
@@ -262,6 +263,8 @@ def _write_timer_json(
     try:
         with open(pkg.times_log_path, "w", encoding="utf-8") as timelog:
             timer.write_json(timelog, extra_attributes=extra_attributes)
+        # Written after the post-install hooks, so apply the configured permissions here
+        fp.set_permissions_by_spec(pkg.times_log_path, pkg.spec)
     except Exception as e:
         spack.util.tty.debug(str(e))
         return
@@ -560,6 +563,8 @@ def worker_function(
                     )
                     shutil.copyfileobj(f, gzip_file)
                     gzip_file.close()
+                # Written after the post-install hooks, so apply the configured permissions here
+                fp.set_permissions_by_spec(spec.package.install_log_path, spec)
             except Exception:
                 pass  # don't fail the build just because log compression failed
 
