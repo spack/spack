@@ -1897,6 +1897,7 @@ def force_old_layout(to_move, print_message=True):
     parts = ["No Spack-internal resources were migrated"]
     if retained_resources:
         parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
+    parts.append("Run `spack migrate use-new-layout` to migrate if desired later.")
     sys.stderr.write("\n".join(parts) + "\n")
 
 
