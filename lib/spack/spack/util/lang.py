@@ -6,6 +6,7 @@ import collections.abc
 import contextlib
 import fnmatch
 import functools
+import io
 import itertools
 import os
 import re
@@ -22,6 +23,7 @@ from typing import (
     Dict,
     Generic,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -1146,21 +1148,74 @@ class PriorityOrderedMapping(Mapping[KT, VT]):
         return popped_item
 
 
+@contextlib.contextmanager
+def open_controlling_terminal() -> Iterator[Optional[typing.TextIO]]:
+    """Open the controlling terminal for an interactive prompt, bypassing stdin/stderr.
+
+    Yields a read/write text stream on the terminal, or ``None`` when the process has no
+    controlling terminal (cron, CI, ``ssh -T``, containers without ``-t``), or when it is
+    not in the terminal's foreground process group (backgrounded with ``&``), i.e. when
+    nobody could answer a prompt. Redirection of the standard streams (``2>&1 | tee``,
+    ``$(...)`` capture, fish's ``capture_all``) does not matter: the prompt still reaches
+    the user and the answer is still read from the keyboard.
+
+    On Windows the yielded stream is only written to: :func:`readline_with_timeout` reads
+    keystrokes through ``msvcrt``, which uses the console input buffer directly and not
+    ``sys.stdin``. ``sys.stderr`` is yielded when both it and ``sys.stdin`` are the console.
+    """
+    if sys.platform == "win32":
+        if sys.stdin and sys.stderr and sys.stdin.isatty() and sys.stderr.isatty():
+            yield sys.stderr
+        else:
+            yield None
+        return
+
+    try:
+        fd = os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY)
+    except OSError:
+        yield None
+        return
+
+    try:
+        if os.tcgetpgrp(fd) != os.getpgrp():
+            yield None
+            return
+    except OSError:
+        os.close(fd)
+        yield None
+        return
+
+    # A tty is not seekable, so fdopen(fd, "r+") refuses it; wrap the raw fd directly.
+    # Input is read from the fd by readline_with_timeout; output is written through.
+    with io.TextIOWrapper(io.FileIO(fd, "r+"), write_through=True) as terminal:
+        yield terminal
+
+
 def readline_with_timeout(
-    prompt_format: str, timeout: float, update_interval: float = 1.0
+    prompt_format: str,
+    timeout: float,
+    update_interval: float = 1.0,
+    terminal: Optional[typing.TextIO] = None,
 ) -> Optional[str]:
-    """Read a line from stdin with a countdown timer in the prompt.
+    """Read a line from a terminal with a countdown timer in the prompt.
 
     Args:
         prompt_format: The prompt (this will insert "(remaining ...):" at the end)
         timeout: Maximum time to wait for input in seconds
         update_interval: How often to update the countdown display in seconds
+        terminal: Stream on the terminal to prompt on; see :func:`open_controlling_terminal`.
+            Output always goes to it (default ``sys.stderr``). On Unix input is also read
+            from its file descriptor (default ``sys.stdin``); on Windows input comes from
+            the console via ``msvcrt`` regardless of this argument.
 
     Returns:
         The input line if entered before timeout, None if timeout expires
     """
+    out_stream = terminal if terminal is not None else sys.stderr
+
     # Platform-specific setup
     if sys.platform == "win32":
+        # msvcrt reads the console input buffer directly; no stream is involved
         import msvcrt
 
         def check_input_ready(timeout_sec):
@@ -1182,13 +1237,13 @@ def readline_with_timeout(
         import termios
         import tty
 
-        # Save terminal settings to restore later
-        fd = sys.stdin.fileno()
+        # Read from the terminal's fd; save its settings to restore later
+        fd = (terminal if terminal is not None else sys.stdin).fileno()
         old_settings = termios.tcgetattr(fd)
 
         def check_input_ready(timeout_sec):
             """Check if input is available (Unix)."""
-            ready, _, _ = select.select([sys.stdin], [], [], timeout_sec)
+            ready, _, _ = select.select([fd], [], [], timeout_sec)
             return bool(ready)
 
         def read_char():
@@ -1234,16 +1289,16 @@ def readline_with_timeout(
         while True:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                sys.stderr.write("\n")
-                sys.stderr.flush()
+                out_stream.write("\n")
+                out_stream.flush()
                 return None
 
             # Update display periodically
             now = time.monotonic()
             if now - last_update >= update_interval:
                 full_prompt = f"{prompt_format} (remaining {int(remaining)}s) "
-                sys.stderr.write(f"\r{full_prompt}{''.join(characters)}")
-                sys.stderr.flush()
+                out_stream.write(f"\r{full_prompt}{''.join(characters)}")
+                out_stream.flush()
                 last_update = now
 
             # Check for input
@@ -1254,8 +1309,8 @@ def readline_with_timeout(
 
             # Handle special characters
             if character in ("\r", "\n"):
-                sys.stderr.write("\r\n")
-                sys.stderr.flush()
+                out_stream.write("\r\n")
+                out_stream.flush()
                 return "".join(characters)
             if character in ("\003", "\x03"):  # Ctrl+C
                 raise KeyboardInterrupt
@@ -1264,13 +1319,13 @@ def readline_with_timeout(
                     characters.pop()
                     # Redraw immediately after backspace
                     full_prompt = f"{prompt_format} (remaining {int(remaining)}s) "
-                    sys.stderr.write(f"\r{full_prompt}{''.join(characters)} \b")
-                    sys.stderr.flush()
+                    out_stream.write(f"\r{full_prompt}{''.join(characters)} \b")
+                    out_stream.flush()
                 continue
             if character.isprintable():
                 characters.append(character)
-                sys.stderr.write(character)
-                sys.stderr.flush()
+                out_stream.write(character)
+                out_stream.flush()
     finally:
         cleanup()
         # Restore original signal handlers

@@ -4,6 +4,8 @@
 
 """Tests for layout detection and config variable resolution."""
 
+import contextlib
+import io
 import os
 import pathlib
 import shutil
@@ -15,6 +17,7 @@ import spack.config
 import spack.error
 import spack.migrate
 import spack.paths
+import spack.util.lang
 import spack.util.spack_yaml as syaml
 
 
@@ -1005,6 +1008,34 @@ def test_remigration_summary_excludes_envs_with_differing_manifests(
 
     err = capsys.readouterr().err
     assert "Migrated: environments (except foo: previously migrated, manifests differ" in err
+
+
+def test_prefix_migration_prompt_needs_controlling_terminal(monkeypatch):
+    """Without a controlling terminal the prompt is skipped and migration declined, no
+    matter what stdin/stderr are. With one, the question goes to the terminal, not stderr."""
+    monkeypatch.delenv("SPACK_AUTOMIGRATE_YES", raising=False)
+    resources = {"environments": True, "gpg_keys": False, "licenses": False, "installs": False}
+
+    monkeypatch.setattr(
+        spack.util.lang, "open_controlling_terminal", lambda: contextlib.nullcontext(None)
+    )
+    assert spack.migrate._prompt_for_prefix_migration(resources, timeout=1) is False
+
+    # nothing eligible: no terminal needed, no prompt
+    installs_only = {"environments": False, "gpg_keys": False, "licenses": False, "installs": True}
+    assert spack.migrate._prompt_for_prefix_migration(installs_only, timeout=1) is False
+
+    terminal = io.StringIO()
+    monkeypatch.setattr(
+        spack.util.lang, "open_controlling_terminal", lambda: contextlib.nullcontext(terminal)
+    )
+    monkeypatch.setattr(spack.util.lang, "readline_with_timeout", lambda *a, **kw: "y")
+    assert spack.migrate._prompt_for_prefix_migration(resources, timeout=1) is True
+    assert "legacy internal layout" in terminal.getvalue()
+
+    monkeypatch.setattr(spack.util.lang, "readline_with_timeout", lambda *a, **kw: None)
+    assert spack.migrate._prompt_for_prefix_migration(resources, timeout=1) is False
+    assert "No response received" in terminal.getvalue()
 
 
 def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):

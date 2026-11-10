@@ -1514,20 +1514,17 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
     if not resources:
         return False
 
-    # Check stdin and stderr are both ttys (prompt goes to stderr)
-    if not (sys.stdin and sys.stdin.isatty()) or not (sys.stderr and sys.stderr.isatty()):
-        return False
-
-    # On Unix, also check if we're in the foreground process group
-    # (Windows doesn't have process groups, so skip this check there)
-    if sys.platform != "win32":
-        try:
-            if os.getpgrp() != os.tcgetpgrp(sys.stdin.fileno()):
-                return False
-        except OSError:
-            # Can't determine process group - assume we can't prompt
+    # Prompt on the controlling terminal, not stdin/stderr: shell integration captures
+    # stderr (`spack env activate` in fish, `$(spack ...)`), and `2>&1 | tee` is common, yet
+    # in all those cases a user is sitting at a terminal and can answer. No controlling
+    # terminal, or not in its foreground process group, means nobody can.
+    with lang.open_controlling_terminal() as terminal:
+        if terminal is None:
             return False
+        return _ask_on_terminal(terminal, resources, timeout)
 
+
+def _ask_on_terminal(terminal, resources, timeout: float) -> bool:
     tty.info(
         "Spack found resources in its legacy internal layout.",
         "Spack can copy the following resources to the new user data location",
@@ -1538,7 +1535,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
         " `spack migrate undo`",
         "If (n)o (the default): configuration is updated to prefer the old locations over"
         " the new defaults; nothing inside the Spack prefix is copied into $HOME.",
-        stream=sys.stderr,
+        stream=terminal,
     )
 
     deadline = time.monotonic() + timeout
@@ -1546,24 +1543,18 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
 
     while True:
         remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            sys.stderr.write("\r" + " " * 80 + "\r")  # Clear the line
-            sys.stderr.flush()
-            tty.info(
-                "No response received; keeping resources in their old locations.",
-                stream=sys.stderr,
+        answer = None
+        if remaining > 0:
+            answer = lang.readline_with_timeout(
+                prompt, remaining, update_interval=1.0, terminal=terminal
             )
-            return False
-
-        answer = lang.readline_with_timeout(prompt, remaining, update_interval=1.0)
 
         if answer is None:
             # Timeout expired
-            sys.stderr.write("\r" + " " * 80 + "\r")  # Clear the line
-            sys.stderr.flush()
+            terminal.write("\r" + " " * 80 + "\r")  # Clear the line
+            terminal.flush()
             tty.info(
-                "No response received; keeping resources in their old locations.",
-                stream=sys.stderr,
+                "No response received; keeping resources in their old locations.", stream=terminal
             )
             return False
 
@@ -1574,7 +1565,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
             # Empty string (just hitting enter) defaults to "no"
             return False
         else:
-            sys.stderr.write(
+            terminal.write(
                 f'Must enter (y)es or (n)o or newline (implied "no"), got: "{answer}"\n'
             )
             # Loop back and ask again with remaining time
