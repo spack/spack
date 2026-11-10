@@ -944,8 +944,6 @@ def _migrate_user_config() -> bool:
     if not _has_user_config_to_migrate(old_location):
         return False
 
-    already_populated = _is_nonempty_directory(new_location)
-
     ret = migrate_with_staging(
         old_path=old_location,
         new_path=new_location,
@@ -956,7 +954,7 @@ def _migrate_user_config() -> bool:
         verify_destination_callback=can_migrate_to_location,
     )
 
-    if (not ret) and _is_nonempty_directory(old_location) and not already_populated:
+    if (not ret) and _is_nonempty_directory(old_location):
         tty.die(
             f"Failed to migrate Spack config directory. Fix permissions on {new_location} or "
             "set SPACK_USER_CONFIG_PATH=~/.spack to use the old location"
