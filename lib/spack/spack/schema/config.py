@@ -78,9 +78,9 @@ properties: Dict[str, Any] = {
             "locations": {
                 "type": "object",
                 "description": "Roots for Spack's user-level data. Used by "
-                "$data_home/$state_home/$cache_home substitutions. "
-                "Defaults come from the active layout scheme yaml "
-                "(etc/spack/defaults/old/config.yaml).",
+                "$data_home/$state_home/$cache_home substitutions. Each is a list of "
+                "candidates; the first whose variables all resolve is used "
+                "(see etc/spack/defaults/base/config.yaml).",
                 "properties": {
                     "data": {
                         "oneOf": [
