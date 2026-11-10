@@ -68,9 +68,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
     subparser.epilog = (
         "WARNING:\n"
-        "  Do not run this command in parallel with other spack commands for the same\n"
-        "  Spack instance. This command modifies configuration files that other processes\n"
-        "  may be reading, and does not use locking to coordinate with them."
+        "  undo and use-new-layout hold the migration lock, so spack commands that start\n"
+        "  while they run wait for the result. Commands already running for the same Spack\n"
+        "  instance have loaded their configuration and do not see the change."
     )
 
 
