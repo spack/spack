@@ -988,6 +988,11 @@ def _main(argv=None):
     # Do not perform migration for non-commands (e.g. --help).
     cmd_array = args.command or []
     if cmd_array and cmd_array[0] != "isolate":
+        # Configuration is not loaded yet, but the config-free output options can already be
+        # honored so that `spack -d` shows what migration is doing
+        tty.set_verbose(args.verbose)
+        tty.set_debug(args.debug)
+        tty.set_stacktrace(args.stacktrace)
         spack.migrate.perform_migration()
 
     # ------------------------------------------------------------------------
