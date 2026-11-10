@@ -1177,10 +1177,10 @@ def open_controlling_terminal() -> Iterator[Optional[typing.TextIO]]:
         return
 
     try:
-        if os.tcgetpgrp(fd) != os.getpgrp():
-            yield None
-            return
+        foreground = os.tcgetpgrp(fd) == os.getpgrp()
     except OSError:
+        foreground = False
+    if not foreground:
         os.close(fd)
         yield None
         return
