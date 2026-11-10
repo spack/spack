@@ -5218,6 +5218,25 @@ def test_stale_spack_env_not_rewritten_when_not_migrated(stale_activated_env, wo
     assert os.path.realpath(env.path) == os.path.realpath(old_root / "unmigrated")
 
 
+def test_dash_e_old_env_dir_uses_migrated_copy(stale_activated_env, working_env):
+    """``spack -e $spack/var/spack/environments/foo`` and ``-D`` on a migrated env operate
+    on the live copy, like SPACK_ENV does; an unmigrated one is used where it is."""
+    old_root, new_root = stale_activated_env
+    os.environ.pop(ev.spack_env_var, None)
+
+    for kwargs in ({"env": str(old_root / "foo")}, {"env_dir": str(old_root / "foo")}):
+        args = Namespace(env=None, env_dir=None, no_env=False, command=["add", "zlib"])
+        vars(args).update(kwargs)
+        env = spack.cmd.find_environment(args)
+        assert env is not None
+        assert os.path.realpath(env.path) == os.path.realpath(new_root / "foo"), kwargs
+
+    args = Namespace(env=None, env_dir=str(old_root / "unmigrated"), no_env=False, command=[])
+    assert os.path.realpath(spack.cmd.find_environment(args).path) == os.path.realpath(
+        old_root / "unmigrated"
+    )
+
+
 def test_spack_env_outside_old_root_untouched(stale_activated_env, working_env, tmp_path):
     """An independent (anonymous) environment is never rewritten."""
     indep = tmp_path / "project"

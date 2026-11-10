@@ -644,13 +644,36 @@ def require_active_env(parser):
     )
 
 
-def _maybe_rewrite_spack_env_after_migration(args: argparse.Namespace) -> None:
-    """Rewrite SPACK_ENV if it points at the pre-migration copy of a migrated environment.
+def _migrated_copy_of(env_path: str) -> Optional[str]:
+    """The copy at the current environments root of a pre-migration environment path.
 
-    A shell that activated an environment before the migration still has SPACK_ENV set to
-    ``$spack/var/spack/environments/<name>``. If that environment was copied to the current
-    environments root, point SPACK_ENV at the copy so that this command reads and writes
-    the live environment rather than the stale one.
+    After the migration, ``$spack/var/spack/environments/<name>`` is a stale copy of an
+    environment that now lives under the current environments root. Returns the path of the
+    live copy if ``env_path`` is such a stale copy, otherwise ``None``.
+    """
+    old_root = os.path.realpath(spack.paths.old_envs_path)
+    new_root = os.path.realpath(spack.environment.environment.env_root_path())
+    if old_root == new_root:
+        return None
+
+    env_real = os.path.realpath(os.path.expanduser(env_path))
+    try:
+        rel = os.path.relpath(env_real, old_root)
+    except ValueError:  # different drives on Windows
+        return None
+    if rel.startswith(".."):
+        return None  # not under the old environments root
+
+    new_path = os.path.join(new_root, rel)
+    if not os.path.isdir(new_path):
+        return None  # this environment was not migrated; keep using the old copy
+    tty.debug(f"Using migrated copy {new_path} of {env_path}")
+    return new_path
+
+
+def _maybe_rewrite_spack_env_after_migration(args: argparse.Namespace) -> None:
+    """Rewrite SPACK_ENV if it points at the pre-migration copy of a migrated environment,
+    so that this command reads and writes the live environment rather than the stale one.
 
     ``spack env deactivate`` is left alone: the shell's PATH and friends still hold the
     old copy's view, so that is the environment to deactivate.
@@ -662,26 +685,9 @@ def _maybe_rewrite_spack_env_after_migration(args: argparse.Namespace) -> None:
     command = getattr(args, "command", None) or []
     if len(command) >= 2 and command[0] == "env" and command[1] == "deactivate":
         return
-
-    old_root = os.path.realpath(spack.paths.old_envs_path)
-    new_root = os.path.realpath(spack.environment.environment.env_root_path())
-    if old_root == new_root:
-        return
-
-    spack_env_real = os.path.realpath(os.path.expanduser(spack_env))
-    try:
-        rel = os.path.relpath(spack_env_real, old_root)
-    except ValueError:  # different drives on Windows
-        return
-    if rel.startswith(".."):
-        return  # not under the old environments root
-
-    new_spack_env = os.path.join(new_root, rel)
-    if not os.path.isdir(new_spack_env):
-        return  # this environment was not migrated; keep using the old copy
-
-    os.environ[ev.spack_env_var] = new_spack_env
-    tty.debug(f"Rewrote {ev.spack_env_var} from {spack_env} to {new_spack_env}")
+    new_spack_env = _migrated_copy_of(spack_env)
+    if new_spack_env:
+        os.environ[ev.spack_env_var] = new_spack_env
 
 
 def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
@@ -723,6 +729,9 @@ def find_environment(args: argparse.Namespace) -> Optional[ev.Environment]:
     # if we get here, env isn't the name of a spack environment; it has
     # to be a path to an environment, or there is something wrong.
     if ev.is_env_dir(env):
+        # `spack -e <path>`/`-D <path>` naming the pre-migration copy of a migrated env
+        if args.env or args.env_dir:
+            env = _migrated_copy_of(env) or env
         return ev.Environment(env)
 
     raise ev.SpackEnvironmentError("no environment in %s" % env)
