@@ -71,10 +71,6 @@ So that you can familiarize yourself with the project, we will start with a high
       var/
          spack/
              test_repos/   <- contains package repositories for tests
-             cache/        <- saves resources downloaded during installs
-
-      opt/
-         spack/            <- packages are installed here
 
       lib/
          spack/
@@ -97,8 +93,9 @@ So that you can familiarize yourself with the project, we will start with a high
                test/              <- unit test modules
                util/              <- common code
 
-Spack is designed so that it could live within a `standard UNIX directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib``, ``var``, and ``opt`` all contain a ``spack`` subdirectory in case Spack is installed alongside other software.
+Spack is designed so that it could live within a `standard UNIX directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib`` and ``var`` contain a ``spack`` subdirectory in case Spack is installed alongside other software.
 Most of the interesting parts of Spack live in ``lib/spack``.
+Spack writes nothing into its own prefix: installed packages, caches and other generated data go to the locations described in :ref:`where_spack_writes_data`.
 
 .. note::
 
