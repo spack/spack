@@ -107,6 +107,8 @@ From lowest to highest precedence:
    Spack may create a ``layout`` scope in ``$(prefix)/etc/spack/layout/`` for generated settings associated with migration or isolation.
    It sits just above ``defaults``, but below ``system``, ``site``, ``plugin``, ``user``, and ``spack``.
    A fresh Spack instance has no layout scope; it is created only when needed.
+   The directory and its files take their permissions from ``$(prefix)/etc/spack/`` rather than from the umask of whoever ran the command, so that other users of a shared instance can read them.
+   See :ref:`where_spack_writes_data`.
 
 Each configuration directory may contain several configuration files, such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``.
 When configurations conflict, settings from higher-precedence scopes override lower-precedence settings.
@@ -809,6 +811,15 @@ A handful of additional environment variables influence Spack's runtime behavior
    signing.
    When unset, Spack uses ``config:gpg_path``, which defaults to
    ``$data_home/gpg``.
+   When set, the :ref:`migration <where_spack_writes_data>` of a pre-1.3
+   instance leaves its GPG data in the legacy locations under ``$spack``.
+
+.. envvar:: SPACK_AUTOMIGRATE_YES
+
+   Set to ``1`` or ``true`` to approve the :ref:`migration
+   <where_spack_writes_data>` of a pre-1.3 instance's environments, GPG data
+   and licenses without a prompt, e.g. in scripts. Any other value does not
+   approve.
 
 .. envvar:: SPACK_GREP
 
