@@ -1197,8 +1197,10 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
 
     # Acquire lock for all environments
     lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
+    lock_acquired = False
     try:
         lock.acquire_write()
+        lock_acquired = True
 
         # Check occupied destinations before copying any new environments. This
         # lets migrate_with_staging reject conflicts without leaving a partial
@@ -1279,7 +1281,8 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
         # All environments copied successfully - old environments remain in place
         return True, differing
     finally:
-        lock.release_write()
+        if lock_acquired:
+            lock.release_write()
 
 
 def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
