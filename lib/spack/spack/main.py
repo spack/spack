@@ -989,10 +989,13 @@ def _main(argv=None):
     cmd_array = args.command or []
     if cmd_array and cmd_array[0] != "isolate":
         # Configuration is not loaded yet, but the config-free output options can already be
-        # honored so that `spack -d` shows what migration is doing
+        # honored so that `spack -d` shows what migration is doing and `--color` applies to
+        # the migration prompt
         tty.set_verbose(args.verbose)
         tty.set_debug(args.debug)
         tty.set_stacktrace(args.stacktrace)
+        if args.color is not None:
+            color.set_color_when(args.color)
         spack.migrate.perform_migration()
 
     # ------------------------------------------------------------------------
