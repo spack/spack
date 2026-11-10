@@ -14,6 +14,9 @@ trap clean_up ERR
 
 [[ -n "$TMPCONFIG_DEBUG" ]] && printf "Redirecting TMP_DIR and spack directories to $TMP_DIR\n"
 
+# This runs spack with the real configuration, before anything is redirected, so on its
+# first use it performs the same migration of ~/.spack and of resources in the Spack
+# prefix as any other spack command would (prompting if there is a terminal).
 export BOOTSTRAP="$($DIR/spack bootstrap root)"
 private_bootstrap="$TMP_DIR/bootstrap"
 
