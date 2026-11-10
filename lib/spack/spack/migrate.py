@@ -551,8 +551,6 @@ def _warn_about_old_defaults_in_linked_config(old_location: str) -> None:
                 data = syaml.load(f)
         except (OSError, syaml.SpackYAMLError):
             continue
-        if not data:
-            continue
         for key_path, value, new_default in _spelled_out_old_defaults(
             data, os.path.dirname(path), old_location
         ):
