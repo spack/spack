@@ -1509,7 +1509,7 @@ def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float 
         return False
 
     # Check stdin and stderr are both ttys (prompt goes to stderr)
-    if not sys.stdin.isatty() or not sys.stderr.isatty():
+    if not (sys.stdin and sys.stdin.isatty()) or not (sys.stderr and sys.stderr.isatty()):
         return False
 
     # On Unix, also check if we're in the foreground process group
