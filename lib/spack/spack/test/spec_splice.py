@@ -19,6 +19,8 @@ PROVIDES = {
     "charmpp": ("mpi",),
     "openblas": ("blas", "lapack"),
     "intel-oneapi-mkl": ("blas", "lapack"),
+    "fftw": ("fftw-api",),
+    "amdfftw": ("fftw-api",),
 }
 
 
@@ -254,6 +256,21 @@ def test_splice_rejects_moving_part_of_an_edge():
     replacement = node("libxml2@2", (glibc, "link", "libc"), (libiconv, "link", "iconv"))
 
     # libxslt has one glibc prefix, which would have to become both glibc and libiconv
+    with pytest.raises(SpliceError):
+        spec.splice(replacement, transitive=True)
+
+
+@pytest.mark.xfail(strict=True, reason="dependencies by name are replaced by other packages")
+def test_splice_rejects_provider_switch_if_the_old_provider_stays():
+    """A node cannot switch provider if the old one stays among its dependencies."""
+    fftw = node("fftw@3")
+    pfft = node("pfft@1", (fftw, "link"))
+    libvdwxc_1 = node("libvdwxc@1", (fftw, "link", "fftw-api"))
+    spec = node("octopus@1", (fftw, "link", "fftw-api"), (pfft, "link"), (libvdwxc_1, "link"))
+    amdfftw = node("amdfftw@3")
+    replacement = node("libvdwxc@2", (amdfftw, "link", "fftw-api"))
+
+    # octopus would use amdfftw, but pfft needs fftw: octopus has one fftw prefix for both
     with pytest.raises(SpliceError):
         spec.splice(replacement, transitive=True)
 
