@@ -1512,7 +1512,7 @@ class _Splice:
         used_as: Dict[str, Set[str]] = {h: set() for h in changed}
         for h in changed:
             if changed[h]:
-                self._validate_relocation(h, edges[h])
+                self._validate_relocation(h, edges)
             for child, (_, virtuals) in edges[h].items():
                 missing = set(virtuals) - _provided(self.nodes[child])
                 if missing:
@@ -1533,18 +1533,30 @@ class _Splice:
                 if n > max(1, before[key]):
                     raise SpliceError(f"{self.error}: the result would have {n} {kind} {key}")
 
+    def _names_below(self, h: str, edges) -> Set[str]:
+        """Names of the link/run dependencies of node h in the result"""
+        seen: Set[str] = set()
+        stack = list(edges[h])
+        while stack:
+            child = stack.pop()
+            if child not in seen:
+                seen.add(child)
+                stack.extend(edges[child])
+        return {self.nodes[child].name for child in seen}
+
     def _validate_relocation(self, h: str, edges) -> None:
         """Binaries of node h refer to the link/run dependencies of its build spec. Relocation, see
         spack.binary_distribution, maps each to the dependency of the result used as the same
         virtuals, or else of the same name, so that must be exactly one, and each dependency must
-        be the image of one."""
+        be the image of one. A dependency mapped to another package has one prefix to map, so it
+        cannot remain a dependency of the node."""
         parent = self.nodes[h].name
         mapped: Set[str] = set()
         for e in self.nodes[h].build_spec.edges_to_dependencies(depflag=_NON_BUILD):
             wanted = set(e.virtuals)
             images = [
                 c
-                for c, (_, virtuals) in edges.items()
+                for c, (_, virtuals) in edges[h].items()
                 if (
                     not wanted.isdisjoint(virtuals)
                     if wanted
@@ -1563,7 +1575,13 @@ class _Splice:
                     "at once"
                 )
             mapped.add(images[0])
-        unmapped = edges.keys() - mapped
+            image = self.nodes[images[0]].name
+            if image != e.spec.name and e.spec.name in self._names_below(h, edges):
+                raise SpliceError(
+                    f"{self.error}: relocation of {parent} cannot map {e.spec.name} to {image}, "
+                    f"as {e.spec.name} remains a dependency"
+                )
+        unmapped = edges[h].keys() - mapped
         if unmapped:
             name = self.nodes[min(unmapped)].name
             raise SpliceError(

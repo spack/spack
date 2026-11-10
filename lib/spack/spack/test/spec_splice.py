@@ -259,7 +259,6 @@ def test_splice_rejects_moving_part_of_an_edge():
         spec.splice(replacement, transitive=True)
 
 
-@pytest.mark.xfail(strict=True, reason="dependencies by name are replaced by other packages")
 def test_splice_rejects_provider_switch_if_the_old_provider_stays():
     """A node cannot switch provider if the old one stays among its dependencies."""
     fftw = node("fftw@3")
