@@ -118,15 +118,21 @@ The most commonly used scopes are ``environment``, ``user``, and ``spack``.
 If you forget, you can always see the available configuration scopes in order of precedence with the ``spack config scopes`` command::
 
     > spack config scopes -p
-    Scope            Path
+    Scope                  Path
     command_line
-    spack            /home/username/spack/etc/spack
-    user             /home/username/.config/spack/
-    site             /home/username/spack/etc/spack/site/
-    defaults         /home/username/spack/etc/spack/defaults/
-    defaults:darwin  /home/username/spack/etc/spack/defaults/darwin/
-    defaults:base    /home/username/spack/etc/spack/defaults/base/
+    spack                  /home/username/spack/etc/spack/
+    spack:isolate          /home/username/spack/etc/spack/isolate/
+    spack:standard_scopes  /home/username/spack/etc/spack/standard_scopes/
+    user                   /home/username/.config/spack/
+    site                   /home/username/spack/etc/spack/site/
+    system                 /etc/spack/
+    layout                 /home/username/spack/etc/spack/layout/
+    defaults               /home/username/spack/etc/spack/defaults/
+    defaults:darwin        /home/username/spack/etc/spack/defaults/darwin/
+    defaults:base          /home/username/spack/etc/spack/defaults/base/
     _builtin
+
+``spack:isolate`` and ``spack:standard_scopes`` hold the ``include.yaml`` files that define the other scopes (see :ref:`include-yaml`); they are listed because they are included, but normally hold no settings of their own.
 
 Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``, ``spack external find``, etc.) take a ``--scope=<name>`` parameter that you can use to control which scope is modified.
 By default, they modify the highest-precedence available scope that is not read-only (like `defaults`).
