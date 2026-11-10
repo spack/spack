@@ -215,13 +215,13 @@ def _do_isolate(args):
 
 
 def _undo_isolate():
+    """Remove the isolate scope. Nothing else is touched: if the instance holds resources in
+    the legacy layout and no migration decision has been recorded, the next command asks."""
     if not os.path.exists(spack.paths.isolate_scope_path):
         tty.die("Cannot find isolation to undo")
 
     shutil.rmtree(spack.paths.isolate_scope_path)
     tty.msg(f"Removed isolate scope: {spack.paths.isolate_scope_path}")
-
-    spack.migrate.perform_migration()
 
 
 def isolate(parser, args):

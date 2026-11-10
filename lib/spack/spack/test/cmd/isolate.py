@@ -372,9 +372,16 @@ packages:
     assert text == expected_text
 
 
-def test_isolate_undo(isolate_paths, tmp_path):
-    """Test that --undo removes the isolate scope."""
+def test_isolate_undo(isolate_paths, tmp_path, monkeypatch):
+    """--undo removes the isolate scope and nothing else: it does not take the migration
+    decision for an instance that still holds resources in the legacy layout."""
     home_dir, base_prefix, etc_spack, isolate_scope_path = isolate_paths
+    old_env = Path(spack.paths.old_envs_path) / "legacy"
+    old_env.mkdir(parents=True)
+    (old_env / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    monkeypatch.setattr(
+        spack.migrate, "perform_migration", lambda: pytest.fail("--undo must not migrate")
+    )
 
     isolated_path = tmp_path / "test-isolation"
     sp_isolate("--path", str(isolated_path))
@@ -382,6 +389,8 @@ def test_isolate_undo(isolate_paths, tmp_path):
 
     sp_isolate("--undo")
     assert not isolate_scope_path.exists()
+    assert not spack.migrate.migration_done()
+    assert not Path(spack.paths.layout_scope_path).exists()
 
 
 def test_isolate_undo_preserves_data(isolate_paths, tmp_path):

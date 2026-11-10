@@ -469,7 +469,7 @@ When developing an isolated Spack instance, command completion should be regener
 
 ## 4.6 Isolation undo
 
-The current `spack isolate --undo` removes the current isolate scope. It does not restore or delete old resources. For old self-isolation data, whether the target remains available depends on whether the user performed the old undo before pulling or restored the tracked include file to preserve it.
+The current `spack isolate --undo` removes the current isolate scope. It does not restore or delete old resources, and it does not itself decide about migrating resources in the legacy layout: if no decision has been recorded (`$spack/.migration-done`), the next Spack command prompts for one as it would on a fresh pull. For old self-isolation data, whether the target remains available depends on whether the user performed the old undo before pulling or restored the tracked include file to preserve it.
 
 # 5. Non-writable Prefixes and Custom Configuration
 
