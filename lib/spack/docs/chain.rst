@@ -22,11 +22,12 @@ To register the other Spack instance, you can add it as an entry to ``upstreams.
 
   upstreams:
     spack-instance-1:
-      install_tree: /path/to/other/spack/opt/spack
+      install_tree: /shared/spack-data/installs
     spack-instance-2:
-      install_tree: /path/to/another/spack/opt/spack
+      install_tree: /path/to/pre-1.3/spack/opt/spack
 
-The ``install_tree`` must point to the ``opt/spack`` directory inside of the Spack base directory, or the location of the ``install_tree`` defined in :ref:`config.yaml <config-yaml>`.
+The ``install_tree`` must point to the location of the ``install_tree`` defined in the upstream's :ref:`config.yaml <config-yaml>`: ``$data_home/installs`` of its user by default, or the ``opt/spack`` directory inside of the Spack base directory for an instance in use since before 1.3.
+``spack config get config:install_tree:root`` run with the upstream Spack prints it.
 
 Once the upstream Spack instance has been added, ``spack find`` will automatically check the upstream instance when querying installed packages, and new package installations for the local Spack installation will use any dependencies that are installed in the upstream instance.
 
@@ -66,9 +67,9 @@ There are two requirements to use the modules created by an upstream Spack insta
 
   upstreams:
     spack-instance-1:
-      install_tree: /path/to/other/spack/opt/spack
+      install_tree: /shared/spack-data/installs
       modules:
-        tcl: /path/to/other/spack/share/spack/modules
+        tcl: /shared/spack-data/modules
 
 Each time new packages are installed in the upstream Spack instance, the upstream Spack maintainer should run ``spack module tcl refresh`` (or the corresponding command for the type of module that they intend to use).
 
