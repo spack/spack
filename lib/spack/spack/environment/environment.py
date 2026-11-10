@@ -34,6 +34,7 @@ from typing import (
 
 import spack
 import spack.active_environment
+import spack.caches
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -2896,9 +2897,16 @@ class Environment:
                 msg += " You need to use a newer Spack version."
             raise SpackEnvironmentError(msg)
 
+        # Spec formats before v6 omit virtuals, reconstructed from this environment's repos
+        repo = None
+        if reader.SPEC_VERSION < 6:
+            repo = spack.repo.RepoPath.from_config(
+                self._config, cache=spack.caches.misc_cache(config=self._config)
+            )
+
         concretized_order = [x.hash for x in self.concretized_roots]
         first_seen, concretized_order = self._filter_specs(
-            reader, json_specs_by_hash, concretized_order
+            reader, json_specs_by_hash, concretized_order, repo=repo
         )
         for idx, spec_dag_hash in enumerate(concretized_order):
             self.concretized_roots[idx].hash = spec_dag_hash
@@ -2910,7 +2918,7 @@ class Environment:
             for env_name, roots in self.included_concretized_roots.items():
                 order = [x.hash for x in roots]
                 filtered_spec, new_order = self._filter_specs(
-                    reader, included_json_specs_by_hash, order
+                    reader, included_json_specs_by_hash, order, repo=repo
                 )
                 first_seen.update(filtered_spec)
                 for idx, spec_dag_hash in enumerate(new_order):
@@ -2919,7 +2927,15 @@ class Environment:
             for env_path, roots in self.included_concretized_roots.items():
                 self.included_specs_by_hash[env_path] = {x.hash: first_seen[x.hash] for x in roots}
 
-    def _filter_specs(self, reader, json_specs_by_hash, order_concretized):
+    def _filter_specs(
+        self, reader, json_specs_by_hash, order_concretized, *, repo: Optional[spack.repo.RepoPath]
+    ):
+        """Builds the specs of a lockfile.
+
+        Args:
+            repo: repositories used to reconstruct the virtuals that the spec format of
+                ``reader`` omits, or None if it records them
+        """
         # Track specs by their lockfile key.  Currently, spack uses the finest
         # grained hash as the lockfile key, while older formats used the build
         # hash or a previous incarnation of the DAG hash (one that did not
@@ -2954,8 +2970,8 @@ class Environment:
                 specs_by_hash[lockfile_key]._build_spec = specs_by_hash[bhash]
 
         # The DAG is wired by hand above, so reconstruct what spec formats before v6 omit
-        if reader.SPEC_VERSION < 6:
-            spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=spack.repo.PATH)
+        if repo is not None:
+            spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=repo)
 
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to
