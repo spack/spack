@@ -94,12 +94,24 @@ def _check_for_escaping_env_variables(data: Any, file_context: str = "") -> None
         for item in data:
             _check_for_escaping_env_variables(item, file_context)
     elif isinstance(data, str):
-        if "$env" in data and "/.." in data:
-            context = f" in {file_context}" if file_context else ""
-            raise spack.error.SpackError(
-                f"Cannot migrate: path '{data}'{context} contains $env/.. which would "
-                f"reference outside the environment. Expand the variable or use an absolute path."
-            )
+        parts = data.split("/")  # even on windows, spack config paths written with /
+        if parts[0] in ("$env", "${env}"):
+            depth = 1
+            # Count path components vs .. components to see if we reach outside of the env
+            for part in parts[1:]:
+                if part in ("", "."):
+                    continue
+                if part == "..":
+                    depth -= 1
+                    if depth < 1:
+                        context = f" in {file_context}" if file_context else ""
+                        raise spack.error.SpackError(
+                            f"Cannot migrate: path '{data}'{context} contains $env/.. which would "
+                            f"reference outside the environment. Expand the variable or use an "
+                            "absolute path."
+                        )
+                else:
+                    depth += 1
 
 
 def _walk_yaml_for_paths(

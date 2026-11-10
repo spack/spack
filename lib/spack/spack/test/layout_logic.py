@@ -593,6 +593,18 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
             lambda old_envs: "$env/../shared.yaml",
             r"contains \$env/\.\. which would reference outside",
         ),
+        (
+            lambda old_envs: "${env}/../shared.yaml",
+            r"contains \$env/\.\. which would reference outside",
+        ),
+        (
+            lambda old_envs: "$env/sub/../../shared.yaml",
+            r"contains \$env/\.\. which would reference outside",
+        ),
+        (
+            lambda old_envs: "$env//../shared.yaml",
+            r"contains \$env/\.\. which would reference outside",
+        ),
     ],
 )
 def test_env_migration_blocks_external_references(tmp_path, path_factory, expected_error):
@@ -620,6 +632,14 @@ def test_env_migration_blocks_external_references(tmp_path, path_factory, expect
             str(old_envs),
             tmp_path / "new",
         )
+
+
+@pytest.mark.parametrize(
+    "path", ["$env/sub/../shared.yaml", "${env}/a/b/../../c.yaml", "$env/./x.yaml", "$env"]
+)
+def test_env_migration_allows_env_relative_paths_that_stay_inside(path):
+    """``..`` under ``$env`` is fine as long as it never climbs above the environment."""
+    spack.migrate._check_for_escaping_env_variables({"spack": {"include": [path]}}, "spack.yaml")
 
 
 @pytest.mark.parametrize("conflict", ["environments", "gpg"])
