@@ -675,6 +675,32 @@ def test_env_migration_resolves_relative_paths_from_the_included_file(tmp_path):
     assert "staging" not in (site / "spack.yaml").read_text(encoding="utf-8")
 
 
+def test_migrate_with_staging_warns_when_lock_cannot_be_created(tmp_path, capsys):
+    """An unwritable destination parent fails the lock; the user is told, the resource is
+    retained, and nothing is raised for the prefix-migration handler to misreport."""
+    old = tmp_path / "old"
+    old.mkdir()
+    (old / "file").write_text("x", encoding="utf-8")
+    parent = tmp_path / "ro"
+    parent.mkdir()
+    parent.chmod(0o500)
+    try:
+        result = spack.migrate.migrate_with_staging(
+            old_path=str(old),
+            new_path=str(parent / "new"),
+            prepare_staging_callback=lambda o, s, n: shutil.copytree(o, s),
+            lock_name=".test-lock",
+            staging_name=".test-staging",
+            description="test resource",
+            verify_destination_callback=spack.migrate.can_migrate_to_location,
+        )
+    finally:
+        parent.chmod(0o700)
+
+    assert result is False
+    assert f"Cannot migrate test resource to {parent / 'new'}" in capsys.readouterr().err
+
+
 def test_env_migration_unwritable_data_home_is_retained_not_fatal(tmp_path, capsys):
     """A read-only environments destination is reported for what it is and the environments
     are retained, instead of surfacing as a "spack prefix is not writable" error."""

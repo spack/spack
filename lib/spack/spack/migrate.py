@@ -798,7 +798,8 @@ def migrate_with_staging(
         return True
 
     except spack.util.lock.LockPermissionError as e:
-        tty.debug(f"Cannot lock for migrating {description}: {e}")
+        # The destination is not writable; the resource is retained where it is
+        tty.warn(f"Cannot migrate {description} to {new_path}: {e}")
         return False
 
     except spack.util.lock.LockTimeoutError as e:
@@ -1329,8 +1330,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
         try:
             lock.acquire_write()
         except spack.util.lock.LockPermissionError as e:
-            # The data home is not writable: like any other failure to copy, the
-            # environments are retained where they are. This is not a prefix problem.
+            # The destination is not writable; the environments are retained where they are
             tty.warn(f"Cannot migrate environments to {dst_dir}: {e}")
             return False, differing
         lock_acquired = True
