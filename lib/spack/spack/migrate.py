@@ -676,22 +676,24 @@ def migrate_with_staging(
             return False
 
         # Check destination and verify we can write to it
+        # If the new path is a link but still a valid target, we track the final location as well
+        final_destination = os.realpath(new_path) if os.path.islink(new_path) else new_path
         try:
-            if os.path.lexists(new_path):
-                if os.path.isdir(new_path) and not os.listdir(new_path):
-                    os.rmdir(new_path)
-                    tty.debug(f"Removed empty {new_path} to proceed with migration")
+            if os.path.lexists(final_destination):
+                if os.path.isdir(final_destination) and not os.listdir(final_destination):
+                    os.rmdir(final_destination)
+                    tty.debug(f"Removed empty {final_destination} to proceed with migration")
                 else:
                     # Not empty or not a directory - can't migrate
                     # This should have been caught by verify_destination_callback, but
-                    # kept as a safety check
+                    # kept as a safety check in case a non-spack process touches it
                     return False
 
             # Verify we have permissions to create new_path by testing with makedirs
             # This creates the directory so os.rename() will work later
-            os.makedirs(new_path, exist_ok=True)
+            os.makedirs(final_destinaton, exist_ok=True)
             # Remove it immediately so os.rename() from staging will work
-            os.rmdir(new_path)
+            os.rmdir(final_destination)
 
         except PermissionError:
             # Cannot write to destination - migration not possible
@@ -714,7 +716,7 @@ def migrate_with_staging(
         os.chmod(staging_path, 0o700)
 
         # Atomically rename staging to final destination
-        os.rename(staging_path, new_path)
+        os.rename(staging_path, final_destination)
         tty.debug(f"{description.capitalize()} migrated from {old_path} to {new_path}")
         return True
 
