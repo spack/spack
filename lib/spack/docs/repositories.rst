@@ -131,6 +131,7 @@ Automatic Cloning
 
 When Spack first encounters a Git-based repository configuration, it automatically clones it.
 By default, these repositories are cloned into a subdirectory within ``$data_home/package_repos/`` (``~/.local/share/spack/package_repos/`` by default), named with a hash of the repository URL.
+Clones made by Spack 1.2 or earlier under ``~/.spack/package_repos/`` are :ref:`copied there <home-migration>` the first time a newer Spack runs; the originals are kept for the older instances.
 
 To change directories to the package repository, you can use ``spack cd --repo [name]``.
 To find where a repository is cloned, you can use ``spack location --repo [name]`` or ``spack repo list``.
