@@ -644,6 +644,37 @@ def test_env_migration_allows_env_relative_paths_that_stay_inside(path):
     spack.migrate._check_for_escaping_env_variables({"spack": {"include": [path]}}, "spack.yaml")
 
 
+def test_env_migration_resolves_relative_paths_from_the_included_file(tmp_path):
+    """``conf/main.yaml`` including ``../extra.yaml`` stays inside the env and is kept; the
+    same spelling climbing above the env is refused. Absolute paths into the env are rewritten
+    to the final destination, not the staging directory the file is read from."""
+    old_envs = tmp_path / "old"
+    new_envs = tmp_path / "new"
+    for name, main_include in (("site", "../extra.yaml"), ("bad", "../../shared.yaml")):
+        env = old_envs / name
+        (env / "conf").mkdir(parents=True)
+        (env / "spack.yaml").write_text(
+            f"spack:\n  specs: []\n  include: [conf/main.yaml, {env / 'conf' / 'abs.yaml'}]\n",
+            encoding="utf-8",
+        )
+        (env / "conf" / "main.yaml").write_text(f"include: [{main_include}]\n", encoding="utf-8")
+        (env / "conf" / "abs.yaml").write_text("config: {}\n", encoding="utf-8")
+        (env / "extra.yaml").write_text("config: {}\n", encoding="utf-8")
+
+    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    assert not ok  # "bad" blocks
+
+    shutil.rmtree(old_envs / "bad")
+    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    assert ok
+    site = new_envs / "site"
+    assert (site / "conf" / "main.yaml").read_text(
+        encoding="utf-8"
+    ) == "include: [../extra.yaml]\n"
+    assert str(site / "conf" / "abs.yaml") in (site / "spack.yaml").read_text(encoding="utf-8")
+    assert "staging" not in (site / "spack.yaml").read_text(encoding="utf-8")
+
+
 def test_env_migration_copies_unparseable_yaml_verbatim(tmp_path):
     """A ``*.yaml`` file that is not YAML (a Jinja template, say) is not Spack config; it
     is copied as it is and does not block the environment."""

@@ -211,6 +211,7 @@ def process_env_file_paths(
     new_env_dir: str,
     old_envs_root: Optional[str] = None,
     new_envs_root: Optional[str] = None,
+    staging_dir: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """Rewrite paths in environment config files for environment relocation.
 
@@ -230,6 +231,8 @@ def process_env_file_paths(
         new_env_dir: New environment directory root
         old_envs_root: Old environments root (parent of all envs being migrated)
         new_envs_root: New environments root (target parent for migrated envs)
+        staging_dir: Directory ``file_path`` is read from, when that is not ``new_env_dir``
+            (the copy is staged next to its destination and renamed into place afterwards)
 
     Returns:
         Modified data if any paths were changed, None otherwise
@@ -249,19 +252,16 @@ def process_env_file_paths(
     if not data:
         return None
 
-    # Check for $env/.. patterns that escape the environment
-    rel_file = os.path.relpath(file_path, os.path.abspath(new_env_dir))
+    # Where the file sits within the environment, taken from where it was read
+    staging_norm = os.path.normpath(os.path.abspath(staging_dir or new_env_dir))
+    rel_file = os.path.relpath(os.path.abspath(file_path), staging_norm)
     _check_for_escaping_env_variables(data, rel_file)
 
-    # file_path is in the new location (staging), but we need to resolve relative paths
-    # as they would have been in the old location
-    new_config_dir = os.path.dirname(file_path)
+    # Relative paths are resolved as they would have been in the old location; rewritten
+    # absolute paths point at the final destination
     old_env_norm = os.path.normpath(os.path.abspath(old_env_dir))
     new_env_norm = os.path.normpath(os.path.abspath(new_env_dir))
-
-    # Calculate what the config dir would have been in the old location
-    rel_to_new_env = os.path.relpath(new_config_dir, new_env_norm)
-    old_config_dir = os.path.join(old_env_norm, rel_to_new_env)
+    old_config_dir = os.path.join(old_env_norm, os.path.dirname(rel_file))
 
     found_paths = _walk_yaml_for_paths(data, old_config_dir)
     modified = False
@@ -288,7 +288,6 @@ def process_env_file_paths(
             # Path is outside the env
             if not os.path.isabs(original_value):
                 # Rule 4: Relative path outside env -> BLOCK MIGRATION
-                rel_file = os.path.relpath(file_path, new_env_norm)
                 raise spack.error.SpackError(
                     f"Environment cannot be migrated: relative path '{original_value}' "
                     f"in {rel_file} points outside the environment to {abs_path}. "
@@ -307,7 +306,6 @@ def process_env_file_paths(
 
                 if inside_envs_root:
                     # Rule 5: Absolute path to sibling in envs root -> BLOCK MIGRATION
-                    rel_file = os.path.relpath(file_path, new_env_norm)
                     raise spack.error.SpackError(
                         f"Environment cannot be migrated: absolute path '{original_value}' "
                         f"in {rel_file} points to a sibling location in the environments root. "
@@ -1244,7 +1242,9 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
         # Rewrite paths in environment config files
         yaml_files = filesystem.find(staging_path, ["*.yaml", "*.yml"], recursive=True)
         for yaml_file in yaml_files:
-            processed = process_env_file_paths(yaml_file, old_path, new_path, src_dir, dst_dir)
+            processed = process_env_file_paths(
+                yaml_file, old_path, new_path, src_dir, dst_dir, staging_dir=staging_path
+            )
             if processed:
                 # Get original file permissions before rewriting
                 old_mode = os.stat(yaml_file).st_mode & 0o777
