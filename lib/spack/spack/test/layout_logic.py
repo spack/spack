@@ -1406,28 +1406,17 @@ def test_gpg_migration_publishes_nothing_if_keys_dir_would_be_refused(tmp_path):
     assert not new_home.exists()
 
 
-def test_detect_old_installs_reads_the_database_index(mock_spack_instance, capsys):
-    """``opt/spack/.spack-db/`` is an install tree only if its index records installs: not
-    after a read-only command on a fresh clone (lock file only), not after
-    ``uninstall --all`` (empty index). An unreadable index is retained, with a warning.
-    Any installed prefix counts regardless."""
+def test_detect_old_installs_ignores_the_database(mock_spack_instance):
+    """Only installed prefixes make ``opt/spack`` an install tree. ``.spack-db/`` alone does
+    not, whatever it holds: a read-only command on a fresh clone creates it, and
+    ``uninstall --all`` leaves it behind with an index recording nothing."""
     _, base_prefix = mock_spack_instance
     db = pathlib.Path(base_prefix) / "opt" / "spack" / ".spack-db"
     db.mkdir(parents=True)
     (db / "lock").touch()
-    assert spack.migrate.detect_old_resources()["installs"] is False
-
-    (db / "index.json").write_text('{"database": {"installs": {}}}', encoding="utf-8")
-    assert spack.migrate.detect_old_resources()["installs"] is False
-
     (db / "index.json").write_text('{"database": {"installs": {"abc": {}}}}', encoding="utf-8")
-    assert spack.migrate.detect_old_resources()["installs"] is True
+    assert spack.migrate.detect_old_resources()["installs"] is False
 
-    (db / "index.json").write_text("{not json", encoding="utf-8")
-    assert spack.migrate.detect_old_resources()["installs"] is True
-    assert "Cannot read the installation database" in capsys.readouterr().err
-
-    (db / "index.json").unlink()
     (db.parent / "zlib-1.3-abc").mkdir()
     assert spack.migrate.detect_old_resources()["installs"] is True
 

@@ -4,7 +4,6 @@
 """This module implements the migration from Spack@:1.2 config layout to Spack@1.3: layout."""
 
 import filecmp
-import json
 import os
 import re
 import shutil
@@ -60,23 +59,11 @@ def detect_old_resources() -> Dict[str, bool]:
 
     opt_spack = os.path.join(spack.paths.opt_path, "spack")
 
-    # `.spack-db/` counts as an install tree only if its index records installs. A read-only
-    # command on a fresh clone creates the directory and a lock file without an index, and
-    # `spack uninstall --all` leaves an index with none. An index that cannot be read is
-    # treated as holding installs, so that they are retained rather than lost.
-    index = os.path.join(opt_spack, ".spack-db", "index.json")
-    db_has_installs = False
-    if os.path.exists(index):
-        try:
-            with open(index, "r", encoding="utf-8") as f:
-                db_has_installs = bool(json.load(f)["database"]["installs"])
-        except (OSError, ValueError, KeyError, TypeError) as e:
-            tty.warn(f"Cannot read the installation database {index}: {e}")
-            db_has_installs = True
-    ignore_in_opt = ["gpg"] if db_has_installs else ["gpg", ".spack-db"]
-
     return {
-        "installs": _has_entries(opt_spack, ignore=ignore_in_opt),
+        # The installed prefixes are what would be lost by changing the install root; the
+        # database is only an index of them. A read-only command on a fresh clone creates
+        # `.spack-db/` on its own, and `uninstall --all` leaves it behind.
+        "installs": _has_entries(opt_spack, ignore=["gpg", ".spack-db"]),
         "gpg_keys": _has_entries(spack.paths.old_gpg_path)
         or _has_entries(spack.paths.old_gpg_keys_path),
         "licenses": _has_entries(spack.paths.old_licenses_path),
