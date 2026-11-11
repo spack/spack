@@ -260,6 +260,11 @@ Some environments cannot be copied safely, and Spack keeps **all** environments 
 
 To migrate the others anyway, fix or move the offending environment (e.g. remove its develop specs) and run ``spack migrate use-new-layout``.
 
+The destination ``$data_home/environments`` is shared by all of the user's Spack instances, so it may already hold an environment of the same name.
+Before copying anything, Spack checks every such name: an environment put there by another instance (or by hand) is a conflict, and no environment is copied.
+An environment that this instance copied in an earlier run is recognized by its ``.migration-<hash>`` file and skipped; if its ``spack.yaml`` no longer matches the original's, say because the original was edited after ``spack migrate undo``, the copy is kept as it is and a warning asks you to carry over any changes by hand.
+If a copy fails part-way, the environments copied in the same run are removed again, so the destination holds either all of the migratable environments or none of them.
+
 After the migration, Spack treats the old location as an alias for the new one: ``SPACK_ENV``, ``spack -e`` or ``spack -D`` naming ``$SPACK_ROOT/var/spack/environments/<name>`` operate on the migrated copy if there is one, so that a shell that activated an environment before the migration keeps working on the live copy.
 The exception is ``spack env deactivate``, which undoes the activation of the old copy.
 An environment that was not migrated is used where it is.
