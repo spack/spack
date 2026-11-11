@@ -404,22 +404,27 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     assert result["user_config"] is True
     new = pathlib.Path(spack.migrate.migration_config_home())
     regular = sorted(
-        str(p.relative_to(new)) for p in new.rglob("*") if p.is_file() and not p.is_symlink()
+        p.relative_to(new).as_posix()
+        for p in new.rglob("*")
+        if p.is_file() and not p.is_symlink()
     )
     assert regular == ["config.yaml", "linux/packages.yaml", "repos.yaml", "v2/x.yaml"]
     assert not list(new.parent.glob(".spack-*"))  # lock and staging are gone
-    links = {str(p.relative_to(new)): os.readlink(p) for p in new.rglob("*") if p.is_symlink()}
-    assert links == {
+    links = {p.name: p for p in new.rglob("*") if p.is_symlink()}
+    # (link name, where it must resolve to, whether its target is spelled absolute)
+    expected = {
         # relative, stays inside: verbatim
-        "current": "v2",
+        "current": (new / "v2", False),
         # relative, leaves ~/.spack: made absolute so it still resolves
-        "mirrors.yaml": str(outside_dir / "mirrors.yaml"),
-        "shared": str(outside_dir),
+        "mirrors.yaml": (outside_dir / "mirrors.yaml", True),
+        "shared": (outside_dir, True),
         # absolute into ~/.spack: left alone, the target is still there
-        "alias.yaml": str(old / "config.yaml"),
+        "alias.yaml": (old / "config.yaml", True),
     }
-    for link in links:
-        assert (new / link).exists(), f"{link} dangles"
+    assert set(links) == set(expected)
+    for name, (target, absolute) in expected.items():
+        assert links[name].resolve() == target.resolve(), name
+        assert os.path.isabs(os.readlink(links[name])) is absolute, name
     # editing the linked-to file is seen through the link: it is live, not a copy
     (outside_dir / "mirrors.yaml").write_text("mirrors:\n  m: file:///x\n", encoding="utf-8")
     assert "file:///x" in (new / "mirrors.yaml").read_text(encoding="utf-8")
