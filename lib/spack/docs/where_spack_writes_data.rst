@@ -46,7 +46,7 @@ Migration of ``$spack``-internal data for older instances
 ----------------------------------------------------------
 
 If a user ``git pull``s into a pre-1.3 Spack instance, Spack will prompt to update where some artifacts are stored to match the new default layout.
-The user must explicitly approve this migration, either interactively or by setting the ``SPACK_AUTOMIGRATE_YES`` environment variable to ``1`` or ``true`` (any other value does not approve).
+The user must explicitly approve this migration, either interactively or by setting the ``SPACK_AUTOMIGRATE_YES`` environment variable to ``1`` or ``true``.
 ``spack migrate undo`` restores use of the legacy locations by updating configuration; it does not remove files copied to the new locations.
 The original resources are still available because migration leaves them in place.
 
