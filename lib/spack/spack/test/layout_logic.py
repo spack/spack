@@ -844,7 +844,9 @@ def test_env_migration_keeps_relative_paths_that_stay_inside(tmp_path):
 
 
 @pytest.mark.parametrize("conflict", ["environments", "gpg"])
-def test_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch, conflict):
+def test_migration_old_spack_internal_resources(
+    mock_spack_instance, monkeypatch, capsys, conflict
+):
     """Test migration of resources previously stored in ``$spack``.
 
     Migration is component-wise: configuration points to old locations for
@@ -883,6 +885,7 @@ def test_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch
 
     spack.migrate.migrate_spack_prefix(spack.migrate.detect_old_resources())
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+    assert capsys.readouterr().err.count("Destination exists from different source") == 1
 
     config = spack.config.CONFIG
     if conflict == "environments":

@@ -1586,7 +1586,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
             src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
             verify_with_marker = _make_marker_verifier(marker_name, src_path, src_dir)
-            previously_migrated = verify_with_marker(dst_path) == DestinationCheck.SKIP
+            previously_migrated = os.path.exists(os.path.join(dst_path, marker_name))
             success = migrate_with_staging(
                 old_path=src_path,
                 new_path=dst_path,
