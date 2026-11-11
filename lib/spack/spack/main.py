@@ -1111,6 +1111,21 @@ def finish_parse_and_run(parser, cmd_name, main_args, env_format_error):
         return _invoke_command(command, parser, args, unknown)
 
 
+def _exit_by_signal(signum: int) -> int:
+    """Exit by the given signal, so that the parent process sees why spack stopped."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.flush()
+        except Exception:
+            pass
+    if sys.platform == "win32":
+        # There are no signals to exit by: os.kill() would terminate the process with this code
+        return signum
+    signal.signal(signum, signal.SIG_DFL)
+    os.kill(os.getpid(), signum)
+    return 128 + signum
+
+
 def main(argv=None):
     """This is the entry point for the Spack command.
 
@@ -1150,23 +1165,16 @@ def main(argv=None):
 
     except KeyboardInterrupt:
         if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
-            raise
-        sys.stderr.write("\n")
-        tty.error("Keyboard interrupt.")
-        return signal.SIGINT.value
+            traceback.print_exc()
+        else:
+            sys.stderr.write("\n")
+            tty.error("Keyboard interrupt.")
+        return _exit_by_signal(signal.SIGINT)
 
     except spack.error.TerminatedBySignal as e:
         if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
             traceback.print_exc()
-        for stream in (sys.stdout, sys.stderr):
-            try:
-                stream.flush()
-            except Exception:
-                pass
-        # Exit by the same signal, so that the parent process sees why spack stopped
-        signal.signal(e.signum, signal.SIG_DFL)
-        os.kill(os.getpid(), e.signum)
-        return 128 + e.signum
+        return _exit_by_signal(e.signum)
 
     except SystemExit as e:
         if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
