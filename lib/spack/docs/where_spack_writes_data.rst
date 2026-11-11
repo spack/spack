@@ -116,11 +116,13 @@ Any other string is left as it is: an absolute path into ``~/.spack`` under some
 
 The copy is skipped when the user scope has been pointed elsewhere with :envvar:`SPACK_CONFIG_HOME` or ``SPACK_USER_CONFIG_PATH``, or disabled with :envvar:`SPACK_DISABLE_LOCAL_CONFIG`; it goes to ``$XDG_CONFIG_HOME/spack`` if that variable is set.
 A ``~/.config/spack`` (or ``$XDG_CONFIG_HOME/spack``) that already exists and is not empty is left alone: nothing is merged into it.
+If the destination is empty or missing and the copy fails (a warning says why, typically permissions), Spack stops with an error rather than run without the user's configuration; fix the cause, or set ``SPACK_USER_CONFIG_PATH=~/.spack`` to keep using the old location.
 If ``~/.spack`` is itself a symbolic link (to a dotfiles checkout, say), ``~/.config/spack`` is created as a link to the same target and nothing is rewritten; Spack instead prints the values that still spell out 1.2 defaults, once, for you to update manually if desired.
 
 **Package repositories.**
 Each clone under ``~/.spack/package_repos`` is copied to the same name under ``$data_home/package_repos``, unless a clone of that name is already there (the name is a hash of the remote URL, so it is the same repository).
 A clone that cannot be copied is named in a warning and Spack clones it afresh at the new location when needed; to keep using the old clone, point ``repos:<name>:destination`` at it.
+While copying, Spack holds the lock that older Spack versions take to clone into ``~/.spack/package_repos``, so a clone that an older instance is still making is not copied half-done; this can make the first command of a newer instance wait for an older one.
 
 .. _spack-migrate-command:
 
