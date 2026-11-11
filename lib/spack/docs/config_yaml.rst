@@ -169,7 +169,7 @@ Defaults to ``$data_home/licenses``.
 ``gpg_path`` and ``gpg_keys_path``
 ----------------------------------
 
-The GnuPG home directory holding Spack's keyring, and the directory of public keys that ``spack gpg init`` imports into it (see :ref:`cmd-spack-gpg`).
+The GnuPG home directory holding Spack's keyring, and the directory of public keys into which ``spack gpg init`` imports (see :ref:`cmd-spack-gpg`).
 They default to ``$data_home/gpg`` and ``$data_home/gpg-keys``.
 ``gpg_path`` is ignored when :envvar:`SPACK_GNUPGHOME` is set.
 
