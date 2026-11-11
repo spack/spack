@@ -114,9 +114,9 @@ Two kinds of values are rewritten in the copies, so that the configuration means
 To remove the dependence of those files on ``~/.spack``, manually move the resource and modify the relevant configuration file.
 Any other string is left as it is: an absolute path into ``~/.spack`` under some other setting is a choice that still names what it did.
 
-The copy is skipped when the user scope has been pointed elsewhere with :envvar:`SPACK_CONFIG_HOME` or ``SPACK_USER_CONFIG_PATH``, or disabled with :envvar:`SPACK_DISABLE_LOCAL_CONFIG`; it goes to ``$XDG_CONFIG_HOME/spack`` if that variable is set.
+The copy is skipped when the user scope has been pointed elsewhere with :envvar:`SPACK_CONFIG_HOME` or :envvar:`SPACK_USER_CONFIG_PATH`, or disabled with :envvar:`SPACK_DISABLE_LOCAL_CONFIG`; it goes to ``$XDG_CONFIG_HOME/spack`` if that variable is set.
 A ``~/.config/spack`` (or ``$XDG_CONFIG_HOME/spack``) that already exists and is not empty is left alone: nothing is merged into it.
-If the destination is empty or missing and the copy fails (a warning says why, typically permissions), Spack stops with an error rather than run without the user's configuration; fix the cause, or set ``SPACK_USER_CONFIG_PATH=~/.spack`` to keep using the old location.
+If the destination is empty or missing and the copy fails (a warning says why, typically permissions), Spack stops with an error rather than run without the user's configuration; fix the cause, or set ``SPACK_CONFIG_HOME=~/.spack`` to keep using the old location.
 If ``~/.spack`` is itself a symbolic link (to a dotfiles checkout, say), ``~/.config/spack`` is created as a link to the same target and nothing is rewritten; Spack instead prints the values that still spell out 1.2 defaults, once, for you to update manually if desired.
 
 **Package repositories.**

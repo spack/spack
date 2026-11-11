@@ -2472,8 +2472,7 @@ def user_cache_path() -> str:
 
 
 def reports_path() -> str:
-    """junit, cdash, etc. reports about builds (``$state_home/reports``): a record of what
-    happened, which cannot be regenerated."""
+    """junit, cdash, etc. reports about builds."""
     return os.path.join(_resolve_location_var("state"), "reports")
 
 
