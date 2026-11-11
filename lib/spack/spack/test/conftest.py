@@ -191,6 +191,7 @@ def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifie
         "  # user configuration scope\n"
         '  - name: "user"\n'
         "    path_override_env_var:\n"
+        "      - SPACK_CONFIG_HOME\n"
         "      - SPACK_USER_CONFIG_PATH\n"
         "      - $XDG_CONFIG_HOME/spack\n"
         '    path: "~/.config/spack"\n'
