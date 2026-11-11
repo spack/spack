@@ -33,7 +33,7 @@ See :ref:`configuration-scopes` for details.
 
 This section contains sub-keys ``data``, ``state``, and ``cache``.
 These settings are used to change where Spack writes data.
-See :ref:`where-spack-writes-data`.
+See :ref:`where_spack_writes_data`.
 
 Each of these settings accepts a list of values (or a single string).
 Variable substitution is run on each entry in the list, and if all variables resolve and result in an absolute path, the entry is used.

@@ -35,7 +35,8 @@ def detect_old_resources() -> Dict[str, bool]:
     """Detect presence of old Spack-internal resources.
 
     Returns:
-        Dictionary with keys: 'installs', 'gpg_keys', 'licenses', 'environments'
+        Dictionary with keys ``installs``, ``gpg_keys``, ``licenses`` and ``environments`` and
+        boolean values indicating whether those resource types are present.
     """
 
     def _has_entries(path: str, ignore: Optional[List[str]] = None) -> bool:
@@ -337,7 +338,7 @@ def _process_yaml_files_in_directory(
     whether it points at a file or a directory, so that aliases (``current -> v2``) and
     links into a dotfiles checkout stay live rather than becoming frozen copies. A link's
     target is copied verbatim; the caller fixes up targets that would no longer resolve
-    (see :func:`_rewrite_symlinks_after_copy`).
+    (see ``_rewrite_symlinks_after_copy``).
 
     Args:
         old_dir: Source directory to walk
@@ -678,8 +679,8 @@ def _make_marker_verifier(
 
     ``old_path`` is the source the destination would have been migrated from; a destination
     that is a symlink to the same place as ``old_path`` was made by
-    :func:`_migrate_symlinked_root` (links carry no marker) and counts as already migrated.
-    ``migrated_root`` is passed through to :func:`_same_link_or_link_to_sibling`.
+    ``_migrate_symlinked_root`` (links carry no marker) and counts as already migrated.
+    ``migrated_root`` is passed through to ``_same_link_or_link_to_sibling``.
     """
 
     def verify_with_marker(dest_path):
@@ -796,7 +797,7 @@ def migrate_with_staging(
     Common pattern for atomic migrations:
 
     1. Check source exists and has content; a source that is itself a symlink is migrated
-       by re-creating the link (see :func:`_migrate_symlinked_root`)
+       by re-creating the link (see ``_migrate_symlinked_root``)
     2. Verify destination (via callback) - can skip, fail, or proceed
     3. Acquire lock (unless lock_name is None, meaning caller handles locking)
     4. Re-verify destination inside lock (state may have changed)
@@ -811,7 +812,7 @@ def migrate_with_staging(
             PROCEED (safe to migrate). Use can_migrate_to_location for simple
             empty-directory checks, or _make_marker_verifier for marker-based checks.
         migrated_root: Directory all of whose entries are being migrated alongside this
-            one; see :func:`_migrate_symlinked_root`.
+            one; see ``_migrate_symlinked_root``.
     """
     if not _is_nonempty_directory(old_path):
         return False
