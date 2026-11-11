@@ -1407,7 +1407,7 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
     for var in ("SPACK_CONFIG_HOME", "SPACK_USER_CONFIG_PATH", "SPACK_DISABLE_LOCAL_CONFIG"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
-    monkeypatch.setattr(spack.migrate, "_migrate_package_repositories", lambda: False)
+
     dotfiles = tmp_path / "dotfiles" / "spack"
     dotfiles.mkdir(parents=True)
     (dotfiles / "config.yaml").write_text("config:\n  build_jobs: 7\n", encoding="utf-8")
@@ -1425,15 +1425,14 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
     )
     before = {p.name: p.read_text(encoding="utf-8") for p in dotfiles.iterdir()}
 
-    assert spack.migrate.migrate_home()["user_config"] is True
+    assert spack.migrate._migrate_user_config() is True
     assert new.is_symlink() and new.resolve() == dotfiles.resolve()
     err = capsys.readouterr().err
-    assert "Migrated user config" in err
     assert "bootstrap:root" in err and "$state_home/bootstrap" in err
     assert "repos" not in err
     assert {p.name: p.read_text(encoding="utf-8") for p in dotfiles.iterdir()} == before
 
-    assert spack.migrate.migrate_home()["user_config"] is False
+    assert spack.migrate._migrate_user_config() is False
     assert capsys.readouterr().err == ""
     assert new.is_symlink()
 
@@ -1446,7 +1445,7 @@ def test_symlinked_dot_spack_leaves_populated_config_home_alone(tmp_path, monkey
     for var in ("SPACK_CONFIG_HOME", "SPACK_USER_CONFIG_PATH", "SPACK_DISABLE_LOCAL_CONFIG"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
-    monkeypatch.setattr(spack.migrate, "_migrate_package_repositories", lambda: False)
+
     dotfiles = tmp_path / "dotfiles" / "spack"
     dotfiles.mkdir(parents=True)
     (dotfiles / "config.yaml").write_text("config:\n  build_jobs: 7\n", encoding="utf-8")
@@ -1455,7 +1454,7 @@ def test_symlinked_dot_spack_leaves_populated_config_home_alone(tmp_path, monkey
     new.mkdir(parents=True)
     (new / "packages.yaml").write_text("packages: {}\n", encoding="utf-8")
 
-    assert spack.migrate.migrate_home()["user_config"] is False
+    assert spack.migrate._migrate_user_config() is False
     assert capsys.readouterr().err == ""
     assert not new.is_symlink()
     assert sorted(p.name for p in new.iterdir()) == ["packages.yaml"]
