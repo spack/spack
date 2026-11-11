@@ -1174,7 +1174,7 @@ def _migrate_user_config() -> bool:
     if failed:
         tty.die(
             f"Failed to migrate Spack config directory to {new_location} (see any warning"
-            " above). Fix the problem, or set SPACK_USER_CONFIG_PATH=~/.spack to use the old"
+            " above). Fix the problem, or set SPACK_CONFIG_HOME=~/.spack to use the old"
             " location"
         )
 
