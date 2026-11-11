@@ -282,6 +282,14 @@ def _use_new_layout(args):
     layout_scope_path = spack.paths.layout_scope_path
     marker_path = spack.migrate.migration_done_marker_path()
 
+    # The copies would go to the home directory, outside the isolation, and the isolate
+    # scope would keep pointing at the legacy locations (see perform_migration).
+    if os.path.exists(os.path.join(spack.paths.isolate_scope_path, "include.yaml")):
+        tty.die(
+            "This Spack instance is isolated; an isolated instance keeps its legacy resources"
+            " where they are. Run `spack isolate --undo` first if you want to migrate them."
+        )
+
     old_resources = spack.migrate.detect_old_resources()
 
     if not any(old_resources.values()):

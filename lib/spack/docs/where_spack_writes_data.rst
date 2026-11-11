@@ -138,6 +138,7 @@ It has three actions:
 
 ``spack migrate use-new-layout``
   Remove the layout scope and re-run the migration of ``$spack``-internal resources, for example after declining the prompt on the first run.
+  It refuses to act on an isolated instance, which keeps its legacy resources where they are; run ``spack isolate --undo`` first.
 
 Both actions hold the migration lock, so a Spack command started meanwhile waits for them to finish (up to two minutes) and then uses the result; they stop if another process changed the migration state while they were waiting for the lock.
 

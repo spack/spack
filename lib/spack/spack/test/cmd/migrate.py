@@ -304,6 +304,26 @@ def test_migrate_use_new_layout_holds_the_migration_lock(mock_spack_instance, mo
     assert spack.migrate.migration_done()
 
 
+def test_migrate_use_new_layout_refuses_an_isolated_instance(mock_spack_instance, monkeypatch):
+    """An isolated instance keeps its legacy resources in place: the copies would land in
+    the home directory, outside the isolation, and the isolate scope would keep pointing at
+    the legacy locations."""
+    _, base_prefix = mock_spack_instance
+    old_envs = Path(base_prefix) / "var" / "spack" / "environments"
+    (old_envs / "demo").mkdir(parents=True)
+    (old_envs / "demo" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    spack.main.SpackCommand("isolate")("--self")
+    monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
+
+    with pytest.raises(spack.main.SpackCommandError):
+        sp_migrate("use-new-layout")
+
+    assert "isolated" in sp_migrate.output
+    assert not spack.migrate.migration_done()
+    new_envs = Path(spack.migrate.migration_data_home()) / "environments"
+    assert not new_envs.exists()
+
+
 def test_migrate_can_alternate_between_old_and_new_layout(mock_spack_instance, monkeypatch):
     """Can alternate between undo and use-new-layout to switch layouts."""
     home_dir, base_prefix = mock_spack_instance
