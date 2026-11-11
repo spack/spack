@@ -361,6 +361,19 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     (old / "srccache").mkdir()
     (old / "srccache" / "big.tar.gz").write_bytes(b"\0" * 4096)
     (old / "README").write_text("notes\n", encoding="utf-8")
+    # the directories Spack itself wrote into ~/.spack hold YAML of their own (an installed
+    # Python package, a staged source tree, a not-YAML "*.yaml") and links; none is config
+    pkg = old / "bootstrap" / "store" / "linux" / "clingo-1.0-abc" / "lib"
+    (pkg / "site").mkdir(parents=True)
+    (pkg / "site" / "cfg.yaml").write_text("a: 1\n", encoding="utf-8")
+    (pkg.parent / "lib64").symlink_to("lib")
+    src = old / "stage" / "spack-stage-foo-1.0-abc" / "spack-src"
+    (src / ".github").mkdir(parents=True)
+    (src / ".github" / "ci.yml").write_text("on: push\n", encoding="utf-8")
+    (src / "environment.yaml").write_text("- not: [valid\n", encoding="utf-8")
+    for data_dir in ("cache", "git_repos", "package_repos", "reports", "test"):
+        (old / data_dir / "x").mkdir(parents=True)
+        (old / data_dir / "x" / "index.yaml").write_text("b: 2\n", encoding="utf-8")
     (old / "dangling").symlink_to(old / "nowhere")
     # Make sure a read-only directory doesn't error
     ro = old / "ro"

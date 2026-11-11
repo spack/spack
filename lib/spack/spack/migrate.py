@@ -11,7 +11,7 @@ import shutil
 import sys
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Container, Dict, List, Optional, Tuple, Union
 
 import spack.config
 import spack.error
@@ -326,11 +326,20 @@ def process_env_file_paths(
     return data if modified else None
 
 
+#: Directories Spack <= 1.2 created under ``~/.spack`` for data, not configuration: caches,
+#: the bootstrap store, build and test stages, clones. Any YAML inside them belongs to that
+#: data (a staged source tree, an installed Python package), not to the user scope.
+_OLD_DOT_SPACK_DATA_DIRS = frozenset(
+    ["bootstrap", "cache", "git_repos", "package_repos", "reports", "stage", "test"]
+)
+
+
 def _process_yaml_files_in_directory(
     old_dir: str,
     staging_dir: str,
     processor_func: Callable[[str, str, str], Optional[Dict[str, Any]]],
     new_dir: str,
+    skip_toplevel: Container[str] = (),
 ) -> None:
     """Walk a directory tree, copying its YAML files (processed) and its symlinks (as is).
 
@@ -345,11 +354,14 @@ def _process_yaml_files_in_directory(
         staging_dir: Staging directory where processed files are written
         processor_func: Function(yaml_file_path, old_dir, new_dir) -> modified_data or None
         new_dir: Target directory (passed to processor_func)
+        skip_toplevel: names of entries directly under ``old_dir`` not to copy or descend
     """
     for root, dirs, files in os.walk(old_dir, followlinks=False):
+        if root == old_dir:
+            dirs[:] = [d for d in dirs if d not in skip_toplevel]
         # A directory holding an environment manifest or a package repository is data the
         # user keeps here, not configuration of this scope: do not descend into it.
-        if root != old_dir and any(f in files for f in ("spack.yaml", "spack.lock", "repo.yaml")):
+        elif any(f in files for f in ("spack.yaml", "spack.lock", "repo.yaml")):
             dirs[:] = []
             continue
 
@@ -1034,21 +1046,23 @@ def _rewrite_symlinks_after_copy(
     return rewrites
 
 
-# Directories to exclude at the first level when copying config
-# These are non-config data that Spack <= 1.2 wrote into ~/.spack
 def _prepare_config_staging(old_location, staging_path, new_location):
     """Callback for config migration: copy the YAML configuration files, with path rewriting.
 
-    Only ``*.yaml``/``*.yml`` files and symlinks are copied. Everything else under
-    ``~/.spack`` is either regenerable data (caches, bootstrap store, package repository
-    clones), or data the user put there (a local repository or mirror, an install tree)
-    which is referred to by path from the configuration and keeps working where it is,
-    since ``~/.spack`` is retained.
+    Only ``*.yaml``/``*.yml`` files and symlinks are copied, and not from the directories
+    Spack itself wrote data into (``_OLD_DOT_SPACK_DATA_DIRS``). Everything else under
+    ``~/.spack`` is either regenerable data, or data the user put there (a local repository
+    or mirror, an install tree) which is referred to by path from the configuration and
+    keeps working where it is, since ``~/.spack`` is retained.
     See :func:`process_config_file_paths` for how such references are kept valid.
     """
     os.makedirs(staging_path, exist_ok=True)
     _process_yaml_files_in_directory(
-        old_location, staging_path, process_config_file_paths, new_location
+        old_location,
+        staging_path,
+        process_config_file_paths,
+        new_location,
+        skip_toplevel=_OLD_DOT_SPACK_DATA_DIRS,
     )
 
     if not os.listdir(staging_path):

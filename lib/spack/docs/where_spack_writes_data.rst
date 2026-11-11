@@ -102,7 +102,7 @@ Migration of ``~/.spack``
 
 **User configuration.**
 Only the configuration files (``*.yaml``, ``*.yml``, and symbolic links) under ``~/.spack`` are copied to ``~/.config/spack``, keeping their relative layout (``~/.spack/linux/packages.yaml`` becomes ``~/.config/spack/linux/packages.yaml``).
-A directory that holds an environment (``spack.yaml`` or ``spack.lock``) or a package repository (``repo.yaml``) is data rather than configuration and is not descended into.
+The directories Spack itself wrote data into (``bootstrap``, ``cache``, ``git_repos``, ``package_repos``, ``reports``, ``stage``, ``test``) are skipped, as is a directory that holds an environment (``spack.yaml`` or ``spack.lock``) or a package repository (``repo.yaml``): those are data rather than configuration.
 A file that cannot be parsed or read is skipped with a warning.
 Everything else in ``~/.spack`` is not configuration and is either handled separately or is regenerable in the new location.
 
