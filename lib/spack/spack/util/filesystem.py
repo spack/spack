@@ -1034,7 +1034,7 @@ def mkdirp(
                 for intermediate_path in reversed(intermediate_folders):
                     if intermediate_mode is not None:
                         os.chmod(intermediate_path, intermediate_mode)
-                    if intermediate_group is not None:
+                    if intermediate_group:  # 0 is what os.stat reports on Windows
                         chgrp_if_not_world_writable(intermediate_path, intermediate_group)
                         if intermediate_mode is not None:
                             os.chmod(
