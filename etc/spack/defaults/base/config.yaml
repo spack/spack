@@ -168,6 +168,11 @@ config:
   # Which installer to use: "old" (deprecated) or "new".
   installer: new
 
+  # Whether a failure to push a package to a build cache with autopush enabled
+  # fails the installation. If false, a warning is printed instead and the
+  # package remains installed.
+  autopush_fail_on_error: true
+
   # Restrict filesystem and network access during builds. The stage directory,
   # install prefix, and system temp directory are always writable.
   # Spack-installed dependency prefixes are always readable. Use the allow_read

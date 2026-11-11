@@ -20,6 +20,8 @@ def post_install(spec, explicit):
     if pkg.installed_from_binary_cache:
         return
 
+    fail_on_error = spack.config.CONFIG.get("config:autopush_fail_on_error", True)
+
     # Push the package to all autopush mirrors
     for mirror in spack.mirrors.mirror.MirrorCollection(binary=True, autopush=True).values():
         if not mirror.matches_binary(spec, direction="push"):
@@ -28,9 +30,19 @@ def post_install(spec, explicit):
             )
             continue
 
-        signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
-        with spack.binary_distribution.make_uploader(
-            mirror=mirror, force=True, signing_key=signing_key
-        ) as uploader:
-            uploader.push_or_raise([spec], config=spack.config.CONFIG)
+        try:
+            _push(spec, mirror)
+        except Exception as e:
+            if fail_on_error:
+                raise
+            tty.warn(f"{spec.name}: Failed to push to build cache '{mirror.name}': {e}")
+            continue
         tty.msg(f"{spec.name}: Pushed to build cache: '{mirror.name}'")
+
+
+def _push(spec, mirror):
+    signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
+    with spack.binary_distribution.make_uploader(
+        mirror=mirror, force=True, signing_key=signing_key
+    ) as uploader:
+        uploader.push_or_raise([spec], config=spack.config.CONFIG)
