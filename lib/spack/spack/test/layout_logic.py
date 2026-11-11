@@ -19,6 +19,7 @@ import spack.migrate
 import spack.paths
 import spack.util.lang
 import spack.util.spack_yaml as syaml
+from spack.util.filesystem import getuid
 
 
 def test_config_defaults_use_data_home(mock_spack_instance, monkeypatch):
@@ -361,6 +362,7 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     (old / "srccache" / "big.tar.gz").write_bytes(b"\0" * 4096)
     (old / "README").write_text("notes\n", encoding="utf-8")
     (old / "dangling").symlink_to(old / "nowhere")
+    # Make sure a read-only directory doesn't error
     ro = old / "ro"
     ro.mkdir()
     (ro / "f").write_text("x", encoding="utf-8")
@@ -675,6 +677,8 @@ def test_env_migration_resolves_relative_paths_from_the_included_file(tmp_path):
     assert "staging" not in (site / "spack.yaml").read_text(encoding="utf-8")
 
 
+@pytest.mark.not_on_windows("permission bits do not apply on Windows")
+@pytest.mark.skipif(getuid() == 0, reason="root ignores permission bits")
 def test_migrate_with_staging_warns_when_lock_cannot_be_created(tmp_path, capsys):
     """An unwritable destination parent fails the lock; the user is told, the resource is
     retained, and nothing is raised for the prefix-migration handler to misreport."""
@@ -701,6 +705,8 @@ def test_migrate_with_staging_warns_when_lock_cannot_be_created(tmp_path, capsys
     assert f"Cannot migrate test resource to {parent / 'new'}" in capsys.readouterr().err
 
 
+@pytest.mark.not_on_windows("permission bits do not apply on Windows")
+@pytest.mark.skipif(getuid() == 0, reason="root ignores permission bits")
 def test_env_migration_unwritable_data_home_is_retained_not_fatal(tmp_path, capsys):
     """A read-only environments destination is reported for what it is and the environments
     are retained, instead of surfacing as a "spack prefix is not writable" error."""
@@ -719,6 +725,8 @@ def test_env_migration_unwritable_data_home_is_retained_not_fatal(tmp_path, caps
     assert f"Cannot migrate environments to {new_envs}" in capsys.readouterr().err
 
 
+@pytest.mark.not_on_windows("permission bits do not apply on Windows")
+@pytest.mark.skipif(getuid() == 0, reason="root ignores permission bits")
 def test_env_migration_rollback_removes_read_only_copies(tmp_path):
     """When one environment blocks migration, copies already made are removed even if they
     contain read-only directories (copied permissions), and so is the failed staging dir.

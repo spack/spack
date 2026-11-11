@@ -12,6 +12,7 @@ import spack.config
 import spack.main
 import spack.migrate
 import spack.util.tty
+from spack.util.filesystem import getuid
 
 sp_migrate = spack.main.SpackCommand("migrate")
 
@@ -240,7 +241,8 @@ def test_migrate_cleanup_old_refuses_symlink(mock_spack_instance, monkeypatch):
     assert (target / "config.yaml").exists()
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="permission bits")
+@pytest.mark.not_on_windows("permission bits do not apply on Windows")
+@pytest.mark.skipif(getuid() == 0, reason="root ignores permission bits")
 def test_migrate_cleanup_old_reports_removal_failures(mock_spack_instance, monkeypatch):
     home_dir, base_prefix = mock_spack_instance
     old_user, _ = _setup_cleanup_old(home_dir)
