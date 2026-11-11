@@ -406,6 +406,7 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
         str(p.relative_to(new)) for p in new.rglob("*") if p.is_file() and not p.is_symlink()
     )
     assert regular == ["config.yaml", "linux/packages.yaml", "repos.yaml", "v2/x.yaml"]
+    assert not list(new.parent.glob(".spack-*"))  # lock and staging are gone
     links = {str(p.relative_to(new)): os.readlink(p) for p in new.rglob("*") if p.is_symlink()}
     assert links == {
         # relative, stays inside: verbatim
@@ -894,6 +895,7 @@ def test_migration_old_spack_internal_resources(mock_spack_instance, monkeypatch
 
         assert (new_gpg / "old-keyring-file").read_text(encoding="utf-8") == "old"
         assert (new_gpg_keys / "old-public-key").read_text(encoding="utf-8") == "old"
+        assert not list(data_home.glob(".*gpg*"))  # locks and staging are gone
         assert spack.config.canonicalize_path(config.get("config:gpg_path")) == str(new_gpg)
         assert spack.config.canonicalize_path(config.get("config:gpg_keys_path")) == str(
             new_gpg_keys
@@ -1015,9 +1017,8 @@ def test_migration_copies_package_repositories(mock_spack_instance, monkeypatch)
     assert (new_repos / "second" / "root.txt").read_text(encoding="utf-8") == "second root"
     assert (old_repos / "first" / "root.txt").exists()
     assert (old_repos / "second" / "root.txt").exists()
-    if sys.platform != "win32":
-        assert (new_repos / ".spack-package-repos-migration-lock").exists()
-    assert not any(p.name.startswith(".package-repos-migration") for p in new_repos.iterdir())
+    # neither the staging directories nor the lock are left behind
+    assert not any(p.name.startswith(".") for p in new_repos.iterdir())
 
     # Second run: nothing left to copy, nothing reported as migrated
     assert spack.migrate.migrate_home()["package_repos"] is False

@@ -921,6 +921,11 @@ def migrate_with_staging(
         # Atomically rename staging to final destination
         os.rename(staging_path, final_destination)
         tty.debug(f"{description.capitalize()} migrated from {old_path} to {new_path}")
+        # The lock has done its job: a process still waiting on it, or one arriving after the
+        # file is gone, finds the destination populated when it re-verifies under the lock.
+        if lock is not None:
+            with contextlib.suppress(OSError):
+                os.unlink(lock.path)
         return True
 
     except spack.util.lock.LockPermissionError as e:
