@@ -14,7 +14,7 @@ import signal
 import sys
 import tempfile
 import time
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Set, Union
 
 import spack.binary_distribution
 import spack.config
@@ -33,8 +33,10 @@ import spack.util.tty
 from spack.installer.base import (
     JOBSERVER_EVENT,
     OUTPUT_BUFFER_SIZE,
+    SIGNAL_EVENT,
     SIGWINCH_EVENT,
     STDIN_EVENT,
+    TERMINATION_SIGNALS,
     BaseTerminalState,
     ExitCode,
     FdInfo,
@@ -154,6 +156,53 @@ class NullReportData(ReportData):
         self, reports: Dict[str, spack.report.RequestRecord], build_graph: "BuildGraph"
     ) -> None:
         pass
+
+
+class SignalEvents:
+    """Turns signals with the default action into event loop events, so that they never interrupt
+    its bookkeeping. The wakeup fd receives one byte per signal, its number, and wakes up select().
+    Other signals with Python handlers write to it too."""
+
+    def __init__(self, signals: Iterable[signal.Signals]) -> None:
+        self.handled = [s for s in signals if signal.getsignal(s) is signal.SIG_DFL]
+        self.read_fd = -1
+        self.write_fd = -1
+        self.old_wakeup_fd = -1
+
+    def setup(self, selector: selectors.BaseSelector) -> None:
+        if not self.handled:
+            return
+        # Set the wakeup fd before the handlers, so that every handled signal wakes up select()
+        self.read_fd, self.write_fd = os.pipe()
+        os.set_blocking(self.read_fd, False)
+        os.set_blocking(self.write_fd, False)
+        selector.register(self.read_fd, selectors.EVENT_READ, SIGNAL_EVENT)
+        self.old_wakeup_fd = signal.set_wakeup_fd(self.write_fd)
+        for sig in self.handled:
+            # A no-op: the C handler writes the signal number to the wakeup fd
+            signal.signal(sig, lambda signum, frame: None)
+
+    def read(self) -> bytes:
+        """Return the numbers of the signals received since the last read."""
+        try:
+            return os.read(self.read_fd, 65536)
+        except BlockingIOError:
+            return b""
+
+    def teardown(self, signals: Iterable[int]) -> int:
+        """Restore the handlers and close the pipe. Return the first of ``signals`` received since
+        the last read, or 0."""
+        # Safe to reset to SIG_DFL, since only signals that had it are handled
+        for sig in self.handled:
+            signal.signal(sig, signal.SIG_DFL)
+        if self.write_fd < 0:
+            return 0
+        # Read and close the pipe only after it is no longer the wakeup fd
+        signal.set_wakeup_fd(self.old_wakeup_fd)
+        received = self.read()
+        os.close(self.read_fd)
+        os.close(self.write_fd)
+        return next((s for s in received if s in signals), 0)
 
 
 def _signal_children(running_builds: Dict[str, ChildInfo], sig: signal.Signals) -> None:
@@ -300,6 +349,9 @@ class PackageInstaller:
 
         self.next_database_write = 0.0
 
+        #: Specs added to the database by ``install()``, also when it raises
+        self.recorded_specs: List[spack.spec.Spec] = []
+
     def install(self) -> None:
         # Refuse disallowed deprecations before updating any index, so an install that cannot
         # succeed does no work first
@@ -345,7 +397,12 @@ class PackageInstaller:
         failures: List[spack.spec.Spec] = []
         finished_builds: List[str] = []
 
+        signal_events = SignalEvents(TERMINATION_SIGNALS)
+        terminated = 0
+
         try:
+            signal_events.setup(selector)
+
             # Try to schedule builds immediately. The first job does not require a token.
             blocked = False
             if self.pending_builds:
@@ -404,15 +461,19 @@ class PackageInstaller:
                         if data.name == "output":
                             self._handle_child_logs(child_info, selector)
                         elif data.name == "state":
-                            self._handle_child_state(child_info, selector)
-                        elif data.name == "sentinel":
-                            finished_builds.append(data.build_id)
+                            # EOF on the state channel means the build process has exited.
+                            if not self._handle_child_state(child_info, selector):
+                                finished_builds.append(data.build_id)
                     elif data == STDIN_EVENT:
                         stdin_ready = True
                     elif data == SIGWINCH_EVENT:
                         assert terminal is not None
                         terminal.drain_sigwinch()
                         self.ui.on_resize()
+                    elif data == SIGNAL_EVENT:
+                        for signum in signal_events.read():
+                            if signum in TERMINATION_SIGNALS:
+                                terminated = terminated or signum
                     elif data == JOBSERVER_EVENT and not jobserver.has_target_parallelism():
                         jobserver.maybe_discard_tokens()
                         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
@@ -422,6 +483,10 @@ class PackageInstaller:
                     self._handle_finished_build(
                         build_id, current_time, jobserver, selector, failures, database_actions
                     )
+
+                # Stop before starting more builds; the cleanup terminates the running ones
+                if terminated:
+                    break
 
                 if failures and self.fail_fast:
                     # Terminate other builds to actually fail fast. We continue in the event loop
@@ -463,6 +528,23 @@ class PackageInstaller:
             if terminal is not None:
                 terminal.teardown_input()
 
+            # Send SIGTERM to running builds and release their jobserver tokens; this is a no-op in
+            # the successful case. It does not wait: builds are joined after the DB flush.
+            for child in self.running_builds.values():
+                try:
+                    child.proc.terminate()
+                except Exception:
+                    pass
+                try:
+                    jobserver.release()
+                except Exception:
+                    pass
+
+            # An exception between SIGCONT and on_resume after Ctrl-Z leaves the builds stopped,
+            # and stopped builds do not handle the SIGTERM above until they are continued.
+            if sys.platform != "win32":
+                _signal_children(self.running_builds, signal.SIGCONT)
+
             # Flush any not-yet-written successful builds to the DB; save the exception on error
             # to be re-raised after best-effort cleanup.
             db_exc = None
@@ -472,26 +554,24 @@ class PackageInstaller:
                     with db.write_transaction():
                         for action in database_actions:
                             action.save_to_db(db)
+                    self._extend_recorded_specs(database_actions)
                 except Exception as e:
                     db_exc = e
 
-            # Send SIGTERM to running builds; this is a no-op in the successful case.
-            for child in self.running_builds.values():
-                try:
-                    child.proc.terminate()
-                except Exception:
-                    pass
-
-            # Release our jobserver token for each terminated build and then join.
-            for child in self.running_builds.values():
-                try:
-                    jobserver.release()
-                    child.proc.join(timeout=30)
-                    if child.proc.is_alive():
-                        child.proc.kill()
-                        child.proc.join()
-                except Exception:
-                    pass
+            # Wait for the builds to exit, kill those that do not, and reap them all.
+            try:
+                stuck = self._wait_for_exit(timeout=30)
+                if sys.platform == "win32":
+                    for build_id in stuck:
+                        self.running_builds[build_id].proc.kill()
+                else:
+                    # Unlike kill(), this also kills the build's children, which could otherwise
+                    # keep writing to the prefix after its lock is released.
+                    _signal_children({b: self.running_builds[b] for b in stuck}, signal.SIGKILL)
+                for child in self.running_builds.values():
+                    child.proc.join()
+            except Exception:
+                pass
 
             # Release all held locks best-effort, so that one failure does not prevent the others
             # from being released.
@@ -518,11 +598,17 @@ class PackageInstaller:
                 jobserver.close()
             except Exception:
                 pass
+            terminated = signal_events.teardown(TERMINATION_SIGNALS) or terminated
 
             # Restore output settings. On Linux this is a no-op. On Windows this disables
             # VT100 processing and must happen after the final render.
             if terminal is not None:
                 terminal.teardown_output()
+
+            # A termination signal, also one received during cleanup, takes precedence over other
+            # exceptions
+            if terminated:
+                raise spack.error.TerminatedBySignal(terminated)
 
             # Re-raise the DB exception if any.
             if db_exc is not None:
@@ -569,7 +655,6 @@ class PackageInstaller:
         jobserver.release()
         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
         self._drain_child_output(build, selector)
-        self._drain_child_state(build, selector)
         exitcode = build.close(selector)
         self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
@@ -648,7 +733,13 @@ class PackageInstaller:
             )
             and self._save_to_db(database_actions, retained_read_locks)
         ):
+            self._extend_recorded_specs(database_actions)
             database_actions.clear()
+
+    def _extend_recorded_specs(self, database_actions: List[DatabaseAction]) -> None:
+        self.recorded_specs.extend(
+            a.spec for a in database_actions if isinstance(a, AddSpecAction)
+        )
 
     def _save_to_db(
         self,
@@ -832,6 +923,27 @@ class PackageInstaller:
         except OSError:
             pass
 
+    def _wait_for_exit(self, timeout: float) -> List[str]:
+        """Process output and state of the running builds until their state channels reach EOF.
+        Returns the ids of builds that are still running after the timeout."""
+        deadline = time.monotonic() + timeout
+        running = set(self.running_builds)
+        with selectors.DefaultSelector() as selector:
+            for build_id in running:
+                self.running_builds[build_id].register_with_selector(selector, build_id)
+            while running:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                for key, _ in selector.select(remaining):
+                    data = key.data
+                    child = self.running_builds[data.build_id]
+                    if data.name == "output":
+                        self._handle_child_logs(child, selector)
+                    elif not self._handle_child_state(child, selector):
+                        running.discard(data.build_id)
+        return list(running)
+
     def _handle_child_logs(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
         """Handle reading output logs from a child process pipe. Returns False once the channel
         has reached EOF and was unregistered, True while it remains open."""
@@ -858,12 +970,6 @@ class PackageInstaller:
     def _drain_child_output(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
         """Read and print any remaining output from a finished child's pipe."""
         while self._handle_child_logs(child_info, selector):
-            pass
-
-    def _drain_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> None:
-        """Read and process any remaining state messages from a finished child's pipe."""
-        # Must drain before child.close() to consume any remaining data before bridges close.
-        while self._handle_child_state(child_info, selector):
             pass
 
     def _handle_child_state(self, child_info: ChildInfo, selector: selectors.BaseSelector) -> bool:
@@ -909,5 +1015,7 @@ class PackageInstaller:
                 self.ui.on_progress(dag_hash, message["progress"], message["total"])
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
+            elif "exit" in message:
+                child_info.exit_code = message["exit"]
 
         return True

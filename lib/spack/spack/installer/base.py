@@ -10,11 +10,12 @@ import io
 import os
 import re
 import selectors
+import signal
 import socket
 import sys
 import threading
 from multiprocessing.connection import Connection
-from typing import Callable, MutableMapping, NamedTuple, Optional, Union
+from typing import Callable, MutableMapping, NamedTuple, Optional
 
 from spack.vendor.typing_extensions import Literal
 
@@ -50,10 +51,18 @@ class ExitCode:
 #: while the terminal is headless (there is no signal for it).
 HEADLESS_WAKE_INTERVAL = 1.0
 
-#: Selector data keys registered by the terminal and dispatched by the event loop
+#: Selector data keys dispatched by the event loop
 STDIN_EVENT = "stdin"
 SIGWINCH_EVENT = "sigwinch"
 JOBSERVER_EVENT = "jobserver"
+SIGNAL_EVENT = "signal"
+
+#: Signals on which the event loop stops and cleans up
+if sys.platform == "win32":
+    # Windows cannot send SIGTERM to another process, it terminates the process instead
+    TERMINATION_SIGNALS = ()
+else:
+    TERMINATION_SIGNALS = (signal.SIGTERM, signal.SIGHUP)
 
 
 class BuildChannels(NamedTuple):
@@ -224,18 +233,6 @@ class NoMakeflags(Makeflags):
 
     def apply(self, env: MutableMapping[str, str]) -> None:
         pass
-
-
-class ProcessExitNotifier(abc.ABC):
-    """Selector-watchable handle that becomes readable when the child process exits."""
-
-    @property
-    @abc.abstractmethod
-    def fileobj(self) -> Union[int, socket.socket]:
-        """Object/fd to register with the selector to detect process exit."""
-
-    def close(self) -> None:
-        """Release any resources. Default: nothing to release."""
 
 
 class JobServerBase(abc.ABC):

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pathlib
 
 import pytest
@@ -210,3 +211,25 @@ def test_deprecate_spec_with_external_dependency(
     deprecate("-y", "libdwarf@=20111030", "libdwarf@=20130729")
 
     assert db.deprecator(deprecated_spec) == new_libdwarf
+
+
+def test_deprecate_updates_module_files(
+    mock_packages,
+    mock_archive,
+    mock_fetch,
+    temporary_store: Store,
+    install_mockery,
+    tcl_module_filename,
+):
+    """Tests that deprecate removes the module file of the deprecated spec, and writes the
+    module file of the deprecator it installs.
+    """
+    install("--fake", "libelf@0.8.10")
+    [deprecated] = temporary_store.db.query("libelf@0.8.10")
+    assert os.path.exists(tcl_module_filename(deprecated))
+
+    deprecate("-y", "-i", "libelf@0.8.10", "libelf@0.8.13")
+
+    [deprecator] = temporary_store.db.query("libelf@0.8.13")
+    assert not os.path.exists(tcl_module_filename(deprecated))
+    assert os.path.exists(tcl_module_filename(deprecator))

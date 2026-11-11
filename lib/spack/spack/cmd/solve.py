@@ -77,17 +77,17 @@ def _process_result(result, show, required_format, kwargs):
             if band != prev_band:
                 label = f"-- {band}"
                 dashes = "-" * max(0, divider_width - len(label) - 1)
-                color.cprint(f"  @*{{{label}}} @K{{{dashes}}}")
+                color.cprint(f"  @*{{{label}}} @#{{{dashes}}}")
                 prev_band = band
 
-            value = f"@K{{{criterion.value:>5}}}"
+            value = f"@#{{{criterion.value:>5}}}"
             grey_out = True
             if criterion.value > 0:
                 value = f"@*{{{criterion.value:>5}}}"
                 grey_out = False
 
             if grey_out:
-                lc = "@K"
+                lc = "@#"
             elif criterion.kind == OptimizationKind.CONCRETE:
                 lc = "@b"
             elif criterion.kind == OptimizationKind.BUILD:
@@ -95,7 +95,7 @@ def _process_result(result, show, required_format, kwargs):
             else:
                 lc = "@y"
 
-            color.cprint(f"  @K{{{i:8}}}  {value}  {lc}{{{criterion.name:<{maxlen}}}}")
+            color.cprint(f"  @#{{{i:8}}}  {value}  {lc}{{{criterion.name:<{maxlen}}}}")
         print()
         print()
         color.cprint("  @*{Legend:}")

@@ -658,7 +658,7 @@ class YamlFilesystemView(FilesystemView):
                 for abbrv, s in zip(abbreviated, specs):
                     prefix = ""
                     if self.verbose:
-                        prefix = colorize("@K{%s}" % s.dag_hash(7))
+                        prefix = colorize("@#{%s}" % s.dag_hash(7))
                     print(prefix + (format % (abbrv, self.get_projection_for_spec(s))))
         else:
             tty.warn(self._croot + "No packages found.")

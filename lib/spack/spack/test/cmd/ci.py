@@ -2049,7 +2049,8 @@ def fetch_versions_match(monkeypatch):
 
     def get_checksums_for_versions(url_by_version, package_name, **kwargs):
         pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
-        return {v: pkg_cls.versions[v]["sha256"] for v in url_by_version}
+        hashes = {v: pkg_cls.versions[v]["sha256"] for v in url_by_version}
+        return spack.stage.ChecksumResult(hashes=hashes, failures={})
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
 
@@ -2059,10 +2060,11 @@ def fetch_versions_invalid(monkeypatch):
     """Fake *invalid* checksums returned from downloaded tarballs."""
 
     def get_checksums_for_versions(url_by_version, package_name, **kwargs):
-        return {
+        hashes = {
             v: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
             for v in url_by_version
         }
+        return spack.stage.ChecksumResult(hashes=hashes, failures={})
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
 
@@ -2326,3 +2328,22 @@ def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_
 
         out = ci_cmd("verify-versions", commits[-2], commits[-3])
         assert "Skipping manual download package: diff-test" in out
+
+
+def test_ci_validate_standard_versions_fetch_failure(
+    capfd, mock_packages, fetch_url_exists, monkeypatch
+):
+    """Tests that a version whose archive cannot be fetched fails validation."""
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        failures = {v: "GET returned 503" for v in url_by_version}
+        return spack.stage.ChecksumResult(hashes={}, failures=failures)
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+    spec = spack.spec.Spec("diff-test")
+    pkg = mock_packages.get_pkg_class(spec.name)(spec)
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, [spack.version.Version("2.1.5")]) is False
+
+    out, err = capfd.readouterr()
+    assert "Could not fetch diff-test@2.1.5: GET returned 503" in err

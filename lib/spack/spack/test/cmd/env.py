@@ -740,6 +740,15 @@ def test_remove_before_concretize(mutable_config):
         assert not e.concretized_roots
 
 
+def test_remove_spec_with_toolchain(tmp_path: pathlib.Path):
+    """Manifest entries are toolchain-expanded like the spec on the command line before matching"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text("spack:\n  toolchains:\n    tc: '%c=gcc'\n  specs: [mpileaks %tc]\n")
+    with ev.Environment(tmp_path):
+        remove("mpileaks %tc")
+    assert "mpileaks" not in manifest.read_text()
+
+
 def test_remove_command():
     env("create", "test")
     assert "test" in env("list")
@@ -3677,8 +3686,8 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_modules_exist_after_env_install(installed_environment):
-    with installed_environment(
+def test_modules_exist_after_env_install(environment_from_manifest, install_mockery, mock_fetch):
+    environment_from_manifest(
         """
 spack:
   specs:
@@ -3694,7 +3703,9 @@ spack:
       roots:
         tcl: without_view
 """
-    ) as e:
+    )
+    with ev.read("test") as e:
+        install("--fake")
         specs = e.all_specs()
         for module_set in ("uses_view", "without_view"):
             modules = glob.glob(f"{e.path}/{module_set}/**/*/*")
@@ -5245,3 +5256,127 @@ def test_spack_env_outside_old_root_untouched(stale_activated_env, working_env, 
     env = _find_env_with(["add", "zlib"], indep)
     assert env is not None
     assert os.path.realpath(env.path) == os.path.realpath(indep)
+
+
+def _read_manifest(manifest: pathlib.Path) -> Dict[str, Any]:
+    return spack.util.spack_yaml.load(manifest.read_text())["spack"]
+
+
+@pytest.mark.parametrize(
+    "content,args,key,expected",
+    [
+        # A group listed before the spec to change
+        (
+            "spack: {specs: [{group: tools, specs: [libelf]}, mpileaks]}",
+            ["mpileaks@2.2"],
+            "specs",
+            [{"group": "tools", "specs": ["libelf"]}, "mpileaks@2.2"],
+        ),
+        # A default group entry written as a dictionary
+        (
+            "spack: {specs: [{specs: [mpileaks]}, libelf]}",
+            ["mpileaks@2.2"],
+            "specs",
+            [{"specs": ["mpileaks@2.2"]}, "libelf"],
+        ),
+        # A reference listed before the spec to change
+        (
+            "spack: {definitions: [{base: [libelf, libdwarf]}], specs: [$base, mpileaks]}",
+            ["mpileaks@2.2"],
+            "specs",
+            ["$base", "mpileaks@2.2"],
+        ),
+        # A toolchain in the spec to change
+        (
+            "spack: {toolchains: {tc: '%c=gcc'}, specs: [mpileaks %tc]}",
+            ["mpileaks@2.2"],
+            "specs",
+            ["mpileaks@2.2 %tc"],
+        ),
+        # A definition entry written in a non-canonical form
+        (
+            "spack: {definitions: [{mylist: ['mpileaks +shared']}], specs: [$mylist]}",
+            ["-l", "mylist", "mpileaks@2.2"],
+            "definitions",
+            [{"mylist": ["mpileaks@2.2+shared"]}],
+        ),
+    ],
+)
+def test_change_edits_the_written_entry(tmp_path: pathlib.Path, content, args, key, expected):
+    """Tests that 'spack change' edits the entry written in the manifest, and leaves the other
+    entries as they are.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(content)
+    with ev.Environment(tmp_path):
+        change(*args)
+    assert _read_manifest(manifest)[key] == expected
+
+
+@pytest.mark.parametrize(
+    "content,args",
+    [
+        # The spec comes only from a reference
+        ("spack: {definitions: [{base: [mpileaks, libelf]}], specs: [$base]}", ["mpileaks@2.2"]),
+        # The spec is both written and pulled in through a reference
+        (
+            "spack: {definitions: [{base: [mpileaks]}], specs: [$base, mpileaks@2.1]}",
+            ["-a", "mpileaks@2.2"],
+        ),
+        # The toolchain sets the attribute to be changed
+        (
+            "spack: {toolchains: {tc: 'cflags=-O3 %c=gcc'}, specs: [mpileaks %tc]}",
+            ["mpileaks cflags=-O2"],
+        ),
+    ],
+)
+def test_change_refuses_entries_it_cannot_edit(tmp_path: pathlib.Path, content, args):
+    """Tests that 'spack change' fails, and leaves the manifest as it is, when the result would not
+    be the requested change.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(content)
+    with ev.Environment(tmp_path):
+        with pytest.raises(ValueError, match="Cannot change abstract specs"):
+            change(*args)
+    assert manifest.read_text() == content
+
+
+@pytest.mark.parametrize(
+    "content,expected",
+    [
+        (
+            "spack: {specs: [{group: tools, specs: [libelf]}, mpileaks]}",
+            [{"group": "tools", "specs": ["libelf"]}],
+        ),
+        (
+            "spack: {definitions: [{base: [libelf, libdwarf]}], specs: [$base, mpileaks]}",
+            ["$base"],
+        ),
+    ],
+)
+def test_remove_next_to_groups_and_references(tmp_path: pathlib.Path, content, expected):
+    """Tests that 'spack remove' removes the written entry when the default list also holds a
+    group or a reference.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(content)
+    with ev.Environment(tmp_path):
+        remove("mpileaks")
+    assert _read_manifest(manifest)["specs"] == expected
+
+
+def test_remove_reports_only_the_specs_it_removed(tmp_path: pathlib.Path):
+    """Tests that 'spack remove' reports as removed only the specs written in the manifest, and
+    warns about the others.
+    """
+    (tmp_path / "spack.yaml").write_text(
+        "spack: {definitions: [{base: [libelf]}], specs: [$base, mpileaks]}"
+    )
+    with ev.Environment(tmp_path):
+        with pytest.warns(UserWarning, match="'libelf' stays in 'specs'"):
+            output = remove("libelf")
+        assert "has been removed" not in output
+
+        output = remove("mpileaks")
+        assert "mpileaks has been removed" in output

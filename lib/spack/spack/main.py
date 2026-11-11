@@ -1188,6 +1188,19 @@ def main(argv=None):
         tty.error("Keyboard interrupt.")
         return signal.SIGINT.value
 
+    except spack.error.TerminatedBySignal as e:
+        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+            traceback.print_exc()
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                stream.flush()
+            except Exception:
+                pass
+        # Exit by the same signal, so that the parent process sees why spack stopped
+        signal.signal(e.signum, signal.SIG_DFL)
+        os.kill(os.getpid(), e.signum)
+        return 128 + e.signum
+
     except SystemExit as e:
         if _show_backtrace(argv):
             traceback.print_exc()

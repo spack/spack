@@ -307,7 +307,7 @@ def _format_pruning_message(spec: spack.spec.Spec, prune: bool, reasons: List[st
         return f"  {status}{spec.cformat(spec_fmt)} ({reason_msg})"
 
     msg = f"{spec.format(spec_fmt)} ({reason_msg})"
-    return colorize(f"  @K -   {cescape(msg)}@.")
+    return colorize(f"  @# -   {cescape(msg)}@.")
 
 
 def prune_pipeline(

@@ -38,6 +38,6 @@ def remove(parser, args):
             env.clear()
         else:
             for spec in spack.cmd.parse_specs(args.specs):
-                env.remove(spec, args.list_name, force=args.force)
-                tty.msg(f"{spec} has been removed from {env.manifest}")
+                for removed in env.remove(spec, args.list_name, force=args.force):
+                    tty.msg(f"{removed} has been removed from {env.manifest}")
         env.write()

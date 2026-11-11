@@ -24,6 +24,7 @@ import spack.error
 import spack.main
 import spack.mirrors.mirror
 import spack.spec
+import spack.store
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.active_environment import active_environment
@@ -35,6 +36,7 @@ from spack.url_buildcache import (
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     check_mirror_for_layout,
+    get_entries_from_cache,
     get_url_buildcache_class,
 )
 from spack.util.filesystem import copy_tree, find, getuid
@@ -499,9 +501,11 @@ def test_push_and_install_with_mirror_marked_unsigned_does_not_require_extra_fla
     ).install()
 
 
-def test_skip_no_redistribute(mock_packages, config):
+def test_skip_no_redistribute(mock_packages, config, capfd):
     specs = list(spack.concretize.concretize_one("no-redistribute-dependent").traverse())
     filtered = spack.cmd.buildcache._skip_no_redistribute_for_public(specs)
+    # the user must be told without --debug that specs were skipped
+    assert "cannot be redistributed" in capfd.readouterr().err
     assert not any(s.name == "no-redistribute" for s in filtered)
     assert any(s.name == "no-redistribute-dependent" for s in filtered)
 
@@ -1162,6 +1166,29 @@ def test_buildcache_create_view_empty(
     assert not hashes_in_view
 
 
+def test_get_entries_from_cache_lists_root_and_view_indices(
+    tmp_path, mutable_config, mutable_database, mutable_mock_env_path
+):
+    """Listing INDEX manifests must find both the root index and view indices"""
+    mirror_directory = str(tmp_path)
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+
+    spec = mutable_database.query_local("mpileaks")[0]
+    buildcache("push", "--update-index", "my-mirror", spec.format("{/hash}"))
+    _, env_args = args_for_env_by_path(spec)
+    buildcache("update-index", "--name", "test_view", "my-mirror", *env_args)
+
+    mirror_url = url_util.path_to_file_url(mirror_directory)
+    index_manifests, _ = get_entries_from_cache(mirror_url, BuildcacheComponent.INDEX)
+
+    found = {url_util.local_file_path(url) for url in index_manifests}
+    expected = {
+        url_util.local_file_path(URLBuildcacheEntry.get_index_url(mirror_url)),
+        url_util.local_file_path(URLBuildcacheEntry.get_index_url(mirror_url, "test_view")),
+    }
+    assert found == expected
+
+
 @pytest.mark.parametrize(
     "source_args", (args_for_active_env, args_for_env_by_path, args_for_env_by_name)
 )
@@ -1583,3 +1610,22 @@ def test_buildcache_push_group_requires_active_env(tmp_path: pathlib.Path):
 
     with pytest.raises(spack.main.SpackCommandError):
         buildcache("push", "--unsigned", "--group", "default", str(mirror_dir), fail_on_error=True)
+
+
+def test_buildcache_install_writes_module_files(
+    temporary_mirror, install_mockery, tcl_module_filename
+):
+    """Tests that buildcache install writes the module file of each spec it installs."""
+    install("--fake", "--no-cache", "dependent-install")
+    buildcache("push", "--unsigned", temporary_mirror, "dependent-install")
+    buildcache("update-index", temporary_mirror)
+    installed = spack.store.STORE.db.query()
+    uninstall("-y", "--all")
+    assert not any(os.path.exists(tcl_module_filename(s)) for s in installed)
+
+    buildcache("install", "--unsigned", "dependent-install")
+
+    assert {s.dag_hash() for s in spack.store.STORE.db.query()} == {
+        s.dag_hash() for s in installed
+    }
+    assert all(os.path.exists(tcl_module_filename(s)) for s in installed)

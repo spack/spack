@@ -73,28 +73,6 @@ class SpecList:
         self._constraints = None
         self._specs = None
 
-    def remove(self, spec):
-        # Get spec to remove from list
-        remove = [
-            s
-            for s in self.yaml_list
-            if (isinstance(s, str) and not s.startswith("$")) and Spec(s) == Spec(spec)
-        ]
-        if not remove:
-            msg = f"Cannot remove {spec} from SpecList {self.name}.\n"
-            msg += f"Either {spec} is not in {self.name} or {spec} is "
-            msg += "expanded from a matrix and cannot be removed directly."
-            raise SpecListError(msg)
-
-        # Remove may contain more than one string representation of the same spec
-        for item in remove:
-            self.yaml_list.remove(item)
-            self.specs_as_yaml_list.remove(item)
-
-        # invalidate cache variables when we change the list
-        self._constraints = None
-        self._specs = None
-
     def extend(self, other: "SpecList", copy_reference=True) -> None:
         self.yaml_list.extend(other.yaml_list)
         self.specs_as_yaml_list.extend(other.specs_as_yaml_list)
@@ -203,6 +181,13 @@ class SpecListParser:
     def parse_user_specs(self, *, name, yaml_list) -> SpecList:
         definition = Definition(name=name, yaml_list=yaml_list, when=None)
         return self._speclist_from_definitions(name, [definition])
+
+    def expand(self, text: str) -> Spec:
+        """Parses a single spec string, and expands the toolchains used to build the spec lists"""
+        spec = Spec(text)
+        if self._toolchains:
+            expand_toolchains(spec, self._toolchains)
+        return spec
 
     def _parse_yaml_definition(self, yaml_entry) -> Definition:
         when_string = yaml_entry.get("when")
