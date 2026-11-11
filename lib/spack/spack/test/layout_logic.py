@@ -338,6 +338,7 @@ def test_config_path_migration_relative_paths_in_known_keys(tmp_path):
     assert inc[2] == str(old / "abs-include.yaml")
 
 
+@pytest.mark.requires_symlinks
 def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     """Only configuration files are copied from ~/.spack; data the user keeps there (install
     trees, repos, mirrors, caches, and anything uncopyable) stays where it is and is
@@ -776,6 +777,7 @@ def test_env_migration_rollback_removes_read_only_copies(tmp_path, nested):
     assert [p.name for p in new_envs.iterdir() if p.name != ".lock"] == []
 
 
+@pytest.mark.requires_symlinks
 def test_env_migration_rewrites_paths_spelled_through_a_symlinked_prefix(tmp_path):
     """``~/spack -> /clone``: an include written as ``~/spack/var/.../own/jobs.yaml`` is
     inside the env being moved and must be rewritten; the same spelling into a sibling env
@@ -1190,6 +1192,7 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
 
 
 @nested
+@pytest.mark.requires_symlinks
 def test_env_migration_drops_old_layout_view_links(tmp_path, nested):
     """Views are not copied. Spack < 1.3 built a view rooted at ``<env>/<name>`` in the
     container ``<env>/._<name>/<hash>`` with an absolute symlink ``<env>/<name>`` to it. Link
@@ -1386,6 +1389,7 @@ def test_prefix_migration_prompt_needs_controlling_terminal(monkeypatch):
     assert "No response received" in terminal.getvalue()
 
 
+@pytest.mark.requires_symlinks
 def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
     """A resource whose root is a symlink (licenses -> site store, an env -> a checkout) is
     migrated by re-creating the link: a copy would freeze the data. A second migration finds
@@ -1428,6 +1432,7 @@ def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
 
 
 @nested
+@pytest.mark.requires_symlinks
 def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path, nested):
     """``prod -> myenv`` among the environments is an alias for a sibling that is migrated
     too; the alias is re-created relative so it reads the migrated copy. A link to somewhere
@@ -1463,6 +1468,7 @@ def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path, nested):
     assert not (new_envs / "junk").is_symlink() and not (new_envs / "junk2").is_symlink()
 
 
+@pytest.mark.requires_symlinks
 def test_nested_env_discovery(tmp_path):
     """Only what applies to nested environments alone: a subtree with no manifest is not
     environment data, a link to an ancestor of an environment is an alias and follows it,
@@ -1491,6 +1497,7 @@ def test_nested_env_discovery(tmp_path):
     assert {p.name for p in (new_envs / "team").iterdir()} == {"spack.yaml"}
 
 
+@pytest.mark.requires_symlinks
 def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkeypatch, capsys):
     """``~/.spack -> ~/dotfiles/spack``: the first run links ``~/.config/spack`` to the same
     place, says so, and lists any spelled-out Spack 1.2 defaults in the linked files without
@@ -1531,6 +1538,7 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
     assert new.is_symlink()
 
 
+@pytest.mark.requires_symlinks
 def test_symlinked_dot_spack_leaves_populated_config_home_alone(tmp_path, monkeypatch, capsys):
     """``~/.spack -> ~/dotfiles/spack`` while ``~/.config/spack`` already holds files: the
     user has configuration in the new place, so nothing is linked and nothing is fatal, just
@@ -1554,6 +1562,7 @@ def test_symlinked_dot_spack_leaves_populated_config_home_alone(tmp_path, monkey
     assert sorted(p.name for p in new.iterdir()) == ["packages.yaml"]
 
 
+@pytest.mark.requires_symlinks
 def test_license_migration_recognizes_its_own_repointed_links(tmp_path):
     """An absolute symlink into the license dir is repointed into the new dir on copy; a
     later run must see that as the same link, not as a conflict, while a link to a
@@ -1575,6 +1584,7 @@ def test_license_migration_recognizes_its_own_repointed_links(tmp_path):
     assert not spack.migrate._migrate_licenses(str(src), str(dst))
 
 
+@pytest.mark.requires_symlinks
 def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path, capsys):
     """Existing destination entries are compared byte-for-byte and like-for-like (a file never
     matches a symlink), and a mismatch says what differs; links the user already had in the

@@ -225,6 +225,7 @@ def test_migrate_cleanup_old_user_scope_reference(mock_spack_instance, monkeypat
     assert old_user.exists()
 
 
+@pytest.mark.requires_symlinks
 def test_migrate_cleanup_old_refuses_symlink(mock_spack_instance, monkeypatch):
     home_dir, base_prefix = mock_spack_instance
     target = Path(home_dir) / "real-dot-spack"

@@ -2708,6 +2708,22 @@ def pytest_runtest_setup(item):
     if only_windows_marker and sys.platform != "win32":
         pytest.skip(*only_windows_marker.args)
 
+    if item.get_closest_marker(name="requires_symlinks") and not _can_symlink():
+        pytest.skip("this process cannot create symlinks")
+
+
+@spack.util.lang.memoized
+def _can_symlink() -> bool:
+    """Whether ``os.symlink`` works here: always on POSIX, on Windows only with Developer
+    Mode or elevation. Checked once per session with a real link, including a dangling one,
+    which is what a migration test may need to make."""
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            os.symlink("nowhere", os.path.join(tmp, "link"))
+            return os.path.islink(os.path.join(tmp, "link"))
+        except (OSError, NotImplementedError):
+            return False
+
 
 @pytest.fixture(autouse=True)
 def disable_parallelism(monkeypatch, request):
