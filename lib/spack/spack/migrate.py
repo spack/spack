@@ -1324,6 +1324,44 @@ def _migrate_gpg(
     return True
 
 
+def _find_environments(root: str) -> List[str]:
+    """Paths, relative to ``root``, of the environments to migrate from it.
+
+    Managed environments are leaves (``team/proj``), found by descending directories until one
+    holds a ``spack.yaml``; a subtree without one is not environment data. Symlinks are not
+    descended: a link is an alias and is migrated as a link, but only if it points at an
+    environment or at an ancestor of one under ``root`` (``prod -> myenv``, ``all -> team``),
+    so links are collected after the directories they may alias.
+    """
+    envs: List[str] = []
+    links: List[str] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        rel = os.path.relpath(dirpath, root)
+        if rel != os.curdir and "spack.yaml" in filenames:
+            envs.append(rel)
+            dirnames[:] = []
+            continue
+        for name in list(dirnames):
+            if os.path.islink(os.path.join(dirpath, name)):
+                links.append(os.path.normpath(os.path.join(rel, name)))
+                dirnames.remove(name)
+
+    root_real = os.path.realpath(root)
+    env_dirs = set()  # environments and their ancestors under root
+    for env in envs:
+        path = os.path.realpath(os.path.join(root, env))
+        while path.startswith(root_real + os.sep):
+            env_dirs.add(path)
+            path = os.path.dirname(path)
+    for link in links:
+        target = os.path.realpath(os.path.join(root, link))
+        if target in env_dirs or os.path.isfile(os.path.join(target, "spack.yaml")):
+            envs.append(link)
+        else:
+            tty.debug(f"Not migrating {link}: not an environment or a link to one")
+    return sorted(envs)
+
+
 def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
     """Copy environments under one lock, removing partial results on failure.
 
@@ -1465,12 +1503,22 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
         # Check occupied destinations before copying any new environments. This
         # lets migrate_with_staging reject conflicts without leaving a partial
         # migration behind.
-        source_entries = {
-            entry for entry in os.listdir(src_dir) if os.path.isdir(os.path.join(src_dir, entry))
-        }
-        destination_entries = set(os.listdir(dst_dir))
-        intersection = sorted(source_entries & destination_entries)
-        remainder = sorted(source_entries - destination_entries)
+        entries = _find_environments(src_dir)
+        occupied = {e for e in entries if os.path.lexists(os.path.join(dst_dir, e))}
+        remainder = [e for e in entries if e not in occupied]
+
+        # An environment nested under another would be invisible to Spack, which treats
+        # environments as leaves; refuse rather than write into someone else's environment.
+        for entry in remainder:
+            ancestor = os.path.dirname(entry)
+            while ancestor:
+                if os.path.exists(os.path.join(dst_dir, ancestor, "spack.yaml")):
+                    tty.warn(
+                        f"Cannot migrate environment {entry}: {os.path.join(dst_dir, ancestor)}"
+                        " is already an environment"
+                    )
+                    return False, differing
+                ancestor = os.path.dirname(ancestor)
 
         # Check if any environments in remainder have installs inside them
         # (indicated by .spack-db/index.json - these are non-relocatable)
@@ -1507,7 +1555,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
                             return False, differing
 
         copied = []
-        for entry in intersection + remainder:
+        for entry in entries:
             src_path = os.path.join(src_dir, entry)
             dst_path = os.path.join(dst_dir, entry)
             verify_with_marker = _make_marker_verifier(marker_name, src_path, src_dir)
@@ -1517,15 +1565,19 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
                 new_path=dst_path,
                 prepare_staging_callback=prepare_env_staging,
                 lock_name=None,  # Parent holds the lock
-                staging_name=f".spack-env-{entry}-staging",
+                staging_name=f".spack-env-{entry.replace(os.sep, '-')}-staging",
                 description=f"environment {entry}",
                 verify_destination_callback=verify_with_marker,
                 migrated_root=src_dir,
             )
             if success:
-                if entry not in destination_entries:
+                if entry not in occupied:
                     copied.append(entry)
-                elif previously_migrated and not _env_manifests_match(src_path, dst_path):
+                elif (
+                    previously_migrated
+                    and not os.path.islink(src_path)
+                    and not _env_manifests_match(src_path, dst_path)
+                ):
                     # The marker tells us this copy came from this prefix, but not which
                     # side has been edited since. Keep the copy; the user decides.
                     tty.warn(
@@ -1537,7 +1589,15 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
                     differing.append(entry)
             else:
                 for done in copied:
-                    _remove_tree(os.path.join(dst_dir, done), "partially migrated environment")
+                    done_path = os.path.join(dst_dir, done)
+                    if os.path.islink(done_path):
+                        os.unlink(done_path)
+                    else:
+                        _remove_tree(done_path, "partially migrated environment")
+                    parent = os.path.dirname(done)
+                    while parent and not os.listdir(os.path.join(dst_dir, parent)):
+                        os.rmdir(os.path.join(dst_dir, parent))
+                        parent = os.path.dirname(parent)
                 return False, differing
 
         # All environments copied successfully - old environments remain in place
