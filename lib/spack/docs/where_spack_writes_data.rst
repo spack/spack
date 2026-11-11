@@ -78,7 +78,9 @@ A resource whose legacy directory is itself a symbolic link (``$spack/etc/spack/
 The keys directory (``$spack/var/spack/gpg``, public keys imported by ``spack gpg init``) is copied first, then the keyring (``$spack/opt/spack/gpg``).
 Both must succeed, or both stay in the legacy locations.
 A destination that already exists is never merged with: if another Spack instance already put a keyring at ``$data_home/gpg``, this instance keeps its own in ``$spack``.
+If the keys directory was copied but the keyring could not be, what has been published is a directory of public keys, not a keyring; both settings keep pointing at ``$spack``, and a later ``spack migrate use-new-layout`` recognizes the copied keys directory as its own and only has to copy the keyring.
 GnuPG's transient files (agent sockets, ``*.lock``, ``random_seed``, keyring backups ``*~``) are not copied.
+Symbolic links are copied as links; a relative link that leaves the directory is made absolute, and an absolute link into the legacy directory is pointed at the new one, so that a keyring assembled from links keeps working.
 
 **Licenses.**
 The entries of ``$spack/etc/spack/licenses`` are copied one by one, in alphabetical order, into ``$data_home/licenses``, which may already hold licenses from another instance.
