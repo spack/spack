@@ -1118,6 +1118,9 @@ def _exit_by_signal(signum: int) -> int:
             stream.flush()
         except Exception:
             pass
+    if sys.platform == "win32":
+        # There are no signals to exit by: os.kill() would terminate the process with this code
+        return signum
     signal.signal(signum, signal.SIG_DFL)
     os.kill(os.getpid(), signum)
     return 128 + signum
