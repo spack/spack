@@ -96,6 +96,7 @@ class ChildInfo:
         "state_r_conn",
         "control_w_conn",
         "log_path",
+        "receives_interrupt",
         "prefix_lock",
         "state_buffer",
         "exit_code",
@@ -109,6 +110,7 @@ class ChildInfo:
         state_r_conn: IpcChannel,
         control_w_conn: IpcChannel,
         log_path: str,
+        receives_interrupt: bool,
     ) -> None:
         self.proc = proc
         self.spec = spec
@@ -116,6 +118,8 @@ class ChildInfo:
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
         self.log_path = log_path
+        #: Whether Ctrl-C in the terminal reaches the build too, so that it stops by itself
+        self.receives_interrupt = receives_interrupt
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
         # Buffer for partially received state data from this child. Kept as raw bytes and split on
         # b"\n": the newline byte cannot occur inside a multi-byte UTF-8 sequence, so framing is
@@ -469,8 +473,10 @@ def worker_function(
         # Reset SIGTSTP to default in case the parent had a custom handler.
         signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
-        # Detach from the event loop's wakeup fd, which fork inherits
+        # Detach from the event loop's wakeup fd and its Ctrl-C handler, which fork inherits
         signal.set_wakeup_fd(-1)
+        if signal.getsignal(signal.SIGINT) is not signal.SIG_IGN:
+            signal.signal(signal.SIGINT, signal.default_int_handler)
 
         # Under forkserver/spawn Python drops CLOEXEC. We don't want to expose these fds to the
         # build. Notably the state fd should be closed, since its EOF signals to the parent process
@@ -870,7 +876,14 @@ def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
     channels.close_child_ends()
 
     return ChildInfo(
-        proc, spec, channels.output_r, channels.state_r, channels.control_w, request.log_path
+        proc,
+        spec,
+        channels.output_r,
+        channels.state_r,
+        channels.control_w,
+        request.log_path,
+        # Windows has no process groups to shield the build from Ctrl-C in the console
+        receives_interrupt=sys.platform == "win32",
     )
 
 
