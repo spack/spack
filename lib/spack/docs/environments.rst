@@ -266,7 +266,7 @@ An environment that this instance copied in an earlier run is recognized by its 
 If a copy fails part-way, the environments copied in the same run are removed again, so the destination holds either all of the migratable environments or none of them.
 
 After the migration, Spack treats the old location as an alias for the new one: ``SPACK_ENV``, ``spack -e`` or ``spack -D`` naming ``$SPACK_ROOT/var/spack/environments/<name>`` operate on the migrated copy if there is one, so that a shell that activated an environment before the migration keeps working on the live copy.
-The exception is ``spack env deactivate``, which undoes the activation of the old copy.
+The exceptions are ``spack env deactivate`` and ``spack env activate`` (which deactivates first), which undo the activation of the old copy.
 An environment that was not migrated is used where it is.
 
 Environment-Aware Commands
