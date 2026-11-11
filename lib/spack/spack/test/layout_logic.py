@@ -390,9 +390,9 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     outside_dir = pathlib.Path(home_dir) / "other" / "spack"
     outside_dir.mkdir(parents=True)
     (outside_dir / "mirrors.yaml").write_text("mirrors: {}\n", encoding="utf-8")
-    (old / "mirrors.yaml").symlink_to("../other/spack/mirrors.yaml")
+    (old / "mirrors.yaml").symlink_to(os.path.join("..", "other", "spack", "mirrors.yaml"))
     # a directory link into dotfiles, relative: must be made absolute to still resolve
-    (old / "shared").symlink_to("../other/spack")
+    (old / "shared").symlink_to(os.path.join("..", "other", "spack"))
     # an absolute link into ~/.spack itself: still valid, left alone
     (old / "alias.yaml").symlink_to(old / "config.yaml")
 

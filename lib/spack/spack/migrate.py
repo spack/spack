@@ -408,7 +408,8 @@ def _copy_symlink(old_path: str, staging_path: str) -> None:
     """Re-create the symlink at ``old_path`` as ``staging_path`` with the same target."""
     try:
         os.makedirs(os.path.dirname(staging_path), exist_ok=True)
-        os.symlink(os.readlink(old_path), staging_path)
+        # On Windows a link's type must be given: the target may not exist in staging yet
+        os.symlink(os.readlink(old_path), staging_path, target_is_directory=os.path.isdir(old_path))
     except OSError as e:
         tty.warn(f"Not copying symlink {old_path} to the new configuration location: {e}")
 
@@ -788,7 +789,7 @@ def _migrate_symlinked_root(
             return DestinationCheck.FAIL
     try:
         filesystem.mkdirp(os.path.dirname(new_path))
-        os.symlink(target, new_path)
+        os.symlink(target, new_path, target_is_directory=True)
     except OSError as e:
         tty.warn(f"Cannot migrate {description}: could not link {new_path} -> {target}: {e}")
         return DestinationCheck.FAIL
