@@ -125,7 +125,7 @@ def _expand_matrix_constraints(matrix_config) -> List[Tuple[List[Spec], bool]]:
     # recurse so we can handle nested matrices
     expanded_rows = []
     for row in matrix_config["matrix"]:
-        new_row = []
+        new_row: List[Tuple[Optional[str], bool]] = []
         for r in row:
             if isinstance(r, dict) and "matrix" in r:
                 # Flatten the nested matrix into a single row of constraints

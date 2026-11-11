@@ -844,7 +844,7 @@ spack:
         assert "FOOBAR=mpileaks" in env("activate", "--sh", "test")
 
     extra = "  - spec: callpath\n    install: false\n"
-    manifest_path.write_text(manifest.format(extra=extra, view=view_dir))
+    manifest_path.write_text(manifest.format(extra=extra, view=view_dir), encoding="utf-8")
     with ev.Environment(manifest_path.parent) as test:
         test.concretize()
         test.write(regenerate=True)
