@@ -26,7 +26,7 @@ config:
     # length as possible
     # if padded_length is an integer, Spack will pad to that many characters,
     # assuming it is higher than the length of the install_tree root.
-    # padded_length: 128
+    # padded_length: 256
 
 
   # Locations where templates should be found
