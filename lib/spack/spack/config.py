@@ -2336,8 +2336,8 @@ def get_user():
 NOMATCH = object()
 
 
-_frozen_home = {}
-_resolving_location_vars = set()
+_frozen_home: Dict[str, str] = {}
+_resolving_location_vars: Set[str] = set()
 
 
 def freeze(home_vars):
