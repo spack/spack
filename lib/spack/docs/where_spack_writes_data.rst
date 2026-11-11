@@ -71,7 +71,7 @@ If ``SPACK_GNUPGHOME`` is set, the GPG keyring and keys directory are not copied
 How each resource is copied
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Resources (except for licenses) are copied to a staging directory next to the destination and renamed into place, so another Spack instance never sees a half-copied resource
+Resources (except for licenses) are copied to a staging directory next to the destination and renamed into place, so another Spack instance never sees a half-copied resource.
 A resource whose legacy directory is itself a symbolic link (``$spack/etc/spack/licenses -> /site/licenses``) is migrated by re-creating the link at the new location; its content is not copied.
 
 **GPG data.**

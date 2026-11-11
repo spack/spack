@@ -243,7 +243,7 @@ When such an instance is updated, the first command :ref:`asks <where_spack_writ
 The copies differ from the originals in a few ways:
 
 * Views are not copied.
-  Activate each migrated environment and run ``spack env view regenerate`` to recreate them, or any concretization or installation command will recreate them
+  Activate each migrated environment and run ``spack env view regenerate`` to recreate them, or any concretization or installation command will recreate them.
   A shell that activated an environment before the migration still has the old view on its ``PATH``; run ``spack env deactivate`` and activate the environment again.
 * Absolute paths in ``spack.yaml`` and in included configuration files that point inside the environment directory are rewritten to the new directory.
   A file that needed rewriting is re-serialized: its content is unchanged, but any YAML anchors, aliases and merge keys are expanded.
