@@ -4,7 +4,6 @@
 
 """Tests for layout detection and config variable resolution."""
 
-import contextlib
 import io
 import os
 import pathlib
@@ -1285,7 +1284,7 @@ def test_automigrate_yes_requires_a_true_value(monkeypatch, value, approved):
     """``SPACK_AUTOMIGRATE_YES=0`` must not approve."""
     monkeypatch.setenv("SPACK_AUTOMIGRATE_YES", value)
     monkeypatch.setattr(
-        spack.util.lang, "open_controlling_terminal", lambda: contextlib.nullcontext(None)
+        spack.util.lang, "open_controlling_terminal", lambda: spack.util.lang.nullcontext(None)
     )
     resources = {"environments": True, "gpg_keys": False, "licenses": False, "installs": False}
     assert spack.migrate._prompt_for_prefix_migration(resources, timeout=1) is approved
@@ -1298,7 +1297,7 @@ def test_prefix_migration_prompt_needs_controlling_terminal(monkeypatch):
     resources = {"environments": True, "gpg_keys": False, "licenses": False, "installs": False}
 
     monkeypatch.setattr(
-        spack.util.lang, "open_controlling_terminal", lambda: contextlib.nullcontext(None)
+        spack.util.lang, "open_controlling_terminal", lambda: spack.util.lang.nullcontext(None)
     )
     assert spack.migrate._prompt_for_prefix_migration(resources, timeout=1) is False
 
@@ -1308,7 +1307,7 @@ def test_prefix_migration_prompt_needs_controlling_terminal(monkeypatch):
 
     terminal = io.StringIO()
     monkeypatch.setattr(
-        spack.util.lang, "open_controlling_terminal", lambda: contextlib.nullcontext(terminal)
+        spack.util.lang, "open_controlling_terminal", lambda: spack.util.lang.nullcontext(terminal)
     )
     monkeypatch.setattr(spack.util.lang, "readline_with_timeout", lambda *a, **kw: "y")
     assert spack.migrate._prompt_for_prefix_migration(resources, timeout=1) is True

@@ -286,8 +286,9 @@ def test_migrate_use_new_layout_holds_the_migration_lock(mock_spack_instance, mo
                 "    print('held')\n",
                 lock_path,
             ],
-            capture_output=True,
-            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
             check=True,
         )
         held_during_migration.append(probe.stdout.strip())
