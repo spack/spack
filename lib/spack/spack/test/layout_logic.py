@@ -284,7 +284,7 @@ def test_config_path_migration_relative_paths_in_known_keys(tmp_path):
                 "repos": {
                     "plain": "myrepo/spack_repo/plain",
                     "dest": {"git": "https://example.com/r.git", "destination": "clones/dest"},
-                    "already_abs": "/elsewhere/spack_repo/abs",
+                    "already_abs": str(tmp_path / "elsewhere" / "spack_repo" / "abs"),
                     "variable": "$spack/var/spack/repos/spack_repo/builtin_mock",
                 },
                 "mirrors": {
@@ -316,7 +316,7 @@ def test_config_path_migration_relative_paths_in_known_keys(tmp_path):
     repos = migrated["repos"]
     assert repos["plain"] == str(old / "myrepo" / "spack_repo" / "plain")
     assert repos["dest"]["destination"] == str(old / "clones" / "dest")
-    assert repos["already_abs"] == "/elsewhere/spack_repo/abs"
+    assert repos["already_abs"] == str(tmp_path / "elsewhere" / "spack_repo" / "abs")
     assert repos["variable"] == "$spack/var/spack/repos/spack_repo/builtin_mock"
 
     mirrors = migrated["mirrors"]
