@@ -404,9 +404,7 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     assert result["user_config"] is True
     new = pathlib.Path(spack.migrate.migration_config_home())
     regular = sorted(
-        p.relative_to(new).as_posix()
-        for p in new.rglob("*")
-        if p.is_file() and not p.is_symlink()
+        p.relative_to(new).as_posix() for p in new.rglob("*") if p.is_file() and not p.is_symlink()
     )
     assert regular == ["config.yaml", "linux/packages.yaml", "repos.yaml", "v2/x.yaml"]
     assert not list(new.parent.glob(".spack-*"))  # lock and staging are gone
