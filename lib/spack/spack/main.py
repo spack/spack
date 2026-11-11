@@ -1205,7 +1205,7 @@ def main(argv=None):
         return _exit_by_signal(signal.SIGINT)
 
     except spack.error.TerminatedBySignal as e:
-        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if _show_backtrace(argv):
             traceback.print_exc()
         return _exit_by_signal(e.signum)
 
