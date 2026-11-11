@@ -99,18 +99,19 @@ Migration of ``~/.spack``
 Only the configuration files (``*.yaml``, ``*.yml``, and symbolic links) under ``~/.spack`` are copied to ``~/.config/spack``, keeping their relative layout (``~/.spack/linux/packages.yaml`` becomes ``~/.config/spack/linux/packages.yaml``).
 A directory that holds an environment (``spack.yaml`` or ``spack.lock``) or a package repository (``repo.yaml``) is data rather than configuration and is not descended into.
 A file that cannot be parsed or read is skipped with a warning.
-Everything else in ``~/.spack`` is either regenerable (caches, the bootstrap store, package repository clones) or data that the configuration refers to by path, and keeps working where it is.
+Everything else in ``~/.spack`` is not configuration and is either handled separately or is regenerable in the new location.
 
 Two kinds of values are rewritten in the copies, so that the configuration means the same thing in its new location:
 
 * An absolute path that spells out the Spack 1.2 default for its own setting (``bootstrap:root: ~/.spack/bootstrap``, ``config:misc_cache: ~/.spack/cache``, ``config:test_stage: ~/.spack/test``, ``~/.spack/stage`` in ``config:build_stage``, as written by ``spack bootstrap root --set`` or ``spack config add``) is replaced by the new default (``$state_home/bootstrap``, ``$cache_home/$spack_instance_id/cache``, ...).
 * A relative path in ``repos``, ``mirrors``, ``include``, ``config:environments_root`` or ``config:license_dir`` is made absolute against ``~/.spack``, where the data still is, since relative paths resolve against the directory of the file they are written in.
 
+To remove the dependence of those files on ``~/.spack``, manually move the resource and modify the relevant configuration file.
 Any other string is left as it is: an absolute path into ``~/.spack`` under some other setting is a choice that still names what it did.
 
 The copy is skipped when the user scope has been pointed elsewhere with :envvar:`SPACK_CONFIG_HOME` or ``SPACK_USER_CONFIG_PATH``, or disabled with :envvar:`SPACK_DISABLE_LOCAL_CONFIG`; it goes to ``$XDG_CONFIG_HOME/spack`` if that variable is set.
-A ``~/.config/spack`` that already exists and is not empty is left alone: nothing is merged into it.
-If ``~/.spack`` is itself a symbolic link (to a dotfiles checkout, say), ``~/.config/spack`` is created as a link to the same target and nothing is rewritten; Spack instead prints the values that still spell out 1.2 defaults, once, for you to update.
+A ``~/.config/spack`` (or ``$XDG_CONFIG_HOME/spack``) that already exists and is not empty is left alone: nothing is merged into it.
+If ``~/.spack`` is itself a symbolic link (to a dotfiles checkout, say), ``~/.config/spack`` is created as a link to the same target and nothing is rewritten; Spack instead prints the values that still spell out 1.2 defaults, once, for you to update manually if desired.
 
 **Package repositories.**
 Each clone under ``~/.spack/package_repos`` is copied to the same name under ``$data_home/package_repos``, unless a clone of that name is already there (the name is a hash of the remote URL, so it is the same repository).
@@ -145,8 +146,10 @@ Both actions hold the migration lock, so a Spack command started meanwhile waits
   Uninstalling the packages does not lift this restriction: the configured install tree must be moved out of ``~/.spack`` first, or the directory removed by hand.
   It also refuses to act on a ``~/.spack`` that is a symbolic link.
 
-  Every other reference is only reported: any configuration value that resolves to a path under ``~/.spack`` (a mirror, a repository, a license directory, ...), ``config:locations`` and ``SPACK_GNUPGHOME``.
-  The report is the safety net and you make the call; if unsure, keep the directory.
+.. warning::
+
+  If you are unsure of whether your Spack instance is using the things left in ``~/.spack``, do not tell the ``spack migrate cleanup-old`` command to proceed.
+  The report of which config values point into ``~/.spack`` and the contents of the directory is the last safety net before deleting data.
 
 Using ``spack isolate`` to avoid migration prompts
 ---------------------------------------------------
