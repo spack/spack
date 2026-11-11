@@ -1153,7 +1153,6 @@ def _migrate_user_config() -> bool:
         # Reported as migrated only when the link is made now; later runs are quiet
         outcome = _migrate_symlinked_root(old_location, new_location, "user config")
         ret = outcome == DestinationCheck.PROCEED
-        failed = outcome == DestinationCheck.FAIL
         if ret:
             _warn_about_old_defaults_in_linked_config(old_location)
     else:
@@ -1166,12 +1165,11 @@ def _migrate_user_config() -> bool:
             description="user config",
             verify_destination_callback=can_migrate_to_location,
         )
-        # ret is False both when the copy could not be done and when nothing needed doing
-        # because the destination was already populated (before we looked, or by another
-        # process while we waited for the lock). Only the former is fatal.
-        failed = not ret and not _is_nonempty_directory(new_location)
 
-    if failed:
+    # ret is False both when the copy (or link) could not be made and when nothing needed
+    # doing because the destination was already populated (before we looked, or by another
+    # process while we waited for the lock). Only the former is fatal.
+    if not ret and not _is_nonempty_directory(new_location):
         tty.die(
             f"Failed to migrate Spack config directory to {new_location} (see any warning"
             " above). Fix the problem, or set SPACK_CONFIG_HOME=~/.spack to use the old"
