@@ -1221,7 +1221,9 @@ def test_env_migration_drops_old_layout_view_links(tmp_path, nested):
     orphan = make_env("orphan")
     (orphan / "._view" / "abc123").mkdir(parents=True)
 
-    ok, differing = spack.migrate._migrate_environments(str(tmp_path / "old"), str(tmp_path / "new"))
+    ok, differing = spack.migrate._migrate_environments(
+        str(tmp_path / "old"), str(tmp_path / "new")
+    )
 
     assert ok and differing == []
     for name, link_name in (
@@ -1464,7 +1466,9 @@ def test_nested_env_discovery(tmp_path):
     old_envs = tmp_path / "old"
     new_envs = tmp_path / "new"
     (old_envs / "team" / "proj").mkdir(parents=True)
-    (old_envs / "team" / "proj" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    (old_envs / "team" / "proj" / "spack.yaml").write_text(
+        "spack:\n  specs: []\n", encoding="utf-8"
+    )
     (old_envs / "junk" / "sub").mkdir(parents=True)
     (old_envs / "junk" / "sub" / "README").write_text("", encoding="utf-8")
     (old_envs / "all").symlink_to("team")
