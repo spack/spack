@@ -257,6 +257,7 @@ def test_migrate_cleanup_old_reports_removal_failures(mock_spack_instance, monke
         locked.chmod(0o755)
 
 
+@pytest.mark.not_on_windows("Spack has no cross-process locks on Windows")
 def test_migrate_use_new_layout_holds_the_migration_lock(mock_spack_instance, monkeypatch):
     """The layout scope and marker are removed and re-created under the migration lock, so a
     command started meanwhile waits rather than finding no decision and making its own."""
