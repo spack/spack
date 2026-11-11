@@ -725,13 +725,19 @@ def test_env_migration_unwritable_data_home_is_retained_not_fatal(tmp_path, caps
     assert f"Cannot migrate environments to {new_envs}" in capsys.readouterr().err
 
 
+#: Managed environments may be nested (``team/proj``); a nested one must migrate exactly like
+#: a top-level one, so the environment tests run both ways.
+nested = pytest.mark.parametrize("nested", ["", "team"], ids=["top-level", "nested"])
+
+
 @pytest.mark.not_on_windows("permission bits do not apply on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="root ignores permission bits")
-def test_env_migration_rollback_removes_read_only_copies(tmp_path):
+@nested
+def test_env_migration_rollback_removes_read_only_copies(tmp_path, nested):
     """When one environment blocks migration, copies already made are removed even if they
     contain read-only directories (copied permissions), and so is the failed staging dir.
     A leftover without a marker would otherwise block every later attempt."""
-    old_envs = tmp_path / "old"
+    old_envs = tmp_path / "old" / nested
     new_envs = tmp_path / "new"
     good = old_envs / "a"
     (good / "ro").mkdir(parents=True)
@@ -745,12 +751,13 @@ def test_env_migration_rollback_removes_read_only_copies(tmp_path):
     )
     (bad / "ro").chmod(0o500)
     try:
-        ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+        ok, _ = spack.migrate._migrate_environments(str(tmp_path / "old"), str(new_envs))
     finally:
         (good / "ro").chmod(0o700)
         (bad / "ro").chmod(0o700)
 
     assert not ok
+    # nothing is left, not even the parent of a rolled-back nested environment
     assert [p.name for p in new_envs.iterdir() if p.name != ".lock"] == []
 
 
@@ -1137,13 +1144,14 @@ def test_migrated_environments_accessible(mock_spack_instance, monkeypatch):
     assert (old_envs / "test-env-1" / "spack.yaml").exists()
 
 
-def test_env_migration_drops_old_layout_view_links(tmp_path):
+@nested
+def test_env_migration_drops_old_layout_view_links(tmp_path, nested):
     """Views are not copied. Spack < 1.3 built a view rooted at ``<env>/<name>`` in the
     container ``<env>/._<name>/<hash>`` with an absolute symlink ``<env>/<name>`` to it. Link
     and container are left behind as a pair; anything else at the env root is kept.
     """
-    old_envs = tmp_path / "old"
-    new_envs = tmp_path / "new"
+    old_envs = tmp_path / "old" / nested
+    new_envs = tmp_path / "new" / nested
 
     def make_env(name, link_name=None, target=None, make_target=True):
         env = old_envs / name
@@ -1172,7 +1180,7 @@ def test_env_migration_drops_old_layout_view_links(tmp_path):
     orphan = make_env("orphan")
     (orphan / "._view" / "abc123").mkdir(parents=True)
 
-    ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    ok, differing = spack.migrate._migrate_environments(str(tmp_path / "old"), str(tmp_path / "new"))
 
     assert ok and differing == []
     for name, link_name in (
@@ -1190,15 +1198,17 @@ def test_env_migration_drops_old_layout_view_links(tmp_path):
     assert copied("orphan") == {"spack.yaml", "._view"}
 
 
+@nested
 def test_remigration_keeps_previously_migrated_env_and_warns_if_manifests_differ(
-    mock_spack_instance, capsys
+    mock_spack_instance, capsys, nested
 ):
     """An environment that was already migrated from this prefix is not copied again.
     If its manifest in ``$spack`` now differs from the copy, the copy is kept, the user is
     told, and the environment is not reported as migrated.
     """
-    old_envs = pathlib.Path(spack.paths.old_envs_path)
-    new_envs = pathlib.Path(spack.migrate.migration_data_home()) / "environments"
+    old_root = pathlib.Path(spack.paths.old_envs_path)
+    new_root = pathlib.Path(spack.migrate.migration_data_home()) / "environments"
+    old_envs, new_envs = old_root / nested, new_root / nested
     for name in ("same", "changed", "abs-path"):
         (old_envs / name).mkdir(parents=True)
     (old_envs / "same" / "spack.yaml").write_text("spack:\n  specs: [zlib]\n", encoding="utf-8")
@@ -1211,7 +1221,7 @@ def test_remigration_keeps_previously_migrated_env_and_warns_if_manifests_differ
         f"spack:\n  specs: [zlib]\n  view: {old_envs / 'abs-path' / 'myview'}\n", encoding="utf-8"
     )
 
-    ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    ok, differing = spack.migrate._migrate_environments(str(old_root), str(new_root))
     assert ok and differing == []
     assert (new_envs / "abs-path" / "spack.yaml").read_text(encoding="utf-8") == (
         f"spack:\n  specs: [zlib]\n  view: {new_envs / 'abs-path' / 'myview'}\n"
@@ -1227,10 +1237,10 @@ def test_remigration_keeps_previously_migrated_env_and_warns_if_manifests_differ
         "spack:\n  specs: [zlib, bzip2]\n", encoding="utf-8"
     )
 
-    ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    ok, differing = spack.migrate._migrate_environments(str(old_root), str(new_root))
 
     assert ok
-    assert sorted(differing) == ["changed", "same"]
+    assert sorted(differing) == [os.path.join(nested, "changed"), os.path.join(nested, "same")]
     # copies are kept as they are
     assert (new_envs / "changed" / "spack.yaml").read_text(encoding="utf-8") == (
         "spack:\n  specs: [zlib@1.2]\n"
@@ -1370,13 +1380,14 @@ def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
     assert not (tmp_path / "new" / "other").is_symlink()
 
 
-def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path):
+@nested
+def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path, nested):
     """``prod -> myenv`` among the environments is an alias for a sibling that is migrated
     too; the alias is re-created relative so it reads the migrated copy. A link to somewhere
     outside stays absolute. Both are recognized on a re-run. A link to something that is
     not an environment is not environment data and is left behind."""
-    old_envs = tmp_path / "old"
-    new_envs = tmp_path / "new"
+    old_envs = tmp_path / "old" / nested
+    new_envs = tmp_path / "new" / nested
     checkout = tmp_path / "checkout"
     for env in (old_envs / "myenv" / "sub", old_envs / "notes", checkout):
         env.mkdir(parents=True)
@@ -1390,7 +1401,9 @@ def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path):
     (old_envs / "junk2").symlink_to(tmp_path)
 
     for _ in range(2):
-        ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+        ok, differing = spack.migrate._migrate_environments(
+            str(tmp_path / "old"), str(tmp_path / "new")
+        )
         assert ok and differing == []
 
     assert os.readlink(new_envs / "prod") == "myenv"
@@ -1403,51 +1416,30 @@ def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path):
     assert not (new_envs / "junk").is_symlink() and not (new_envs / "junk2").is_symlink()
 
 
-def test_nested_envs_are_migrated_as_leaves(tmp_path):
-    """``team/proj`` is one environment, not a ``team`` environment with a subdirectory: its
-    old-format view is dropped like a top-level environment's, its marker and manifest
-    comparison are its own, and a link to ``team`` is an alias of an ancestor. A subtree
-    with no manifest is not environment data. A destination that is already an environment
-    above the nested one is refused, and a failed run leaves no empty parents behind."""
+def test_nested_env_discovery(tmp_path):
+    """Only what applies to nested environments alone: a subtree with no manifest is not
+    environment data, a link to an ancestor of an environment is an alias and follows it,
+    and a destination that is already an environment above a nested one is refused."""
     old_envs = tmp_path / "old"
     new_envs = tmp_path / "new"
-    proj = old_envs / "team" / "proj"
-    (proj / "._view" / "abc").mkdir(parents=True)
-    (proj / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
-    (proj / "view").symlink_to(proj / "._view" / "abc")
+    (old_envs / "team" / "proj").mkdir(parents=True)
+    (old_envs / "team" / "proj" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
     (old_envs / "junk" / "sub").mkdir(parents=True)
     (old_envs / "junk" / "sub" / "README").write_text("", encoding="utf-8")
     (old_envs / "all").symlink_to("team")
 
     assert spack.migrate._find_environments(str(old_envs)) == ["all", os.path.join("team", "proj")]
 
-    for _ in range(2):
-        ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
-        assert ok and differing == []
-    assert {p.name for p in (new_envs / "team" / "proj").iterdir()} == {
-        "spack.yaml",
-        f".migration-{spack.migrate._migration_source_hash()}",
-    }
+    ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    assert ok and differing == []
     assert not (new_envs / "junk").exists()
     assert os.readlink(new_envs / "all") == "team"
-    assert not list(new_envs.glob(".spack-env-*"))
 
-    # Destination holds an environment at `team`: `team/proj` would be inside it
-    other = tmp_path / "other"
-    (other / "team").mkdir(parents=True)
-    (other / "team" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
-    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(other))
+    (new_envs / "team" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    shutil.rmtree(new_envs / "team" / "proj")
+    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
     assert not ok
-    assert {p.name for p in (other / "team").iterdir()} == {"spack.yaml"}
-
-    # A later environment failing rolls back `team/proj` and removes the empty `team`
-    (old_envs / "zzz").mkdir()
-    (old_envs / "zzz" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
-    (old_envs / "zzz" / "escape").symlink_to(os.path.join("..", ".."))
-    failed = tmp_path / "failed"
-    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(failed))
-    assert not ok
-    assert {p.name for p in failed.iterdir()} == {".lock"}
+    assert {p.name for p in (new_envs / "team").iterdir()} == {"spack.yaml"}
 
 
 def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkeypatch, capsys):
