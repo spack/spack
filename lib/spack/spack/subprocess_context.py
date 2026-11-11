@@ -103,7 +103,7 @@ class GlobalStateMarshaler:
         ctx = ctx or multiprocessing.get_context()
         self.is_forked = ctx.get_start_method() == "fork"
 
-        # Capture XDG env vars before fork/spawn - needed for consistent path resolution
+        # Capture paths based on XDG env vars before fork/spawn - for consistent path resolution
         self.home_vars = spack.config.collect()
 
         if self.is_forked:
