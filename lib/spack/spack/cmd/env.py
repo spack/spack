@@ -800,6 +800,7 @@ def env_view(args):
         return
 
     if args.action == ViewAction.regenerate:
+        env.warn_skipped_roots()
         env.regenerate_views()
     elif args.action == ViewAction.enable:
         if args.view_path:

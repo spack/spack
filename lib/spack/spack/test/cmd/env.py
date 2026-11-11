@@ -309,6 +309,17 @@ spack:
 """
 
 
+#: mpileaks depends on callpath, which is marked, so mpileaks is not installed either
+MARKED_CALLPATH_ENV = """\
+spack:
+  specs:
+  - mpileaks
+  - libelf
+  - spec: callpath
+    install: false
+"""
+
+
 def test_add_existing_spec_with_options(environment_from_manifest):
     """Adding a spec that is already listed as a spec: entry does not duplicate it."""
     e = environment_from_manifest(INSTALL_FALSE_ENV)
@@ -733,16 +744,7 @@ spack:
 
 def test_env_install_false_skips_dependents(installed_environment, temporary_store: Store, capfd):
     """Roots that depend on a root with install: false are not installable."""
-    with installed_environment(
-        """\
-spack:
-  specs:
-  - mpileaks
-  - libelf
-  - spec: callpath
-    install: false
-"""
-    ) as test:
+    with installed_environment(MARKED_CALLPATH_ENV) as test:
         assert {s.name for s in test.concrete_roots()} == {"mpileaks", "libelf", "callpath"}
         assert {s.name for s in test.installable_roots()} == {"libelf"}
 
@@ -751,6 +753,145 @@ spack:
         assert not temporary_store.db.query("mpileaks")
         warning = "not installing mpileaks: it depends on callpath, which is marked install: false"
         assert warning in capfd.readouterr()[1]
+
+
+def test_install_cmd_warns_about_blocked_roots(
+    environment_from_manifest, mock_fetch, mock_packages, mock_archive, install_mockery
+):
+    """`spack install` warns about roots skipped because they are marked install: false, or depend
+    on a root that is"""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        e.concretize()
+        e.write()
+        output = install("--fake")
+
+    warning = "not installing mpileaks: it depends on callpath, which is marked install: false"
+    assert warning in output
+    assert "not installing callpath: it is marked install: false" in output
+    assert output.count("not installing callpath") == 1
+
+
+def test_env_install_false_marks_blocked_dependencies(environment_from_manifest, mock_packages):
+    """Dependencies that are only needed by roots which are not installed are also not installable,
+    while dependencies shared with an installable root are."""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        e.concretize()
+
+    hashes = e.not_installable_hashes()
+    not_installable = {
+        s.name for r in e.concrete_roots() for s in r.traverse() if s.dag_hash() in hashes
+    }
+    # roots that are marked or blocked, and dependencies only they need
+    assert {"mpileaks", "callpath", "dyninst", "mpich"} <= not_installable
+    # libelf is a root that gets installed, and the others depend on it
+    assert "libelf" not in not_installable
+
+
+def test_install_cmd_does_not_install_marked_root_by_name(
+    environment_from_manifest, mock_fetch, mock_packages, mock_archive, install_mockery
+):
+    """Naming a root marked install: false on the command line does not install it"""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        e.concretize()
+        e.write()
+        output = install("--fake", "callpath")
+
+    assert "not installing callpath: it is marked install: false" in output
+    assert not spack.store.STORE.db.query("callpath")
+
+
+def test_env_install_false_shared_concrete_spec(environment_from_manifest):
+    """A root marked install: false that concretizes to the same spec as an unmarked root is
+    installed, so it does not block its dependents."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - callpath@1.0
+  - spec: callpath
+    install: false
+"""
+    )
+    with e:
+        e.concretize()
+
+    assert sorted(s.name for s in e.installable_roots()) == ["callpath", "mpileaks"]
+    assert not e.not_installable_hashes()
+
+
+def test_env_install_false_installed_roots_not_in_view(
+    installed_environment, tmp_path: pathlib.Path
+):
+    """Roots that are marked install: false, or blocked by one, are left out of the view and of
+    the activation environment, even when they are already installed."""
+    view_dir = tmp_path / "view"
+    manifest = """\
+spack:
+  specs:
+  - mpileaks
+  - libelf
+{extra}  view: {view}
+"""
+    with installed_environment(manifest.format(extra="", view=view_dir)) as test:
+        assert (view_dir / ".spack" / "callpath").exists()
+        assert (view_dir / ".spack" / "mpileaks").exists()
+        manifest_path = pathlib.Path(test.manifest_path)
+        # the mock mpileaks package sets FOOBAR in its run environment
+        assert "FOOBAR=mpileaks" in env("activate", "--sh", "test")
+
+    extra = "  - spec: callpath\n    install: false\n"
+    manifest_path.write_text(manifest.format(extra=extra, view=view_dir))
+    with ev.Environment(manifest_path.parent) as test:
+        test.concretize()
+        test.write(regenerate=True)
+
+    assert (view_dir / ".spack" / "libelf").exists()
+    assert not (view_dir / ".spack" / "callpath").exists()
+    assert not (view_dir / ".spack" / "mpileaks").exists()
+    assert "FOOBAR=mpileaks" not in env("activate", "--sh", "test")
+
+
+@pytest.mark.parametrize("command", [("concretize",), ("env", "view", "regenerate")])
+def test_commands_warn_about_skipped_roots(environment_from_manifest, mock_packages, command):
+    """`spack concretize` and `spack env view regenerate` warn about roots that are not installed
+    because they are marked install: false, or depend on such a root"""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        e.concretize()
+        e.write()
+        output = SpackCommand(command[0])(*command[1:])
+
+    assert "not installing callpath: it is marked install: false" in output
+    blocked = "not installing mpileaks: it depends on callpath, which is marked install: false"
+    assert blocked in output
+    assert "not installing libelf" not in output
+
+
+def test_env_install_false_in_matrix(environment_from_manifest, mock_packages):
+    """A definition entry marked install: false keeps the flag when expanded in a matrix"""
+    e = environment_from_manifest(
+        """\
+spack:
+  definitions:
+  - apps: [{spec: callpath, install: false}, libelf]
+  specs:
+  - matrix:
+    - [$apps]
+    - ['target=x86_64']
+"""
+    )
+    with e:
+        e.concretize()
+
+    assert [s.name for s in e.concrete_roots()] == ["callpath", "libelf"]
+    assert [s.name for s in e.installable_roots()] == ["libelf"]
+    assert e.not_installable_hashes() >= {
+        s.dag_hash() for s in e.concrete_roots() if s.name == "callpath"
+    }
 
 
 def test_env_install_false_needs_no_concretization(environment_from_manifest):

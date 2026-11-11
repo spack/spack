@@ -58,4 +58,5 @@ def concretize(parser, args):
                 )
             else:
                 tty.msg("No new specs to concretize.")
+            env.warn_skipped_roots()
         env.write()

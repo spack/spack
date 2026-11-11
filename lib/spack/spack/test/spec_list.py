@@ -162,8 +162,8 @@ class TestSpecList:
         parser = SpecListParser()
         parser.parse_definitions(
             data=[
-                {"pkgs": [{"spec": "mpileaks", "install": False}]},
-                {"gccs": [{"spec": "gcc@4.5.0", "install": False}]},
+                {"pkgs": [{"spec": "mpileaks", "install": True}]},
+                {"gccs": [{"spec": "gcc@4.5.0"}]},
             ]
         )
         result = parser.parse_user_specs(
@@ -171,9 +171,73 @@ class TestSpecList:
         )
 
         assert result.specs == [Spec("mpileaks %gcc@4.5.0")]
-        assert parser.definitions["gccs"].specs_as_yaml_list == [
-            {"spec": "gcc@4.5.0", "install": False}
+
+    def test_spec_list_matrix_install_false_with_sigil(self):
+        """The flag survives a sigil reference, since every row using the member is skipped"""
+        parser = SpecListParser()
+        parser.parse_definitions(
+            data=[
+                {"pkgs": ["mpileaks"]},
+                {"gccs": [{"spec": "gcc@4.5.0", "install": False}, "gcc@4.6.0"]},
+            ]
+        )
+        result = parser.parse_user_specs(
+            name="specs", yaml_list=[{"matrix": [["$pkgs"], ["$%gccs"]]}]
+        )
+
+        assert result.specs == [Spec("mpileaks %gcc@4.5.0"), Spec("mpileaks %gcc@4.6.0")]
+        assert result.install_flags == [False, True]
+
+    def test_spec_list_matrix_install_false_in_any_dimension(self):
+        """A row is installed only if none of its members is marked install: false"""
+        parser = SpecListParser()
+        result = parser.parse_user_specs(
+            name="specs",
+            yaml_list=[
+                {
+                    "matrix": [
+                        [{"spec": "mpileaks", "install": False}, "libelf"],
+                        [{"spec": "+debug", "install": False}, "~debug"],
+                    ]
+                }
+            ],
+        )
+
+        assert result.specs == [
+            Spec("mpileaks+debug"),
+            Spec("mpileaks~debug"),
+            Spec("libelf+debug"),
+            Spec("libelf~debug"),
         ]
+        assert result.install_flags == [False, False, False, True]
+
+    def test_spec_list_nested_matrix_install_false(self):
+        """The flag of a member of a nested matrix applies to the rows it ends up in"""
+        parser = SpecListParser()
+        result = parser.parse_user_specs(
+            name="specs",
+            yaml_list=[
+                {
+                    "matrix": [
+                        [
+                            {
+                                "matrix": [
+                                    [{"spec": "mpileaks", "install": False}, "libelf"],
+                                    ["+debug"],
+                                ]
+                            }
+                        ],
+                        ["target=x86_64"],
+                    ]
+                }
+            ],
+        )
+
+        assert result.specs == [
+            Spec("mpileaks+debug target=x86_64"),
+            Spec("libelf+debug target=x86_64"),
+        ]
+        assert result.install_flags == [False, True]
 
     @pytest.mark.regression("16841")
     def test_spec_list_matrix_exclude(self):

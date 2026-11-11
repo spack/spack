@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
-from typing import Any, Dict, List, NamedTuple, Optional, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import spack.spec
 import spack.util.spack_yaml
@@ -39,9 +39,9 @@ class SpecList:
             install_flags = []
             for item in self.specs_as_yaml_list:
                 if isinstance(item, dict) and "matrix" in item:  # matrix of specs
-                    rows = _expand_matrix_constraints(item)
-                    constraints.extend(rows)
-                    install_flags.extend([True] * len(rows))
+                    for row, install in _expand_matrix_constraints(item):
+                        constraints.append(row)
+                        install_flags.append(install)
                 elif isinstance(item, dict):  # single spec with options
                     constraints.append([Spec(item["spec"])])
                     install_flags.append(item.get("install", True))
@@ -116,7 +116,9 @@ def spec_string(item: Union[str, Dict]) -> Optional[str]:
     return None
 
 
-def _expand_matrix_constraints(matrix_config):
+def _expand_matrix_constraints(matrix_config) -> List[Tuple[List[Spec], bool]]:
+    """Expands a matrix into its rows of constraints. Each row is paired with whether it is
+    installed, which is not the case if any of its members is marked ``install: false``."""
     # Avoid circular import
     import spack.hash_lookup
 
@@ -128,13 +130,12 @@ def _expand_matrix_constraints(matrix_config):
             if isinstance(r, dict) and "matrix" in r:
                 # Flatten the nested matrix into a single row of constraints
                 new_row.extend(
-                    [
-                        [" ".join([str(c) for c in expanded_constraint_list])]
-                        for expanded_constraint_list in _expand_matrix_constraints(r)
-                    ]
+                    (" ".join(str(c) for c in constraints), install)
+                    for constraints, install in _expand_matrix_constraints(r)
                 )
             else:
-                new_row.append([spec_string(r)])
+                install = not isinstance(r, dict) or r.get("install", True)
+                new_row.append((spec_string(r), install))
         expanded_rows.append(new_row)
 
     excludes = matrix_config.get("exclude", [])  # only compute once
@@ -143,7 +144,7 @@ def _expand_matrix_constraints(matrix_config):
     results = []
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
-        flat_combo = [Spec(constraint) for constraints in combo for constraint in constraints]
+        flat_combo = [Spec(constraint) for constraint, _ in combo]
 
         test_spec = flat_combo[0].copy()
         for constraint in flat_combo[1:]:
@@ -168,7 +169,7 @@ def _expand_matrix_constraints(matrix_config):
             flat_combo[0] = Spec(sigil + str(flat_combo[0]))
 
         # Add to list of constraints
-        results.append(flat_combo)
+        results.append((flat_combo, all(install for _, install in combo)))
 
     return results
 
@@ -178,8 +179,10 @@ def _sigilify(item, sigil):
         if sigil:
             item["sigil"] = sigil
         return item
+    elif isinstance(item, dict):  # keep the options of a spec entry
+        return {**item, "spec": sigil + item["spec"]}
     else:
-        return sigil + spec_string(item)
+        return sigil + item
 
 
 class Definition(NamedTuple):

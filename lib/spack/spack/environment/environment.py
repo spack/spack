@@ -73,8 +73,7 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
-from .list import SpecList, SpecListParser
-from .list import SpecList, SpecListError, SpecListParser, spec_string
+from .list import SpecList, SpecListParser, spec_string
 
 SpecPair = Tuple[Spec, Spec]
 
@@ -970,10 +969,18 @@ class ViewDescriptor:
         return self._exclude_duplicate_runtimes(result)
 
     def regenerate(self, env: "Environment") -> None:
+        # Roots that are marked install: false, or depend on one, are not part of the view
+        installable = env.installable_roots()
         if self.groups is None:
-            concrete_roots = env.concrete_roots()
+            concrete_roots = installable
         else:
-            concrete_roots = [c for g in self.groups for _, c in env.concretized_specs_by(group=g)]
+            installable_hashes = {s.dag_hash() for s in installable}
+            concrete_roots = [
+                c
+                for g in self.groups
+                for _, c in env.concretized_specs_by(group=g)
+                if c.dag_hash() in installable_hashes
+            ]
 
         specs = self.specs_for_view(concrete_roots)
         content_hash = self.content_hash(specs)
@@ -1121,6 +1128,31 @@ def _install_false_dependencies(spec: Spec, marked: Set[str]) -> List[str]:
             if d.dag_hash() in marked
         }
     )
+
+
+def _marked_message(spec: Spec) -> str:
+    return f"not installing {spec.name}: it is marked install: false"
+
+
+def _blocked_message(spec: Spec, blockers: List[str]) -> str:
+    return (
+        f"not installing {spec.name}: it depends on {', '.join(blockers)}, "
+        "which is marked install: false"
+    )
+
+
+class _RootStatus(NamedTuple):
+    """Which roots of an environment are installed, given the roots marked ``install: false``"""
+
+    #: Marked roots that are not installed, by hash. A marked root is left out if an unmarked root
+    #: concretizes to the same spec, since that spec is installed through the unmarked root.
+    marked: Dict[str, Spec]
+    #: Roots that are not marked
+    unmarked: List[Spec]
+    #: Unmarked roots that are installed
+    installable: List[Spec]
+    #: Unmarked roots that depend on a marked root, with the names of the marked roots
+    blocked: List[Tuple[Spec, List[str]]]
 
 
 class Environment:
@@ -2032,7 +2064,7 @@ class Environment:
             # default view if they are installed.
             with spack.store.STORE.db.read_transaction():
                 for view_name, view in self.views.items():
-                    for spec in self.concrete_roots():
+                    for spec in self.installable_roots():
                         if spec in view and spec.package and spack.store.STORE.db.installed(spec):
                             msg = '{0} in view "{1}"'
                             tty.debug(msg.format(spec.name, view_name))
@@ -2050,7 +2082,7 @@ class Environment:
         try:
             with spack.store.STORE.db.read_transaction():
                 installed_roots = [
-                    s for s in self.concrete_roots() if spack.store.STORE.db.installed(s)
+                    s for s in self.installable_roots() if spack.store.STORE.db.installed(s)
                 ]
             mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
         except Exception as e:
@@ -2182,28 +2214,42 @@ class Environment:
         """
         self.install_specs(None, **install_args)
 
+    def warn_skipped_roots(self) -> None:
+        """Warns about all roots that are not installed because of ``install: false``:
+        marked roots and dependencies."""
+        self._warn_skipped(self._root_status())
+
+    @staticmethod
+    def _warn_skipped(status: _RootStatus) -> None:
+        for spec in status.marked.values():
+            tty.warn(_marked_message(spec))
+        for spec, blockers in status.blocked:
+            tty.warn(_blocked_message(spec, blockers))
+
     def create_installer(self, specs: Optional[List[Spec]] = None, **install_args):
         """Returns an installer for the given specs of this environment, or for all its roots.
 
         Args:
-            specs: specs to install, by default the concrete roots
+            specs: specs to install, by default the installable roots. Specs that are marked
+                ``install: false``, or depend on a root that is, are skipped with a warning.
             install_args: keyword arguments of ``spack.installer_dispatch.create_installer``
         """
-        specs = specs if specs is not None else self._unmarked_roots()
-
-        # Specs that depend on a root marked install: false are not installed either
-        marked = self._install_false_hashes()
-        installable_specs = []
-        for spec in specs:
-            blockers = _install_false_dependencies(spec, marked)
-            if blockers:
-                tty.warn(
-                    f"not installing {spec.name}: it depends on {', '.join(blockers)}, "
-                    "which is marked install: false"
-                )
-            else:
-                installable_specs.append(spec)
-        specs = installable_specs
+        status = self._root_status()
+        if specs is None:
+            self._warn_skipped(status)
+            specs = status.installable
+        else:
+            installable_specs = []
+            for spec in specs:
+                if spec.dag_hash() in status.marked:
+                    tty.warn(_marked_message(spec))
+                    continue
+                blockers = _install_false_dependencies(spec, set(status.marked))
+                if blockers:
+                    tty.warn(_blocked_message(spec, blockers))
+                else:
+                    installable_specs.append(spec)
+            specs = installable_specs
 
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
@@ -2291,14 +2337,12 @@ class Environment:
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
 
-    def _install_false_hashes(self) -> Set[str]:
-        """Hashes of the concrete roots marked ``install: false``"""
-        return {x.hash for x in self._marked_roots()}
-
     def _marked_roots(self) -> List[ConcretizedRootInfo]:
         not_installable: Set[Tuple[str, Spec]] = set()
         for group in self.manifest.groups():
-            speclist = self.user_specs_by(group=group)
+            speclist = self.spec_lists.get(self._user_specs_key(group=group))
+            if speclist is None:  # e.g. while the user specs are being removed
+                continue
             not_installable.update(
                 (group, spec)
                 for spec, install in zip(speclist.specs, speclist.install_flags)
@@ -2306,35 +2350,57 @@ class Environment:
             )
         return [x for x in self.concretized_roots if (x.group, x.root) in not_installable]
 
-    def _unmarked_roots(self) -> List[Spec]:
-        """Same as concrete_roots(), but excludes roots marked ``install: false``"""
-        marked = {(x.group, x.root) for x in self._marked_roots()}
-        result = [
+    def _root_status(self) -> _RootStatus:
+        marked_roots = self._marked_roots()
+        marked_keys = {(x.group, x.root) for x in marked_roots}
+        unmarked = [
             self.specs_by_hash[x.hash]
             for x in self.concretized_roots
-            if (x.group, x.root) not in marked
+            if (x.group, x.root) not in marked_keys
         ]
-        result.extend(
+        unmarked.extend(
             concrete
             for included_env in self.included_concretized_roots
             for _, concrete in self.concretized_specs_from_included_environment(included_env)
         )
-        return result
 
-    def not_installable_hashes(self) -> Set[str]:
-        """Hashes of the specs that are not installed because of ``install: false``."""
-        marked = self._install_false_hashes()
-        installable = {s.dag_hash() for s in self.installable_roots()}
-        blocked = {
-            s.dag_hash() for s in self._unmarked_roots() if _install_false_dependencies(s, marked)
+        unmarked_hashes = {s.dag_hash() for s in unmarked}
+        marked = {
+            x.hash: self.specs_by_hash[x.hash]
+            for x in marked_roots
+            if x.hash not in unmarked_hashes
         }
-        return (marked | blocked) - installable
+
+        # for envs without marked roots, skip walking each root's deps
+        if not marked:
+            return _RootStatus(marked, unmarked, unmarked, [])
+
+        installable, blocked = [], []
+        for spec in unmarked:
+            blockers = _install_false_dependencies(spec, set(marked))
+            if blockers:
+                blocked.append((spec, blockers))
+            else:
+                installable.append(spec)
+        return _RootStatus(marked, unmarked, installable, blocked)
 
     def installable_roots(self) -> List[Spec]:
-        """Same as concrete_roots(), but excludes roots marked ``install: false``, and roots that
-        depend on them."""
-        marked = self._install_false_hashes()
-        return [s for s in self._unmarked_roots() if not _install_false_dependencies(s, marked)]
+        """Same as concrete_roots(), but excludes roots marked ``install: false``, and
+        dependent roots."""
+        return self._root_status().installable
+
+    def not_installable_hashes(self) -> Set[str]:
+        """Hashes of the specs that are not installed because of ``install: false``. This covers
+        marked roots, dependent roots, and dependencies not needed by an installed root."""
+        status = self._root_status()
+        # if no marked roots, don't traverse the env
+        if not status.marked:
+            return set()
+        everything = traverse.traverse_nodes(
+            [*status.unmarked, *status.marked.values()], key=traverse.by_dag_hash
+        )
+        needed = traverse.traverse_nodes(status.installable, key=traverse.by_dag_hash)
+        return {s.dag_hash() for s in everything} - {s.dag_hash() for s in needed}
 
     def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
         """Generates all the (abstract, concrete) spec pairs for a given group"""
