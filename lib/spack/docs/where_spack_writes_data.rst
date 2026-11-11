@@ -51,6 +51,9 @@ The user must explicitly approve this migration, either interactively or by sett
 The original resources are still available because migration leaves them in place.
 
 The check runs at the start of every Spack command except ``spack isolate``, and it is skipped for ``spack --help`` and ``spack --version``.
+It looks at the directories, not at the configuration: an instance has legacy resources if ``$spack/opt/spack`` holds installed packages, or ``$spack/var/spack/environments``, ``$spack/etc/spack/licenses``, ``$spack/opt/spack/gpg`` or ``$spack/var/spack/gpg`` is not empty.
+Installed packages are never copied, so an instance whose only legacy resource is its install tree is not asked anything: its first command records the decision, prints ``Retained: existing installs``, and keeps ``config:install_tree:root`` at ``$spack/opt/spack`` through the layout scope described below.
+That scope has the lowest precedence after the defaults, so an ``install_tree`` (or any other location) set explicitly in user, site or system configuration still wins.
 It runs before configuration is loaded, so the copies go to the fixed default locations (``~/.local/share/spack``, or ``SPACK_DATA_HOME``/``XDG_DATA_HOME`` if set), regardless of ``config:locations`` or any resource-specific setting.
 
 The prompt is written to and read from the controlling terminal (``/dev/tty``), not standard input or error, so it works when Spack's output is captured, e.g. by shell integration (``spack env activate``), ``$(spack ...)``, or ``2>&1 | tee log``.
