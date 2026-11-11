@@ -133,6 +133,7 @@ def _walk_yaml_for_paths(
     """Walk YAML data and find strings that look like paths.
 
     Identifies paths as:
+
     - Absolute paths (os.path.isabs() - handles / on Unix and C:\\ on Windows)
     - Relative paths that climb above their directory once normalized (``../x``, ``./../x``,
       ``a/../../x``)
@@ -793,6 +794,7 @@ def migrate_with_staging(
     """Generic migration function for resources.
 
     Common pattern for atomic migrations:
+
     1. Check source exists and has content; a source that is itself a symlink is migrated
        by re-creating the link (see :func:`_migrate_symlinked_root`)
     2. Verify destination (via callback) - can skip, fail, or proceed
@@ -1369,6 +1371,7 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
         ``env_root``, excluding its view directories.
 
         Skips:
+
         - .spack-env directories (always - contains the default view, in either format)
         - At the environment root, an old-format view: the link ``<name>`` into the container
           ``._<name>/`` and the container itself, as a pair (``view: <env>/view`` gave
