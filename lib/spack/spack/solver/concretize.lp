@@ -1859,10 +1859,15 @@ attr("node_version_satisfies", node(Y, Compiler), VersionRange) :-
    attr("depends_on", node(X, Package), node(Y, Compiler), "build"),
    not runtime(Package).
 
-attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
-   attr("node", node(X, Runtime)),
+% A concrete node constrains only the runtimes in its own unification set
+runtime_bound_in_set(SetID, Runtime, VersionRange) :-
    attr("compatible_runtime", PackageNode, Runtime, VersionRange),
-   concrete(PackageNode).
+   concrete(PackageNode),
+   unification_set(SetID, PackageNode).
+
+attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
+   runtime_bound_in_set(SetID, Runtime, VersionRange),
+   unification_set(SetID, node(X, Runtime)).
 
 % If a compiler package is depended on with type link, it imposes its link dependencies
 compiler_imposes_link_deps(Child, Hash) :-

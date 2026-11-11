@@ -230,3 +230,19 @@ def test_multiple_intel_oneapi_compilers_versions(mutable_config, runtime_repo):
     pkga_v2 = spack.concretize.concretize_one("pkg-a %c,cxx=intel-oneapi-compilers@2.0")
     assert pkga_v2.satisfies("%intel-oneapi-runtime@2.0")
     assert pkga_v2["intel-oneapi-runtime"].satisfies("%gcc-runtime@10.2.1"), pkga_v2.tree()
+
+
+@pytest.mark.regression("51599")
+def test_reused_compiler_older_than_its_own_runtime(runtime_repo, mutable_config):
+    """Tests that a compiler built by a newer version of itself can be reused to build a package.
+
+    The reused compiler depends on the runtime of the newer compiler, while the package it builds
+    links to the runtime of the older compiler.
+    """
+    root, reused_gcc = _concretize_with_reuse(
+        root_str="pkg-b %gcc@9.4.1", reused_str="gcc@9.4.1 languages=c,c++ %gcc@10.2.1"
+    )
+
+    assert root["gcc"].dag_hash() == reused_gcc.dag_hash()
+    assert root["gcc"]["gcc-runtime"].satisfies("@10.2.1")
+    assert root.dependencies("gcc-runtime")[0].satisfies("@9.4.1")
