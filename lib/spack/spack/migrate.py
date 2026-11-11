@@ -409,7 +409,9 @@ def _copy_symlink(old_path: str, staging_path: str) -> None:
     try:
         os.makedirs(os.path.dirname(staging_path), exist_ok=True)
         # On Windows a link's type must be given: the target may not exist in staging yet
-        os.symlink(os.readlink(old_path), staging_path, target_is_directory=os.path.isdir(old_path))
+        os.symlink(
+            os.readlink(old_path), staging_path, target_is_directory=os.path.isdir(old_path)
+        )
     except OSError as e:
         tty.warn(f"Not copying symlink {old_path} to the new configuration location: {e}")
 
