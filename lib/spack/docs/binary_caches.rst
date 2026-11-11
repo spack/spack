@@ -237,7 +237,7 @@ The keyring lives in ``config:gpg_path`` (``$data_home/gpg`` by default), unless
 
 When Spack is first installed, its keyring is empty.
 ``spack gpg init`` imports every ``*.key`` file under ``config:gpg_keys_path`` (``$data_home/gpg-keys`` by default) into the keyring as a trusted key.
-That directory is where a site can place keys that every user of the data location should trust; a fresh Spack checkout has no keys in it.
+A site may override the default from ``/etc/spack/config.yaml`` to a shared location and place keys there that every user should trust; a fresh Spack checkout has no keys in it.
 For a Spack instance upgraded from 1.2 or earlier, the keyring and keys directory stay under ``$spack`` (``opt/spack/gpg`` and ``var/spack/gpg``) until they are :ref:`migrated <where_spack_writes_data>`.
 
 Trusting keys
