@@ -2478,7 +2478,7 @@ def reports_path() -> str:
 
 def default_test_path() -> str:
     """Default for ``config:test_stage``: installation test (``spack test``) output."""
-    return os.path.join(_resolve_location_var("state"), "test")
+    return os.path.join(_resolve_location_var("state"), "test-stage")
 
 
 def user_repos_cache_path() -> str:
