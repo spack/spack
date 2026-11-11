@@ -89,36 +89,6 @@ old_package_repos_path = os.path.join(old_default_dot_spack, "package_repos")
 #: not be shared between those instances.
 spack_instance_id = hash.b32_hash(spack_root)[:7]
 
-
-# Below paths pull configuration from the host environment.
-#
-# There are three environment variables you can use to isolate spack from
-# the host environment:
-# - `SPACK_USER_CONFIG_PATH`: override `~/.config/spack` location
-# - `SPACK_SYSTEM_CONFIG_PATH`: override `/etc/spack` configuration scope.
-# - `SPACK_DISABLE_LOCAL_CONFIG`: disable both of these locations.
-
-
-# User configuration in $XDG_CONFIG_HOME/spack
-def _get_user_config_path():
-    return os.path.expanduser(
-        os.getenv("SPACK_USER_CONFIG_PATH") or os.path.join("~", ".config", "spack")
-    )
-
-
-# Configuration in /etc/spack on the system
-def _get_system_config_path():
-    return os.path.expanduser(
-        os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
-    )
-
-
-#: User configuration location
-user_config_path = _get_user_config_path()
-
-#: System configuration location
-system_config_path = _get_system_config_path()
-
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
 
