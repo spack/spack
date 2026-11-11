@@ -37,7 +37,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
             "Permanently delete ~/.spack. Reports its contents and any references to it in"
             " the active configuration, then asks for confirmation. Refuses, even with"
             " --yes, while the install tree or active user config point inside ~/.spack."
-            " uninstalling packages does not lift this, the install tree must be moved."
+            " Uninstalling packages does not lift this; the install tree must be moved."
         ),
     )
     cleanup.add_argument(
@@ -300,7 +300,7 @@ def _use_new_layout(args):
     with spack.migrate.migration_lock():
         if spack.migrate.detect_old_resources() != old_resources:
             tty.die(
-                "Another process migrated while this process waited for the migration lock"
+                "Another process migrated while this process waited for the migration lock."
                 " Re-run if still desired"
             )
         if os.path.exists(layout_scope_path):

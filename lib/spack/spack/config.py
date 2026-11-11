@@ -2550,7 +2550,7 @@ def substitute_config_variables(path, config: Optional["Configuration"] = None):
     - $spack               The Spack instance's prefix
     - $tempdir             Default temporary directory returned by tempfile.gettempdir()
     - $user                The current user's username
-    - $user_cache_path     The user cache directory (alias for $state_home)
+    - $user_cache_path     The user cache directory (alias for $cache_home)
     - $spack_instance_id   Hash that distinguishes Spack instances on the filesystem
     - $architecture        The spack architecture triple for the current system
     - $arch                The spack architecture triple for the current system
