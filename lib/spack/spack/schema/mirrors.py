@@ -122,9 +122,27 @@ mirror_entry = {
             "build cache creation",
         },
         "autopush": {
-            "type": "boolean",
             "description": "Automatically push packages to this build cache immediately after "
             "they are installed locally",
+            "anyOf": [
+                {"type": "boolean", "description": "Enable or disable automatic push"},
+                {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "enable": {
+                            "type": "boolean",
+                            "description": "Enable or disable automatic push (default: false)",
+                        },
+                        "fail_on_error": {
+                            "type": "boolean",
+                            "description": "Whether a failure to push a package fails its "
+                            "installation. If false, a warning is printed instead "
+                            "(default: true)",
+                        },
+                    },
+                },
+            ],
         },
         **overridable_per_direction,
     },

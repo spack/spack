@@ -153,6 +153,22 @@ class Mirror:
 
     @property
     def autopush(self) -> bool:
+        """Whether packages are pushed to this mirror automatically after installation"""
+        autopush = self._autopush_data
+        if isinstance(autopush, dict):
+            return autopush.get("enable", False)
+        return autopush
+
+    @property
+    def autopush_fail_on_error(self) -> bool:
+        """Whether a failure to automatically push a package fails its installation"""
+        autopush = self._autopush_data
+        if isinstance(autopush, dict):
+            return autopush.get("fail_on_error", True)
+        return True
+
+    @property
+    def _autopush_data(self) -> Union[bool, Dict[str, bool]]:
         if isinstance(self._data, str):
             return False
         return self._data.get("autopush", False)
@@ -258,6 +274,12 @@ class Mirror:
         ]
         if top_level:
             keys += ["binary", "source", "signed", "autopush"]
+
+            # Toggling autopush on or off keeps the other autopush settings
+            autopush = current_data.get("autopush")
+            if isinstance(autopush, dict) and isinstance(new_data.get("autopush"), bool):
+                new_data = {**new_data, "autopush": {**autopush, "enable": new_data["autopush"]}}
+
         changed = False
         for key in keys:
             if key in new_data and current_data.get(key) != new_data[key]:

@@ -28,9 +28,19 @@ def post_install(spec, explicit):
             )
             continue
 
-        signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
-        with spack.binary_distribution.make_uploader(
-            mirror=mirror, force=True, signing_key=signing_key
-        ) as uploader:
-            uploader.push_or_raise([spec], config=spack.config.CONFIG)
+        try:
+            _push(spec, mirror)
+        except Exception as e:
+            if mirror.autopush_fail_on_error:
+                raise
+            tty.warn(f"{spec.name}: Failed to push to build cache '{mirror.name}': {e}")
+            continue
         tty.msg(f"{spec.name}: Pushed to build cache: '{mirror.name}'")
+
+
+def _push(spec, mirror):
+    signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
+    with spack.binary_distribution.make_uploader(
+        mirror=mirror, force=True, signing_key=signing_key
+    ) as uploader:
+        uploader.push_or_raise([spec], config=spack.config.CONFIG)

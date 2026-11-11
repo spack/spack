@@ -733,6 +733,23 @@ def test_mirror_add_set_autopush(mutable_config: Configuration):
     assert mutable_config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
     mirror("remove", "example")
 
+    # Toggling autopush on a mirror with the long form keeps fail_on_error
+    mutable_config.set(
+        "mirrors:example",
+        {"url": "http://example.com", "autopush": {"enable": True, "fail_on_error": False}},
+    )
+    mirror("set", "--no-autopush", "example")
+    assert mutable_config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "autopush": {"enable": False, "fail_on_error": False},
+    }
+    mirror("set", "--autopush", "example")
+    assert mutable_config.get("mirrors:example") == {
+        "url": "http://example.com",
+        "autopush": {"enable": True, "fail_on_error": False},
+    }
+    mirror("remove", "example")
+
 
 @pytest.mark.require_provenance
 @pytest.mark.disable_clean_stage_check
