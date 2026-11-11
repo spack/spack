@@ -19,6 +19,7 @@ import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.installer_dispatch
 import spack.mirrors.mirror
 import spack.modules
 import spack.oci.image
@@ -632,19 +633,18 @@ def install_fn(args):
         all_architectures=args.otherarch, config=spack.config.CONFIG
     )
     matches = spack.store.find(args.specs, multiple=args.multiple, query_fn=query)
-    if matches:
-        # Fail before extracting anything if the database cannot be modified.
-        spack.store.STORE.db.ensure_latest_db_version()
-    installed: List[Spec] = []
+    overwrite = {s.dag_hash() for s in traverse.traverse_nodes(matches, deptype=("link", "run"))}
+    installer = spack.installer_dispatch.create_installer(
+        [s.package for s in matches],
+        overwrite=overwrite if args.force else None,
+        unsigned=args.unsigned,
+        root_policy="cache_only",
+        dependencies_policy="cache_only",
+    )
     try:
-        for match in matches:
-            for node in match.traverse(root=True, order="post", deptype=("link", "run")):
-                if spack.binary_distribution.install_root_node(
-                    node, unsigned=args.unsigned, force=args.force
-                ):
-                    installed.append(node)
+        installer.install()
     finally:
-        spack.modules.write_module_files(installed)
+        spack.modules.write_module_files(installer.recorded_specs)
 
 
 def list_fn(args):

@@ -57,24 +57,12 @@ def _try_import_from_store(module: str, query_spec: Union[str, "spack.spec.Spec"
     installed_specs = spack.store.STORE.db.query(query_spec, installed=True)
 
     for candidate_spec in installed_specs:
-        # previously bootstrapped specs may not have a python-venv dependency.
-        if candidate_spec.dependencies("python-venv"):
-            python, *_ = candidate_spec.dependencies("python-venv")
-        else:
-            python, *_ = candidate_spec.dependencies("python")
-
-        # if python is installed, ask it for the layout
-        if spack.store.STORE.db.installed(python):
-            module_paths = [
-                os.path.join(candidate_spec.prefix, python.package.purelib),
-                os.path.join(candidate_spec.prefix, python.package.platlib),
-            ]
-        # otherwise search for the site-packages directory
-        # (clingo from binaries with truncated python-venv runtime)
-        else:
-            module_paths = glob.glob(
-                os.path.join(candidate_spec.prefix, "lib", "python*", "site-packages")
-            )
+        # The site-packages directories of the prefix, without importing packages from a repo
+        module_paths = [
+            *glob.glob(os.path.join(candidate_spec.prefix, "lib*", "python*", "site-packages")),
+            # The layout on Windows
+            *glob.glob(os.path.join(candidate_spec.prefix, "Lib", "site-packages")),
+        ]
         path_before = list(sys.path)
 
         # NOTE: try module_paths first and last, last allows an existing version in path
@@ -203,19 +191,14 @@ def _executables_in_store(
     return None
 
 
-def _root_spec(spec_str: str, platform: Optional[str] = None, target: Optional[str] = None) -> str:
-    """Add the platform and target to a spec used during bootstrapping.
+def _root_spec(spec_str: str) -> str:
+    """Add the host platform and target to a spec used during bootstrapping.
 
     Args:
         spec_str: spec to be bootstrapped. Must be without platform and target.
-        platform: platform the software will run on. Defaults to the host platform.
-        target: target family the software will run on. Defaults to the host target family.
     """
-    if platform is None:
-        platform = str(spack.platforms.host())
-    if target is None:
-        target = str(spack.vendor.archspec.cpu.host().family)
-
+    platform = str(spack.platforms.host())
+    target = spack.vendor.archspec.cpu.host().family
     spec_str += f" platform={platform} target={target}"
 
     tty.debug(f"[BOOTSTRAP ROOT SPEC] {spec_str}")
