@@ -238,26 +238,27 @@ For convenience, Spack can also place an independent environment in a temporary 
 Environments migrated from a pre-1.3 Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack 1.2 and earlier kept managed environments in ``$SPACK_ROOT/var/spack/environments``.
+Spack 1.2 and earlier kept managed environments in ``$SPACK_ROOT/var/spack/environments`` by default.
 When such an instance is updated, the first command :ref:`asks <where_spack_writes_data>` whether to copy them to ``$data_home/environments``; the originals are left in place.
 The copies differ from the originals in a few ways:
 
 * Views are not copied.
-  Activate each migrated environment and run ``spack env view regenerate`` to recreate them.
+  Activate each migrated environment and run ``spack env view regenerate`` to recreate them, or any concretization or installation command will recreate them
   A shell that activated an environment before the migration still has the old view on its ``PATH``; run ``spack env deactivate`` and activate the environment again.
 * Absolute paths in ``spack.yaml`` and in included configuration files that point inside the environment directory are rewritten to the new directory.
-  A file that needed rewriting is re-serialized: its content is unchanged, but YAML anchors, aliases and merge keys are expanded.
+  A file that needed rewriting is re-serialized: its content is unchanged, but any YAML anchors, aliases and merge keys are expanded.
+  If the file is tracked in a git repo, you may want to handle migration manually.
 * Each copy contains a ``.migration-<hash>`` file that lets Spack recognize its own copy if the migration is run again.
   In an environment kept in Git, add it to ``.gitignore``.
 
 Some environments cannot be copied safely, and Spack keeps **all** environments in the old location rather than splitting them (the summary message says ``Retained: environments``):
 
-* an environment that contains an install tree (a ``.spack-db`` directory), because the database records absolute install prefixes;
+* an environment that contains an install tree (a ``.spack-db`` directory), because the installed binaries contain hardcoded absolute paths;
 * an environment with develop specs (``dev_path`` in ``spack.lock``), because their hashes depend on the path;
 * an environment that refers, by relative path, to a file outside its own directory, or by absolute path to a sibling environment, or through ``$env/..``;
-* an environment containing a symbolic link that would have to be rewritten.
+* an environment containing a symbolic link that would have to be rewritten (a relative symlink that reaches outside the environment or an absolute symlink into the old environment location).
 
-To migrate the others anyway, fix or move the offending environment (for example copy it with ``spack env create --dir <new path> <old path>``, or remove its develop specs) and run ``spack migrate use-new-layout``.
+To migrate the others anyway, fix or move the offending environment (e.g. remove its develop specs) and run ``spack migrate use-new-layout``.
 
 After the migration, Spack treats the old location as an alias for the new one: ``SPACK_ENV``, ``spack -e`` or ``spack -D`` naming ``$SPACK_ROOT/var/spack/environments/<name>`` operate on the migrated copy if there is one, so that a shell that activated an environment before the migration keeps working on the live copy.
 The exception is ``spack env deactivate``, which undoes the activation of the old copy.
