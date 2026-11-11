@@ -1855,7 +1855,7 @@ error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Sour
 
 % If a node is built, impose constraints on the compiler coming from dependents
 attr("node_version_satisfies", node(Y, Compiler), VersionRange) :-
-   propagate(node(X, Package), node_version_satisfies(Compiler, VersionRange)),
+   propagate(node(X, Package), node_version_satisfies(Compiler, VersionRange), _),
    attr("depends_on", node(X, Package), node(Y, Compiler), "build"),
    not runtime(Package).
 
