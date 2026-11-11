@@ -18,6 +18,7 @@ import spack.error
 import spack.migrate
 import spack.paths
 import spack.util.lang
+import spack.util.lock
 import spack.util.spack_yaml as syaml
 from spack.util.filesystem import getuid
 
@@ -1083,6 +1084,33 @@ def test_migration_warns_about_package_repositories_it_cannot_copy(mock_spack_in
     assert str(old_repo) in err
     assert "repos:<name>:destination" in err
     assert (new_repos / "k7m2x3q").read_text(encoding="utf-8") == "in the way"
+
+
+@pytest.mark.parametrize("error", ["permission", "timeout"])
+def test_migration_names_dot_spack_when_its_clone_lock_cannot_be_taken(
+    mock_spack_instance, monkeypatch, capsys, ensure_debug, error
+):
+    """The clone lock an older Spack holds lives in ``~/.spack``; failing to take it must
+    be reported as that, not as a problem with the destination, which is where
+    migrate_with_staging keeps its own lock."""
+    home_dir, _ = mock_spack_instance
+    old_repos = pathlib.Path(home_dir) / ".spack" / "package_repos"
+    (old_repos / "k7m2x3q").mkdir(parents=True)
+    (old_repos / "k7m2x3q" / "source").write_text("x", encoding="utf-8")
+    new_repos = pathlib.Path(spack.migrate.migration_data_home()) / "package_repos"
+
+    def cannot_lock(self, *args, **kwargs):
+        if error == "permission":
+            raise spack.util.lock.LockPermissionError("no permission")
+        raise spack.util.lock.LockTimeoutError(spack.util.lock.LockType.READ, "x", 1.0, 1)
+
+    monkeypatch.setattr(spack.util.lock.ReadTransaction, "__enter__", cannot_lock)
+
+    assert spack.migrate.migrate_home()["package_repos"] is False
+    err = capsys.readouterr().err
+    assert f"could not take the clone lock in {pathlib.Path(home_dir) / '.spack'}" in err
+    assert "could not be copied" in err and str(old_repos / "k7m2x3q") in err
+    assert not (new_repos / "k7m2x3q").exists()
 
 
 def test_config_migration_skips_unparseable_yaml(mock_spack_instance, monkeypatch):

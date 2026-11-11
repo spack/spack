@@ -1093,8 +1093,15 @@ def _old_package_repos_lock() -> spack.util.lock.Lock:
 
 def _prepare_package_repo_staging(old_path, staging_path, new_path):
     """Callback for migrating one package repository clone."""
-    with spack.util.lock.ReadTransaction(_old_package_repos_lock()):
-        shutil.copytree(old_path, staging_path, symlinks=True)
+    # The lock errors are re-raised as staging errors: migrate_with_staging attributes any
+    # it sees to its own lock at the destination, and this one is in ~/.spack.
+    try:
+        with spack.util.lock.ReadTransaction(_old_package_repos_lock()):
+            shutil.copytree(old_path, staging_path, symlinks=True)
+    except (spack.util.lock.LockPermissionError, spack.util.lock.LockTimeoutError) as e:
+        raise MigrationStagingError(
+            f"could not take the clone lock in {spack.paths.old_default_dot_spack}: {e}"
+        ) from e
 
 
 #: Transient files GnuPG keeps in its home directory. None of these hold key material, and
