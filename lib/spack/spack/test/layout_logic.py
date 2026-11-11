@@ -1673,9 +1673,14 @@ def test_detect_old_installs_ignores_the_database(mock_spack_instance):
     (db.parent / "zlib-1.3-abc").mkdir()
     assert spack.migrate.detect_old_resources()["installs"] is True
 
-    pathlib.Path(spack.paths.old_envs_path).mkdir(parents=True)
-    (pathlib.Path(spack.paths.old_envs_path) / ".lock").touch()  # likewise, the root lock
+    old_envs = pathlib.Path(spack.paths.old_envs_path)
+    (old_envs / "junk").mkdir(parents=True)  # a directory with no manifest is not an env,
+    (old_envs / ".lock").touch()  # nor is the root lock,
+    (old_envs / ".hidden" / "spack.yaml").parent.mkdir()
+    (old_envs / ".hidden" / "spack.yaml").touch()  # nor anything in a dot directory
     assert spack.migrate.detect_old_resources()["environments"] is False
+    (old_envs / "junk" / "spack.yaml").touch()
+    assert spack.migrate.detect_old_resources()["environments"] is True
 
 
 def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):

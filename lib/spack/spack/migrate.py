@@ -69,8 +69,9 @@ def detect_old_resources() -> Dict[str, bool]:
         "gpg_keys": _has_entries(spack.paths.old_gpg_path)
         or _has_entries(spack.paths.old_gpg_keys_path),
         "licenses": _has_entries(spack.paths.old_licenses_path),
-        # `.lock` is left behind by `spack env create` with environments_root pointed here
-        "environments": _has_entries(spack.paths.old_envs_path, ignore=[".lock"]),
+        # Only manifests count; `spack env create` leaves a `.lock`, and anything else there
+        # (a stray file, a directory with no manifest) is not an environment
+        "environments": bool(_find_environments(spack.paths.old_envs_path)),
     }
 
 
@@ -1355,21 +1356,35 @@ def _find_environments(root: str) -> List[str]:
     """Paths, relative to ``root``, of the environments to migrate from it.
 
     Managed environments are leaves (``team/proj``), found by descending directories until one
-    holds a ``spack.yaml``; a subtree without one is not environment data. Symlinks are not
-    descended: a link is an alias and is migrated as a link, but only if it points at an
-    environment or at an ancestor of one under ``root`` (``prod -> myenv``, ``all -> team``),
-    so links are collected after the directories they may alias.
+    holds a ``spack.yaml``; a subtree without one is not environment data, and like
+    ``spack.environment.all_environment_names`` this does not look inside dot directories.
+    Symlinks are not descended: a link is an alias and is migrated as a link, but only if it
+    points at an environment or at an ancestor of one under ``root`` (``prod -> myenv``,
+    ``all -> team``), so links are collected after the directories they may alias.
     """
+    if not os.path.isdir(root):
+        return []
+
+    def unreadable(e: OSError) -> None:
+        if isinstance(e, PermissionError):
+            tty.die(
+                f"Spack encountered a permission error at {e.filename} while attempting to read "
+                "old storage locations to migrate data. Fix the permissions or contact an admin "
+                "of this Spack instance to run spack migration."
+            )
+
     envs: List[str] = []
     links: List[str] = []
-    for dirpath, dirnames, filenames in os.walk(root):
+    for dirpath, dirnames, filenames in os.walk(root, onerror=unreadable):
         rel = os.path.relpath(dirpath, root)
         if rel != os.curdir and "spack.yaml" in filenames:
             envs.append(rel)
             dirnames[:] = []
             continue
         for name in list(dirnames):
-            if os.path.islink(os.path.join(dirpath, name)):
+            if name.startswith("."):
+                dirnames.remove(name)
+            elif os.path.islink(os.path.join(dirpath, name)):
                 links.append(os.path.normpath(os.path.join(rel, name)))
                 dirnames.remove(name)
 
