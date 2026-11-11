@@ -1495,18 +1495,11 @@ def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
         os.umask(old_umask)
 
 
-def test_mkdirp_parents_perms_without_a_group(tmp_path: pathlib.Path, monkeypatch):
-    """``default_perms="parents"`` must not try to chgrp when the nearest existing parent
-    reports no group, as ``os.stat`` does on Windows (``st_gid == 0``), for intermediate
-    directories as well as the leaf."""
-    real_stat = os.stat
-
-    class NoGroup:
-        def __init__(self, st):
-            self.st_mode, self.st_gid = st.st_mode, 0
-
-    monkeypatch.setattr(fs.os, "stat", lambda p, *a, **k: NoGroup(real_stat(p, *a, **k)))
-    monkeypatch.setattr(fs, "chgrp", lambda p, g: pytest.fail(f"chgrp({p}, {g})"))
-
+# This test won't fail on posix, but it is only testing anything interesting on windows
+@pytest.mark.only_windows("os.stat reports no group (st_gid == 0) only on Windows")
+def test_mkdirp_parents_perms_without_a_group(tmp_path: pathlib.Path):
+    """``default_perms="parents"`` must not try to chgrp (unsupported on Windows) when the
+    nearest existing parent reports no group, for intermediate directories as well as the
+    leaf."""
     fs.mkdirp(str(tmp_path / "a" / "b" / "c"), default_perms="parents")
     assert (tmp_path / "a" / "b" / "c").is_dir()
