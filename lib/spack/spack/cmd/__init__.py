@@ -676,14 +676,15 @@ def _maybe_rewrite_spack_env_after_migration(args: argparse.Namespace) -> None:
     so that this command reads and writes the live environment rather than the stale one.
 
     ``spack env deactivate`` is left alone: the shell's PATH and friends still hold the
-    old copy's view, so that is the environment to deactivate.
+    old copy's view, so that is the environment to deactivate. So is ``spack env
+    activate``, which deactivates the current environment before activating the new one.
     """
     spack_env = os.environ.get(ev.spack_env_var)
     if not spack_env:
         return
     # args.command is the unparsed remainder, e.g. ["env", "deactivate", "--sh"]
     command = getattr(args, "command", None) or []
-    if len(command) >= 2 and command[0] == "env" and command[1] == "deactivate":
+    if command[:1] == ["env"] and command[1:2] in (["activate"], ["deactivate"]):
         return
     new_spack_env = _migrated_copy_of(spack_env)
     if new_spack_env:

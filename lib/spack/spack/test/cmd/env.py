@@ -5212,11 +5212,14 @@ def test_stale_spack_env_is_rewritten_to_migrated_copy(stale_activated_env, work
     assert os.path.realpath(os.environ[ev.spack_env_var]) == os.path.realpath(new_root / "foo")
 
 
-def test_stale_spack_env_not_rewritten_for_deactivate(stale_activated_env, working_env):
-    """`spack env deactivate` must undo the environment whose view is in the shell's PATH:
-    the old copy."""
+@pytest.mark.parametrize(
+    "command", [["env", "deactivate", "--sh"], ["env", "activate", "--sh", "other"]]
+)
+def test_stale_spack_env_not_rewritten_for_deactivate(stale_activated_env, working_env, command):
+    """`spack env deactivate`, and `spack env activate` (which deactivates first), must undo
+    the environment whose view is in the shell's PATH: the old copy."""
     old_root, new_root = stale_activated_env
-    env = _find_env_with(["env", "deactivate", "--sh"], old_root / "foo")
+    env = _find_env_with(command, old_root / "foo")
     assert env is not None
     assert os.path.realpath(env.path) == os.path.realpath(old_root / "foo")
 
