@@ -1652,6 +1652,10 @@ def test_detect_old_installs_ignores_the_database(mock_spack_instance):
     (db.parent / "zlib-1.3-abc").mkdir()
     assert spack.migrate.detect_old_resources()["installs"] is True
 
+    pathlib.Path(spack.paths.old_envs_path).mkdir(parents=True)
+    (pathlib.Path(spack.paths.old_envs_path) / ".lock").touch()  # likewise, the root lock
+    assert spack.migrate.detect_old_resources()["environments"] is False
+
 
 def test_migration_with_no_old_resources(mock_spack_instance, monkeypatch):
     """When no old resources exist in $spack, migration doesn't touch the spack prefix.

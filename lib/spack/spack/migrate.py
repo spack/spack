@@ -69,7 +69,8 @@ def detect_old_resources() -> Dict[str, bool]:
         "gpg_keys": _has_entries(spack.paths.old_gpg_path)
         or _has_entries(spack.paths.old_gpg_keys_path),
         "licenses": _has_entries(spack.paths.old_licenses_path),
-        "environments": _has_entries(spack.paths.old_envs_path),
+        # `.lock` is left behind by `spack env create` with environments_root pointed here
+        "environments": _has_entries(spack.paths.old_envs_path, ignore=[".lock"]),
     }
 
 
