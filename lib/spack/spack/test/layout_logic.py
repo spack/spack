@@ -1204,29 +1204,33 @@ def test_env_migration_drops_old_layout_view_links(tmp_path, nested):
     old_envs = tmp_path / "old" / nested
     new_envs = tmp_path / "new" / nested
 
-    def make_env(name, link_name=None, target=None, make_target=True):
+    def make_env(name, link_name=None, target=None, make_target=True, absolute=False):
         env = old_envs / name
         env.mkdir(parents=True)
         (env / "spack.yaml").write_text("spack:\n  specs: [zlib]\n", encoding="utf-8")
         if link_name:
-            if os.path.isabs(target):
-                target = str(env / target.lstrip(os.sep))
+            relative_target = pathlib.Path(*target)
+            target_path = env / relative_target
             if make_target:
-                (env / target / "bin").mkdir(parents=True)
-                (env / target / "bin" / "tool").write_text("x", encoding="utf-8")
-            (env / link_name).symlink_to(target)
+                (target_path / "bin").mkdir(parents=True)
+                (target_path / "bin" / "tool").write_text("x", encoding="utf-8")
+            (env / link_name).symlink_to(
+                target_path if absolute else relative_target, target_is_directory=True
+            )
         return env
 
     def copied(name):
         return {p.name for p in (new_envs / name).iterdir() if not p.name.startswith(".migration")}
 
-    make_env("default", "view", "/._view/abc123")  # view: <env>/view
-    make_env("custom", "myview", "/._myview/abc123")  # view: {x: {root: <env>/myview}}
-    make_env("relative", "view", "._view/abc123")
-    make_env("dangling", "view", "/._view/abc123", make_target=False)
+    make_env("default", "view", ("._view", "abc123"), absolute=True)  # view: <env>/view
+    make_env(
+        "custom", "myview", ("._myview", "abc123"), absolute=True
+    )  # view: {x: {root: <env>/myview}}
+    make_env("relative", "view", ("._view", "abc123"))
+    make_env("dangling", "view", ("._view", "abc123"), make_target=False, absolute=True)
     (old_envs / "dangling" / "._view").mkdir()  # hash dir already removed, container remains
     # root-level link into something that merely starts with ._ is not a view
-    make_env("other", "link", "._viewer")
+    make_env("other", "link", ("._viewer",))
     # a container with no partner link is not recognized, and is copied
     orphan = make_env("orphan")
     (orphan / "._view" / "abc123").mkdir(parents=True)
