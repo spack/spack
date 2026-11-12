@@ -1001,7 +1001,7 @@ def _rewrite_symlinks_after_copy(
             if not os.path.islink(path):
                 continue
 
-            target = os.readlink(path)
+            target = filesystem.readlink(path)
             new_target = None
 
             if os.path.isabs(target):
