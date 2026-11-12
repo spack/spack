@@ -1191,7 +1191,12 @@ def open_controlling_terminal() -> Iterator[Optional[typing.TextIO]]:
         yield terminal
 
 
-def readline_with_timeout(
+# Tested in a separate interpreter attached to a real controlling PTY: input, Enter, empty input,
+# multiple characters, backspace, timeout, and redirected standard streams are covered there.
+# pytest-cov does not instrument that manually launched interpreter, so exclude this implementation
+# from its line metric. The Windows msvcrt adapter and signal cleanup are not exercised by those
+# POSIX PTY tests.
+def readline_with_timeout(  # pragma: no cover
     prompt_format: str,
     timeout: float,
     update_interval: float = 1.0,
