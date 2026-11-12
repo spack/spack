@@ -423,12 +423,19 @@ class PrependPath(NamePathModifier):
         env[self.name] = self.separator.join(directories)
 
 
+def _normalize_paths(paths: List[str]) -> List[str]:
+    """Normalize the entries of a path list. Empty entries are kept as they are, since normpath
+    would turn them into ".", the current working directory."""
+    return [path_to_os_path(os.path.normpath(x)).pop() if x else x for x in paths]
+
+
 class RemoveFirstPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemoveFirstPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator)
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        if not environment_value:
+            return
+        directories = _normalize_paths(environment_value.split(self.separator))
         val = path_to_os_path(os.path.normpath(self.value)).pop()
         if val in directories:
             directories.remove(val)
@@ -439,8 +446,9 @@ class RemoveLastPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemoveLastPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator)[::-1]
-        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        if not environment_value:
+            return
+        directories = _normalize_paths(environment_value.split(self.separator)[::-1])
         val = path_to_os_path(os.path.normpath(self.value)).pop()
         if val in directories:
             directories.remove(val)
@@ -451,13 +459,11 @@ class RemovePath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator)
-        directories = [
-            path_to_os_path(os.path.normpath(x)).pop()
-            for x in directories
-            if x != path_to_os_path(os.path.normpath(self.value)).pop()
-        ]
-        env[self.name] = self.separator.join(directories)
+        if not environment_value:
+            return
+        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        directories = [x for x in environment_value.split(self.separator) if x != val]
+        env[self.name] = self.separator.join(_normalize_paths(directories))
 
 
 class DeprioritizeSystemPaths(NameModifier):
@@ -465,9 +471,7 @@ class DeprioritizeSystemPaths(NameModifier):
         tty.debug(f"DeprioritizeSystemPaths: {self.name}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = deprioritize_system_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        )
+        directories = deprioritize_system_paths(_normalize_paths(directories))
         env[self.name] = self.separator.join(directories)
 
 
@@ -476,9 +480,7 @@ class PruneDuplicatePaths(NameModifier):
         tty.debug(f"PruneDuplicatePaths: {self.name}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
-        directories = prune_duplicate_paths(
-            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
-        )
+        directories = prune_duplicate_paths(_normalize_paths(directories))
         env[self.name] = self.separator.join(directories)
 
 
