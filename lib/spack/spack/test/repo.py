@@ -579,6 +579,21 @@ def test_valid_module_name_v2():
     assert not valid_module_name("_zlib", api)
     assert not valid_module_name("_false", api)
 
+    # empty module name
+    assert not valid_module_name("", api)
+
+
+def test_ensure_valid_variants_anonymous_spec(mock_packages):
+    """Test that Spec.ensure_valid_variants safely returns early for anonymous specs."""
+    s = spack.spec.Spec()
+    spack.spec.Spec.ensure_valid_variants(s, repo=mock_packages)
+
+
+def test_get_pkg_class_empty_name(mock_packages):
+    """Test that get_pkg_class with an empty name raises UnknownPackageError cleanly."""
+    with pytest.raises(spack.repo.UnknownPackageError, match="anonymous package"):
+        mock_packages.get_pkg_class("")
+
 
 def test_namespace_is_optional_in_v2(tmp_path: pathlib.Path):
     """Test that a repo without a namespace is valid in v2."""
