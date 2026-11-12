@@ -46,18 +46,20 @@ end
 
 # h and V flags don't require further output parsing.
 if ( "$_sp_flags" =~ *h* || "$_sp_flags" =~ *V* ) then
-    \spack $_sp_flags $_sp_args
+    \spack $_sp_flags $_sp_args:q
     goto _sp_end
 endif
 
 # Set up args -- we want a subcommand and a spec.
+# Use :q on all expansions of these variables so that quoted CLI args
+# (e.g. --format "{name}") aren't re-split or glob/brace-expanded.
 set _sp_subcommand=""
-set _sp_spec=""
+set _sp_spec=()
 if ($#_sp_args > 0) then
-    set _sp_subcommand = ($_sp_args[1])
+    set _sp_subcommand = ($_sp_args[1]:q)
 endif
 if ($#_sp_args > 1) then
-    set _sp_spec = ($_sp_args[2-])
+    set _sp_spec = ($_sp_args[2-]:q)
 endif
 
 # Run subcommand
@@ -65,16 +67,16 @@ switch ($_sp_subcommand)
 case cd:
     shift _sp_args  # get rid of 'cd'
 
-    set _sp_arg=""
+    set _sp_arg=()
     if ($#_sp_args > 0) then
-        set _sp_arg = ($_sp_args[1])
+        set _sp_arg = ($_sp_args[1]:q)
     endif
     shift _sp_args
 
     if ( "$_sp_arg" == "-h" || "$_sp_args" == "--help" ) then
         \spack cd -h
     else
-        cd `\spack location $_sp_arg $_sp_args`
+        cd `\spack location $_sp_arg:q $_sp_args:q`
     endif
     breaksw
 case env:
@@ -82,7 +84,7 @@ case env:
 
     set _sp_arg=""
     if ($#_sp_args > 0) then
-        set _sp_arg = ($_sp_args[1])
+        set _sp_arg = ($_sp_args[1]:q)
     endif
 
     if ( "$_sp_arg" == "-h" || "$_sp_arg" == "--help" ) then
@@ -92,7 +94,7 @@ case env:
             case activate:
                 set _sp_env_arg=""
                 if ($#_sp_args > 1) then
-                    set _sp_env_arg = ($_sp_args[2])
+                    set _sp_env_arg = ($_sp_args[2]:q)
                 endif
 
                 # Space needed here to differentiate between `-h`
@@ -103,17 +105,17 @@ case env:
                      "$_sp_args" =~ "* -h*" || \
                      "$_sp_args" =~ "* --help*" ) then
                     # No args or args contain --sh, --csh, or -h/--help: just execute.
-                    \spack $_sp_flags env $_sp_args
+                    \spack $_sp_flags env $_sp_args:q
                 else
                     shift _sp_args  # consume 'activate' or 'deactivate'
                     # Actual call to activate: source the output.
-                    eval `\spack $_sp_flags env activate --csh $_sp_args`
+                    eval `\spack $_sp_flags env activate --csh $_sp_args:q`
                 endif
                 breaksw
             case deactivate:
                 set _sp_env_arg=""
                 if ($#_sp_args > 1) then
-                    set _sp_env_arg = ($_sp_args[2])
+                    set _sp_env_arg = ($_sp_args[2]:q)
                 endif
 
                 # Space needed here to differentiate between `--sh`
@@ -121,7 +123,7 @@ case env:
                 if ( "$_sp_args" =~ "* --sh*" || \
                      "$_sp_args" =~ "* --csh*" ) then
                     # Args contain --sh or --csh: just execute.
-                    \spack $_sp_flags env $_sp_args
+                    \spack $_sp_flags env $_sp_args:q
                 else if ( "$_sp_env_arg" != "" ) then
                     # Any other arguments are an error or -h/--help: just run help.
                     \spack $_sp_flags env deactivate -h
@@ -131,7 +133,7 @@ case env:
                 endif
                 breaksw
             default:
-                \spack $_sp_flags env $_sp_args
+                \spack $_sp_flags env $_sp_args:q
                 breaksw
         endsw
     endif
@@ -148,16 +150,16 @@ case unload:
          " $_sp_spec" =~ "* -h*" || \
          " $_sp_spec" =~ "* --help*") then
         # Args contain --sh, --csh, or -h/--help: just execute.
-        \spack $_sp_flags $_sp_subcommand $_sp_spec
+        \spack $_sp_flags $_sp_subcommand $_sp_spec:q
     else
         # Otherwise, eval with csh.
-        eval `\spack $_sp_flags $_sp_subcommand --csh $_sp_spec || \
+        eval `\spack $_sp_flags $_sp_subcommand --csh $_sp_spec:q || \
              echo "exit 1"`
     endif
     breaksw
 
 default:
-    \spack $_sp_flags $_sp_args
+    \spack $_sp_flags $_sp_args:q
     breaksw
 endsw
 
