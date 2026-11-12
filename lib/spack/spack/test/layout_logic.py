@@ -1505,13 +1505,15 @@ def test_nested_env_discovery(tmp_path):
 
 
 @pytest.mark.requires_symlinks
-def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkeypatch, capsys):
+def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(
+    tmp_path, monkeypatch, capsys, set_home
+):
     """``~/.spack -> ~/dotfiles/spack``: the first run links ``~/.config/spack`` to the same
     place, says so, and lists any spelled-out Spack 1.2 defaults in the linked files without
     touching them; later runs find the link and say nothing. An empty ``~/.config/spack``
     (created by hand, or by a tool like stow) is replaced by the link rather than being
     reported as a permissions problem."""
-    monkeypatch.setenv("HOME", str(tmp_path))
+    set_home(str(tmp_path))
     for var in ("SPACK_CONFIG_HOME", "SPACK_USER_CONFIG_PATH", "SPACK_DISABLE_LOCAL_CONFIG"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
@@ -1546,11 +1548,13 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
 
 
 @pytest.mark.requires_symlinks
-def test_symlinked_dot_spack_leaves_populated_config_home_alone(tmp_path, monkeypatch, capsys):
+def test_symlinked_dot_spack_leaves_populated_config_home_alone(
+    tmp_path, monkeypatch, capsys, set_home
+):
     """``~/.spack -> ~/dotfiles/spack`` while ``~/.config/spack`` already holds files: the
     user has configuration in the new place, so nothing is linked and nothing is fatal, just
     as for a populated destination when ``~/.spack`` is a directory."""
-    monkeypatch.setenv("HOME", str(tmp_path))
+    set_home(str(tmp_path))
     for var in ("SPACK_CONFIG_HOME", "SPACK_USER_CONFIG_PATH", "SPACK_DISABLE_LOCAL_CONFIG"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
