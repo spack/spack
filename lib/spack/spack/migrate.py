@@ -776,7 +776,7 @@ def _migrate_symlinked_root(
     if migrated_root is not None and _is_under(target, migrated_root):
         target = os.path.relpath(target, os.path.realpath(os.path.dirname(old_path)))
     if os.path.lexists(new_path):
-        if os.path.islink(new_path) and os.readlink(new_path) == target:
+        if os.path.islink(new_path) and filesystem.readlink(new_path) == target:
             tty.debug(f"{new_path} is already a link to {target}, nothing to migrate")
             return DestinationCheck.SKIP
         if os.path.isdir(new_path) and not os.listdir(new_path):
