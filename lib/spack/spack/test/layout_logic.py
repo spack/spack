@@ -1259,6 +1259,13 @@ def test_env_migration_drops_old_layout_view_links(tmp_path, nested):
     # a container with no partner link is not recognized, and is copied
     orphan = make_env("orphan")
     (orphan / "._view" / "abc123").mkdir(parents=True)
+    # New-format views are identified by their marker wherever they live; .spack-env always
+    # contains generated environment metadata (including the default view) and is excluded.
+    marked = make_env("marked")
+    (marked / "views" / "custom").mkdir(parents=True)
+    (marked / "views" / "custom" / ".spack-view").touch()
+    (marked / "views" / "keep").mkdir()
+    (marked / ".spack-env" / "view").mkdir(parents=True)
 
     ok, differing = spack.migrate._migrate_environments(
         str(tmp_path / "old"), str(tmp_path / "new")
@@ -1278,6 +1285,8 @@ def test_env_migration_drops_old_layout_view_links(tmp_path, nested):
     assert copied("other") == {"spack.yaml", "link", "._viewer"}
     assert (new_envs / "other" / "link").is_symlink()
     assert copied("orphan") == {"spack.yaml", "._view"}
+    assert copied("marked") == {"spack.yaml", "views"}
+    assert {p.name for p in (new_envs / "marked" / "views").iterdir()} == {"keep"}
 
 
 @nested
