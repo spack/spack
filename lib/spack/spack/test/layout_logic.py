@@ -5,6 +5,7 @@
 """Tests for layout detection and config variable resolution."""
 
 import contextlib
+import filecmp
 import io
 import os
 import pathlib
@@ -1679,6 +1680,7 @@ def test_license_migration_compares_bytes_and_leaves_user_links_alone(tmp_path, 
     assert "both are files, but their contents differ" in err
     assert "spack migrate use-new-layout" in err
     (dst / "a.lic").write_bytes(b"key\xff")
+    filecmp.clear_cache()  # same path, size, and possibly mtime: force the retry to read bytes
 
     # same content, but a file in the source and a link in the destination
     (src / "b.lic").write_text("key", encoding="utf-8")
