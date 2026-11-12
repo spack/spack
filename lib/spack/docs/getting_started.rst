@@ -13,13 +13,20 @@ Getting Started
 ===============
 
 Getting Spack is easy.
-You can clone it from the `GitHub repository <https://github.com/spack/spack>`_ using this command:
+You can clone the latest release from the `GitHub repository <https://github.com/spack/spack>`_ using this command:
 
 .. code-block:: console
 
-   $ git clone --depth=2 https://github.com/spack/spack.git
+   $ git clone --depth=2 --branch releases/latest https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
+To update it to a later release, run this inside that directory:
+
+.. code-block:: console
+
+   $ git fetch --depth=2 --force origin tag releases/latest && git checkout releases/latest
+
+To track the development version instead, clone without ``--branch releases/latest``.
 Once you have cloned Spack, we recommend sourcing the appropriate script for your shell.
 
 For *bash*, *zsh* and *sh* users:
