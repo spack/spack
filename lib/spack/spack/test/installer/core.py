@@ -4,16 +4,18 @@
 """Tests for the installer.core module: the PackageInstaller event loop."""
 
 import os
+import selectors
 import signal
 import sys
+import time
 
 import pytest
 
 import spack.error
 import spack.spec
 from spack.config import Configuration
-from spack.installer.base import TERMINATION_SIGNALS, ExitCode
-from spack.installer.core import PackageInstaller, read_connection, write_connection
+from spack.installer.base import STOP_SIGNALS, ExitCode
+from spack.installer.core import PackageInstaller, SignalEvents, read_connection, write_connection
 from spack.installer.ui import ChangeJobs, SetEcho
 from spack.store import Store
 from spack.test.installer.conftest import (
@@ -231,6 +233,24 @@ def test_fail_fast_terminates_running_builds(temporary_store, mock_packages):
     assert bad.name in str(exc_info.value) and hanging.name not in str(exc_info.value)
 
 
+@pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root
+def test_builds_that_do_not_terminate_are_killed(temporary_store, mock_packages):
+    """A build that is still running when the terminate timeout expires is killed."""
+    bad, hanging = _make_concrete("pkg-a"), _make_concrete("pkg-b")
+    launcher = ScriptedLauncher(
+        {
+            bad.name: Script(exitcode=ExitCode.BUILD_ERROR),
+            hanging.name: Script(hang=True, ignore_terminate=True),
+        }
+    )
+    with pytest.raises(spack.error.InstallError):
+        _install(
+            launcher, bad, hanging, fail_fast=True, concurrent_packages=2, terminate_timeout=0.0
+        )
+
+    assert launcher.hanging[0].terminated and launcher.hanging[0].killed
+
+
 def test_set_echo_commands_reach_control_channel(temporary_store, mock_packages):
     """SetEcho commands queued by the UI are written as b"1"/b"0" to the control channel of the
     build, which is still registered as running when the command queue is drained."""
@@ -352,48 +372,144 @@ def test_keyboard_interrupt_terminates_builds_and_flushes_db(temporary_store, mo
 
 
 def _skip_if_handled_by_test_runner():
-    if any(signal.getsignal(sig) is not signal.SIG_DFL for sig in TERMINATION_SIGNALS):
-        pytest.skip("termination signals are handled by the test runner")
+    if len(SignalEvents(STOP_SIGNALS).old_handlers) < len(STOP_SIGNALS):
+        pytest.skip("stop signals are handled by the test runner")
+
+
+def _send(signum):
+    """Send a signal to this process."""
+    if sys.platform == "win32":
+        # os.kill() terminates the process on Windows
+        signal.raise_signal(signum)  # novermin
+    else:
+        os.kill(os.getpid(), signum)
+
+
+def _stop_error(signum):
+    """The exception that install() raises after the given signal stopped it."""
+    return KeyboardInterrupt if signum == signal.SIGINT else spack.error.TerminatedBySignal
 
 
 @pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
-@pytest.mark.parametrize("signum", TERMINATION_SIGNALS, ids=lambda s: s.name)
-def test_termination_signal_terminates_builds(signum, temporary_store, mock_packages):
-    """A termination signal ends the event loop, which terminates the running builds, restores the
-    default handlers, and raises TerminatedBySignal."""
+@pytest.mark.parametrize("signum", STOP_SIGNALS, ids=lambda s: s.name)
+def test_stop_signal_terminates_builds(signum, temporary_store, mock_packages):
+    """A stop signal terminates the running builds. The event loop ends when they have exited,
+    restores the signal handlers, and raises."""
     _skip_if_handled_by_test_runner()
     spec = _make_concrete("trivial-install-test-package")
     launcher = ScriptedLauncher({spec.name: Script(hang=True)})
+    handlers = [signal.getsignal(s) for s in STOP_SIGNALS]
 
     def tick():
-        if launcher.hanging:
-            os.kill(os.getpid(), signum)
+        if launcher.hanging and not launcher.hanging[0].terminated:
+            _send(signum)
 
-    with pytest.raises(spack.error.TerminatedBySignal) as e:
-        _install(launcher, spec, ui=DrivingUI(tick))
+    ui = DrivingUI(tick)
+    with pytest.raises(_stop_error(signum)) as e:
+        _install(launcher, spec, ui=ui)
 
-    assert e.value.signum == signum
-    assert launcher.hanging[0].terminated
-    assert all(signal.getsignal(s) is signal.SIG_DFL for s in TERMINATION_SIGNALS)
+    assert signum == signal.SIGINT or e.value.signum == signum
+    assert launcher.hanging[0].terminated and not launcher.hanging[0].killed
+    assert ("stopping",) in ui.events
+    assert not [e for e in ui.events if e[0] == "state_changed" and e[2] == "failed"]
+    assert [signal.getsignal(s) for s in STOP_SIGNALS] == handlers
 
 
-@pytest.mark.not_on_windows("Windows has no termination signals to handle")
 @pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
-def test_termination_signal_while_starting_build(temporary_store, mock_packages):
-    """A termination signal while a build is started terminates that build."""
+@pytest.mark.parametrize("signum", STOP_SIGNALS, ids=lambda s: s.name)
+def test_stop_signal_while_starting_build(signum, temporary_store, mock_packages):
+    """A stop signal while a build is started terminates that build."""
     _skip_if_handled_by_test_runner()
     spec = _make_concrete("trivial-install-test-package")
     launcher = ScriptedLauncher({spec.name: Script(hang=True)})
 
     def launch(request, jobserver):
         child = launcher(request, jobserver)
-        os.kill(os.getpid(), signal.SIGTERM)
+        _send(signum)
         return child
 
-    with pytest.raises(spack.error.TerminatedBySignal):
+    with pytest.raises(_stop_error(signum)):
         _install(launch, spec)
 
     assert launcher.hanging[0].terminated
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+def test_build_finishing_while_stopping(temporary_store, mock_packages):
+    """A build that finishes successfully after a stop signal is added to the database, and its
+    dependents are not started."""
+    _skip_if_handled_by_test_runner()
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(hang=True), root.name: Script()})
+
+    def tick():
+        if launcher.hanging and not launcher.hanging[0].finished:
+            _send(signal.SIGINT)
+            launcher.hanging[0].finish()
+
+    with pytest.raises(KeyboardInterrupt):
+        _install(launcher, root, ui=DrivingUI(tick))
+
+    assert [r.spec.name for r in launcher.requests] == [dep.name]
+    assert _record(temporary_store, dep) is not None
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+def test_second_interrupt_kills_builds(temporary_store, mock_packages):
+    """Ctrl-C while the builds are terminating kills them, instead of waiting for the timeout."""
+    _skip_if_handled_by_test_runner()
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(hang=True, ignore_terminate=True)})
+
+    def tick():
+        if launcher.hanging and not launcher.hanging[0].killed:
+            _send(signal.SIGINT)
+
+    with pytest.raises(KeyboardInterrupt):
+        _install(launcher, spec, ui=DrivingUI(tick))
+
+    assert launcher.hanging[0].killed
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+def test_interrupt_does_not_terminate_builds_that_receive_it(temporary_store, mock_packages):
+    """The event loop does not terminate a build that receives Ctrl-C too, like builds on Windows,
+    where that would kill the build before it has cleaned up. It waits for the build to exit."""
+    _skip_if_handled_by_test_runner()
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(hang=True, receives_interrupt=True)})
+
+    def tick():
+        if ("stopping",) in ui.events:
+            launcher.hanging[0].finish()
+        elif launcher.hanging:
+            _send(signal.SIGINT)
+
+    ui = DrivingUI(tick)
+    with pytest.raises(KeyboardInterrupt):
+        _install(launcher, spec, ui=ui)
+
+    assert not launcher.hanging[0].terminated and not launcher.hanging[0].killed
+
+
+def test_third_interrupt_raises_keyboard_interrupt():
+    """The event loop handles Ctrl-C twice; after that it is raised as usual, so that an event loop
+    that does not respond can still be interrupted."""
+    _skip_if_handled_by_test_runner()
+    signal_events = SignalEvents([signal.SIGINT])
+    with selectors.DefaultSelector() as selector:
+        signal_events.setup(selector)
+        try:
+            _send(signal.SIGINT)
+            _send(signal.SIGINT)
+            assert signal_events.read() == bytes([signal.SIGINT, signal.SIGINT])
+            with pytest.raises(KeyboardInterrupt):
+                _send(signal.SIGINT)
+                time.sleep(1)  # the handler runs between two bytecodes
+        finally:
+            assert signal_events.teardown(STOP_SIGNALS) == signal.SIGINT
+    assert signal.getsignal(signal.SIGINT) is signal.default_int_handler
 
 
 @pytest.mark.not_on_windows("Windows has no termination signals to handle")
@@ -412,7 +528,7 @@ def test_termination_signal_during_cleanup(temporary_store, mock_packages):
             terminate = build.terminate
 
             def signal_and_terminate():
-                os.kill(os.getpid(), signal.SIGTERM)
+                _send(signal.SIGTERM)
                 terminate()
 
             build.terminate = signal_and_terminate
