@@ -392,9 +392,7 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     (outside_dir / "mirrors.yaml").write_text("mirrors: {}\n", encoding="utf-8")
     (old / "mirrors.yaml").symlink_to(os.path.join("..", "other", "spack", "mirrors.yaml"))
     # a directory link into dotfiles, relative: must be made absolute to still resolve
-    (old / "shared").symlink_to(
-        os.path.join("..", "other", "spack"), target_is_directory=True
-    )
+    (old / "shared").symlink_to(os.path.join("..", "other", "spack"), target_is_directory=True)
     # an absolute link into ~/.spack itself: still valid, left alone
     (old / "alias.yaml").symlink_to(old / "config.yaml")
 
@@ -1456,9 +1454,7 @@ def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path, nested):
         (env / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
     (old_envs / "prod").symlink_to("myenv", target_is_directory=True)
     (old_envs / "prod2").symlink_to(old_envs / "myenv", target_is_directory=True)
-    (old_envs / "deep").symlink_to(
-        old_envs / "myenv" / "sub", target_is_directory=True
-    )
+    (old_envs / "deep").symlink_to(old_envs / "myenv" / "sub", target_is_directory=True)
     (old_envs / "external").symlink_to(checkout, target_is_directory=True)
     (old_envs / "junk").symlink_to("notes", target_is_directory=True)
     (old_envs / "junk2").symlink_to(tmp_path, target_is_directory=True)
