@@ -925,7 +925,7 @@ complete -c spack -n '__fish_spack_using_command cd' -s m -l module-dir -d 'spac
 complete -c spack -n '__fish_spack_using_command cd' -s r -l spack-root -f -a spack_root
 complete -c spack -n '__fish_spack_using_command cd' -s r -l spack-root -d 'spack installation root'
 complete -c spack -n '__fish_spack_using_command cd' -s i -l install-dir -f -a install_dir
-complete -c spack -n '__fish_spack_using_command cd' -s i -l install-dir -d 'install prefix for spec (spec need not be installed)'
+complete -c spack -n '__fish_spack_using_command cd' -s i -l install-dir -d 'install prefix for an installed spec'
 complete -c spack -n '__fish_spack_using_command cd' -s p -l package-dir -f -a package_dir
 complete -c spack -n '__fish_spack_using_command cd' -s p -l package-dir -d 'directory enclosing a spec'"'"'s package.py file'
 complete -c spack -n '__fish_spack_using_command cd' -l repo -l packages -s P -r -f -a repo
@@ -2280,7 +2280,7 @@ complete -c spack -n '__fish_spack_using_command location' -s m -l module-dir -d
 complete -c spack -n '__fish_spack_using_command location' -s r -l spack-root -f -a spack_root
 complete -c spack -n '__fish_spack_using_command location' -s r -l spack-root -d 'spack installation root'
 complete -c spack -n '__fish_spack_using_command location' -s i -l install-dir -f -a install_dir
-complete -c spack -n '__fish_spack_using_command location' -s i -l install-dir -d 'install prefix for spec (spec need not be installed)'
+complete -c spack -n '__fish_spack_using_command location' -s i -l install-dir -d 'install prefix for an installed spec'
 complete -c spack -n '__fish_spack_using_command location' -s p -l package-dir -f -a package_dir
 complete -c spack -n '__fish_spack_using_command location' -s p -l package-dir -d 'directory enclosing a spec'"'"'s package.py file'
 complete -c spack -n '__fish_spack_using_command location' -l repo -l packages -s P -r -f -a repo
