@@ -2088,28 +2088,24 @@ class Environment:
             )
 
     def _env_modifications_for_view(
-        self, view: ViewDescriptor, reverse: bool = False
+        self, view: ViewDescriptor
     ) -> spack.util.environment.EnvironmentModifications:
         try:
             with spack.store.STORE.db.read_transaction():
                 installed_roots = [
                     s for s in self.installable_roots() if spack.store.STORE.db.installed(s)
                 ]
-            mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
+            return uenv.environment_modifications_for_specs(*installed_roots, view=view)
         except Exception as e:
             # Failing to setup spec-specific changes shouldn't be a hard error.
-            tty.warn(
-                f"could not {'unload' if reverse else 'load'} runtime environment due "
-                f"to {e.__class__.__name__}: {e}"
-            )
+            tty.warn(f"could not load runtime environment due to {e.__class__.__name__}: {e}")
             return spack.util.environment.EnvironmentModifications()
-        return mods.reversed() if reverse else mods
 
     def add_view_to_env(
         self, env_mod: spack.util.environment.EnvironmentModifications, view: str
     ) -> spack.util.environment.EnvironmentModifications:
         """Collect the environment modifications to activate an environment using the provided
-        view. Removes duplicate paths.
+        view.
 
         Args:
             env_mod: the environment modifications object that is modified.
@@ -2120,29 +2116,6 @@ class Environment:
 
         env_mod.extend(uenv.unconditional_environment_modifications(descriptor))
         env_mod.extend(self._env_modifications_for_view(descriptor))
-
-        # deduplicate paths from specs mapped to the same location
-        for env_var in env_mod.group_by_name():
-            env_mod.prune_duplicate_paths(env_var)
-
-        return env_mod
-
-    def rm_view_from_env(
-        self, env_mod: spack.util.environment.EnvironmentModifications, view: str
-    ) -> spack.util.environment.EnvironmentModifications:
-        """Collect the environment modifications to deactivate an environment using the provided
-        view. Reverses the action of ``add_view_to_env``.
-
-        Args:
-            env_mod: the environment modifications object that is modified.
-            view: the name of the view to deactivate."""
-        descriptor = self.views.get(view)
-        if not descriptor:
-            return env_mod
-
-        env_mod.extend(uenv.unconditional_environment_modifications(descriptor).reversed())
-        env_mod.extend(self._env_modifications_for_view(descriptor, reverse=True))
-
         return env_mod
 
     def add_concrete_spec(

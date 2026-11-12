@@ -1340,7 +1340,10 @@ CMAKE_PREFIX_PATH   .
 Each of these paths are appended to the view root, and added to the relevant variable if the path exists.
 For this reason, it is not recommended to use non-default projections with the default view of an environment.
 
-The ``spack env deactivate`` command will remove the active view of the Spack environment from the user's environment variables.
+The ``spack env deactivate`` command gives back to the environment variables changed by ``spack env activate`` the values they had before activation.
+Changes made to those variables after activation are kept: for instance, an entry appended to ``PATH`` stays there, while the entries of the view are removed.
+These variables are also part of the output of ``spack env activate --sh`` and of the other shell options.
+
 
 
 .. _cmd-spack-env-depfile:

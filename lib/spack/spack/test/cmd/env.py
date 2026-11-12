@@ -52,6 +52,7 @@ from spack.util import tty
 from spack.util.executable import Executable
 from spack.util.filesystem import readlink
 from spack.util.lang import dedupe
+from spack.util.undo_record import UndoRecord
 from spack.version import Version
 
 # TODO-27021
@@ -968,7 +969,7 @@ def test_env_modifications_error_on_activate(
     pkg = mock_packages.get_pkg_class("cmake-client")
     monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
 
-    ev.shell.activate(e)
+    ev.shell.activate(e, UndoRecord({}))
 
     _, err = capfd.readouterr()
     assert "cmake-client had issues!" in err
@@ -983,9 +984,9 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
     with e:
         install("--add", "--fake", "depends-on-run-env")
 
-    env_variables = {}
-    ev.shell.activate(e).apply_modifications(env_variables)
-    assert env_variables["DEPENDENCY_ENV_VAR"] == "1"
+    record = UndoRecord({})
+    ev.shell.activate(e, record)
+    assert record.value("DEPENDENCY_ENV_VAR") == "1"
 
 
 def test_env_definition_symlink(install_mockery, mock_fetch, tmp_path: pathlib.Path):
@@ -3598,19 +3599,13 @@ spack:
     with ev.read("test"):
         install("--fake")
 
-    test_env = ev.read("test")
-    output = env("activate", "--sh", "test")
+    during = _shell_after({"PATH": "/usr/bin:/bin"}, tmp_path, "activate", "--sh", "test")
+    assert during["SPACK_ENVAR_SET_IN_ENV_LOAD"] == "True"
+    assert during["CONFIG_ENVAR_SET_IN_ENV_LOAD"] == "True"
 
-    assert "SPACK_ENVAR_SET_IN_ENV_LOAD=True" in output
-    assert "CONFIG_ENVAR_SET_IN_ENV_LOAD=True" in output
-
-    with test_env:
-        with spack.util.environment.set_env(
-            SPACK_ENVAR_SET_IN_ENV_LOAD="True", CONFIG_ENVAR_SET_IN_ENV_LOAD="True"
-        ):
-            output = env("deactivate", "--sh")
-            assert "unset SPACK_ENVAR_SET_IN_ENV_LOAD" in output
-            assert "unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
+    after = _shell_after(during, tmp_path, "deactivate", "--sh")
+    assert "SPACK_ENVAR_SET_IN_ENV_LOAD" not in after
+    assert "CONFIG_ENVAR_SET_IN_ENV_LOAD" not in after
 
 
 def test_stack_view_no_activate_without_default(
@@ -5675,3 +5670,101 @@ def test_remove_reports_only_the_specs_it_removed(tmp_path: pathlib.Path):
 
         output = remove("mpileaks")
         assert "mpileaks has been removed" in output
+
+
+#: Variables that activating the "test" environment of these tests changes
+_ACTIVATED_VARIABLES = (
+    "ACLOCAL_PATH",
+    "CMAKE_PREFIX_PATH",
+    "MANPATH",
+    "PATH",
+    "PKG_CONFIG_PATH",
+    "VIRTUAL_ENV_PROMPT",
+    ev.spack_env_var,
+    ev.spack_env_view_var,
+)
+
+
+def _activated_variables(shell: Dict[str, str]) -> Dict[str, Optional[str]]:
+    return {name: shell.get(name) for name in _ACTIVATED_VARIABLES}
+
+
+def _spack_env(shell: Dict[str, str], *args: str) -> str:
+    """Returns the output of ``spack env <args>`` run with exactly ``shell`` as the environment."""
+    with spack.util.environment.set_env(
+        **{name: shell.get(name) for name in set(os.environ) | set(shell)}
+    ):
+        return env(*args)
+
+
+def _shell_after(shell: Dict[str, str], tmp_path: pathlib.Path, *args: str) -> Dict[str, str]:
+    """Runs ``spack env <args>`` with ``shell`` as the environment, evaluates its output in bash,
+    and returns the environment of bash afterwards."""
+    script = tmp_path / "commands.sh"
+    script.write_text(_spack_env(shell, *args))
+    return spack.util.environment.environment_after_sourcing_files(str(script), env=shell)
+
+
+@pytest.mark.not_on_windows("evaluates the output in bash")
+@pytest.mark.regression("48391")
+@pytest.mark.regression("16343")
+def test_env_deactivate_restores_the_shell(tmp_path: pathlib.Path, mock_packages, install_mockery):
+    """Tests that deactivating an environment gives back the variables it changed exactly as
+    they were, including entries of the view that were already on PATH, while keeping changes
+    made after activation.
+    """
+    env("create", "test")
+    with ev.read("test") as e:
+        install("--fake", "--add", "cmake")
+        view_bin = os.path.join(e.default_view.root, "bin")
+
+    shell = {"PATH": f"{view_bin}:/usr/bin:/bin", "MANPATH": "/usr/share/man"}
+
+    during = _shell_after(shell, tmp_path, "activate", "--sh", "test")
+    assert during["PATH"] == shell["PATH"]
+    assert during["CMAKE_PREFIX_PATH"] == e.default_view.root
+    after = _shell_after(during, tmp_path, "deactivate", "--sh")
+    assert _activated_variables(after) == _activated_variables(shell)
+    assert not [name for name in after if name.startswith("SPACK_UNDO_")]
+
+    during = _shell_after(shell, tmp_path, "activate", "--sh", "test")
+    during["PATH"] += ":/my/bin"
+    after = _shell_after(during, tmp_path, "deactivate", "--sh")
+    assert after["PATH"] == f"{view_bin}:/usr/bin:/bin:/my/bin"
+
+
+def test_env_deactivate_without_undo_record(mock_packages, install_mockery):
+    """Tests that an environment activated without an undo record is deactivated with a warning,
+    leaving its variables in place.
+    """
+    env("create", "test")
+    with ev.read("test") as test_env:
+        install("--fake", "--add", "cmake")
+
+    with test_env, pytest.warns(UserWarning, match="activated without an undo record"):
+        output = _spack_env({ev.spack_env_var: test_env.path}, "deactivate", "--sh")
+    assert "unset SPACK_ENV;" in output
+    assert "PATH" not in output
+
+
+@pytest.mark.not_on_windows("evaluates the output in bash")
+def test_env_activate_after_deactivation_without_undo_record(
+    tmp_path: pathlib.Path, mock_packages, install_mockery
+):
+    """Tests that an environment deactivated by a Spack that does not record its changes is
+    dropped from the record, so that the next activation starts from the shell as it is.
+    """
+    env("create", "test")
+    with ev.read("test") as e:
+        install("--fake", "--add", "cmake")
+        view_bin = os.path.join(e.default_view.root, "bin")
+
+    during = _shell_after({"PATH": "/usr/bin:/bin"}, tmp_path, "activate", "--sh", "test")
+    ev.deactivate()
+
+    elsewhere = {k: v for k, v in during.items() if k != "SPACK_ENV"}
+    elsewhere["PATH"] = "/usr/bin:/bin:/new"
+    again = _shell_after(elsewhere, tmp_path, "activate", "--sh", "test")
+    assert again["PATH"] == f"{view_bin}:/usr/bin:/bin:/new"
+    after = _shell_after(again, tmp_path, "deactivate", "--sh")
+    assert after["PATH"] == "/usr/bin:/bin:/new"
