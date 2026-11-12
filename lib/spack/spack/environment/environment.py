@@ -3091,7 +3091,7 @@ def display_specs(
         ),
         key=traverse.by_dag_hash,
     )
-    print(tree_string)
+    print(tree_string, end="")
 
 
 def make_repo_path(root):
