@@ -1670,7 +1670,7 @@ class Environment:
                 self.concretized_roots, lambda x: x.root not in stale_specs
             )
             for x in removed:
-                del self.specs_by_hash[x.hash]
+                self._maybe_remove_dag_hash(x.hash)
 
         return removed_specs
 
