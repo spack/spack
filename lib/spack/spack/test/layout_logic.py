@@ -1803,6 +1803,53 @@ def test_migrate_with_staging_skips_occupied_destination(tmp_path, monkeypatch):
     assert set(new_path.iterdir()) == {existing}
 
 
+def test_migrate_with_staging_replaces_empty_destination(tmp_path):
+    """An existing empty destination is removed and atomically replaced by the staged copy."""
+    old_path = tmp_path / "old"
+    old_path.mkdir()
+    (old_path / "file").write_text("content", encoding="utf-8")
+    new_path = tmp_path / "new"
+    new_path.mkdir()
+
+    assert spack.migrate.migrate_with_staging(
+        old_path=str(old_path),
+        new_path=str(new_path),
+        prepare_staging_callback=lambda old, staging, new: shutil.copytree(old, staging),
+        lock_name=".test-lock",
+        staging_name=".test-staging",
+        description="test resource",
+        verify_destination_callback=spack.migrate.can_migrate_to_location,
+    )
+    assert (new_path / "file").read_text(encoding="utf-8") == "content"
+
+
+def test_migrate_with_staging_removes_stale_staging_directory(tmp_path):
+    """A staging directory left by a failed process is removed before preparing a new copy."""
+    old_path = tmp_path / "old"
+    old_path.mkdir()
+    (old_path / "file").write_text("content", encoding="utf-8")
+    new_path = tmp_path / "new"
+    staging = tmp_path / ".test-staging"
+    staging.mkdir()
+    (staging / "stale").write_text("stale", encoding="utf-8")
+
+    def prepare(old, staging_path, new):
+        assert not os.path.exists(staging_path)
+        shutil.copytree(old, staging_path)
+
+    assert spack.migrate.migrate_with_staging(
+        old_path=str(old_path),
+        new_path=str(new_path),
+        prepare_staging_callback=prepare,
+        lock_name=".test-lock",
+        staging_name=staging.name,
+        description="test resource",
+        verify_destination_callback=spack.migrate.can_migrate_to_location,
+    )
+    assert (new_path / "file").read_text(encoding="utf-8") == "content"
+    assert not staging.exists()
+
+
 def test_layout_scope_fallback_for_old_installs(mock_spack_instance, monkeypatch):
     """When old installs exist, layout scope retains install_tree at old location.
 
