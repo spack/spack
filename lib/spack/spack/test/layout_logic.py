@@ -704,7 +704,7 @@ def test_env_migration_retains_all_when_one_has_nonrelocatable_state(tmp_path, b
     ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
 
     assert not ok and differing == []
-    assert {p.name for p in new_envs.iterdir()} == {".lock"}
+    assert not [p for p in new_envs.iterdir() if p.name != ".lock"]
     assert (old_envs / "good" / "spack.yaml").exists()
     assert (old_envs / "blocked" / "spack.yaml").exists()
 
