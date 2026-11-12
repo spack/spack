@@ -173,7 +173,8 @@ class TestSpecList:
         assert result.specs == [Spec("mpileaks %gcc@4.5.0")]
 
     def test_spec_list_matrix_install_false_with_sigil(self):
-        """The flag survives a sigil reference, since every row using the member is skipped"""
+        """The flag survives a sigil reference, since every row using the member is skipped. The
+        row records the marked dependency constraint, to report it to the user"""
         parser = SpecListParser()
         parser.parse_definitions(
             data=[
@@ -187,6 +188,7 @@ class TestSpecList:
 
         assert result.specs == [Spec("mpileaks %gcc@4.5.0"), Spec("mpileaks %gcc@4.6.0")]
         assert result.install_flags == [False, True]
+        assert result.marked == ["%gcc@4.5.0", None]
 
     def test_spec_list_matrix_install_false_in_any_dimension(self):
         """A row is installed only if none of its members is marked install: false"""

@@ -1130,8 +1130,19 @@ def _install_false_dependencies(spec: Spec, marked: Set[str]) -> List[str]:
     )
 
 
-def _marked_message(spec: Spec) -> str:
-    return f"not installing {spec.name}: it is marked install: false"
+class _MarkedRoot(NamedTuple):
+    spec: Spec
+    #: The entry marked ``install: false`` that made this root not installed.
+    marked: str
+
+
+def _marked_message(root: _MarkedRoot) -> str:
+    if root.marked.startswith(("^", "%")):
+        return (
+            f"not installing {root.spec.name}: it uses {root.marked} which is marked "
+            "install: false"
+        )
+    return f"not installing {root.spec.name}: it is marked install: false"
 
 
 def _blocked_message(spec: Spec, blockers: List[str]) -> str:
@@ -1146,7 +1157,7 @@ class _RootStatus(NamedTuple):
 
     #: Marked roots that are not installed, by hash. A marked root is left out if an unmarked root
     #: concretizes to the same spec, since that spec is installed through the unmarked root.
-    marked: Dict[str, Spec]
+    marked: Dict[str, _MarkedRoot]
     #: Roots that are not marked
     unmarked: List[Spec]
     #: Unmarked roots that are installed
@@ -2221,8 +2232,8 @@ class Environment:
 
     @staticmethod
     def _warn_skipped(status: _RootStatus) -> None:
-        for spec in status.marked.values():
-            tty.warn(_marked_message(spec))
+        for root in status.marked.values():
+            tty.warn(_marked_message(root))
         for spec, blockers in status.blocked:
             tty.warn(_blocked_message(spec, blockers))
 
@@ -2242,7 +2253,7 @@ class Environment:
             installable_specs = []
             for spec in specs:
                 if spec.dag_hash() in status.marked:
-                    tty.warn(_marked_message(spec))
+                    tty.warn(_marked_message(status.marked[spec.dag_hash()]))
                     continue
                 blockers = _install_false_dependencies(spec, set(status.marked))
                 if blockers:
@@ -2337,22 +2348,26 @@ class Environment:
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
 
-    def _marked_roots(self) -> List[ConcretizedRootInfo]:
-        not_installable: Set[Tuple[str, Spec]] = set()
+    def _marked_roots(self) -> List[Tuple[ConcretizedRootInfo, str]]:
+        """Roots that are not installed because of ``install: false``, each with the entry that
+        is marked"""
+        marked: Dict[Tuple[str, Spec], str] = {}
         for group in self.manifest.groups():
             speclist = self.spec_lists.get(self._user_specs_key(group=group))
             if speclist is None:  # e.g. while the user specs are being removed
                 continue
-            not_installable.update(
-                (group, spec)
-                for spec, install in zip(speclist.specs, speclist.install_flags)
-                if not install
+            marked.update(
+                ((group, spec), by) for spec, by in zip(speclist.specs, speclist.marked) if by
             )
-        return [x for x in self.concretized_roots if (x.group, x.root) in not_installable]
+        return [
+            (x, marked[(x.group, x.root)])
+            for x in self.concretized_roots
+            if (x.group, x.root) in marked
+        ]
 
     def _root_status(self) -> _RootStatus:
         marked_roots = self._marked_roots()
-        marked_keys = {(x.group, x.root) for x in marked_roots}
+        marked_keys = {(x.group, x.root) for x, _ in marked_roots}
         unmarked = [
             self.specs_by_hash[x.hash]
             for x in self.concretized_roots
@@ -2366,8 +2381,8 @@ class Environment:
 
         unmarked_hashes = {s.dag_hash() for s in unmarked}
         marked = {
-            x.hash: self.specs_by_hash[x.hash]
-            for x in marked_roots
+            x.hash: _MarkedRoot(self.specs_by_hash[x.hash], by)
+            for x, by in marked_roots
             if x.hash not in unmarked_hashes
         }
 
@@ -2397,7 +2412,7 @@ class Environment:
         if not status.marked:
             return set()
         everything = traverse.traverse_nodes(
-            [*status.unmarked, *status.marked.values()], key=traverse.by_dag_hash
+            [*status.unmarked, *(r.spec for r in status.marked.values())], key=traverse.by_dag_hash
         )
         needed = traverse.traverse_nodes(status.installable, key=traverse.by_dag_hash)
         return {s.dag_hash() for s in everything} - {s.dag_hash() for s in needed}

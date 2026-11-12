@@ -894,6 +894,34 @@ spack:
     }
 
 
+@pytest.mark.parametrize("also_root", [False, True])
+def test_env_install_false_dependency_sigil_in_matrix(
+    environment_from_manifest, mock_packages, capfd, also_root
+):
+    """A matrix row that uses an entry marked install: false as a dependency constraint (^ sigil)
+    is not installed, whether or not the entry is also a root of the environment."""
+    e = environment_from_manifest(
+        f"""\
+spack:
+  definitions:
+  - deps: [{{spec: callpath, install: false}}]
+  specs:
+  {"- $deps" if also_root else ""}
+  - matrix:
+    - [mpileaks]
+    - [$^deps]
+"""
+    )
+    with e:
+        e.concretize()
+        e.warn_skipped_roots()
+
+    assert e.installable_roots() == []
+    err = capfd.readouterr()[1]
+    assert "not installing mpileaks: it uses ^callpath which is marked install: false" in err
+    assert ("not installing callpath: it is marked install: false" in err) == also_root
+
+
 def test_env_install_false_needs_no_concretization(environment_from_manifest):
     """install: false is read from spack.yaml at install time, so it needs no concretization."""
     e = environment_from_manifest(

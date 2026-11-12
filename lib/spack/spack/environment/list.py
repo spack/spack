@@ -21,7 +21,7 @@ class SpecList:
         # We cache results and invalidate when self.yaml_list changes
         self.specs_as_yaml_list = expanded_list or []
         self._constraints = None
-        self._install_flags: List[bool] = []
+        self._marked: List[Optional[str]] = []
         self._specs: Optional[List[Spec]] = None
         self._toolchains = toolchains
 
@@ -36,29 +36,35 @@ class SpecList:
     def specs_as_constraints(self):
         if self._constraints is None:
             constraints = []
-            install_flags = []
+            marked: List[Optional[str]] = []
             for item in self.specs_as_yaml_list:
                 if isinstance(item, dict) and "matrix" in item:  # matrix of specs
-                    for row, install in _expand_matrix_constraints(item):
+                    for row, row_marked in _expand_matrix_constraints(item):
                         constraints.append(row)
-                        install_flags.append(install)
+                        marked.append(row_marked)
                 elif isinstance(item, dict):  # single spec with options
                     constraints.append([Spec(item["spec"])])
-                    install_flags.append(item.get("install", True))
+                    marked.append(None if item.get("install", True) else item["spec"])
                 else:  # individual spec
                     constraints.append([Spec(item)])
-                    install_flags.append(True)
+                    marked.append(None)
             self._constraints = constraints
-            self._install_flags = install_flags
+            self._marked = marked
 
         return self._constraints
 
     @property
-    def install_flags(self) -> List[bool]:
-        """Install flag for each spec in ``self.specs``, in the same order"""
+    def marked(self) -> List[Optional[str]]:
+        """For each spec in ``self.specs``, in the same order: None if it is installed, otherwise
+        the member marked ``install: false`` that made it not installed (e.g. ``%gcc@13``)."""
         if self._constraints is None:
-            self.specs_as_constraints  # also computes the install flags
-        return self._install_flags
+            self.specs_as_constraints  # also computes the marked members
+        return self._marked
+
+    @property
+    def install_flags(self) -> List[bool]:
+        """Whether each spec in ``self.specs`` is installed"""
+        return [m is None for m in self.marked]
 
     @property
     def specs(self) -> List[Spec]:
@@ -116,26 +122,26 @@ def spec_string(item: Union[str, Dict]) -> Optional[str]:
     return None
 
 
-def _expand_matrix_constraints(matrix_config) -> List[Tuple[List[Spec], bool]]:
-    """Expands a matrix into its rows of constraints. Each row is paired with whether it is
-    installed, which is not the case if any of its members is marked ``install: false``."""
+def _expand_matrix_constraints(matrix_config) -> List[Tuple[List[Spec], Optional[str]]]:
+    """Expands a matrix into its rows of constraints. Each row is paired with None if it is
+    installed, or else with its first member marked ``install: false``, which is why it is not."""
     # Avoid circular import
     import spack.hash_lookup
 
     # recurse so we can handle nested matrices
     expanded_rows = []
     for row in matrix_config["matrix"]:
-        new_row: List[Tuple[Optional[str], bool]] = []
+        new_row: List[Tuple[Optional[str], Optional[str]]] = []
         for r in row:
             if isinstance(r, dict) and "matrix" in r:
                 # Flatten the nested matrix into a single row of constraints
-                new_row.extend(
-                    (" ".join(str(c) for c in constraints), install)
-                    for constraints, install in _expand_matrix_constraints(r)
-                )
+                for constraints, marked in _expand_matrix_constraints(r):
+                    string = " ".join(str(c) for c in constraints)
+                    new_row.append((string, string if marked else None))
             else:
-                install = not isinstance(r, dict) or r.get("install", True)
-                new_row.append((spec_string(r), install))
+                string = spec_string(r)
+                marked = string if isinstance(r, dict) and not r.get("install", True) else None
+                new_row.append((string, marked))
         expanded_rows.append(new_row)
 
     excludes = matrix_config.get("exclude", [])  # only compute once
@@ -169,7 +175,7 @@ def _expand_matrix_constraints(matrix_config) -> List[Tuple[List[Spec], bool]]:
             flat_combo[0] = Spec(sigil + str(flat_combo[0]))
 
         # Add to list of constraints
-        results.append((flat_combo, all(install for _, install in combo)))
+        results.append((flat_combo, next((m for _, m in combo if m), None)))
 
     return results
 
