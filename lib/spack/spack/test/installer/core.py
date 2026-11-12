@@ -6,15 +6,19 @@
 import os
 import signal
 import sys
+from types import SimpleNamespace
 
 import pytest
 
 import spack.error
+import spack.installer_dispatch
+import spack.plugins
 import spack.spec
+import spack.util.lang
 from spack.config import Configuration
 from spack.installer.base import TERMINATION_SIGNALS, ExitCode
 from spack.installer.core import PackageInstaller, read_connection, write_connection
-from spack.installer.ui import ChangeJobs, SetEcho
+from spack.installer.ui import ChangeJobs, InstallerUI, SetEcho, TerminalUI
 from spack.store import Store
 from spack.test.installer.conftest import (
     DrivingUI,
@@ -28,7 +32,210 @@ from spack.test.installer.conftest import (
 
 
 class TestPackageInstallerConstructor:
-    """Tests for PackageInstaller constructor, especially capacity initialization."""
+    """Tests for installer construction and UI selection."""
+
+    @pytest.fixture(autouse=True)
+    def default_plugins(self, mutable_config):
+        mutable_config.set("config:plugins", {})
+        mutable_config.set("config:installer", "new")
+
+    @pytest.mark.skipif(sys.version_info < (3, 8), reason="entry-point discovery needs Python 3.8")
+    @pytest.mark.parametrize("target", ["Skin", "setup", "setup_instance"])
+    def test_external_plugin_bundle(
+        self, temporary_store, mock_packages, monkeypatch, tmp_path, mutable_config, target
+    ):
+        module_name = f"test_installer_skin_{target.lower()}"
+        (tmp_path / f"{module_name}.py").write_text(
+            "from spack.installer.ui import TerminalUI\n"
+            "from spack.installer import PackageInstaller\n"
+            "class Skin(TerminalUI): pass\n"
+            "class Engine(PackageInstaller): pass\n"
+            "def setup():\n"
+            "    if not callable(getattr(TerminalUI, 'on_jobs_changed', None)):\n"
+            "        raise RuntimeError('unsupported API')\n"
+            "    return Skin\n"
+            "def setup_instance():\n"
+            "    return Skin(\n"
+            "        total=0, verbose=True, filter_padding=False, show_log_on_error=False\n"
+            "    )\n",
+            encoding="utf-8",
+        )
+        metadata = tmp_path / f"{module_name}-1.0.dist-info"
+        metadata.mkdir()
+        (metadata / "METADATA").write_text(
+            f"Metadata-Version: 2.1\nName: {module_name}\nVersion: 1.0\n", encoding="utf-8"
+        )
+        (metadata / "entry_points.txt").write_text(
+            f"[spack.plugins.ui]\nexternal-test-skin = {module_name}:{target}\n"
+            f"[spack.plugins.installer]\nexternal-test-engine = {module_name}:Engine\n",
+            encoding="utf-8",
+        )
+        monkeypatch.syspath_prepend(str(tmp_path))
+        mutable_config.set(
+            "config:plugins", {"ui": "external-test-skin", "installer": "external-test-engine"}
+        )
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        try:
+            installer = spack.installer_dispatch.create_installer([spec.package], verbose=True)
+            assert type(installer).__name__ == "Engine"
+            assert type(installer).__module__ == module_name
+            assert type(installer.ui).__name__ == "Skin"
+            assert type(installer.ui).__module__ == module_name
+            assert installer.ui.total > 0
+            assert installer.ui.verbose
+        finally:
+            sys.modules.pop(module_name, None)
+
+    @pytest.mark.parametrize(
+        "failure", ["import", "setup", "invalid-class", "invalid-result", "constructor"]
+    )
+    def test_broken_ui_entry_point_falls_back(
+        self, temporary_store, mock_packages, monkeypatch, mutable_config, capsys, failure
+    ):
+        class BrokenUI(TerminalUI):
+            def __init__(self, **kwargs):
+                raise RuntimeError("constructor failed")
+
+        def setup():
+            if failure == "setup":
+                raise RuntimeError("incompatible API")
+            return object
+
+        def load():
+            if failure == "import":
+                raise ImportError("import failed")
+            if failure == "constructor":
+                return BrokenUI
+            if failure == "invalid-class":
+                return object
+            return setup
+
+        monkeypatch.setattr(
+            spack.util.lang,
+            "get_entry_points",
+            lambda *, group: [SimpleNamespace(name="broken", load=load)],
+        )
+        mutable_config.set("config:plugins:ui", "broken")
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        assert type(PackageInstaller([spec.package]).ui) is TerminalUI
+        assert "using default TerminalUI" in capsys.readouterr().err
+
+    def test_unselected_entry_point_is_not_loaded(self, monkeypatch, mutable_config):
+        groups = []
+
+        def load():
+            pytest.fail("unselected entry point was loaded")
+
+        def entries(*, group):
+            groups.append(group)
+            assert group == "spack.plugins.ui"
+            return [
+                SimpleNamespace(name="other", load=load),
+                SimpleNamespace(name="selected", load=lambda: TerminalUI),
+            ]
+
+        monkeypatch.setattr(spack.util.lang, "get_entry_points", entries)
+        assert type(spack.plugins.create_plugin("ui", TerminalUI, total=0)) is TerminalUI
+        assert not groups
+        mutable_config.set("config:plugins:ui", "selected")
+        assert type(spack.plugins.create_plugin("ui", TerminalUI, total=0)) is TerminalUI
+        assert groups == ["spack.plugins.ui"]
+
+    @pytest.mark.parametrize("count", [0, 2])
+    @pytest.mark.parametrize("name", ["skin", "streaming"])
+    def test_missing_or_ambiguous_entry_point(
+        self, monkeypatch, mutable_config, capsys, count, name
+    ):
+        def load():
+            pytest.fail("ambiguous entry point was loaded")
+
+        monkeypatch.setattr(
+            spack.util.lang,
+            "get_entry_points",
+            lambda *, group: [SimpleNamespace(name=name, load=load)] * count,
+        )
+        mutable_config.set("config:plugins:ui", name)
+        assert type(spack.plugins.create_plugin("ui", TerminalUI, total=0)) is TerminalUI
+        assert "using default TerminalUI" in capsys.readouterr().err
+
+    def test_streaming_ui_entry_point(self, monkeypatch, mutable_config):
+        from spack.installer.streaming.ui import StreamingTerminalUI, setup
+
+        entries = [SimpleNamespace(name="streaming", load=lambda: setup)]
+        monkeypatch.setattr(spack.util.lang, "get_entry_points", lambda *, group: entries)
+        mutable_config.set("config:plugins:ui", "streaming")
+        assert type(spack.plugins.create_plugin("ui", TerminalUI, total=0)) is StreamingTerminalUI
+
+    def test_incompatible_streaming_ui(self, monkeypatch, mutable_config, capsys):
+        from spack.installer.streaming.ui import setup
+
+        entries = [SimpleNamespace(name="streaming", load=lambda: setup)]
+        monkeypatch.setattr(spack.util.lang, "get_entry_points", lambda *, group: entries)
+        mutable_config.set("config:plugins:ui", "streaming")
+        monkeypatch.setattr(TerminalUI, "_render_overview", None)
+        assert type(spack.plugins.create_plugin("ui", TerminalUI, total=0)) is TerminalUI
+        assert "incompatible terminal UI API" in capsys.readouterr().err
+
+    def test_broken_installer_plugin_falls_back(
+        self, temporary_store, mock_packages, monkeypatch, mutable_config, capsys
+    ):
+        class BrokenInstaller(PackageInstaller):
+            def __init__(self, *args, **kwargs):
+                raise RuntimeError("initialization failed")
+
+        monkeypatch.setattr(
+            spack.util.lang,
+            "get_entry_points",
+            lambda **kwargs: [SimpleNamespace(name="broken", load=lambda: BrokenInstaller)],
+        )
+        mutable_config.set("config:plugins:installer", "broken")
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        installer = spack.installer_dispatch.create_installer([spec.package], verbose=True)
+        assert type(installer) is PackageInstaller
+        assert installer.verbose
+        assert "using default PackageInstaller" in capsys.readouterr().err
+
+    def test_nonterminal_ui_and_explicit_override(
+        self, temporary_store, mock_packages, monkeypatch, mutable_config
+    ):
+        class HeadlessUI(InstallerUI):
+            def __init__(self, **kwargs):
+                super().__init__()
+
+        loaded = []
+
+        def load():
+            loaded.append(True)
+            return HeadlessUI
+
+        monkeypatch.setattr(
+            spack.util.lang,
+            "get_entry_points",
+            lambda **kwargs: [SimpleNamespace(name="headless", load=load)],
+        )
+        mutable_config.set("config:plugins:ui", "headless")
+        spec = spack.spec.Spec("trivial-install-test-package")
+        spec._mark_concrete()
+        assert type(PackageInstaller([spec.package]).ui) is HeadlessUI
+        explicit = RecordingUI()
+        assert PackageInstaller([spec.package], ui=explicit).ui is explicit
+        assert loaded == [True]
+
+    @pytest.mark.parametrize("implementation", ["old", "new"])
+    def test_default_installer_dispatch(self, temporary_store, mutable_config, implementation):
+        mutable_config.set("config:installer", implementation)
+        if implementation == "old":
+            from spack.old_installer import PackageInstaller as Builtin
+
+            with pytest.warns(UserWarning, match="config:installer:old is deprecated"):
+                installer = spack.installer_dispatch.create_installer([])
+        else:
+            Builtin = PackageInstaller
+            installer = spack.installer_dispatch.create_installer([])
+        assert type(installer) is Builtin
 
     def test_capacity_explicit_concurrent_packages(self, temporary_store, mock_packages):
         """Test that capacity is set correctly when concurrent_packages is explicitly provided."""
