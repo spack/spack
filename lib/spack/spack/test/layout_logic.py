@@ -368,7 +368,7 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     pkg = old / "bootstrap" / "store" / "linux" / "clingo-1.0-abc" / "lib"
     (pkg / "site").mkdir(parents=True)
     (pkg / "site" / "cfg.yaml").write_text("a: 1\n", encoding="utf-8")
-    (pkg.parent / "lib64").symlink_to("lib")
+    (pkg.parent / "lib64").symlink_to("lib", target_is_directory=True)
     src = old / "stage" / "spack-stage-foo-1.0-abc" / "spack-src"
     (src / ".github").mkdir(parents=True)
     (src / ".github" / "ci.yml").write_text("on: push\n", encoding="utf-8")
@@ -385,14 +385,16 @@ def test_config_migration_copies_only_yaml(mock_spack_instance, capsys):
     # a directory alias stays a link, so it keeps tracking v2
     (old / "v2").mkdir()
     (old / "v2" / "x.yaml").write_text("config: {}\n", encoding="utf-8")
-    (old / "current").symlink_to("v2")
+    (old / "current").symlink_to("v2", target_is_directory=True)
     # a yaml that is a link outside the config dir stays a link to that content
     outside_dir = pathlib.Path(home_dir) / "other" / "spack"
     outside_dir.mkdir(parents=True)
     (outside_dir / "mirrors.yaml").write_text("mirrors: {}\n", encoding="utf-8")
     (old / "mirrors.yaml").symlink_to(os.path.join("..", "other", "spack", "mirrors.yaml"))
     # a directory link into dotfiles, relative: must be made absolute to still resolve
-    (old / "shared").symlink_to(os.path.join("..", "other", "spack"))
+    (old / "shared").symlink_to(
+        os.path.join("..", "other", "spack"), target_is_directory=True
+    )
     # an absolute link into ~/.spack itself: still valid, left alone
     (old / "alias.yaml").symlink_to(old / "config.yaml")
 
@@ -789,7 +791,7 @@ def test_env_migration_rewrites_paths_spelled_through_a_symlinked_prefix(tmp_pat
     link = tmp_path / "spack-link"
     old_envs = clone / "var" / "spack" / "environments"
     old_envs.mkdir(parents=True)
-    link.symlink_to(clone)
+    link.symlink_to(clone, target_is_directory=True)
     linked_envs = link / "var" / "spack" / "environments"
     for name, target in (("own", "own"), ("sib", "own")):
         (old_envs / name).mkdir()
@@ -1409,7 +1411,7 @@ def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
 
     # licenses; an empty destination directory is replaced by the link
     src = tmp_path / "licenses"
-    src.symlink_to(site)
+    src.symlink_to(site, target_is_directory=True)
     dst = tmp_path / "new" / "licenses"
     dst.mkdir(parents=True)
     assert spack.migrate._migrate_licenses(str(src), str(dst))
@@ -1423,7 +1425,7 @@ def test_symlinked_resource_root_is_migrated_as_a_symlink(tmp_path):
     # an environment, through migrate_with_staging and the marker verifier
     old_envs = tmp_path / "old-envs"
     old_envs.mkdir()
-    (old_envs / "linked").symlink_to(site)
+    (old_envs / "linked").symlink_to(site, target_is_directory=True)
     new_envs = tmp_path / "new-envs"
     for _ in range(2):
         ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
@@ -1452,12 +1454,14 @@ def test_symlinked_env_into_the_envs_root_follows_its_target(tmp_path, nested):
         env.mkdir(parents=True)
     for env in (old_envs / "myenv", old_envs / "myenv" / "sub", checkout):
         (env / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
-    (old_envs / "prod").symlink_to("myenv")
-    (old_envs / "prod2").symlink_to(old_envs / "myenv")
-    (old_envs / "deep").symlink_to(old_envs / "myenv" / "sub")
-    (old_envs / "external").symlink_to(checkout)
-    (old_envs / "junk").symlink_to("notes")
-    (old_envs / "junk2").symlink_to(tmp_path)
+    (old_envs / "prod").symlink_to("myenv", target_is_directory=True)
+    (old_envs / "prod2").symlink_to(old_envs / "myenv", target_is_directory=True)
+    (old_envs / "deep").symlink_to(
+        old_envs / "myenv" / "sub", target_is_directory=True
+    )
+    (old_envs / "external").symlink_to(checkout, target_is_directory=True)
+    (old_envs / "junk").symlink_to("notes", target_is_directory=True)
+    (old_envs / "junk2").symlink_to(tmp_path, target_is_directory=True)
 
     for _ in range(2):
         ok, differing = spack.migrate._migrate_environments(
@@ -1488,7 +1492,7 @@ def test_nested_env_discovery(tmp_path):
     )
     (old_envs / "junk" / "sub").mkdir(parents=True)
     (old_envs / "junk" / "sub" / "README").write_text("", encoding="utf-8")
-    (old_envs / "all").symlink_to("team")
+    (old_envs / "all").symlink_to("team", target_is_directory=True)
 
     assert spack.migrate._find_environments(str(old_envs)) == ["all", os.path.join("team", "proj")]
 
@@ -1519,7 +1523,7 @@ def test_symlinked_dot_spack_is_migrated_once_and_quietly_after(tmp_path, monkey
     dotfiles = tmp_path / "dotfiles" / "spack"
     dotfiles.mkdir(parents=True)
     (dotfiles / "config.yaml").write_text("config:\n  build_jobs: 7\n", encoding="utf-8")
-    (tmp_path / ".spack").symlink_to(dotfiles)
+    (tmp_path / ".spack").symlink_to(dotfiles, target_is_directory=True)
     new = tmp_path / ".config" / "spack"
     new.mkdir(parents=True)
 
@@ -1558,7 +1562,7 @@ def test_symlinked_dot_spack_leaves_populated_config_home_alone(tmp_path, monkey
     dotfiles = tmp_path / "dotfiles" / "spack"
     dotfiles.mkdir(parents=True)
     (dotfiles / "config.yaml").write_text("config:\n  build_jobs: 7\n", encoding="utf-8")
-    (tmp_path / ".spack").symlink_to(dotfiles)
+    (tmp_path / ".spack").symlink_to(dotfiles, target_is_directory=True)
     new = tmp_path / ".config" / "spack"
     new.mkdir(parents=True)
     (new / "packages.yaml").write_text("packages: {}\n", encoding="utf-8")

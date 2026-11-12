@@ -231,7 +231,7 @@ def test_migrate_cleanup_old_refuses_symlink(mock_spack_instance, monkeypatch):
     target = Path(home_dir) / "real-dot-spack"
     target.mkdir()
     (target / "config.yaml").write_text("config: {}\n", encoding="utf-8")
-    (Path(home_dir) / ".spack").symlink_to(target)
+    (Path(home_dir) / ".spack").symlink_to(target, target_is_directory=True)
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
 
     with pytest.raises(spack.main.SpackCommandError):
