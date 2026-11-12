@@ -1,0 +1,1436 @@
+{
+  "microarchitectures": {
+    "nvidia": {
+      "from": [],
+      "vendor": "generic"
+    },
+    "70": {
+      "from": [
+        "nvidia"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "9.0:12.9",
+            "name": "70",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "6.0:",
+            "name": "sm_70",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "72": {
+      "from": [
+        "70"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "10.0:12.9",
+            "name": "72",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "7.0:",
+            "name": "sm_72",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "75": {
+      "from": [
+        "72"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "10.0:",
+            "name": "75",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "8.0:",
+            "name": "sm_75",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "80": {
+      "from": [
+        "nvidia"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "11.0:",
+            "name": "80",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "name": "sm_80",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "86": {
+      "from": [
+        "80"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "11.1:",
+            "name": "86",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "13.0:",
+            "name": "sm_86",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "87": {
+      "from": [
+        "86"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "11.5:",
+            "name": "87",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "16.0:",
+            "name": "sm_87",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "88": {
+      "from": [
+        "87"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "13.0:",
+            "name": "88",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "22.1:",
+            "name": "sm_88",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "89": {
+      "from": [
+        "88"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "11.8:",
+            "name": "89",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "16.0:",
+            "name": "sm_89",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "90": {
+      "from": [
+        "nvidia"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "11.8:",
+            "name": "90",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "16.0:",
+            "name": "sm_90",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "90a": {
+      "from": [
+        "90"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.0:",
+            "name": "90a",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "18.1:",
+            "name": "sm_90a",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "100": {
+      "from": [
+        "nvidia"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.8:",
+            "name": "100",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "20.1:",
+            "name": "sm_100",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "100f": {
+      "from": [
+        "100"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:",
+            "name": "100f",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "23.1:",
+            "name": "sm_100f",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "100a": {
+      "from": [
+        "100f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.8:",
+            "name": "100a",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "20.1:",
+            "name": "sm_100a",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "101": {
+      "from": [
+        "nvidia"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.8:12.9",
+            "name": "101",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "20.1:",
+            "name": "sm_101",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "101f": {
+      "from": [
+        "101"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:12.9",
+            "name": "101f",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "23.1:",
+            "name": "sm_101f",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "101a": {
+      "from": [
+        "101f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.8:12.9",
+            "name": "101a",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "20.1:",
+            "name": "sm_101a",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "103": {
+      "from": [
+        "100"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:",
+            "name": "103",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "22.1:",
+            "name": "sm_103",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "103f": {
+      "from": [
+        "103",
+        "100f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:",
+            "name": "103f",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "23.1:",
+            "name": "sm_103f",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "103a": {
+      "from": [
+        "103f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:",
+            "name": "103a",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "22.1:",
+            "name": "sm_103a",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "107": {
+      "from": [
+        "103"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "13.4:",
+            "name": "107",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ]
+      }
+    },
+    "107f": {
+      "from": [
+        "107",
+        "103f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "13.4:",
+            "name": "107f",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ]
+      }
+    },
+    "107a": {
+      "from": [
+        "107f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "13.4:",
+            "name": "107a",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ]
+      }
+    },
+    "110": {
+      "from": [
+        "nvidia"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "13.0:",
+            "name": "110",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "22.1:",
+            "name": "sm_110",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "110f": {
+      "from": [
+        "110"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "13.0:",
+            "name": "110f",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "23.1:",
+            "name": "sm_110f",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "110a": {
+      "from": [
+        "110f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "13.0:",
+            "name": "110a",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "22.1:",
+            "name": "sm_110a",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "120": {
+      "from": [
+        "nvidia"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.8:",
+            "name": "120",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "20.1:",
+            "name": "sm_120",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "120f": {
+      "from": [
+        "120"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:",
+            "name": "120f",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "23.1:",
+            "name": "sm_120f",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "120a": {
+      "from": [
+        "120f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.8:",
+            "name": "120a",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "20.1:",
+            "name": "sm_120a",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "121": {
+      "from": [
+        "120"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:",
+            "name": "121",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "22.1:",
+            "name": "sm_121",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "121f": {
+      "from": [
+        "121",
+        "120f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:",
+            "name": "121f",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "23.1:",
+            "name": "sm_121f",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "121a": {
+      "from": [
+        "121f"
+      ],
+      "vendor": "nvidia",
+      "compilers": {
+        "nvcc": [
+          {
+            "versions": "12.9:",
+            "name": "121a",
+            "flags": "-gencode arch=compute_{name},code=sm_{name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "22.1:",
+            "name": "sm_121a",
+            "flags": "--cuda-gpu-arch={name}"
+          }
+        ]
+      }
+    },
+    "amd": {
+      "from": [],
+      "vendor": "generic"
+    },
+    "gfx900": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx900:xnack-": {
+      "from": [
+        "gfx900"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx902": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx906": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx906:xnack-": {
+      "from": [
+        "gfx906"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx908": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx908:xnack-": {
+      "from": [
+        "gfx908"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx90a": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.3:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "13.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx90a:xnack-": {
+      "from": [
+        "gfx90a"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.3:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "13.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx90a:xnack+": {
+      "from": [
+        "gfx90a"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.3:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "13.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx90c": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx940": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "5.3:7.1",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "15.0:20.1",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx941": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "5.7:7.1",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "17.0:20.1",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx942": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "5.7:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "17.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx950": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "6.4:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "20.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1010": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1011": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1012": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1013": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.5:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "13.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1030": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1031": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1032": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1033": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1034": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.3:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "13.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1035": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "4.5:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "13.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1036": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "5.2:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "15.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1100": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "5.3:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "15.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1101": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "5.3:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "15.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1102": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "5.3:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "15.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1103": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "5.3:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "15.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1150": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "6.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "17.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1151": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "6.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "17.0:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1152": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "6.2:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "19.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1153": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "6.4:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "20.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1200": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "6.2:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "18.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1201": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "6.2:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "18.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1250": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "7.2:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "21.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    },
+    "gfx1251": {
+      "from": [
+        "amd"
+      ],
+      "vendor": "amd",
+      "compilers": {
+        "hipcc": [
+          {
+            "versions": "7.2:",
+            "flags": "--offload-arch={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "22.1:",
+            "flags": "--offload-arch={name}"
+          }
+        ]
+      }
+    }
+  }
+}

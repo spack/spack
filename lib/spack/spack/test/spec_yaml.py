@@ -524,6 +524,15 @@ def test_pickle_roundtrip_for_abstract_specs(spec_str):
     assert str(s) == str(t)
 
 
+def test_gpu_variants_do_not_add_an_architecture_to_the_node_dict():
+    """An architecture holding only the GPU mirror has nothing to serialize, so an abstract
+    spec with a GPU variant keeps the node dict, and the hash, it has on develop."""
+    assert "arch" not in Spec("vtk-m cuda_arch=80").to_node_dict()
+    assert Spec("vtk-m cuda_arch=80").dag_hash() == "pdstwqoqkzwnvjlhajh5jdknehk7b7ze"
+    # a real, if partial, architecture is still written
+    assert Spec("vtk-m cuda_arch=80 target=x86_64").to_node_dict()["arch"]["target"] == "x86_64"
+
+
 @pytest.mark.parametrize(
     "spec_str",
     [

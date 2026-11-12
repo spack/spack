@@ -26,6 +26,7 @@ from typing import (
 )
 
 import spack.error
+import spack.gpus
 import spack.spec_parser
 import spack.util.tty.color
 from spack.util import lang
@@ -789,6 +790,10 @@ def prevalidate_variant_value(
     # raise if there is no definition at all
     if not pkg_cls.has_variant(variant.name):
         raise UnknownVariantError(f"No such variant '{variant.name}' in package {pkg_cls.name}")
+
+    values = spack.gpus.validation_values(variant.name, variant.values)
+    if values != variant.values:
+        variant = VariantValue(variant.type, variant.name, values, concrete=variant.concrete)
 
     # do as much prevalidation as we can -- check only those
     # variants whose when constraint intersects this spec

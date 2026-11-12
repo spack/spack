@@ -64,6 +64,7 @@ from typing import (
     ClassVar,
     Deque,
     Dict,
+    FrozenSet,
     Iterable,
     Iterator,
     List,
@@ -80,6 +81,7 @@ from typing import (
 )
 
 import spack.vendor.archspec.cpu
+import spack.vendor.archspec.gpu
 from spack.vendor.typing_extensions import Literal
 
 import spack
@@ -88,6 +90,7 @@ import spack.compilers.flags
 import spack.deptypes as dt
 import spack.enums
 import spack.error
+import spack.gpus
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -228,6 +231,73 @@ def _make_microarchitecture(name: str) -> spack.vendor.archspec.cpu.Microarchite
     return spack.vendor.archspec.cpu.TARGETS.get(
         name, spack.vendor.archspec.cpu.generic_microarchitecture(name)
     )
+
+
+def _make_gpu_microarch(
+    name: Union[str, spack.vendor.archspec.gpu.GPUMicroarch]
+) -> spack.vendor.archspec.gpu.GPUMicroarch:
+    """The archspec node for a GPU micro-architecture name.
+
+    Raises:
+        ValueError: if archspec does not know the name. Unlike CPU targets, there is no generic
+            fallback: a node outside the archspec graph has no ancestors and no compiler data,
+            so nothing could be built or compared correctly for it. Support for a new
+            micro-architecture is added to the archspec data, not worked around here.
+    """
+    if isinstance(name, spack.vendor.archspec.gpu.GPUMicroarch):
+        return name
+
+    target = spack.vendor.archspec.gpu.TARGETS.get(name)
+    if target is None:
+        raise ValueError(f"'{name}' is not a GPU micro-architecture known to archspec")
+    return target
+
+
+class GPUTarget(NamedTuple):
+    """A GPU micro-architecture in an ArchSpec: ``80`` is exactly that target, ``:80`` is any
+    target an 80 device runs, i.e. 80 or one of its ancestors."""
+
+    node: spack.vendor.archspec.gpu.GPUMicroarch
+    compatible: bool
+
+    @property
+    def name(self) -> str:
+        return self.node.name
+
+    def __str__(self) -> str:
+        return f":{self.name}" if self.compatible else self.name
+
+    def accepted_targets(self) -> FrozenSet[spack.vendor.archspec.gpu.GPUMicroarch]:
+        """The targets this one accepts code for: itself, plus every ancestor but the vendor
+        root when compatible."""
+        if not self.compatible:
+            return frozenset([self.node])
+        return frozenset([self.node, *(a for a in self.node.ancestors if a.parents)])
+
+
+def _make_gpu_target(
+    value: Union[str, spack.vendor.archspec.gpu.GPUMicroarch, GPUTarget],
+) -> GPUTarget:
+    """Raises ValueError, like ``_make_gpu_microarch``, for a name archspec does not know."""
+    if isinstance(value, GPUTarget):
+        return value
+    if isinstance(value, str) and value.startswith(":"):
+        return GPUTarget(_make_gpu_microarch(value[1:]), compatible=True)
+    return GPUTarget(_make_gpu_microarch(value), compatible=False)
+
+
+def is_compatible_gpu_value(value: Union[str, bool]) -> bool:
+    """Whether a GPU variant value is a compatible form archspec knows, e.g. ``:86``."""
+    try:
+        return _make_gpu_target(str(value)).compatible
+    except ValueError:
+        return False
+
+
+def has_compatible_gpu_value(variant: vt.VariantValue) -> bool:
+    """Whether a GPU variant carries a compatible form archspec knows, e.g. ``:86``. Such a
+    variant is compared by the architecture, not by the variant's own exact rules."""
+    return any(is_compatible_gpu_value(value) for value in variant.values)
 
 
 def _closed_interval_targets(
@@ -543,6 +613,75 @@ class ArchSpec:
         return results
 
     @staticmethod
+    def _gpu_satisfies(
+        lhs: Optional[Sequence[GPUTarget]], rhs: Optional[Sequence[GPUTarget]]
+    ) -> bool:
+        """Whether every target requested on the right is covered by one built on the left:
+        its accepted set is contained in the request's. Exact against exact is equality;
+        an exact ``80`` covers ``:86``; ``:80`` covers ``:86``; nothing covers across vendors."""
+        if not rhs:
+            return True
+
+        if not lhs:
+            return False
+
+        return all(
+            any(built.accepted_targets() <= wanted.accepted_targets() for built in lhs)
+            for wanted in rhs
+        )
+
+    @staticmethod
+    def _gpu_intersects(
+        lhs: Optional[Sequence[GPUTarget]], rhs: Optional[Sequence[GPUTarget]]
+    ) -> bool:
+        """Whether code can be built for both sides. An empty side places no constraint."""
+        if not lhs or not rhs:
+            return True
+
+        return bool(ArchSpec._gpu_intersection(lhs, rhs))
+
+    @staticmethod
+    def _gpu_meet(lhs: GPUTarget, rhs: GPUTarget) -> List[GPUTarget]:
+        """The targets both accept: exact when either side is exact, otherwise the most specific
+        common ancestors, each compatible."""
+        common = lhs.accepted_targets() & rhs.accepted_targets()
+        if not common:
+            return []
+        if not (lhs.compatible and rhs.compatible):
+            return [GPUTarget(node, compatible=False) for node in common]
+        maximal = [n for n in common if not any(n < m for m in common)]
+        return [GPUTarget(n, compatible=True) for n in sorted(maximal, key=lambda n: n.name)]
+
+    @staticmethod
+    def _gpu_intersection(
+        lhs: Optional[Sequence[GPUTarget]], rhs: Optional[Sequence[GPUTarget]]
+    ) -> List[GPUTarget]:
+        """The targets both sides accept, vendor by vendor: a vendor present on both sides meets
+        pairwise, one present on a single side passes through unchanged. Empty when a vendor on
+        both sides has no common target."""
+        results: List[GPUTarget] = []
+
+        if not lhs or not rhs:
+            return results
+
+        vendors = dict.fromkeys(t.node.vendor for t in (*lhs, *rhs))
+        for vendor in vendors:
+            left = [t for t in lhs if t.node.vendor == vendor]
+            right = [t for t in rhs if t.node.vendor == vendor]
+            if not left or not right:
+                results.extend(left or right)
+                continue
+            met: List[GPUTarget] = []
+            for l_target in left:
+                for r_target in right:
+                    met.extend(t for t in ArchSpec._gpu_meet(l_target, r_target) if t not in met)
+            if not met:
+                return []
+            results.extend(met)
+
+        return results
+
+    @staticmethod
     def default_arch():
         """Return the default architecture"""
         platform = spack.platforms.host()
@@ -551,19 +690,27 @@ class ArchSpec:
         arch_tuple = str(platform), str(default_os), str(default_target)
         return ArchSpec(arch_tuple)
 
-    __slots__ = "_platform", "_os", "_target"
+    __slots__ = "_platform", "_os", "_target", "_gpus"
 
-    def __init__(self, spec_or_platform_tuple=(None, None, None)):
+    def __init__(self, spec_or_platform_tuple=(None, None, None), gpus=None):
         """Architecture specification a package should be built with.
 
         Each ArchSpec is comprised of three elements: a platform (e.g. Linux),
         an OS (e.g. RHEL6), and a target (e.g. x86_64).
+
+        Builds with device code also carry the GPU micro-architectures they
+        target (e.g. 80,90a or gfx942). These mirror the ``cuda_arch`` or
+        ``amdgpu_target`` variant of the owning spec, which remains the source
+        of truth: the spec copies the variant in, and the logic for satisfies,
+        intersects and constrain lives here. The field is never serialized.
 
         Args:
             spec_or_platform_tuple (ArchSpec or str or tuple): if an ArchSpec
                 is passed it will be duplicated into the new instance.
                 Otherwise information on platform, OS and target should be
                 passed in either as a spec string or as a tuple.
+            gpus (list or None): GPU micro-architectures, as names or archspec
+                nodes. Replaces those of a duplicated ArchSpec when given.
         """
 
         # If the argument to __init__ is a spec string, parse it
@@ -577,6 +724,8 @@ class ArchSpec:
         if isinstance(spec_or_platform_tuple, ArchSpec):
             other = spec_or_platform_tuple
             platform_tuple = other.platform, other.os, other.target
+            if gpus is None:
+                gpus = other.gpus
 
         elif isinstance(spec_or_platform_tuple, (str, tuple)):
             spec_fields = spec_or_platform_tuple
@@ -592,6 +741,7 @@ class ArchSpec:
             platform_tuple = (_string_or_none(platform), _string_or_none(operating_system), target)
 
         self.platform, self.os, self.target = platform_tuple
+        self.gpus = gpus
 
     @staticmethod
     def override(init_spec, change_spec):
@@ -607,6 +757,8 @@ class ArchSpec:
             new_spec.os = change_spec.os
         if change_spec.target:
             new_spec.target = change_spec.target
+        if change_spec.gpus:
+            new_spec.gpus = change_spec.gpus
         return new_spec
 
     def _autospec(self, spec_like):
@@ -621,6 +773,7 @@ class ArchSpec:
             yield self.target
         else:
             yield self.target.name
+        # gpus is a mirror of the variants, which already count towards a spec's identity
 
     @property
     def platform(self):
@@ -703,6 +856,30 @@ class ArchSpec:
 
         self._target = value
 
+    @property
+    def gpus(self) -> Optional[Tuple[GPUTarget, ...]]:
+        """The GPU targets of the build, or None when it has none.
+
+        A mirror of the ``cuda_arch`` / ``amdgpu_target`` variant of the owning spec, kept in
+        memory only: it is never serialized, and the variant remains the source of truth.
+        """
+        return self._gpus
+
+    @gpus.setter
+    def gpus(
+        self,
+        value: Optional[
+            Sequence[Union[str, spack.vendor.archspec.gpu.GPUMicroarch, GPUTarget]]
+        ],
+    ) -> None:
+        """Stores the targets, resolving names through ``_make_gpu_target`` and dropping
+        duplicates. An empty value means none."""
+        if not value:
+            self._gpus = None
+            return
+
+        self._gpus = tuple(dict.fromkeys(_make_gpu_target(v) for v in value))
+
     def satisfies(self, other: "ArchSpec") -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.
 
@@ -715,6 +892,7 @@ class ArchSpec:
             self._attr_satisfies(self.platform, other.platform)
             and self._attr_satisfies(self.os, other.os)
             and self._target_satisfies(self.target, other.target)
+            and self._gpu_satisfies(*self._gpu_scope(other))
         )
 
     def intersects(self, other: "ArchSpec") -> bool:
@@ -733,6 +911,7 @@ class ArchSpec:
             self._attr_intersects(self.platform, other.platform)
             and self._attr_intersects(self.os, other.os)
             and self._target_intersects(self.target, other.target)
+            and self._gpu_intersects(*self._gpu_scope(other))
         )
 
     def _target_constrain(self, other: "ArchSpec") -> bool:
@@ -757,6 +936,40 @@ class ArchSpec:
             return False
 
         self.target = intersection_target
+        return True
+
+    def _gpu_scope(
+        self, other: "ArchSpec"
+    ) -> Tuple[Tuple[GPUTarget, ...], Tuple[GPUTarget, ...]]:
+        """Both sides' targets for the vendors a compatible form is involved in. Bare targets
+        of other vendors are the variant's to compare, so they are left out."""
+        mine, theirs = self.gpus or (), other.gpus or ()
+        vendors = {t.node.vendor for t in (*mine, *theirs) if t.compatible}
+        return (
+            tuple(t for t in mine if t.node.vendor in vendors),
+            tuple(t for t in theirs if t.node.vendor in vendors),
+        )
+
+    def _gpu_constrain(self, other: "ArchSpec") -> bool:
+        mine, theirs = self._gpu_scope(other)
+        if not theirs:
+            return False
+
+        if not mine:
+            results = list(theirs)
+        else:
+            results = self._gpu_intersection(mine, theirs)
+            if not results:
+                raise UnsatisfiableArchitectureSpecError(self, other)
+
+        # targets of vendors outside the scope are untouched
+        scoped = {t.node.vendor for t in (*mine, *theirs)}
+        kept = tuple(t for t in self.gpus or () if t.node.vendor not in scoped)
+        new = kept + tuple(results)
+        if new == self.gpus:
+            return False
+
+        self.gpus = new
         return True
 
     def constrain(self, other: "ArchSpec") -> bool:
@@ -787,6 +1000,7 @@ class ArchSpec:
                 constrained = True
 
         constrained |= self._target_constrain(other)
+        constrained |= self._gpu_constrain(other)
 
         return constrained
 
@@ -836,8 +1050,9 @@ class ArchSpec:
         return "%s-%s-%s" % (self.platform, self.os, self.target)
 
     def __repr__(self):
-        fmt = "ArchSpec(({0.platform!r}, {0.os!r}, {1!r}))"
-        return fmt.format(self, str(self.target))
+        gpus = "" if self.gpus is None else f", gpus={','.join(str(g) for g in self.gpus)!r}"
+        fmt = "ArchSpec(({0.platform!r}, {0.os!r}, {1!r}){2})"
+        return fmt.format(self, str(self.target), gpus)
 
     def __contains__(self, string):
         return string in str(self) or string in self.target
@@ -2132,6 +2347,29 @@ class Spec:
 
         return result
 
+    def _sync_gpu_data_from_variants(self) -> None:
+        """Mirrors the GPU variants into ``architecture.gpus``. Values archspec does not know,
+        ``none`` included, are left out: they get no archspec features."""
+        gpus: List[GPUTarget] = []
+
+        for name in spack.gpus.VENDOR_BY_VARIANT:
+            variant_value = self.variants.get(name)
+            if variant_value is None:
+                continue
+            for value in variant_value.values:
+                try:
+                    gpus.append(_make_gpu_target(str(value)))
+                except ValueError:
+                    continue
+
+        if not gpus:
+            return
+
+        if self.architecture is None:
+            self.architecture = ArchSpec()
+
+        self.architecture.gpus = gpus
+
     def _add_flag(
         self, name: str, value: Union[str, bool], propagate: bool, concrete: bool
     ) -> None:
@@ -2149,6 +2387,9 @@ class Spec:
             pattern = _NAMESPACE_VALUE if name == "namespace" else _BARE_VALUE
             if not pattern.fullmatch(value):
                 raise ValueError(f"invalid value {value!r} for {name}")
+
+        if name in spack.gpus.VENDOR_BY_VARIANT and value == spack.gpus.HOST_DEFAULT:
+            value = ",".join(spack.gpus.resolve_host_default(name))  # flatten GPUs to CSV string
 
         if name == "arch" or name == "architecture":
             assert isinstance(value, str)  # checked above, for mypy
@@ -2181,6 +2422,8 @@ class Spec:
                 reason = _propagated_bool_conflict(self.variants, self.propagated_variants)
                 if reason is not None:
                     raise reason
+            if name in spack.gpus.VENDOR_BY_VARIANT:
+                self._sync_gpu_data_from_variants()
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -2653,7 +2896,9 @@ class Spec:
         if self.versions:
             d.update(self.versions.to_dict())
 
-        if self.architecture:
+        if self.architecture and (
+            self.architecture.platform or self.architecture.os or self.architecture.target
+        ):
             d.update(self.architecture.to_dict())
 
         if self.namespace:
@@ -3332,6 +3577,7 @@ class Spec:
 
         changed |= self.versions.intersect(other.versions)
         changed |= self._constrain_variants(other)
+        self._sync_gpu_data_from_variants()
 
         changed |= self.compiler_flags.constrain(other.compiler_flags)
 
@@ -3342,10 +3588,28 @@ class Spec:
             # copy, so that a later constrain on self does not write through into other
             self.architecture = oarch.copy()
             changed = True
+        changed |= self._write_gpus_back_to_variants(other)
 
         if deps:
             changed |= self._constrain_dependencies(other)
 
+        return changed
+
+    def _write_gpus_back_to_variants(self, other: "Spec") -> bool:
+        """After the architecture constrained the compatible GPU forms, the variants that
+        deferred to it take the result; the variant remains the source of truth."""
+        if self.architecture is None or self.architecture.gpus is None:
+            return False
+
+        changed = False
+        for name, vendor in spack.gpus.VENDOR_BY_VARIANT.items():
+            mine, theirs = self.variants.get(name), other.variants.get(name)
+            if mine is None or not VariantMap._compared_by_architecture(name, mine, theirs):
+                continue
+            values = tuple(str(t) for t in self.architecture.gpus if t.node.vendor == vendor)
+            if values and set(values) != set(mine.values):
+                mine.set(*values)
+                changed = True
         return changed
 
     def _constrain_dependencies(self, other: "Spec") -> bool:
@@ -5100,10 +5364,21 @@ class VariantMap(_VariantMapBase):
         """Stores ``vspec`` under its own name, replacing any entry already there."""
         self[vspec.name] = vspec
 
+    @staticmethod
+    def _compared_by_architecture(name: str, *variants: Optional[vt.VariantValue]) -> bool:
+        # a GPU variant with a compatible form (e.g. ``:86``) is compared by the ArchSpec
+        return name in spack.gpus.VENDOR_BY_VARIANT and any(
+            v is not None and has_compatible_gpu_value(v) for v in variants
+        )
+
     def satisfies(self, other: "VariantMap") -> bool:
         for name, variant in other.items():
             mine = self.get(name)
-            if mine is None or not mine.satisfies(variant):
+            if mine is None:
+                return False
+            if self._compared_by_architecture(name, mine, variant):
+                continue
+            if not mine.satisfies(variant):
                 return False
         return True
 
@@ -5111,7 +5386,9 @@ class VariantMap(_VariantMapBase):
         """The first pair of values of the same name that do not intersect, if any."""
         for name, variant in other.items():
             mine = self.get(name)
-            if mine is not None and not mine.intersects(variant):
+            if mine is None or self._compared_by_architecture(name, mine, variant):
+                continue
+            if not mine.intersects(variant):
                 return mine, variant
         return None
 
@@ -5124,7 +5401,7 @@ class VariantMap(_VariantMapBase):
             if mine is None:
                 self[name] = variant.copy()
                 changed = True
-            else:
+            elif not self._compared_by_architecture(name, mine, variant):
                 changed |= mine.constrain(variant)
         return changed
 
@@ -5231,7 +5508,9 @@ def substitute_abstract_variants(spec: Spec, *, repo=None):
             continue
 
         new_variant = pkg_variant.make_variant(*v.values)
-        pkg_variant.validate_or_raise(new_variant, spec.name)
+        pkg_variant.validate_or_raise(
+            pkg_variant.make_variant(*spack.gpus.validation_values(name, v.values)), spec.name
+        )
         spec.variants.set(new_variant)
 
     if unknown:
@@ -5426,6 +5705,8 @@ class SpecfileReaderBase(abc.ABC):
                 spec.propagated_variants[name] = vt.VariantValue.from_node_dict(
                     name, values, abstract=name in propagated_abstract
                 )
+
+        spec._sync_gpu_data_from_variants()
 
         spec.external_path = None
         spec.external_modules = None
