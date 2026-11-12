@@ -683,9 +683,12 @@ def _same_link_or_link_to_sibling(
         return False
     if os.path.realpath(path) == os.path.realpath(other):
         return True
-    if migrated_root is None or not _is_under(other, migrated_root):
+    target = os.path.realpath(other)
+    if migrated_root is None or not _is_under(target, migrated_root):
         return False
-    rel = os.path.relpath(os.path.realpath(other), os.path.realpath(migrated_root))
+    # _migrate_symlinked_root preserves this target relative to the source link's directory;
+    # resolve the same spelling from the destination link's directory.
+    rel = os.path.relpath(target, os.path.realpath(os.path.dirname(other)))
     return os.path.realpath(path) == os.path.realpath(os.path.join(os.path.dirname(path), rel))
 
 
