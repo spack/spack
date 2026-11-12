@@ -152,6 +152,7 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
 
 
 @pytest.mark.not_on_windows("Cannot find echo executable")
+@pytest.mark.child_coverage
 def test_test_spec_passes(mock_packages, install_mockery, mock_test_stage, monkeypatch):
     spec = spack.concretize.concretize_one("simple-standalone-test")
     monkeypatch.setattr(spack.database.Database, "installed", _true)
