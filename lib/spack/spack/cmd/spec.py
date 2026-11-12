@@ -99,7 +99,7 @@ def spec(parser, args):
     if show_status:
         spack.binary_distribution.load_buildcache_index()
         status_fn = ev.install_status_fn(
-            spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+            env, spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
         )
     else:
         status_fn = None

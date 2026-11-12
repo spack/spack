@@ -367,7 +367,7 @@ def _maybe_add_and_concretize(args, env, specs):
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
             spack.binary_distribution.load_buildcache_index()
             status_fn = ev.install_status_fn(
-                spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+                env, spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
             )
             ev.display_specs([concrete for _, concrete in concretized_specs], status_fn=status_fn)
 

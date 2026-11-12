@@ -3223,11 +3223,11 @@ _NOT_PRESENT = (
 
 
 def install_status_fn(
+    env: Optional[Environment],
     status_fn: Optional[Callable[[Spec], spack.spec.InstallStatus]] = None,
 ) -> Callable[[Spec], spack.spec.InstallStatus]:
-    """Status for specs that aren't installed because of ``install:false``."""
+    """Status for specs that aren't installed because of ``install:false`` in ``env``."""
     base = status_fn if status_fn is not None else spack.store.STORE.db.install_status
-    env = active_environment()
     if env is None:
         return base
 
@@ -3264,7 +3264,7 @@ def display_specs(
         format=spack.spec.DISPLAY_FORMAT,
         hashes=True,
         hashlen=7,
-        status_fn=install_status_fn(status_fn),
+        status_fn=install_status_fn(active_environment(), status_fn),
         version_style_fn=(
             spack.package_base.non_preferred_version if highlight_non_defaults else None
         ),
