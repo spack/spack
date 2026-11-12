@@ -119,6 +119,11 @@ class TclConfiguration(BaseConfiguration):
                 return scope.name
         return None
 
+    @property
+    def exclude_variants(self) -> List[str]:
+        """List of variants that should not be defined."""
+        return self.conf.get("filter", {}).get("exclude_variants", [])
+
     @staticmethod
     def _variant_to_str_dict(v: VariantValue) -> Dict[str, str]:
         """Returns a dictionary entry representing variant object passed as argument.
@@ -162,10 +167,11 @@ class TclConfiguration(BaseConfiguration):
             return {}
 
         # Variants reserved by Spack (like patches or dev_path) are not defined
+        excluded = RESERVED_NAMES | set(self.exclude_variants)
         variant_dict = {
             v.name: self._variant_to_str_dict(v)
             for v in sorted(self.spec.variants.values(), key=lambda x: x.name)
-            if v.name not in RESERVED_NAMES
+            if v.name not in excluded
         }
 
         short_hash = self.spec.dag_hash(7)
