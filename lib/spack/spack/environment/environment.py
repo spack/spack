@@ -3214,6 +3214,14 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
+#: Statuses of specs that are not installed, shown as [x] when ``install: false`` skips the spec
+_NOT_PRESENT = (
+    spack.spec.InstallStatus.absent,
+    spack.spec.InstallStatus.missing,
+    spack.spec.InstallStatus.buildcache,
+)
+
+
 def install_status_fn(
     status_fn: Optional[Callable[[Spec], spack.spec.InstallStatus]] = None,
 ) -> Callable[[Spec], spack.spec.InstallStatus]:
@@ -3229,10 +3237,7 @@ def install_status_fn(
 
     def _status_fn(spec: Spec) -> spack.spec.InstallStatus:
         status = base(spec)
-        if (
-            status in (spack.spec.InstallStatus.absent, spack.spec.InstallStatus.missing)
-            and spec.dag_hash() in not_installable
-        ):
+        if status in _NOT_PRESENT and spec.dag_hash() in not_installable:
             return spack.spec.InstallStatus.not_installable
         return status
 
