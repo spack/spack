@@ -289,7 +289,7 @@ condition_set(LiteralNode, BuildNode) :- build_dependency_of_literal_node(Litera
 
 % Generate a comprehensible error for cases like 'foo ^bar' where 'bar' is a build dependency
 % of a transitive dependency of 'foo'
-error(1, "{0} is not a direct 'build' or 'test' dependency, or transitive 'link' or 'run' dependency of any root", Literal)
+error(1, "'{0}' is not a direct 'build' or 'test' dependency of '{1}', nor a transitive 'link' or 'run' dependency of it", Literal, RootPackage)
   :- literal_node(RootPackage, node(X, Literal)),
      not depends_on(node(min_dupe_id, RootPackage), node(X, Literal)),
      not unification_set("root", node(X, Literal)).
