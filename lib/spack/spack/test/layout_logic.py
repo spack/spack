@@ -682,6 +682,36 @@ def test_env_migration_blocks_external_references(tmp_path, path_factory, expect
         )
 
 
+@pytest.mark.parametrize("blocked_by", ["install_tree", "dev_path"])
+def test_env_migration_retains_all_when_one_has_nonrelocatable_state(tmp_path, blocked_by):
+    """An install tree or a develop path cannot be relocated safely; one such environment
+    retains the whole managed-environment root rather than splitting it across locations."""
+    old_envs = tmp_path / "old"
+    new_envs = tmp_path / "new"
+    for name in ("good", "blocked"):
+        (old_envs / name).mkdir(parents=True)
+        (old_envs / name / "spack.yaml").write_text(
+            "spack:\n  specs: [zlib]\n", encoding="utf-8"
+        )
+
+    blocked = old_envs / "blocked"
+    if blocked_by == "install_tree":
+        (blocked / "store" / ".spack-db").mkdir(parents=True)
+        (blocked / "store" / ".spack-db" / "index.json").write_text("{}", encoding="utf-8")
+    else:
+        (blocked / "spack.lock").write_text(
+            '{"concrete_specs": {"abc": {"parameters": {"dev_path": "../src"}}}}',
+            encoding="utf-8",
+        )
+
+    ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+
+    assert not ok and differing == []
+    assert {p.name for p in new_envs.iterdir()} == {".lock"}
+    assert (old_envs / "good" / "spack.yaml").exists()
+    assert (old_envs / "blocked" / "spack.yaml").exists()
+
+
 @pytest.mark.parametrize(
     "path", ["$env/sub/../shared.yaml", "${env}/a/b/../../c.yaml", "$env/./x.yaml", "$env"]
 )
