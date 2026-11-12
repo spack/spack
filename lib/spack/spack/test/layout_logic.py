@@ -690,9 +690,7 @@ def test_env_migration_retains_all_when_one_has_nonrelocatable_state(tmp_path, b
     new_envs = tmp_path / "new"
     for name in ("good", "blocked"):
         (old_envs / name).mkdir(parents=True)
-        (old_envs / name / "spack.yaml").write_text(
-            "spack:\n  specs: [zlib]\n", encoding="utf-8"
-        )
+        (old_envs / name / "spack.yaml").write_text("spack:\n  specs: [zlib]\n", encoding="utf-8")
 
     blocked = old_envs / "blocked"
     if blocked_by == "install_tree":
@@ -700,8 +698,7 @@ def test_env_migration_retains_all_when_one_has_nonrelocatable_state(tmp_path, b
         (blocked / "store" / ".spack-db" / "index.json").write_text("{}", encoding="utf-8")
     else:
         (blocked / "spack.lock").write_text(
-            '{"concrete_specs": {"abc": {"parameters": {"dev_path": "../src"}}}}',
-            encoding="utf-8",
+            '{"concrete_specs": {"abc": {"parameters": {"dev_path": "../src"}}}}', encoding="utf-8"
         )
 
     ok, differing = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
