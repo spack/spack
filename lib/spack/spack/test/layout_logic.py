@@ -229,19 +229,23 @@ def test_migration_copies_user_config(mock_spack_instance, monkeypatch):
     assert new_config.read_text(encoding="utf-8") == "config:\n  build_jobs: 3\n"
 
 
-def test_migration_skips_user_config_when_spack_user_config_path_set(
-    mock_spack_instance, monkeypatch
+@pytest.mark.parametrize(
+    "env_var", ["SPACK_CONFIG_HOME", "SPACK_USER_CONFIG_PATH", "SPACK_DISABLE_LOCAL_CONFIG"]
+)
+def test_migration_skips_user_config_when_config_location_is_overridden(
+    mock_spack_instance, monkeypatch, env_var
 ):
-    """Migration skips user config if SPACK_USER_CONFIG_PATH is set."""
+    """Migration skips user config when its location is overridden or disabled."""
     home_dir, base_prefix = mock_spack_instance
     old_config = pathlib.Path(home_dir) / ".spack"
     old_config.mkdir()
     (old_config / "config.yaml").write_text("config:\n  build_jobs: 3\n", encoding="utf-8")
 
-    # Set SPACK_USER_CONFIG_PATH to indicate user has explicit override
     custom_path = pathlib.Path(home_dir) / "custom_config"
     custom_path.mkdir()
-    monkeypatch.setenv("SPACK_USER_CONFIG_PATH", str(custom_path))
+
+    # SPACK_DISABLE_LOCAL_CONFIG can be set to anything, so use the path to avoid a conditional
+    monkeypatch.setenv(env_var, str(custom_path))
 
     monkeypatch.setattr(spack.config, "CONFIG", spack.config.create())
     result = spack.migrate.migrate_home()
@@ -258,6 +262,27 @@ def test_migration_skips_user_config_when_spack_user_config_path_set(
 
     # Old config should still exist (not moved)
     assert (old_config / "config.yaml").exists(), "Old config should remain untouched"
+
+
+def test_failed_user_config_migration_dies_with_recovery_hint(
+    mock_spack_instance, monkeypatch, capsys
+):
+    """Failure to copy a non-empty user scope stops before Spack silently ignores it."""
+    home_dir, _ = mock_spack_instance
+    old_config = pathlib.Path(home_dir) / ".spack"
+    old_config.mkdir()
+    (old_config / "config.yaml").write_text("config:\n  build_jobs: 3\n", encoding="utf-8")
+
+    def fail_copy(*args, **kwargs):
+        raise OSError("copy failed")
+
+    monkeypatch.setattr(spack.migrate, "_prepare_config_staging", fail_copy)
+    with pytest.raises(SystemExit):
+        spack.migrate._migrate_user_config()
+
+    err = capsys.readouterr().err
+    assert "Failed to migrate Spack config directory" in err
+    assert "set SPACK_CONFIG_HOME=~/.spack to use the old location" in err
 
 
 def test_config_path_migration_relative_paths_in_known_keys(tmp_path):
