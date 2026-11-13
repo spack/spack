@@ -11,6 +11,7 @@ import spack.environment as ev
 import spack.repo
 import spack.schema.environment
 import spack.store
+import spack.user_environment as uenv
 import spack.util.undo_record as undo_record
 from spack.util import tty
 from spack.util.environment import EnvironmentModifications, ShellCmdString
@@ -151,13 +152,18 @@ _ENV_KIND = "env"
 
 
 def read_undo_record(environ: Mapping[str, str]) -> undo_record.UndoRecord:
-    """Reads the undo record of the shell. The unit of an environment that is not the active one
-    any more was undone outside the record, and is forgotten."""
+    """Returns the undo record stored in ``environ``. Units undone outside the record (environment
+    not in ``SPACK_ENV``, spec not in ``SPACK_LOADED_HASHES``) are dropped, and the variables keep
+    their value.
+    """
     record = undo_record.UndoRecord.from_environ(environ)
+    stale = uenv.unloaded_keys(record, environ)
     unit = record.find(_ENV_KIND)
     active = environ.get(ev.spack_env_var)
     if unit is not None and (active is None or unit.key != _environment_key(active)):
-        record.forget(unit.key)
+        stale.append(unit.key)
+    if stale:
+        record.forget(stale)
     return record
 
 

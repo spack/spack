@@ -4,17 +4,44 @@
 import os
 import re
 import sys
+from typing import Dict, Optional
 
 import pytest
 
 import spack.concretize
+import spack.environment as ev
 import spack.user_environment as uenv
+import spack.util.environment
 from spack.main import SpackCommand
+from spack.test.utilities import current_shell, replacing_environ, shell_after
 
 load = SpackCommand("load")
 unload = SpackCommand("unload")
 install = SpackCommand("install")
 location = SpackCommand("location")
+env = SpackCommand("env")
+
+#: Variables that loading the packages of these tests, or activating their environment, changes
+_LOADED_VARIABLES = (
+    "ACLOCAL_PATH",
+    "CMAKE_PREFIX_PATH",
+    "FOOBAR",
+    "MANPATH",
+    "PATH",
+    "PKG_CONFIG_PATH",
+    "VIRTUAL_ENV_PROMPT",
+    ev.spack_env_var,
+    ev.spack_env_view_var,
+    uenv.spack_loaded_hashes_var,
+)
+
+
+def _loaded_variables(shell: Dict[str, str]) -> Dict[str, Optional[str]]:
+    return {name: shell.get(name) for name in _LOADED_VARIABLES}
+
+
+def _undo_variables(shell: Dict[str, str]) -> Dict[str, str]:
+    return {name: value for name, value in shell.items() if name.startswith("SPACK_UNDO_")}
 
 
 def test_manpath_trailing_colon(
@@ -147,13 +174,10 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive, mock_pac
     assert "To set up shell support" in out
 
 
+@pytest.mark.not_on_windows("evaluates the output of spack load in bash")
 @pytest.mark.parametrize(
     "shell,set_command,unset_command",
-    (
-        [("--bat", 'set "%s=%s"', 'set "%s="')]
-        if sys.platform == "win32"
-        else [("--sh", "export %s=%s", "unset %s"), ("--csh", "setenv %s %s", "unsetenv %s")]
-    ),
+    [("--sh", "export %s=%s", "unset %s"), ("--csh", "setenv %s %s", "unsetenv %s")],
 )
 def test_unload(
     shell,
@@ -164,20 +188,20 @@ def test_unload(
     mock_archive,
     mock_packages,
     working_env,
+    tmp_path,
 ):
     """Tests that any variables set in the user environment are undone by the
     unload command"""
     install("--fake", "mpileaks")
-    mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
-    # Set so unload has something to do
-    os.environ["FOOBAR"] = "mpileaks"
-    os.environ[uenv.spack_loaded_hashes_var] = ("%s" + os.pathsep + "%s") % (
-        mpileaks_spec.dag_hash(),
-        "garbage",
-    )
+    before = current_shell()
+    before.pop("FOOBAR", None)
+    before[uenv.spack_loaded_hashes_var] = "garbage"
+    loaded = shell_after(before, tmp_path, load, "--sh", "mpileaks")
+    assert loaded["FOOBAR"] == "mpileaks"
 
-    shell_out = unload(shell, "mpileaks")
+    with spack.util.environment.set_env(**replacing_environ(loaded)):
+        shell_out = unload(shell, "mpileaks")
 
     assert (unset_command % "FOOBAR") in shell_out
 
@@ -194,3 +218,107 @@ def test_unload_fails_no_shell(
 
     out = unload("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out
+
+
+@pytest.mark.not_on_windows("evaluates the output in bash")
+def test_unload_gives_back_values_set_by_earlier_loads(
+    install_mockery, mock_fetch, mock_archive, mock_packages, working_env, tmp_path
+):
+    """Tests that unloading a package gives back the values it overwrote, including those set by
+    a package loaded earlier, and that loading a package again makes its values win again.
+    """
+    install("--fake", "mpileaks")
+    install("--fake", "conflict")
+    before = current_shell()
+    before["FOOBAR"] = "user"
+
+    first = shell_after(before, tmp_path, load, "--sh", "mpileaks")
+    both = shell_after(first, tmp_path, load, "--sh", "conflict")
+    assert both["FOOBAR"] == "conflict"
+    again = shell_after(both, tmp_path, load, "--sh", "mpileaks")
+    assert again["FOOBAR"] == "mpileaks"
+
+    only_conflict = shell_after(again, tmp_path, unload, "--sh", "mpileaks")
+    assert only_conflict["FOOBAR"] == "conflict"
+    after = shell_after(only_conflict, tmp_path, unload, "--sh", "conflict")
+    assert _loaded_variables(after) == _loaded_variables(before)
+    assert not _undo_variables(after)
+
+
+@pytest.mark.not_on_windows("evaluates the output in bash")
+def test_unload_after_loading_twice(
+    install_mockery, mock_fetch, mock_archive, mock_packages, working_env, tmp_path
+):
+    """Tests that loading a package twice adds its paths once, and that unloading it once gives
+    back the shell from before the first load.
+    """
+    install("--fake", "mpileaks")
+    before = current_shell()
+
+    once = shell_after(before, tmp_path, load, "--sh", "mpileaks")
+    twice = shell_after(once, tmp_path, load, "--sh", "mpileaks")
+    assert twice["CMAKE_PREFIX_PATH"] == once["CMAKE_PREFIX_PATH"]
+    assert twice[uenv.spack_loaded_hashes_var] == once[uenv.spack_loaded_hashes_var]
+    after = shell_after(twice, tmp_path, unload, "--sh", "mpileaks")
+    assert _loaded_variables(after) == _loaded_variables(before)
+    assert not _undo_variables(after)
+
+
+@pytest.mark.not_on_windows("evaluates the output in bash")
+def test_unload_keeps_shared_dependencies(
+    install_mockery, mock_fetch, mock_archive, mock_packages, working_env, tmp_path
+):
+    """Tests that unloading one of two loaded packages gives the shell that loading only the other
+    one gives, when the second one is a dependency of the first.
+    """
+    install("--fake", "mpileaks")
+    before = current_shell()
+    only_callpath = shell_after(before, tmp_path, load, "--sh", "callpath")
+
+    both = shell_after(before, tmp_path, load, "--sh", "mpileaks")
+    both = shell_after(both, tmp_path, load, "--sh", "callpath")
+    after = shell_after(both, tmp_path, unload, "--sh", "mpileaks")
+    assert _loaded_variables(after) == _loaded_variables(only_callpath)
+    assert _undo_variables(after) == _undo_variables(only_callpath)
+
+
+def test_unload_without_undo_record(
+    install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    """Tests that a package loaded without an undo record is unloaded with a warning, leaving its
+    variables in place.
+    """
+    install("--fake", "mpileaks")
+    mpileaks_hash = spack.concretize.concretize_one("mpileaks").dag_hash()
+
+    loaded_hashes = os.pathsep.join([mpileaks_hash, "garbage"])
+    with spack.util.environment.set_env(
+        FOOBAR="mpileaks", **{uenv.spack_loaded_hashes_var: loaded_hashes}
+    ):
+        with pytest.warns(UserWarning, match="loaded without an undo record"):
+            shell_out = unload("--sh", "mpileaks")
+    assert "FOOBAR" not in shell_out
+    assert f"export {uenv.spack_loaded_hashes_var}=garbage;" in shell_out
+
+
+@pytest.mark.not_on_windows("evaluates the output in bash")
+def test_package_loaded_in_an_environment_stays_loaded_after_deactivation(
+    install_mockery, mock_fetch, mock_archive, mock_packages, mutable_mock_env_path, tmp_path
+):
+    """Tests that a package loaded while an environment is active stays loaded after the
+    environment is deactivated, and that unloading it gives back the shell from before
+    activation.
+    """
+    env("create", "test")
+    with ev.read("test"):
+        install("--fake", "--add", "mpileaks")
+    before = current_shell()
+    before.pop("FOOBAR", None)
+
+    active = shell_after(before, tmp_path, env, "activate", "--sh", "test")
+    loaded = shell_after(active, tmp_path, load, "--sh", "mpileaks")
+    deactivated = shell_after(loaded, tmp_path, env, "deactivate", "--sh")
+    assert deactivated["FOOBAR"] == "mpileaks"
+    after = shell_after(deactivated, tmp_path, unload, "--sh", "mpileaks")
+    assert _loaded_variables(after) == _loaded_variables(before)
+    assert not _undo_variables(after)

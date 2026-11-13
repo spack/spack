@@ -5,12 +5,16 @@
 import argparse
 import os
 import sys
+import warnings
+from typing import List
 
 import spack.cmd
 import spack.cmd.common
+import spack.environment.shell
 import spack.store
 import spack.user_environment as uenv
 from spack.cmd.common import arguments
+from spack.util.lang import dedupe
 
 description = "remove package from the user environment"
 section = "user environment"
@@ -71,14 +75,16 @@ def unload(parser, args):
             "cannot specify specs on command line when unloading all specs with '--all'"
         )
 
-    hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(os.pathsep)
+    hashes = uenv.loaded_hashes(os.environ)
     if args.specs:
-        specs = [
-            spack.cmd.disambiguate_spec_from_hashes(spec, hashes)
-            for spec in spack.cmd.parse_specs(args.specs)
-        ]
+        removed = list(
+            dedupe(
+                spack.cmd.disambiguate_spec_from_hashes(spec, hashes).dag_hash()
+                for spec in spack.cmd.parse_specs(args.specs)
+            )
+        )
     else:
-        specs = spack.store.STORE.db.query(hashes=hashes)
+        removed = hashes
 
     if not args.shell:
         specs_str = " ".join(args.specs) or "SPECS"
@@ -88,9 +94,19 @@ def unload(parser, args):
         )
         return 1
 
-    env_mod = uenv.environment_modifications_for_specs(*specs).reversed()
-    for spec in specs:
-        env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-    cmds = env_mod.shell_modifications(args.shell)
+    record = spack.environment.shell.read_undo_record(os.environ)
+    without_record = [h for h in removed if not uenv.unload(record, h)]
+    if without_record:
+        _warn_loaded_without_record(without_record)
+    sys.stdout.write(uenv.shell_commands(record, args.shell, unloaded=removed))
 
-    sys.stdout.write(cmds)
+
+def _warn_loaded_without_record(hashes: List[str]) -> None:
+    specs = {s.dag_hash(): s for s in spack.store.STORE.db.query(hashes=hashes)}
+    for dag_hash in hashes:
+        spec = specs.get(dag_hash)
+        label = spec.format("{name}{@version}{/hash:7}") if spec else f"/{dag_hash[:7]}"
+        warnings.warn(
+            f"{label} was loaded without an undo record, so its changes to environment variables "
+            "are left in the shell"
+        )

@@ -817,6 +817,10 @@ When you no longer want to use a package, you can type ``spack unload``:
 
    $ spack unload mpich %gcc@4.4.7
 
+Unloading a package gives back to the environment variables it changed the values they would have if the package had never been loaded.
+Changes made by packages loaded later, by an active environment, or by the user after loading are kept.
+Loading a package that is already loaded makes its values take precedence again over those of the packages loaded after it.
+
 
 .. index:: ambiguous spec
 

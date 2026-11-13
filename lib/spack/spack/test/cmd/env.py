@@ -46,7 +46,7 @@ from spack.spec import Spec
 from spack.stage import stage_prefix
 from spack.store import Store
 from spack.test.conftest import RepoBuilder
-from spack.test.utilities import RecordingUI
+from spack.test.utilities import RecordingUI, replacing_environ, shell_after
 from spack.traverse import traverse_nodes
 from spack.util import tty
 from spack.util.executable import Executable
@@ -3599,11 +3599,11 @@ spack:
     with ev.read("test"):
         install("--fake")
 
-    during = _shell_after({"PATH": "/usr/bin:/bin"}, tmp_path, "activate", "--sh", "test")
+    during = shell_after({"PATH": "/usr/bin:/bin"}, tmp_path, env, "activate", "--sh", "test")
     assert during["SPACK_ENVAR_SET_IN_ENV_LOAD"] == "True"
     assert during["CONFIG_ENVAR_SET_IN_ENV_LOAD"] == "True"
 
-    after = _shell_after(during, tmp_path, "deactivate", "--sh")
+    after = shell_after(during, tmp_path, env, "deactivate", "--sh")
     assert "SPACK_ENVAR_SET_IN_ENV_LOAD" not in after
     assert "CONFIG_ENVAR_SET_IN_ENV_LOAD" not in after
 
@@ -5689,22 +5689,6 @@ def _activated_variables(shell: Dict[str, str]) -> Dict[str, Optional[str]]:
     return {name: shell.get(name) for name in _ACTIVATED_VARIABLES}
 
 
-def _spack_env(shell: Dict[str, str], *args: str) -> str:
-    """Returns the output of ``spack env <args>`` run with exactly ``shell`` as the environment."""
-    with spack.util.environment.set_env(
-        **{name: shell.get(name) for name in set(os.environ) | set(shell)}
-    ):
-        return env(*args)
-
-
-def _shell_after(shell: Dict[str, str], tmp_path: pathlib.Path, *args: str) -> Dict[str, str]:
-    """Runs ``spack env <args>`` with ``shell`` as the environment, evaluates its output in bash,
-    and returns the environment of bash afterwards."""
-    script = tmp_path / "commands.sh"
-    script.write_text(_spack_env(shell, *args))
-    return spack.util.environment.environment_after_sourcing_files(str(script), env=shell)
-
-
 @pytest.mark.not_on_windows("evaluates the output in bash")
 @pytest.mark.regression("48391")
 @pytest.mark.regression("16343")
@@ -5720,16 +5704,16 @@ def test_env_deactivate_restores_the_shell(tmp_path: pathlib.Path, mock_packages
 
     shell = {"PATH": f"{view_bin}:/usr/bin:/bin", "MANPATH": "/usr/share/man"}
 
-    during = _shell_after(shell, tmp_path, "activate", "--sh", "test")
+    during = shell_after(shell, tmp_path, env, "activate", "--sh", "test")
     assert during["PATH"] == shell["PATH"]
     assert during["CMAKE_PREFIX_PATH"] == e.default_view.root
-    after = _shell_after(during, tmp_path, "deactivate", "--sh")
+    after = shell_after(during, tmp_path, env, "deactivate", "--sh")
     assert _activated_variables(after) == _activated_variables(shell)
     assert not [name for name in after if name.startswith("SPACK_UNDO_")]
 
-    during = _shell_after(shell, tmp_path, "activate", "--sh", "test")
+    during = shell_after(shell, tmp_path, env, "activate", "--sh", "test")
     during["PATH"] += ":/my/bin"
-    after = _shell_after(during, tmp_path, "deactivate", "--sh")
+    after = shell_after(during, tmp_path, env, "deactivate", "--sh")
     assert after["PATH"] == f"{view_bin}:/usr/bin:/bin:/my/bin"
 
 
@@ -5742,7 +5726,10 @@ def test_env_deactivate_without_undo_record(mock_packages, install_mockery):
         install("--fake", "--add", "cmake")
 
     with test_env, pytest.warns(UserWarning, match="activated without an undo record"):
-        output = _spack_env({ev.spack_env_var: test_env.path}, "deactivate", "--sh")
+        with spack.util.environment.set_env(
+            **replacing_environ({ev.spack_env_var: test_env.path})
+        ):
+            output = env("deactivate", "--sh")
     assert "unset SPACK_ENV;" in output
     assert "PATH" not in output
 
@@ -5759,12 +5746,12 @@ def test_env_activate_after_deactivation_without_undo_record(
         install("--fake", "--add", "cmake")
         view_bin = os.path.join(e.default_view.root, "bin")
 
-    during = _shell_after({"PATH": "/usr/bin:/bin"}, tmp_path, "activate", "--sh", "test")
+    during = shell_after({"PATH": "/usr/bin:/bin"}, tmp_path, env, "activate", "--sh", "test")
     ev.deactivate()
 
     elsewhere = {k: v for k, v in during.items() if k != "SPACK_ENV"}
     elsewhere["PATH"] = "/usr/bin:/bin:/new"
-    again = _shell_after(elsewhere, tmp_path, "activate", "--sh", "test")
+    again = shell_after(elsewhere, tmp_path, env, "activate", "--sh", "test")
     assert again["PATH"] == f"{view_bin}:/usr/bin:/bin:/new"
-    after = _shell_after(again, tmp_path, "deactivate", "--sh")
+    after = shell_after(again, tmp_path, env, "deactivate", "--sh")
     assert after["PATH"] == "/usr/bin:/bin:/new"
