@@ -16,9 +16,11 @@ import spack.binary_distribution
 import spack.cmd
 import spack.concretize
 import spack.config
+import spack.context
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
+import spack.externals_config
 import spack.mirrors.mirror
 import spack.modules
 import spack.oci.image
@@ -653,6 +655,15 @@ def install_fn(args):
         spack.modules.write_module_files(installed)
 
 
+def _host_compatible_specs(specs: List[Spec]) -> List[Spec]:
+    """Return the specs whose binaries can be reused on the host."""
+    host = spack.spec.ArchSpec.default_arch()
+    libcs: List[Spec] = []
+    if host.platform not in ("windows", "darwin"):
+        libcs = sorted(spack.externals_config.all_libcs(spack.context.default()))
+    return [s for s in specs if s.host_compatible(host, libcs=libcs)]
+
+
 def list_fn(args):
     """list binary packages available from mirrors"""
     try:
@@ -661,8 +672,7 @@ def list_fn(args):
         tty.die(e)
 
     if not args.allarch:
-        arch = spack.spec.Spec.default_arch()
-        specs = [s for s in specs if s.intersects(arch)]
+        specs = _host_compatible_specs(specs)
 
     if args.specs:
         constraints = set(args.specs)

@@ -736,6 +736,36 @@ class ArchSpec:
             and self._target_intersects(self.target, other.target)
         )
 
+    def host_compatible(self, host: "ArchSpec") -> bool:
+        """Return True if binaries built for this architecture can run on the host
+        architecture, otherwise False.
+
+        Platforms must match. Operating systems are compared only on Windows, since
+        elsewhere compatibility is determined by the runtime libraries instead. A target is
+        compatible with itself and with every newer microarchitecture in its family, so
+        ``x86_64_v3`` binaries run on a ``skylake`` host, but not the other way around.
+
+        Args:
+            host: architecture of the host
+        """
+        if not self._attr_intersects(self.platform, host.platform):
+            return False
+
+        if host.platform == "windows" and not self._attr_intersects(self.os, host.os):
+            return False
+
+        if not self.target or not host.target:
+            return True
+
+        # Each element of the target list is widened to its lower bound and every
+        # descendant of it: those are the targets that can run its binaries.
+        return any(
+            self._target_intersects(
+                _make_microarchitecture(f"{element.partition(':')[0]}:"), host.target
+            )
+            for element in str(self.target).split(",")
+        )
+
     def _target_constrain(self, other: "ArchSpec") -> bool:
         # An unconstrained target on either side means the other side is the intersection.
         # _target_intersection cannot express that: it returns an empty list whenever one of
@@ -3489,6 +3519,49 @@ class Spec:
                 return False
 
         return True
+
+    def host_compatible(
+        self, host: Optional[ArchSpec] = None, *, libcs: Iterable["Spec"] = ()
+    ) -> bool:
+        """Return True if binaries for this spec can be reused on a host, otherwise False.
+
+        Every node needed at run time must have an architecture compatible with the host,
+        see :py:meth:`ArchSpec.host_compatible`. The operating system is compared literally
+        only on Windows. On ``darwin`` libc has a stable ABI across OS releases, so nothing else
+        is checked. Elsewhere every ``libc`` in the DAG must be matched by a host libc with the
+        same name and prefix, and a version greater or equal.
+
+        Host information is passed in explicitly, so the result depends only on the arguments.
+
+        Args:
+            host: architecture of the host (default: :py:meth:`ArchSpec.default_arch`)
+            libcs: libcs available on the host, not used on Windows and ``darwin``
+        """
+        host_arch = ArchSpec.default_arch() if host is None else host
+
+        # Build dependencies are not needed to run the binaries, so they are not checked
+        runtime = ("link", "run")
+        if not all(
+            node.architecture.host_compatible(host_arch)
+            for node in self.traverse(deptype=runtime)
+            if node.architecture
+        ):
+            return False
+
+        if host_arch.platform in ("windows", "darwin"):
+            return True
+
+        libcs = list(libcs)
+        return all(
+            any(
+                libc.name == edge.spec.name
+                and libc.external_path == edge.spec.external_path
+                and libc.version >= edge.spec.version
+                for libc in libcs
+            )
+            for edge in self.traverse_edges(root=False, cover="edges", deptype=runtime)
+            if "libc" in edge.virtuals
+        )
 
     def satisfies(self, other: Union[str, "Spec"], deps: bool = True) -> bool:
         """Return True if all concrete specs matching self also match other, otherwise False.

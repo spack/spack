@@ -3700,3 +3700,105 @@ def test_git_ref_spec_operations_are_pure(monkeypatch):
         assert str(spec) == spec_str
         assert spec.copy() == spec == Spec.from_dict(spec.to_dict())
         assert hash(spec) == hash(Spec(spec_str))
+
+
+def _spec_with_libc(arch: str, libc: str, prefix: str = "/usr") -> Spec:
+    s = Spec(f"pkg-a arch={arch}")
+    libc_spec = Spec(libc)
+    libc_spec.external_path = prefix
+    s._add_dependency(libc_spec, depflag=dt.BUILD | dt.LINK, virtuals=("libc",))
+    return s
+
+
+@pytest.mark.parametrize(
+    "spec,libcs,expected",
+    [
+        # OS names are not compared on Linux, only libc
+        (_spec_with_libc("linux-rhel8-x86_64", "glibc@=2.28"), ["glibc@=2.35"], True),
+        (_spec_with_libc("linux-rhel8-x86_64", "glibc@=2.35"), ["glibc@=2.35"], True),
+        (_spec_with_libc("linux-rhel8-x86_64", "glibc@=2.39"), ["glibc@=2.35"], False),
+        (_spec_with_libc("linux-rhel8-x86_64", "glibc@=2.28"), ["musl@=2.35"], False),
+        (
+            _spec_with_libc("linux-rhel8-x86_64", "glibc@=2.28", prefix="/opt"),
+            ["glibc@=2.35"],
+            False,
+        ),
+        (_spec_with_libc("linux-rhel8-x86_64", "glibc@=2.28"), [], False),
+        # a DAG without libc is always compatible
+        (Spec("pkg-a arch=linux-rhel8-x86_64"), [], True),
+        # platform and target are still compared
+        (_spec_with_libc("darwin-sonoma-x86_64", "glibc@=2.28"), ["glibc@=2.35"], False),
+        (_spec_with_libc("linux-rhel8-aarch64", "glibc@=2.28"), ["glibc@=2.35"], False),
+    ],
+)
+def test_host_compatible_libc(spec, libcs, expected):
+    host = ArchSpec("linux-ubuntu22.04-x86_64")
+    host_libcs = []
+    for x in libcs:
+        libc = Spec(x)
+        libc.external_path = "/usr"
+        host_libcs.append(libc)
+    assert spec.host_compatible(host, libcs=host_libcs) is expected
+
+
+@pytest.mark.parametrize(
+    "spec,expected",
+    [
+        # libc has a stable ABI on macOS, so any OS release is accepted
+        ("pkg-a arch=darwin-ventura-aarch64", True),
+        ("pkg-a arch=darwin-tahoe-aarch64", True),
+        ("pkg-a arch=darwin-ventura-aarch64 %apple-clang@=17.0.0", True),
+        # platform and target are still compared
+        ("pkg-a arch=darwin-ventura-x86_64", False),
+        ("pkg-a arch=linux-ventura-aarch64", False),
+    ],
+)
+def test_host_compatible_darwin(spec, expected):
+    host = ArchSpec("darwin-sonoma-aarch64")
+    assert Spec(spec).host_compatible(host) is expected
+
+
+@pytest.mark.parametrize(
+    "spec,expected",
+    [
+        ("pkg-a arch=windows-windows10-x86_64", True),
+        ("pkg-a arch=windows-windows11-x86_64", False),
+        ("pkg-a arch=linux-windows10-x86_64", False),
+    ],
+)
+def test_host_compatible_windows(spec, expected):
+    host = ArchSpec("windows-windows10-x86_64")
+    assert Spec(spec).host_compatible(host) is expected
+
+
+@pytest.mark.parametrize(
+    "arch,host,expected",
+    [
+        # a target runs on itself and on newer microarchitectures of its family
+        ("linux-rhel8-x86_64_v3", "linux-ubuntu22.04-skylake", True),
+        ("linux-rhel8-x86_64", "linux-ubuntu22.04-skylake", True),
+        ("linux-rhel8-skylake", "linux-ubuntu22.04-skylake", True),
+        ("linux-rhel8-x86_64_v4", "linux-ubuntu22.04-skylake", False),
+        ("linux-rhel8-icelake", "linux-ubuntu22.04-skylake", False),
+        ("linux-rhel8-aarch64", "linux-ubuntu22.04-skylake", False),
+        ("linux-rhel8-x86_64_v2:x86_64_v4", "linux-ubuntu22.04-x86_64_v2", True),
+        ("linux-rhel8-x86_64_v4,aarch64", "linux-ubuntu22.04-neoverse_v2", True),
+        # platforms must match, OS only on windows
+        ("darwin-sonoma-x86_64", "linux-ubuntu22.04-skylake", False),
+        ("windows-windows10-x86_64", "windows-windows11-skylake", False),
+        ("windows-windows11-x86_64", "windows-windows11-skylake", True),
+    ],
+)
+def test_arch_host_compatible(arch, host, expected):
+    assert ArchSpec(arch).host_compatible(ArchSpec(host)) is expected
+
+
+def test_host_compatible_checks_runtime_dependencies():
+    """Run time dependencies must also run on the host, while build dependencies need not."""
+    host = ArchSpec("linux-ubuntu22.04-skylake")
+    s = Spec("pkg-a arch=linux-rhel8-x86_64_v3")
+    s._add_dependency(Spec("pkg-b arch=linux-rhel8-x86_64_v4"), depflag=dt.BUILD, virtuals=())
+    assert s.host_compatible(host)
+
+    s._add_dependency(Spec("pkg-c arch=linux-rhel8-x86_64_v4"), depflag=dt.LINK, virtuals=())
+    assert not s.host_compatible(host)
