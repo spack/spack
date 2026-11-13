@@ -2541,15 +2541,12 @@ class Environment:
                     yield d
 
     def _concrete_specs_dict(self):
-        concrete_specs = {}
-        for s in traverse.traverse_nodes(self.specs_by_hash.values(), key=traverse.by_dag_hash):
-            concrete_specs[s.dag_hash()] = s.node_dict_with_hashes()
-
-            if s.build_spec is not s:
-                for d in s.build_spec.traverse():
-                    concrete_specs[d.dag_hash()] = d.node_dict_with_hashes()
-
-        return concrete_specs
+        return {
+            s.dag_hash(): s.node_dict_with_hashes()
+            for s in traverse.traverse_nodes(
+                self.specs_by_hash.values(), key=traverse.by_dag_hash, build_specs=True
+            )
+        }
 
     def _lockfile_fingerprint(self) -> Tuple[Any, ...]:
         """Roots and included data, which determine the lockfile content up to version metadata"""
