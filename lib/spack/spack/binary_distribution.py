@@ -39,6 +39,7 @@ from typing import (
     Mapping,
     NamedTuple,
     Optional,
+    Sequence,
     Set,
     Tuple,
     Union,
@@ -1218,8 +1219,17 @@ class Uploader:
     ) -> Tuple[List[spack.spec.Spec], List[Tuple[spack.spec.Spec, BaseException]]]:
         raise NotImplementedError
 
-    def tag(self, tag: str, roots: List[spack.spec.Spec]):
-        """Make a list of selected specs together available under the given tag"""
+    def tag(
+        self,
+        tag: str,
+        roots: List[spack.spec.Spec],
+        *,
+        env_view_root: Optional[str] = None,
+        env_modifications: Optional[spack.util.environment.EnvironmentModifications] = None,
+    ):
+        """Make a list of selected specs together available under the given tag. If
+        ``env_view_root`` is given, the environment view at that path is added as a layer on top,
+        and ``env_modifications`` are used for the image's environment variables."""
         pass
 
 
@@ -1256,7 +1266,14 @@ class OCIUploader(Uploader):
 
         return skipped, upload_errors
 
-    def tag(self, tag: str, roots: List[spack.spec.Spec]):
+    def tag(
+        self,
+        tag: str,
+        roots: List[spack.spec.Spec],
+        *,
+        env_view_root: Optional[str] = None,
+        env_modifications: Optional[spack.util.environment.EnvironmentModifications] = None,
+    ):
         tagged_image = self.target_image.with_tag(tag)
 
         # _push_oci may not populate self._base_images if binaries were already in the registry
@@ -1267,8 +1284,23 @@ class OCIUploader(Uploader):
                 spec=spec,
                 base_image_cache=self._base_images,
             )
+
+        extra_layers = (
+            [_oci_push_env_view_blob(tagged_image, env_view_root, self.tmpdir)]
+            if env_view_root
+            else []
+        )
+
         _oci_put_manifest(
-            self._base_images, self._checksums, tagged_image, self.tmpdir, None, None, *roots
+            self._base_images,
+            self._checksums,
+            tagged_image,
+            self.tmpdir,
+            None,
+            None,
+            *roots,
+            extra_layers=extra_layers,
+            env_modifications=env_modifications,
         )
 
         tty.info(f"Tagged {tagged_image}")
@@ -1501,6 +1533,28 @@ def _oci_push_pkg_blob(
     return blob, elapsed
 
 
+def _oci_push_env_view_blob(
+    image_ref: ImageReference, view_root: str, tmpdir: str
+) -> spack.oci.oci.Blob:
+    """Push an environment view as a layer to the registry and return the blob info. The view
+    ends up in the image at the same path as on the host, like the packages it links to."""
+    filename = os.path.join(tmpdir, "env-view.tar.gz")
+
+    with spack.util.archive.gzip_compressed_tarfile(filename) as (tar, gz_checksum, tar_checksum):
+        spack.util.archive.reproducible_tarfile_from_prefix(
+            tar, view_root, include_parent_directories=True
+        )
+
+    blob = spack.oci.oci.Blob(
+        Digest.from_sha256(gz_checksum.hexdigest()),
+        Digest.from_sha256(tar_checksum.hexdigest()),
+        os.path.getsize(filename),
+    )
+    upload_blob_with_retry(image_ref, file=filename, digest=blob.compressed_digest)
+    os.unlink(filename)
+    return blob
+
+
 def _oci_retrieve_env_dict_from_config(config: dict) -> dict:
     """Retrieve the environment variables from the image config file.
     Sets a default value for PATH if it is not present.
@@ -1534,7 +1588,13 @@ def _oci_put_manifest(
     extra_config: Optional[dict],
     annotations: Optional[dict],
     *specs: spack.spec.Spec,
+    extra_layers: Sequence[spack.oci.oci.Blob] = (),
+    env_modifications: Optional[spack.util.environment.EnvironmentModifications] = None,
 ):
+    """Upload the config and manifest of an image that consists of the base image, a layer for
+    each of the specs and their runtime dependencies, and ``extra_layers`` on top. The image's
+    environment variables are set from ``env_modifications`` if given, and otherwise from the
+    run environment of the specs."""
     architecture = _oci_archspec_to_gooarch(specs[0])
 
     expected_blobs: List[spack.spec.Spec] = [
@@ -1556,18 +1616,20 @@ def _oci_put_manifest(
         base_manifest_mediaType == "application/vnd.docker.distribution.manifest.v2+json"
     )
 
-    spack.user_environment.environment_modifications_for_specs(*specs).apply_modifications(env)
+    if env_modifications is None:
+        env_modifications = spack.user_environment.environment_modifications_for_specs(*specs)
+    env_modifications.apply_modifications(env)
 
     # Create an oci.image.config file
     config = copy.deepcopy(base_config)
 
+    # If a layer for a dependency has gone missing (due to removed manifest in the registry, a
+    # failed push, or a local forced uninstall), we cannot create a runnable container image.
+    blobs = [checksums[s.dag_hash()] for s in expected_blobs if s.dag_hash() in checksums]
+    blobs.extend(extra_layers)
+
     # Add the diff ids of the blobs
-    for s in expected_blobs:
-        # If a layer for a dependency has gone missing (due to removed manifest in the registry, a
-        # failed push, or a local forced uninstall), we cannot create a runnable container image.
-        checksum = checksums.get(s.dag_hash())
-        if checksum:
-            config["rootfs"]["diff_ids"].append(str(checksum.uncompressed_digest))
+    config["rootfs"]["diff_ids"].extend(str(blob.uncompressed_digest) for blob in blobs)
 
     # Set the environment variables
     config["config"]["Env"] = [f"{k}={v}" for k, v in env.items()]
@@ -1591,6 +1653,12 @@ def _oci_put_manifest(
     # Upload the config file
     upload_blob_with_retry(image_ref, file=config_file, digest=config_file_checksum)
 
+    layer_media_type = (
+        "application/vnd.docker.image.rootfs.diff.tar.gzip"
+        if use_docker_format
+        else "application/vnd.oci.image.layer.v1.tar+gzip"
+    )
+
     manifest = {
         "mediaType": base_manifest_mediaType,
         "schemaVersion": 2,
@@ -1603,16 +1671,11 @@ def _oci_put_manifest(
             *(layer for layer in base_manifest["layers"]),
             *(
                 {
-                    "mediaType": (
-                        "application/vnd.docker.image.rootfs.diff.tar.gzip"
-                        if use_docker_format
-                        else "application/vnd.oci.image.layer.v1.tar+gzip"
-                    ),
-                    "digest": str(checksums[s.dag_hash()].compressed_digest),
-                    "size": checksums[s.dag_hash()].size,
+                    "mediaType": layer_media_type,
+                    "digest": str(blob.compressed_digest),
+                    "size": blob.size,
                 }
-                for s in expected_blobs
-                if s.dag_hash() in checksums
+                for blob in blobs
             ),
         ],
     }

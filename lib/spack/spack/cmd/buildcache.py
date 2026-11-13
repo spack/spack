@@ -36,6 +36,7 @@ from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.spec import Spec, save_dependency_specfiles
 from spack.util import tty
+from spack.util.environment import EnvironmentModifications
 from spack.util.lang import elide_list, stable_partition
 from spack.util.string import plural
 from spack.util.tty import colify
@@ -140,6 +141,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=None,
         help="when pushing to an OCI registry, tag an image containing all root specs and their "
         "runtime dependencies",
+    )
+    push.add_argument(
+        "--env-view",
+        action="store_true",
+        help="with --tag, add the default view of the active environment as a layer on top of "
+        "the image, and set the image's environment variables from it (this is the environment "
+        "view, not a build cache index view)",
     )
     push.add_argument(
         "--private",
@@ -497,6 +505,14 @@ def push_fn(args):
     if args.specs and args.groups:
         args.subparser.error("--group and explicit specs are mutually exclusive")
 
+    if args.env_view:
+        if not args.tag:
+            args.subparser.error("--env-view requires --tag")
+        if args.specs or args.groups:
+            args.subparser.error("--env-view cannot be combined with --group or explicit specs")
+        if not spack.cmd.require_active_env(args.subparser).has_view(ev.default_view_name):
+            tty.die("--env-view requires an environment with a default view")
+
     if args.groups:
         env = spack.cmd.require_active_env(args.subparser)
         available_groups = env.manifest.groups()
@@ -581,6 +597,15 @@ def push_fn(args):
     if not spack.oci.image.is_oci_url(mirror.push_url):
         check_mirror_for_layout(mirror)
 
+    # Bring the view up to date before uploading anything, so that problems with it show up early.
+    env_view_root, env_modifications = None, None
+    if args.env_view:
+        env = spack.cmd.require_active_env(args.subparser)
+        view = env.default_view
+        view.regenerate(env)
+        env_view_root = view.root
+        env_modifications = env.add_view_to_env(EnvironmentModifications(), ev.default_view_name)
+
     with spack.binary_distribution.make_uploader(
         mirror=mirror,
         force=args.force,
@@ -626,7 +651,9 @@ def push_fn(args):
 
         # Finally tag all roots as a single image if requested.
         if args.tag:
-            uploader.tag(args.tag, roots)
+            uploader.tag(
+                args.tag, roots, env_view_root=env_view_root, env_modifications=env_modifications
+            )
 
 
 def install_fn(args):
