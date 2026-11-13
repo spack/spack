@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
+import gzip
 import json
 import os
 import pathlib
@@ -204,6 +205,65 @@ def test_buildcache_autopush(tmp_path: pathlib.Path, install_mockery, mock_fetch
 
     assert not (mirror_dir / specs_dirs / manifest_file).exists()
     assert (mirror_autopush_dir / specs_dirs / manifest_file).exists()
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize(
+    "failure,push_error",
+    [
+        ("upload", spack.binary_distribution.PushToBuildCacheError),
+        ("credentials", spack.error.MirrorError),
+    ],
+)
+@pytest.mark.parametrize("autopush_fail_on_error", [True, False])
+def test_buildcache_autopush_failure(
+    failure,
+    push_error,
+    autopush_fail_on_error,
+    tmp_path: pathlib.Path,
+    install_mockery,
+    mock_fetch,
+    installer_variant,
+    monkeypatch,
+):
+    """Test that autopush failures fail the install only if config:autopush_fail_on_error"""
+    mirror_dir = tmp_path / "mirror"
+    if failure == "upload":
+        # A regular file where the mirror directory should be makes the upload fail
+        mirror_dir.write_text("not a directory")
+        mirror("add", "--autopush", "--unsigned", "mirror-autopush", mirror_dir.as_uri())
+    else:
+        monkeypatch.delenv("SPACK_TEST_UNSET_TOKEN", raising=False)
+        mirror(
+            "add",
+            "--autopush",
+            "--unsigned",
+            "--s3-access-token-variable",
+            "SPACK_TEST_UNSET_TOKEN",
+            "mirror-autopush",
+            mirror_dir.as_uri(),
+        )
+
+    spack.config.CONFIG.set("config:autopush_fail_on_error", autopush_fail_on_error)
+    s = spack.concretize.concretize_one("trivial-install-test-package")
+
+    if autopush_fail_on_error:
+        # The old installer propagates the push error, the new one reports a failed build
+        expected_error = push_error if installer_variant == "old" else spack.error.InstallError
+        with pytest.raises(expected_error):
+            install("--fake", "trivial-install-test-package")
+        assert f"{push_error.__name__}: " in install.output
+        assert not s.installed
+        return
+
+    out = install("--fake", "trivial-install-test-package")
+    assert s.installed
+
+    # The new installer only writes build output to the log file
+    if installer_variant == "new":
+        with gzip.open(s.package.install_log_path, "rt") as f:
+            out = f.read()
+    assert "Failed to push to build cache 'mirror-autopush'" in out
 
 
 def test_buildcache_sync(

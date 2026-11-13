@@ -233,6 +233,11 @@ properties: Dict[str, Any] = {
                 "enum": ["old", "new"],
                 "description": "Which installer to use. The old installer is deprecated.",
             },
+            "autopush_fail_on_error": {
+                "type": "boolean",
+                "description": "Whether a failure to push a package to a build cache with "
+                "autopush enabled fails the installation. If false, a warning is printed instead",
+            },
             "sandbox": {
                 "type": "object",
                 "description": "Restrict filesystem and network access during builds.",

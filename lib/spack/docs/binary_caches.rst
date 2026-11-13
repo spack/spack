@@ -397,6 +397,16 @@ will have the same effect as
 
     Packages are automatically pushed to a build cache only if they are built from source.
 
+By default, a failure to push a package to a build cache fails its installation.
+To print a warning instead and keep the installed package, set ``autopush_fail_on_error`` to ``false`` in ``config.yaml``:
+
+.. code-block:: yaml
+
+    config:
+      autopush_fail_on_error: false
+
+This can be useful in CI, where a temporarily unavailable build cache should not fail the build.
+
 .. index::
    single: buildcache; OCI registries
    single: OCI registry
