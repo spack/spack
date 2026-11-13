@@ -67,7 +67,7 @@ The command
 
 .. code-block:: text
 
-   spack buildcache push [--base-image BASE_IMAGE] [--tag TAG] mirror [specs...]
+   spack buildcache push [--base-image BASE_IMAGE] [--tag TAG] [--env-view] mirror [specs...]
 
 creates and pushes a container image to an OCI-compatible container registry, with the ``mirror`` argument specifying a registry (see below).
 
@@ -87,6 +87,10 @@ The arguments are as follows:
 ``--tag TAG``
   Specifies a container image tag to use.
   This tag is used for the image consisting of all specs specified in the command line together.
+
+``--env-view``
+  Adds the default :ref:`view <configuring_environment_views>` of the active environment as an extra layer to the image created by ``--tag``, and makes the image's environment variables refer to the view instead of to every package individually.
+  See :ref:`this example <environment-view-in-containers>`.
 
 ``mirror`` argument
   Either the name of a configured OCI registry image (in ``mirrors.yaml``), or a URL specifying the registry and image name.
@@ -238,6 +242,47 @@ The advantage of using a Spack environment is that we do not have to specify the
 With environments, all root specs and their runtime dependencies are included in the container image.
 
 If you do specify specs in ``spack buildcache push`` with an environment active, only those matching specs from the environment are included in the image.
+
+.. _environment-view-in-containers:
+
+Example 3: adding the environment view to the container image
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, variables like ``PATH`` in the image have one entry for every package:
+
+.. code-block:: console
+
+   $ docker run example.com/name/image:my_env sh -c 'echo $PATH'
+   /opt/software/linux-aarch64/tree-2.1.0-cf77mci5svim3x6u3d5siuis3b5fusfu/bin:/opt/software/linux-aarch64/jq-1.8.2-ynhc4vufyjyjrlco4y42fczzqaveq7f4/bin:/opt/software/linux-aarch64/xz-5.8.4-es5x33bfkrwevtmwuulb2ru5c3i4iyre/bin:[...]:/usr/bin:/sbin:/bin
+
+For larger environments these variables can get very long.
+With ``--env-view``, Spack adds the environment's :ref:`view <configuring_environment_views>` to the image as a layer on top of the packages, and sets the variables from the view.
+
+The view is put in the image at the same path as on the host, so it is best to give it a fixed location in ``spack.yaml``:
+
+.. code-block:: yaml
+
+   spack:
+     specs: [tree, jq, zstd, xz]
+     view: /opt/view
+
+.. code-block:: console
+
+   $ spack -e . install
+   $ spack -e . buildcache push \
+         --base-image ubuntu:24.04 \
+         --tag my_env \
+         --env-view \
+         container-registry
+
+   $ docker run example.com/name/image:my_env sh -c 'echo $PATH; ls -l /opt/view/bin/jq'
+   /opt/view/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+   lrwxrwxrwx 1 root root 76 Jan  1  1970 /opt/view/bin/jq -> /opt/software/linux-aarch64/jq-1.8.2-ynhc4vufyjyjrlco4y42fczzqaveq7f4/bin/jq
+
+.. note::
+
+   ``--env-view`` is about the *environment* view.
+   It is unrelated to the index views of build caches (``spack mirror add --view``).
 
 
 .. _generating-recipes:
