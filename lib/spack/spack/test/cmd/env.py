@@ -1320,7 +1320,6 @@ spack:
 def test_lockfile_spliced_specs(environment_from_manifest, install_mockery):
     """Test that an environment can round-trip a spliced spec."""
     # Create a local install for zmpi to splice in
-    # Default concretization is not using zmpi
     zmpi = spack.concretize.concretize_one("zmpi")
     PackageInstaller([zmpi.package], fake=True).install()
 
@@ -1328,7 +1327,7 @@ def test_lockfile_spliced_specs(environment_from_manifest, install_mockery):
         f"""
 spack:
   specs:
-  - mpileaks
+  - mpileaks ^mpich
   concretizer:
     splice:
       explicit:
