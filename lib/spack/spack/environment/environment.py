@@ -2373,10 +2373,18 @@ class Environment:
             for x in self.concretized_roots
             if (x.group, x.root) not in marked_keys
         ]
+        # like concretized_specs(), skip included roots already present as unmarked local roots
+        seen = {
+            (x.root, x.hash)
+            for x in self.concretized_roots
+            if (x.group, x.root) not in marked_keys
+        }
         unmarked.extend(
             concrete
             for included_env in self.included_concretized_roots
-            for _, concrete in self.concretized_specs_from_included_environment(included_env)
+            for _, concrete in self.concretized_specs_from_included_environment(
+                included_env, _seen=seen
+            )
         )
 
         unmarked_hashes = {s.dag_hash() for s in unmarked}
