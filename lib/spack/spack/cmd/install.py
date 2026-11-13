@@ -14,7 +14,6 @@ import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
 import spack.modules
-import spack.paths
 import spack.spec
 import spack.store
 import spack.util.filesystem as fs
@@ -235,7 +234,7 @@ def default_log_file(spec):
     the corresponding directory if not present
     """
     basename = spec.format_path("test-{name}-{version}-{hash}.xml")
-    dirname = fs.os.path.join(spack.paths.reports_path, "junit")
+    dirname = fs.os.path.join(spack.config.reports_path(), "junit")
     fs.mkdirp(dirname)
     return fs.os.path.join(dirname, basename)
 

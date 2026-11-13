@@ -87,7 +87,7 @@ You can check what is installed in the bootstrapping store at any time using:
 .. code-block:: console
 
    % spack -b find
-   ==> Showing internal bootstrap store at "/Users/spack/.spack/bootstrap/store"
+   ==> Showing internal bootstrap store at "/Users/spack/.local/state/spack/bootstrap/store"
    ==> 11 installed packages
    -- darwin-catalina-x86_64 / apple-clang@12.0.0 ------------------
    clingo-bootstrap@spack  libassuan@2.5.5  libgpg-error@1.42  libksba@1.5.1  pinentry@1.1.1  zlib@1.2.11
@@ -98,10 +98,10 @@ If needed, you can remove all the software in the current bootstrapping store wi
 .. code-block:: console
 
    % spack clean -b
-   ==> Removing bootstrapped software and configuration in "/Users/spack/.spack/bootstrap"
+   ==> Removing bootstrapped software and configuration in "/Users/spack/.local/state/spack/bootstrap"
 
    % spack -b find
-   ==> Showing internal bootstrap store at "/Users/spack/.spack/bootstrap/store"
+   ==> Showing internal bootstrap store at "/Users/spack/.local/state/spack/bootstrap/store"
    ==> 0 installed packages
 
 .. _cmd-spack-bootstrap-list:

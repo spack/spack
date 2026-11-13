@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional,
 
 import spack.config
 import spack.error
-import spack.paths
 import spack.repo
 import spack.report
 import spack.spec
@@ -99,7 +98,7 @@ def get_test_stage_dir() -> str:
         absolute path to the configured test stage root or, if none, the default test stage path
     """
     return spack.config.canonicalize_path(
-        spack.config.CONFIG.get("config:test_stage", spack.paths.default_test_path)
+        spack.config.CONFIG.get("config:test_stage", spack.config.default_test_path())
     )
 
 

@@ -14,11 +14,12 @@ trap clean_up ERR
 
 [[ -n "$TMPCONFIG_DEBUG" ]] && printf "Redirecting TMP_DIR and spack directories to $TMP_DIR\n"
 
-export BOOTSTRAP="${SPACK_USER_CACHE_PATH:=$HOME/.spack}/bootstrap"
-export SPACK_USER_CACHE_PATH="$TMP_DIR/user_cache"
-mkdir -p "$SPACK_USER_CACHE_PATH"
+# This runs spack with the real configuration, before anything is redirected, so on its
+# first use it performs the same migration of ~/.spack and of resources in the Spack
+# prefix as any other spack command would (prompting if there is a terminal).
+export BOOTSTRAP="$($DIR/spack bootstrap root)"
+private_bootstrap="$TMP_DIR/bootstrap"
 
-private_bootstrap="$SPACK_USER_CACHE_PATH/bootstrap"
 use_spack=''
 use_bwrap=''
 # argument handling
@@ -65,26 +66,41 @@ mkdir -p "$BOOTSTRAP"
 
 export SPACK_SYSTEM_CONFIG_PATH="$TMP_DIR/sys_conf"
 export SPACK_USER_CONFIG_PATH="$TMP_DIR/user_conf"
+# SPACK_CONFIG_HOME takes precedence over SPACK_USER_CONFIG_PATH for the user scope and
+# would also keep home migration from being skipped; point it at the same directory.
+export SPACK_CONFIG_HOME="$SPACK_USER_CONFIG_PATH"
 mkdir -p "$SPACK_USER_CONFIG_PATH"
+# We redirect the default locations and we explicitly redirect the individual entries
+# This ensures new locations are moved by default, and specific entries are moved even
+# if the user has overridden them.
 cat >"$SPACK_USER_CONFIG_PATH/config.yaml" <<EOF
 config:
+  locations:
+    data: $TMP_DIR/data
+    state: $TMP_DIR/state
+    cache: $TMP_DIR/cache
   install_tree:
-    root: $TMP_DIR/install
-  misc_cache: $$user_cache_path/cache
-  source_cache: $$user_cache_path/source
-  environments_root: $TMP_DIR/envs
+    root: \$data_home/install
+  misc_cache: \$cache_home/cache
+  source_cache: \$data_home/source
+  environments_root: \$data_home/envs
 EOF
+# Bootstrap is redirected back to the original location unless using `-b/-B`.
 cat >"$SPACK_USER_CONFIG_PATH/bootstrap.yaml" <<EOF
 bootstrap:
   root: $BOOTSTRAP
 EOF
 
+# ro bindings are belt+suspenders in case the config above doesn't redirect everything
 if [[ -n "$use_bwrap" ]] ; then
     CMD=(
         bwrap
         --dev-bind / /
         --ro-bind "$DIR/.." "$DIR/.." # do not touch spack root
-        --ro-bind $HOME/.spack $HOME/.spack # do not touch user config/cache dir
+        --ro-bind-try $HOME/.config/spack $HOME/.config/spack # do not touch user config dir
+        --ro-bind-try $HOME/.cache/spack $HOME/.cache/spack # do not touch user cache dir
+        --ro-bind-try $HOME/.local/state/spack $HOME/.local/state/spack # do not touch user state dir
+        --ro-bind-try $HOME/.local/share/spack $HOME/.local/share/spack # do not touch user data dir
         --bind "$TMP_DIR" "$TMP_DIR"
         --bind "$BOOTSTRAP" "$BOOTSTRAP"
         --die-with-parent

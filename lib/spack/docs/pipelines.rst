@@ -59,7 +59,7 @@ Here's the ``.gitlab-ci.yml`` file from that example that builds and runs the pi
    variables:
      SPACK_REPOSITORY: "https://github.com/spack/spack.git"
      SPACK_REF: "develop-2024-10-06"
-     SPACK_USER_CONFIG_PATH: ${CI_PROJECT_DIR}
+     SPACK_CONFIG_HOME: ${CI_PROJECT_DIR}
      SPACK_BACKTRACE: 1
 
    generate-pipeline:
@@ -129,7 +129,7 @@ And here's the Spack environment built by the pipeline represented as a ``spack.
            - cd spack && git checkout ${SPACK_REF} && cd ../
            - . "./spack/share/spack/setup-env.sh"
            - spack --version
-           - export SPACK_USER_CONFIG_PATH=${CI_PROJECT_DIR}
+           - export SPACK_CONFIG_HOME=${CI_PROJECT_DIR}
            - spack config blame mirrors
 
 

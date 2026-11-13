@@ -5,6 +5,7 @@
 import os
 import pathlib
 import re
+import subprocess
 import sys
 from datetime import datetime, timedelta
 
@@ -410,3 +411,107 @@ class TestPriorityOrderedMapping:
 
         assert list(m.values()) == [1, 2, 3]
         assert list(m.reversed_values()) == [3, 2, 1]
+
+
+def _run_in_pty(child_code: str, answer: bytes, tmp_path):
+    """Run ``child_code`` in a Python subprocess whose controlling terminal is a fresh pty.
+
+    The child's stdin, stdout and stderr are all redirected away from the terminal, as
+    they are under fish's ``capture_all`` or ``$(...)`` capture; only the controlling
+    terminal is the pty. ``answer`` is typed on the pty up front (type-ahead); the child
+    reports through ``RESULT_FILE``. Returns ``(pty_output, result)``.
+    """
+    import pty
+
+    result_file = tmp_path / "result"
+    pid, fd = pty.fork()
+    if pid == 0:  # child: runs under the pty, exits via os._exit
+        proc = subprocess.run(
+            [sys.executable, "-c", child_code],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env={**os.environ, "RESULT_FILE": str(result_file)},
+        )
+        if proc.returncode != 0:
+            result_file.write_text("CHILD FAILED\n" + proc.stderr.decode(errors="replace"))
+        os._exit(proc.returncode)
+
+    os.write(fd, answer)
+    output = b""
+    while True:
+        try:
+            chunk = os.read(fd, 4096)
+        except OSError:  # EIO once the child has closed the child side
+            break
+        if not chunk:
+            break
+        output += chunk
+    os.waitpid(pid, 0)
+    os.close(fd)
+    return output.decode(errors="replace"), result_file.read_text()
+
+
+_READLINE_CHILD = """
+import os, sys
+sys.path[:0] = {path!r}
+import spack.util.lang as lang
+with lang.open_controlling_terminal() as terminal:
+    if terminal is None:
+        result = "NO-TERMINAL"
+    else:
+        answer = lang.readline_with_timeout("Proceed? [y/N]", {timeout}, terminal=terminal)
+        result = "ANSWER " + repr(answer)
+# anything written to the captured streams would be lost on the user; make sure it is empty
+open(os.environ["RESULT_FILE"], "w").write(result)
+"""
+
+
+@pytest.mark.not_on_windows("uses pty.fork")
+@pytest.mark.parametrize(
+    "typed,expected", [(b"y\r", "'y'"), (b"\r", "''"), (b"no\r", "'no'"), (b"yx\x7f\r", "'y'")]
+)
+def test_readline_with_timeout_on_controlling_terminal(typed, expected, tmp_path):
+    """The prompt is shown and answered on the controlling terminal even when stdin,
+    stdout and stderr are all redirected (fish's ``capture_all``, ``2>&1 | tee``)."""
+    child = _READLINE_CHILD.format(path=sys.path, timeout=5)
+    pty_out, result = _run_in_pty(child, typed, tmp_path)
+    assert "Proceed? [y/N]" in pty_out, result
+    assert result == f"ANSWER {expected}"
+
+
+@pytest.mark.not_on_windows("uses pty.fork")
+def test_readline_with_timeout_times_out(tmp_path):
+    child = _READLINE_CHILD.format(path=sys.path, timeout=1)
+    pty_out, result = _run_in_pty(child, b"", tmp_path)
+    assert "Proceed? [y/N]" in pty_out, result
+    assert result == "ANSWER None"
+
+
+@pytest.mark.not_on_windows("uses pty.fork")
+def test_open_controlling_terminal_background_job(tmp_path):
+    """A process outside the terminal's foreground process group cannot prompt."""
+    child = _READLINE_CHILD.format(path=sys.path, timeout=5).replace(
+        "import spack.util.lang as lang", "os.setpgrp()\nimport spack.util.lang as lang"
+    )
+    pty_out, result = _run_in_pty(child, b"y\r", tmp_path)
+    assert result == "NO-TERMINAL"
+    assert "Proceed?" not in pty_out
+
+
+def test_open_controlling_terminal_without_terminal(monkeypatch):
+    """No controlling terminal (cron, CI, ``setsid``): yields None rather than raising."""
+    if sys.platform == "win32":
+        monkeypatch.setattr(sys, "stdin", None)
+    else:
+        real_open = os.open
+
+        def no_tty(path, *args, **kwargs):
+            if path == "/dev/tty":
+                raise OSError(6, "Device not configured", path)
+            return real_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(os, "open", no_tty)
+
+    with spack.util.lang.open_controlling_terminal() as terminal:
+        assert terminal is None

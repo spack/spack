@@ -622,6 +622,7 @@ def test_ci_get_stack_changed_no_env(mock_git_repo, monkeypatch):
     """Test that we can detect the change to .gitlab-ci.yml in a
     mock spack git repo."""
     monkeypatch.setenv("CI_CONFIG_PATH", os.path.join(mock_git_repo, ".gitlab-ci.yml"))
+
     monkeypatch.setattr(spack.paths, "prefix", mock_git_repo)
     fake_env_path = os.path.join(
         spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))

@@ -15,22 +15,39 @@ Spack Settings (config.yaml)
 ============================
 
 Spack's basic configuration options are set in ``config.yaml``.
-You can see the default settings by looking at ``etc/spack/defaults/config.yaml``:
+You can see the default settings by looking at ``etc/spack/defaults/base/config.yaml``:
 
 .. literalinclude:: _spack_root/etc/spack/defaults/base/config.yaml
    :language: yaml
 
-These settings can be overridden in ``etc/spack/config.yaml`` or ``~/.spack/config.yaml``.
+These settings can be overridden in ``etc/spack/config.yaml``, or ``~/.config/spack/config.yaml``, or in an active environment.
 See :ref:`configuration-scopes` for details.
 
 .. index::
    single: install_tree (config.yaml)
 
+.. _locations_config:
+
+``locations``
+-------------
+
+This section contains sub-keys ``data``, ``state``, and ``cache``.
+These settings are used to change where Spack writes data.
+See :ref:`where_spack_writes_data`.
+
+Each of these settings accepts a list of values (or a single string).
+Variable substitution is run on each entry in the list, and if all variables resolve and result in an absolute path, the entry is used.
+Entries that resolve to a relative path raise an error, while entries with unset variables fall through to the next entry.
+If you want an unset variable to be treated as an error, use ``::`` to ensure no default entries are used.
+
+The defaults try e.g. ``SPACK_DATA_HOME``, then ``XDG_DATA_HOME/spack``, then the XDG default directory for each type (see :ref:`local-config-overrides`).
+If a setting is left without any entry, for instance by a ``config::`` override of the whole section, the XDG default directory is used; ``install_tree:root``, ``source_cache``, ``misc_cache``, ``gpg_path``, ``gpg_keys_path`` and ``environments_root`` likewise fall back to their default paths under it.
+
 ``install_tree:root``
 ---------------------
 
 The location where Spack will install packages and their dependencies.
-The default is ``$spack/opt/spack``.
+The default is ``$data_home/installs``.
 
 ``projections``
 ---------------
@@ -91,12 +108,12 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
    - $tempdir/$user/spack-stage
-   - ~/.spack/stage
+   - $state_home/stage
 
 This can be an ordered list of paths that Spack should search when trying to find a temporary directory for the build stage.
 The list is searched in order, and Spack will use the first directory to which it has write access.
 
-Specifying `~/.spack/stage` first will ensure each user builds in their home directory.
+Specifying ``$state_home/stage`` first will ensure each user builds in their home directory.
 The historic Spack stage path `$spack/var/spack/stage` will build directly inside the Spack instance.
 See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
 
@@ -112,7 +129,7 @@ Unsuccessful builds are not deleted, but you can manually purge them with ``spac
 --------------------
 
 Location to cache downloaded tarballs and repositories.
-By default, these are stored in ``$spack/var/spack/cache``.
+By default, these are stored in ``$data_home/downloads``.
 These are stored indefinitely by default and can be purged with ``spack clean --downloads``.
 
 .. _Misc Cache:
@@ -121,14 +138,40 @@ These are stored indefinitely by default and can be purged with ``spack clean --
 --------------------
 
 Temporary directory to store long-lived cache files, such as indices of packages available in repositories.
-Defaults to ``~/.spack/cache``.
+Defaults to ``$cache_home/$spack_instance_id/cache``.
 Can be purged with ``spack clean --misc-cache``.
 
 In some cases, e.g., if you work with many Spack instances or many different versions of Spack, it makes sense to have a cache per instance or per version.
 You can do that by changing the value to either:
 
-* ``~/.spack/$spack_instance_id/cache`` for per-instance caches, or
-* ``~/.spack/$spack_short_version/cache`` for per-spack-version caches.
+* ``$cache_home/$spack_instance_id/cache`` for per-instance caches (the default), or
+* ``$cache_home/$spack_short_version/cache`` for per-spack-version caches.
+
+``test_stage``
+--------------
+
+Directory in which ``spack test`` runs stand-alone tests and stores their results.
+Defaults to ``$state_home/test-stage``.
+See :ref:`configure-test-stage`.
+
+``environments_root``
+---------------------
+
+Directory in which :ref:`managed environments <environments>` are created.
+Defaults to ``$data_home/environments``.
+
+``license_dir``
+---------------
+
+Directory in which Spack looks for the license files of packages that need one (see :ref:`license`).
+Defaults to ``$data_home/licenses``.
+
+``gpg_path`` and ``gpg_keys_path``
+----------------------------------
+
+The GnuPG home directory holding Spack's keyring, and the directory of public keys into which ``spack gpg init`` imports (see :ref:`cmd-spack-gpg`).
+They default to ``$data_home/gpg`` and ``$data_home/gpg-keys``.
+``gpg_path`` is ignored when :envvar:`SPACK_GNUPGHOME` is set.
 
 ``verify_ssl``
 --------------------

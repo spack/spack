@@ -15,6 +15,7 @@ from typing import Any, Dict, Optional
 
 import pytest
 
+import spack.cmd
 import spack.cmd.env
 import spack.concretize
 import spack.config
@@ -5551,6 +5552,85 @@ def test_reported_total_ignores_specs_that_were_kept(unify, mutable_config, mock
     assert total == 1
     assert [count for _, _, count, _ in ui.concretized] == [1]
     assert [abstract.name for abstract, _, _, _ in ui.concretized] == ["mpileaks"]
+
+
+@pytest.fixture
+def stale_activated_env(tmp_path, mutable_mock_env_path, monkeypatch):
+    """A shell that activated env ``foo`` before the migration: SPACK_ENV points at the
+    old copy under the pre-migration environments root, while ``environments_root`` now
+    points at the new root, where ``foo`` has been copied."""
+    old_root = tmp_path / "old-envs"
+    for root in (old_root, mutable_mock_env_path):
+        (root / "foo").mkdir(parents=True)
+        (root / "foo" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    (old_root / "unmigrated").mkdir()
+    (old_root / "unmigrated" / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+
+    monkeypatch.setattr(spack.paths, "old_envs_path", str(old_root))
+    return old_root, mutable_mock_env_path
+
+
+def _find_env_with(command, spack_env):
+    args = Namespace(env=None, env_dir=None, no_env=False, command=command)
+    os.environ[ev.spack_env_var] = str(spack_env)
+    return spack.cmd.find_environment(args)
+
+
+def test_stale_spack_env_is_rewritten_to_migrated_copy(stale_activated_env, working_env):
+    old_root, new_root = stale_activated_env
+    env = _find_env_with(["add", "zlib"], old_root / "foo")
+    assert env is not None
+    assert os.path.realpath(env.path) == os.path.realpath(new_root / "foo")
+    assert os.path.realpath(os.environ[ev.spack_env_var]) == os.path.realpath(new_root / "foo")
+
+
+@pytest.mark.parametrize(
+    "command", [["env", "deactivate", "--sh"], ["env", "activate", "--sh", "other"]]
+)
+def test_stale_spack_env_not_rewritten_for_deactivate(stale_activated_env, working_env, command):
+    """`spack env deactivate`, and `spack env activate` (which deactivates first), must undo
+    the environment whose view is in the shell's PATH: the old copy."""
+    old_root, new_root = stale_activated_env
+    env = _find_env_with(command, old_root / "foo")
+    assert env is not None
+    assert os.path.realpath(env.path) == os.path.realpath(old_root / "foo")
+
+
+def test_stale_spack_env_not_rewritten_when_not_migrated(stale_activated_env, working_env):
+    """An env that was not copied to the new root keeps being used from the old root."""
+    old_root, new_root = stale_activated_env
+    env = _find_env_with(["add", "zlib"], old_root / "unmigrated")
+    assert env is not None
+    assert os.path.realpath(env.path) == os.path.realpath(old_root / "unmigrated")
+
+
+def test_dash_e_old_env_dir_uses_migrated_copy(stale_activated_env, working_env):
+    """``spack -e $spack/var/spack/environments/foo`` and ``-D`` on a migrated env operate
+    on the live copy, like SPACK_ENV does; an unmigrated one is used where it is."""
+    old_root, new_root = stale_activated_env
+    os.environ.pop(ev.spack_env_var, None)
+
+    for kwargs in ({"env": str(old_root / "foo")}, {"env_dir": str(old_root / "foo")}):
+        args = Namespace(env=None, env_dir=None, no_env=False, command=["add", "zlib"])
+        vars(args).update(kwargs)
+        env = spack.cmd.find_environment(args)
+        assert env is not None
+        assert os.path.realpath(env.path) == os.path.realpath(new_root / "foo"), kwargs
+
+    args = Namespace(env=None, env_dir=str(old_root / "unmigrated"), no_env=False, command=[])
+    assert os.path.realpath(spack.cmd.find_environment(args).path) == os.path.realpath(
+        old_root / "unmigrated"
+    )
+
+
+def test_spack_env_outside_old_root_untouched(stale_activated_env, working_env, tmp_path):
+    """An independent (anonymous) environment is never rewritten."""
+    indep = tmp_path / "project"
+    indep.mkdir()
+    (indep / "spack.yaml").write_text("spack:\n  specs: []\n", encoding="utf-8")
+    env = _find_env_with(["add", "zlib"], indep)
+    assert env is not None
+    assert os.path.realpath(env.path) == os.path.realpath(indep)
 
 
 def _read_manifest(manifest: pathlib.Path) -> Dict[str, Any]:

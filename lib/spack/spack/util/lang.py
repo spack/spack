@@ -6,10 +6,12 @@ import collections.abc
 import contextlib
 import fnmatch
 import functools
+import io
 import itertools
 import os
 import re
 import sys
+import time
 import traceback
 import types
 import typing
@@ -21,6 +23,7 @@ from typing import (
     Dict,
     Generic,
     Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -1143,3 +1146,195 @@ class PriorityOrderedMapping(Mapping[KT, VT]):
         self._priorities = [(p, k) for p, k in self._priorities if k != key]
         assert len(self._data) == len(self._priorities)
         return popped_item
+
+
+@contextlib.contextmanager
+def open_controlling_terminal() -> Iterator[Optional[typing.TextIO]]:
+    """Open the controlling terminal for an interactive prompt, bypassing stdin/stderr.
+
+    Yields a read/write text stream on the terminal, or ``None`` when the process has no
+    controlling terminal (cron, CI, ``ssh -T``, containers without ``-t``), or when it is
+    not in the terminal's foreground process group (backgrounded with ``&``), i.e. when
+    nobody could answer a prompt. Redirection of the standard streams (``2>&1 | tee``,
+    ``$(...)`` capture, fish's ``capture_all``) does not matter: the prompt still reaches
+    the user and the answer is still read from the keyboard.
+
+    On Windows the yielded stream is only written to: :func:`readline_with_timeout` reads
+    keystrokes through ``msvcrt``, which uses the console input buffer directly and not
+    ``sys.stdin``. ``sys.stderr`` is yielded when both it and ``sys.stdin`` are the console.
+    """
+    if sys.platform == "win32":
+        if sys.stdin and sys.stderr and sys.stdin.isatty() and sys.stderr.isatty():
+            yield sys.stderr
+        else:
+            yield None
+        return
+
+    try:
+        fd = os.open("/dev/tty", os.O_RDWR | os.O_NOCTTY)
+    except OSError:
+        yield None
+        return
+
+    try:
+        foreground = os.tcgetpgrp(fd) == os.getpgrp()
+    except OSError:
+        foreground = False
+    if not foreground:
+        os.close(fd)
+        yield None
+        return
+
+    # A tty is not seekable, so fdopen(fd, "r+") refuses it; wrap the raw fd directly.
+    # Input is read from the fd by readline_with_timeout; output is written through.
+    with io.TextIOWrapper(io.FileIO(fd, "r+"), write_through=True) as terminal:
+        yield terminal
+
+
+# Tested in a separate interpreter attached to a real controlling PTY: input, Enter, empty input,
+# multiple characters, backspace, timeout, and redirected standard streams are covered there.
+# pytest-cov does not instrument that manually launched interpreter, so exclude this implementation
+# from its line metric. The Windows msvcrt adapter and signal cleanup are not exercised by those
+# POSIX PTY tests.
+def readline_with_timeout(  # pragma: no cover
+    prompt_format: str,
+    timeout: float,
+    update_interval: float = 1.0,
+    terminal: Optional[typing.TextIO] = None,
+) -> Optional[str]:
+    """Read a line from a terminal with a countdown timer in the prompt.
+
+    Args:
+        prompt_format: The prompt (this will insert "(remaining ...):" at the end)
+        timeout: Maximum time to wait for input in seconds
+        update_interval: How often to update the countdown display in seconds
+        terminal: Stream on the terminal to prompt on; see :func:`open_controlling_terminal`.
+            Output always goes to it (default ``sys.stderr``). On Unix input is also read
+            from its file descriptor (default ``sys.stdin``); on Windows input comes from
+            the console via ``msvcrt`` regardless of this argument.
+
+    Returns:
+        The input line if entered before timeout, None if timeout expires
+    """
+    out_stream = terminal if terminal is not None else sys.stderr
+
+    # Platform-specific setup
+    if sys.platform == "win32":
+        # msvcrt reads the console input buffer directly; no stream is involved
+        import msvcrt
+
+        def check_input_ready(timeout_sec):
+            """Check if input is available (Windows)."""
+            deadline = time.monotonic() + timeout_sec
+            while time.monotonic() < deadline:
+                if msvcrt.kbhit():
+                    return True
+                time.sleep(0.05)
+            return False
+
+        def read_char():
+            """Read one character (Windows)."""
+            return msvcrt.getwch()
+
+        cleanup = lambda: None
+    else:
+        import select
+        import termios
+        import tty
+
+        # Read from the terminal's fd; save its settings to restore later
+        fd = (terminal if terminal is not None else sys.stdin).fileno()
+        old_settings = termios.tcgetattr(fd)
+
+        def check_input_ready(timeout_sec):
+            """Check if input is available (Unix)."""
+            ready, _, _ = select.select([fd], [], [], timeout_sec)
+            return bool(ready)
+
+        def read_char():
+            """Read one character (Unix)."""
+            return os.read(fd, 1).decode(errors="replace")
+
+        def cleanup():
+            """Restore terminal settings (Unix)."""
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+    # Install signal handlers to ensure cleanup on SIGTERM/SIGINT/SIGHUP
+    # Note: SIGKILL (kill -9) cannot be caught and will leave terminal in raw mode
+    original_sigterm = None
+    original_sigint = None
+    original_sighup = None
+    if sys.platform != "win32":
+        import signal
+
+        def signal_handler(signum, frame):
+            """Clean up terminal before exit."""
+            cleanup()
+            if signum == signal.SIGINT:
+                # SIGINT (Ctrl+C) - raise to let caller handle
+                raise KeyboardInterrupt
+            else:
+                # SIGTERM/SIGHUP - exit cleanly after cleanup
+                sys.exit(128 + signum)
+
+        original_sigterm = signal.signal(signal.SIGTERM, signal_handler)
+        original_sigint = signal.signal(signal.SIGINT, signal_handler)
+        original_sighup = signal.signal(signal.SIGHUP, signal_handler)
+
+    try:
+        if sys.platform != "win32":
+            # Put terminal in raw mode to read character-by-character
+            tty.setraw(fd, when=termios.TCSANOW)
+
+        deadline = time.monotonic() + timeout
+        characters: List[str] = []
+        last_update = 0.0
+
+        # Main input loop
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                out_stream.write("\n")
+                out_stream.flush()
+                return None
+
+            # Update display periodically
+            now = time.monotonic()
+            if now - last_update >= update_interval:
+                full_prompt = f"{prompt_format} (remaining {int(remaining)}s) "
+                out_stream.write(f"\r{full_prompt}{''.join(characters)}")
+                out_stream.flush()
+                last_update = now
+
+            # Check for input
+            if not check_input_ready(min(update_interval, remaining)):
+                continue
+
+            character = read_char()
+
+            # Handle special characters
+            if character in ("\r", "\n"):
+                out_stream.write("\r\n")
+                out_stream.flush()
+                return "".join(characters)
+            if character in ("\003", "\x03"):  # Ctrl+C
+                raise KeyboardInterrupt
+            if character in ("\b", "\x7f", "\x08"):  # Backspace or DEL
+                if characters:
+                    characters.pop()
+                    # Redraw immediately after backspace
+                    full_prompt = f"{prompt_format} (remaining {int(remaining)}s) "
+                    out_stream.write(f"\r{full_prompt}{''.join(characters)} \b")
+                    out_stream.flush()
+                continue
+            if character.isprintable():
+                characters.append(character)
+                out_stream.write(character)
+                out_stream.flush()
+    finally:
+        cleanup()
+        # Restore original signal handlers
+        if sys.platform != "win32":
+            signal.signal(signal.SIGTERM, original_sigterm)
+            signal.signal(signal.SIGINT, original_sigint)
+            signal.signal(signal.SIGHUP, original_sighup)

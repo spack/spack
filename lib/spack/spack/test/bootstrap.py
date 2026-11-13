@@ -39,19 +39,9 @@ if not PROTOTYPES:
 
 
 @pytest.fixture(autouse=True)
-def isolated_bootstrap_root(monkeypatch, tmp_path: pathlib.Path):
-    """Point the bootstrap root at a temporary directory, so that tests entering
-    ``ensure_bootstrap_configuration`` do not mount the user's real bootstrap config.
-
-    Two settings resolve the root: the default scope has ``root: $user_cache_path/bootstrap``,
-    and ``root_path()`` falls back to ``default_user_bootstrap_path`` when no config defines
-    it. Both are pinned here so that they agree.
-    """
-    user_cache_path = tmp_path / "user_cache"
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(user_cache_path))
-    monkeypatch.setattr(
-        spack.paths, "default_user_bootstrap_path", str(user_cache_path / "bootstrap")
-    )
+def isolated_bootstrap_root(tmp_path: pathlib.Path, mutable_config):
+    """Point the bootstrap root at a temporary directory for each test."""
+    mutable_config.set("bootstrap:root", str(tmp_path / "bootstrap"))
 
 
 @pytest.fixture
@@ -155,11 +145,18 @@ def test_bootstrap_deactivates_environments(active_mock_environment):
     assert active_environment() == active_mock_environment
 
 
-def test_bootstrap_db_upgrade_error_points_at_b_flag(mutable_config, monkeypatch):
+def test_bootstrap_db_upgrade_error_points_at_b_flag(
+    mutable_config, monkeypatch, tmp_path: pathlib.Path
+):
     """An outdated bootstrap store database must raise ExplicitDatabaseUpgradeError, and,
     because the store being read is the bootstrap store, the migration hint must be
     ``spack -b reindex`` rather than plain ``spack reindex``.
+
+    The synthetic database is explicitly placed in a temporary bootstrap root. This test must
+    never modify the bootstrap store used by the test runner or CI.
     """
+    mutable_config.set("bootstrap:root", str(tmp_path / "bootstrap"))
+
     with pytest.raises(spack.error.ExplicitDatabaseUpgradeError) as exc_info:
         with spack.bootstrap.ensure_bootstrap_configuration():
             db_dir = pathlib.Path(spack.store.STORE.root) / ".spack-db"

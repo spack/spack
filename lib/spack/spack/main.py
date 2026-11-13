@@ -35,6 +35,7 @@ import spack.environment
 import spack.environment as ev
 import spack.environment.environment
 import spack.error
+import spack.migrate
 import spack.paths
 import spack.platforms
 import spack.solver.asp
@@ -796,7 +797,7 @@ def print_setup_info(*info):
     This is in ``main.py`` to make it fast; the setup scripts need to
     invoke spack in login scripts, and it needs to be quick.
     """
-    from spack.modules.common import root_path
+    from spack.modules.common import ModulesError, root_path
 
     shell = "csh" if "csh" in info else "sh"
 
@@ -814,8 +815,11 @@ def print_setup_info(*info):
     # print roots for all module systems
     module_to_roots = {"tcl": list(), "lmod": list()}
     for name in module_to_roots.keys():
-        path = root_path(name, "default")
-        module_to_roots[name].append(path)
+        try:
+            path = root_path(name, "default")
+            module_to_roots[name].append(path)
+        except ModulesError:
+            pass
 
     other_spack_instances = spack.config.CONFIG.get("upstreams") or {}
     for install_properties in other_spack_instances.values():
@@ -966,6 +970,34 @@ def _main(argv=None):
         print(spack.get_version())
         return 0
 
+    # -------------------------------------------------------------------------
+    # The next two sections after this one set up config properly.
+    # Nothing can touch config before here
+    # -------------------------------------------------------------------------
+    # If a test or script overrides with a non-singleton, allow that
+    assert (
+        not isinstance(spack.config.CONFIG, spack.util.lang.Singleton)
+        or spack.config.CONFIG._instance is None
+    )
+
+    # ------------------------------------------------------------------------------------
+    # This part of `main()` handles migration from the old configs (Spack 1.2 and earlier)
+    # ------------------------------------------------------------------------------------
+
+    # We do not fully parse, we only have the spack args parsed at this point
+    # Do not perform migration for non-commands (e.g. --help).
+    cmd_array = args.command or []
+    if cmd_array and cmd_array[0] != "isolate":
+        # Configuration is not loaded yet, but the config-free output options can already be
+        # honored so that `spack -d` shows what migration is doing and `--color` applies to
+        # the migration prompt
+        tty.set_verbose(args.verbose)
+        tty.set_debug(args.debug)
+        tty.set_stacktrace(args.stacktrace)
+        if args.color is not None:
+            color.set_color_when(args.color)
+        spack.migrate.perform_migration()
+
     # ------------------------------------------------------------------------
     # This part of the `main()` sets up Spack's configuration.
     #
@@ -1016,6 +1048,18 @@ def _main(argv=None):
     # ------------------------------------------------------------------------
     # Things that require configuration should go below here
     # ------------------------------------------------------------------------
+    if (
+        sys.platform == "darwin"
+        and multiprocessing.get_start_method(allow_none=True) is None
+        and spack.config.CONFIG.get("config:installer") == "new"
+    ):
+        # Forkserver is significantly faster than spawn. This has to be configured once and early
+        # in the process.
+        multiprocessing.set_start_method("forkserver")
+    # When using the forkserver start method, preload the following modules to improve startup
+    # time of child processes.
+    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
+
     if args.print_shell_vars:
         print_setup_info(*args.print_shell_vars.split(","))
         return 0
@@ -1139,17 +1183,6 @@ def main(argv=None):
             the executable name. If None, parses from sys.argv.
 
     """
-    if (
-        sys.platform == "darwin"
-        and multiprocessing.get_start_method(allow_none=True) is None
-        and spack.config.CONFIG.get("config:installer") == "new"
-    ):
-        # Forkserver is significantly faster than spawn. This has to be configured once and early
-        # in the process.
-        multiprocessing.set_start_method("forkserver")
-    # When using the forkserver start method, preload the following modules to improve startup
-    # time of child processes.
-    multiprocessing.set_forkserver_preload(["spack.main", "spack.package", "spack.installer"])
     try:
         g0, g1, g2 = gc.get_threshold()
         gc.set_threshold(50 * g0, g1, g2)
@@ -1164,7 +1197,7 @@ def main(argv=None):
         e.die()  # gracefully die on any SpackErrors
 
     except KeyboardInterrupt:
-        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if _show_backtrace(argv):
             traceback.print_exc()
         else:
             sys.stderr.write("\n")
@@ -1172,20 +1205,35 @@ def main(argv=None):
         return _exit_by_signal(signal.SIGINT)
 
     except spack.error.TerminatedBySignal as e:
-        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if _show_backtrace(argv):
             traceback.print_exc()
         return _exit_by_signal(e.signum)
 
     except SystemExit as e:
-        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if _show_backtrace(argv):
             traceback.print_exc()
         return e.code
 
     except Exception as e:
-        if spack.config.CONFIG.get("config:debug") or spack.error.SHOW_BACKTRACE:
+        if _show_backtrace(argv):
             raise
         tty.error(e)
         return 3
+
+
+def _show_backtrace(argv) -> bool:
+    """Whether an error escaping ``_main`` should be shown with its backtrace.
+
+    Reading ``config:debug`` loads the configuration, which may itself be what failed
+    (e.g. a user scope path that is not a directory); then only the command line can say.
+    """
+    if spack.error.SHOW_BACKTRACE:
+        return True
+    try:
+        return bool(spack.config.CONFIG.get("config:debug"))
+    except Exception:
+        args, _ = make_argument_parser().parse_known_args(argv)
+        return bool(args.debug)
 
 
 def _handle_solver_bug(

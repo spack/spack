@@ -1,0 +1,2223 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""This module implements the migration from Spack@:1.2 config layout to Spack@1.3: layout."""
+
+import contextlib
+import filecmp
+import os
+import re
+import shutil
+import sys
+import time
+from enum import Enum
+from typing import Any, Callable, Container, Dict, List, Optional, Tuple, Union
+
+import spack.config
+import spack.error
+import spack.paths
+import spack.util.environment
+import spack.util.hash
+import spack.util.lock
+import spack.util.spack_yaml as syaml
+from spack.util import filesystem, lang, tty
+
+
+class DestinationCheck(Enum):
+    """Actions for destination verification callback in migration."""
+
+    PROCEED = "proceed"  # Destination is clear, proceed with migration
+    SKIP = "skip"  # Already migrated correctly, skip but return success
+    FAIL = "fail"  # Conflict detected, abort migration
+
+
+def detect_old_resources() -> Dict[str, bool]:
+    """Detect presence of old Spack-internal resources.
+
+    Returns:
+        Dictionary with keys ``installs``, ``gpg_keys``, ``licenses`` and ``environments`` and
+        boolean values indicating whether those resource types are present.
+    """
+
+    def _has_entries(path: str, ignore: Optional[List[str]] = None) -> bool:
+        """Check if directory exists and has entries."""
+        if not os.path.exists(path):
+            return False
+        try:
+            for entry in os.listdir(path):
+                if ignore and entry in ignore:
+                    continue
+                return True
+            return False
+        except NotADirectoryError:
+            # catch TOCTOU issue from path removed after check
+            return False
+        except PermissionError as e:
+            tty.die(
+                f"Spack encountered a permission error at {e.filename} while attempting to read "
+                "old storage locations to migrate data. Fix the permissions or contact an admin "
+                "of this Spack instance to run spack migration."
+            )
+
+    opt_spack = os.path.join(spack.paths.opt_path, "spack")
+
+    return {
+        # The installed prefixes are what would be lost by changing the install root; the
+        # database is only an index of them. A read-only command on a fresh clone creates
+        # `.spack-db/` on its own, and `uninstall --all` leaves it behind.
+        "installs": _has_entries(opt_spack, ignore=["gpg", ".spack-db"]),
+        "gpg_keys": _has_entries(spack.paths.old_gpg_path)
+        or _has_entries(spack.paths.old_gpg_keys_path),
+        "licenses": _has_entries(spack.paths.old_licenses_path),
+        # Only manifests count; `spack env create` leaves a `.lock`, and anything else there
+        # (a stray file, a directory with no manifest) is not an environment
+        "environments": bool(_find_environments(spack.paths.old_envs_path)),
+    }
+
+
+class Index:
+    """Represents a list index in a YAML path."""
+
+    def __init__(self, idx: int):
+        self.idx = idx
+
+    def __repr__(self):
+        return f"Index({self.idx})"
+
+
+def _check_for_escaping_env_variables(data: Any, file_context: str = "") -> None:
+    """Check YAML data for $env/.. patterns that escape the environment.
+
+    Args:
+        data: YAML data structure to check
+        file_context: Description of the file being checked (for error messages)
+
+    Raises:
+        spack.error.SpackError: If $env/.. pattern found
+    """
+    if isinstance(data, dict):
+        for value in data.values():
+            _check_for_escaping_env_variables(value, file_context)
+    elif isinstance(data, list):
+        for item in data:
+            _check_for_escaping_env_variables(item, file_context)
+    elif isinstance(data, str):
+        parts = data.split("/")  # even on windows, spack config paths written with /
+        if parts[0] in ("$env", "${env}"):
+            depth = 1
+            # Count path components vs .. components to see if we reach outside of the env
+            for part in parts[1:]:
+                if part in ("", "."):
+                    continue
+                if part == "..":
+                    depth -= 1
+                    if depth < 1:
+                        context = f" in {file_context}" if file_context else ""
+                        raise spack.error.SpackError(
+                            f"Cannot migrate: path '{data}'{context} contains $env/.. which would "
+                            f"reference outside the environment. Expand the variable or use an "
+                            "absolute path."
+                        )
+                else:
+                    depth += 1
+
+
+def _looks_like_path(value: str) -> bool:
+    """Whether a YAML string is a path reference worth checking: absolute, or relative and
+    climbing above its own directory (``../x``, ``./../x``, ``a/../../x``)."""
+    if os.path.isabs(value):
+        return True
+    return os.path.normpath(value).split(os.sep)[0] == os.pardir
+
+
+def _walk_yaml_for_paths(
+    data: Any, config_file_dir: str, key_path: Optional[List[Union[str, Index]]] = None
+) -> List[Tuple[List[Union[str, Index]], str, str]]:
+    """Walk YAML data and find strings that look like paths.
+
+    Identifies paths as:
+
+    - Absolute paths (os.path.isabs() - handles / on Unix and C:\\ on Windows)
+    - Relative paths that climb above their directory once normalized (``../x``, ``./../x``,
+      ``a/../../x``)
+
+    Args:
+        data: YAML data structure to walk
+        config_file_dir: Directory containing the config file (for resolving relative paths)
+        key_path: Current position in the YAML structure
+
+    Returns:
+        List of (key_path, original_value, absolute_path) tuples
+    """
+    if key_path is None:
+        key_path = []
+
+    results = []
+
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if isinstance(value, (dict, list)):
+                nested = _walk_yaml_for_paths(value, config_file_dir, key_path + [key])
+                results.extend(nested)
+            elif isinstance(value, str):
+                if _looks_like_path(value):
+                    abs_path = _resolve_and_check_path(value, config_file_dir)
+                    if abs_path:
+                        results.append((key_path + [key], value, abs_path))
+
+    elif isinstance(data, list):
+        for idx, item in enumerate(data):
+            if isinstance(item, (dict, list)):
+                nested = _walk_yaml_for_paths(item, config_file_dir, key_path + [Index(idx)])
+                results.extend(nested)
+            elif isinstance(item, str):
+                if _looks_like_path(item):
+                    abs_path = _resolve_and_check_path(item, config_file_dir)
+                    if abs_path:
+                        results.append((key_path + [Index(idx)], item, abs_path))
+
+    return results
+
+
+def _resolve_and_check_path(value: str, config_file_dir: str) -> str:
+    """Resolve a potential path string to an absolute path.
+
+    Used by _walk_yaml_for_paths which examines strings that look like paths
+    (absolute or starting with ../), so we can assume these are meant to be path references.
+    """
+    if not value or value.startswith("$"):
+        return ""
+
+    if os.path.isabs(value):
+        return value
+
+    return os.path.normpath(os.path.join(config_file_dir, value))
+
+
+def _absolutize_path_in_yaml(
+    data: Any, key_path_parts: List[Union[str, Index]], new_value: str
+) -> None:
+    """Replace a value at a path in a YAML data structure."""
+    current = data
+
+    for key in key_path_parts[:-1]:
+        if isinstance(key, Index):
+            current = current[key.idx]
+        else:
+            current = current[key]
+
+    final_key = key_path_parts[-1]
+    if isinstance(final_key, Index):
+        current[final_key.idx] = new_value
+    else:
+        current[final_key] = new_value
+
+
+def process_env_file_paths(
+    file_path: str,
+    old_env_dir: str,
+    new_env_dir: str,
+    old_envs_root: Optional[str] = None,
+    new_envs_root: Optional[str] = None,
+    staging_dir: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Rewrite paths in environment config files for environment relocation.
+
+    Applies environment-specific path rewriting rules:
+
+    1. Absolute path inside old env -> rewrite to new env location
+    2. Relative path staying inside env -> keep relative (works in new location)
+    3. Absolute path outside env and outside envs root -> unchanged
+
+    BLOCKED (migration fails if these are found):
+    4. Relative path pointing outside env -> BLOCKS MIGRATION
+    5. Absolute path in envs root but outside this env (sibling) -> BLOCKS MIGRATION
+
+    Args:
+        file_path: Path to the yaml file to process
+        old_env_dir: Old environment directory root
+        new_env_dir: New environment directory root
+        old_envs_root: Old environments root (parent of all envs being migrated)
+        new_envs_root: New environments root (target parent for migrated envs)
+        staging_dir: Directory ``file_path`` is read from, when that is not ``new_env_dir``
+            (the copy is staged next to its destination and renamed into place afterwards)
+
+    Returns:
+        Modified data if any paths were changed, None otherwise
+
+    Raises:
+        spack.error.SpackError: If environment has external references that prevent migration
+    """
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = syaml.load(f)
+    except syaml.SpackYAMLError as e:
+        # Not every *.yaml in an environment is Spack configuration: templates (Jinja), CI
+        # fragments, user notes. Spack never read this file, so copy it as it is.
+        tty.debug(f"Not rewriting paths in {file_path}, it is not YAML: {e}")
+        return None
+
+    if not data:
+        return None
+
+    # Where the file sits within the environment, taken from where it was read
+    staging_norm = os.path.normpath(os.path.abspath(staging_dir or new_env_dir))
+    rel_file = os.path.relpath(os.path.abspath(file_path), staging_norm)
+    _check_for_escaping_env_variables(data, rel_file)
+
+    # Relative paths are resolved as they would have been in the old location; rewritten
+    # absolute paths point at the final destination. Containment is decided on resolved
+    # paths, so that a value spelled through a symlink (``~/spack -> /clone``) still counts.
+    old_env_norm = os.path.normpath(os.path.abspath(old_env_dir))
+    old_env_real = os.path.realpath(old_env_dir)
+    new_env_norm = os.path.normpath(os.path.abspath(new_env_dir))
+    old_config_dir = os.path.join(old_env_norm, os.path.dirname(rel_file))
+
+    found_paths = _walk_yaml_for_paths(data, old_config_dir)
+    modified = False
+
+    for key_path, original_value, abs_path in found_paths:
+        abs_path_norm = os.path.realpath(abs_path)
+
+        # Check if path is inside the env being moved
+        try:
+            rel_to_old_env = os.path.relpath(abs_path_norm, old_env_real)
+            inside_env = not rel_to_old_env.startswith("..")
+        except ValueError:
+            # Different drives on Windows
+            inside_env = False
+
+        if inside_env:
+            # Rule 1: Path inside env - rewrite if absolute, keep relative if relative
+            if os.path.isabs(original_value):
+                new_path = os.path.join(new_env_norm, rel_to_old_env)
+                _absolutize_path_in_yaml(data, key_path, new_path)
+                modified = True
+            # else: Rule 2: Relative path inside env: keep as-is
+        else:
+            # Path is outside the env
+            if not os.path.isabs(original_value):
+                # Rule 4: Relative path outside env -> BLOCK MIGRATION
+                raise spack.error.SpackError(
+                    f"Environment cannot be migrated: relative path '{original_value}' "
+                    f"in {rel_file} points outside the environment to {abs_path}. "
+                    f"Either make this an absolute path or move the target inside the environment."
+                )
+
+            # Absolute path outside env - check if it's in envs root (sibling reference)
+            if old_envs_root:
+                try:
+                    envs_root_norm = os.path.realpath(old_envs_root)
+                    rel_to_envs_root = os.path.relpath(abs_path_norm, envs_root_norm)
+                    inside_envs_root = not rel_to_envs_root.startswith("..")
+                except ValueError:
+                    # Different drives
+                    inside_envs_root = False
+
+                if inside_envs_root:
+                    # Rule 5: Absolute path to sibling in envs root -> BLOCK MIGRATION
+                    raise spack.error.SpackError(
+                        f"Environment cannot be migrated: absolute path '{original_value}' "
+                        f"in {rel_file} points to a sibling location in the environments root. "
+                        f"Move the target outside the environments root or inside this "
+                        f"environment."
+                    )
+
+            # Rule 3: Absolute path outside env and outside envs root -> OK, unchanged
+
+    return data if modified else None
+
+
+#: Directories Spack <= 1.2 created under ``~/.spack`` for data, not configuration: caches,
+#: the bootstrap store, build and test stages, clones. Any YAML inside them belongs to that
+#: data (a staged source tree, an installed Python package), not to the user scope.
+_OLD_DOT_SPACK_DATA_DIRS = frozenset(
+    ["bootstrap", "cache", "git_repos", "package_repos", "reports", "stage", "test"]
+)
+
+
+def _process_yaml_files_in_directory(
+    old_dir: str,
+    staging_dir: str,
+    processor_func: Callable[[str, str, str], Optional[Dict[str, Any]]],
+    new_dir: str,
+    skip_toplevel: Container[str] = (),
+) -> None:
+    """Walk a directory tree, copying its YAML files (processed) and its symlinks (as is).
+
+    Symlinks are not followed: a link is re-created as a link in the staging directory,
+    whether it points at a file or a directory, so that aliases (``current -> v2``) and
+    links into a dotfiles checkout stay live rather than becoming frozen copies. A link's
+    target is copied verbatim; the caller fixes up targets that would no longer resolve
+    (see ``_rewrite_symlinks_after_copy``).
+
+    Args:
+        old_dir: Source directory to walk
+        staging_dir: Staging directory where processed files are written
+        processor_func: Function(yaml_file_path, old_dir, new_dir) -> modified_data or None
+        new_dir: Target directory (passed to processor_func)
+        skip_toplevel: names of entries directly under ``old_dir`` not to copy or descend
+    """
+    for root, dirs, files in os.walk(old_dir, followlinks=False):
+        if root == old_dir:
+            dirs[:] = [d for d in dirs if d not in skip_toplevel]
+        # A directory holding an environment manifest or a package repository is data the
+        # user keeps here, not configuration of this scope: do not descend into it.
+        elif any(f in files for f in ("spack.yaml", "spack.lock", "repo.yaml")):
+            dirs[:] = []
+            continue
+
+        # Directory symlinks are reported in ``dirs`` but not descended into (followlinks is
+        # False); re-create them as links.
+        for name in dirs:
+            old_path = os.path.join(root, name)
+            if os.path.islink(old_path):
+                _copy_symlink(
+                    old_path, os.path.join(staging_dir, os.path.relpath(old_path, old_dir))
+                )
+
+        for filename in files:
+            if not filename.endswith((".yaml", ".yml")):
+                continue
+
+            old_path = os.path.join(root, filename)
+            rel_path = os.path.relpath(old_path, old_dir)
+            staging_file_path = os.path.join(staging_dir, rel_path)
+
+            if os.path.islink(old_path):
+                _copy_symlink(old_path, staging_file_path)
+                continue
+
+            try:
+                modified_data = processor_func(old_path, old_dir, new_dir)
+
+                os.makedirs(os.path.dirname(staging_file_path), exist_ok=True)
+
+                if modified_data is not None:
+                    old_mode = os.stat(old_path).st_mode & 0o777
+                    with open(staging_file_path, "w", encoding="utf-8") as f:
+                        syaml.dump(modified_data, f)
+                    os.chmod(staging_file_path, old_mode)
+                else:
+                    shutil.copy2(old_path, staging_file_path)
+            except (syaml.SpackYAMLError, OSError) as e:
+                tty.warn(f"Not copying {rel_path} to the new configuration location: {e}")
+
+
+def _copy_symlink(old_path: str, staging_path: str) -> None:
+    """Re-create the symlink at ``old_path`` as ``staging_path`` with the same target."""
+    try:
+        os.makedirs(os.path.dirname(staging_path), exist_ok=True)
+        # On Windows a link's type must be given: the target may not exist in staging yet
+        os.symlink(
+            os.readlink(old_path), staging_path, target_is_directory=os.path.isdir(old_path)
+        )
+    except OSError as e:
+        tty.warn(f"Not copying symlink {old_path} to the new configuration location: {e}")
+
+
+#: Config entries whose Spack <= 1.2 default lived under ``~/.spack``, and where that default
+#: lives in the new layout.
+#:
+#: Keyed by config path (``section:key``). Each entry lists regexes matching the old
+#: default(s) as ``/``-separated paths relative to ``~/.spack``, and the new default as a
+#: config-variable string so that ``config:locations`` and the ``SPACK_*_HOME``/``XDG_*_HOME``
+#: environment variables keep applying after migration.
+#:
+#: Those subtrees are regenerable data, not configuration, so the home migration does not copy
+#: them (it copies only YAML files). A user config file may still spell out the
+#: old default as an absolute path, e.g. ``bootstrap:root: /home/me/.spack/bootstrap`` as
+#: written by ``spack bootstrap root --set``. Only when a value *is* the old default for its own
+#: key is it rewritten to the new default. Any other absolute path under ``~/.spack`` is a
+#: user choice and is left alone: ``~/.spack`` is retained, so it still names what it did.
+#:
+#: The old defaults are fixed in Spack 1.2 and never change; the new defaults should match
+#: ``etc/spack/defaults``.
+_OLD_DOT_SPACK_DEFAULTS: Dict[str, Tuple[List["re.Pattern[str]"], str]] = {
+    # etc/spack/defaults/bootstrap.yaml: root: $user_cache_path/bootstrap
+    "bootstrap:root": ([re.compile(r"^bootstrap$")], "$state_home/bootstrap"),
+    # etc/spack/defaults/config.yaml: misc_cache: $user_cache_path/cache, and the paths.py
+    # fallback ~/.spack/<spack_instance_id>/cache, where the id is the first 7 characters of
+    # a base32 hash (alphabet a-z2-7)
+    "config:misc_cache": (
+        [re.compile(r"^cache$"), re.compile(r"^[a-z2-7]{7}/cache$")],
+        "$cache_home/$spack_instance_id/cache",
+    ),
+    # etc/spack/defaults/config.yaml: test_stage: $user_cache_path/test
+    "config:test_stage": ([re.compile(r"^test$")], "$state_home/test-stage"),
+    # etc/spack/defaults/config.yaml: build_stage: [..., $user_cache_path/stage]
+    "config:build_stage": ([re.compile(r"^stage$")], "$state_home/stage"),
+}
+
+
+def _relocate_old_default(key_path: List[Union[str, Index]], rel_to_old: str) -> Optional[str]:
+    """If ``rel_to_old`` (a path relative to ``~/.spack``) is the Spack 1.2 default for the
+    config entry at ``key_path``, return that entry's new default; otherwise ``None``."""
+    # config path, ignoring :: and list indices
+    config_key = ":".join(str(k).rstrip(":") for k in key_path if not isinstance(k, Index))
+    entry = _OLD_DOT_SPACK_DEFAULTS.get(config_key)
+    if entry is None:
+        return None
+    matchers, new_default = entry
+    rel_posix = rel_to_old.replace(os.sep, "/")
+    if any(m.match(rel_posix) for m in matchers):
+        return new_default
+    return None
+
+
+#: Configuration entries whose string values are paths to persistent on-disk state that a
+#: user may have placed under ``~/.spack`` and referred to by a path *relative to the config
+#: file*. Relative paths in Spack configuration resolve against the directory of the file
+#: they are written in, so once the file moves to ``~/.config/spack`` such a reference would
+#: point at nothing. The home migration does not copy the referenced data (see
+#: ``_prepare_config_staging``), so these values are made absolute against ``~/.spack``,
+#: where the data still is.
+#:
+#: Each entry is a key path from the top of the file; ``*`` matches any dict key or list index
+#: _select_from_config returns all matches the calling code is responsible for filtering further
+_RELATIVE_PATH_CONFIG_KEYS: List[List[str]] = [
+    # repos: {name: path}  or  {name: {destination: path}}
+    ["repos", "*"],
+    ["repos", "*", "destination"],
+    # mirrors: {name: url}  or  {name: {url:, fetch:, push:}} (strings or {url: ...})
+    ["mirrors", "*"],
+    ["mirrors", "*", "url"],
+    ["mirrors", "*", "fetch"],
+    ["mirrors", "*", "push"],
+    ["mirrors", "*", "fetch", "url"],
+    ["mirrors", "*", "push", "url"],
+    # include: [path]  or  [{path: ...}]
+    ["include", "*"],
+    ["include", "*", "path"],
+    ["config", "environments_root"],
+    ["config", "license_dir"],
+]
+
+
+def _select_from_config(
+    data: Any, key_path: List[str]
+) -> List[Tuple[List[Union[str, Index]], Any]]:
+    """All ``(concrete_key_path, value)`` pairs in ``data`` matching a pattern key path."""
+    if not key_path:
+        return [([], data)]
+    head, rest = key_path[0], key_path[1:]
+    out: List[Tuple[List[Union[str, Index]], Any]] = []
+
+    def descend(step: Union[str, Index], child: Any) -> None:
+        for sub, val in _select_from_config(child, rest):
+            out.append(([step] + sub, val))
+
+    if head == "*" and isinstance(data, dict):
+        for k, v in data.items():
+            descend(k, v)
+    elif head == "*" and isinstance(data, list):
+        for i, v in enumerate(data):
+            descend(Index(i), v)
+    elif isinstance(data, dict):
+        # ``key::`` override spelling is the same key
+        for k, v in data.items():
+            if str(k).rstrip(":") == head:
+                descend(k, v)
+    return out
+
+
+def _is_relative_filesystem_path(value: Any) -> bool:
+    """A plain relative path: a string that is not absolute, not a URL, not ``~``- or
+    ``$``-prefixed. Non-strings (a ``{git:, destination:}`` dict selected by a ``*``) are not."""
+    if not isinstance(value, str):
+        return False
+    if os.path.isabs(value) or value.startswith(("~", "$")):
+        return False
+    if "://" in value:  # url, not a path
+        return False
+    return True
+
+
+def _spelled_out_old_defaults(
+    data: Any, config_dir: str, old_location: str
+) -> List[Tuple[List[Union[str, Index]], str, str]]:
+    """Values in ``data`` that spell out the Spack 1.2 default under ``old_location`` for
+    their own config key, as ``(key_path, value, new_default)``; see
+    ``_OLD_DOT_SPACK_DEFAULTS``."""
+    old_location_norm = os.path.normpath(os.path.abspath(old_location))
+    found = []
+    for key_path, value, abs_path in _walk_yaml_for_paths(data, config_dir):
+        if not os.path.isabs(value):
+            continue
+        try:
+            rel_to_old = os.path.relpath(os.path.normpath(abs_path), old_location_norm)
+        except ValueError:  # different drives on Windows
+            continue
+        if rel_to_old.startswith(".."):
+            continue
+        new_default = _relocate_old_default(key_path, rel_to_old)
+        if new_default is not None:
+            found.append((key_path, value, new_default))
+    return found
+
+
+def _warn_about_old_defaults_in_linked_config(old_location: str) -> None:
+    """``~/.spack`` is a symlink and its target is now the user config scope as it is; the
+    path rewriting of a copied configuration (``_OLD_DOT_SPACK_DEFAULTS``) does not apply
+    to files Spack does not own. Tell the user which values still spell out a Spack 1.2
+    default so they can update them."""
+    lines = []
+    with os.scandir(old_location) as entries:
+        files = sorted(e.path for e in entries if e.name.endswith((".yaml", ".yml")))
+    for path in files:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = syaml.load(f)
+        except (OSError, syaml.SpackYAMLError):
+            continue
+        for key_path, value, new_default in _spelled_out_old_defaults(
+            data, os.path.dirname(path), old_location
+        ):
+            key = ":".join(str(k) for k in key_path if not isinstance(k, Index))
+            lines.append(
+                f"  {os.path.realpath(path)}: {key} = {value} (new default: {new_default})"
+            )
+    if lines:
+        tty.warn(
+            f"{old_location} is a symlink, so {os.path.realpath(old_location)} is used as the"
+            " user configuration as it is. These values spell out Spack 1.2 defaults; the"
+            " directories they name are regenerable and Spack 1.3 puts them elsewhere by"
+            " default. Update or remove them if you do not want to keep using the old"
+            " locations:",
+            *lines,
+        )
+
+
+def process_config_file_paths(
+    file_path: str, old_location: str, new_config_location: str
+) -> Optional[Dict[str, Any]]:
+    """Rewrite paths in a user configuration file for relocation to the new config home.
+
+    Only two kinds of value are touched:
+
+    - An absolute path that is the Spack 1.2 default for its own config key (e.g.
+      ``bootstrap:root: ~/.spack/bootstrap``) is rewritten to the key's new default; see
+      ``_OLD_DOT_SPACK_DEFAULTS``. That data is regenerable and is not carried over.
+    - A *relative* path in one of the keys listed in ``_RELATIVE_PATH_CONFIG_KEYS`` is made
+      absolute against the old config directory, so that it keeps pointing at the data in
+      ``~/.spack`` (which is retained) rather than at the same relative location under
+      ``~/.config/spack`` (where nothing was copied).
+
+    Every other string is left exactly as it was: absolute paths into ``~/.spack`` still
+    name files that are still there, and strings that merely look like paths (module
+    projections, spec strings) are not paths.
+
+    Returns the modified data if any paths were changed, None otherwise.
+    """
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = syaml.load(f)
+
+    if not data:
+        return None
+
+    modified = False
+    # The file is read from its old location; relative paths resolve against that directory.
+    config_dir = os.path.dirname(os.path.abspath(file_path))
+
+    # 1. Spelled-out old defaults -> new defaults, anywhere in the file
+    for key_path, _, new_path in _spelled_out_old_defaults(data, config_dir, old_location):
+        _absolutize_path_in_yaml(data, key_path, new_path)
+        modified = True
+
+    # 2. Relative paths in the known path-valued keys -> absolute, against the old location
+    for pattern in _RELATIVE_PATH_CONFIG_KEYS:
+        for key_path, value in _select_from_config(data, pattern):
+            if _is_relative_filesystem_path(value):
+                _absolutize_path_in_yaml(
+                    data, key_path, os.path.normpath(os.path.join(config_dir, value))
+                )
+                modified = True
+
+    return data if modified else None
+
+
+def can_migrate_to_location(location: str):
+    """Verify destination is empty or doesn't exist (for use as verify_destination_callback)."""
+    if not os.path.lexists(location):
+        return DestinationCheck.PROCEED
+
+    if not os.path.isdir(location):
+        tty.warn(f"{location} exists as a file or dangling symlink, cannot migrate")
+        return DestinationCheck.FAIL
+
+    if os.listdir(location):
+        tty.debug(f"{location} already has files, skipping migration")
+        return DestinationCheck.FAIL
+
+    if not os.access(location, os.W_OK):
+        tty.debug(f"{location} is not writable, skipping migration")
+        return DestinationCheck.FAIL
+
+    # Empty directory - safe to migrate
+    return DestinationCheck.PROCEED
+
+
+def _is_nonempty_directory(path: str) -> bool:
+    try:
+        return bool(os.listdir(path))
+    except OSError:
+        return False
+
+
+def _is_under(path: str, root: str) -> bool:
+    """Whether the resolved ``path`` is ``root`` or beneath it."""
+    try:
+        rel = os.path.relpath(os.path.realpath(path), os.path.realpath(root))
+    except ValueError:  # different drives on Windows
+        return False
+    return not rel.startswith(os.pardir)
+
+
+def _same_link_or_link_to_sibling(
+    path: str, other: str, migrated_root: Optional[str] = None
+) -> bool:
+    """Whether ``path`` is a symlink to the same place as ``other``, or (when
+    ``migrated_root`` is given) a relative link to the same entry under ``dirname(path)``
+    as ``other`` is under ``migrated_root``."""
+    if not os.path.islink(path):
+        return False
+    if os.path.realpath(path) == os.path.realpath(other):
+        return True
+    target = os.path.realpath(other)
+    if migrated_root is None or not _is_under(target, migrated_root):
+        return False
+    # _migrate_symlinked_root preserves this target relative to the source link's directory;
+    # resolve the same spelling from the destination link's directory.
+    rel = os.path.relpath(target, os.path.realpath(os.path.dirname(other)))
+    return os.path.realpath(path) == os.path.realpath(os.path.join(os.path.dirname(path), rel))
+
+
+def _make_marker_verifier(
+    marker_name: str, old_path: Optional[str] = None, migrated_root: Optional[str] = None
+):
+    """Build a destination verifier that recognizes this instance's migration marker.
+
+    ``old_path`` is the source the destination would have been migrated from; a destination
+    that is a symlink to the same place as ``old_path`` was made by
+    ``_migrate_symlinked_root`` (links carry no marker) and counts as already migrated.
+    ``migrated_root`` is passed through to ``_same_link_or_link_to_sibling``.
+    """
+
+    def verify_with_marker(dest_path):
+        if not os.path.lexists(dest_path):
+            return DestinationCheck.PROCEED
+        if old_path is not None and _same_link_or_link_to_sibling(
+            dest_path, old_path, migrated_root
+        ):
+            tty.debug(f"Already migrated as a link: {dest_path}")
+            return DestinationCheck.SKIP
+        marker_path = os.path.join(dest_path, marker_name)
+        if os.path.exists(marker_path):
+            tty.debug(f"Already migrated from this spack instance (found marker {marker_name})")
+            return DestinationCheck.SKIP
+        tty.warn(f"Destination exists from different source: {dest_path}")
+        return DestinationCheck.FAIL
+
+    return verify_with_marker
+
+
+def _env_manifests_match(src_env: str, dst_env: str) -> bool:
+    """Whether a previously migrated environment still has the same manifest as its source.
+
+    The migration rewrites absolute paths into the environment's own directory, so the
+    copy's manifest legitimately differs from the source by that substitution; undo it
+    before comparing. The lockfile is not compared: it changes on every concretization.
+    """
+    try:
+        with open(os.path.join(src_env, "spack.yaml"), "r", encoding="utf-8") as f:
+            src_text = f.read()
+        with open(os.path.join(dst_env, "spack.yaml"), "r", encoding="utf-8") as f:
+            dst_text = f.read()
+    except OSError:
+        return False
+    dst_text = dst_text.replace(os.path.abspath(dst_env), os.path.abspath(src_env))
+    return src_text == dst_text
+
+
+def _remove_tree(path: str, what: str) -> None:
+    """Remove a directory Spack created during migration, making read-only entries writable
+    first (copied trees keep their source permissions). Whatever still cannot be removed is
+    reported, so that a leftover is never silent."""
+
+    def on_error(func, failed_path, exc_info):
+        try:
+            os.chmod(os.path.dirname(failed_path), 0o700)
+            os.chmod(failed_path, 0o700)
+            func(failed_path)
+        except OSError as e:
+            tty.warn(f"Could not remove {what} {path}: {e}")
+
+    shutil.rmtree(path, onerror=on_error)
+
+
+def _migrate_symlinked_root(
+    old_path: str, new_path: str, description: str, migrated_root: Optional[str] = None
+) -> DestinationCheck:
+    """Migrate a resource whose root is itself a symlink by re-creating the link.
+
+    The link is what the user set up (``licenses -> /site/licenses``,
+    ``~/.spack -> ~/dotfiles/spack``); the data lives where it points. Copying through it
+    would freeze the data at today's contents and detach it from the user's source of truth.
+
+    If ``migrated_root`` is given, it is the directory whose entries are all being migrated
+    to ``dirname(new_path)``; a link whose target lies under it (``prod -> myenv`` among
+    the environments) is re-created relative, so that it follows its target to the new
+    location. Any other target is linked to absolutely.
+
+    Returns ``PROCEED`` if the link was created by this call, ``SKIP`` if the destination is
+    already that link (nothing to do: the resource is migrated), and ``FAIL`` otherwise. An
+    empty destination directory is replaced by the link; a populated one is left alone
+    quietly, as it is the user's or another instance's; a file or a link to somewhere else
+    is left alone with a warning.
+    """
+    target = os.path.realpath(old_path)
+    if migrated_root is not None and _is_under(target, migrated_root):
+        target = os.path.relpath(target, os.path.realpath(os.path.dirname(old_path)))
+    if os.path.lexists(new_path):
+        if _same_link_or_link_to_sibling(new_path, old_path, migrated_root):
+            tty.debug(f"{new_path} is already a link to {target}, nothing to migrate")
+            return DestinationCheck.SKIP
+        if os.path.isdir(new_path) and not os.listdir(new_path):
+            os.rmdir(new_path)
+        elif os.path.isdir(new_path):
+            tty.debug(f"{new_path} already has files, not linking it to {target}")
+            return DestinationCheck.FAIL
+        else:
+            tty.warn(
+                f"Cannot migrate {description}: {new_path} exists and is not a link to {target}"
+            )
+            return DestinationCheck.FAIL
+    try:
+        filesystem.mkdirp(os.path.dirname(new_path))
+        os.symlink(target, new_path, target_is_directory=True)
+    except OSError as e:
+        tty.warn(f"Cannot migrate {description}: could not link {new_path} -> {target}: {e}")
+        return DestinationCheck.FAIL
+    tty.debug(f"{description.capitalize()} migrated as a symlink: {new_path} -> {target}")
+    return DestinationCheck.PROCEED
+
+
+def migrate_with_staging(
+    old_path: str,
+    new_path: str,
+    prepare_staging_callback,
+    lock_name: Optional[str],
+    staging_name: str,
+    description: str,
+    verify_destination_callback,
+    migrated_root: Optional[str] = None,
+) -> bool:
+    """Generic migration function for resources.
+
+    Common pattern for atomic migrations:
+
+    1. Check source exists and has content; a source that is itself a symlink is migrated
+       by re-creating the link (see ``_migrate_symlinked_root``)
+    2. Verify destination (via callback) - can skip, fail, or proceed
+    3. Acquire lock (unless lock_name is None, meaning caller handles locking)
+    4. Re-verify destination inside lock (state may have changed)
+    5. Create staging directory
+    6. Call callback to populate staging (copy/process files)
+    7. Atomically rename staging to destination
+
+    Args:
+        lock_name: Name of lock file. If None, caller is responsible for locking.
+        verify_destination_callback: Function that checks destination and returns
+            DestinationCheck.SKIP (already migrated), FAIL (can't migrate), or
+            PROCEED (safe to migrate). Use can_migrate_to_location for simple
+            empty-directory checks, or _make_marker_verifier for marker-based checks.
+        migrated_root: Directory all of whose entries are being migrated alongside this
+            one; see ``_migrate_symlinked_root``.
+    """
+    if not _is_nonempty_directory(old_path):
+        return False
+
+    if os.path.islink(old_path):
+        # created now, or already in place: either way the resource is migrated
+        outcome = _migrate_symlinked_root(old_path, new_path, description, migrated_root)
+        return outcome != DestinationCheck.FAIL
+
+    # Verify destination before locking. This will almost always trigger an early
+    # return (skip locking). Marker-based verifiers check for already-migrated
+    # destinations first (which won't be empty due to marker file), then fall back
+    # to the empty-directory check.
+    action = verify_destination_callback(new_path)
+    if action == DestinationCheck.SKIP:
+        return True
+    elif action == DestinationCheck.FAIL:
+        return False
+    # PROCEED continues to acquire lock and migrate
+
+    # Prepare parent directory and staging path
+    parent = os.path.dirname(new_path)
+    staging_path = os.path.join(parent, staging_name)
+    try:
+        filesystem.mkdirp(parent)
+    except OSError:
+        return False
+
+    # Acquire lock only if caller didn't take responsibility for it; a caller that holds
+    # the lock itself also owns the staging directory from the start
+    lock = None
+    lock_acquired = lock_name is None
+    if lock_name is not None:
+        lock_path = os.path.join(parent, lock_name)
+        lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+
+    try:
+        if lock is not None:
+            lock.acquire_write()
+            lock_acquired = True
+
+        # Verify destination again inside lock (state may have changed)
+        action = verify_destination_callback(new_path)
+        if action == DestinationCheck.SKIP:
+            return True
+        elif action == DestinationCheck.FAIL:
+            return False
+        # PROCEED continues normal flow
+
+        if not _is_nonempty_directory(old_path):
+            return False
+
+        # Check destination and verify we can write to it
+        # If the new path is a link but still a valid target, we track the final location as well
+        final_destination = os.path.realpath(new_path) if os.path.islink(new_path) else new_path
+        try:
+            if os.path.lexists(final_destination):
+                if os.path.isdir(final_destination) and not os.listdir(final_destination):
+                    os.rmdir(final_destination)
+                    tty.debug(f"Removed empty {final_destination} to proceed with migration")
+                else:
+                    # Not empty or not a directory - can't migrate
+                    # This should have been caught by verify_destination_callback, but
+                    # kept as a safety check in case a non-spack process touches it
+                    return False
+
+            # Verify we have permissions to create new_path by testing with makedirs
+            # This creates the directory so os.rename() will work later
+            os.makedirs(final_destination, exist_ok=True)
+            # Remove it immediately so os.rename() from staging will work
+            os.rmdir(final_destination)
+
+        except PermissionError:
+            # Cannot write to destination - migration not possible
+            return False
+
+        # Clean up stale staging directory from previous failed attempt
+        if os.path.exists(staging_path):
+            _remove_tree(staging_path, "stale staging directory")
+
+        # Callback creates staging directory and populates it
+        tty.debug(f"Migrating {description} from {old_path} to {new_path}")
+        try:
+            prepare_staging_callback(old_path, staging_path, new_path)
+        except Exception as e:
+            tty.debug(f"Failed to migrate {description} from {old_path} to {new_path}: {e}")
+            return False
+
+        # Set staging directory permissions to 0700 before rename
+        # (migrating to home directory, only user should access)
+        os.chmod(staging_path, 0o700)
+
+        # Atomically rename staging to final destination
+        os.rename(staging_path, final_destination)
+        tty.debug(f"{description.capitalize()} migrated from {old_path} to {new_path}")
+        # The lock has done its job: a process still waiting on it, or one arriving after the
+        # file is gone, finds the destination populated when it re-verifies under the lock.
+        if lock is not None:
+            with contextlib.suppress(OSError):
+                os.unlink(lock.path)
+        return True
+
+    except spack.util.lock.LockPermissionError as e:
+        # The destination is not writable; the resource is retained where it is
+        tty.warn(f"Cannot migrate {description} to {new_path}: {e}")
+        return False
+
+    except spack.util.lock.LockTimeoutError as e:
+        tty.debug(f"Timed out waiting for {description} migration lock: {e}")
+        return False
+
+    except MigrationStagingError as e:
+        tty.debug(f"Cannot migrate {description}: {e}")
+        return False
+
+    except spack.error.SpackError as e:
+        tty.warn(f"Cannot migrate {description}: {e}")
+        return False
+
+    except (OSError, shutil.Error) as e:
+        tty.warn(f"Failed to migrate {description}: {e}")
+        return False
+
+    finally:
+        # Clean up staging directory if it still exists and we own the lock for it
+        if lock_acquired and os.path.exists(staging_path):
+            _remove_tree(staging_path, "staging directory")
+
+        if lock_acquired and lock is not None:
+            lock.release_write()
+
+
+def _rewrite_symlinks_after_copy(
+    staging_path, old_location, new_location, error_on_rewrite=False, only=None
+):
+    """Rewrite or detect problematic symlinks in staging directory after copying.
+
+    Rules:
+    - Relative symlinks pointing outside old_location: make absolute (or error)
+    - Absolute symlinks pointing inside old_location: rewrite to new_location (or error)
+    - Other symlinks: leave as-is
+
+    Args:
+        staging_path: Directory where files were copied to
+        old_location: Original source directory
+        new_location: Target directory for migration
+        error_on_rewrite: If True, raise MigrationStagingError instead of rewriting
+        only: Restrict to these top-level entries of ``staging_path`` (default: all)
+
+    Returns:
+        A list of (link_path, old_target, new_target) tuples for reporting.
+
+    Raises:
+        MigrationStagingError: If error_on_rewrite=True and problematic symlinks found
+    """
+    rewrites = []
+    old_location_real = os.path.realpath(old_location)
+
+    for root, dirs, files in os.walk(staging_path, followlinks=False):
+        if only is not None and root == staging_path:
+            dirs[:] = [d for d in dirs if d in only]
+            files = [f for f in files if f in only]
+        for name in list(dirs) + list(files):
+            path = os.path.join(root, name)
+
+            if not os.path.islink(path):
+                continue
+
+            target = filesystem.readlink(path)
+            new_target = None
+
+            if os.path.isabs(target):
+                # Absolute symlink - check if it points into old_location
+                target_real = os.path.realpath(target)
+                try:
+                    if os.path.commonpath([target_real, old_location_real]) == old_location_real:
+                        # Points inside old location - would need rewriting
+                        rel_path = os.path.relpath(target_real, old_location_real)
+                        new_target = os.path.join(new_location, rel_path)
+                except (ValueError, OSError):
+                    # Different drives on Windows, or path doesn't exist - leave as-is
+                    pass
+            else:
+                # Relative symlink - check if resolved target is outside old_location
+                # Resolve relative to the ORIGINAL link location (in old_location)
+                rel_path_in_staging = os.path.relpath(path, staging_path)
+                original_link = os.path.join(old_location, rel_path_in_staging)
+                original_link_dir = os.path.dirname(original_link)
+
+                try:
+                    # Resolve the target relative to original link directory
+                    # (target was read from staging, but we resolve as if from original location)
+                    resolved = os.path.normpath(os.path.join(original_link_dir, target))
+                    resolved_real = (
+                        os.path.realpath(resolved) if os.path.exists(resolved) else resolved
+                    )
+
+                    # Check if resolved target is outside old_location
+                    try:
+                        common = os.path.commonpath([resolved_real, old_location_real])
+                        if common != old_location_real:
+                            # Points outside - would need to make absolute
+                            new_target = resolved_real
+                    except ValueError:
+                        # Different drives or no common path - definitely outside
+                        new_target = resolved_real
+                except (OSError, ValueError):
+                    # Can't resolve - leave as-is
+                    pass
+
+            if new_target:
+                rewrites.append((path, target, new_target))
+                if error_on_rewrite:
+                    rel_path = os.path.relpath(path, staging_path)
+                    raise MigrationStagingError(
+                        f"Cannot migrate: symlink '{rel_path}' points to '{target}' which would "
+                        f"require rewriting to '{new_target}'. Environment migration does not "
+                        f"support symlink rewriting."
+                    )
+                # Rewrite mode: update the symlink
+                os.unlink(path)
+                os.symlink(new_target, path)
+
+    return rewrites
+
+
+def _prepare_config_staging(old_location, staging_path, new_location):
+    """Callback for config migration: copy the YAML configuration files, with path rewriting.
+
+    Only ``*.yaml``/``*.yml`` files and symlinks are copied, and not from the directories
+    Spack itself wrote data into (``_OLD_DOT_SPACK_DATA_DIRS``). Everything else under
+    ``~/.spack`` is either regenerable data, or data the user put there (a local repository
+    or mirror, an install tree) which is referred to by path from the configuration and
+    keeps working where it is, since ``~/.spack`` is retained.
+    See :func:`process_config_file_paths` for how such references are kept valid.
+    """
+    os.makedirs(staging_path, exist_ok=True)
+    _process_yaml_files_in_directory(
+        old_location,
+        staging_path,
+        process_config_file_paths,
+        new_location,
+        skip_toplevel=_OLD_DOT_SPACK_DATA_DIRS,
+    )
+
+    if not os.listdir(staging_path):
+        # Caught by migrate_with_staging
+        raise MigrationStagingError("no user config to migrate")
+
+    # Symlinks were copied with their targets verbatim. A relative target that leaves the
+    # old directory (``-> ../dotfiles/spack``) would resolve somewhere else from the new
+    # location; make it absolute. An absolute target into the old directory is left alone:
+    # the file it names is still there.
+    rewrites = _rewrite_symlinks_after_copy(
+        staging_path, old_location, old_location, error_on_rewrite=False
+    )
+    for link_path, old_target, new_target in rewrites:
+        rel_link = os.path.relpath(link_path, staging_path)
+        tty.debug(f"Rewrote symlink {rel_link}: {old_target} -> {new_target}")
+
+
+def _old_package_repos_lock() -> spack.util.lock.Lock:
+    """The lock Spack <= 1.2 holds while cloning into ``~/.spack/package_repos``.
+
+    Taken (shared) while copying so that a repository still being cloned by an older
+    Spack instance is not copied half-done.
+    """
+    lock_path = os.path.join(spack.paths.old_default_dot_spack, "package-repository.lock")
+    return spack.util.lock.Lock(lock_path)
+
+
+def _prepare_package_repo_staging(old_path, staging_path, new_path):
+    """Callback for migrating one package repository clone."""
+    # The lock errors are re-raised as staging errors: migrate_with_staging attributes any
+    # it sees to its own lock at the destination, and this one is in ~/.spack.
+    try:
+        with spack.util.lock.ReadTransaction(_old_package_repos_lock()):
+            shutil.copytree(old_path, staging_path, symlinks=True)
+    except (spack.util.lock.LockPermissionError, spack.util.lock.LockTimeoutError) as e:
+        raise MigrationStagingError(
+            f"could not take the clone lock in {spack.paths.old_default_dot_spack}: {e}"
+        ) from e
+
+
+#: Transient files GnuPG keeps in its home directory. None of these hold key material, and
+#: copying them is harmful or impossible: agent sockets (``S.*``) cannot be copied at all and
+#: fail the whole copy, stale lock files would block gpg in the new home, and the RNG seed
+#: and keyring backups are regenerated on demand.
+_GPG_TRANSIENT_PATTERNS = ("S.*", "*.lock", "random_seed", "*~")
+
+
+def _make_gpg_stager(marker_name: str):
+    """Build the staging callback for a GPG directory: copy it without GnuPG's transient
+    files, fix up symlinks so that a keyring assembled from links keeps working, set
+    permissions, and add the migration marker."""
+
+    def prepare_gpg_staging(old_path, staging_path, new_path):
+        shutil.copytree(
+            old_path,
+            staging_path,
+            symlinks=True,
+            ignore=shutil.ignore_patterns(*_GPG_TRANSIENT_PATTERNS),
+        )
+        for link, old, new in _rewrite_symlinks_after_copy(staging_path, old_path, new_path):
+            tty.debug(f"Rewrote GPG symlink {os.path.relpath(link, staging_path)}: {old} -> {new}")
+        os.chmod(staging_path, 0o700)
+        with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
+            f.write(f"Migrated from {spack.paths.prefix}\n")
+
+    return prepare_gpg_staging
+
+
+def _has_user_config_to_migrate(old_location: str) -> bool:
+    """Whether ``~/.spack`` holds any configuration file (``*.yaml``/``*.yml``) to migrate.
+
+    Lets ``_migrate_user_config`` exit early for the common case of a ``~/.spack`` that only
+    holds caches and package repository clones.
+    """
+    if not os.path.isdir(old_location):
+        return False
+    # Only a top-level file can be a scope's configuration; anything deeper is only reached
+    # through an include from such a file.
+    with os.scandir(old_location) as entries:
+        return any(e.name.endswith((".yaml", ".yml")) for e in entries)
+
+
+def _migrate_user_config() -> bool:
+    """Copy config files from ~/.spack to user config location.
+
+    Respects XDG_CONFIG_HOME but skips migration if SPACK_USER_CONFIG_PATH is set.
+    """
+    # User has set new variable for config location -- don't migrate in face of explicit override
+    if os.getenv("SPACK_CONFIG_HOME"):
+        return False
+
+    # User has set old variable for config location -- don't migrate in face of explicit override
+    if os.getenv("SPACK_USER_CONFIG_PATH"):
+        return False
+
+    # User has set variable to ignore local config -- don't migrate
+    if os.getenv("SPACK_DISABLE_LOCAL_CONFIG"):
+        return False
+
+    old_location = os.path.expanduser("~/.spack")
+    new_location = migration_config_home()
+
+    # No migration when there is nothing to migrate
+    if not _has_user_config_to_migrate(old_location):
+        return False
+
+    if os.path.islink(old_location):
+        # Reported as migrated only when the link is made now; later runs are quiet
+        outcome = _migrate_symlinked_root(old_location, new_location, "user config")
+        ret = outcome == DestinationCheck.PROCEED
+        if ret:
+            _warn_about_old_defaults_in_linked_config(old_location)
+    else:
+        ret = migrate_with_staging(
+            old_path=old_location,
+            new_path=new_location,
+            prepare_staging_callback=_prepare_config_staging,
+            lock_name=".spack-user-config-migration.lock",
+            staging_name=".spack-config-staging",
+            description="user config",
+            verify_destination_callback=can_migrate_to_location,
+        )
+
+    # ret is False both when the copy (or link) could not be made and when nothing needed
+    # doing because the destination was already populated (before we looked, or by another
+    # process while we waited for the lock). Only the former is fatal.
+    if not ret and not _is_nonempty_directory(new_location):
+        tty.die(
+            f"Failed to migrate Spack config directory to {new_location} (see any warning"
+            " above). Fix the problem, or set SPACK_CONFIG_HOME=~/.spack to use the old"
+            " location"
+        )
+
+    return ret
+
+
+def _migrate_package_repositories() -> bool:
+    """Copy legacy package repository clones to the new default location.
+
+    ``package_repos`` holds one clone per remote, in a directory named by the hash of
+    the remote URL, so the directory is shared by every Spack instance on the machine
+    and may already be partly populated (by a fresh checkout, or an earlier migration).
+    Clones are therefore copied one at a time: a clone whose directory already exists
+    at the destination is the same repository and is left alone; the rest are copied.
+
+    Returns True if any clone was copied.
+    """
+    old_root = spack.paths.old_package_repos_path
+    new_root = os.path.join(migration_data_home(), "package_repos")
+
+    if not _is_nonempty_directory(old_root):
+        return False
+
+    copied: List[str] = []
+    skipped: List[str] = []
+    failed: List[str] = []
+    for name in sorted(os.listdir(old_root)):
+        old_path = os.path.join(old_root, name)
+        new_path = os.path.join(new_root, name)
+        if not os.path.isdir(old_path):
+            continue
+        if os.path.isdir(new_path) and os.listdir(new_path):
+            skipped.append(name)
+            continue
+        ok = migrate_with_staging(
+            old_path=old_path,
+            new_path=new_path,
+            prepare_staging_callback=_prepare_package_repo_staging,
+            lock_name=".spack-package-repos-migration-lock",
+            staging_name=f".package-repos-migration-{name}",
+            description=f"package repository {name}",
+            verify_destination_callback=can_migrate_to_location,
+        )
+        (copied if ok else failed).append(name)
+
+    if failed:
+        lines = [f"The following package repository clones could not be copied to {new_root}:"]
+        for name in failed:
+            lines.append(f"  - {os.path.join(old_root, name)}")
+        lines.append(
+            f"Spack will use whatever is at the corresponding path under {new_root} instead,"
+            " cloning afresh if nothing is there. Any local changes in the old clones are"
+            f" still in {old_root}; to keep using an old clone, point its"
+            " `repos:<name>:destination` setting at it."
+        )
+        tty.warn(*lines)
+
+    if skipped:
+        tty.debug(f"Package repositories already present in {new_root}: {', '.join(skipped)}")
+
+    return bool(copied)
+
+
+def _migration_lock_path() -> str:
+    """Path to the migration lock file for $spack prefix resources."""
+    return os.path.join(spack.paths.prefix, ".migration-lock")
+
+
+@contextlib.contextmanager
+def migration_lock():
+    """Take the migration lock and yield in a try/except block that catches locking errors."""
+    lock_path = _migration_lock_path()
+    lock = spack.util.lock.Lock(lock_path, default_timeout=120)
+    try:
+        with spack.util.lock.WriteTransaction(lock):
+            yield
+    except spack.util.lock.LockPermissionError:
+        # Read-only prefix
+        tty.die(
+            "The spack prefix is not writable. "
+            "Writing to the Spack prefix is required to migrate Spack data locations."
+            " Contact an admin of the Spack instance to run the spack migration."
+        )
+    except spack.util.lock.LockTimeoutError as e:
+        # Some other migration process is taking too long, bail vs. hang
+        tty.die(f"Timed out waiting for migration lock: {e}")
+
+
+def migration_done_marker_path() -> str:
+    """Path to the marker file indicating migration is complete."""
+    return os.path.join(spack.paths.prefix, ".migration-done")
+
+
+def migration_done() -> bool:
+    """Returns whether the migration_done_marker exists."""
+    return os.path.exists(migration_done_marker_path())
+
+
+def _migration_source_hash() -> str:
+    """Compute a hash of the spack prefix to identify this migration source.
+
+    This hash is used in marker files to distinguish migrations from different
+    spack instances, enabling fault tolerance when migrations are interrupted.
+
+    Returns:
+        8-character hex hash of the normalized spack prefix path
+    """
+    prefix_str = os.path.normpath(spack.paths.prefix)
+    return spack.util.hash.b32_hash(prefix_str)[:8]
+
+
+def _migrate_gpg(
+    old_gpg_home: str, target_gpg_home: str, old_gpg_keys: str, target_gpg_keys: str
+) -> bool:
+    """Migrate both the GPG keys directory (public keys to import) and the GPG home (the
+    keyring, including secret keys).
+
+    Returns True only if both migrations succeed; on failure both are configured to their
+    old locations. The keys directory goes first: if it is refused (another instance owns
+    the destination), nothing has been published. If the home then fails, what is left
+    behind is a directory of public keys, not a keyring.
+    """
+    marker_name = f".migration-{_migration_source_hash()}"
+    stage = _make_gpg_stager(marker_name)
+
+    if os.path.exists(old_gpg_keys):
+        if not migrate_with_staging(
+            old_path=old_gpg_keys,
+            new_path=target_gpg_keys,
+            prepare_staging_callback=stage,
+            lock_name=".gpg-keys-migration.lock",
+            staging_name=".spack-gpg-keys-staging",
+            description="GPG keys",
+            verify_destination_callback=_make_marker_verifier(marker_name, old_gpg_keys),
+        ):
+            return False
+
+    if os.path.exists(old_gpg_home):
+        return migrate_with_staging(
+            old_path=old_gpg_home,
+            new_path=target_gpg_home,
+            prepare_staging_callback=stage,
+            lock_name=".gpg-home-migration.lock",
+            staging_name=".spack-gpg-home-staging",
+            description="GPG home",
+            verify_destination_callback=_make_marker_verifier(marker_name, old_gpg_home),
+        )
+
+    return True
+
+
+def _find_environments(root: str) -> List[str]:
+    """Paths, relative to ``root``, of the environments to migrate from it.
+
+    Managed environments are leaves (``team/proj``), found by descending directories until one
+    holds a ``spack.yaml``; a subtree without one is not environment data, and like
+    ``spack.environment.all_environment_names`` this does not look inside dot directories.
+    Symlinks are not descended: a link is an alias and is migrated as a link, but only if it
+    points at an environment or at an ancestor of one under ``root`` (``prod -> myenv``,
+    ``all -> team``), so links are collected after the directories they may alias.
+    """
+    if not os.path.isdir(root):
+        return []
+
+    def unreadable(e: OSError) -> None:
+        if isinstance(e, PermissionError):
+            tty.die(
+                f"Spack encountered a permission error at {e.filename} while attempting to read "
+                "old storage locations to migrate data. Fix the permissions or contact an admin "
+                "of this Spack instance to run spack migration."
+            )
+
+    envs: List[str] = []
+    links: List[str] = []
+    for dirpath, dirnames, filenames in os.walk(root, onerror=unreadable):
+        rel = os.path.relpath(dirpath, root)
+        if rel != os.curdir and "spack.yaml" in filenames:
+            envs.append(rel)
+            dirnames[:] = []
+            continue
+        for name in list(dirnames):
+            if name.startswith("."):
+                dirnames.remove(name)
+            elif os.path.islink(os.path.join(dirpath, name)):
+                links.append(os.path.normpath(os.path.join(rel, name)))
+                dirnames.remove(name)
+
+    root_real = os.path.realpath(root)
+    env_dirs = set()  # environments and their ancestors under root
+    for env in envs:
+        path = os.path.realpath(os.path.join(root, env))
+        while path.startswith(root_real + os.sep):
+            env_dirs.add(path)
+            path = os.path.dirname(path)
+    for link in links:
+        target = os.path.realpath(os.path.join(root, link))
+        if target in env_dirs or os.path.isfile(os.path.join(target, "spack.yaml")):
+            envs.append(link)
+        else:
+            tty.debug(f"Not migrating {link}: not an environment or a link to one")
+    return sorted(envs)
+
+
+def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
+    """Copy environments under one lock, removing partial results on failure.
+
+    Returns: ``(success, differing)`` where ``differing`` names environments that were
+        found already migrated from this prefix but whose manifest no longer matches the
+        source. Those are left as they are at the destination and are not counted as
+        migrated by the caller.
+    """
+    differing: List[str] = []
+    if not os.path.exists(src_dir):
+        return True, differing
+
+    source_hash = _migration_source_hash()
+    marker_name = f".migration-{source_hash}"
+
+    try:
+        filesystem.mkdirp(dst_dir)
+    except (OSError, PermissionError):
+        # Cannot create destination directory - migration not possible
+        return False, differing
+
+    # Define environment metadata/view exclusion callback
+    # Use hardcoded marker instead of importing from environment module to avoid
+    # circular imports during module load time
+    VIEW_MARKER_FILE = ".spack-view"
+
+    def _is_old_view_pair(directory: str, link_name: str) -> bool:
+        """Whether ``directory/link_name`` is an old-format view link, i.e. a symlink into
+        the sibling container ``directory/._<link_name>/<hash>``.
+
+        Spack < 1.3 (``ViewDescriptor._next_root``) built the view for a root ``<dir>/<name>``
+        at ``<dir>/._<name>/<content hash>`` and made ``<dir>/<name>`` an absolute symlink to
+        it. The target is resolved lexically, so a link whose hash directory has already been
+        removed still counts.
+        """
+        link = os.path.join(directory, link_name)
+        if not os.path.islink(link):
+            return False
+        target = os.path.relpath(os.path.realpath(link), os.path.realpath(directory))
+        return target.split(os.sep)[0] == f"._{link_name}"
+
+    def make_ignore_views(env_root: str):
+        """Build the ``shutil.copytree`` ignore callback for copying the environment at
+        ``env_root``, excluding its view directories.
+
+        Skips:
+
+        - .spack-env directories (always - contains the default view, in either format)
+        - At the environment root, an old-format view: the link ``<name>`` into the container
+          ``._<name>/`` and the container itself, as a pair (``view: <env>/view`` gave
+          ``view -> <env>/._view/<hash>``; ``view: {x: {root: <env>/myview}}`` gave
+          ``myview -> <env>/._myview/<hash>``). A ``._x/`` with no partner link is copied.
+        - Directories with .spack-view marker anywhere (custom-location views, June 2026+)
+
+        spack.lock is copied
+
+        Note: Skipping .spack-env also excludes cached repos and locks as a side effect.
+        """
+
+        def ignore_views(directory, names):
+            ignored = []
+            is_env_root = os.path.normpath(directory) == os.path.normpath(env_root)
+            name_set = set(names)
+
+            for name in names:
+                path = os.path.join(directory, name)
+
+                # Always skip .spack-env directory (contains default views)
+                if name == ".spack-env":
+                    ignored.append(name)
+                    tty.debug(f"Excluding .spack-env directory: {path}")
+                # Ignore if it's an old-style view symlink
+                elif is_env_root and _is_old_view_pair(directory, name):
+                    ignored.append(name)
+                    tty.debug(f"Excluding old-format view link: {path}")
+                # This is a directory that held the hashed contents for an old-style view symlink
+                elif (
+                    is_env_root
+                    and name.startswith("._")
+                    and name[2:] in name_set
+                    and os.path.isdir(path)
+                    and _is_old_view_pair(directory, name[2:])
+                ):
+                    ignored.append(name)
+                    tty.debug(f"Excluding old-format view container: {path}")
+                # Skip custom-location views with marker file (anywhere in tree)
+                elif os.path.isdir(path) and os.path.exists(os.path.join(path, VIEW_MARKER_FILE)):
+                    ignored.append(name)
+                    tty.debug(f"Excluding view directory with marker: {path}")
+            return ignored
+
+        return ignore_views
+
+    # Define staging callback for environment migration
+    def prepare_env_staging(old_path, staging_path, new_path):
+        """Copy environment and rewrite paths.
+
+        Raises:
+            MigrationStagingError: If the environment cannot be safely migrated due to:
+                - Symlinks inside the env pointing to absolute paths within the old env
+                - Symlinks inside the env pointing outside the staging directory
+        """
+        shutil.copytree(old_path, staging_path, symlinks=True, ignore=make_ignore_views(old_path))
+
+        # Check for problematic symlinks (raises MigrationStagingError if found)
+        _rewrite_symlinks_after_copy(staging_path, old_path, new_path, error_on_rewrite=True)
+
+        # Rewrite paths in environment config files
+        yaml_files = filesystem.find(staging_path, ["*.yaml", "*.yml"], recursive=True)
+        for yaml_file in yaml_files:
+            processed = process_env_file_paths(
+                yaml_file, old_path, new_path, src_dir, dst_dir, staging_dir=staging_path
+            )
+            if processed:
+                # Get original file permissions before rewriting
+                old_mode = os.stat(yaml_file).st_mode & 0o777
+                with open(yaml_file, "w", encoding="utf-8") as f:
+                    syaml.dump(processed, f)
+                # Restore original permissions
+                os.chmod(yaml_file, old_mode)
+                tty.debug(f"Rewrote paths in {yaml_file}")
+
+        # Add migration marker to identify this source
+        with open(os.path.join(staging_path, marker_name), "w", encoding="utf-8") as f:
+            f.write(f"Migrated from {spack.paths.prefix}\n")
+
+    # Acquire lock for all environments
+    lock = spack.util.lock.Lock(os.path.join(dst_dir, ".lock"), default_timeout=120)
+    lock_acquired = False
+    try:
+        try:
+            lock.acquire_write()
+        except spack.util.lock.LockPermissionError as e:
+            # The destination is not writable; the environments are retained where they are
+            tty.warn(f"Cannot migrate environments to {dst_dir}: {e}")
+            return False, differing
+        lock_acquired = True
+
+        # Check occupied destinations before copying any new environments. This
+        # lets migrate_with_staging reject conflicts without leaving a partial
+        # migration behind.
+        entries = _find_environments(src_dir)
+        occupied = {e for e in entries if os.path.lexists(os.path.join(dst_dir, e))}
+        remainder = [e for e in entries if e not in occupied]
+
+        # An environment nested under another would be invisible to Spack, which treats
+        # environments as leaves; refuse rather than write into someone else's environment.
+        for entry in remainder:
+            ancestor = os.path.dirname(entry)
+            while ancestor:
+                if os.path.exists(os.path.join(dst_dir, ancestor, "spack.yaml")):
+                    tty.warn(
+                        f"Cannot migrate environment {entry}: {os.path.join(dst_dir, ancestor)}"
+                        " is already an environment"
+                    )
+                    return False, differing
+                ancestor = os.path.dirname(ancestor)
+
+        # Check if any environments in remainder have installs inside them
+        # (indicated by .spack-db/index.json - these are non-relocatable)
+        # Also check whether they have specs with dev_path in the lockfile,
+        # we do not currently relocate those.
+        for entry in remainder:
+            env_path = os.path.join(src_dir, entry)
+            if os.path.isdir(env_path):
+                # Look for database index file anywhere under the environment directory
+                db_index = None
+                for root, _, files in os.walk(env_path):
+                    if os.path.basename(root) == ".spack-db" and "index.json" in files:
+                        db_index = os.path.join(env_path, root, "index.json")
+                        break
+
+                if db_index:
+                    tty.debug(
+                        f"Environment {entry} has installs inside it "
+                        f"(found {db_index}); skipping migration of all environments"
+                    )
+                    return False, differing
+
+                # Read the lockfile and look for dev_path variants
+                # Technically, we could also read the yaml file and only return False if the
+                # dev_path comes from a relative path in the yaml, but we are conservative here
+                lock_path = os.path.join(env_path, "spack.lock")
+                if os.path.exists(lock_path):
+                    with open(lock_path, "r", encoding="utf-8") as f:
+                        if '"dev_path":' in f.read():
+                            tty.debug(
+                                f"environment {entry} has develop specs in it. "
+                                "Skipping migration of all environments"
+                            )
+                            return False, differing
+
+        copied = []
+        for entry in entries:
+            src_path = os.path.join(src_dir, entry)
+            dst_path = os.path.join(dst_dir, entry)
+            verify_with_marker = _make_marker_verifier(marker_name, src_path, src_dir)
+            previously_migrated = os.path.exists(os.path.join(dst_path, marker_name))
+            success = migrate_with_staging(
+                old_path=src_path,
+                new_path=dst_path,
+                prepare_staging_callback=prepare_env_staging,
+                lock_name=None,  # Parent holds the lock
+                staging_name=f".spack-env-{entry.replace(os.sep, '-')}-staging",
+                description=f"environment {entry}",
+                verify_destination_callback=verify_with_marker,
+                migrated_root=src_dir,
+            )
+            if success:
+                if entry not in occupied:
+                    copied.append(entry)
+                elif (
+                    previously_migrated
+                    and not os.path.islink(src_path)
+                    and not _env_manifests_match(src_path, dst_path)
+                ):
+                    # The marker tells us this copy came from this prefix, but not which
+                    # side has been edited since. Keep the copy; the user decides.
+                    tty.warn(
+                        f"Attempted to migrate environment {src_path} to {dst_path}, but it"
+                        " was previously migrated and the environment manifests differ. The"
+                        f" copy at {dst_path} will be used. Manually transfer any changes"
+                        f" from {src_path} that you want to preserve."
+                    )
+                    differing.append(entry)
+            else:
+                for done in copied:
+                    done_path = os.path.join(dst_dir, done)
+                    if os.path.islink(done_path):
+                        os.unlink(done_path)
+                    else:
+                        _remove_tree(done_path, "partially migrated environment")
+                    parent = os.path.dirname(done)
+                    while parent and not os.listdir(os.path.join(dst_dir, parent)):
+                        os.rmdir(os.path.join(dst_dir, parent))
+                        parent = os.path.dirname(parent)
+                return False, differing
+
+        # All environments copied successfully - old environments remain in place
+        return True, differing
+    finally:
+        if lock_acquired:
+            lock.release_write()
+
+
+def _dirs_identical(src_dir: str, dst_dir: str) -> bool:
+    """Check if two directory trees have identical structure and content.
+
+    Uses deep comparison (actual file content), not shallow (size/mtime only).
+    """
+    cmp = filecmp.dircmp(src_dir, dst_dir)
+
+    if cmp.left_only or cmp.right_only:
+        return False
+
+    # Check common files with deep comparison (content, not just size/mtime)
+    for common_file in cmp.common_files:
+        src_file = os.path.join(src_dir, common_file)
+        dst_file = os.path.join(dst_dir, common_file)
+        if not filecmp.cmp(src_file, dst_file, shallow=False):
+            return False
+
+    # Recursively check subdirectories
+    for subdir in cmp.common_dirs:
+        if not _dirs_identical(os.path.join(src_dir, subdir), os.path.join(dst_dir, subdir)):
+            return False
+
+    return True
+
+
+def _same_target(src_link: str, dst_link: str, src_root: str, dst_root: str) -> bool:
+    """Whether two symlinks resolve to the same place, counting a target under ``src_root``
+    as the same as the corresponding target under ``dst_root``."""
+    src_target = os.path.realpath(src_link)
+    dst_target = os.path.realpath(dst_link)
+    if src_target == dst_target:
+        return True
+    src_root_real = os.path.realpath(src_root)
+    try:
+        rel = os.path.relpath(src_target, src_root_real)
+    except ValueError:  # different drives on Windows
+        return False
+    if rel.startswith(os.pardir):
+        return False
+    return dst_target == os.path.realpath(os.path.join(dst_root, rel))
+
+
+def _entry_kind(path: str) -> str:
+    """``symlink``, ``directory`` or ``file``, for messages (a symlink is reported as such
+    whatever it points to)."""
+    if os.path.islink(path):
+        return "a symlink"
+    if os.path.isdir(path):
+        return "a directory"
+    return "a file"
+
+
+def _migrate_licenses(src_dir: str, dst_dir: str) -> bool:
+    """Copy licenses individually without claiming to lock out manual edits.
+
+    Symlinks are copied as symlinks (not dereferenced), preserving their targets.
+    Relative symlinks pointing outside the license dir are rewritten to be absolute.
+    Absolute symlinks into the license dir are rewritten to the new license dir.
+    """
+    if not os.path.exists(src_dir):
+        return True
+
+    if os.path.islink(src_dir):
+        return _migrate_symlinked_root(src_dir, dst_dir, "licenses") != DestinationCheck.FAIL
+
+    src_entries = sorted(os.listdir(src_dir))
+    if not src_entries:
+        return True
+
+    try:
+        filesystem.mkdirp(dst_dir)
+    except (OSError, PermissionError):
+        # Cannot create destination directory - migration not possible
+        return False
+
+    copied = []
+    pre_existing = set(os.listdir(dst_dir))
+
+    for entry in src_entries:
+        src_path = os.path.join(src_dir, entry)
+        dst_path = os.path.join(dst_dir, entry)
+        try:
+            if os.path.lexists(dst_path):
+                # Check if content matches (prior copy or identical from another checkout)
+                if os.path.islink(src_path) and os.path.islink(dst_path):
+                    # For symlinks, compare targets. A link into the license dir itself is
+                    # repointed on copy (see _rewrite_symlinks_after_copy), so a target under
+                    # src_dir matches the same target under dst_dir.
+                    if _same_target(src_path, dst_path, src_dir, dst_dir):
+                        tty.debug(
+                            f"License symlink {entry} already exists with matching target, "
+                            f"skipping"
+                        )
+                        copied.append(entry)
+                        continue
+                    reason = (
+                        f"both are symlinks, but {src_path} points to "
+                        f"{os.readlink(src_path)} and {dst_path} points to "
+                        f"{os.readlink(dst_path)}"
+                    )
+                elif os.path.islink(src_path) != os.path.islink(dst_path):
+                    reason = f"{_entry_kind(src_path)} vs. {_entry_kind(dst_path)}"
+                elif os.path.isfile(src_path) and os.path.isfile(dst_path):
+                    if filecmp.cmp(src_path, dst_path, shallow=False):
+                        tty.debug(
+                            f"License file {entry} already exists with matching content, skipping"
+                        )
+                        copied.append(entry)
+                        continue
+                    reason = "both are files, but their contents differ"
+                elif os.path.isdir(src_path) and os.path.isdir(dst_path):
+                    # For directories, check if trees are identical
+                    if _dirs_identical(src_path, dst_path):
+                        tty.debug(
+                            f"License directory {entry} already exists with matching content, "
+                            f"skipping"
+                        )
+                        copied.append(entry)
+                        continue
+                    reason = "both are directories, but their contents differ"
+                else:
+                    reason = f"{_entry_kind(src_path)} vs. {_entry_kind(dst_path)}"
+                tty.warn(
+                    f"License migration stopped: {entry} already exists at {dst_dir} and is"
+                    f" not the same as the one in {src_dir} ({reason}). Copied licenses: "
+                    f"{', '.join(copied) if copied else 'none'}. The old license directory"
+                    f" will remain configured; copied files may remain in {dst_dir}. Resolve"
+                    f" the difference, then run `spack migrate use-new-layout`."
+                )
+                return False
+
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, dst_path, symlinks=True)
+            else:
+                # Copy file or symlink (follow_symlinks=False preserves symlinks)
+                shutil.copy2(src_path, dst_path, follow_symlinks=False)
+            copied.append(entry)
+
+        except (OSError, shutil.Error) as e:
+            tty.warn(
+                f"License migration stopped at {entry}: {e}. Copied licenses: "
+                f"{', '.join(copied) if copied else 'none'}. The old license directory "
+                f"will remain configured; copied files may remain in {dst_dir}."
+            )
+            return False
+
+    # Rewrite relative symlinks that point out of the license dir, since those would dangle after
+    # migration. Only entries this run copied are touched; what the user already had at the
+    # destination is theirs.
+    new_entries = [e for e in copied if e not in pre_existing]
+    try:
+        rewrites = _rewrite_symlinks_after_copy(dst_dir, src_dir, dst_dir, only=new_entries)
+    except OSError as e:
+        tty.warn(f"License migration: could not rewrite symlinks in {dst_dir}: {e}")
+        return False
+    for link, old, new in rewrites:
+        tty.debug(f"Rewrote license symlink {os.path.relpath(link, dst_dir)}: {old} -> {new}")
+
+    return True
+
+
+def migrate_home() -> Dict[str, bool]:
+    """Migrate user config and package repos from ~/.spack to new XDG locations.
+
+    This is independent of $spack prefix migration and runs whenever:
+    - Old locations have content
+    - New locations don't exist (checked by individual migration functions)
+
+    This allows users who git pull a new Spack to get their ~/.spack migrated
+    regardless of what's in the $spack prefix.
+
+    Prints a message only if anything was actually migrated.
+
+    Returns:
+        Dict with keys 'user_config' and 'package_repos', values True if migrated
+    """
+
+    tty.debug("Home directory migration called")
+
+    user_config_migrated = _migrate_user_config()
+    package_repos_migrated = _migrate_package_repositories()
+
+    # Print message only if something was actually migrated
+    if user_config_migrated or package_repos_migrated:
+        parts = ["Spack migrated home directory resources:"]
+        if user_config_migrated:
+            parts.append(f"  - Migrated user config from ~/.spack to {migration_config_home()}.")
+        if package_repos_migrated:
+            parts.append(
+                "  - Migrated package repositories from ~/.spack to the shared data location."
+            )
+        parts.append("  - ~/.spack was retained because older Spack instances may still use it.")
+        sys.stderr.write("\n".join(parts) + "\n")
+
+    return {"user_config": user_config_migrated, "package_repos": package_repos_migrated}
+
+
+def migration_config_home() -> str:
+    """Compute migration target for config_home with XDG fallback chain.
+
+    Uses (in order of precedence):
+    1. XDG_CONFIG_HOME environment variable (append /spack)
+    2. Default XDG_CONFIG_HOME location: ~/.config/spack
+
+    This does not use config, since migration happens before config is fully loaded.
+    Does not check SPACK_CONFIG_HOME/SPACK_USER_CONFIG_PATH - if that's set, caller should skip
+    migration.
+    """
+    xdg_config = os.getenv("XDG_CONFIG_HOME")
+    if xdg_config:
+        return _absolute_home_var("XDG_CONFIG_HOME", os.path.join(xdg_config, "spack"))
+
+    return os.path.join(os.path.expanduser("~"), ".config", "spack")
+
+
+def _absolute_home_var(var: str, value: str) -> str:
+    """Expand ``~`` if present in a path taken from environment variable ``var`` and insist that
+    the result is absolute. A relative location would silently land in the current working
+    directory; ``config:locations`` rejects it too, once configuration is loaded."""
+    expanded = os.path.normpath(os.path.expanduser(value))
+    if not os.path.isabs(expanded):
+        tty.die(
+            f"{var}={os.environ[var]!r} is not an absolute path. Spack's data, state and "
+            "config locations must be absolute; fix or unset the variable."
+        )
+    return expanded
+
+
+def migration_data_home() -> str:
+    """Compute migration target for data_home with XDG fallback chain.
+
+    Uses (in order of precedence):
+    1. SPACK_DATA_HOME environment variable
+    2. XDG_DATA_HOME environment variable
+    3. Default XDG_DATA_HOME location: ~/.local/share/spack
+
+    This does not use config, since migration happens before config is fully loaded.
+    """
+    spack_data = os.getenv("SPACK_DATA_HOME")
+    if spack_data:
+        return _absolute_home_var("SPACK_DATA_HOME", spack_data)
+
+    xdg_data = os.getenv("XDG_DATA_HOME")
+    if xdg_data:
+        return _absolute_home_var("XDG_DATA_HOME", os.path.join(xdg_data, "spack"))
+
+    return os.path.join(os.path.expanduser("~"), ".local", "share", "spack")
+
+
+def _prompt_for_prefix_migration(old_resources: Dict[str, bool], timeout: float = 60) -> bool:
+    """Ask whether portable resources under the Spack prefix may be copied
+    A return value of ``True`` means the user saw the prompt and responded "yes";
+    a return value of ``False`` means either the user responded "no", or the user
+    never saw the prompt (e.g. because Spack is being run as part of a script).
+
+    This can also return False if it detects that no resources are eligible for
+    moving (in which case there would be no point in prompting the user for that).
+    """
+    if spack.util.environment.env_flag("SPACK_AUTOMIGRATE_YES"):
+        return True
+    data_home = migration_data_home()
+    resources = []
+    if old_resources["gpg_keys"] and not os.getenv("SPACK_GNUPGHOME"):
+        resources.append(
+            (
+                "GPG data",
+                f"{spack.paths.old_gpg_path} and {spack.paths.old_gpg_keys_path}",
+                f"{data_home}/gpg and {data_home}/gpg-keys",
+            )
+        )
+    if old_resources["licenses"]:
+        resources.append(
+            ("licenses", spack.paths.old_licenses_path, os.path.join(data_home, "licenses"))
+        )
+    if old_resources["environments"]:
+        resources.append(
+            ("environments", spack.paths.old_envs_path, os.path.join(data_home, "environments"))
+        )
+
+    if not resources:
+        return False
+
+    # Prompt on the controlling terminal, not stdin/stderr: shell integration captures
+    # stderr (`spack env activate` in fish, `$(spack ...)`), and `2>&1 | tee` is common, yet
+    # in all those cases a user is sitting at a terminal and can answer. No controlling
+    # terminal, or not in its foreground process group, means nobody can.
+    with lang.open_controlling_terminal() as terminal:
+        if terminal is None:
+            return False
+        return _ask_on_terminal(terminal, resources, timeout)
+
+
+def _ask_on_terminal(terminal, resources, timeout: float) -> bool:
+    tty.info(
+        "Spack found resources in its legacy internal layout.",
+        "Spack can copy the following resources to the new user data location",
+        "(based on XDG_DATA_HOME/SPACK_DATA_HOME environment variables):",
+        *[f"{name}: {old} -> {new}" for name, old, new in resources],
+        "If (y)es: Spack attempts to copy local resources into the new default location;"
+        " the old resources are not deleted and this can be undone later with"
+        " `spack migrate undo`",
+        "If (n)o (the default): configuration is updated to prefer the old locations over"
+        " the new defaults; nothing inside the Spack prefix is copied into $HOME.",
+        stream=terminal,
+    )
+
+    deadline = time.monotonic() + timeout
+    prompt = "Proceed with copying these resources? [y/N]"
+
+    while True:
+        remaining = deadline - time.monotonic()
+        answer = None
+        if remaining > 0:
+            answer = lang.readline_with_timeout(
+                prompt, remaining, update_interval=1.0, terminal=terminal
+            )
+
+        if answer is None:
+            # Timeout expired
+            terminal.write("\r" + " " * 80 + "\r")  # Clear the line
+            terminal.flush()
+            tty.info(
+                "No response received; keeping resources in their old locations.", stream=terminal
+            )
+            return False
+
+        answer = answer.strip().lower()
+        if answer in ("y", "yes"):
+            return True
+        elif answer in ("n", "no", ""):
+            # Empty string (just hitting enter) defaults to "no"
+            return False
+        else:
+            terminal.write(
+                f'Must enter (y)es or (n)o or newline (implied "no"), got: "{answer}"\n'
+            )
+            # Loop back and ask again with remaining time
+
+
+def migrate_spack_prefix(old_resources):
+    """Migrate Spack prefix data from old to new locations.
+
+    Migrates portable resources (licenses, environments, GPG data) from old
+    locations under $spack to new XDG-style shared locations. Existing installs
+    are retained in place. Configuration is written to the layout scope.
+
+    This is called during initialization after the user approves migration, or
+    directly by `spack migrate use-new-layout`.
+    """
+    tty.debug("Spack prefix migration called")
+
+    migrated_resources: List[str] = []
+
+    # Compute data_home using XDG fallback chain (without config, since CONFIG doesn't exist yet)
+    data_home = migration_data_home()
+
+    # 1. Handle GPG (both keyring and keys directory)
+    old_gpg_home = spack.paths.old_gpg_path
+    old_gpg_keys = spack.paths.old_gpg_keys_path
+    if old_resources["gpg_keys"]:
+        target_gpg_home = os.path.join(data_home, "gpg")
+        target_gpg_keys = os.path.join(data_home, "gpg-keys")
+        gnupghome = os.getenv("SPACK_GNUPGHOME")
+
+        if not gnupghome:
+            if _migrate_gpg(old_gpg_home, target_gpg_home, old_gpg_keys, target_gpg_keys):
+                migrated_resources.append("GPG data")
+                del old_resources["gpg_keys"]
+
+    # 2. Handle licenses
+    if old_resources["licenses"]:
+        old_licenses = spack.paths.old_licenses_path
+        target_licenses = os.path.join(data_home, "licenses")
+        if _migrate_licenses(old_licenses, target_licenses):
+            migrated_resources.append("licenses")
+            tty.debug(f"Copied licenses from {old_licenses} to {target_licenses}")
+            del old_resources["licenses"]
+
+    # 3. Handle environments
+    if old_resources["environments"]:
+        old_envs = spack.paths.old_envs_path
+        target_envs = os.path.join(data_home, "environments")
+        envs_ok, differing = _migrate_environments(old_envs, target_envs)
+        if envs_ok:
+            if differing:
+                names = ", ".join(differing)
+                migrated_resources.append(
+                    f"environments (except {names}: previously migrated, manifests differ;"
+                    " see warning above)"
+                )
+            else:
+                migrated_resources.append("environments")
+            tty.debug(f"Copied environments from {old_envs} to {target_envs}")
+            del old_resources["environments"]
+
+    # 4. Installs: these are always pointed to the old locations if they exist.
+    # This method deletes items that are migrated from old_resources, so we
+    # retain them simply by never deleting that entry
+
+    # Write layout scope for resources that didn't migrate
+    retained_resources = _force_old_layout(old_resources)
+
+    # Write migration completion marker as the last step
+    # This allows other processes to detect that migration finished
+    marker_path = migration_done_marker_path()
+    with open(marker_path, "w", encoding="utf-8") as f:
+        f.write("Migration completed\n")
+    tty.debug(f"Wrote migration completion marker: {marker_path}")
+
+    # Print migration summary
+    parts = []
+    if migrated_resources:
+        parts.append("Spack migrated old resources.")
+        parts.append("  - Migrated: " + ", ".join(migrated_resources) + ".")
+        if "environments" in migrated_resources:
+            parts.extend(
+                [
+                    "  - Environment views were not copied. Activate each environment and run "
+                    "`spack env view regenerate` to recreate them.",
+                    "  - If you have an environment activated by a prior command (not this one) "
+                    "you will need to deactivate and then reactivate it.",
+                ]
+            )
+    else:
+        parts.append("No Spack-internal resources were migrated")
+
+    if retained_resources:
+        parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
+
+    if migrated_resources:
+        parts.extend(["", "To undo this migration, run `spack migrate undo`."])
+    sys.stderr.write("\n".join(parts) + "\n")
+
+
+def _force_old_layout(to_move) -> List[str]:
+    config_path = os.path.join(spack.paths.layout_scope_path, "config.yaml")
+
+    config_changes: Dict[str, Dict[str, Any]] = {"config": {}}
+    retained_resources: List[str] = []
+
+    # populates config_changes with any changes from to_move
+    generate_old_layout_config(to_move, config_changes)
+
+    if to_move.get("installs"):
+        retained_resources.append("existing installs")
+
+    if to_move.get("gpg_keys"):
+        retained_resources.append(f"GPG data ({spack.paths.old_gpg_path})")
+
+    if to_move.get("licenses"):
+        retained_resources.append(f"licenses ({spack.paths.old_licenses_path})")
+
+    if to_move.get("environments"):
+        retained_resources.append(f"environments ({spack.paths.old_envs_path})")
+
+    # Write config scope files to the layout scope only if we have config changes
+    if config_changes["config"]:
+        spack.config.write_config_file(config_path, config_changes)
+        tty.debug(f"Wrote config.yaml to {config_path}")
+    else:
+        tty.debug("No config changes needed, skipping config.yaml")
+
+    tty.debug(f"Created layout scope pointing to old locations {spack.paths.layout_scope_path}")
+
+    return retained_resources
+
+
+def force_old_layout(to_move, print_message=True):
+    retained_resources = _force_old_layout(to_move)
+
+    marker_path = migration_done_marker_path()
+    with open(marker_path, "w", encoding="utf-8") as f:
+        f.write("Migration completed\n")
+    tty.debug(f"Wrote migration completion marker: {marker_path}")
+
+    if not print_message:
+        return
+
+    parts = ["No Spack-internal resources were migrated"]
+    if retained_resources:
+        parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
+    parts.append("Run `spack migrate use-new-layout` to migrate if desired later.")
+    sys.stderr.write("\n".join(parts) + "\n")
+
+
+def generate_old_layout_config(old_resources, scope_config):
+    if old_resources.get("installs"):
+        scope_config["config"]["install_tree"] = {"root": os.path.join("$spack", "opt", "spack")}
+        tty.debug(f"Keeping existing installs in {spack.paths.prefix}/opt/spack")
+
+    if old_resources.get("gpg_keys"):
+        old_gpg_home = spack.paths.old_gpg_path.replace(spack.paths.prefix, "$spack")
+        old_gpg_keys = spack.paths.old_gpg_keys_path.replace(spack.paths.prefix, "$spack")
+        scope_config["config"]["gpg_path"] = old_gpg_home
+        scope_config["config"]["gpg_keys_path"] = old_gpg_keys
+        tty.debug(f"Keeping GPG data in {old_gpg_home} and {old_gpg_keys}")
+
+    if old_resources.get("licenses"):
+        old_license_path = spack.paths.old_licenses_path.replace(spack.paths.prefix, "$spack")
+        scope_config["config"]["license_dir"] = old_license_path
+        tty.debug(f"Keeping licenses in {spack.paths.old_licenses_path}")
+
+    if old_resources.get("environments"):
+        old_envs_path = spack.paths.old_envs_path.replace(spack.paths.prefix, "$spack")
+        scope_config["config"]["environments_root"] = old_envs_path
+        tty.debug(f"Keeping environments in {spack.paths.old_envs_path}")
+
+
+def perform_migration():
+    """Check for migration and prompt if needed.
+
+    This runs before the CONFIG singleton is created, so migration functions
+    cannot rely on CONFIG being available.
+
+    Returns True iff config was migrated.
+
+    This method rewrites config. It must be run either before config is loaded or immediately prior
+    to exiting (terminating the process).
+    """
+    isolate_include = os.path.join(spack.paths.isolate_scope_path, "include.yaml")
+    if os.path.exists(isolate_include):
+        # This instance has been isolated post-1.3
+        # The isolate scope is responsible for handling the layout to see old resources
+        return False
+
+    # Migrate user config scope and package repos. An entirely-new spack
+    # instance can do this (and needs to in order to access user config
+    # in new location). This occurs whether or not there are resources in
+    # the spack prefix that need to be migrated, but not if the
+    # `spack isolate` command has been run
+    #
+    # The method returns a dict with keys "user_config" and "package_repos", and
+    # values whether they were migrated
+    config_migrated = migrate_home()["user_config"]
+
+    if migration_done():
+        return config_migrated
+
+    old_resources = detect_old_resources()
+    if any(old_resources.values()):
+        with migration_lock():
+            # If it was migrated while we were waiting on the lock, return
+            if migration_done():
+                return config_migrated
+
+            # Waiting for user input inside the lock prevents other
+            # instances from progressing, but prevents a scenario where
+            # user says "Y" and then a separate non-tty process subverts
+            # that
+            try:
+                user_allows_it = _prompt_for_prefix_migration(old_resources)
+                if user_allows_it:
+                    migrate_spack_prefix(old_resources)
+                else:
+                    force_old_layout(old_resources)
+            except PermissionError as e:
+                tty.die(
+                    f"PermissionError accessing {e.filename}. Writing to the Spack prefix "
+                    "is required to migrate your Spack data. Fix the permissions or "
+                    "contact someone with permissions to run the spack migration."
+                )
+    return config_migrated
+
+
+class MigrationStagingError(spack.error.SpackError):
+    """Raised when a resource cannot be safely staged for migration."""

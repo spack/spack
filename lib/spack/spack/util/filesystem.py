@@ -979,15 +979,18 @@ def mkdirp(
 
     Arguments:
         paths: paths to create with mkdirp
-        mode: optional permissions to set on the created directory -- use OS default
-            if not provided
-        group: optional group for permissions of final created directory -- use OS
-            default if not provided. Only used if world write permissions are not set
+        mode: optional permissions to set on the created directory -- if not provided,
+            the OS default, or the nearest existing parent's permissions when
+            ``default_perms`` is ``"parents"``
+        group: optional group for permissions of final created directory -- if not provided,
+            the OS default, or the nearest existing parent's group when ``default_perms``
+            is ``"parents"``. Only used if world write permissions are not set
         default_perms: one of ``"parents"`` or ``"args"``. The default permissions that are set for
-            directories that are not themselves an argument for mkdirp. ``"parents"`` means
-            intermediate directories get the permissions of their direct parent directory,
-            ``"args"`` means intermediate get the same permissions specified in the arguments to
-            mkdirp -- default value is ``"args"``
+            created directories for which no permissions were given: intermediate directories,
+            and the leaf if ``mode`` is not provided. ``"parents"`` means they get the
+            permissions of the nearest existing parent directory, ``"args"`` means intermediate
+            directories get the same permissions specified in the arguments to mkdirp -- default
+            value is ``"args"``
     """
     default_perms = default_perms or "args"
     paths = path_to_os_path(*paths)
@@ -996,21 +999,8 @@ def mkdirp(
             try:
                 last_parent, intermediate_folders = longest_existing_parent(path)
 
-                # create folders
-                os.makedirs(path)
-
-                # leaf folder permissions
-                if mode is not None:
-                    os.chmod(path, mode)
-                if group:
-                    chgrp_if_not_world_writable(path, group)
-                    if mode is not None:
-                        os.chmod(path, mode)  # reset sticky grp bit post chgrp
-
-                # for intermediate folders, change mode just for newly created
-                # ones and if mode_intermediate has been specified, otherwise
-                # intermediate folders list is not populated at all and default
-                # OS mode will be used
+                # Permissions for created directories that were not given any: intermediate
+                # ones, and the leaf if no mode was given.
                 if default_perms == "args":
                     intermediate_mode = mode
                     intermediate_group = group
@@ -1023,10 +1013,28 @@ def mkdirp(
                     msg += "Choose from 'args' or 'parents'."
                     raise ValueError(msg)
 
+                leaf_mode = mode if mode is not None else intermediate_mode
+                leaf_group = group if group is not None else intermediate_group
+
+                # create folders
+                os.makedirs(path)
+
+                # leaf folder permissions
+                if leaf_mode is not None:
+                    os.chmod(path, leaf_mode)
+                if leaf_group:
+                    chgrp_if_not_world_writable(path, leaf_group)
+                    if leaf_mode is not None:
+                        os.chmod(path, leaf_mode)  # reset sticky grp bit post chgrp
+
+                # for intermediate folders, change mode just for newly created
+                # ones and if mode_intermediate has been specified, otherwise
+                # intermediate folders list is not populated at all and default
+                # OS mode will be used
                 for intermediate_path in reversed(intermediate_folders):
                     if intermediate_mode is not None:
                         os.chmod(intermediate_path, intermediate_mode)
-                    if intermediate_group is not None:
+                    if intermediate_group:  # 0 is what os.stat reports on Windows
                         chgrp_if_not_world_writable(intermediate_path, intermediate_group)
                         if intermediate_mode is not None:
                             os.chmod(

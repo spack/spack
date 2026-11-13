@@ -44,7 +44,7 @@ Second, it has many powerful features to help make package writing easy.
 Setting up for package development
 ----------------------------------
 
-For developing new packages or working with existing ones, it's helpful to have the ``spack/spack-packages`` repository in a convenient location like your home directory, rather than the default ``~/.spack/package_repos/<hash>/``.
+For developing new packages or working with existing ones, it's helpful to have the ``spack/spack-packages`` repository in a convenient location like your home directory, rather than the default ``$data_home/package_repos/<hash>/``.
 
 If you plan to contribute changes back to Spack, we recommend creating a fork of the `packages repository <https://github.com/spack/spack-packages>`_.
 See `GitHub's fork documentation <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_ for details.

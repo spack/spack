@@ -71,10 +71,10 @@ For example:
 .. code-block:: console
 
    $ spack compiler find /opt/intel/oneapi/compiler/2025.1/bin/
-   ==> Added 1 new compiler to /home/user/.spack/packages.yaml
+   ==> Added 1 new compiler to /home/user/.config/spack/packages.yaml
        intel-oneapi-compilers@2025.1.0
    ==> Compilers are defined in the following files:
-       /home/user/.spack/packages.yaml
+       /home/user/.config/spack/packages.yaml
 
 Or you can run ``spack compiler find`` with no arguments to force auto-detection.
 This is useful if you do not know where compilers are installed, but you know that new compilers have been added to your ``PATH``.
@@ -84,7 +84,7 @@ For example, you might load a module, like this:
 
    $ module load gcc/4.9.0
    $ spack compiler find
-   ==> Added 1 new compiler to /home/user/.spack/packages.yaml
+   ==> Added 1 new compiler to /home/user/.config/spack/packages.yaml
        gcc@4.9.0
 
 This loads the environment module for gcc-4.9.0 to add it to ``PATH``, and then it adds the compiler to Spack.

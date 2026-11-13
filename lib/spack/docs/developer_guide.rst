@@ -66,15 +66,11 @@ So that you can familiarize yourself with the project, we will start with a high
 
       etc/
          spack/            <- Spack config files.
-                              Can be overridden by files in ~/.spack.
+                              Can be overridden by files in ~/.config/spack.
 
       var/
          spack/
              test_repos/   <- contains package repositories for tests
-             cache/        <- saves resources downloaded during installs
-
-      opt/
-         spack/            <- packages are installed here
 
       lib/
          spack/
@@ -97,12 +93,13 @@ So that you can familiarize yourself with the project, we will start with a high
                test/              <- unit test modules
                util/              <- common code
 
-Spack is designed so that it could live within a `standard UNIX directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib``, ``var``, and ``opt`` all contain a ``spack`` subdirectory in case Spack is installed alongside other software.
+Spack is designed so that it could live within a `standard UNIX directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib`` and ``var`` contain a ``spack`` subdirectory in case Spack is installed alongside other software.
 Most of the interesting parts of Spack live in ``lib/spack``.
+Spack writes nothing into its own prefix: installed packages, caches and other generated data go to the locations described in :ref:`where_spack_writes_data`.
 
 .. note::
 
-   **Package Repositories**: Built-in packages are hosted in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_ and are automatically cloned to ``~/.spack/package_repos/`` when needed.
+   **Package Repositories**: Built-in packages are hosted in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_ and are automatically cloned to ``$data_home/package_repos/`` when needed.
    The ``var/spack/test_repos/`` directory is used for unit tests only.
    See :ref:`repositories` for details on package repositories.
 
@@ -221,7 +218,7 @@ Understanding this system is important for developing Spack itself.
   Contains the ``Repo`` and ``RepoPath`` classes that handle loading and searching packages from multiple repositories.
 
 Built-in packages are stored in a separate Git repository (`spack/spack-packages <https://github.com/spack/spack-packages>`_) rather than being included directly in the Spack source tree.
-This repository is automatically cloned to ``~/.spack/package_repos/`` when needed.
+This repository is automatically cloned to ``$data_home/package_repos/`` (``~/.local/share/spack/package_repos/`` by default) when needed.
 
 Key concepts:
 
@@ -314,7 +311,8 @@ Sometimes, the functionality you desire can be added to an existing command.
 Also, remember to add unit tests for your command.
 If it is not used very frequently, changes to the rest of Spack can cause your command to break without sufficient unit tests to prevent this from happening.
 
-Whenever you add/remove/rename a command or flags for an existing command, make sure to update Spack's `Bash tab completion script <https://github.com/spack/spack/blob/develop/share/spack/spack-completion.bash>`_.
+Whenever you add/remove/rename a command or flags for an existing command, make sure to update Spack's `Bash tab completion script <https://github.com/spack/spack/blob/develop/share/spack/spack-completion.bash>`_ by running ``spack -E commands --update-completion``.
+The scripts list the names of the configuration scopes, so run this from a checkout that is not isolated with ``spack isolate``; ``-E`` keeps an active environment's scope out of the list.
 
 
 Writing Hooks
