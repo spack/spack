@@ -540,10 +540,12 @@ def set_wrapper_variables(pkg, env):
         # what this branch is trying to avoid.
         if is_system_path(dep.prefix):
             continue
-        # TODO: as of Spack 0.22, multiple instances of the same package may occur among the link
-        # deps, so keying by name is wrong. In practice it is not problematic: we obtain the same
-        # gcc-runtime / glibc here, and repeatedly add the same dirs that are later deduped.
-        query = pkg.spec[dep.name]
+        # A name lookup can select a different instance, including a build-only dependency.
+        # Preserve the query context without replacing the dependency from the link traversal.
+        query = dep
+        query.last_query = spack.spec.QueryState(
+            name=dep.name, extra_parameters=[], isvirtual=False, parent=pkg.spec
+        )
         dep_link_dirs = link_dirs_of(query)
         link_dirs[:0] = dep_link_dirs
         if dep.dag_hash() in rpath_hashes:
