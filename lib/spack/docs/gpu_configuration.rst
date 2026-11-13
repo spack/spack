@@ -28,38 +28,174 @@ The following is an example ``packages.yaml`` that organizes a consistent set of
      hip:
        buildable: false
        externals:
-       - spec: hip@5.3.0
-         prefix: /opt/rocm-5.3.0/hip
-     hsa-rocr-dev:
+       - spec: "hip@10.1 %gcc@13.3.0" # define default GCC libstc++ that should be used
+         prefix: /opt/rocm/core-10.1
+     amdsmi:
        buildable: false
        externals:
-       - spec: hsa-rocr-dev@5.3.0
-         prefix: /opt/rocm-5.3.0/
+       - spec: amdsmi@10.1
+         prefix: /opt/rocm/core-10.1
      comgr:
        buildable: false
        externals:
-       - spec: comgr@5.3.0
-         prefix: /opt/rocm-5.3.0/
-     hipsparse:
-       buildable: false
-       externals:
-       - spec: hipsparse@5.3.0
-         prefix: /opt/rocm-5.3.0/
+       - spec: comgr@10.1
+         prefix: /opt/rocm/core-10.1
      hipblas:
        buildable: false
        externals:
-       - spec: hipblas@5.3.0
-         prefix: /opt/rocm-5.3.0/
+       - spec: hipblas@10.1
+         prefix: /opt/rocm/core-10.1
+     hipcub:
+       buildable: false
+       externals:
+       - spec: hipcub@10.1
+         prefix: /opt/rocm/core-10.1
+     hipfft:
+       buildable: false
+       externals:
+       - spec: hipfft@10.1
+         prefix: /opt/rocm/core-10.1
+     hiprand:
+       buildable: false
+       externals:
+       - spec: hiprand@10.1
+         prefix: /opt/rocm/core-10.1
+     hipsparse:
+       buildable: false
+       externals:
+       - spec: hipsparse@10.1
+         prefix: /opt/rocm/core-10.1
+     miopen-hip:
+       buildable: false
+       externals:
+       - spec: miopen-hip@10.1
+         prefix: /opt/rocm/core-10.1
+     rccl:
+       buildable: false
+       externals:
+       - spec: rccl@10.1
+         prefix: /opt/rocm/core-10.1
      rocblas:
        buildable: false
        externals:
-       - spec: rocblas@5.3.0
-         prefix: /opt/rocm-5.3.0/
+       - spec: rocblas@10.1
+         prefix: /opt/rocm/core-10.1
+     rocfft:
+       buildable: false
+       externals:
+       - spec: rocfft@10.1
+         prefix: /opt/rocm/core-10.1
+     rocm-cmake:
+       buildable: false
+       externals:
+       - spec: rocm-cmake@10.1
+         prefix: /opt/rocm/core-10.1
+     rocm-dbgapi:
+       buildable: false
+       externals:
+       - spec: rocm-dbgapi@10.1
+         prefix: /opt/rocm/core-10.1
+     rocm-debug-agent:
+       buildable: false
+       externals:
+       - spec: rocm-debug-agent@10.1
+         prefix: /opt/rocm/core-10.1
+     rocm-device-libs:
+       buildable: false
+       externals:
+       - spec: rocm-device-libs@10.1
+         prefix: /opt/rocm/core-10.1
+     rocm-gdb:
+       buildable: false
+       externals:
+       - spec: rocm-gdb@10.1
+         prefix: /opt/rocm/core-10.1
+     rocm-opencl:
+       buildable: false
+       externals:
+       - spec: rocm-opencl@10.1
+         prefix: /opt/rocm/core-10.1
+     rocm-smi-lib:
+       buildable: false
+       externals:
+       - spec: rocm-smi-lib@10.1
+         prefix: /opt/rocm/core-10.1
+     rocprofiler-systems:
+       buildable: false
+       externals:
+       - spec: rocprofiler-systems@10.1
+         prefix: /opt/rocm/core-10.1
+     hipify-clang:
+       buildable: false
+       externals:
+       - spec: hipify-clang@10.1
+         prefix: /opt/rocm/core-10.1
+     hsa-amd-aqlprofile:
+       buildable: false
+       externals:
+       - spec: hsa-amd-aqlprofile@10.1
+         prefix: /opt/rocm/core-10.1
+     hsa-rocr-dev:
+       buildable: false
+       externals:
+       - spec: hsa-rocr-dev@10.1
+         prefix: /opt/rocm/core-10.1
+     roctracer-dev-api:
+       buildable: false
+       externals:
+       - spec: roctracer-dev-api@10.1
+         prefix: /opt/rocm/core-10.1
+     roctracer-dev:
+       buildable: false
+       externals:
+       - spec: roctracer-dev@10.1
+         prefix: /opt/rocm/core-10.1
      rocprim:
        buildable: false
        externals:
-       - spec: rocprim@5.3.0
-         prefix: /opt/rocm-5.3.0/rocprim/
+       - spec: rocprim@10.1
+         prefix: /opt/rocm/core-10.1
+     rocrand:
+       buildable: false
+       externals:
+       - spec: rocrand@10.1
+         prefix: /opt/rocm/core-10.1
+     hipsolver:
+       buildable: false
+       externals:
+       - spec: hipsolver@10.1
+         prefix: /opt/rocm/core-10.1
+     rocsolver:
+       buildable: false
+       externals:
+       - spec: rocsolver@10.1
+         prefix: /opt/rocm/core-10.1
+     rocsparse:
+       buildable: false
+       externals:
+       - spec: rocsparse@10.1
+         prefix: /opt/rocm/core-10.1
+     rocthrust:
+       buildable: false
+       externals:
+       - spec: rocthrust@10.1
+         prefix: /opt/rocm/core-10.1
+     rocprofiler-dev:
+       buildable: false
+       externals:
+       - spec: rocprofiler-dev@10.1
+         prefix: /opt/rocm/core-10.1
+     rocprofiler-sdk:
+       buildable: false
+       externals:
+       - spec: rocprofiler-sdk@10.1
+         prefix: /opt/rocm/core-10.1
+     rocm-core:
+       buildable: false
+       externals:
+       - spec: rocm-core@10.1
+         prefix: /opt/rocm/core-10.1
+
 
 This is in combination with the following compiler definition:
 
@@ -67,13 +203,15 @@ This is in combination with the following compiler definition:
 
    packages:
      llvm-amdgpu:
+       buildable: false
        externals:
-       - spec: llvm-amdgpu@=5.3.0
-         prefix: /opt/rocm-5.3.0
+       - spec: llvm-amdgpu@10.1
+         prefix: /opt/rocm/core-10.1/lib/llvm
          extra_attributes:
            compilers:
-             c: /opt/rocm-5.3.0/bin/amdclang
-             cxx: /opt/rocm-5.3.0/bin/amdclang++
+             c: /opt/rocm/core-10.1/lib/llvm/bin/amdclang
+             cxx: /opt/rocm/core-10.1/lib/llvm/bin/amdclang++
+             fortran: /opt/rocm/core-10.1/lib/llvm/bin/amdflang
 
 This includes the following considerations:
 
