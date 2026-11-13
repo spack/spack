@@ -1063,6 +1063,10 @@ class PackageInstaller:
                 self.ui.on_progress(dag_hash, message["progress"], message["total"])
             elif "installed_from_binary_cache" in message:
                 child_info.spec.package.installed_from_binary_cache = True
+            elif "fetched_from_binary_cache" in message:
+                self.ui.on_fetched_from_binary_cache(
+                    dag_hash, message["fetched_from_binary_cache"]
+                )
             elif "exit" in message:
                 child_info.exit_code = message["exit"]
 

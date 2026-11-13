@@ -357,6 +357,20 @@ class TestOutputRendering:
         # Non-TTY output should not contain ANSI escape codes
         assert "\033[" not in output
 
+    @pytest.mark.parametrize("is_tty", [True, False])
+    def test_fetched_from_binary_cache_only_shown_in_non_tty_output(self, is_tty):
+        """The build cache is printed in non-TTY output, but not in the interactive display"""
+        tui, _, fake_stdout = create_tui(is_tty=is_tty, terminal_cols=200)
+        on_build_added(tui, "mypackage")
+        tui.on_state_changed("mypackage", "fetching from build cache")
+        tui.on_fetched_from_binary_cache("mypackage", "local")
+        assert tui.builds["mypackage"].state == "fetching from build cache"
+        tui.on_state_changed("mypackage", "relocating")
+        tui.render()
+
+        output = fake_stdout.getvalue()
+        assert ("fetched from build cache local" in output) != is_tty
+
     def test_tty_output_contains_ansi(self):
         """Test that TTY mode produces ANSI codes"""
         tui, _, fake_stdout = create_tui()

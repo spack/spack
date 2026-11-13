@@ -130,6 +130,9 @@ class InstallerUI:
     def on_progress(self, build_id: str, current: int, total: int) -> None:
         """Fetch progress of a build changed."""
 
+    def on_fetched_from_binary_cache(self, build_id: str, mirror_name: str) -> None:
+        """A build's binary was fetched from the build cache named ``mirror_name``."""
+
     def on_total_increased(self, count: int) -> None:
         """The total number of scheduled builds increased (e.g. build dep expansion)."""
 
@@ -462,10 +465,27 @@ class TerminalUI(InstallerUI):
         self._update_terminal_title()
 
         # For non-TTY output, print state changes immediately
-        if not self.is_tty and not self.headless:
-            line = "".join(self._generate_line_components(build_info, static=True, now=now))
-            self.stdout.write(line + "\n")
-            self.stdout.flush()
+        self._write_static_line(build_info, now)
+
+    def on_fetched_from_binary_cache(self, build_id: str, mirror_name: str) -> None:
+        """Print which build cache the binary was fetched from, in non-TTY output only."""
+        # The interactive display keeps this space for other purposes (e.g. fetch progress).
+        self._write_static_line(
+            self.builds[build_id], self.get_time(), f"fetched from build cache {mirror_name}"
+        )
+
+    def _write_static_line(
+        self, build_info: BuildInfo, now: float, status: Optional[str] = None
+    ) -> None:
+        """In non-TTY mode, print a line for the build, optionally with a custom status text."""
+        if self.is_tty or self.headless:
+            return
+        components = self._generate_line_components(
+            build_info, static=True, now=now, status=status
+        )
+        line = "".join(components)
+        self.stdout.write(line + "\n")
+        self.stdout.flush()
 
     def _parse_log_summary(self, build_info: BuildInfo) -> None:
         """Store the interesting parts of a failed build's log."""
@@ -664,9 +684,14 @@ class TerminalUI(InstallerUI):
             buffer.write(component)
 
     def _generate_line_components(
-        self, build_info: BuildInfo, static: bool = False, now: float = 0.0
+        self,
+        build_info: BuildInfo,
+        static: bool = False,
+        now: float = 0.0,
+        status: Optional[str] = None,
     ) -> Generator[str, None, None]:
-        """Yield formatted line components for a package."""
+        """Yield formatted line components for a package. ``status`` overrides the text shown for
+        the build's progress or state."""
         if build_info.external:
             indicator = "[e]"
         elif build_info.state == "finished":
@@ -695,7 +720,9 @@ class TerminalUI(InstallerUI):
         yield f"{self.color.CYAN}@{build_info.version}{self.color.RESET}"
 
         # progress or state
-        if build_info.progress_percent is not None:
+        if status is not None:
+            yield f" {status}"
+        elif build_info.progress_percent is not None:
             yield " fetching"
             yield f": {build_info.progress_percent}%"
         elif build_info.state == "finished":
