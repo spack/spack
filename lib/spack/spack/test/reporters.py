@@ -3,13 +3,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import pathlib
+import xml.etree.ElementTree as ET
 
 import pytest
 
+import spack.report
 import spack.reporters.extract
 import spack.util.filesystem as fs
 from spack.install_test import TestStatus
-from spack.reporters import CDash, CDashConfiguration
+from spack.reporters import CDash, CDashConfiguration, JUnit
 from spack.util import tty
 
 # Use a path variable to appease Spack style line length checks
@@ -192,3 +194,39 @@ def test_cdash_reporter_truncates_build_name_if_too_long():
 
     assert new_build_name != extra_long_build_name
     assert new_build_name == build_name
+
+
+class _FakeRequestRecord(spack.report.Record):
+    def summarize(self):
+        pass
+
+
+def test_junit_reporter_keeps_failure_outside_test_parts(tmp_path: pathlib.Path):
+    """A package that failed with no failed test part keeps its package-level test case."""
+    outputs = """
+==> Testing package fake-1.0-abcdefg
+==> [2022-02-15-18:44:21.250165] test: test_one: first part
+PASSED: Fake::test_one
+==> [2022-02-15-18:44:21.250200] Completed testing
+"""
+    package = spack.report.Record(
+        name="fake",
+        id="abcdefg",
+        elapsed_time=1.0,
+        result="error",
+        message="test process died",
+        exception="Traceback",
+        stdout=outputs,
+    )
+    spec = _FakeRequestRecord(
+        name="fake", time=1.0, timestamp="now", properties=[], packages=[package]
+    )
+    report = tmp_path / "report.xml"
+    JUnit().test_report(str(report), [spec])
+
+    (suite,) = ET.parse(report).getroot()
+    assert (suite.get("tests"), suite.get("failures"), suite.get("errors")) == ("1", "0", "1")
+    (case,) = suite.findall("testcase")
+    assert (case.get("classname"), case.get("name")) == ("fake", "abcdefg")
+    error = case.find("error")
+    assert error is not None and error.get("message") == "test process died"
