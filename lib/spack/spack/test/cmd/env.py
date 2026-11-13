@@ -2184,6 +2184,26 @@ def test_env_loads_skips_install_false(
     assert "cmake" not in contents
 
 
+@pytest.mark.parametrize("args", [[], ["-r"]])
+def test_env_loads_included_root_not_duplicated(
+    args, mutable_mock_env_path, install_mockery, mock_fetch, mock_modules_root
+):
+    """A root shared with an included environment, and its dependencies, are listed once."""
+    _, _, combined = setup_combined_multiple_env()
+    with combined:
+        combined.add("libelf")  # also a root of the included test2 environment
+        combined.concretize()
+        combined.write()
+        install("--fake")
+        module("tcl", "refresh", "-y")
+        env("loads", *args)
+
+    with open(os.path.join(combined.path, "loads"), encoding="utf-8") as f:
+        loads = [line for line in f.read().splitlines() if line.startswith("module load")]
+    assert len(loads) == len(set(loads))
+    assert any("libelf" in line for line in loads)
+
+
 @pytest.mark.disable_clean_stage_check
 def test_stage(mock_stage, mock_fetch, install_mockery):
     env("create", "test")
