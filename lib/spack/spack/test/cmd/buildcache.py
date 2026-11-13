@@ -969,6 +969,21 @@ def test_buildcache_prune_unreadable_manifest_reports_cause(
     assert "Permission denied" in str(error.value)
 
 
+def test_buildcache_prune_no_blobs_listed_aborts(tmp_path, mutable_database, mock_gnupghome):
+    """If no blobs are listed, orphan pruning must not delete every manifest."""
+    mirror_url = f"file://{tmp_path}"
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+    buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    shutil.rmtree(tmp_path / spack.binary_distribution.buildcache_relative_blobs_path())
+
+    with pytest.raises(spack.buildcache_prune.BuildcachePruningException, match="No blobs"):
+        buildcache("prune", "my-mirror")
+
+    assert web_util.url_exists(URLBuildcacheEntry.get_manifest_url(spec, mirror_url=mirror_url))
+
+
 def test_buildcache_prune_skips_manifest_deleted_after_listing(
     tmp_path, mutable_database, mock_gnupghome
 ):

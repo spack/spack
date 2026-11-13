@@ -356,6 +356,13 @@ def prune_orphan(
     total_pruned = 0
     manifests = list(manifest_to_mtime_mapping.keys())
 
+    # With no blobs listed, every manifest would look orphaned.
+    if manifests and not blob_list:
+        raise BuildcachePruningException(
+            f"No blobs listed in {mirror.fetch_url} but {len(manifests)} manifest(s) found; "
+            "stopped orphan pruning so the manifests are not deleted"
+        )
+
     # Report what earlier passes pruned even if a later pass aborts.
     try:
         while True:
