@@ -11,6 +11,7 @@ import time
 
 import pytest
 
+import spack.concretize
 import spack.error
 import spack.spec
 from spack.config import Configuration
@@ -491,6 +492,52 @@ def test_interrupt_does_not_terminate_builds_that_receive_it(temporary_store, mo
         _install(launcher, spec, ui=ui)
 
     assert not launcher.hanging[0].terminated and not launcher.hanging[0].killed
+
+
+def _is_unlocked(path):
+    """Whether the process that holds a lock on the file has exited. Unlike a pid, this is not
+    fooled by a process that nobody reaps."""
+    import fcntl
+
+    with open(path, "rb") as f:
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return True
+        except OSError:
+            return False
+
+
+@pytest.mark.not_on_windows("Windows does not have process groups")
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+@pytest.mark.parametrize("ignore_sigterm", [False, True])
+def test_interrupt_running_build(ignore_sigterm, install_mockery):
+    """Ctrl-C terminates a build and its child process, and the build removes its prefix. If the
+    child process ignores SIGTERM, a second Ctrl-C kills it."""
+    _skip_if_handled_by_test_runner()
+    variant = "+ignore_sigterm" if ignore_sigterm else "~ignore_sigterm"
+    spec = spack.concretize.concretize_one(f"blocking-install {variant}")
+    lock, ready = os.path.join(spec.prefix, "lock"), os.path.join(spec.prefix, "ready")
+    interrupts = []
+
+    def tick():
+        if os.path.exists(ready) and len(interrupts) < (2 if ignore_sigterm else 1):
+            interrupts.append(time.monotonic())
+            _send(signal.SIGINT)
+
+    installer = PackageInstaller(
+        [spec.package], explicit=True, ui=DrivingUI(tick), terminate_timeout=60.0
+    )
+    with pytest.raises(KeyboardInterrupt):
+        installer.install()
+
+    assert time.monotonic() - interrupts[0] < 30
+    if ignore_sigterm:
+        # The build was killed. Its child process dies with it, perhaps slightly later.
+        while not _is_unlocked(lock):
+            assert time.monotonic() - interrupts[0] < 30
+            time.sleep(0.01)
+    else:
+        assert not os.path.exists(spec.prefix)
 
 
 def test_third_interrupt_raises_keyboard_interrupt():
