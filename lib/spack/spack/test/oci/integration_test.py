@@ -17,6 +17,7 @@ from contextlib import contextmanager
 import pytest
 
 import spack.binary_distribution
+import spack.config
 import spack.database
 import spack.deptypes as dt
 import spack.environment as ev
@@ -68,6 +69,19 @@ def test_buildcache_push_command(mutable_database: Database):
         # executables with a .exe extension on Windows)
         exe_suffix = ".exe" if sys.platform == "win32" else ""
         assert os.path.exists(os.path.join(spec.prefix, "bin", f"mpileaks{exe_suffix}"))
+
+
+def test_install_from_signed_oci_mirror_is_an_error(mutable_database: Database):
+    with oci_servers(InMemoryOCIRegistry("example.com")):
+        mirror("add", "oci-test", "oci://example.com/image")
+        buildcache("push", "--update-index", "oci-test", "mpileaks^mpich")
+        spec = mutable_database.query_local("mpileaks^mpich")[0]
+        spec.package.do_uninstall()
+
+        spack.config.CONFIG.set("mirrors:oci-test:signed", True)
+        with pytest.raises(spack.error.MirrorError, match="`signed: true` is not supported"):
+            buildcache("install", "mpileaks^mpich")
+        assert not mutable_database.installed(spec)
 
 
 def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
