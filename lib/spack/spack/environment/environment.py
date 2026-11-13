@@ -73,7 +73,7 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
-from .list import SpecList, SpecListParser
+from .list import SpecList, SpecListParser, spec_string
 
 SpecPair = Tuple[Spec, Spec]
 
@@ -969,10 +969,18 @@ class ViewDescriptor:
         return self._exclude_duplicate_runtimes(result)
 
     def regenerate(self, env: "Environment") -> None:
+        # Roots that are marked install: false, or depend on one, are not part of the view
+        installable = env.installable_roots()
         if self.groups is None:
-            concrete_roots = env.concrete_roots()
+            concrete_roots = installable
         else:
-            concrete_roots = [c for g in self.groups for _, c in env.concretized_specs_by(group=g)]
+            installable_hashes = {s.dag_hash() for s in installable}
+            concrete_roots = [
+                c
+                for g in self.groups
+                for _, c in env.concretized_specs_by(group=g)
+                if c.dag_hash() in installable_hashes
+            ]
 
         specs = self.specs_for_view(concrete_roots)
         content_hash = self.content_hash(specs)
@@ -1109,6 +1117,53 @@ class ConcretizedRootInfo:
             new=False,
             group=info_dict.get("group", DEFAULT_USER_SPEC_GROUP),
         )
+
+
+def _install_false_dependencies(spec: Spec, marked: Set[str]) -> List[str]:
+    """Names of the dependencies of ``spec`` whose hash is a root marked ``install:false``"""
+    return sorted(
+        {
+            d.name
+            for d in traverse.traverse_nodes([spec], root=False, key=traverse.by_dag_hash)
+            if d.dag_hash() in marked
+        }
+    )
+
+
+class _MarkedRoot(NamedTuple):
+    spec: Spec
+    #: The entry marked ``install: false`` that made this root not installed.
+    marked: str
+
+
+def _marked_message(root: _MarkedRoot) -> str:
+    if root.marked.startswith(("^", "%")):
+        return (
+            f"not installing {root.spec.name}: it uses {root.marked} which is marked "
+            "install: false"
+        )
+    return f"not installing {root.spec.name}: it is marked install: false"
+
+
+def _blocked_message(spec: Spec, blockers: List[str]) -> str:
+    return (
+        f"not installing {spec.name}: it depends on {', '.join(blockers)}, "
+        "which is marked install: false"
+    )
+
+
+class _RootStatus(NamedTuple):
+    """Which roots of an environment are installed, given the roots marked ``install: false``"""
+
+    #: Marked roots that are not installed, by hash. A marked root is left out if an unmarked root
+    #: concretizes to the same spec, since that spec is installed through the unmarked root.
+    marked: Dict[str, _MarkedRoot]
+    #: Roots that are not marked
+    unmarked: List[Spec]
+    #: Unmarked roots that are installed
+    installable: List[Spec]
+    #: Unmarked roots that depend on a marked root, with the names of the marked roots
+    blocked: List[Tuple[Spec, List[str]]]
 
 
 class Environment:
@@ -1544,7 +1599,7 @@ class Environment:
                     raise SpackEnvironmentError(f"no such package: {spec.name}")
 
         list_to_change = self.spec_lists[list_name]
-        existing = str(spec) in list_to_change.yaml_list
+        existing = any(spec_string(x) == str(spec) for x in list_to_change.yaml_list)
         if not existing:
             list_to_change.add(spec)
             if list_name == USER_SPECS_KEY:
@@ -2020,7 +2075,7 @@ class Environment:
             # default view if they are installed.
             with spack.store.STORE.db.read_transaction():
                 for view_name, view in self.views.items():
-                    for spec in self.concrete_roots():
+                    for spec in self.installable_roots():
                         if spec in view and spec.package and spack.store.STORE.db.installed(spec):
                             msg = '{0} in view "{1}"'
                             tty.debug(msg.format(spec.name, view_name))
@@ -2038,7 +2093,7 @@ class Environment:
         try:
             with spack.store.STORE.db.read_transaction():
                 installed_roots = [
-                    s for s in self.concrete_roots() if spack.store.STORE.db.installed(s)
+                    s for s in self.installable_roots() if spack.store.STORE.db.installed(s)
                 ]
             mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
         except Exception as e:
@@ -2170,14 +2225,42 @@ class Environment:
         """
         self.install_specs(None, **install_args)
 
+    def warn_skipped_roots(self) -> None:
+        """Warns about all roots that are not installed because of ``install: false``:
+        marked roots and dependencies."""
+        self._warn_skipped(self._root_status())
+
+    @staticmethod
+    def _warn_skipped(status: _RootStatus) -> None:
+        for root in status.marked.values():
+            tty.warn(_marked_message(root))
+        for spec, blockers in status.blocked:
+            tty.warn(_blocked_message(spec, blockers))
+
     def create_installer(self, specs: Optional[List[Spec]] = None, **install_args):
         """Returns an installer for the given specs of this environment, or for all its roots.
 
         Args:
-            specs: specs to install, by default the concrete roots
+            specs: specs to install, by default the installable roots. Specs that are marked
+                ``install: false``, or depend on a root that is, are skipped with a warning.
             install_args: keyword arguments of ``spack.installer_dispatch.create_installer``
         """
-        specs = specs if specs is not None else self.concrete_roots()
+        status = self._root_status()
+        if specs is None:
+            self._warn_skipped(status)
+            specs = status.installable
+        else:
+            installable_specs = []
+            for spec in specs:
+                if spec.dag_hash() in status.marked:
+                    tty.warn(_marked_message(status.marked[spec.dag_hash()]))
+                    continue
+                blockers = _install_false_dependencies(spec, set(status.marked))
+                if blockers:
+                    tty.warn(_blocked_message(spec, blockers))
+                else:
+                    installable_specs.append(spec)
+            specs = installable_specs
 
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
@@ -2264,6 +2347,75 @@ class Environment:
         """Same as concretized_specs, except it returns the list of concrete
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
+
+    def _marked_roots(self) -> List[Tuple[ConcretizedRootInfo, str]]:
+        """Roots that are not installed because of ``install: false``, each with the entry that
+        is marked"""
+        marked: Dict[Tuple[str, Spec], str] = {}
+        for group in self.manifest.groups():
+            speclist = self.spec_lists.get(self._user_specs_key(group=group))
+            if speclist is None:  # e.g. while the user specs are being removed
+                continue
+            marked.update(
+                ((group, spec), by) for spec, by in zip(speclist.specs, speclist.marked) if by
+            )
+        return [
+            (x, marked[(x.group, x.root)])
+            for x in self.concretized_roots
+            if (x.group, x.root) in marked
+        ]
+
+    def _root_status(self) -> _RootStatus:
+        marked_roots = self._marked_roots()
+        marked_keys = {(x.group, x.root) for x, _ in marked_roots}
+        unmarked = [
+            self.specs_by_hash[x.hash]
+            for x in self.concretized_roots
+            if (x.group, x.root) not in marked_keys
+        ]
+        unmarked.extend(
+            concrete
+            for included_env in self.included_concretized_roots
+            for _, concrete in self.concretized_specs_from_included_environment(included_env)
+        )
+
+        unmarked_hashes = {s.dag_hash() for s in unmarked}
+        marked = {
+            x.hash: _MarkedRoot(self.specs_by_hash[x.hash], by)
+            for x, by in marked_roots
+            if x.hash not in unmarked_hashes
+        }
+
+        # for envs without marked roots, skip walking each root's deps
+        if not marked:
+            return _RootStatus(marked, unmarked, unmarked, [])
+
+        installable, blocked = [], []
+        for spec in unmarked:
+            blockers = _install_false_dependencies(spec, set(marked))
+            if blockers:
+                blocked.append((spec, blockers))
+            else:
+                installable.append(spec)
+        return _RootStatus(marked, unmarked, installable, blocked)
+
+    def installable_roots(self) -> List[Spec]:
+        """Same as concrete_roots(), but excludes roots marked ``install: false``, and
+        dependent roots."""
+        return self._root_status().installable
+
+    def not_installable_hashes(self) -> Set[str]:
+        """Hashes of the specs that are not installed because of ``install: false``. This covers
+        marked roots, dependent roots, and dependencies not needed by an installed root."""
+        status = self._root_status()
+        # if no marked roots, don't traverse the env
+        if not status.marked:
+            return set()
+        everything = traverse.traverse_nodes(
+            [*status.unmarked, *(r.spec for r in status.marked.values())], key=traverse.by_dag_hash
+        )
+        needed = traverse.traverse_nodes(status.installable, key=traverse.by_dag_hash)
+        return {s.dag_hash() for s in everything} - {s.dag_hash() for s in needed}
 
     def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
         """Generates all the (abstract, concrete) spec pairs for a given group"""
@@ -3062,6 +3214,36 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
+#: Statuses of specs that are not installed, shown as [x] when ``install: false`` skips the spec
+_NOT_PRESENT = (
+    spack.spec.InstallStatus.absent,
+    spack.spec.InstallStatus.missing,
+    spack.spec.InstallStatus.buildcache,
+)
+
+
+def install_status_fn(
+    env: Optional[Environment],
+    status_fn: Optional[Callable[[Spec], spack.spec.InstallStatus]] = None,
+) -> Callable[[Spec], spack.spec.InstallStatus]:
+    """Status for specs that aren't installed because of ``install:false`` in ``env``."""
+    base = status_fn if status_fn is not None else spack.store.STORE.db.install_status
+    if env is None:
+        return base
+
+    not_installable = env.not_installable_hashes()
+    if not not_installable:
+        return base
+
+    def _status_fn(spec: Spec) -> spack.spec.InstallStatus:
+        status = base(spec)
+        if status in _NOT_PRESENT and spec.dag_hash() in not_installable:
+            return spack.spec.InstallStatus.not_installable
+        return status
+
+    return _status_fn
+
+
 def display_specs(
     specs: List[spack.spec.Spec],
     *,
@@ -3082,7 +3264,7 @@ def display_specs(
         format=spack.spec.DISPLAY_FORMAT,
         hashes=True,
         hashlen=7,
-        status_fn=status_fn if status_fn is not None else spack.store.STORE.db.install_status,
+        status_fn=install_status_fn(active_environment(), status_fn),
         version_style_fn=(
             spack.package_base.non_preferred_version if highlight_non_defaults else None
         ),
@@ -3312,7 +3494,8 @@ def initialize_environment_dir(
 
 
 class ManifestEntry(NamedTuple):
-    """A spec string written in a list of the manifest file"""
+    """A spec string written in a list of the manifest file, either on its own or as the ``spec``
+    attribute of an entry with options"""
 
     #: ``specs`` for the default group, otherwise the name of a definition
     list_name: str
@@ -3428,6 +3611,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     )
                 elif "specs" in item:
                     self._user_specs[group].extend(item["specs"])
+                elif "spec" in item:
+                    self._user_specs[group].append(item)
 
     def _clear_user_specs(self) -> None:
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
@@ -3456,12 +3641,13 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         else:
             containers = [item[list_name] for item in self._active_definitions(list_name)]
 
-        return [
-            ManifestEntry(list_name, container, idx, item, expand(item))
-            for container in containers
-            for idx, item in enumerate(container)
-            if isinstance(item, str) and not item.startswith("$")
-        ]
+        result = []
+        for container in containers:
+            for idx, item in enumerate(container):
+                text = spec_string(item)
+                if text is not None and not text.startswith("$"):
+                    result.append(ManifestEntry(list_name, container, idx, text, expand(text)))
+        return result
 
     def _default_group_lists(self) -> List[List[Any]]:
         """Returns the YAML lists holding the specs of the default group"""
@@ -3490,7 +3676,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             replacements: entries, each paired with its new text
         """
         for entry, text in replacements:
-            entry.container[entry.position] = text
+            item = entry.container[entry.position]
+            if isinstance(item, dict):  # spec entry with options, which are kept
+                item["spec"] = text
+            else:
+                entry.container[entry.position] = text
         self._entries_changed([entry for entry, _ in replacements])
 
     def remove_entries(self, entries: List[ManifestEntry]) -> None:

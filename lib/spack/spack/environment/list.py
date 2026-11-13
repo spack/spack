@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
-from typing import Any, Dict, List, NamedTuple, Optional, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import spack.spec
 import spack.util.spack_yaml
@@ -21,13 +21,14 @@ class SpecList:
         # We cache results and invalidate when self.yaml_list changes
         self.specs_as_yaml_list = expanded_list or []
         self._constraints = None
+        self._marked: List[Optional[str]] = []
         self._specs: Optional[List[Spec]] = None
         self._toolchains = toolchains
 
     @property
     def is_matrix(self):
         for item in self.specs_as_yaml_list:
-            if isinstance(item, dict):
+            if isinstance(item, dict) and "matrix" in item:
                 return True
         return False
 
@@ -35,14 +36,35 @@ class SpecList:
     def specs_as_constraints(self):
         if self._constraints is None:
             constraints = []
+            marked: List[Optional[str]] = []
             for item in self.specs_as_yaml_list:
-                if isinstance(item, dict):  # matrix of specs
-                    constraints.extend(_expand_matrix_constraints(item))
+                if isinstance(item, dict) and "matrix" in item:  # matrix of specs
+                    for row, row_marked in _expand_matrix_constraints(item):
+                        constraints.append(row)
+                        marked.append(row_marked)
+                elif isinstance(item, dict):  # single spec with options
+                    constraints.append([Spec(item["spec"])])
+                    marked.append(None if item.get("install", True) else item["spec"])
                 else:  # individual spec
                     constraints.append([Spec(item)])
+                    marked.append(None)
             self._constraints = constraints
+            self._marked = marked
 
         return self._constraints
+
+    @property
+    def marked(self) -> List[Optional[str]]:
+        """For each spec in ``self.specs``, in the same order: None if it is installed, otherwise
+        the member marked ``install: false`` that made it not installed (e.g. ``%gcc@13``)."""
+        if self._constraints is None:
+            self.specs_as_constraints  # also computes the marked members
+        return self._marked
+
+    @property
+    def install_flags(self) -> List[bool]:
+        """Whether each spec in ``self.specs`` is installed"""
+        return [m is None for m in self.marked]
 
     @property
     def specs(self) -> List[Spec]:
@@ -89,25 +111,37 @@ class SpecList:
         return iter(self.specs)
 
 
-def _expand_matrix_constraints(matrix_config):
+def spec_string(item: Union[str, Dict]) -> Optional[str]:
+    """Returns the spec string of a single spec entry in a YAML spec list, i.e. either a plain
+    string or a ``spec:`` entry with options. Returns None for other entries, like matrices.
+    """
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict) and "spec" in item:
+        return item["spec"]
+    return None
+
+
+def _expand_matrix_constraints(matrix_config) -> List[Tuple[List[Spec], Optional[str]]]:
+    """Expands a matrix into its rows of constraints. Each row is paired with None if it is
+    installed, or else with its first member marked ``install: false``, which is why it is not."""
     # Avoid circular import
     import spack.hash_lookup
 
     # recurse so we can handle nested matrices
     expanded_rows = []
     for row in matrix_config["matrix"]:
-        new_row = []
+        new_row: List[Tuple[Optional[str], Optional[str]]] = []
         for r in row:
-            if isinstance(r, dict):
+            if isinstance(r, dict) and "matrix" in r:
                 # Flatten the nested matrix into a single row of constraints
-                new_row.extend(
-                    [
-                        [" ".join([str(c) for c in expanded_constraint_list])]
-                        for expanded_constraint_list in _expand_matrix_constraints(r)
-                    ]
-                )
+                for constraints, marked in _expand_matrix_constraints(r):
+                    string = " ".join(str(c) for c in constraints)
+                    new_row.append((string, string if marked else None))
             else:
-                new_row.append([r])
+                string = spec_string(r)
+                marked = string if isinstance(r, dict) and not r.get("install", True) else None
+                new_row.append((string, marked))
         expanded_rows.append(new_row)
 
     excludes = matrix_config.get("exclude", [])  # only compute once
@@ -116,7 +150,7 @@ def _expand_matrix_constraints(matrix_config):
     results = []
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
-        flat_combo = [Spec(constraint) for constraints in combo for constraint in constraints]
+        flat_combo = [Spec(constraint) for constraint, _ in combo]
 
         test_spec = flat_combo[0].copy()
         for constraint in flat_combo[1:]:
@@ -141,16 +175,18 @@ def _expand_matrix_constraints(matrix_config):
             flat_combo[0] = Spec(sigil + str(flat_combo[0]))
 
         # Add to list of constraints
-        results.append(flat_combo)
+        results.append((flat_combo, next((m for _, m in combo if m), None)))
 
     return results
 
 
 def _sigilify(item, sigil):
-    if isinstance(item, dict):
+    if isinstance(item, dict) and "matrix" in item:
         if sigil:
             item["sigil"] = sigil
         return item
+    elif isinstance(item, dict):  # keep the options of a spec entry
+        return {**item, "spec": sigil + item["spec"]}
     else:
         return sigil + item
 
@@ -234,7 +270,7 @@ class SpecListParser:
                 continue
 
             value = item
-            if isinstance(item, dict):
+            if isinstance(item, dict) and "spec" not in item:
                 value = self._expand_yaml_matrix(item)
             result.append(value)
         return result
