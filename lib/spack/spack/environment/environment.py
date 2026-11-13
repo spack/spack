@@ -19,6 +19,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    FrozenSet,
     Iterable,
     List,
     Mapping,
@@ -1119,15 +1120,26 @@ class ConcretizedRootInfo:
         )
 
 
-def _install_false_dependencies(spec: Spec, marked: Set[str]) -> List[str]:
-    """Names of the dependencies of ``spec`` whose hash is a root marked ``install:false``"""
-    return sorted(
-        {
-            d.name
-            for d in traverse.traverse_nodes([spec], root=False, key=traverse.by_dag_hash)
-            if d.dag_hash() in marked
-        }
-    )
+def _install_false_dependencies(
+    specs: Sequence[Spec], marked: Iterable[str]
+) -> Dict[str, List[str]]:
+    """Names of the dependencies of each spec whose hash is a root marked ``install:false``,
+    keyed by the hash of the spec. Specs without any are left out.
+
+    All specs are covered by a single post-order walk, so nodes shared between them are visited
+    once rather than once per spec."""
+    marked = frozenset(marked)
+    #: dag hash -> names of the marked roots below that node (not including the node itself)
+    below: Dict[str, FrozenSet[str]] = {}
+    for node in traverse.traverse_nodes(specs, order="post", key=traverse.by_dag_hash):
+        names: Set[str] = set()
+        for dep in node.dependencies():
+            dep_hash = dep.dag_hash()
+            names.update(below[dep_hash])
+            if dep_hash in marked:
+                names.add(dep.name)
+        below[node.dag_hash()] = frozenset(names)
+    return {h: sorted(below[h]) for h in (s.dag_hash() for s in specs) if below[h]}
 
 
 class _MarkedRoot(NamedTuple):
@@ -1196,6 +1208,10 @@ class Environment:
         self.specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)
         self._repo = None
+        #: Last result of _install_false_dependencies, with the (root hashes, marked hashes) key
+        self._blockers_cache: Optional[
+            Tuple[Tuple[FrozenSet[str], FrozenSet[str]], Dict[str, List[str]]]
+        ] = None
 
         #: Environment root dirs for concrete (lockfile) included environments
         self.included_concrete_env_root_dirs: List[str] = []
@@ -2251,11 +2267,13 @@ class Environment:
             specs = status.installable
         else:
             installable_specs = []
+            candidates = [s for s in specs if s.dag_hash() not in status.marked]
+            all_blockers = self._install_false_dependencies(candidates, status.marked)
             for spec in specs:
                 if spec.dag_hash() in status.marked:
                     tty.warn(_marked_message(status.marked[spec.dag_hash()]))
                     continue
-                blockers = _install_false_dependencies(spec, set(status.marked))
+                blockers = all_blockers.get(spec.dag_hash())
                 if blockers:
                     tty.warn(_blocked_message(spec, blockers))
                 else:
@@ -2365,6 +2383,16 @@ class Environment:
             if (x.group, x.root) in marked
         ]
 
+    def _install_false_dependencies(
+        self, specs: Sequence[Spec], marked: Iterable[str]
+    ) -> Dict[str, List[str]]:
+        """Memoized :func:`_install_false_dependencies`. Concrete specs are identified by their
+        hash, so the key needs no invalidation when roots are added, changed or removed."""
+        key = (frozenset(s.dag_hash() for s in specs), frozenset(marked))
+        if self._blockers_cache is None or self._blockers_cache[0] != key:
+            self._blockers_cache = (key, _install_false_dependencies(specs, key[1]))
+        return self._blockers_cache[1]
+
     def _root_status(self) -> _RootStatus:
         marked_roots = self._marked_roots()
         marked_keys = {(x.group, x.root) for x, _ in marked_roots}
@@ -2391,8 +2419,9 @@ class Environment:
             return _RootStatus(marked, unmarked, unmarked, [])
 
         installable, blocked = [], []
+        all_blockers = self._install_false_dependencies(unmarked, marked)
         for spec in unmarked:
-            blockers = _install_false_dependencies(spec, set(marked))
+            blockers = all_blockers.get(spec.dag_hash())
             if blockers:
                 blocked.append((spec, blockers))
             else:
