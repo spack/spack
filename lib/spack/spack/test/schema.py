@@ -11,6 +11,7 @@ from spack.vendor import jsonschema
 
 import spack.schema
 import spack.schema.env
+import spack.schema.filter
 import spack.util.spack_yaml as syaml
 from spack.util.lang import list_modules
 
@@ -253,6 +254,56 @@ def test_spack_schemas_are_valid():
             jsonschema.validate(module_schema, _draft_07_with_spack_extensions)
         except jsonschema.ValidationError as e:
             raise RuntimeError(f"Invalid JSON schema in {module_name}: {e.message}") from e
+
+
+def test_filter_schema_accepts_valid_configuration():
+    """Accept the filter structure, including package-name lists and named package modes."""
+    v = spack.schema.Validator(spack.schema.filter.schema)
+    v.validate(
+        {
+            "filter": {
+                # Schema validation accepts format strings, even path-like ones; creation
+                # separately checks that concrete projections produce valid, unambiguous specs.
+                "projections": {
+                    "all": "{name}@{version}",
+                    "mpileaks": "{name}@{version}/{hash:7}",
+                },
+                "concrete": True,
+                "flatten": True,
+                "specs": {"allow": ["mpileaks"], "block": ["zmpi"]},
+                "packages": {"allow": ["all", "cmake"], "block": ["mpileaks"]},
+                "config": {"allow": ["packages"], "block": ["mirrors"]},
+            }
+        }
+    )
+    # Named modes are alternatives to the allow/block mapping, not nested external filters.
+    v.validate({"filter": {"packages": "all"}})
+    v.validate({"filter": {"packages": "externals_only"}})
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"filter": {"externals": {"block": True}}},
+        {"filter": {"unknown": []}},
+        {"filter": {"flatten": "yes"}},
+        {"filter": {"specs": {"allow": True}}},
+        # Mode names are exact: neither a shorthand nor a disable mode is supported.
+        {"filter": {"packages": "externals"}},
+        {"filter": {"packages": "none"}},
+        {"filter": {"packages": {"allow": True}}},
+        # Package filters select whole entries; they do not contain per-external filter rules.
+        {"filter": {"packages": {"externals": {"block": True}}}},
+        {"filter": {"packages": {"externals": {"allow": ["cmake"]}}}},
+        {"filter": {"packages": {"unknown": []}}},
+        {"filter": {"config": {"block": True}}},
+    ],
+)
+def test_filter_schema_rejects_invalid_configuration(data):
+    """Reject unknown keys, unsupported package modes, and invalid filter setting types."""
+    v = spack.schema.Validator(spack.schema.filter.schema)
+    with pytest.raises(jsonschema.ValidationError):
+        v.validate(data)
 
 
 def test_env_schema_update_wrong_type():
