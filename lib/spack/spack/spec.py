@@ -1297,6 +1297,258 @@ def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
         edge_map[key] = [edge]
 
 
+_NON_BUILD = dt.ALL & ~dt.BUILD
+
+#: Link/run edges of a node: child hash -> (deptypes, virtuals)
+_LinkEdges = Dict[str, Tuple[dt.DepFlag, Tuple[str, ...]]]
+
+
+def _add_edge(parent: "Spec", child: "Spec", depflag: dt.DepFlag, virtuals: Tuple[str, ...]):
+    """Add an edge as is, without merging it with others"""
+    edge = DependencySpec(parent, child, depflag=depflag, virtuals=virtuals)
+    _add_edge_to_map(parent._dependencies, child.name, edge)
+    _add_edge_to_map(child._dependents, parent.name, edge)
+
+
+def _provided(spec: "Spec") -> Set[str]:
+    return {v.name for v in spec.provided_virtuals}
+
+
+def _used_as(root: "Spec", visited: Optional[Set[str]] = None) -> Dict[str, Set[str]]:
+    """Link/run nodes of root by hash, with the virtuals on their in-edges; stops at visited"""
+    used_as: Dict[str, Set[str]] = {root.dag_hash(): set()}
+    for edge in root.traverse_edges(
+        root=False,
+        cover="edges",
+        deptype=_NON_BUILD,
+        key=spack.traverse.by_dag_hash,
+        visited=visited,
+    ):
+        used_as.setdefault(edge.spec.dag_hash(), set()).update(edge.virtuals)
+    return used_as
+
+
+def _link_edges(node: "Spec") -> _LinkEdges:
+    return {
+        e.spec.dag_hash(): (e.depflag & _NON_BUILD, e.virtuals)
+        for e in node.edges_to_dependencies(depflag=_NON_BUILD)
+    }
+
+
+class _Splice:
+    """Spec.splice: decided on the unmodified inputs, by DAG hash and on link/run edges only"""
+
+    def __init__(
+        self, spec: "Spec", replacement: "Spec", transitive: bool, target: Optional["Spec"]
+    ) -> None:
+        self.spec, self.replacement = spec, replacement
+        self.error = f"Cannot splice {replacement.format('{name}/{hash:7}')} into "
+        self.error += spec.format("{name}/{hash:7}")
+        self.nodes = {
+            n.dag_hash(): n
+            for root in (replacement, spec)
+            for n in root.traverse(deptype=_NON_BUILD, key=spack.traverse.by_dag_hash)
+        }
+        self.spec_used_as = _used_as(spec)
+        replacement_used_as = _used_as(replacement)
+        self.targets = self._targets(target)
+        # link/run nodes of the spec reachable without passing through a target
+        spec_used_as_without_targets = _used_as(spec, visited=set(self.targets))
+        surviving = spec_used_as_without_targets.keys() - self.targets
+        self.spec_only = surviving - replacement_used_as.keys()
+
+        # Edges of nodes on the losing side go to the winner of the same name or virtual
+        if transitive:
+            winners, winner_used_as = set(replacement_used_as), replacement_used_as
+        else:
+            # what the surviving nodes are used as by each other, not by the replaced targets
+            winners, winner_used_as = surviving, spec_used_as_without_targets
+        self.losers = (surviving | replacement_used_as.keys()) - winners
+        self.by_name: Dict[str, str] = {}
+        self.by_virtual: Dict[str, str] = {}
+        for h in sorted(winners):
+            self._keep_newest(self.by_name, self.nodes[h].name, h)
+            for v in winner_used_as[h]:
+                self._keep_newest(self.by_virtual, v, h)
+        if transitive:  # the replacement is used as what the targets were used as
+            for t in self.targets:
+                self.by_virtual.update(dict.fromkeys(self.spec_used_as[t], replacement.dag_hash()))
+
+        #: link/run edges after the splice, per node
+        self.edges: Dict[str, _LinkEdges] = {}
+        #: nodes of the result -> their dependents
+        self.parents: Dict[str, List[str]] = collections.defaultdict(list)
+        #: name -> nodes of the result that have a dependency of that name below them
+        self.above: Dict[str, Set[str]] = {}
+
+    def _targets(self, target: Optional["Spec"]) -> Set[str]:
+        """The link/run nodes of the spec to replace"""
+        nodes = self.spec_used_as
+        if target is None:
+            named = {h for h in nodes if self.nodes[h].name == self.replacement.name}
+            provided = _provided(self.replacement)
+            return named or {h for h in nodes if nodes[h] and nodes[h] <= provided}
+        used = {h for h in nodes if target.name in nodes[h]}
+        return used or {h for h in nodes if self.nodes[h].satisfies(target)}
+
+    def _keep_newest(self, table: Dict[str, str], key: str, h: str) -> None:
+        """Inputs not from a solve may have several nodes of a name or virtual: take the newest"""
+        if key not in table or self.nodes[table[key]].version < self.nodes[h].version:
+            table[key] = h
+
+    def _redirect(self, h: str, edge: "DependencySpec") -> List[Tuple[str, Tuple[str, ...]]]:
+        """Where a link/run edge of node h goes after the splice: (child hash, virtuals) pairs"""
+        child = edge.spec.dag_hash()
+        if h in self.spec_only and child in self.targets:
+            return [(self.replacement.dag_hash(), edge.virtuals)]
+        if h not in self.losers:
+            return [(child, edge.virtuals)]
+        named = self.by_name.get(edge.spec.name, child)
+        return [(self.by_virtual.get(v, named), (v,)) for v in edge.virtuals] or [(named, ())]
+
+    def result(self) -> "Spec":
+        if self.spec.dag_hash() in self.targets:
+            return self.replacement.copy()
+        if not self.targets:
+            raise SpliceError(
+                f"{self.error}: it has no node to replace, or the replacement fails to provide a "
+                "virtual it is used as"
+            )
+
+        for h, node in self.nodes.items():
+            edges = self.edges[h] = {}
+            for edge in node.edges_to_dependencies(depflag=_NON_BUILD):
+                for child, virtuals in self._redirect(h, edge):
+                    depflag, old = edges.get(child, (dt.NONE, ()))
+                    merged = tuple(sorted({*old, *virtuals}))
+                    edges[child] = (depflag | (edge.depflag & _NON_BUILD), merged)
+
+        self._validate(self._changed())
+
+        # A changed node can also be an unchanged build dependency: copies have their own memo
+        copies: Dict[str, Spec] = {}
+        output: Dict[str, Spec] = {}
+
+        def copy(node: "Spec") -> "Spec":
+            h = node.dag_hash()
+            if h not in copies:
+                copies[h] = new = node.copy(deps=False)
+                for e in node.edges_to_dependencies():
+                    _add_edge(new, copy(e.spec), e.depflag, e.virtuals)
+            return copies[h]
+
+        def build(h: str) -> "Spec":
+            if h not in output:
+                node = self.nodes[h]
+                children = {c: build(c) for c in self.edges[h]}
+                rewired = {children[c].dag_hash(): e for c, e in self.edges[h].items()}
+                # With the link/run edges of the input node or of its build spec, it is that node
+                for existing in (node, node.build_spec):
+                    if rewired == _link_edges(existing):
+                        output[h] = copy(existing)
+                        break
+                else:
+                    output[h] = new = node.copy(deps=False)
+                    new.clear_caches(keep_package_hash=True)
+                    new._build_spec = node.build_spec
+                    for child, (depflag, virtuals) in self.edges[h].items():
+                        _add_edge(new, children[child], depflag, virtuals)
+            return output[h]
+
+        return build(self.spec.dag_hash())
+
+    def _changed(self) -> Dict[str, bool]:
+        """Whether each node of the result differs from its input node; a cycle is an error"""
+        changed: Dict[str, bool] = {}
+        on_stack: Set[str] = set()
+
+        def visit(h: str) -> bool:
+            if h in on_stack:
+                raise SpliceError(f"{self.error}: the result would have a dependency cycle")
+            if h not in changed:
+                on_stack.add(h)
+                for c in self.edges[h]:
+                    self.parents[c].append(h)
+                # a list, not any(): every child is visited to detect cycles
+                children = [visit(c) for c in self.edges[h]]
+                changed[h] = any(children) or self.edges[h] != _link_edges(self.nodes[h])
+                on_stack.remove(h)
+            return changed[h]
+
+        visit(self.spec.dag_hash())
+        return changed
+
+    def _validate(self, changed: Dict[str, bool]) -> None:
+        """The replacement is used, edge virtuals are provided, a name or virtual has one node, or
+        no more than in the spec, and changed nodes can be relocated"""
+        if self.replacement.dag_hash() not in changed:
+            raise SpliceError(f"{self.error}: the replacement would not be used")
+        used_as: Dict[str, Set[str]] = {h: set() for h in changed}
+        for h in changed:
+            for child, (_, virtuals) in self.edges[h].items():
+                missing = set(virtuals) - _provided(self.nodes[child])
+                if missing:
+                    name = self.nodes[child].name
+                    raise SpliceError(f"{self.error}: {name} does not provide {missing}")
+                used_as[child].update(virtuals)
+
+        def names(used_as):
+            return collections.Counter(self.nodes[h].name for h in used_as)
+
+        def providers(used_as):
+            provider_names = {(v, self.nodes[h].name) for h in used_as for v in used_as[h]}
+            return collections.Counter(v for v, _ in provider_names)
+
+        for count, kind in ((names, "nodes named"), (providers, "providers of")):
+            before = count(self.spec_used_as)
+            for key, n in count(used_as).items():
+                if n > max(1, before[key]):
+                    raise SpliceError(f"{self.error}: the result would have {n} {kind} {key}")
+
+        for h in changed:
+            if changed[h]:
+                self._validate_relocation(h)
+
+    def _has_below(self, h: str, name: str) -> bool:
+        """Whether node h of the result has a link/run dependency of that name, direct or not"""
+        if name not in self.above:
+            self.above[name] = above = set()
+            stack = [x for x in self.parents if self.nodes[x].name == name]
+            while stack:
+                for parent in self.parents[stack.pop()]:
+                    if parent not in above:
+                        above.add(parent)
+                        stack.append(parent)
+        return h in self.above[name]
+
+    def _validate_relocation(self, h: str) -> None:
+        """Relocation maps each link/run dependency of the build spec of node h to one new one"""
+        cannot_map = f"{self.error}: relocation of {self.nodes[h].name} cannot map"
+        mapped: Set[str] = set()
+        for e in self.nodes[h].build_spec.edges_to_dependencies(depflag=_NON_BUILD):
+            old, wanted = e.spec.name, set(e.virtuals)
+            # by virtual, or else by name
+            images = [
+                c
+                for c, (_, virtuals) in self.edges[h].items()
+                if (not wanted.isdisjoint(virtuals) if wanted else self.nodes[c].name == old)
+            ]
+            names = sorted(self.nodes[c].name for c in images)
+            if not images:
+                raise SpliceError(f"{cannot_map} {old} by name or virtual")
+            if len(images) > 1:
+                raise SpliceError(f"{cannot_map} {old} to {' and '.join(names)} at once")
+            # the binaries have one prefix for the old dependency
+            if names[0] != old and self._has_below(h, old):
+                raise SpliceError(
+                    f"{cannot_map} {old} to {names[0]}, as {old} remains a dependency"
+                )
+            mapped.add(images[0])
+        unmapped = self.edges[h].keys() - mapped
+        if unmapped:
+            raise SpliceError(f"{cannot_map} a dependency to {self.nodes[min(unmapped)].name}")
+
+
 def _select_edges(
     edge_map: EdgeMap,
     *,
@@ -4697,150 +4949,33 @@ class Spec:
                         _add_edge_to_map(new_dependencies, edge.spec.name, edge)
             spec._dependencies = new_dependencies
 
-    def _virtuals_provided(self, root) -> Set[str]:
-        """Return set of virtuals provided by self in the context of root"""
-        if root is self:
-            return {s.name for s in self.provided_virtuals}
-
-        hashes = [s.dag_hash() for s in root.traverse()]
-        in_edges = set(
-            [edge for edge in self.edges_from_dependents() if edge.parent.dag_hash() in hashes]
-        )
-        return set().union(*[edge.virtuals for edge in in_edges])
-
-    def _splice_match(self, other, self_root, other_root):
-        """Return True if other is a match for self in a splice of other_root into self_root
-
-        Other is a splice match for self if it shares a name, or if self is a virtual provider
-        and other provides a superset of the virtuals provided by self. Virtuals provided are
-        evaluated in the context of a root spec (self_root for self, other_root for other).
-
-        This is a slight oversimplification. Other could be a match for self in the context of
-        one edge in self_root and not in the context of another edge. This method could be
-        expanded in the future to account for these cases.
-        """
-        if other.name == self.name:
-            return True
-
-        return bool(
-            bool(self._virtuals_provided(self_root))
-            and self._virtuals_provided(self_root) <= other._virtuals_provided(other_root)
-        )
-
-    def _splice_detach_and_add_dependents(self, replacement, context):
-        """Helper method for Spec._splice_helper.
-
-        replacement is a node to splice in, context is the scope of dependents to consider relevant
-        to this splice."""
-        # Update build_spec attributes for all transitive dependents
-        # before we start changing their dependencies
-        ancestors_in_context = [
-            a
-            for a in self.traverse(root=False, direction="parents")
-            if a in context.traverse(deptype=dt.LINK | dt.RUN)
-        ]
-        for ancestor in ancestors_in_context:
-            # Only set it if it hasn't been spliced before
-            ancestor._build_spec = ancestor._build_spec or ancestor.copy()
-            ancestor.clear_caches(keep_package_hash=True)
-            for edge in ancestor.edges_to_dependencies(depflag=dt.BUILD):
-                if edge.depflag & ~dt.BUILD:
-                    edge.depflag &= ~dt.BUILD
-                else:
-                    ancestor._dependencies[edge.spec.name].remove(edge)
-                    edge.spec._dependents[ancestor.name].remove(edge)
-
-        # For each direct dependent in the link/run graph, replace the dependency on
-        # node with one on replacement
-        for edge in self.edges_from_dependents():
-            if edge.parent not in ancestors_in_context:
-                continue
-
-            edge.parent._dependencies[self.name].remove(edge)
-            self._dependents[edge.parent.name].remove(edge)
-            edge.parent._add_dependency(replacement, depflag=edge.depflag, virtuals=edge.virtuals)
-
-    def _splice_helper(self, replacement):
-        """Main loop of a transitive splice.
-
-        The while loop around a traversal of self ensures that changes to self from previous
-        iterations are reflected in the traversal. This avoids evaluating irrelevant nodes
-        using topological traversal (all incoming edges traversed before any outgoing edge).
-        If any node will not be in the end result, its parent will be spliced and it will not
-        ever be considered.
-        For each node in self, find any analogous node in replacement and swap it in.
-        We assume all build deps are handled outside of this method
-
-        Arguments:
-            replacement: The node that will replace any equivalent node in self
-            self_root: The root of the spec that self comes from. This provides the context for
-                evaluating whether ``replacement`` is a match for each node of ``self``. See
-                ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
-            other_root: The root of the spec that replacement comes from. This provides the context
-                for evaluating whether ``replacement`` is a match for each node of ``self``. See
-                ``Spec._splice_match`` and ``Spec._virtuals_provided`` for details.
-        """
-        ids = {id(s) for s in replacement.traverse()}
-
-        # Sort all possible replacements by name and virtual for easy access later
-        replacements_by_name = collections.defaultdict(list)
-        for node in replacement.traverse():
-            replacements_by_name[node.name].append(node)
-            virtuals = node._virtuals_provided(root=replacement)
-            for virtual in virtuals:
-                replacements_by_name[virtual].append(node)
-
-        changed = True
-        while changed:
-            changed = False
-
-            # Intentionally allowing traversal to change on each iteration
-            # using breadth-first traversal to ensure we only reach nodes that will
-            # be in final result
-            for node in self.traverse(root=False, order="topo", deptype=dt.ALL & ~dt.BUILD):
-                # If this node has already been swapped in, don't consider it again
-                if id(node) in ids:
-                    continue
-
-                analogs = replacements_by_name[node.name]
-                if not analogs:
-                    # If we have to check for matching virtuals, then we need to check that it
-                    # matches all virtuals. Use `_splice_match` to validate possible matches
-                    for virtual in node._virtuals_provided(root=self):
-                        analogs += [
-                            r
-                            for r in replacements_by_name[virtual]
-                            if node._splice_match(r, self_root=self, other_root=replacement)
-                        ]
-
-                    # No match, keep iterating over self
-                    if not analogs:
-                        continue
-
-                # If there are multiple analogs, this package must satisfy the constraint
-                # that a newer version can always replace a lesser version.
-                analog = max(analogs, key=lambda s: s.version)
-
-                # No splice needed here, keep checking
-                if analog == node:
-                    continue
-
-                node._splice_detach_and_add_dependents(analog, context=self)
-                changed = True
-                break
-
-    def splice(self, other: "Spec", transitive: bool = True) -> "Spec":
+    def splice(
+        self, other: "Spec", transitive: bool = True, *, target: Optional["Spec"] = None
+    ) -> "Spec":
         """Returns a new, spliced concrete :class:`Spec` with the ``other`` dependency and,
         optionally, its dependencies.
 
         Args:
             other: alternate dependency
             transitive: include other's dependencies
+            target: what to replace: a concrete node, a virtual (the nodes used as it), or an
+                abstract spec. By default the node named like ``other``, or else the nodes used
+                only as virtuals that ``other`` provides. If the root is the target, the result
+                is a copy of ``other``.
+
+        Raises:
+            spack.spec.SpliceError: if there is nothing to replace, the replacement would not be
+                used, or the result would have a dependency cycle, a virtual that is not provided,
+                several nodes of a name or providers of a virtual unless the spec has as many, or
+                a node whose dependencies relocation cannot map from those of its build spec.
 
         Returns: a concrete, spliced version of the current :class:`Spec`
 
         When transitive is :data:`True`, use the dependencies from ``other`` to reconcile
         conflicting dependencies. When transitive is :data:`False`, use dependencies from self.
+        Dependencies conflict when they have the same name or are used as the same virtual, where
+        the virtuals that replaced nodes use their dependencies as do not count. The inputs are
+        not modified; the result consists of new nodes.
 
         For example, suppose we have the following dependency graph:
 
@@ -4876,71 +5011,7 @@ class Spec:
         spec's provenance is preserved unchanged."""
         assert self.concrete
         assert other.concrete
-
-        if self._splice_match(other, self_root=self, other_root=other):
-            return other.copy()
-
-        if not any(
-            node._splice_match(other, self_root=self, other_root=other)
-            for node in self.traverse(root=False, deptype=dt.LINK | dt.RUN)
-        ):
-            other_str = other.format("{name}/{hash:7}")
-            self_str = self.format("{name}/{hash:7}")
-            msg = f"Cannot splice {other_str} into {self_str}."
-            msg += f" Either {self_str} cannot depend on {other_str},"
-            msg += f" or {other_str} fails to provide a virtual used in {self_str}"
-            raise SpliceError(msg)
-
-        # Copies of all non-build deps, build deps will get added at the end
-        spec = self.copy(deps=dt.ALL & ~dt.BUILD)
-        replacement = other.copy(deps=dt.ALL & ~dt.BUILD)
-
-        def make_node_pairs(orig_spec, copied_spec):
-            return list(
-                zip(
-                    orig_spec.traverse(deptype=dt.ALL & ~dt.BUILD),
-                    copied_spec.traverse(deptype=dt.ALL & ~dt.BUILD),
-                )
-            )
-
-        def mask_build_deps(in_spec):
-            for edge in in_spec.traverse_edges(cover="edges"):
-                edge.depflag &= ~dt.BUILD
-
-        if transitive:
-            # These pairs will allow us to reattach all direct build deps
-            # We need the list of pairs while the two specs still match
-            node_pairs = make_node_pairs(self, spec)
-
-            # Ignore build deps in the modified spec while doing the splice
-            # They will be added back in at the end
-            mask_build_deps(spec)
-
-            # Transitively splice any relevant nodes from new into base
-            # This handles all shared dependencies between self and other
-            spec._splice_helper(replacement)
-        else:
-            # Do the same thing as the transitive splice, but reversed
-            node_pairs = make_node_pairs(other, replacement)
-            mask_build_deps(replacement)
-            replacement._splice_helper(spec)
-
-            # Intransitively splice replacement into spec
-            # This is very simple now that all shared dependencies have been handled
-            for node in spec.traverse(order="topo", deptype=dt.LINK | dt.RUN):
-                if node._splice_match(other, self_root=spec, other_root=other):
-                    node._splice_detach_and_add_dependents(replacement, context=spec)
-
-        # For nodes that were spliced, modify the build spec to ensure build deps are preserved
-        # For nodes that were not spliced, replace the build deps on the spec itself
-        for orig, copy in node_pairs:
-            if copy._build_spec:
-                copy._build_spec = orig.build_spec.copy()
-            else:
-                for edge in orig.edges_to_dependencies(depflag=dt.BUILD):
-                    copy._add_dependency(edge.spec, depflag=dt.BUILD, virtuals=edge.virtuals)
-
-        return spec
+        return _Splice(self, other, transitive, target).result()
 
     def mutate(self, mutator) -> bool:
         """Mutate concrete spec to match constraints represented by mutator.
