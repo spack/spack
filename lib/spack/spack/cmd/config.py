@@ -404,6 +404,10 @@ def config_remove(args):
     This is a stateful operation that edits the config files."""
     scope, _ = _get_scope_and_section(args)
 
+    if ":" not in args.path:
+        spack.config.CONFIG.remove_section(args.path, scope=scope)
+        return
+
     path, _, value = args.path.rpartition(":")
     existing = spack.config.CONFIG.get(path, scope=scope)
 
