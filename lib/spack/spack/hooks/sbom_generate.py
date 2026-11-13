@@ -105,6 +105,64 @@ def get_download_location(spec):
     return None
 
 
+def generate_external_refs(spec):
+    """Generate external references for a spec.
+
+    Args:
+        spec: The package spec
+
+    Returns:
+        A list of external references in JSON format.
+
+    Note: Only PackageURL (PURL) is currently supported.
+    """
+
+    # SPDX Specification v3.0.1
+    # Annex E
+    # Package URL specification v1 (Normative)
+    # How to produce and consume purl data
+    # spdx.github.io/spdx-spec/v3.0.1/annexes/pkg-url-specification
+
+    scheme = "pkg:"
+
+    # This is our unique name registered with the PURL spec
+    # https://github.com/package-url/purl-spec
+    type = "spack"
+
+    # E.4.3 Rules for namespace
+    # Use the 'builtin' namespace or the one provided by the user
+    namespace = "builtin"
+    if spec.namespace:
+        x = spec.namespace.lstrip("/").rstrip("/").encode("utf-8")
+        namespace = urllib.parse.quote(x)
+
+    # E.4.4 Rules for name
+    name = urllib.parse.quote(spec.name.encode("utf-8"))
+    if namespace:
+        name = "/" + name
+
+    # E.4.5 Rules for version
+    # If this is a git SHA, the PURL will be conformant but unlikely to be
+    # in any vulnerability database.
+    version = "@" + urllib.parse.quote(str(spec.version).encode("utf-8"))
+
+    # E.4.6 Rules for qualifiers
+    # E.6 Known qualifiers key/value pairs
+    #  'checksum' is a known qualifier, so name it 'daghash'.
+    qualifier = f"?daghash={spec.dag_hash()}"
+
+    # 'referenceCategory' was removed from the spec in v3.0.1
+    # Since spack advertises support for 2.3, it is added here.
+    # https://spdx.github.io/spdx-spec/v2.3.1/external-repository-identifiers/
+    return [
+        {
+            "referenceCategory": "PACKAGE-MANAGER",
+            "referenceType": "purl",
+            "referenceLocator": f"{scheme}{type}/{namespace}{name}{version}{qualifier}",  # noqa: E501
+        }
+    ]
+
+
 def make_spdx_2_3_package_entry(spec):
     pkg = getattr(spec, "package", None)
     return {
@@ -117,6 +175,7 @@ def make_spdx_2_3_package_entry(spec):
         "licenseDeclared": get_license(pkg) or "NOASSERTION",
         "licenseConcluded": "NOASSERTION",
         "checksums": get_checksums(spec),
+        "externalRefs": generate_external_refs(spec),
     }
 
 
