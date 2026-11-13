@@ -449,6 +449,60 @@ def test_wrapper_variables(
         delattr(dep_pkg, "libs")
 
 
+@pytest.mark.parametrize("older_depflag", [dt.BUILD, dt.LINK], ids=["build-only", "link"])
+def test_wrapper_variables_with_duplicate_dependencies(
+    config, mock_packages, monkeypatch, tmp_path, older_depflag
+):
+    """Use the actual link dependency, not a same-named build or link dependency."""
+    root = spack.concretize.concretize_one("dt-diamond")
+    newer = root["dt-diamond-right"]
+    older = spack.spec.Spec("dt-diamond-right@=0.1")
+    older._mark_concrete()
+    root.add_dependency_edge(older, depflag=older_depflag, virtuals=())
+
+    for dep in (older, newer):
+        dep.set_prefix(str(tmp_path / str(dep.version)))
+        monkeypatch.setattr(
+            dep.package,
+            "libs",
+            LibraryList([os.path.join(dep.prefix, "lib", "libdep.so")]),
+            raising=False,
+        )
+        monkeypatch.setattr(
+            dep.package,
+            "headers",
+            HeaderList([os.path.join(dep.prefix, "include", "dep.h")]),
+            raising=False,
+        )
+        monkeypatch.setattr(
+            dep.package,
+            "mpi_libs",
+            LibraryList([str(tmp_path / "stale" / "libmpi.so")]),
+            raising=False,
+        )
+        dep.last_query = spack.spec.QueryState("mpi", ["fortran"], True, None)
+
+    env_mods = EnvironmentModifications()
+    spack.build_environment.set_wrapper_variables(root.package, env_mods)
+    env = {}
+    env_mods.apply_modifications(env)
+    link_dirs = (env["SPACK_LINK_DIRS"] + ":" + env["SPACK_STORE_LINK_DIRS"]).split(":")
+    include_dirs = (env["SPACK_INCLUDE_DIRS"] + ":" + env["SPACK_STORE_INCLUDE_DIRS"]).split(":")
+    rpath_dirs = (env["SPACK_RPATH_DIRS"] + ":" + env["SPACK_STORE_RPATH_DIRS"]).split(":")
+
+    assert os.path.join(newer.prefix, "lib") in link_dirs
+    assert os.path.join(newer.prefix, "include") in include_dirs
+    assert os.path.join(newer.prefix, "lib") in rpath_dirs
+    assert os.path.join(older.prefix, "lib") not in rpath_dirs
+    assert str(tmp_path / "stale") not in link_dirs
+    if older_depflag == dt.BUILD:
+        assert os.path.join(older.prefix, "lib") not in link_dirs
+        assert os.path.join(older.prefix, "include") not in include_dirs
+    else:
+        assert os.path.join(older.prefix, "lib") in link_dirs
+        assert os.path.join(older.prefix, "include") in include_dirs
+
+
 def test_external_prefixes_last(
     mutable_config: Configuration, mock_packages, working_env, monkeypatch
 ):
