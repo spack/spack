@@ -37,6 +37,28 @@ def _decode_macho_data(bytestring):
     return bytestring.rstrip(b"\x00").decode("ascii")
 
 
+def expand_macos_firmlink_prefixes(prefix_to_prefix: Dict[str, str]) -> Dict[str, str]:
+    """On Darwin (macOS), the root filesystem is read-only and writable system
+    paths (including custom paths created via /etc/synthetic.conf) are firmlinked
+    to /System/Volumes/Data/<path>. Build tools (e.g., CMake and compilers) may
+    record either the canonical root path or the resolved /System/Volumes/Data path.
+    This helper expands prefix_to_prefix so that both variants are mapped to the
+    destination prefix.
+    """
+    firmlink_prefix = "/System/Volumes/Data"
+    expanded: Dict[str, str] = {}
+    for old_p, new_p in prefix_to_prefix.items():
+        expanded[old_p] = new_p
+        if old_p and old_p != "/":
+            if old_p.startswith(firmlink_prefix):
+                alt_old = old_p[len(firmlink_prefix) :]
+            else:
+                alt_old = firmlink_prefix + old_p
+            if alt_old not in prefix_to_prefix and alt_old not in expanded:
+                expanded[alt_old] = new_p
+    return expanded
+
+
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
     """
     Inputs
