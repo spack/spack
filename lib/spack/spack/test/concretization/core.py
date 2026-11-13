@@ -6241,3 +6241,23 @@ def test_reused_spec_keeps_provider_with_another_provider_as_root(
         [(Spec(spec_str), None), (Spec("zmpi"), None)]
     )
     assert mpileaks.satisfies(f"mpileaks/{installed.dag_hash()}")
+
+
+def test_variant_value_validated_against_the_definitions_of_each_spec(mock_packages):
+    """Tests that variant values are validated against the intersecting definitions."""
+    clauses = spack.solver.clauses.SpecClauseGenerator(repo=spack.repo.PATH)
+    pkg_cls = spack.repo.PATH.get_pkg_class("variant-values")
+    only_foo, foo_and_bar = (vdef for _, vdef in pkg_cls.variant_definitions("v"))
+
+    # foo is always accepted
+    clauses.spec_clauses(Spec("variant-values@1.0 v=foo"))
+    clauses.spec_clauses(Spec("variant-values@2.0 v=foo"))
+    assert clauses.variant_values_from_specs == {
+        ("variant-values", id(only_foo), "foo"),
+        ("variant-values", id(foo_and_bar), "foo"),
+    }
+
+    # bar is rejected under certain conditions
+    clauses.spec_clauses(Spec("variant-values@2.0 v=bar"))
+    with pytest.raises(vt.InvalidVariantValueError):
+        clauses.spec_clauses(Spec("variant-values@1.0 v=bar"))
