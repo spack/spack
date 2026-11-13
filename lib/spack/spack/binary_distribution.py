@@ -2073,49 +2073,28 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
-def _virtuals_by_node(root: spack.spec.Spec) -> Dict[int, Set[str]]:
-    """Return the virtuals each node in the DAG of ``root`` provides, in the context of ``root``,
-    keyed by the ``id`` of the node. Same semantics as ``Spec._virtuals_provided``.
-    """
-    result: Dict[int, Set[str]] = defaultdict(set)
-    result[id(root)] = {v.name for v in root.provided_virtuals}
-    for edge in root.traverse_edges(root=False, cover="edges"):
-        result[id(edge.spec)].update(edge.virtuals)
-    return result
+def _splice_analogs(spec: spack.spec.Spec) -> Dict[str, spack.spec.Spec]:
+    """Maps the hash of each node of the build spec of a spliced spec to the node at its place:
+    the node of its name, or else the node used as the virtuals it was used as. Several nodes can
+    have the same analog, and a node the splice removed has none.
 
-
-class _SpliceAnalogs:
-    """Finds the node of the build spec that a node of a spliced spec replaced.
-
-    Candidates are the nodes of the build spec that ``Spec._splice_match`` accepts: those with the
-    same name, and those providing a superset of the virtuals the node provides.
-
-    Among them, same name is preferred, then higher version, then the first in traversal order,
-    as in ``Spec.splice``. The index is built in a single pass over the DAGs of both specs.
-    """
-
-    def __init__(self, spec: spack.spec.Spec) -> None:
-        # Candidates are referred to by their position in traversal order
-        self.candidates = list(spec.build_spec.traverse(deptype=dt.ALL & ~dt.BUILD))
-        self.by_name: Dict[str, List[int]] = defaultdict(list)
-        self.by_virtual: Dict[str, Set[int]] = defaultdict(set)
-        build_spec_virtuals = _virtuals_by_node(spec.build_spec)
-        for i, d in enumerate(self.candidates):
-            self.by_name[d.name].append(i)
-            for virtual in build_spec_virtuals[id(d)]:
-                self.by_virtual[virtual].add(i)
-        self.spec_virtuals = _virtuals_by_node(spec)
-
-    def __call__(self, s: spack.spec.Spec) -> Optional[spack.spec.Spec]:
-        # For each virtual s provides, the candidates providing it
-        providers = [self.by_virtual.get(v, set()) for v in self.spec_virtuals[id(s)]]
-        # Candidates providing all virtuals of s; none if s provides no virtuals
-        common = set.intersection(*providers) if providers else set()
-        analogs = {*self.by_name.get(s.name, []), *common}
-        if not analogs:
-            return None
-        key = lambda i: (self.candidates[i].name == s.name, self.candidates[i].version, -i)
-        return self.candidates[max(analogs, key=key)]
+    Assumes that names and virtuals are unique among the link/run/test dependencies of the spliced
+    spec."""
+    non_build = dt.ALL & ~dt.BUILD
+    edges = list(spec.traverse_edges(cover="edges", deptype=non_build))
+    by_name = {e.spec.name: e.spec for e in edges}
+    by_virtual = {v: e.spec for e in edges for v in e.virtuals}
+    analogs: Dict[str, spack.spec.Spec] = {}
+    providers: Dict[str, Set[spack.spec.Spec]] = defaultdict(set)
+    for e in spec.build_spec.traverse_edges(cover="edges", deptype=non_build):
+        if e.spec.name in by_name:
+            analogs[e.spec.dag_hash()] = by_name[e.spec.name]
+        else:
+            providers[e.spec.dag_hash()].update(
+                by_virtual[v] for v in e.virtuals if v in by_virtual
+            )
+    analogs.update((h, nodes.pop()) for h, nodes in providers.items() if len(nodes) == 1)
+    return analogs
 
 
 def _containing_prefix(path: bytes, prefixes: Container[bytes]) -> Optional[bytes]:
@@ -2190,36 +2169,27 @@ def relocate_package(spec: spack.spec.Spec) -> None:
     # in an upstream, so we cannot assume the original spack store root can be mapped uniformly to
     # the new spack store root.
 
-    # If the spec is spliced, we need to handle the simultaneous mapping from the old install_tree
-    # to the new install_tree and from the build_spec to the spliced spec. Nodes the splice did
-    # not change keep their hash. For the others, the old prefix is the one of their analog: the
-    # node of the build_spec they replaced. Externals are included so that a spliced-in external
-    # gets a mapping from the old prefix of its analog.
+    # The prefix of each node the binaries may refer to becomes that of the node of spec at its
+    # place. That is the node with the same hash, unless the spec is spliced: then the map is also
+    # from the build_spec to the spliced spec, where a changed node has an analog, which may be an
+    # external and may be shared, or was removed by the splice.
     relocation_specs = specs_to_relocate(spec, include_externals=True)
-    splice_analogs = _SpliceAnalogs(spec) if spec.spliced else None
-    matched_old_hashes = set()
+    analogs = {s.dag_hash(): s for s in relocation_specs}
+    if spec.spliced:
+        analogs = {**_splice_analogs(spec), **analogs}
+    replaced_prefixes: Dict[str, List[str]] = {}
     spliced_externals: Dict[str, spack.spec.Spec] = {}
-    for s in relocation_specs:
-        analog = s
-        if splice_analogs is not None and s.dag_hash() not in hash_to_old_prefix:
-            analog = splice_analogs(s) or s
-
-        lookup_dag_hash = analog.dag_hash()
-        if lookup_dag_hash in hash_to_old_prefix:
-            matched_old_hashes.add(lookup_dag_hash)
-            old_dep_prefix = hash_to_old_prefix[lookup_dag_hash]
-            prefix_to_prefix[old_dep_prefix] = str(s.prefix)
-            if s.external and analog is not s:
-                spliced_externals[old_dep_prefix] = s
+    for dag_hash, old_dep_prefix in hash_to_old_prefix.items():
+        analog = analogs.get(dag_hash)
+        if analog is None:
+            replaced_prefixes[old_dep_prefix] = []
+            continue
+        prefix_to_prefix[old_dep_prefix] = str(analog.prefix)
+        if analog.external and analog.dag_hash() != dag_hash:
+            spliced_externals[old_dep_prefix] = analog
 
     rpath_transform = None
     if spec.spliced:
-        # Nodes of the build_spec without an analog in the spliced spec were removed by the splice
-        replaced_prefixes: Dict[str, List[str]] = {
-            old_prefix: []
-            for dag_hash, old_prefix in hash_to_old_prefix.items()
-            if dag_hash not in matched_old_hashes
-        }
         for old_prefix, external in spliced_externals.items():
             # A build adds no RPATH entry for externals in system prefixes
             if spack.util.environment.is_system_path(external.prefix):

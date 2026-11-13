@@ -11,6 +11,8 @@ import pytest
 import spack.concretize
 import spack.deptypes as dt
 import spack.rewiring
+import spack.spec
+from spack.binary_distribution import _splice_analogs
 from spack.old_installer import PackageInstaller
 from spack.store import Store
 from spack.test.relocate import text_in_bin
@@ -180,3 +182,53 @@ def test_rewire_virtual(mock_fetch, install_mockery):
 
     # check for correct prefix paths
     check_spliced_spec_prefixes(spliced_spec)
+
+
+def test_splice_analogs(mock_packages, config):
+    """Nodes of the build spec map to the nodes of the spliced spec at their place."""
+    spec = spack.concretize.concretize_one("splice-vt^splice-a")
+    spliced = spec.splice(spack.concretize.concretize_one("splice-h"), transitive=True)
+    build_spec = spliced.build_spec
+    analogs = _splice_analogs(spliced)
+
+    assert analogs[build_spec.dag_hash()] is spliced
+    assert analogs[build_spec["splice-a"].dag_hash()] is spliced["splice-h"]
+    assert analogs[build_spec["splice-z"].dag_hash()] is spliced["splice-z"]
+
+
+def _node(name, *edges):
+    """A concrete node with link edges (child, virtual, ...)"""
+    spec = spack.spec.Spec(f"{name}@=1.0 arch=linux-ubuntu26.04-x86_64")
+    spec._package_hash = name.ljust(32, "0")
+    for child, *virtuals in edges:
+        spec._add_dependency(child, depflag=dt.LINK, virtuals=tuple(virtuals))
+    spec._mark_concrete()
+    return spec
+
+
+def test_splice_analogs_of_provider_that_is_still_a_dependency():
+    """A provider that is still a dependency is its own analog."""
+    # the old libxml2 took iconv from glibc, the new one takes it from libiconv
+    glibc = _node("glibc")
+    old_libxml2 = _node("libxml2", (glibc, "libc", "iconv"))
+    new_libxml2 = _node("libxml2", (glibc, "libc"), (_node("libiconv"), "iconv"))
+    spliced = _node("fontconfig", (glibc, "libc"), (new_libxml2,))
+    spliced.build_spec = _node("fontconfig", (glibc, "libc"), (old_libxml2,))
+    analogs = _splice_analogs(spliced)
+
+    assert analogs[old_libxml2.dag_hash()] is new_libxml2
+    assert analogs[glibc.dag_hash()] is glibc
+
+
+def test_splice_analogs_of_two_nodes_that_became_one():
+    """Two nodes of the build spec can have the same analog."""
+    # octopus was built with amdfftw as fftw-api, and now uses the fftw that pfft needs
+    fftw = _node("fftw")
+    pfft = _node("pfft", (fftw,))
+    amdfftw = _node("amdfftw")
+    spliced = _node("octopus", (fftw, "fftw-api"), (pfft,))
+    spliced.build_spec = _node("octopus", (amdfftw, "fftw-api"), (pfft,))
+    analogs = _splice_analogs(spliced)
+
+    assert analogs[amdfftw.dag_hash()] is fftw
+    assert analogs[fftw.dag_hash()] is fftw
