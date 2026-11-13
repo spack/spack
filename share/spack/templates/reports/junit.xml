@@ -19,8 +19,8 @@
 {% endfor %}
         </properties>
 {% for case in suite.testcases %}
-        <testcase classname="{{ case.classname }}"
-                  name="{{ case.name }}"
+        <testcase classname="{{ case.classname|e }}"
+                  name="{{ case.name|e }}"
                   time="{{ case.time }}">
 {% if case.result == 'failure' %}
             <failure message="{{ case.message|e }}">
