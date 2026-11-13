@@ -4,6 +4,7 @@
 
 import collections
 import filecmp
+import io
 import os
 import pathlib
 import shutil
@@ -24,7 +25,7 @@ import spack.util.url as url_util
 from spack.repo import RepoPath
 from spack.spec import Spec
 from spack.stage import stage_from_config
-from spack.test.conftest import MockStageRoot
+from spack.test.conftest import MockStageRoot, RepoBuilder
 from spack.util.executable import Executable, ProcessError
 from spack.util.filesystem import mkdirp, touch, working_dir
 
@@ -203,6 +204,54 @@ def test_stale_patch_cache_falls_back_to_fresh(mock_packages: RepoPath, config):
 
     assert len(patches) == 2
     assert {p.relative_path for p in patches} == {"foo.patch", "baz.patch"}
+
+
+@pytest.mark.regression("34961")
+@pytest.mark.parametrize("namespaced", [False, True])
+def test_dependency_patch_across_repositories(tmp_path, namespaced):
+    upstream = RepoBuilder(str(tmp_path / "upstream"))
+    upstream.add_package("dependency")
+    overlay = RepoBuilder(str(tmp_path / "overlay"))
+    overlay.add_package("dependency")
+    overlay.add_package("consumer")
+    dependency = f"{upstream.namespace}.dependency" if namespaced else "dependency"
+    recipe = pathlib.Path(overlay._recipe_filename("consumer"))
+    with recipe.open("a", encoding="utf-8") as f:
+        f.write(f'\n    depends_on("{dependency}", patches=["dependency.patch"])\n')
+    patch_path = recipe.parent / "dependency.patch"
+    patch_path.write_text("dependency patch\n", encoding="utf-8")
+
+    # A dependency absent from the overlay must also be resolved across repositories.
+    upstream.add_package("external")
+    with recipe.open("a", encoding="utf-8") as f:
+        f.write('    depends_on("external", patches=["external.patch"])\n')
+    (recipe.parent / "external.patch").write_text("external patch\n", encoding="utf-8")
+
+    with spack.repo.use_repositories(overlay.root, upstream.root) as repos:
+        consumer = repos.get_pkg_class("consumer")
+        index = repos.get_patch_index()
+        stream = io.StringIO()
+        index.to_json(stream)
+        stream.seek(0)
+        cached_index = spack.patch.PatchCache.from_json(stream, repository=repos)
+        for name, namespace, filename in [
+            ("dependency", upstream.namespace if namespaced else overlay.namespace, patch_path),
+            ("external", upstream.namespace, recipe.parent / "external.patch"),
+        ]:
+            target = repos.get_pkg_class(f"{namespace}.{name}")
+            declared = next(
+                patch
+                for deps in consumer.dependencies.values()
+                for dep in deps.values()
+                if dep.spec.name == name
+                for patches in dep.patches.values()
+                for patch in patches
+            )
+            for patch_index in (index, cached_index):
+                patch = patch_index.patch_for_package(declared.sha256, target, validate=True)
+                assert patch.owner == consumer.fullname
+                assert patch.path == str(filename)
+                assert set(patch_index.index[declared.sha256]) == {target.fullname}
 
 
 def test_patch_mixed_versions_subset_constraint(mock_packages, config):

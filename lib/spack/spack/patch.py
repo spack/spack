@@ -544,13 +544,15 @@ class PatchCache:
 
     @staticmethod
     def _index_patches(
-        pkg_class: Type["spack.package_base.PackageBase"], repository: "spack.repo.RepoPath"
+        pkg_class: Type["spack.package_base.PackageBase"],
+        repository: Union["spack.repo.Repo", "spack.repo.RepoPath"],
     ) -> Dict[Any, Any]:
         """Patch index for a specific patch.
 
         Args:
             pkg_class: package object to get patches for
-            repository: repository containing the package
+            repository: repository or repository search path containing the patch owner;
+                dependency packages are resolved through the active search path when available
 
         Returns:
             The patch index for that package.
@@ -567,13 +569,19 @@ class PatchCache:
         if not pkg_class._patches_dependencies:
             return index
 
+        # Patch files belong to this repository; dependencies can be in other repositories.
+        import spack.repo
+
+        dependency_repository = repository
+        if isinstance(repository, spack.repo.Repo) and spack.repo.PATH is not None:
+            dependency_repository = spack.repo.PATH
         for deps_by_name in pkg_class.dependencies.values():
             for dependency in deps_by_name.values():
                 if not dependency.patches:
                     continue
                 for patch_list in dependency.patches.values():
                     for patch in patch_list:
-                        dspec_cls = repository.get_pkg_class(dependency.spec.name)
+                        dspec_cls = dependency_repository.get_pkg_class(dependency.spec.fullname)
                         patch_dict = patch.to_dict()
                         patch_dict.pop("sha256")  # save some space
                         index[patch.sha256] = {dspec_cls.fullname: patch_dict}
