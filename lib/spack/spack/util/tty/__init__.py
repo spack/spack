@@ -13,7 +13,7 @@ from datetime import datetime
 from types import TracebackType
 from typing import IO, Callable, Iterator, NoReturn, Optional, Type, Union
 
-from .color import cescape, clen, cprint, cwrite
+from .color import cescape, clen, colorize, cprint, cwrite
 from .color import clear_isatty_cache as clear_isatty_cache
 
 # Globals
@@ -281,6 +281,23 @@ def get_yes_or_no(prompt: str, default: Optional[bool] = None) -> Optional[bool]
             elif ans == "n" or ans == "no":
                 result = False
     return result
+
+
+#: Shortest rule drawn by :func:`band`
+_MIN_BAND_DASHES = 6
+
+
+def band(label: str, width: int, *, indent: int = 2) -> str:
+    """Render a section-header rule: an indented ``--``, the label, then dashes filling the width.
+
+    The label is expected to be colorized already, so its printable length is what sizes the
+    dashes:
+    ``indent + 2 dashes + 1 space + label + 1 space + dashes == width``. A label too wide for the
+    width still gets a short rule, which overflows the width.
+    """
+    header = f"{' ' * indent}{colorize('@*{--}')} {label}"
+    dashes = "-" * max(_MIN_BAND_DASHES, width - indent - 4 - clen(label))
+    return f"{header} {colorize(f'@#{{{dashes}}}')}"
 
 
 def hline(label: Optional[str] = None, *, char: str = "-", max_width: int = 64) -> None:

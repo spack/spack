@@ -66,18 +66,15 @@ def _process_result(result, show, required_format, kwargs):
         maxlen = max(len(s.name) for s in result.criteria)
         color.cprint("@*{  Priority  Value  Criterion}")
 
-        # Width of a data row past its 2-space indent, matching the row format below:
-        # 8-wide priority + 2 gap + 5-wide value + 2 gap + maxlen-wide criterion name.
-        divider_width = 8 + 2 + 5 + 2 + maxlen
+        # A data row is "  {i:8}  {value:>5}  {name:<maxlen}", so 2 + 8 + 2 + 5 + 2 + maxlen wide
+        divider_width = 2 + 8 + 2 + 5 + 2 + maxlen
         prev_band = None
 
         for i, criterion in enumerate(result.criteria, 1):
             # Criteria are grouped into priority bands; print a header when the band changes.
             band = criterion.band
             if band != prev_band:
-                label = f"-- {band}"
-                dashes = "-" * max(0, divider_width - len(label) - 1)
-                color.cprint(f"  @*{{{label}}} @#{{{dashes}}}")
+                print(tty.band(color.colorize(f"@*{{{band}}}"), divider_width))
                 prev_band = band
 
             value = f"@#{{{criterion.value:>5}}}"
