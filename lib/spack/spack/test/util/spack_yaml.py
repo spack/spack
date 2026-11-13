@@ -4,6 +4,7 @@
 
 import re
 
+import spack.util.spack_yaml as syaml
 from spack.config import Configuration
 from spack.main import SpackCommand
 
@@ -95,3 +96,31 @@ def test_config_blame_defaults():
                 printed_line = printed_line.lower()
 
             assert val in printed_line, filename
+
+
+def test_trailing_colon_marks_override_keys_only():
+    """Keys ending in ':' are config overrides; values ending in ':' (e.g. target ranges) are
+    kept as is."""
+    data = syaml.load_config(
+        """\
+packages::
+  all:
+    require:
+    - spec: target=x86_64_v3
+      when: "target=x86_64:"
+    - "target=:aarch64"
+    - one_of: ["target=x86_64_v2:", "target=aarch64:"]
+  "^python@3:":
+    require: "@3.11:"
+"""
+    )
+    (key,) = data.keys()
+    assert key == "packages" and key.override
+    require = data["packages"]["all"]["require"]
+    assert require[0]["when"] == "target=x86_64:"
+    assert not getattr(require[0]["when"], "override", False)
+    assert require[1] == "target=:aarch64"
+    assert require[2]["one_of"] == ["target=x86_64_v2:", "target=aarch64:"]
+    # keys containing '@' are never overrides
+    assert "^python@3:" in data["packages"]
+    assert data["packages"]["^python@3:"]["require"] == "@3.11:"
