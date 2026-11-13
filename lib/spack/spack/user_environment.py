@@ -73,7 +73,8 @@ def project_env_mods(
     # Avoid empty regex if all external
     if not prefix_to_prefix:
         return
-    prefix_regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
+    prefixes = sorted(prefix_to_prefix, key=len, reverse=True)
+    prefix_regex = re.compile("|".join(re.escape(p) for p in prefixes))
     for mod in env.env_modifications:
         if isinstance(mod, environment.NameValueModifier):
             mod.value = prefix_regex.sub(lambda m: prefix_to_prefix[m.group(0)], mod.value)
