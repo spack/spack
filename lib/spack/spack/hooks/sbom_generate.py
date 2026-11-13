@@ -4,6 +4,7 @@
 """Generate a Software Bill of Materials (SBOM) for each Spack installation."""
 
 import os
+import re
 import time
 import urllib.parse
 
@@ -105,10 +106,17 @@ def get_download_location(spec):
     return None
 
 
+def spdx_package_id(spec):
+    """SPDX 2.3 (clause 7.2) allows only letters, numbers, "." and "-" after "SPDXRef-", but
+    Spack versions can contain other characters, such as "_" (rdkit@2023_03_1) or "=" (git
+    versions)."""
+    return "SPDXRef-PACKAGE-" + re.sub(r"[^A-Za-z0-9.\-]", "-", f"{spec.name}-{spec.version}")
+
+
 def make_spdx_2_3_package_entry(spec):
     pkg = getattr(spec, "package", None)
     return {
-        "SPDXID": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
+        "SPDXID": spdx_package_id(spec),
         "name": spec.name,
         "versionInfo": str(spec.version),
         "supplier": get_supplier(pkg) or "NOASSERTION",
@@ -162,7 +170,7 @@ def generate_spdx_2_3(spec):
         {
             "spdxElementId": "SPDXRef-DOCUMENT",
             "relationshipType": "DESCRIBES",
-            "relatedSpdxElement": f"SPDXRef-PACKAGE-{spec.name}-{spec.version}",
+            "relatedSpdxElement": spdx_package_id(spec),
         }
     ]
 
@@ -172,7 +180,7 @@ def generate_spdx_2_3(spec):
 
         relationships.append(
             {
-                "spdxElementId": f"SPDXRef-PACKAGE-{spec.name}-{str(spec.version)}",
+                "spdxElementId": spdx_package_id(spec),
                 "relationshipType": "CONTAINS",
                 "relatedSpdxElement": dep_entry["SPDXID"],
             }
