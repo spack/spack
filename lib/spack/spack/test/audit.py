@@ -144,3 +144,13 @@ def test_audit_reports_patch_fixes_naming_no_deprecation_label(package, expected
     """
     errors = spack.audit.run_check("PKG-DIRECTIVES", pkgs=[package])
     assert [e.summary for e in errors] == expected
+
+
+def test_depend_on_provider(mock_packages, monkeypatch):
+    """Ensure packages depend on virtual instead of provider"""
+    monkeypatch.setattr(spack.audit, "VIRTUALS", {"mpi"})
+    errors = spack.audit.run_check("PKG-DIRECTIVES", pkgs=["direct-mpich"])
+    errors = [e for e in errors if "dependency on provider" in e.summary]
+    assert len(errors) == 1 and "'mpich'" in errors[0].summary
+    assert "depend on 'mpi' instead of 'mpich'" in errors[0].details
+    assert "if 'mpich' is needed, require '%mpi=mpich'" in errors[0].details
