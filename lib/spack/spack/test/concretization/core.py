@@ -2954,6 +2954,16 @@ packages:
             assert "Cannot use commit variant with" in e.value.message
 
 
+    def test_when_versions_solver(self):
+        """Tests that concretize a package that uses when= returns the highest version which
+        matches the test platform
+        """
+        spec = check_concretize("when-versions")
+        assert spec.satisfies("@2.5.5")
+        with pytest.raises(spack.error.UnsatisfiableSpecError):
+            spack.concretize.concretize_one("when-versions@1.0")
+
+
 @pytest.fixture()
 def duplicates_test_repository():
     repository_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "duplicates_test")

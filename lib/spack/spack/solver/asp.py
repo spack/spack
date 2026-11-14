@@ -1244,6 +1244,10 @@ class SpackSolverSetup:
                 commit = pkg.version_or_package_attr("commit", v, "")
                 self.git_commit_versions[pkg.name][v] = commit
 
+        for v in self.possible_versions[pkg.name]:
+            for when, _ in pkg.version_definitions(v):
+                self.when_version(pkg, v, when)
+
     def conflict_rules(self, pkg):
         for when_spec, conflict_specs in pkg.conflicts.items():
             when_spec_msg = f"conflict constraint {when_spec}"
@@ -1371,6 +1375,23 @@ class SpackSolverSetup:
             for (spec_str, _), (effect_id, requirements) in self._effect_cache[name].items():
                 self.gen.effect_facts(name, effect_id, spec_str, requirements)
         self._effect_cache.clear()
+
+    def when_version(
+            self,
+            pkg: Type[spack.package_base.PackageBase],
+            version,
+            when: spack.spec.Spec,
+    ):
+        pkg_fact = lambda f: self.gen.pkg_fact(pkg.name, f)
+
+        if when == EMPTY_SPEC:
+            # version is always allowed
+            pkg_fact(fn.version_definition(version))
+        else:
+            # version is only allowed if when condition is met
+            msg = f"Package {pkg.name} version '{version}' when {when}"
+            cond_id = self.condition(when, required_name=pkg.name, msg=msg)
+            pkg_fact(fn.version_condition(version, cond_id))
 
     def define_variant(
         self,
