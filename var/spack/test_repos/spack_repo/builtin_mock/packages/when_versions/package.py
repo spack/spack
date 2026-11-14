@@ -12,6 +12,8 @@ class WhenVersions(Package):
 
     homepage = "http://www.example.com"
 
+    version("3.0", url="http://www.example.com/cray", when="platform=cray")
+    version("2.5.5", url="http://www.example.com/test", when="platform=test")
     version("1.0", url="http://www.example.com/linux", when="platform=linux")
     version("1.0", url="http://www.example.com/darwin", when="platform=darwin")
     # Test backwards compatability
