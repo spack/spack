@@ -199,3 +199,53 @@ def test_detector_reads_the_recipe_from_the_repo_it_is_given(
 
     with pytest.raises(spack.repo.UnknownEntityError):
         detector._compile_dummy_c_source()
+
+
+@pytest.mark.usefixtures("mock_packages")
+class TestFileCompilerCache:
+    @pytest.mark.parametrize("recreate_cache", [False, True])
+    def test_failed_compiler_output_is_retried(
+        self, mock_gcc, monkeypatch, tmp_path, recreate_cache
+    ):
+        file_cache = spack.util.file_cache.FileCache(tmp_path)
+        cache = spack.compilers.libraries.FileCompilerCache(file_cache)
+
+        outputs = iter([None, "successful compiler output"])
+
+        def compiler_output(compiler, *, repo):
+            return {"c_compiler_output": next(outputs)}
+
+        monkeypatch.setattr(cache, "value", compiler_output)
+
+        first = cache.get(mock_gcc, repo=spack.repo.PATH)
+        if recreate_cache:
+            cache = spack.compilers.libraries.FileCompilerCache(file_cache)
+            monkeypatch.setattr(cache, "value", compiler_output)
+        second = cache.get(mock_gcc, repo=spack.repo.PATH)
+        third = cache.get(mock_gcc, repo=spack.repo.PATH)
+
+        assert first.c_compiler_output is None
+        assert second.c_compiler_output == "successful compiler output"
+        assert third.c_compiler_output == "successful compiler output"
+
+    def test_failed_compiler_probe_is_retried(self, mock_gcc, monkeypatch, tmp_path):
+        cache = spack.compilers.libraries.FileCompilerCache(
+            spack.util.file_cache.FileCache(tmp_path)
+        )
+        detector = spack.compilers.libraries.CompilerPropertyDetector(
+            mock_gcc, repo=spack.repo.PATH, cache=cache
+        )
+        calls = []
+
+        def compiler_output(exe, *args, **kwargs):
+            calls.append(exe)
+            if len(calls) == 1:
+                raise spack.util.executable.ProcessError("compiler unavailable")
+            return without_flag_output
+
+        monkeypatch.setattr(spack.util.executable.Executable, "__call__", compiler_output)
+
+        assert detector.compiler_verbose_output() is None
+        assert detector.compiler_verbose_output() == without_flag_output
+        assert detector.compiler_verbose_output() == without_flag_output
+        assert len(calls) == 2
