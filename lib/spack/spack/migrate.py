@@ -2084,6 +2084,13 @@ def migrate_spack_prefix(old_resources):
         parts.append("No Spack-internal resources were migrated")
 
     if retained_resources:
+        parts.append(
+            "Spack was unable to migrate the following resource(s). If retaining them in the old "
+            "locations is not acceptable, migrate them manually."
+        )
+        parts.append(
+            "Run `spack -d migrate use-new-layout` to see details on why they were retained."
+        )
         parts.append("  - Retained: " + ", ".join(retained_resources) + ".")
 
     if migrated_resources:
