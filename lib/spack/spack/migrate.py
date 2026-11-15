@@ -1286,9 +1286,11 @@ def migration_lock():
     except spack.util.lock.LockPermissionError:
         # Read-only prefix
         tty.die(
-            "The spack prefix is not writable. "
-            "Writing to the Spack prefix is required to migrate Spack data locations."
-            " Contact an admin of the Spack instance to run the spack migration."
+            f"The spack prefix {spack.paths.prefix} is not writable. When upgrading Spack to v1.3 "
+            "or later, write access to the Spack prefix is necessary to migrate or decline data "
+            "migration from the Spack prefix to the home directory\n\n"
+            "To use this Spack instance, contact an admin of this instance "
+            f"to run the migration."
         )
     except spack.util.lock.LockTimeoutError as e:
         # Some other migration process is taking too long, bail vs. hang
