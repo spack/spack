@@ -60,7 +60,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         pip-install: >-
-          pytest pytest-xdist pytest-cov "coverage<=7.11.0" "mypy>=0.900" ruff
+          pytest pytest-xdist pytest-cov coverage<=7.11.0 mypy>=0.900 ruff
     - name: Run unit tests
       env:
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
