@@ -295,7 +295,7 @@ def test_installed_from_binary_cache_message_sets_package_attr(temporary_store, 
     the parent process."""
     spec = _make_concrete("trivial-install-test-package")
     launcher = ScriptedLauncher(
-        {spec.name: Script(raw_state=b'{"installed_from_binary_cache":true}\n')}
+        {spec.name: Script(raw_state=b'{"installed_from_binary_cache":"mirror"}\n')}
     )
     _install(launcher, spec)
 
