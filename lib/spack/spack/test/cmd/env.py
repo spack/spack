@@ -72,6 +72,7 @@ concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
+spec = SpackCommand("spec")
 develop = SpackCommand("develop")
 module = SpackCommand("module")
 
@@ -787,6 +788,20 @@ def test_env_install_false_marks_blocked_dependencies(environment_from_manifest,
     assert {"mpileaks", "callpath", "dyninst", "mpich"} <= not_installable
     # libelf is a root that gets installed, and the others depend on it
     assert "libelf" not in not_installable
+
+
+def test_env_install_false_status_spec(environment_from_manifest, mock_packages):
+    """spack spec -I shows specs that are not installed because of install: false as [x]"""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        output = spec("-I")
+
+    marked = [line for line in output.splitlines() if line.startswith("[x]")]
+    # roots that are marked or blocked, and dependencies only they need
+    for name in ("mpileaks", "callpath", "dyninst", "mpich"):
+        assert any(f"{name}@" in line for line in marked)
+    # libelf is a root that gets installed, and the others depend on it
+    assert not any("libelf@" in line for line in marked)
 
 
 def test_install_cmd_does_not_install_marked_root_by_name(
