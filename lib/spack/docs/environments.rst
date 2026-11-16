@@ -983,7 +983,7 @@ Roots that are not installed because of ``install: false`` are also left out of 
 This is true even if the root is already installed.
 
 Specs that will not be installed because of ``install: false`` are shown with a yellow ``[x]`` in place of the usual status in the output of ``spack spec -I``, ``spack find -I`` and ``spack concretize``.
-This covers the marked roots, the roots that depend on them, and the dependencies that no installed root needs.
+This covers the marked roots, the roots that depend on them, and any dependency needed only by those roots.
 A spec that is already installed keeps its usual status.
 
 .. index::
