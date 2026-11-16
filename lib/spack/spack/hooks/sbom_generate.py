@@ -130,8 +130,8 @@ def generate_external_refs(spec):
     type = "spack"
 
     # E.4.3 Rules for namespace
-    # Use the 'builtin' namespace or the one provided by the user
-    namespace = "builtin"
+    # Abstract specs may not have a namespace
+    namespace = ""
     if spec.namespace:
         x = spec.namespace.lstrip("/").rstrip("/").encode("utf-8")
         namespace = urllib.parse.quote(x)
