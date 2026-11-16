@@ -61,8 +61,10 @@ def test_user_input_combination(config, target_str, os_str):
     the operating system match.
     """
     spec = Spec(f"libelf os={os_str} target={target_str}")
-    assert spec.architecture.os == str(TEST_PLATFORM.operating_system(os_str))
-    assert spec.architecture.target == TEST_PLATFORM.target(target_str)
+    expected_os = TEST_PLATFORM.default_os if os_str == "default_os" else os_str
+    expected_target = TEST_PLATFORM.default if target_str == "default_target" else target_str
+    assert spec.architecture.os == str(TEST_PLATFORM.operating_system(expected_os))
+    assert spec.architecture.target == TEST_PLATFORM.target(expected_target)
 
 
 def test_default_os_and_target(config, mock_packages):

@@ -13,6 +13,7 @@ import spack.cmd
 import spack.config
 import spack.environment as ev
 import spack.installer_dispatch
+import spack.modules
 import spack.paths
 import spack.spec
 import spack.store
@@ -365,7 +366,9 @@ def _maybe_add_and_concretize(args, env, specs):
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
             spack.binary_distribution.load_buildcache_index()
-            status_fn = spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+            status_fn = ev.install_status_fn(
+                env, spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+            )
             ev.display_specs([concrete for _, concrete in concretized_specs], status_fn=status_fn)
 
         # save view regeneration for later, so that we only do it
@@ -384,7 +387,8 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter)
 
     # Now we're doing `spack install --only-concrete`.
     if args.add or not specs:
-        specs_to_install = env.concrete_roots()
+        env.warn_skipped_roots()
+        specs_to_install = env.installable_roots()
         if not specs_to_install:
             tty.msg(f"{env.name} environment has no specs to install")
             return
@@ -408,9 +412,15 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter)
 
     try:
         report_file = report_filename(args, specs_to_install)
-        install_kwargs["report_file"] = report_file
-        install_kwargs["reporter"] = reporter
-        env.install_specs(specs_to_install, **install_kwargs)
+        installer = env.create_installer(
+            specs_to_install, create_reports=reporter is not None, **install_kwargs
+        )
+        try:
+            installer.install()
+        finally:
+            spack.modules.write_module_files(installer.recorded_specs)
+            if reporter:
+                reporter.build_report(report_file, list(installer.reports.values()))
     finally:
         if env.views:
             with env.write_transaction():
@@ -447,12 +457,13 @@ def install_without_active_env(args, install_kwargs, reporter):
     installs = [s.package for s in concrete_specs]
     install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
 
+    installer = spack.installer_dispatch.create_installer(
+        installs, create_reports=reporter is not None, **install_kwargs
+    )
     try:
-        builder = spack.installer_dispatch.create_installer(
-            installs, create_reports=reporter is not None, **install_kwargs
-        )
-        builder.install()
+        installer.install()
     finally:
+        spack.modules.write_module_files(installer.recorded_specs)
         if reporter:
             report_file = report_filename(args, concrete_specs)
-            reporter.build_report(report_file, list(builder.reports.values()))
+            reporter.build_report(report_file, list(installer.reports.values()))

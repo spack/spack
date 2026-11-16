@@ -307,7 +307,7 @@ def _format_pruning_message(spec: spack.spec.Spec, prune: bool, reasons: List[st
         return f"  {status}{spec.cformat(spec_fmt)} ({reason_msg})"
 
     msg = f"{spec.format(spec_fmt)} ({reason_msg})"
-    return colorize(f"  @K -   {cescape(msg)}@.")
+    return colorize(f"  @# -   {cescape(msg)}@.")
 
 
 def prune_pipeline(
@@ -520,7 +520,10 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     rebuild_everything = not options.prune_up_to_date and not options.prune_untouched
 
     # Build a pipeline from the specs in the concrete environment
-    pipeline = PipelineDag([env.specs_by_hash[x.hash] for x in env.concretized_roots])
+    installable = {s.dag_hash() for s in env.installable_roots()}
+    pipeline = PipelineDag(
+        [env.specs_by_hash[x.hash] for x in env.concretized_roots if x.hash in installable]
+    )
 
     # Optionally add various pruning filters
     pruning_filters = []

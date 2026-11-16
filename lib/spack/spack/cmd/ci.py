@@ -749,11 +749,15 @@ def validate_standard_versions(
         else:
             url_dict[version] = url
 
-    version_hashes = spack.stage.get_checksums_for_versions(
+    result = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, fetch_options=pkg.fetch_options, config=cfg.CONFIG
     )
 
-    for version, sha in version_hashes.items():
+    for version, error in result.failures.items():
+        tty.error(f"Could not fetch {pkg.name}@{version}: {error}")
+        valid_checksums = False
+
+    for version, sha in result.hashes.items():
         if sha != pkg.versions[version]["sha256"]:
             tty.error(
                 f"Invalid checksum found {pkg.name}@{version}\n"

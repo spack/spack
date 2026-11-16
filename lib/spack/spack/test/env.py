@@ -645,11 +645,9 @@ spack:
   - {spec_str}
 """
     )
-    s = spack.spec.Spec(spec_str)
-    spack_yaml = EnvironmentManifestFile(tmp_path)
-    # Doing a round trip str -> Spec -> str normalizes the representation
-    spack_yaml.remove_user_spec(str(s))
-    spack_yaml.flush()
+    env = ev.Environment(tmp_path)
+    env.remove(spec_str)
+    env.write()
 
     assert spec_str not in manifest.read_text()
 

@@ -57,6 +57,7 @@ import spack.mirrors.mirror
 import spack.oci.image
 import spack.oci.oci
 import spack.oci.opener
+import spack.package_prefs
 import spack.paths
 import spack.platforms
 import spack.spec
@@ -89,7 +90,6 @@ from spack.oci.oci import (
     upload_blob_with_retry,
     upload_manifest_with_retry,
 )
-from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.relocate_text import utf8_paths_to_single_binary_regex
 from spack.stage import stage_from_config
 from spack.util import file_cache, timer, tty
@@ -2347,12 +2347,9 @@ def extract_tarball(spec, tarball_stage: spack.stage.Stage, force=False, timer=t
             raise NoOverwriteException(str(spec.prefix))
 
     # Create the install prefix
-    fsys.mkdirp(
-        spec.prefix,
-        mode=get_package_dir_permissions(spec),
-        group=get_package_group(spec),
-        default_perms="parents",
-    )
+    perms = spack.package_prefs.package_permissions(spack.config.CONFIG, spec.name)
+    spack.package_prefs.warn_if_sgid_on_afs(spec.prefix, perms.dir_mode)
+    fsys.mkdirp(spec.prefix, mode=perms.dir_mode, group=perms.group, default_perms="parents")
 
     tarfile_path = tarball_stage.save_filename
 
@@ -2427,7 +2424,7 @@ def install_root_node(
     force: bool = False,
     sha256: Optional[str] = None,
     allow_missing: bool = False,
-) -> None:
+) -> bool:
     """Install the root node of a concrete spec from a buildcache.
 
     Checking the sha256 sum of a node before installation is usually needed only
@@ -2440,14 +2437,17 @@ def install_root_node(
         force: force installation if the spec is already present in the local store
         sha256: optional sha256 of the binary package, to be checked before installation
         allow_missing: when true, allows installing a node with missing dependencies
+
+    Returns:
+        ``True`` if the node was installed, ``False`` if it was skipped
     """
     # Early termination
     if spec.external or not spec.concrete:
         warnings.warn("Skipping external or abstract spec {0}".format(spec.format()))
-        return
+        return False
     elif spack.store.STORE.db.installed(spec) and not force:
         warnings.warn("Package for spec {0} already installed.".format(spec.format()))
-        return
+        return False
 
     tarball_stage = download_tarball(spec.build_spec, unsigned)
     if not tarball_stage:
@@ -2468,19 +2468,7 @@ def install_root_node(
         spec.package.windows_establish_runtime_linkage()
         spack.hooks.post_install(spec, False)
         spack.store.STORE.db.add(spec, allow_missing=allow_missing)
-
-
-def install_single_spec(spec, unsigned=False, force=False):
-    """Install a single concrete spec from a buildcache.
-
-    Args:
-        spec (spack.spec.Spec): spec to be installed
-        unsigned (bool): if True allows installing unsigned binaries
-        force (bool): force installation if the spec is already present in the
-            local store
-    """
-    for node in spec.traverse(root=True, order="post", deptype=("link", "run")):
-        install_root_node(node, unsigned=unsigned, force=force)
+    return True
 
 
 def try_direct_fetch(spec: spack.spec.Spec) -> List[MirrorMetadata]:

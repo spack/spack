@@ -10,7 +10,7 @@ import sys
 import tempfile
 import warnings
 from pathlib import Path
-from typing import List, Optional, Set, Tuple, Union
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
 import spack.cmd
 import spack.cmd.common
@@ -921,6 +921,7 @@ def env_view(args):
         return
 
     if args.action == ViewAction.regenerate:
+        env.warn_skipped_roots()
         env.regenerate_views()
     elif args.action == ViewAction.enable:
         if args.view_path:
@@ -989,10 +990,12 @@ def env_loads(args):
 
     loads_file = fs.join_path(env.path, "loads")
     with open(loads_file, "w", encoding="utf-8") as f:
+        installable = env.installable_roots()
         if not recurse_dependencies:
-            specs = [env.specs_by_hash[x.hash] for x in env.concretized_roots]
+            hashes = {s.dag_hash() for s in installable}
+            specs = [env.specs_by_hash[x.hash] for x in env.concretized_roots if x.hash in hashes]
         else:
-            specs = list(traverse_nodes(env.concrete_roots(), deptype=("link", "run")))
+            specs = list(traverse_nodes(installable, deptype=("link", "run")))
         spack.cmd.modules.loads(module_type, specs, args, f)
 
     print("To load this environment, type:")
@@ -1194,7 +1197,7 @@ def env_depfile(args):
 
 
 #: Dictionary mapping subcommand names and aliases to functions
-subcommand_functions = {}
+subcommand_functions: Dict[str, Callable] = {}
 
 
 #

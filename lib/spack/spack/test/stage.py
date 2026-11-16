@@ -7,6 +7,7 @@
 import collections
 import errno
 import getpass
+import hashlib
 import os
 import pathlib
 import shutil
@@ -30,6 +31,7 @@ from spack.stage import (
     stage_from_config,
 )
 from spack.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
+from spack.version import StandardVersion
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -977,3 +979,34 @@ def test_override_keep_in_composite_stage(config):
     assert not stage_1.keep
     assert not stage_2.keep
     assert not stage_3.keep
+
+
+@pytest.mark.disable_clean_stage_check
+def test_get_checksums_for_versions_reports_failures(tmp_path: pathlib.Path, config):
+    """Tests that a version whose archive cannot be fetched is returned as a failure, and the other
+    versions are still checksummed.
+    """
+    archive = tmp_path / "pkg-1.0.tar.gz"
+    archive.write_bytes(b"pkg 1.0")
+    v1, v2 = StandardVersion.from_string("1.0"), StandardVersion.from_string("1.1")
+    url_by_version = {
+        v1: url_util.path_to_file_url(str(archive)),
+        v2: url_util.path_to_file_url(str(tmp_path / "pkg-1.1.tar.gz")),
+    }
+
+    result = spack.stage.get_checksums_for_versions(url_by_version, "pkg", config=config)
+
+    assert result.hashes == {v1: hashlib.sha256(b"pkg 1.0").hexdigest()}
+    assert list(result.failures) == [v2]
+
+
+@pytest.mark.disable_clean_stage_check
+def test_get_checksums_for_versions_all_fail(tmp_path: pathlib.Path, config):
+    """Tests that the function returns when no archive can be fetched."""
+    v1 = StandardVersion.from_string("1.0")
+    url_by_version = {v1: url_util.path_to_file_url(str(tmp_path / "pkg-1.0.tar.gz"))}
+
+    result = spack.stage.get_checksums_for_versions(url_by_version, "pkg", config=config)
+
+    assert result.hashes == {}
+    assert list(result.failures) == [v1]

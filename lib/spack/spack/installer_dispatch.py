@@ -53,11 +53,12 @@ def create_installer(
             "Remove the setting or use config:installer:new instead."
         )
 
-    if spack.config.CONFIG.get("config:sandbox:enable", False):
-        if use_old_installer:
-            raise spack.sandbox.SandboxError(
-                "config:sandbox:enable is only supported with config:installer:new"
-            )
+    enable_sandbox = spack.config.CONFIG.get("config:sandbox:enable", False)
+    if enable_sandbox and use_old_installer:
+        raise spack.sandbox.SandboxError(
+            "config:sandbox:enable is only supported with config:installer:new"
+        )
+    if enable_sandbox is True:
         # Probe sandbox support now so builds don't fail later inside a subprocess.
         spack.sandbox.get_sandbox()
 

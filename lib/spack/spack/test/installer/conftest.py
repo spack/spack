@@ -4,13 +4,11 @@
 """Shared fakes and helpers for the installer unit tests."""
 
 import json
-import signal
-import socket
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import spack.deptypes as dt
 import spack.spec
-from spack.installer.base import BuildChannels, ExitCode, JobServerBase, ProcessExitNotifier
+from spack.installer.base import BuildChannels, ExitCode, JobServerBase
 from spack.installer.build import BuildRequest, ChildInfo, create_build_channels
 from spack.installer.core import PackageInstaller, write_connection
 from spack.installer.ui import InstallerUI
@@ -70,6 +68,9 @@ class RecordingUI(InstallerUI):
     def on_finished(self, failures):
         self.events.append(("finished", tuple(failures)))
 
+    def on_stopping(self):
+        self.events.append(("stopping",))
+
 
 class DrivingUI(RecordingUI):
     """Records events and runs a callback on every event-loop tick, so tests can finish hanging
@@ -87,59 +88,63 @@ class DrivingUI(RecordingUI):
             self.on_tick()
 
 
+def send_message(conn, message: dict) -> None:
+    """Write a message to a state channel the way a build does."""
+    write_connection(conn, json.dumps(message).encode() + b"\n")
+
+
 class Script(NamedTuple):
     """The scripted result of a single launched build."""
 
-    exitcode: int = ExitCode.SUCCESS
+    #: None for a build that exits without reporting an exit code.
+    exitcode: Optional[int] = ExitCode.SUCCESS
     states: Tuple[str, ...] = ()
     output: bytes = b""
     #: Raw bytes written to the state channel verbatim, for protocol edge cases.
     raw_state: bytes = b""
     #: Keep the build running until the test calls finish() or the event loop terminates it.
     hang: bool = False
+    #: Keep the build running when the event loop terminates it, until it is killed.
+    ignore_terminate: bool = False
+    #: The build receives Ctrl-C in the terminal too, like builds on Windows.
+    receives_interrupt: bool = False
 
 
-class FakeBuild(ProcessExitNotifier):
+class FakeBuild:
     """A ``ProcessLike`` for builds that run in-process, without forking. It stays alive until
-    finish() or terminate() is called (immediately at launch for non-hanging scripts). Doubles as
-    its own exit notifier: a socketpair (selectable on Windows too, like the production
-    WindowsSentinelBridge) whose write end is closed when the build finishes."""
+    finish() or terminate() is called (immediately at launch for non-hanging scripts)."""
 
     #: There is no real process (group) to signal.
     pid: Optional[int] = None
 
-    def __init__(self, exitcode: int, channels: BuildChannels) -> None:
-        self._read, self._write = socket.socketpair()
-        self._exitcode = exitcode
-        self.exitcode: Optional[int] = None
+    def __init__(
+        self, exitcode: Optional[int], channels: BuildChannels, ignore_terminate: bool
+    ) -> None:
+        self.exitcode = exitcode
+        self.finished = False
         self.terminated = False
+        self.killed = False
+        self.ignore_terminate = ignore_terminate
         self.channels = channels
 
-    @property
-    def fileobj(self) -> socket.socket:
-        return self._read
-
-    def close(self) -> None:
-        # The event loop closes this object as notifier and as process; socket.close() is
-        # idempotent, so that is fine.
-        self._read.close()
-
     def finish(self) -> None:
-        if self.exitcode is None:
-            self.exitcode = self._exitcode
-            # EOF the state/output channels and make the exit notifier fire.
+        if not self.finished:
+            self.finished = True
+            # Report the exit code and EOF the channels, like a child that exited.
+            if self.exitcode is not None:
+                send_message(self.channels.state_w, {"exit": self.exitcode})
             self.channels.state_w.close()
             self.channels.output_w.close()
-            self._write.close()
 
     def terminate(self) -> None:
-        self.terminated, self._exitcode = True, -signal.SIGTERM
+        self.terminated = True
+        if not self.ignore_terminate:
+            self.exitcode = ExitCode.BUILD_ERROR
+            self.finish()
+
+    def kill(self) -> None:
+        self.killed, self.exitcode = True, ExitCode.BUILD_ERROR
         self.finish()
-
-    kill = terminate
-
-    def is_alive(self) -> bool:
-        return self.exitcode is None
 
     def join(self, timeout: Optional[float] = None) -> None:
         pass
@@ -165,18 +170,18 @@ class ScriptedLauncher:
         script = self.scripts[request.spec.name].pop(0)
         channels = create_build_channels()
         for state in script.states:
-            write_connection(channels.state_w, json.dumps({"state": state}).encode() + b"\n")
+            send_message(channels.state_w, {"state": state})
         if script.raw_state:
             write_connection(channels.state_w, script.raw_state)
         if script.output:
             write_connection(channels.output_w, script.output)
-        build = FakeBuild(script.exitcode, channels)
+        build = FakeBuild(script.exitcode, channels, script.ignore_terminate)
         self.builds.append(build)
         if script.hang:
             # The channels stay open until the test finishes the build.
             self.hanging.append(build)
         else:
-            # Finishing EOFs the channels and the exit notifier, like a child that exited.
+            # Finishing EOFs the channels, like a child that exited.
             build.finish()
         return ChildInfo(
             build,
@@ -184,8 +189,8 @@ class ScriptedLauncher:
             channels.output_r,
             channels.state_r,
             channels.control_w,
-            build,
             request.log_path,
+            script.receives_interrupt,
         )
 
 

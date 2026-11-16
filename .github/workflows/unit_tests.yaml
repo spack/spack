@@ -142,7 +142,8 @@ jobs:
           bin/spack python -c "from spack_repo.builtin.packages.mpileaks.package import Mpileaks"
     - name: Run unit tests
       run: |
-          python3 -m pytest --verbose -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
+          # No --verbose: with execnet 1.9 it can make xdist run tests outside the main thread
+          python3 -m pytest -x -n3 --dist loadfile -k 'not cvs and not svn and not hg'
   # Test the concretizer against clingo builds published on PyPI, rather than the binaries
   # we bootstrap. clingo v6 is still pre-release, so that variant is allowed to fail
   # without blocking the workflow.

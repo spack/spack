@@ -7,6 +7,8 @@ import spack.cmd.common.arguments
 import spack.cmd.modules
 import spack.config
 import spack.modules
+import spack.modules.common
+from spack.util import tty
 
 
 def add_command(parser, command_dict):
@@ -34,6 +36,17 @@ def setdefault(module_type, specs, args):
     spec = specs[0]
     data = {"modules": {args.module_set_name: {"tcl": {"defaults": [str(spec)]}}}}
     scope = spack.config.InternalConfigScope("tcl-setdefault", data)
-    with spack.config.CONFIG.override(scope):
-        writer = spack.modules.module_types["tcl"].from_spec(spec, args.module_set_name)
+    root = spack.modules.common.root_path("tcl", args.module_set_name)
+    override = spack.config.CONFIG.override(scope)
+    transaction = spack.modules.common.module_root_transaction(root)
+    with override, transaction as cache:
+        writer = spack.modules.module_types["tcl"].from_spec(
+            spec, args.module_set_name, cache=cache
+        )
+        # The default symlink points to the module file, which holds the other installations too
+        if writer.has_other_installations:
+            tty.die(
+                f"Cannot set {spec.cshort_spec} as default: its module file holds other "
+                "installations and 'module load' selects the first one it lists by default"
+            )
         writer.update_module_defaults()

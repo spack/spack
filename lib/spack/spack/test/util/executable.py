@@ -253,3 +253,33 @@ def test_exe_disallows_callable_as_output(mock_executable):
     hello = ex.Executable(path)
     with pytest.raises(ValueError):
         hello(output=lambda line: line)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="pass_fds is POSIX specific")
+def test_exe_passes_only_jobserver_fds():
+    r, w = os.pipe()
+    os.set_inheritable(r, True)
+    os.set_inheritable(w, True)
+    python = ex.Executable(sys.executable)
+    check = f"import os; os.fstat({r}); os.fstat({w})"
+    try:
+        python("-c", check, error=str, fail_on_error=False)
+        assert python.returncode != 0
+        python("-c", check, extra_env={"MAKEFLAGS": f" -j4 --jobserver-auth={r},{w}"})
+    finally:
+        os.close(r)
+        os.close(w)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="jobserver fds are POSIX specific")
+def test_jobserver_fds():
+    r, w = os.pipe()
+    try:
+        makeflags = f" -j4 --jobserver-auth={r},{w}"
+        assert ex.jobserver_fds(makeflags) == (r, w)
+        # gmake 4.4 disables the jobserver for recipes that are not recursive
+        makeflags += " --jobserver-auth=-2,-2"
+        assert ex.jobserver_fds(makeflags) == ()
+    finally:
+        os.close(r)
+        os.close(w)

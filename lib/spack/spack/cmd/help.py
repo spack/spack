@@ -21,7 +21,7 @@ spec_guide = """\
   package [constraints] [^dependency [constraints] ...]
 
   package                           any package from 'spack list', or
-  @K{/hash}                             unique prefix or full hash of
+  @#{/hash}                             unique prefix or full hash of
                                     installed package
 
   @*B{constraints:}
@@ -57,7 +57,7 @@ spec_guide = """\
 
     @*c{dependencies:}
       ^dependency [constraints]     specify constraints on dependencies
-      ^@K{/hash}                        build with a specific installed
+      ^@#{/hash}                        build with a specific installed
                                     dependency
 
   @*B{examples:}

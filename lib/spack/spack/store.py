@@ -184,13 +184,11 @@ class Store:
         bin_dir = os.path.dirname(sbang_path)
         os.makedirs(bin_dir, exist_ok=True)
 
-        all_spec = spack.spec.Spec("all")
-        group_name = spack.package_prefs.get_package_group(all_spec)
-        config_mode = spack.package_prefs.get_package_dir_permissions(all_spec)
-        gid = grp.getgrnam(group_name).gr_gid if group_name else -1
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, None)
+        gid = grp.getgrnam(perms.group).gr_gid if perms.group else -1
 
-        if group_name:
-            os.chmod(bin_dir, config_mode)
+        if perms.group:
+            os.chmod(bin_dir, perms.dir_mode)
             os.chown(bin_dir, -1, gid)
         else:
             fs.set_install_permissions(bin_dir)
@@ -199,8 +197,8 @@ class Store:
             spack.paths.sbang_script, "rb"
         ) as src:
             shutil.copyfileobj(src, dst)
-            os.fchmod(dst.fileno(), config_mode | 0o111)  # ensure executable
-            if group_name:
+            os.fchmod(dst.fileno(), perms.dir_mode | 0o111)  # ensure executable
+            if perms.group:
                 os.fchown(dst.fileno(), -1, gid)
 
     def __reduce__(self):

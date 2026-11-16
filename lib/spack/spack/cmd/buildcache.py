@@ -20,6 +20,7 @@ import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
 import spack.mirrors.mirror
+import spack.modules
 import spack.oci.image
 import spack.oci.oci
 import spack.spec
@@ -423,7 +424,7 @@ def _skip_no_redistribute_for_public(specs: List[Spec]) -> List[Spec]:
             removed_specs.append(spec)
     if removed_specs:
         colified_output = colify.colified([s.name for s in removed_specs], indent=4)
-        tty.debug(
+        tty.warn(
             "The following specs will not be added to the binary cache"
             " because they cannot be redistributed:\n"
             f"{colified_output}\n"
@@ -505,11 +506,17 @@ def push_fn(args):
                 f"Available groups are: {', '.join(sorted(available_groups))}"
             )
 
-        roots = [c for g in args.groups for _, c in env.concretized_specs_by(group=g)]
+        installable = {s.dag_hash() for s in env.installable_roots()}
+        roots = [
+            c
+            for g in args.groups
+            for _, c in env.concretized_specs_by(group=g)
+            if c.dag_hash() in installable
+        ]
     elif args.specs:
         roots = _matching_specs(spack.cmd.parse_specs(args.specs))
     else:
-        roots = spack.cmd.require_active_env(args.subparser).concrete_roots()
+        roots = spack.cmd.require_active_env(args.subparser).installable_roots()
 
     mirror = args.mirror
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
@@ -634,10 +641,16 @@ def install_fn(args):
     if matches:
         # Fail before extracting anything if the database cannot be modified.
         spack.store.STORE.db.ensure_latest_db_version()
-    for match in matches:
-        spack.binary_distribution.install_single_spec(
-            match, unsigned=args.unsigned, force=args.force
-        )
+    installed: List[Spec] = []
+    try:
+        for match in matches:
+            for node in match.traverse(root=True, order="post", deptype=("link", "run")):
+                if spack.binary_distribution.install_root_node(
+                    node, unsigned=args.unsigned, force=args.force
+                ):
+                    installed.append(node)
+    finally:
+        spack.modules.write_module_files(installed)
 
 
 def list_fn(args):

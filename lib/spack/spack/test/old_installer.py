@@ -20,7 +20,6 @@ import spack.error
 import spack.hooks
 import spack.old_installer as inst
 import spack.package_base
-import spack.package_prefs as prefs
 import spack.repo
 import spack.report
 import spack.spec
@@ -811,18 +810,17 @@ def test_cleanup_all_tasks(install_mockery, monkeypatch):
     assert len(installer.build_tasks) == 1
 
 
-def test_setup_install_dir_grp(temporary_store: Store, install_mockery, monkeypatch, capfd):
+def test_setup_install_dir_grp(
+    temporary_store: Store, install_mockery, mutable_config, monkeypatch, capfd
+):
     """Test _setup_install_dir's group change."""
     mock_group = "mockgroup"
     mock_chgrp_msg = "Changing group for {0} to {1}"
 
-    def _get_group(spec):
-        return mock_group
-
     def _chgrp(path, group):
         tty.msg(mock_chgrp_msg.format(path, group))
 
-    monkeypatch.setattr(prefs, "get_package_group", _get_group)
+    mutable_config.set("packages:all:permissions:group", mock_group)
     monkeypatch.setattr(fs, "chgrp", _chgrp)
 
     build_task = create_build_task(

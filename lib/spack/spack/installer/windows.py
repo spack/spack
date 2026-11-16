@@ -21,8 +21,7 @@ import socket
 import threading
 import time
 from ctypes import wintypes
-from multiprocessing import Process
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
@@ -30,7 +29,6 @@ from spack.installer.base import (
     STDIN_EVENT,
     BaseTerminalState,
     BuildChannels,
-    ProcessExitNotifier,
     StdinReader,
     Tee,
 )
@@ -174,33 +172,6 @@ class WindowsTerminalState(BaseTerminalState):
                     pass
 
 
-class WindowsSentinelBridge(ProcessExitNotifier):
-    """Process-exit notifier for Windows: a thread joins the process and pokes a socket so the
-    selector wakes up (Windows process handles cannot be registered with the selector directly)."""
-
-    def __init__(self, proc: Process) -> None:
-        self.rsock, self.wsock = socket.socketpair()
-        self.rsock.setblocking(False)
-        self.proc = proc
-        self.thread = threading.Thread(target=self._wait, daemon=True)
-        self.thread.start()
-
-    def _wait(self) -> None:
-        self.proc.join()
-        try:
-            self.wsock.sendall(b"x")
-        except OSError:
-            pass
-        self.wsock.close()
-
-    @property
-    def fileobj(self) -> socket.socket:
-        return self.rsock
-
-    def close(self) -> None:
-        self.rsock.close()
-
-
 def create_build_channels() -> BuildChannels:
     """Create the channel pairs of a build. The state and output read ends are non-blocking so
     the selector-based loop never blocks. The worker's tee thread is stopped by closing the
@@ -211,6 +182,15 @@ def create_build_channels() -> BuildChannels:
     output_r.setblocking(False)
     state_r.setblocking(False)
     return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, None)
+
+
+def create_wakeup_channel() -> Tuple[socket.socket, socket.socket]:
+    """Create a non-blocking socket pair: the read end is for the selector, the write end is for
+    :func:`signal.set_wakeup_fd`."""
+    r, w = socket.socketpair()
+    r.setblocking(False)
+    w.setblocking(False)
+    return r, w
 
 
 class WindowsTee(Tee):

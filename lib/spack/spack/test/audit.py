@@ -71,7 +71,21 @@ def test_package_audits(packages, expected_errors, mock_packages):
                 }
             },
             "CFG-PACKAGES",
-        )
+        ),
+        # A template set for some of the installations folded in a tcl module file
+        (
+            "modules",
+            {
+                "default": {
+                    "tcl": {
+                        "variants": "all",
+                        "hash_length": 0,
+                        "mpileaks +debug": {"template": "override_from_modules.txt"},
+                    }
+                }
+            },
+            "CFG-MODULES",
+        ),
     ],
 )
 def test_config_audits(
@@ -80,6 +94,22 @@ def test_config_audits(
     with mutable_config.override(config_section, data):
         reports = spack.audit.run_group("configs")
         assert any((check == failing_check) and errors for check, errors in reports)
+
+
+@pytest.mark.parametrize(
+    "tcl_data",
+    [
+        # A template set for a package or a package version applies to the whole module file
+        {"variants": "all", "hash_length": 0, "mpileaks": {"template": "override.txt"}},
+        {"variants": "all", "hash_length": 0, "mpileaks@2.3": {"template": "override.txt"}},
+        {"variants": "all", "hash_length": 0, "all": {"template": "override.txt"}},
+        # Installations are not folded when variants are not defined in module files
+        {"mpileaks +debug": {"template": "override.txt"}},
+    ],
+)
+def test_modules_audit_accepts_templates(mutable_config: Configuration, tcl_data, mock_packages):
+    with mutable_config.override("modules", {"default": {"tcl": tcl_data}}):
+        assert not spack.audit.run_check("CFG-MODULES")
 
 
 def test_when_combined_with_phase_callbacks(mock_packages):
