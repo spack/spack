@@ -5675,3 +5675,17 @@ def test_remove_reports_only_the_specs_it_removed(tmp_path: pathlib.Path):
 
         output = remove("mpileaks")
         assert "mpileaks has been removed" in output
+
+
+def test_create_from_template_with_env_relative_include(tmp_path: pathlib.Path):
+    """Tests that 'spack env create -d' from a spack.yaml that includes '$env/defs.yaml' copies
+    the included file, and that the new environment reads its definitions.
+    """
+    template = tmp_path / "template"
+    template.mkdir()
+    (template / "spack.yaml").write_text("spack: {include: [$env/defs.yaml], specs: [$base]}")
+    (template / "defs.yaml").write_text("definitions: [{base: [libelf]}]")
+
+    env("create", "-d", str(tmp_path / "new"), str(template / "spack.yaml"))
+
+    assert ev.Environment(tmp_path / "new").user_specs.specs == [Spec("libelf")]

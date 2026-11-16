@@ -3501,18 +3501,18 @@ def initialize_environment_dir(
 
     # TODO: make this recursive
     includes = manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
-    paths = spack.config.paths_from_includes(includes)
+    env_dir = pathlib.Path(os.path.abspath(environment_dir))
+    paths = spack.config.paths_from_includes(includes, env_path=str(env_dir))
     for path in paths:
-        if os.path.isabs(path):
+        abspath = pathlib.Path(os.path.normpath(env_dir / path))
+        try:
+            relative_path = abspath.relative_to(env_dir)
+        except ValueError:
+            tty.debug(f"Will not copy include file from outside environment: {path}")
             continue
 
-        abspath = pathlib.Path(os.path.normpath(environment_dir / path))
-        common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
-        if common_path != environment_dir:
-            tty.debug(f"Will not copy relative include file from outside environment: {path}")
-            continue
-
-        orig_abspath = os.path.normpath(envfile.parent / path)
+        # The include is copied from the same location relative to the template
+        orig_abspath = os.path.normpath(envfile.parent / relative_path)
         if os.path.isfile(orig_abspath):
             fs.touchp(abspath)
             shutil.copy(orig_abspath, abspath)

@@ -1658,18 +1658,21 @@ def included_path(
     return GitIncludePaths(entry, env_path=env_path)
 
 
-def paths_from_includes(includes: List[Union[str, dict]]) -> List[str]:
+def paths_from_includes(
+    includes: List[Union[str, dict]], *, env_path: Optional[str] = None
+) -> List[str]:
     """The path(s) from the configured includes.
 
     Args:
         includes: include configuration information
+        env_path: path used for "$env", or None for the path of the active environment
 
     Returns: list of path or an empty list if there are none
     """
 
     paths = []
     for entry in includes:
-        include = included_path(entry)
+        include = included_path(entry, env_path=env_path)
         paths.extend(include.paths)
     return paths
 
