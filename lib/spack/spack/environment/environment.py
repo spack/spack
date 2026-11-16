@@ -476,6 +476,11 @@ def create_in_dir(
                 _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=copied)
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
 
+    # Reading an environment loads the specs of the included environments only in memory
+    if env.included_concrete_env_root_dirs and not os.path.exists(env.lock_path):
+        with env:
+            env.write()
+
     return env
 
 
@@ -1552,7 +1557,9 @@ class Environment:
         return self.manifest.scope_name
 
     def include_concrete_envs(self):
-        """Copy and save the included environments' specs internally."""
+        """Loads the concrete specs of the included environments into memory, without writing
+        this environment to disk.
+        """
 
         root_hash_seen = set()
         concrete_hash_seen = set()
@@ -1586,7 +1593,6 @@ class Environment:
                 self.included_concrete_spec_data[env_path][lockfile_include_key] = transitive
 
         self.unify_specs()
-        self.write()
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
