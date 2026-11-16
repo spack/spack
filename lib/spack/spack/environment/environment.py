@@ -1208,10 +1208,6 @@ class Environment:
         self.specs_by_hash: Dict[str, Spec] = {}
         #: Repository for this environment (memoized)
         self._repo = None
-        #: Last result of _install_false_dependencies, with the (root hashes, marked hashes) key
-        self._blockers_cache: Optional[
-            Tuple[Tuple[FrozenSet[str], FrozenSet[str]], Dict[str, List[str]]]
-        ] = None
 
         #: Environment root dirs for concrete (lockfile) included environments
         self.included_concrete_env_root_dirs: List[str] = []
@@ -2268,7 +2264,7 @@ class Environment:
         else:
             installable_specs = []
             candidates = [s for s in specs if s.dag_hash() not in status.marked]
-            all_blockers = self._install_false_dependencies(candidates, status.marked)
+            all_blockers = _install_false_dependencies(candidates, status.marked)
             for spec in specs:
                 if spec.dag_hash() in status.marked:
                     tty.warn(_marked_message(status.marked[spec.dag_hash()]))
@@ -2383,16 +2379,6 @@ class Environment:
             if (x.group, x.root) in marked
         ]
 
-    def _install_false_dependencies(
-        self, specs: Sequence[Spec], marked: Iterable[str]
-    ) -> Dict[str, List[str]]:
-        """Memoized :func:`_install_false_dependencies`. Concrete specs are identified by their
-        hash, so the key needs no invalidation when roots are added, changed or removed."""
-        key = (frozenset(s.dag_hash() for s in specs), frozenset(marked))
-        if self._blockers_cache is None or self._blockers_cache[0] != key:
-            self._blockers_cache = (key, _install_false_dependencies(specs, key[1]))
-        return self._blockers_cache[1]
-
     def _root_status(self) -> _RootStatus:
         marked_roots = self._marked_roots()
         marked_keys = {(x.group, x.root) for x, _ in marked_roots}
@@ -2419,7 +2405,7 @@ class Environment:
             return _RootStatus(marked, unmarked, unmarked, [])
 
         installable, blocked = [], []
-        all_blockers = self._install_false_dependencies(unmarked, marked)
+        all_blockers = _install_false_dependencies(unmarked, marked)
         for spec in unmarked:
             blockers = all_blockers.get(spec.dag_hash())
             if blockers:
