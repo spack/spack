@@ -5689,3 +5689,38 @@ def test_create_from_template_with_env_relative_include(tmp_path: pathlib.Path):
     env("create", "-d", str(tmp_path / "new"), str(template / "spack.yaml"))
 
     assert ev.Environment(tmp_path / "new").user_specs.specs == [Spec("libelf")]
+
+
+def test_create_with_keep_relative_from_template_including_a_lockfile(tmp_path: pathlib.Path):
+    """Tests that 'spack env create --keep-relative' from a spack.yaml that includes the lockfile
+    of another environment writes the included specs to the lockfile of the new environment.
+    """
+    included = tmp_path / "included"
+    env("create", "-d", str(included))
+    with ev.Environment(included):
+        add("libelf")
+        concretize()
+    template = tmp_path / "template"
+    template.mkdir()
+    (template / "spack.yaml").write_text(f"spack: {{include: [{included}/spack.lock], specs: []}}")
+
+    env("create", "--keep-relative", "-d", str(tmp_path / "new"), str(template / "spack.yaml"))
+
+    lockfile = json.loads((tmp_path / "new" / "spack.lock").read_text())
+    assert str(included) in lockfile[ev.lockfile_include_key]
+
+
+def test_create_with_keep_relative_and_include_concrete(tmp_path: pathlib.Path):
+    """Tests that 'spack env create --keep-relative --include-concrete' includes the given
+    environment in the new one.
+    """
+    included = tmp_path / "included"
+    env("create", "-d", str(included))
+    with ev.Environment(included):
+        add("libelf")
+        concretize()
+
+    new = tmp_path / "new"
+    env("create", "-d", str(new), "--keep-relative", "--include-concrete", str(included))
+
+    assert ev.Environment(new).included_concrete_env_root_dirs == [str(included)]

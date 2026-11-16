@@ -431,9 +431,6 @@ def create_in_dir(
         init_file = read(str(init_file)).path
     initialize_environment_dir(root, envfile=init_file)
 
-    if with_view is None and keep_relative:
-        return Environment(root)
-
     try:
         manifest = EnvironmentManifestFile(root)
 
