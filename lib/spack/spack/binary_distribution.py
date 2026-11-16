@@ -140,6 +140,13 @@ class BuildCacheDatabase(spack.database.Database):
             )
         return self._handle_current_version_read(check, db)
 
+    def mark_in_buildcache(self, *spec_like, cache: bool = True):
+        self.mark(*spec_like, key="in_buildcache", value=cache)
+
+    @spack.database._autospec
+    def in_buildcache(self, spec) -> bool:
+        return getattr(self._data[spec.dag_hash()], "in_buildcache", False)
+
 
 class FetchCacheError(Exception):
     """Error thrown when fetching the cache failed, usually a composite error list."""
@@ -273,6 +280,51 @@ class BinaryIndexCache:
                 )
                 self._specs_already_associated.add(cached_index_hash)
 
+    def db(
+        self, tmpdir: Optional[str] = None, mirror_metadata: Optional[MirrorMetadata] = None
+    ) -> BuildCacheDatabase:
+        if mirror_metadata is not None:
+            # If no tmpdir passed, just load the database directly
+            if not tmpdir:
+                cache_entry = self._local_index_cache[str(mirror_metadata)]
+                cached_index_path = cache_entry["index_path"]
+                return BuildCacheDatabase(cached_index_path)
+
+            mirrors = [mirror_metadata]
+        else:
+            mirrors = [MirrorMetadata.from_string(m) for m in self._local_index_cache]
+
+        # Create a unified database with all of the listed mirrors
+        db = BuildCacheDatabase(tmpdir or os.path.join(self._index_cache_root, "combined"))
+        for mirror_metadata in mirrors:
+            with tempfile.TemporaryDirectory(
+                dir=spack.stage.stage_root(spack.config.CONFIG)
+            ) as cache_tmpdir:
+                cache_entry = self._local_index_cache[mirror_metadata]
+                cached_index_path = cache_entry["index_path"]
+
+                cache_db = BuildCacheDatabase(cache_tmpdir)
+                with self._index_file_cache.read_transaction(cached_index_path) as f:
+                    if f is not None:
+                        try:
+                            cache_db._read_from_stream(f)
+                        except spack.database.InvalidDatabaseVersionError as e:
+                            tty.warn(
+                                "you need a newer Spack version to read the buildcache index for "
+                                f"the following v{mirror_metadata.version} mirror: "
+                                f"'{mirror_metadata.url}'. {e.database_version_message}"
+                            )
+                            return
+                    else:
+                        warnings.warn("Stale index in cache, consider running `spack clean -m`")
+
+            # Add all of the buildcache specs to the database
+            cache_specs = cache_db.query_local("*")
+            db.add(*cache_specs)
+            db.mark_in_buildcache(*cache_specs)
+
+        return db
+
     def _associate_built_specs_with_mirror(self, cache_key, mirror_metadata: MirrorMetadata):
         with tempfile.TemporaryDirectory(
             dir=spack.stage.stage_root(spack.config.CONFIG)
@@ -297,7 +349,7 @@ class BinaryIndexCache:
                 s
                 for s in db.query_local(installed=InstallRecordStatus.ANY)
                 # todo, make it easier to get install records associated with specs
-                if s.external or db._data[s.dag_hash()].in_buildcache
+                if s.external or db.in_buildcache(s)
             ]
 
             for spec in spec_list:
@@ -818,7 +870,7 @@ def _read_specs(
         # If it is already in the database, mark it and continue
         record = db.query_local_by_spec_hash(spec_hash)
         if record:
-            db.mark(record.spec, "in_buildcache", True)
+            db.mark_in_buildcache(record.spec)
             continue
 
         spec = read_method(file)
@@ -828,7 +880,7 @@ def _read_specs(
             continue
 
         db.add(spec)
-        db.mark(spec, "in_buildcache", True)
+        db.mark_in_buildcache(spec)
 
 
 def _lazy_read_spec(
@@ -1828,7 +1880,7 @@ def _oci_update_index(
         for spec_dict in spec_dicts:
             spec = spack.spec.Spec.from_dict(spec_dict)
             db.add(spec)
-            db.mark(spec, "in_buildcache", True)
+            db.mark_in_buildcache(spec)
 
     with timer.measure("push"):
         # Create the index.json file
