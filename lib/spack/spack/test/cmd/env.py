@@ -5710,3 +5710,30 @@ def test_remove_reports_only_the_specs_it_removed(tmp_path: pathlib.Path):
 
         output = remove("mpileaks")
         assert "mpileaks has been removed" in output
+
+
+@pytest.mark.parametrize(
+    "contents",
+    [
+        # Invalid under the schema
+        "spack:\n  specs: [libelf]\n  view: 3\n",
+        # Invalid YAML
+        "spack:\n  specs: [libelf\n",
+    ],
+)
+def test_create_in_existing_directory_from_invalid_manifest(tmp_path: pathlib.Path, contents):
+    """Tests that a failed 'spack env create -d .' in a directory with other files removes only
+    the files it added.
+    """
+    template = tmp_path / "template"
+    template.mkdir()
+    (template / ev.manifest_name).write_text(contents)
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    (project / "README.md").write_text("notes")
+
+    with fs.working_dir(str(project)):
+        with pytest.raises(spack.error.SpackError):
+            env("create", "-d", ".", str(template / ev.manifest_name))
+
+    assert sorted(os.listdir(project)) == ["README.md", "src"]

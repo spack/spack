@@ -416,6 +416,7 @@ def create_in_dir(
     # If the initfile is a named environment, get its path
     if init_file and exists(str(init_file)):
         init_file = read(str(init_file)).path
+    preexisting = set(os.listdir(root)) if os.path.isdir(root) else None
     initialize_environment_dir(root, envfile=init_file)
 
     if with_view is None and keep_relative:
@@ -439,7 +440,7 @@ def create_in_dir(
         manifest.flush()
 
     except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
-        shutil.rmtree(root)
+        _remove_new_entries(root, preexisting)
         raise e
 
     env = Environment(root)
@@ -464,6 +465,24 @@ def create_in_dir(
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
 
     return env
+
+
+def _remove_new_entries(
+    directory: Union[str, pathlib.Path], preexisting: Optional[Set[str]]
+) -> None:
+    """Removes ``directory`` if ``preexisting`` is None, otherwise only its entries whose names
+    are not in ``preexisting``.
+    """
+    if preexisting is None:
+        shutil.rmtree(directory)
+        return
+
+    for name in set(os.listdir(directory)) - preexisting:
+        path = os.path.join(directory, name)
+        if os.path.isdir(path) and not os.path.islink(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
 
 
 def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):
