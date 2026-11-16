@@ -1670,8 +1670,13 @@ def get_repo_yaml_dir(
     # if namespace has dots those translate to subdirs of further namespace packages.
     namespace_components = namespace.split(".")
 
-    if not all(nm.valid_module_name(n, package_api=package_api) for n in namespace_components):
-        raise InvalidNamespaceError(f"'{namespace}' is not a valid namespace.")
+    for component in namespace_components:
+        if not nm.valid_module_name(component, package_api=package_api):
+            raise InvalidNamespaceError(
+                f"'{namespace}' is not a valid namespace: each component must be a "
+                "valid Python module name (lowercase letters, digits and underscores, "
+                "not starting with a digit)."
+            )
 
     return os.path.join(root, "spack_repo", *namespace_components), namespace
 
