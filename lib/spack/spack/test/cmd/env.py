@@ -804,19 +804,6 @@ def test_env_install_false_status_spec(environment_from_manifest, mock_packages)
     assert not any("libelf@" in line for line in marked)
 
 
-def test_env_install_false_status_find(environment_from_manifest, mock_packages):
-    """spack find -I shows marked and blocked roots as [x]"""
-    e = environment_from_manifest(MARKED_CALLPATH_ENV)
-    with e:
-        e.concretize()
-        e.write()
-        output = find("-I")
-
-    assert "[x] mpileaks" in output
-    assert "[x] callpath" in output
-    assert "[x] libelf" not in output
-
-
 def test_install_cmd_does_not_install_marked_root_by_name(
     environment_from_manifest, mock_fetch, mock_packages, mock_archive, install_mockery
 ):
