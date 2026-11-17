@@ -235,14 +235,14 @@ def test_adding_anonymous_specs_to_env_fails(tmp_path: pathlib.Path):
     """Tests that trying to add an anonymous spec to the 'specs' section of an environment
     raises an exception
     """
-    env = ev.create_in_dir(tmp_path)
+    env = ev.create_in_dir(tmp_path / "env")
     with pytest.raises(ev.SpackEnvironmentError, match="cannot add anonymous"):
         env.add("%gcc")
 
 
 def test_removing_from_non_existing_list_fails(tmp_path: pathlib.Path):
     """Tests that trying to remove a spec from a non-existing definition fails."""
-    env = ev.create_in_dir(tmp_path)
+    env = ev.create_in_dir(tmp_path / "env")
     with pytest.raises(ev.SpackEnvironmentError, match="'bar' does not exist"):
         env.remove("%gcc", list_name="bar")
 
@@ -261,7 +261,7 @@ def test_removing_from_non_existing_list_fails(tmp_path: pathlib.Path):
 )
 def test_update_default_view(init_view, update_value, tmp_path: pathlib.Path, config):
     """Tests updating the default view with different values."""
-    env = ev.create_in_dir(tmp_path, with_view=init_view)
+    env = ev.create_in_dir(tmp_path / "env", with_view=init_view)
     env.update_default_view(update_value)
     env.write(regenerate=True)
     if not isinstance(update_value, bool):
@@ -350,11 +350,11 @@ def test_cannot_initialize_if_init_file_does_not_exist(tmp_path: pathlib.Path):
     """Tests that initializing an environment passing a non-existing init file raises an error."""
     init_file = tmp_path / ev.manifest_name
     with pytest.raises(ev.SpackEnvironmentError, match="cannot initialize"):
-        ev.create_in_dir(tmp_path, init_file=init_file)
+        ev.create_in_dir(tmp_path / "env", init_file=init_file)
 
 
 def test_environment_pickle(tmp_path: pathlib.Path):
-    env1 = ev.create_in_dir(tmp_path)
+    env1 = ev.create_in_dir(tmp_path / "env")
     obj = pickle.dumps(env1)
     env2 = pickle.loads(obj)
     assert isinstance(env2, ev.Environment)
@@ -889,7 +889,7 @@ def test_env_view_on_empty_dir_is_fine(tmp_path: pathlib.Path, config, temporary
     """Tests that creating a view pointing to an empty dir is not an error."""
     view_dir = tmp_path / "view"
     view_dir.mkdir()
-    env = ev.create_in_dir(tmp_path, with_view="view")
+    env = ev.create_in_dir(tmp_path / "env", with_view=str(view_dir))
     env.add("mpileaks")
     env.concretize()
     env.install_all(fake=True)
@@ -916,8 +916,9 @@ def test_view_projection_path_is_final_after_regenerate(
 
     monkeypatch.setattr(spack.package_base.PackageBase, "add_files_to_view", add_files_to_view)
 
-    view_dir = tmp_path / "view"
-    env = ev.create_in_dir(tmp_path, with_view="view")
+    env_dir = tmp_path / "env"
+    view_dir = env_dir / "view"
+    env = ev.create_in_dir(env_dir, with_view="view")
     env.add("mpileaks")
     env.concretize()
     env.install_all(fake=True)
@@ -929,8 +930,8 @@ def test_view_projection_path_is_final_after_regenerate(
         assert marker.read_text() == str(view_dir)
 
     # No staging/backup siblings should be left behind after a successful regeneration.
-    assert not list(tmp_path.glob("view.new.*"))
-    assert not list(tmp_path.glob("view.old.*"))
+    assert not list(env_dir.glob("view.new.*"))
+    assert not list(env_dir.glob("view.old.*"))
 
 
 @pytest.mark.parametrize("as_file", [False, True], ids=["non_empty_dir", "plain_file"])
@@ -944,7 +945,7 @@ def test_env_view_on_non_empty_dir_errors(
     else:
         view_dir.mkdir()
         (view_dir / "file").write_text("")
-    env = ev.create_in_dir(tmp_path, with_view="view")
+    env = ev.create_in_dir(tmp_path / "env", with_view=str(view_dir))
     env.add("mpileaks")
     env.concretize()
     env.install_all(fake=True)
@@ -985,7 +986,7 @@ spack:
 def test_only_roots_are_explicitly_installed(tmp_path: pathlib.Path, config, temporary_store):
     """When installing specific non-root specs from an environment, we continue to mark them
     as implicitly installed. What makes installs explicit is that they are root of the env."""
-    env = ev.create_in_dir(tmp_path)
+    env = ev.create_in_dir(tmp_path / "env")
     env.add("mpileaks")
     env.concretize()
     mpileaks = env.concrete_roots()[0]
@@ -2264,7 +2265,7 @@ def test_environment_pickle_preserves_lock_state(
 ):
     """Tests that an environment round-trips through pickle with its lock-enable state intact."""
     with mutable_config.override("config:locks", enable_locks):
-        env = ev.create_in_dir(tmp_path)
+        env = ev.create_in_dir(tmp_path / "env")
     original_enabled = env.txlock.enabled
 
     blob = pickle.dumps(env)

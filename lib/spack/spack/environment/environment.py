@@ -383,6 +383,11 @@ def create(
         include_concrete: concrete environment names/paths to be included
     """
     environment_dir = environment_dir_from_name(name, exists_ok=False)
+    if is_orphaned(name) and os.listdir(environment_dir):
+        raise SpackEnvironmentError(
+            f"cannot create environment '{name}', '{environment_dir}' holds leftovers of a "
+            f"removed environment. Run 'spack env remove {name}' first"
+        )
     return create_in_dir(
         environment_dir,
         init_file=init_file,
@@ -405,7 +410,7 @@ def create_in_dir(
     are considered manifest files.
 
     Args:
-        root: directory where to create the environment.
+        root: directory where to create the environment. It must not exist or be empty.
         init_file: either a lockfile, a manifest file, an env directory, or None
         with_view: whether a view should be maintained for the environment. If the value is a
             string, it specifies the path to the view
@@ -413,10 +418,15 @@ def create_in_dir(
             otherwise they are made absolute
         include_concrete: concrete environment names/paths to be included
     """
+    root_existed = os.path.lexists(root)
+    if root_existed and (not os.path.isdir(root) or os.listdir(root)):
+        raise SpackEnvironmentError(
+            f"cannot initialize environment, '{root}' exists and is not an empty directory"
+        )
+
     # If the initfile is a named environment, get its path
     if init_file and exists(str(init_file)):
         init_file = read(str(init_file)).path
-    preexisting = set(os.listdir(root)) if os.path.isdir(root) else None
     initialize_environment_dir(root, envfile=init_file)
 
     if with_view is None and keep_relative:
@@ -440,7 +450,10 @@ def create_in_dir(
         manifest.flush()
 
     except (spack.config.ConfigFormatError, SpackEnvironmentConfigError) as e:
-        _remove_new_entries(root, preexisting)
+        if root_existed:
+            fs.remove_directory_contents(root)
+        else:
+            shutil.rmtree(root)
         raise e
 
     env = Environment(root)
@@ -465,24 +478,6 @@ def create_in_dir(
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
 
     return env
-
-
-def _remove_new_entries(
-    directory: Union[str, pathlib.Path], preexisting: Optional[Set[str]]
-) -> None:
-    """Removes ``directory`` if ``preexisting`` is None, otherwise only its entries whose names
-    are not in ``preexisting``.
-    """
-    if preexisting is None:
-        shutil.rmtree(directory)
-        return
-
-    for name in set(os.listdir(directory)) - preexisting:
-        path = os.path.join(directory, name)
-        if os.path.isdir(path) and not os.path.islink(path):
-            shutil.rmtree(path)
-        else:
-            os.remove(path)
 
 
 def _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=False):
@@ -579,16 +574,14 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
     if not exists_ok:
         # environments are leaves in the managed environment directory: refuse to
         # create one inside an existing environment
-        ancestor = os.path.dirname(name)
-        while ancestor:
-            if exists(ancestor):
-                raise SpackEnvironmentError(
-                    f"cannot create environment '{name}' inside existing environment '{ancestor}'"
-                )
-            ancestor = os.path.dirname(ancestor)
+        enclosing = _enclosing_environment(name)
+        if enclosing is not None:
+            raise SpackEnvironmentError(
+                f"cannot create environment '{name}' inside existing environment '{enclosing}'"
+            )
 
         # also disallow creating an env above an existing one
-        nested = next((n for n in all_environment_names() if n.startswith(name + os.sep)), None)
+        nested = _nested_environment(name)
         if nested is not None:
             raise SpackEnvironmentError(
                 f"cannot create environment '{name}': "
@@ -596,6 +589,34 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
             )
 
     return root(name)
+
+
+def _enclosing_environment(env_name: str) -> Optional[str]:
+    ancestor = os.path.dirname(env_name)
+    while ancestor:
+        if exists(ancestor):
+            return ancestor
+        ancestor = os.path.dirname(ancestor)
+    return None
+
+
+def _nested_environment(env_name: str) -> Optional[str]:
+    return next((n for n in all_environment_names() if n.startswith(env_name + os.sep)), None)
+
+
+def is_orphaned(env_name: str) -> bool:
+    """Whether ``env_name``, the name of a managed environment such as ``"grp/inner"``, points to
+    a leftover directory.
+
+    A leftover directory is a directory in the environments root, not a symlink, without a
+    ``spack.yaml``, that neither is inside an environment nor contains one.
+    """
+    if not valid_env_name(env_name) or exists(env_name):
+        return False
+    path = _root(env_name)
+    if not os.path.isdir(path) or os.path.islink(path):
+        return False
+    return _enclosing_environment(env_name) is None and _nested_environment(env_name) is None
 
 
 def ensure_env_root_path_exists():

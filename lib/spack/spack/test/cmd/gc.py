@@ -156,13 +156,14 @@ def test_gc_except_specific_dir_env(
 
     assert mutable_database.query_local("zmpi")
 
-    e = ev.create_in_dir(str(tmp_path))
+    env_dir = tmp_path / "env"
+    e = ev.create_in_dir(str(env_dir))
     with e:
         add("simple-inheritance")
         install()
         assert mutable_database.query_local("simple-inheritance")
 
-    output = gc("-ye", str(tmp_path))
+    output = gc("-ye", str(env_dir))
     assert "Restricting garbage collection" not in output
     assert "Successfully uninstalled zmpi" in output
     assert not mutable_database.query_local("zmpi")
