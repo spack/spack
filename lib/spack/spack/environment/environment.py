@@ -2392,6 +2392,8 @@ class Environment:
             for included_env in self.included_concretized_roots
             for _, concrete in self.concretized_specs_from_included_environment(included_env)
         )
+        # dedupe by hash, user spellings for the same concrete spec can differ between envs
+        unmarked = list({s.dag_hash(): s for s in unmarked}.values())
 
         unmarked_hashes = {s.dag_hash() for s in unmarked}
         marked = {

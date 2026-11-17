@@ -874,7 +874,10 @@ def env_loads(args):
             hashes = {s.dag_hash() for s in installable}
             specs = [env.specs_by_hash[x.hash] for x in env.concretized_roots if x.hash in hashes]
         else:
-            specs = list(traverse_nodes(installable, deptype=("link", "run")))
+            # key by hash: nodes shared with an included environment are distinct objects
+            specs = list(
+                traverse_nodes(installable, deptype=("link", "run"), key=lambda s: s.dag_hash())
+            )
         spack.cmd.modules.loads(module_type, specs, args, f)
 
     print("To load this environment, type:")
