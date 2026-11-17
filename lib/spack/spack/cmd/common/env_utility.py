@@ -138,11 +138,13 @@ def emulate_env_utility(cmd_name, context: Context, args):
     if cmd:
         # Execute the command with the new environment
         if sys.platform == "win32":
-            # execvp handles Windows paths with spaces poorly by joining the
-            # string with spaces and does not quote
-            # subprocess does not do this
-            # execvp looks up the command on the path
-            # subprocess needs the path to the command
+            # execvp handles Windows paths with spaces poorly by joining strings by space
+            # without adding any quoting, leaving windows args with spaces interpreted
+            # as multiple arguments.
+            # subprocess does not do this, it leaves the arguments as specfied by the caller.
+
+            # execvp looks up the command on the path while subprocess needs the path to the
+            # command specified explicitly
             exe = which_string(cmd[0])
             if not exe:
                 tty.die(f"{cmd[0]}: command not found")
