@@ -626,7 +626,17 @@ If the semantic of requirements is too strong, you can also express "strong pref
        - "+shared"
 
 The ``prefer`` and ``conflict`` sections can be used whenever a ``require`` section is allowed.
-The argument is always a list of constraints, and each constraint can be either a simple string, or a more complex object:
+The argument is either a single spec string, or a list of constraints.
+Lists from different configuration scopes are merged, while a single string replaces the value from lower priority scopes:
+
+.. code-block:: yaml
+
+   packages:
+     c:
+       prefer: gcc@15
+
+In a ``prefer`` list, every item is a separate preference, and each one that is missed adds a penalty.
+Items can be spec strings, or objects with more attributes:
 
 .. code-block:: yaml
 

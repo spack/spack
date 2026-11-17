@@ -82,6 +82,43 @@ def _check_unknown_targets(
     warnings.warn(msg)
 
 
+def _warn_on_incompatible_preferences(
+    virtual_name: str, preferences_from_yaml: List[Any], rules: List["RequirementRule"]
+) -> None:
+    """Warns if no provider can satisfy all the unconditional preferences on a virtual."""
+    raw_strs: List[str] = []
+    # Combination of the preferences before the first one that conflicts with them
+    joint: Optional[spack.spec.Spec] = None
+    compatible = True
+    for raw, rule in zip(preferences_from_yaml, rules):
+        constraint = rule.requirements[0]
+        # Not warning for conditional rules with a when= statement
+        if rule.condition != spack.spec.EMPTY_SPEC or not constraint.name:
+            continue
+        raw_strs.append(raw if isinstance(raw, str) else raw["spec"])
+        if joint is None:
+            joint = constraint.copy()
+        elif compatible:
+            candidate = joint.copy()
+            try:
+                candidate.constrain(constraint)
+                joint = candidate
+            except spack.error.UnsatisfiableSpecError:
+                compatible = False
+
+    if compatible:
+        return
+
+    details = "\n".join(f"    {_mark_str(raw_str)}{raw_str}" for raw_str in raw_strs)
+    warnings.warn(
+        f"no provider of '{virtual_name}' can satisfy all of its preferences:\n{details}\n"
+        f"Every package that misses a preference is penalized, so Spack may change other "
+        f"providers, versions or variants to reduce the penalty, and concretization can be "
+        f"very slow.\nUse a string instead of a list to prefer only one spec, and override "
+        f"lower priority scopes: 'prefer: {joint}'"
+    )
+
+
 class RequirementKind(enum.Enum):
     """Purpose / provenance of a requirement"""
 
@@ -231,7 +268,9 @@ class RequirementParser:
         result = self._rules_from_requirements(virtual_str, requests, kind=kind)
 
         kind, requests = self._raw_yaml_data(virtual_str, section="prefer", virtual=True)
-        result.extend(self._rules_from_preferences(virtual_str, preferences=requests, kind=kind))
+        preferences = self._rules_from_preferences(virtual_str, preferences=requests, kind=kind)
+        _warn_on_incompatible_preferences(virtual_str, requests, preferences)
+        result.extend(preferences)
 
         kind, requests = self._raw_yaml_data(virtual_str, section="conflict", virtual=True)
         result.extend(self._rules_from_conflicts(virtual_str, conflicts=requests, kind=kind))
@@ -293,14 +332,15 @@ class RequirementParser:
     def _raw_yaml_data(self, pkg_name: str, *, section: str, virtual: bool = False):
         config = self.config.get_config("packages")
         data = config.get(pkg_name, {}).get(section, [])
-        kind = RequirementKind.PACKAGE
+        kind = RequirementKind.VIRTUAL if virtual else RequirementKind.PACKAGE
 
-        if virtual:
-            return RequirementKind.VIRTUAL, data
-
-        if not data:
+        if not data and not virtual:
             data = config.get("all", {}).get(section, [])
             kind = RequirementKind.DEFAULT
+
+        # A single string is a list with one item
+        if isinstance(data, str):
+            data = [data]
         return kind, data
 
     def _rules_from_requirements(
@@ -427,7 +467,7 @@ class RequirementParser:
                 # Maybe %mpich or so? Just give a generic suggestion.
                 keys = ("<virtual>",)
                 comment = "# For each virtual:\n"
-            data = {"packages": {k: {section: [str(edge.spec)]} for k in keys}}
+            data = {"packages": {k: {section: str(edge.spec)} for k in keys}}
             suggestion = spack.util.spack_yaml.dump(data).rstrip()
             suggestions.append(f"{comment}{suggestion}")
         if suggestions:

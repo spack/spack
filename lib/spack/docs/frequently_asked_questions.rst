@@ -98,14 +98,14 @@ The following example prefers GCC 15 for all languages ``c``, ``cxx``, and ``for
 
    packages:
      c:
-       prefer:
-       - gcc@15
+       prefer: gcc@15
      cxx:
-       prefer:
-       - gcc@15
+       prefer: gcc@15
      fortran:
-       prefer:
-       - gcc@15
+       prefer: gcc@15
+
+The preference is a single string, so it replaces the preferences from lower priority configuration scopes, such as the default preference for ``apple-clang`` on macOS.
+A list would be merged with them instead, and preferences for different compilers on the same language cannot all be satisfied: Spack then penalizes every package it compiles, which can change other parts of the DAG and make concretization very slow.
 
 You can also replace ``prefer:`` with ``require:`` if you want Spack to produce an error if the preferred compiler cannot be used.
 See also :ref:`the previous FAQ entry <faq-concretizer-precedence>`.

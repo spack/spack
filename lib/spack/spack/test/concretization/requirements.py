@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import pathlib
+import warnings
 
 import pytest
 
@@ -1033,6 +1034,30 @@ def test_requiring_package_on_multiple_virtuals(concretize_scope, mock_packages)
             ["^[virtuals=mpi] mpich"],
             ["^[virtuals=mpi] zmpi"],
         ),
+        # Test a single string instead of a list, on a virtual and under all
+        (
+            """
+            packages:
+              all:
+                providers:
+                  mpi: [mpich]
+              mpi:
+                prefer: zmpi
+        """,
+            "mpileaks",
+            ["^[virtuals=mpi] zmpi"],
+            ["^[virtuals=mpi] mpich"],
+        ),
+        (
+            """
+            packages:
+              all:
+                prefer: "%clang"
+        """,
+            "multivalue-variant",
+            ["%[virtuals=c] llvm"],
+            ["%gcc"],
+        ),
         # Tests that strong preferences can be overridden by requirements
         (
             """
@@ -1107,6 +1132,15 @@ def test_strong_preferences_packages_yaml(
           mpi:
             conflict:
             - mpich
+    """,
+            "mpileaks ^[virtuals=mpi] mpich",
+        ),
+        # Test a single string instead of a list
+        (
+            """
+        packages:
+          mpi:
+            conflict: mpich
     """,
             "mpileaks ^[virtuals=mpi] mpich",
         ),
@@ -1680,3 +1714,77 @@ def test_compiler_in_all_from_internal_scope_warns(mock_packages):
 
     with pytest.warns(UserWarning, match="applies a dependency constraint to all packages"):
         parser._maybe_warn_compiler_in_all(require, "require")
+
+
+@pytest.mark.parametrize(
+    "lower,higher,expect_warning",
+    [
+        # The higher scope adds gcc to the llvm preference from the lower scope
+        ("prefer: [llvm]", "prefer: [gcc]", True),
+        # The higher scope replaces the list from the lower scope
+        ("prefer: [llvm]", "prefer:: [gcc]", False),
+        ("prefer: [llvm]", "prefer: gcc", False),
+        # Two versions of the same compiler that no single version satisfies
+        ("prefer: [gcc@9]", "prefer: [gcc@10]", True),
+        # Two version ranges that overlap
+        ("prefer: ['gcc@9:']", "prefer: ['gcc@:10']", False),
+        # Conditional preferences are not checked
+        ('prefer: [{spec: llvm, when: "target=x86_64:"}]', "prefer: [gcc]", False),
+    ],
+)
+def test_incompatible_preferences_across_scopes(
+    lower, higher, expect_warning, concretize_scope, mutable_config, mock_packages
+):
+    """Tests that a warning is emitted when no provider can satisfy all the merged preferences
+    on a virtual, as happens when a user prefers a compiler on top of a platform default.
+    """
+    update_packages_config(f"packages:\n  c:\n    {lower}\n")
+    higher_scope = spack.config.InternalConfigScope(
+        "higher", syaml.load_config(f"packages:\n  c:\n    {higher}\n")
+    )
+    with mutable_config.override(higher_scope), warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        spack.concretize.concretize_one("mpileaks")
+
+    messages = [str(w.message) for w in record]
+    has_warning = any(
+        "no provider of 'c' can satisfy all of its preferences" in m for m in messages
+    )
+    assert has_warning is expect_warning
+
+
+def test_single_string_preference_replaces_lower_scopes(
+    concretize_scope, mutable_config, mock_packages
+):
+    """Tests that a preference written as a single string replaces the list of preferences from
+    lower priority scopes, instead of being merged with it.
+    """
+    update_packages_config("packages:\n  c:\n    prefer: [gcc]\n")
+    higher_scope = spack.config.InternalConfigScope(
+        "higher", syaml.load_config("packages:\n  c:\n    prefer: llvm\n")
+    )
+    with mutable_config.override(higher_scope):
+        assert mutable_config.get("packages:c:prefer") == "llvm"
+        s = spack.concretize.concretize_one("mpileaks ^mpi=mpich2")
+
+    assert s.satisfies("%[virtuals=c] llvm")
+    assert not s.satisfies("%[virtuals=c] gcc")
+
+
+def test_incompatible_preferences_suggest_combined_string(
+    concretize_scope, mutable_config, mock_packages
+):
+    """Tests that the warning for incompatible preferences suggests a single string combining
+    the preferences before the first one that conflicts, so that none of them is dropped.
+    """
+    update_packages_config("packages:\n  c:\n    prefer: [llvm]\n")
+    higher_scope = spack.config.InternalConfigScope(
+        "higher", syaml.load_config("packages:\n  c:\n    prefer: ['gcc@9:', 'gcc@:10']\n")
+    )
+    with mutable_config.override(higher_scope), warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        spack.concretize.concretize_one("mpileaks")
+
+    messages = [str(w.message) for w in record if "no provider of 'c'" in str(w.message)]
+    assert len(messages) == 1
+    assert "'prefer: gcc@9:10'" in messages[0]
