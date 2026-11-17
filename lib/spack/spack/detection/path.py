@@ -15,6 +15,7 @@ import traceback
 import warnings
 from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
+import spack.config
 import spack.error
 import spack.operating_systems.windows_os as winOs
 import spack.repo
@@ -45,7 +46,11 @@ def common_windows_package_paths(pkg_cls=None) -> List[str]:
         return []
     paths = winOs.VisualStudioLayout.find_cmake_paths()
     paths.extend(winOs.VisualStudioLayout.find_ninja_paths())
-    paths.extend(winOs.find_win32_additional_install_paths())
+    paths.extend(
+        winOs.find_win32_additional_install_paths(
+            spack.config.CONFIG.get("config:additional_external_search_paths", default=[])
+        )
+    )
     paths.extend(winOs.WindowsKitExternalPaths.find_windows_kit_bin_paths())
     paths.extend(winOs.WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
     paths.extend(winOs.WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())

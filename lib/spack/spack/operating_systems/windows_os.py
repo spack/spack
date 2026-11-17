@@ -11,10 +11,11 @@ import platform
 import re
 import subprocess
 import sys
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from spack.vendor.archspec.cpu import host
 
+import spack.util.environment
 from spack.error import SpackError
 from spack.util import lang, tty
 from spack.util import windows_registry as winreg
@@ -510,13 +511,14 @@ class VisualStudioLayout:
         return versions
 
 
-def find_win32_additional_install_paths() -> List[str]:
+def find_win32_additional_install_paths(extra_search_paths: Iterable[str] = ()) -> List[str]:
     """Not all programs on Windows live on the PATH
     Return a list of other potential install locations.
-    """
-    import spack.config
-    import spack.util.environment
 
+    Args:
+        extra_search_paths: additional user-configured locations to search, typically
+            ``config:additional_external_search_paths``. They are searched before ``PATH``.
+    """
     drive_letter = _windows_drive()
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
@@ -533,9 +535,7 @@ def find_win32_additional_install_paths() -> List[str]:
     windows_search_ext.append("%s\\ProgramData\\chocolatey\\bin" % drive_letter)
     # Add search path for NuGet package manager default install location
     windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
-    windows_search_ext.extend(
-        spack.config.CONFIG.get("config:additional_external_search_paths", default=[])
-    )
+    windows_search_ext.extend(extra_search_paths)
     windows_search_ext.extend(spack.util.environment.get_path("PATH"))
     return windows_search_ext
 
