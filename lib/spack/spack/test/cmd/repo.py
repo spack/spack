@@ -231,6 +231,8 @@ def test_repo_migrate(tmp_path: pathlib.Path, config):
 
 def test_repo_migrate_relative_symlink(tmp_path: pathlib.Path, config):
     """Symlinks between files in the repo point to the relocated files after migration"""
+    if not spack.util.filesystem.can_symlink():
+        pytest.skip("Repos with symlinks cannot be migrated without symlink privileges")
     old_root, _ = spack.repo.create_repo(str(tmp_path), "org.repo", package_api=(1, 0))
     pkgs_path = pathlib.Path(spack.repo.from_path(old_root).packages_path)
     new_pkgs_path = pathlib.Path(old_root) / "spack_repo" / "org" / "repo" / "packages"
@@ -254,6 +256,8 @@ def test_repo_migrate_symlinks_without_symlink_support(
     tmp_path: pathlib.Path, config, monkeypatch
 ):
     """Repos with symlinks are not migrated if symlinks cannot be created, and are left as is"""
+    if not spack.util.filesystem.can_symlink():
+        pytest.skip("Test requires symlink privileges to create the repo")
     old_root, _ = spack.repo.create_repo(str(tmp_path), "org.repo", package_api=(1, 0))
     pkgs_path = pathlib.Path(spack.repo.from_path(old_root).packages_path)
     (pkgs_path / "7zip").mkdir(parents=True)
@@ -262,8 +266,6 @@ def test_repo_migrate_symlinks_without_symlink_support(
     (pkgs_path / "py-numpy" / "package.py").write_bytes(OLD_NUMPY)
     (pkgs_path / "7zip" / "fix.patch").write_bytes(b"patch contents")
     symlink(os.path.join("..", "7zip", "fix.patch"), str(pkgs_path / "py-numpy" / "fix.patch"))
-    if not os.path.islink(pkgs_path / "py-numpy" / "fix.patch"):
-        pytest.skip("Test requires symlink privileges to create the repo")
 
     monkeypatch.setattr(spack.util.filesystem, "can_symlink", lambda: False)
     err = io.StringIO()

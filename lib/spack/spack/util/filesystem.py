@@ -3027,7 +3027,7 @@ def _windows_symlink(
 
     # Create the symlink
     if not _windows_can_symlink():
-        _windows_create_link(abs_source_path, link_path)
+        _windows_create_symlink_fallback(abs_source_path, link_path)
     else:
         os.symlink(source_path, link_path, target_is_directory=os.path.isdir(abs_source_path))
 
@@ -3148,14 +3148,11 @@ def can_symlink() -> bool:
     return sys.platform != "win32" or _windows_can_symlink()
 
 
-def _windows_create_link(source: str, link: str):
-    """
-    Attempts to create a Hard Link or Junction as an alternative
-    to a symbolic link. This is called when symbolic links cannot
-    be created.
-    """
+def _windows_create_symlink_fallback(source: str, link: str):
+    """Creates the fallback for a symbolic link when the user cannot create symbolic links: a
+    junction if ``source`` is a directory, or a hard link if it is a file."""
     if sys.platform != "win32":
-        raise SymlinkError("windows_create_link method can't be used on non-Windows OS.")
+        raise SymlinkError("Symlink fallbacks can't be created on non-Windows OS.")
     elif os.path.isdir(source):
         _windows_create_junction(source=source, link=link)
     elif os.path.isfile(source):

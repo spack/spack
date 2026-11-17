@@ -212,16 +212,14 @@ def test_windows_create_hard_link(tmp_path: pathlib.Path):
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
-def test_windows_create_link_dir(tmp_path: pathlib.Path):
-    """Test the functionality of the windows_create_link method with a directory
-    which should result in making a junction.
-    """
+def test_windows_create_symlink_fallback_dir(tmp_path: pathlib.Path):
+    """The symlink fallback for a directory is a junction"""
     with fs.working_dir(str(tmp_path)):
         test_dir = str(tmp_path)
         real_dir = os.path.join(test_dir, "real")
         link_dir = os.path.join(test_dir, "link")
         os.mkdir(real_dir)
-        fs._windows_create_link(real_dir, link_dir)
+        fs._windows_create_symlink_fallback(real_dir, link_dir)
         # Verify that all expected conditions are met
         assert os.path.exists(link_dir)
         assert fs.islink(link_dir)
@@ -231,16 +229,13 @@ def test_windows_create_link_dir(tmp_path: pathlib.Path):
 
 
 @pytest.mark.only_windows("Test is for Windows specific behavior")
-def test_windows_create_link_file(tmp_path: pathlib.Path):
-    """Test the functionality of the windows_create_link method with a file
-    which should result in the creation of a hard link. It also tests the
-    functionality of the symlink islink infrastructure.
-    """
+def test_windows_create_symlink_fallback_file(tmp_path: pathlib.Path):
+    """The symlink fallback for a file is a hard link, which islink does not report as a link"""
     with fs.working_dir(str(tmp_path)):
         test_dir = str(tmp_path)
         fd, real_file = tempfile.mkstemp(prefix="real", suffix=".txt", dir=test_dir)
         link_file = str(tmp_path / "link.txt")
-        fs._windows_create_link(real_file, link_file)
+        fs._windows_create_symlink_fallback(real_file, link_file)
         # Verify that all expected conditions are met
         assert fs._windows_is_hardlink(link_file)
         assert not fs.islink(link_file)
@@ -295,8 +290,10 @@ def test_symlink_relative_source_is_relative_to_link(tmp_path: pathlib.Path, lin
 
 
 def test_symlink_to_existing_path_raises_file_exists_error(tmp_path: pathlib.Path, link_mode: str):
-    """Like os.symlink, symlink raises FileExistsError with EEXIST when the link path exists, since
-    callers written against os.symlink catch FileExistsError or check for EEXIST"""
+    """Check that fs.symlink has the same behavior as os.symlink when the link path already
+    exists (including on Windows when the hard link/junction fallback is used): it raises
+    FileExistsError with EEXIST, since callers written against os.symlink catch FileExistsError or
+    check for EEXIST"""
     target = tmp_path / "target"
     link = tmp_path / "link"
     target.touch()

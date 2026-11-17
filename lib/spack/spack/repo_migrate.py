@@ -145,7 +145,8 @@ def migrate_v1_to_v2(
     if symlink_to_ino and not fs.can_symlink():
         print(
             "Cannot upgrade from v1 to v2, because the repository contains symlinks and the "
-            "current user cannot create them (on Windows, enable Developer Mode)",
+            "current user cannot create them. On Windows, either enable Developer Mode, or "
+            "replace the symlinks in the repository with copies of the files they point to",
             file=err,
         )
         return False, None
