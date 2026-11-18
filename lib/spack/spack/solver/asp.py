@@ -2203,12 +2203,20 @@ class SpackSolverSetup:
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
             try:
-                archspec_name = self.context.repo.get(compiler).archspec_name()
+                compiler_pkg = self.context.repo.get(compiler)
+                archspec_name = compiler_pkg.archspec_name()
+                # Check if the compiler package provides an archspec version mapping
+                if hasattr(compiler_pkg, "archspec_version"):
+                    archspec_version_str = compiler_pkg.archspec_version()
+                    archspec_version = vn.Version(archspec_version_str)
+                else:
+                    archspec_version = compiler.version
             except spack.repo.UnknownEntityError:
                 # Reusable compilers may come from a repo that is no longer configured
                 archspec_name = compiler.name
+                archspec_version = compiler.version
             supported, unsupported = self._supported_targets(
-                archspec_name, compiler.version, candidate_targets
+                archspec_name, archspec_version, candidate_targets
             )
 
             for target in supported:
