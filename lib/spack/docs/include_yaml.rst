@@ -83,7 +83,7 @@ If you want to control the :ref:`name of the configuration scope <named-config-s
 
 For example, suppose we only want to include the ``config.yaml`` and ``packages.yaml`` files from the `spack/spack-configs <https://github.com/spack/spack-configs>`_ repository's ``USC/config`` directory when using the ``centos7`` operating system.
 And we want the configuration scope name to start ``common``.
-We could then configure the include in, for example, the user scope include file (i.e., ``$HOME/.spack/include.yaml`` by default), as follows::
+We could then configure the include in, for example, the user scope include file (i.e., ``$HOME/.config/spack/include.yaml`` by default), as follows::
 
    include:
    - name: common
@@ -98,7 +98,7 @@ We could then configure the include in, for example, the user scope include file
 
    The git URL could be specified through an environment variable (e.g., ``$MY_USC_CONFIG_URL``).
 
-If the condition is satisfied, then the ``main`` branch of the repository will be cloned -- under ``$HOME/.spack/includes`` -- when configuration scopes are initially created.
+If the condition is satisfied, then the ``main`` branch of the repository will be cloned -- under ``$HOME/.config/spack/includes`` -- when configuration scopes are initially created.
 Once cloned, the settings for the two files under the ``USC/config`` directory will be integrated into Spack's configuration.
 In this example, the new scopes and their paths can be seen by running::
 
@@ -106,9 +106,9 @@ In this example, the new scopes and their paths can be seen by running::
    Scope               Path
    command_line
    spack                           /Users/username/spack/etc/spack/
-   user                            /Users/username/.spack/
-   common:USC/config/config.yaml   /Users/username/.spack/includes/common/USC/config/config.yaml
-   common:USC/config/packages.yaml /Users/username/.spack/includes/common/USC/config/packages.yaml
+   user                            /Users/username/.config/spack/
+   common:USC/config/config.yaml   /Users/username/.config/spack/includes/common/USC/config/config.yaml
+   common:USC/config/packages.yaml /Users/username/.config/spack/includes/common/USC/config/packages.yaml
    site                            /Users/username/spack/etc/spack/site/
    system                          /etc/spack/
    defaults                        /Users/username/spack/etc/spack/defaults/
@@ -138,7 +138,9 @@ If you want one file to take precedence over another, you can put the include wi
    - /path/to/higher/precedence/scope/
    - /path/to/middle/precedence/scope/
    - git: https://github.com/org/git-repo-scope
-     commit: 95c59784bd02ea248bf905d79d063df38e087b19
+     commit: "95c59784bd02ea248bf905d79d063df38e087b19"
+     paths:
+     - .
 
 ``prefer_modify``
 ^^^^^^^^^^^^^^^^^
@@ -177,12 +179,32 @@ Optionally, you can enable a local path to be overridden by an environment varia
 Here, If ``SPECIAL_CONFIG_PATH`` is set, its value will be used as the path.
 If not, Spack will instead use the ``path:`` specified in configuration.
 
+``path_override_env_var:`` can also be a list, tried in order.
+An entry is either the name of an environment variable, used if it is set to a non-empty value, or a string containing ``$VARIABLE`` references, used if every variable in it is set.
+This is how Spack's own ``user`` scope honors both its own variables and the XDG convention:
+
+.. code-block:: yaml
+
+   include:
+   - name: user
+     path_override_env_var:
+     - SPACK_CONFIG_HOME
+     - SPACK_USER_CONFIG_PATH
+     - $XDG_CONFIG_HOME/spack
+     path: ~/.config/spack
+
 .. note::
 
    ``path_override_env_var:`` is currently only supported for ``path:`` includes, not ``git:`` includes.
 
+   Include paths cannot use the configurable substitutions ``$data_home``, ``$state_home``, ``$cache_home`` or ``$user_cache_path``, since their values come from the configuration that the includes make up.
+   Spack reports an error for an include path containing one of them.
+
 .. versionadded:: 1.1
    The ``path_override_env_var:`` attribute.
+
+.. versionadded:: 1.3
+   List-valued ``path_override_env_var:``.
 
 .. _named-config-scopes:
 
@@ -196,7 +218,7 @@ For example, Spack's own ``defaults`` scope includes a ``base`` scope and a plat
     Scope            Path
     command_line
     spack            /home/username/spack/etc/spack/
-    user             /home/username/.spack/
+    user             /home/username/.config/spack/
     site             /home/username/spack/etc/spack/site/
     defaults         /home/username/spack/etc/spack/defaults/
     defaults:darwin  /home/username/spack/etc/spack/defaults/darwin/
@@ -222,7 +244,7 @@ You can see the ``myscope`` name when we activate this environment::
     env:/home/username/env   /home/username/env/spack.yaml/
     myscope                  /home/username/env/foo/
     spack                    /home/username/spack/etc/spack/
-    user                     /home/username/.spack/
+    user                     /home/username/.config/spack/
     site                     /home/username/spack/etc/spack/site/
     defaults                 /home/username/spack/etc/spack/defaults/
     defaults:darwin          /home/username/spack/etc/spack/defaults/darwin/
@@ -234,14 +256,21 @@ You can now use the argument ``myscope`` to refer to this, for example with ``sp
 Built-in configuration scopes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The default ``user``, ``system``, and ``site`` scopes are defined using ``include:`` in ``$spack/etc/spack/include.yaml``:
+The ``spack`` scope's ``$spack/etc/spack/include.yaml`` includes two directories:
 
 .. literalinclude:: _spack_root/etc/spack/include.yaml
    :language: yaml
 
-You can see that all three of these scopes are given meaningful names, and all three are ``optional``, i.e., they'll be ignored if their directories do not exist.
+``isolate`` is written by :ref:`spack isolate <local-config-overrides>` and does not exist otherwise.
+``standard_scopes`` defines the default ``user``, ``site``, ``system`` and ``layout`` scopes:
+
+.. literalinclude:: _spack_root/etc/spack/standard_scopes/include.yaml
+   :language: yaml
+
+You can see that all of these scopes are given meaningful names, and all are ``optional``, i.e., they'll be ignored if their directories do not exist.
 The ``user`` and ``system`` scopes can also be disabled by setting ``SPACK_DISABLE_LOCAL_CONFIG``.
-Finally, the ``user`` scope can be overridden with a path in ``SPACK_USER_CONFIG_PATH`` if it is set (see :ref:`local-config-overrides`).
+The ``user`` scope can be overridden with a path in ``SPACK_CONFIG_HOME`` if it is set (see :ref:`local-config-overrides`); ``SPACK_USER_CONFIG_PATH`` remains available at lower precedence for backwards compatibility, and ``$XDG_CONFIG_HOME/spack`` is used if that variable is set.
+The ``layout`` scope is generated by the :ref:`migration <where_spack_writes_data>` of a Spack instance that was in use before 1.3; it comes last so that every other scope can override it.
 
 Overriding scopes by name
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -286,21 +315,25 @@ The ``user`` and ``system`` scopes depend on the user and the machine on which S
 
 If you want to eliminate them completely from an environment, you can write:
 
-.. code-block:: yaml
+.. code-block:: text
 
    spack:
      include:: []
 
 This overrides all scopes except the ``defaults`` that Spack needs in order to function.
-You can see that ``spack``, ``user``, and ``site`` are overridden::
+You can see that everything the ``spack`` scope includes -- ``user``, ``site``, ``system`` and ``layout`` -- is overridden::
 
   > spack -e ~/env config scopes -vp
   Scope                    Type          Status    Path
   command_line             internal      active
   env:/home/username/env   env,path      active    /home/username/env/spack.yaml/
-  spack                    path          override  /home/username/spack/etc/spack/
-  user                     include,path  override  /home/username/.spack/
+  spack                    path          active    /home/username/spack/etc/spack/
+  spack:isolate            include,path  override  /home/username/spack/etc/spack/isolate/
+  spack:standard_scopes    include,path  override  /home/username/spack/etc/spack/standard_scopes/
+  user                     include,path  override  /home/username/.config/spack/
   site                     include,path  override  /home/username/spack/etc/spack/site/
+  system                   include,path  override  /etc/spack/
+  layout                   include,path  override  /home/username/spack/etc/spack/layout/
   defaults                 path          active    /home/username/spack/etc/spack/defaults/
   defaults:darwin          include,path  active    /home/username/spack/etc/spack/defaults/darwin/
   defaults:base            include,path  active    /home/username/spack/etc/spack/defaults/base/

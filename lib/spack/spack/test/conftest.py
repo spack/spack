@@ -63,6 +63,7 @@ import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
+import spack.util.hash
 import spack.util.lang
 import spack.util.libc
 import spack.util.lock
@@ -98,6 +99,172 @@ def _recursive_chmod(path: Path, mode: int):
             os.chmod(os.path.join(root, file), mode)
         for dir in dirs:
             os.chmod(os.path.join(root, dir), mode)
+
+
+@pytest.fixture
+def clear_env_vars(working_env, monkeypatch):
+    """Clear XDG and SPACK location env vars, and config path overrides."""
+    # Clear config path overrides
+    monkeypatch.delenv("SPACK_DISABLE_LOCAL_CONFIG", raising=False)
+    monkeypatch.delenv("SPACK_USER_CONFIG_PATH", raising=False)
+    monkeypatch.delenv("SPACK_SYSTEM_CONFIG_PATH", raising=False)
+
+    # Clear XDG and SPACK location overrides
+    for location in ["CONFIG", "DATA", "STATE", "CACHE"]:
+        monkeypatch.delenv(f"XDG_{location}_HOME", raising=False)
+        monkeypatch.delenv(f"SPACK_{location}_HOME", raising=False)
+
+
+def patch_spack_prefix(monkeypatch, prefix: str) -> None:
+    """Point ``spack.paths.prefix`` and every path derived from it at ``prefix``.
+
+    ``spack.paths`` holds plain constants, so patching ``prefix`` alone would leave the
+    derived ones (``etc_path``, ``old_envs_path``, ...) pointing at the real checkout.
+    """
+    derived = {
+        "prefix": prefix,
+        "spack_root": prefix,
+        "bin_path": os.path.join(prefix, "bin"),
+        "opt_path": os.path.join(prefix, "opt"),
+        "share_path": os.path.join(prefix, "share", "spack"),
+        "etc_path": os.path.join(prefix, "etc", "spack"),
+        "isolate_scope_path": os.path.join(prefix, "etc", "spack", "isolate"),
+        "layout_scope_path": os.path.join(prefix, "etc", "spack", "layout"),
+        "self_isolation_prefix": os.path.join(prefix, ".isolate"),
+        "var_path": os.path.join(prefix, "var", "spack"),
+        "old_envs_path": os.path.join(prefix, "var", "spack", "environments"),
+        "old_gpg_path": os.path.join(prefix, "opt", "spack", "gpg"),
+        "old_gpg_keys_path": os.path.join(prefix, "var", "spack", "gpg"),
+        "old_licenses_path": os.path.join(prefix, "etc", "spack", "licenses"),
+        "spack_instance_id": spack.util.hash.b32_hash(prefix)[:7],
+    }
+    for name, value in derived.items():
+        monkeypatch.setattr(spack.paths, name, value)
+    # ~/.spack-derived paths follow $HOME, which the caller may have changed
+    old_dot_spack = os.path.expanduser(os.path.join("~", ".spack"))
+    monkeypatch.setattr(spack.paths, "old_default_dot_spack", old_dot_spack)
+    monkeypatch.setattr(
+        spack.paths, "old_package_repos_path", os.path.join(old_dot_spack, "package_repos")
+    )
+
+
+@pytest.fixture
+def mock_spack_instance(tmp_path, set_home, monkeypatch, clear_env_vars, modifies_spackpaths):
+    """Create a mock Spack instance with simulated home and base prefix.
+
+    This fixture replicates essential Spack configuration structure without copying
+    user-modified files. This prevents developer config (e.g. etc/spack/config.yaml,
+    etc/spack/packages.yaml) from affecting test behavior.
+
+    Tradeoff: If a developer modifies core config files like include.yaml or
+    standard_scopes/include.yaml, those changes won't be reflected in tests.
+    However, this is preferable to tests failing due to unrelated local config.
+
+    Returns:
+        tuple: (home_dir, base_prefix)
+    """
+    home_dir = tmp_path / "home"
+    base_prefix = tmp_path / "spack-root"
+    home_dir.mkdir()
+    base_prefix.mkdir()
+
+    real_etc_spack = Path(spack.paths.prefix) / "etc" / "spack"
+    simulated_etc = base_prefix / "etc" / "spack"
+    simulated_etc.parent.mkdir(parents=True, exist_ok=True)
+
+    # Copy defaults directory entirely (contains baseline config values)
+    if (real_etc_spack / "defaults").exists():
+        shutil.copytree(real_etc_spack / "defaults", simulated_etc / "defaults")
+
+    # Replicate include.yaml structure (don't copy to avoid user modifications)
+    include_yaml = simulated_etc / "include.yaml"
+    include_yaml.write_text(
+        'include:\n  - path: "isolate"\n    optional: true\n  - path: "standard_scopes"\n',
+        encoding="utf-8",
+    )
+
+    # Replicate standard_scopes/include.yaml structure
+    standard_scopes_dir = simulated_etc / "standard_scopes"
+    standard_scopes_dir.mkdir()
+    (standard_scopes_dir / "include.yaml").write_text(
+        "include:\n"
+        "  # user configuration scope\n"
+        '  - name: "user"\n'
+        "    path_override_env_var:\n"
+        "      - SPACK_CONFIG_HOME\n"
+        "      - SPACK_USER_CONFIG_PATH\n"
+        "      - $XDG_CONFIG_HOME/spack\n"
+        '    path: "~/.config/spack"\n'
+        "    optional: true\n"
+        "    prefer_modify: true\n"
+        "    when: '\"SPACK_DISABLE_LOCAL_CONFIG\" not in env'\n"
+        "\n"
+        "  # site configuration scope\n"
+        '  - name: "site"\n'
+        '    path: "$spack/etc/spack/site"\n'
+        "    optional: true\n"
+        "\n"
+        "  # system configuration scope\n"
+        '  - name: "system"\n'
+        "    path_override_env_var: SPACK_SYSTEM_CONFIG_PATH\n"
+        '    path: "/etc/spack"\n'
+        "    optional: true\n"
+        "    when: '\"SPACK_DISABLE_LOCAL_CONFIG\" not in env'\n"
+        "\n"
+        "  # layout scope - auto-generated path overrides for shared Spack\n"
+        "  # Loaded last so user/site/system can override it\n"
+        '  - name: "layout"\n'
+        '    path: "$spack/etc/spack/layout"\n'
+        "    optional: true\n",
+        encoding="utf-8",
+    )
+
+    # Create empty site directory (tests may write to it)
+    (simulated_etc / "site").mkdir(exist_ok=True)
+
+    set_home(str(home_dir))
+    patch_spack_prefix(monkeypatch, str(base_prefix))
+    return str(home_dir), str(base_prefix)
+
+
+@pytest.fixture
+def modifies_spackpaths():
+    """Clear _frozen_home before and after tests that patch spack.paths.
+
+    This fixture is strictly necessary only for tests that BOTH:
+    - Patch spack.paths (change the spack prefix/paths)
+    - Create subprocesses that might freeze path values
+
+    However, it's applied to all tests that patch spack.paths to avoid
+    fragility - if a test starts creating subprocesses later, frozen values from
+    prior tests won't leak in.
+
+    Used in:
+    - lib/spack/spack/test/layout_logic.py (modifies paths + creates subprocs)
+    - lib/spack/spack/test/cmd/migrate.py (modifies paths, no subprocs currently)
+    - lib/spack/spack/test/cmd/ci.py (modifies paths, no subprocs currently)
+    """
+    import spack.config
+
+    spack.config._frozen_home = {}
+    yield
+    spack.config._frozen_home = {}
+
+
+@pytest.fixture
+def set_home(working_env):
+    """Fixture to set HOME environment variable for both Windows and Linux."""
+
+    def _set_home(val):
+        # Clear some env vars that can interfere w/ expanduser(~) on Windows
+        os.environ.pop("USERPROFILE", None)
+        os.environ.pop("HOMEDRIVE", None)
+        os.environ["HOMEPATH"] = val
+
+        # For expanduser on Linux
+        os.environ["HOME"] = val
+
+    yield _set_home
 
 
 @pytest.fixture(autouse=True)
@@ -143,14 +310,25 @@ def write_file(filename, contents):
         f.write(contents)
 
 
+class _ConstantPath:
+    """Picklable stand-in for a ``spack.config.*_path()`` function.
+
+    Monkeypatched values are re-applied in ``spawn``-mode child processes through
+    ``spack.subprocess_context.TestPatches``, which pickles them, so a lambda will not do.
+    """
+
+    def __init__(self, path: str):
+        self.path = path
+
+    def __call__(self) -> str:
+        return self.path
+
+
 @pytest.fixture
-def override_git_repos_cache_path(tmp_path: Path):
-    saved = spack.paths.user_repos_cache_path
+def override_git_repos_cache_path(tmp_path: Path, monkeypatch):
     tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
     tmp_git_path.mkdir()
-    spack.paths.user_repos_cache_path = str(tmp_git_path)
-    yield
-    spack.paths.user_repos_cache_path = saved
+    monkeypatch.setattr(spack.config, "user_repos_cache_path", _ConstantPath(str(tmp_git_path)))
 
 
 @pytest.fixture(scope="session")
@@ -367,9 +545,7 @@ def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFac
 
 
 @pytest.fixture
-def mock_git_package_changes(
-    _mock_git_package_changes_template, tmp_path: Path, override_git_repos_cache_path
-):
+def mock_git_package_changes(_mock_git_package_changes_template, tmp_path: Path):
     """Copy of a mock git repo with known structure of package edits
 
     The structure of commits in this repo is as follows::
@@ -2299,16 +2475,17 @@ def inode_cache():
 @pytest.fixture(autouse=True)
 def mock_user_cache_path(tmp_path: Path, monkeypatch):
     """Point $user_cache_path-derived locations (misc cache, BINARY_INDEX's persistent
-    index cache, etc.) at a per-test temporary directory instead of the real ~/.spack.
+    index cache, etc.) at a per-test temporary directory instead of the real ~/.cache/spack.
 
     Without this, every test process (and, under pytest-xdist, every worker) reads and
-    writes the same real, on-disk cache concurrently, since `$user_cache_path` defaults
-    to `~/.spack` unless SPACK_USER_CACHE_PATH is set. `spack.config.replacements()`
-    resolves `$user_cache_path` lazily via `spack.paths.user_cache_path` on every
-    substitution, so patching that attribute here is picked up correctly regardless of
-    when `spack.paths` was first imported.
+    writes the same real, on-disk cache concurrently. `spack.config.replacements()`
+    resolves `$user_cache_path` lazily via `spack.config.user_cache_path()` on every
+    substitution, so patching that function here is picked up correctly regardless of
+    when `spack.config` was first imported.
     """
-    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path / "user_cache"))
+    monkeypatch.setattr(
+        spack.config, "user_cache_path", _ConstantPath(str(tmp_path / "user_cache"))
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -2530,6 +2707,22 @@ def pytest_runtest_setup(item):
     only_windows_marker = item.get_closest_marker(name="only_windows")
     if only_windows_marker and sys.platform != "win32":
         pytest.skip(*only_windows_marker.args)
+
+    if item.get_closest_marker(name="requires_symlinks") and not _can_symlink():
+        pytest.skip("this process cannot create symlinks")
+
+
+@spack.util.lang.memoized
+def _can_symlink() -> bool:
+    """Whether ``os.symlink`` works here: always on POSIX, on Windows only with Developer
+    Mode or elevation. Checked once per session with a real link, including a dangling one,
+    which is what a migration test may need to make."""
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            os.symlink("nowhere", os.path.join(tmp, "link"))
+            return os.path.islink(os.path.join(tmp, "link"))
+        except (OSError, NotImplementedError):
+            return False
 
 
 @pytest.fixture(autouse=True)

@@ -7,6 +7,10 @@
 Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
+
+Paths that depend on configuration (the user cache, where package
+repositories are cloned, the GPG home, ...) are not defined here; see
+the corresponding functions in :mod:`spack.config`.
 """
 
 import os
@@ -45,10 +49,14 @@ opt_path = os.path.join(prefix, "opt")
 share_path = os.path.join(prefix, "share", "spack")
 etc_path = os.path.join(prefix, "etc", "spack")
 
-#
-# Things in $spack/etc/spack
-#
-default_license_dir = os.path.join(etc_path, "licenses")
+#: Configuration scope written by ``spack isolate``
+isolate_scope_path = os.path.join(etc_path, "isolate")
+
+#: Configuration scope written by the migration, recording where old resources live
+layout_scope_path = os.path.join(etc_path, "layout")
+
+#: Data location used by ``spack isolate --self``
+self_isolation_prefix = os.path.join(prefix, ".isolate")
 
 #
 # Things in $spack/var/spack
@@ -60,89 +68,26 @@ repos_path = os.path.join(var_path, "repos")
 test_repos_path = os.path.join(var_path, "test_repos")
 mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
 
-#
-# Writable things in $spack/var/spack
-# TODO: Deprecate these, as we want a read-only spack prefix by default.
-# TODO: These should probably move to user cache, or some other location.
-#
-# fetch cache for downloaded files
-default_fetch_cache_path = os.path.join(var_path, "cache")
-
-# GPG paths.
-gpg_keys_path = os.path.join(var_path, "gpg")
+# GPG paths for mock data
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
-gpg_path = os.path.join(opt_path, "spack", "gpg")
+
+#
+# Locations where Spack <= 1.2 wrote data into its own prefix, and into ~/.spack.
+# Used only to detect and migrate such data; see :mod:`spack.migrate`.
+#
+old_envs_path = os.path.join(var_path, "environments")
+old_gpg_path = os.path.join(opt_path, "spack", "gpg")
+old_gpg_keys_path = os.path.join(var_path, "gpg")
+old_licenses_path = os.path.join(etc_path, "licenses")
+old_default_dot_spack = os.path.expanduser(os.path.join("~", ".spack"))
+old_package_repos_path = os.path.join(old_default_dot_spack, "package_repos")
 
 
 #: Not a location itself, but used for when Spack instances
 #: share the same cache base directory for caches that should
 #: not be shared between those instances.
 spack_instance_id = hash.b32_hash(spack_root)[:7]
-
-
-# Below paths are where Spack can write information for the user.
-# Some are caches, some are not exactly caches.
-#
-# The options that start with `default_` below are overridable in
-# `config.yaml`, but they default to use `user_cache_path/<location>`.
-#
-# You can override the top-level directory (the user cache path) by
-# setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
-#
-def _get_user_cache_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
-
-
-user_cache_path = str(PurePath(_get_user_cache_path()))
-
-#: junit, cdash, etc. reports about builds
-reports_path = os.path.join(user_cache_path, "reports")
-
-#: installation test (spack test) output
-default_test_path = os.path.join(user_cache_path, "test")
-
-#: spack monitor analysis directories
-default_monitor_path = os.path.join(reports_path, "monitor")
-
-#: git repositories fetched to compare commits to versions
-user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
-
-#: default location where remote package repositories are cloned
-package_repos_path = os.path.join(user_cache_path, "package_repos")
-
-#: bootstrap store for bootstrapping clingo and other tools
-default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
-
-#: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-default_misc_cache_path = os.path.join(user_cache_path, spack_instance_id, "cache")
-
-# Below paths pull configuration from the host environment.
-#
-# There are three environment variables you can use to isolate spack from
-# the host environment:
-# - `SPACK_USER_CONFIG_PATH`: override `~/.spack` location (for config and caches)
-# - `SPACK_SYSTEM_CONFIG_PATH`: override `/etc/spack` configuration scope.
-# - `SPACK_DISABLE_LOCAL_CONFIG`: disable both of these locations.
-
-
-# User configuration and caches in $HOME/.spack
-def _get_user_config_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or "~%s.spack" % os.sep)
-
-
-# Configuration in /etc/spack on the system
-def _get_system_config_path():
-    return os.path.expanduser(
-        os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
-    )
-
-
-#: User configuration location
-user_config_path = _get_user_config_path()
-
-#: System configuration location
-system_config_path = _get_system_config_path()
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None

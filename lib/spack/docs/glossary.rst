@@ -407,7 +407,7 @@ For an alphabetic list of every documented keyword and environment variable, see
    scope
    configuration scope
       A named layer of YAML configuration.
-      Examples are the ``defaults`` scope shipped with Spack, the ``site`` scope for a single Spack instance, and the ``user`` scope in ``~/.spack``; settings in higher-precedence scopes override lower ones, and command-line flags override them all.
+      Examples are the ``defaults`` scope shipped with Spack, the ``site`` scope for a single Spack instance, and the ``user`` scope in ``~/.config/spack``; settings in higher-precedence scopes override lower ones, and command-line flags override them all.
       ``spack config scopes`` lists the active scopes in precedence order.
       See :ref:`configuration-scopes`.
 

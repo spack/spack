@@ -93,7 +93,7 @@ Package names can only contain lowercase characters ``a-z``, digits ``0-9`` and 
 Configuring Repositories with ``repos.yaml``
 --------------------------------------------
 
-Spack uses ``repos.yaml`` files found in its :ref:`configuration scopes <configuration>` (e.g., ``~/.spack/``, ``etc/spack/``) to discover and prioritize package repositories.
+Spack uses ``repos.yaml`` files found in its :ref:`configuration scopes <configuration>` (e.g., ``~/.config/spack/``, ``etc/spack/``) to discover and prioritize package repositories.
 Note that this ``repos.yaml`` (plural) configuration file is distinct from the ``repo.yaml`` (singular) file within each individual package repository.
 
 Spack supports two main types of repository configurations:
@@ -104,7 +104,7 @@ Local Repositories (Path-based)
 You can point Spack to a repository on your local filesystem:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/repos.yaml``
+   :caption: ``~/.config/spack/repos.yaml``
    :name: code-example-local-repo
 
    repos:
@@ -130,7 +130,7 @@ Automatic Cloning
 """""""""""""""""
 
 When Spack first encounters a Git-based repository configuration, it automatically clones it.
-By default, these repositories are cloned into a subdirectory within ``~/.spack/package_repos/``, named with a hash of the repository URL.
+By default, these repositories are cloned into a subdirectory within ``$data_home/package_repos/`` (``~/.local/share/spack/package_repos/`` by default), named with a hash of the repository URL.
 
 To change directories to the package repository, you can use ``spack cd --repo [name]``.
 To find where a repository is cloned, you can use ``spack location --repo [name]`` or ``spack repo list``.
@@ -141,14 +141,14 @@ The ``name`` argument is optional; if omitted, Spack will use the first package 
 Customizing Clone Location
 """"""""""""""""""""""""""
 
-The default clone location (``~/.spack/package_repos/<hashed_name>``) might not be convenient for package maintainers who want to make changes to packages.
+The default clone location (``$data_home/package_repos/<hashed_name>``) might not be convenient for package maintainers who want to make changes to packages.
 You can specify a custom local directory for Spack to clone a Git repository into, or to use if the repository is already cloned there.
 This is done using the ``destination`` key in ``repos.yaml`` or via the ``spack repo set --destination`` command (see :ref:`cmd-spack-repo-set-destination`).
 
 For example, to use ``~/custom_packages_clone`` for ``my_remote_repo``:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/repos.yaml``
+   :caption: ``~/.config/spack/repos.yaml``
    :name: code-example-location
 
    repos:
@@ -160,7 +160,7 @@ If the ``git`` URL is defined in a lower-precedence configuration (like Spack's 
 Spack can make the configuration changes for you using ``spack repo set --destination ~/spack-packages builtin``, or you can directly edit your ``repos.yaml`` file:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/repos.yaml``
+   :caption: ``~/.config/spack/repos.yaml``
    :name: code-example-builtin
 
    repos:
@@ -173,7 +173,7 @@ Updating and pinning
 Repos can be pinned to a git branch, tag, or commit.
 
 .. code-block:: yaml
-   :caption: ``~/.spack/repos.yaml``
+   :caption: ``~/.config/spack/repos.yaml``
    :name: code-example-branch
 
    repos:
@@ -230,7 +230,7 @@ The ``spack-repo-index.yaml`` in the root of ``https://example.com/my_org/my_pkg
 If ``my_pkgs.git`` is configured in ``repos.yaml`` as follows:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/repos.yaml``
+   :caption: ``~/.config/spack/repos.yaml``
    :name: code-example-git-repo
 
    repos:
@@ -244,7 +244,7 @@ If you want only one of the package repositories from a Git mono-repo, you can o
 For example, if you only want the computer science packages:
 
 .. code-block:: yaml
-   :caption: ``~/.spack/repos.yaml``
+   :caption: ``~/.config/spack/repos.yaml``
    :name: code-example-specific-repo
 
    repos:
@@ -443,9 +443,9 @@ This command shows all repositories Spack currently knows about, including their
 
    $ spack repo list
    [+] my_local           v2.0    /path/to/spack_repo/my_local_packages
-   [+] comp_sci_packages  v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/comp_sci_packages
-   [+] physics_packages   v2.0    ~/.spack/package_repos/<hash 1>/spack_pkgs/spack_repo/physics_packages  # From the same git repo
-   [+] builtin            v2.0    ~/.spack/package_repos/<hash 2>/repos/spack_repo/builtin
+   [+] comp_sci_packages  v2.0    ~/.local/share/spack/package_repos/<hash 1>/spack_pkgs/spack_repo/comp_sci_packages
+   [+] physics_packages   v2.0    ~/.local/share/spack/package_repos/<hash 1>/spack_pkgs/spack_repo/physics_packages  # From the same git repo
+   [+] builtin            v2.0    ~/.local/share/spack/package_repos/<hash 2>/repos/spack_repo/builtin
 
 Spack shows a green ``[+]`` next to each repository that is available for use.
 It shows a red ``[-]`` to indicate that package repositories cannot be used due to an error (e.g., unsupported API version, missing ``repo.yaml``, etc.).
@@ -516,7 +516,7 @@ To register package repositories from local paths or a remote Git repositories w
 
   Notice that for Git-based package repositories, you need to specify a configuration name explicitly, which is the key used in your ``repos.yaml`` configuration file.
   The example also shows providing a custom destination path ``~/my_pkgs``.
-  You can omit this if you want Spack to use the default clone location (e.g., ``~/.spack/package_repos/<hashed_name>``).
+  You can omit this if you want Spack to use the default clone location (e.g., ``$data_home/package_repos/<hashed_name>``).
 
 After adding, packages from this repository should appear in ``spack list`` and be installable.
 
@@ -560,7 +560,7 @@ The ``<config_name>`` is the key used in your ``repos.yaml`` file for that Git r
 This updates your user-level ``repos.yaml``, adding or modifying the ``destination:`` key for the specified repository configuration name.
 
 .. code-block:: yaml
-   :caption: ``~/.spack/repos.yaml`` after ``spack repo set``
+   :caption: ``~/.config/spack/repos.yaml`` after ``spack repo set``
    :name: code-example-specific-destination
 
    repos:

@@ -16,7 +16,6 @@ import warnings
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import spack.error
-import spack.paths
 import spack.util.executable
 import spack.util.filesystem
 import spack.util.lang
@@ -500,7 +499,11 @@ class Gpg:
     def _init_gnupghome_dir(gnupghome: Optional[str] = None) -> pathlib.Path:
         """Init gnupg home but don't check permissions"""
         # Make sure that the gnupghome exists
-        gnupghome = gnupghome or os.getenv("SPACK_GNUPGHOME") or spack.paths.gpg_path
+        gnupghome = gnupghome or os.getenv("SPACK_GNUPGHOME")
+        if not gnupghome:
+            import spack.config  # avoid importing config into this utility module at load
+
+            gnupghome = spack.config.gpg_path()
         if not os.path.exists(gnupghome):
             os.makedirs(gnupghome)
             os.chmod(gnupghome, 0o700)

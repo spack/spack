@@ -73,14 +73,17 @@ An environment is created by:
 
    $ spack env create myenv
 
-The directory ``$SPACK_ROOT/var/spack/environments/myenv`` is created to manage the environment.
+The directory ``$data_home/environments/myenv`` (``~/.local/share/spack/environments/myenv`` by default) is created to manage the environment.
 
 .. note::
 
-   By default, all managed environments are stored in the ``$SPACK_ROOT/var/spack/environments`` folder.
+   By default, all managed environments are stored in the ``$data_home/environments`` folder, which is shared by every Spack instance of the user.
    This location can be changed by setting the ``environments_root`` variable in ``config.yaml``.
+   Spack takes a lock (``.lock`` in that folder) while creating an environment, so concurrent ``spack env create`` commands and the migration below do not interfere.
+   See :ref:`where_spack_writes_data`.
+   Managed environments of a Spack instance created before 1.3 live in ``$SPACK_ROOT/var/spack/environments`` until they are :ref:`migrated <migrated-environments>`.
 
-Spack creates the file ``spack.yaml``, hidden directory ``.spack-env``, and ``spack.lock`` file under ``$SPACK_ROOT/var/spack/environments/myenv``.
+Spack creates the file ``spack.yaml``, hidden directory ``.spack-env``, and ``spack.lock`` file under ``$data_home/environments/myenv``.
 User interaction occurs through the ``spack.yaml`` file and the Spack commands that affect it.
 Metadata and, by default, the view are stored in the ``.spack-env`` directory.
 When the environment is concretized, Spack creates the ``spack.lock`` file with the fully configured specs and dependencies for the environment.
@@ -134,7 +137,7 @@ It will also include any other files included in the environment directory, such
 
    Environment creation also accepts a full path to the file.
 
-   If the path is not under the ``$SPACK_ROOT/var/spack/environments`` directory then the source is referred to as an :ref:`independent environment <independent_environments>`.
+   If the path is not under the ``$data_home/environments`` directory then the source is referred to as an :ref:`independent environment <independent_environments>`.
 
 The name of an environment can be a nested path to help organize environments via subdirectories.
 
@@ -230,6 +233,41 @@ For convenience, Spack can also place an independent environment in a temporary 
 
    $ spack env activate --temp
 
+.. _migrated-environments:
+
+Environments migrated from a pre-1.3 Spack
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack 1.2 and earlier kept managed environments in ``$SPACK_ROOT/var/spack/environments`` by default.
+When such an instance is updated, the first command :ref:`asks <where_spack_writes_data>` whether to copy them to ``$data_home/environments``; the originals are left in place.
+The copies differ from the originals in a few ways:
+
+* Views are not copied.
+  Activate each migrated environment and run ``spack env view regenerate`` to recreate them, or any concretization or installation command will recreate them.
+  A shell that activated an environment before the migration still has the old view on its ``PATH``; run ``spack env deactivate`` and activate the environment again.
+* Absolute paths in ``spack.yaml`` and in included configuration files that point inside the environment directory are rewritten to the new directory.
+  A file that needed rewriting is re-serialized: its content is unchanged, but any YAML anchors, aliases and merge keys are expanded.
+  If the file is tracked in a git repo, you may want to handle migration manually.
+* Each copy contains a ``.migration-<hash>`` file that lets Spack recognize its own copy if the migration is run again.
+  In an environment kept in Git, add it to ``.gitignore``.
+
+Some environments cannot be copied safely, and Spack keeps **all** environments in the old location rather than splitting them (the summary message says ``Retained: environments``):
+
+* an environment that contains an install tree (a ``.spack-db`` directory), because the installed binaries contain hardcoded absolute paths;
+* an environment with develop specs (``dev_path`` in ``spack.lock``), because their hashes depend on the path;
+* an environment that refers, by relative path, to a file outside its own directory, or by absolute path to a sibling environment, or through ``$env/..``;
+* an environment containing a symbolic link that would have to be rewritten (a relative symlink that reaches outside the environment or an absolute symlink into the old environment location).
+
+To migrate the others anyway, fix or move the offending environment (e.g. remove its develop specs) and run ``spack migrate use-new-layout``.
+
+The destination ``$data_home/environments`` is shared by all of the user's Spack instances, so it may already hold an environment of the same name.
+Before copying anything, Spack checks every such name: an environment put there by another instance (or by hand) is a conflict, and no environment is copied.
+An environment that this instance copied in an earlier run is recognized by its ``.migration-<hash>`` file and skipped; if its ``spack.yaml`` no longer matches the original's, say because the original was edited after ``spack migrate undo``, the copy is kept as it is and a warning asks you to carry over any changes by hand.
+If a copy fails part-way, the environments copied in the same run are removed again, so the destination holds either all of the migratable environments or none of them.
+
+After the migration, Spack treats the old location as an alias for the new one: ``SPACK_ENV``, ``spack -e`` or ``spack -D`` naming ``$SPACK_ROOT/var/spack/environments/<name>`` operate on the migrated copy if there is one, so that a shell that activated an environment before the migration keeps working on the live copy.
+The exceptions are ``spack env deactivate`` and ``spack env activate`` (which deactivates first), which undo the activation of the old copy.
+An environment that was not migrated is used where it is.
 
 Environment-Aware Commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -256,7 +294,7 @@ The same rule applies to the ``install`` and ``uninstall`` commands.
 
   $ spack install zlib@1.2.8
   [+] yfc7epf zlib@1.2.8 ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x (12s)
-  ==> Updating view at ~/spack/var/spack/environments/myenv/.spack-env/view
+  ==> Updating view at ~/.local/share/spack/environments/myenv/.spack-env/view
 
   $ spack find
   ==> In environment myenv
