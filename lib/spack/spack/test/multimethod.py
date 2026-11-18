@@ -10,10 +10,7 @@ import spack.concretize
 import spack.platforms
 from spack.multimethod import NoSuchMethodError
 
-pytestmark = [
-    pytest.mark.usefixtures("mock_packages", "config"),
-    pytest.mark.not_on_windows("Not running on windows"),
-]
+pytestmark = pytest.mark.usefixtures("mock_packages", "config")
 
 
 @pytest.fixture(scope="module", params=["multimethod", "multimethod-inheritor"])
