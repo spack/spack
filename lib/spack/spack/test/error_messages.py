@@ -295,6 +295,57 @@ class T1(Package):
 )
 
 
+_pkgq4 = (
+    "q4",
+    """\
+class Q4(Package):
+    version("2.1")
+    version("2.0")
+
+    depends_on("q2")
+    depends_on("q3")
+""",
+)
+
+
+_pkgq3 = (
+    "q3",
+    """\
+class Q3(Package):
+    version("2.1")
+    version("2.0")
+
+    depends_on("q1@2:")
+""",
+)
+
+
+_pkgq2 = (
+    "q2",
+    """\
+class Q2(Package):
+    version("2.1")
+    version("2.0")
+
+    depends_on("q1@:1")
+""",
+)
+
+
+_pkgq1 = (
+    "q1",
+    """\
+class Q1(Package):
+    #version("2.1")
+    # if 2.0 is the max version, we can check double reporting
+    # of errors for a constraint like q1@2: (where lower bound == upper bound)
+    version("2.0")
+    version("1.1")
+    version("1.0")
+""",
+)
+
+
 all_pkgs = [
     _pkgx1,
     _pkgx2,
@@ -315,6 +366,10 @@ all_pkgs = [
     _pkgt2,
     _pkgt3,
     _pkgt4,
+    _pkgq1,
+    _pkgq2,
+    _pkgq3,
+    _pkgq4,
 ]
 
 
@@ -448,6 +503,13 @@ def test_diamond_with_pkg_conflict2(concretize_scope, test_repo):
 def test_version_range_null(concretize_scope, test_repo):
     with expect_failure_and_print():
         concretize_one("x2@3:4")
+
+
+def test_null_version_nonempty_union(concretize_scope, test_repo, working_env):
+    # Like prior test, but the version ranges individually are
+    # valid when applied as constraints
+    with expect_failure_and_print(should_mention=["q2", "q3", r":1", r"2:"]):
+        concretize_one("q4")
 
 
 # This error message is hard to follow: neither z2 or z3
