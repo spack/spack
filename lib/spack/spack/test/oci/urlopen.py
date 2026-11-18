@@ -27,6 +27,7 @@ from spack.oci.oci import (
 )
 from spack.oci.opener import (
     Challenge,
+    PreserveRedirectHandler,
     RealmServiceScope,
     UsernamePassword,
     _get_basic_challenge,
@@ -46,6 +47,20 @@ from spack.test.oci.mock_registry import (
     MockBearerTokenServer,
     create_opener,
 )
+
+
+def test_head_request_preserves_method_on_redirect():
+    """Regression test: a HEAD request must remain a HEAD request after following a
+    redirect. The stdlib's HTTPRedirectHandler silently downgrades it to GET, which
+    breaks registries that redirect to signed URLs (e.g. GitLab's GCS-backed registry)
+    whose signature covers the HTTP method, resulting in a 403 Forbidden."""
+    handler = PreserveRedirectHandler()
+    req = Request(url="https://registry.example.com/v2/image/blobs/sha256:abc", method="HEAD")
+    new_req = handler.redirect_request(
+        req, None, 302, "Found", {}, "https://storage.example.com/signed-blob"
+    )
+    assert new_req is not None
+    assert new_req.get_method() == "HEAD"
 
 
 def test_parse_www_authenticate():

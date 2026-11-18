@@ -238,6 +238,21 @@ def _get_basic_challenge(challenges: List[Challenge]) -> Optional[str]:
     return challenge.get_param("realm")
 
 
+class PreserveRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Fixes a long-standing bug in ``urllib.request.HTTPRedirectHandler``: it never
+    forwards the original request's HTTP method, so any redirected ``HEAD`` request is
+    silently turned into a ``GET`` request. This breaks registries (e.g. GitLab backed
+    by GCS) that redirect blob requests to signed URLs whose signature covers the HTTP
+    method: a ``HEAD`` request redirected as ``GET`` no longer matches the signature,
+    and the storage backend responds with 403 Forbidden."""
+
+    def redirect_request(self, req: Request, fp, code, msg, headers, newurl):
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new_req is not None and req.get_method() == "HEAD":
+            new_req.method = "HEAD"
+        return new_req
+
+
 class OCIAuthHandler(urllib.request.BaseHandler):
     def __init__(self, credentials_provider: Callable[[str], Optional[UsernamePassword]]):
         """
@@ -413,7 +428,7 @@ def create_opener():
         urllib.request.HTTPHandler(),
         spack.util.web.SpackHTTPSHandler(context=spack.util.web.ssl_create_default_context()),
         spack.util.web.SpackHTTPDefaultErrorHandler(),
-        urllib.request.HTTPRedirectHandler(),
+        PreserveRedirectHandler(),
         urllib.request.HTTPErrorProcessor(),
         OCIAuthHandler(credentials_from_mirrors),
     ]:
