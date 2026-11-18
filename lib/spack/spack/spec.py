@@ -113,6 +113,7 @@ if TYPE_CHECKING:
     import spack.package_base
     import spack.patch
 
+# Add a meaningless comment here to trigger the unit tests
 SPEC_FORMAT_RE = re.compile(
     r"(?:"  # this is one big or, with matches ordered by priority
     # OPTION 1: escaped character (needs to be first to catch opening \{)
