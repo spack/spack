@@ -14,4 +14,4 @@ config:
   checksum: true
   installer: old  # many tests are based on stdout from old installer
   dirty: false
-  locks: {1}
+  locks: true

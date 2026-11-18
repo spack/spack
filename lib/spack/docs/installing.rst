@@ -125,7 +125,6 @@ For best results on a cluster, it's recommended to limit per-process package-lev
 
 .. admonition:: Windows Support
 
-   On Windows, due to a lack of file lock support, concurrent Spack processes are not guaranteed to function.
    On Windows, due to a lack of jobserver support, jobserver orchestration and dynamic adjustment of build parallelism is not supported.
 
 .. index:: non-interactive

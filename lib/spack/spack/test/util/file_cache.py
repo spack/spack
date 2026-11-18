@@ -36,7 +36,6 @@ def test_read_before_init(file_cache):
         assert stream is None
 
 
-@pytest.mark.not_on_windows("Locks not supported on Windows")
 def test_failed_write_and_read_cache_file(file_cache):
     """Test failing to write then attempting to read a cached file."""
     with pytest.raises(RuntimeError, match=r"^foobar$"):

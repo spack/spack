@@ -1197,7 +1197,7 @@ def test_invalid_concurrent_packages_flag(mutable_config):
         install("--concurrent-packages", "-2")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Feature disabled on windows due to locking")
+@pytest.mark.skipif(sys.platform == "win32", reason="Concurrent builds are disabled on Windows")
 def test_concurrent_packages_set_in_config(mutable_config: Configuration, mock_packages):
     """Ensure that the number of concurrent packages is properly set from adding to config"""
     mutable_config.set("config:concurrent_packages", 3)
