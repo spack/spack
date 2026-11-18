@@ -4,77 +4,77 @@
 
 import os
 import pathlib
-import types
 
 import pytest
 
 import spack.caches
 import spack.cmd.clean
+import spack.concretize
 import spack.main
-import spack.package_base
 import spack.stage
 import spack.store
+import spack.util.file_cache
 import spack.util.filesystem as fs
 
 clean = spack.main.SpackCommand("clean")
 
-
-@pytest.fixture()
-def mock_calls_for_clean(monkeypatch):
-    counts = {}
-
-    class Counter:
-        def __init__(self, name):
-            self.name = name
-            counts[name] = 0
-
-        def __call__(self, *args, **kwargs):
-            counts[self.name] += 1
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "do_clean", Counter("package"))
-    monkeypatch.setattr(spack.stage, "purge", Counter("stages"))
-    downloads = types.SimpleNamespace(destroy=Counter("downloads"))
-    monkeypatch.setattr(spack.caches, "fetch_cache", lambda config: downloads)
-    monkeypatch.setattr(spack.caches.MISC_CACHE, "destroy", Counter("caches"))
-    monkeypatch.setattr(spack.store.STORE.failure_tracker, "clear_all", Counter("failures"))
-    monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
-    monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
-    monkeypatch.setattr(fs, "remove_directory_contents", Counter("bootstrap"))
-
-    yield counts
-
+#: The autouse mock_fetch_cache fixture replaces this with a stub that has no destroy()
+_fetch_cache = spack.caches.fetch_cache
 
 all_effects = ["stages", "downloads", "caches", "failures", "python_cache", "bootstrap"]
 
 
-@pytest.mark.usefixtures("mock_packages")
+@pytest.fixture
+def cleanable(install_mockery, mutable_config, mock_stage, tmp_path: pathlib.Path, monkeypatch):
+    """Creates one item for each thing ``spack clean`` can remove, and returns a function that
+    maps each of them to whether it is still present.
+    """
+    # The global MISC_CACHE is shared by every test in the process
+    misc_cache = spack.util.file_cache.FileCache(tmp_path / "misc_cache")
+    monkeypatch.setattr(spack.caches, "MISC_CACHE", misc_cache)
+    monkeypatch.setattr(spack.caches, "fetch_cache", _fetch_cache)
+    monkeypatch.setattr(spack.cmd.clean, "lib_path", str(tmp_path / "lib"))
+    monkeypatch.setattr(spack.cmd.clean, "var_path", str(tmp_path / "var"))
+    mutable_config.set("bootstrap:root", str(tmp_path / "bootstrap"))
+
+    source_cache = pathlib.Path(spack.caches.fetch_cache_location(config=mutable_config))
+    paths = {
+        "stages": pathlib.Path(mock_stage) / f"{spack.stage.stage_prefix}x",
+        "downloads": source_cache / "archive",
+        "caches": misc_cache.root / "index",
+        "python_cache": tmp_path / "lib" / "__pycache__",
+        "bootstrap": tmp_path / "bootstrap" / "store",
+    }
+    for path in paths.values():
+        path.mkdir(parents=True)
+    failed = spack.concretize.concretize_one("pkg-a")
+    spack.store.STORE.failure_tracker.mark(failed)
+
+    def present():
+        result = {name: path.exists() for name, path in paths.items()}
+        result["failures"] = spack.store.STORE.failure_tracker.has_failed(failed)
+        return result
+
+    return present
+
+
+@pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize(
-    "command_line,effects",
+    "command_line,removed",
     [
-        ("mpileaks", ["package"]),
-        ("-s", ["stages"]),
-        ("-sd", ["stages", "downloads"]),
-        ("-m", ["caches"]),
-        ("-f", ["failures"]),
-        ("-p", ["python_cache"]),
-        ("-a", all_effects),
-        ("", []),
+        ([], ["stages"]),
+        (["-s"], ["stages"]),
+        (["-sd"], ["stages", "downloads"]),
+        (["-m"], ["caches"]),
+        (["-f"], ["failures"]),
+        (["-p"], ["python_cache"]),
+        (["-b"], ["bootstrap"]),
+        (["-a"], all_effects),
     ],
 )
-def test_function_calls(
-    command_line, effects, mock_calls_for_clean, mutable_config, tmp_path: pathlib.Path
-):
-    # Redirect only where it is read, so the other cases keep the store clingo is bootstrapped in
-    if "bootstrap" in effects:
-        mutable_config.set("bootstrap:root", str(tmp_path / "bootstrap"))
-
-    # Call the command with the supplied command line
-    clean(command_line)
-
-    # Assert that we called the expected functions the correct
-    # number of times
-    for name in ["package"] + all_effects:
-        assert mock_calls_for_clean[name] == (1 if name in effects else 0)
+def test_clean_removes(command_line, removed, cleanable):
+    clean(*command_line)
+    assert cleanable() == {name: name not in removed for name in all_effects}
 
 
 def test_remove_python_cache(tmp_path: pathlib.Path, monkeypatch):
@@ -139,3 +139,12 @@ def test_remove_python_cache_skips_symlinked_pycache(tmp_path: pathlib.Path, mon
     assert (view_dir / "__pycache__").is_symlink()
     assert (target / "module.cpython-312.pyc").exists()
     assert not real_cache.exists()
+
+
+@pytest.mark.disable_clean_stage_check
+def test_clean_spec_removes_only_its_stage(cleanable):
+    stage = pathlib.Path(spack.concretize.concretize_one("mpileaks").package.stage.path)
+    stage.mkdir(parents=True)
+    clean("mpileaks")
+    assert not stage.exists()
+    assert all(cleanable().values())
