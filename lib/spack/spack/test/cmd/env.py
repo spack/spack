@@ -60,7 +60,7 @@ from spack.version import Version
 # TODO-27021
 # everything here uses the mock_env_path
 pytestmark = [
-    pytest.mark.usefixtures("mutable_config", "mutable_mock_env_path", "mock_packages"),
+    pytest.mark.usefixtures("mutable_config", "mutable_mock_env_path", "mutable_mock_repo"),
     pytest.mark.maybeslow,
     pytest.mark.not_on_windows("Envs unsupported on Windows"),
 ]
@@ -159,6 +159,141 @@ def test_env_track_nonexistent_path_fails():
     assert "doesn't contain an environment" in env.output
 
 
+def test_env_track_existing_env_fails():
+    env("create", "track_test")
+
+    with pytest.raises(spack.main.SpackCommandError):
+        env("track", "--name", "track_test", ev.environment_dir_from_name("track_test"))
+
+    assert "environment named track_test already exists" in env.output
+
+
+def test_env_track_valid(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
+        # create an independent environment
+        env("create", "-d", ".")
+
+        # test tracking an environment in known store
+        env("track", "--name", "test1", ".")
+
+        # test removing environment to ensure independent isn't deleted
+        env("rm", "-y", "test1")
+
+        assert os.path.isfile("spack.yaml")
+
+
+def test_env_untrack_valid(tmp_path: pathlib.Path):
+    with fs.working_dir(str(tmp_path)):
+        # create an independent environment
+        env("create", "-d", ".")
+
+        # test tracking an environment in known store
+        env("track", "--name", "test_untrack", ".")
+        env("untrack", "--yes-to-all", "test_untrack")
+
+        # check that environment was successfully untracked
+        out = env("ls")
+        assert "test_untrack" not in out
+
+
+def test_env_untrack_invalid_name():
+    # test untracking an environment that doesn't exist
+    env_name = "invalid_environment_untrack"
+
+    out = env("untrack", env_name)
+
+    assert f"Environment '{env_name}' does not exist" in out
+
+
+def test_env_untrack_when_active(tmp_path: pathlib.Path):
+    env_name = "test_untrack_active"
+
+    with fs.working_dir(str(tmp_path)):
+        # create an independent environment
+        env("create", "-d", ".")
+
+        # test tracking an environment in known store
+        env("track", "--name", env_name, ".")
+
+        active_env = ev.read(env_name)
+        with active_env:
+            output = env("untrack", "--yes-to-all", env_name, fail_on_error=False)
+            assert env.error is not None
+
+        # check that environment could not be untracked while active
+        assert f"'{env_name}' can't be untracked while activated" in output
+
+        env("untrack", "-f", env_name)
+        out = env("ls")
+        assert env_name not in out
+
+
+def test_env_untrack_managed():
+    env_name = "test_untrack_managed"
+
+    # create an managed environment
+    env("create", env_name)
+
+    with pytest.raises(spack.main.SpackCommandError):
+        env("untrack", env_name)
+
+    # check that environment could not be untracked while active
+    assert f"'{env_name}' is not a tracked env" in env.output
+
+
+@pytest.fixture()
+def installed_environment(
+    tmp_path: pathlib.Path, mock_fetch, mock_packages, mock_archive, install_mockery
+):
+    spack_yaml = tmp_path / "spack.yaml"
+
+    @contextlib.contextmanager
+    def _installed_environment(content):
+        spack_yaml.write_text(content)
+        with fs.working_dir(tmp_path):
+            env("create", "test", "./spack.yaml")
+            with ev.read("test") as current_environment:
+                current_environment.concretize()
+                current_environment.install_all(fake=True)
+                current_environment.write(regenerate=True)
+
+            with ev.read("test") as current_environment:
+                yield current_environment
+
+    return _installed_environment
+
+
+@pytest.fixture()
+def template_combinatorial_env(tmp_path: pathlib.Path):
+    """Returns a template base environment for tests. Since the environment configuration is
+    extended using str.format, we need double '{' escaping for the projections.
+    """
+    view_dir = tmp_path / "view"
+    return f"""\
+    spack:
+      definitions:
+        - packages: [mpileaks, callpath]
+        - targets: ['target=x86_64', 'target=core2']
+      specs:
+        - matrix:
+            - [$packages]
+            - [$targets]
+
+      view:
+        combinatorial:
+          root: {view_dir}
+          {{view_config}}
+          projections:
+            'all': '{{{{architecture.target}}}}/{{{{name}}}}-{{{{version}}}}'
+    """
+
+
+def test_add_requires_active_env():
+    """Test that spack add exits with code 2 when no environment is active."""
+    add("hdf5", fail_on_error=False)
+    assert add.returncode == 2
+
+
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
@@ -182,7 +317,7 @@ def test_env_write_env_scripts(shell):
 @pytest.mark.parametrize(
     "shell", (["bat", "pwsh"] if sys.platform == "win32" else ["sh", "csh", "fish"])
 )
-def test_env_env_script_content(shell):
+def test_env_script_content(shell):
     """Tests that SPACK_ENV environment command is in shell's activation script"""
     env("create", "script_test")
     environ = ev.read("script_test")
@@ -658,141 +793,6 @@ def test_env_activate_readonly_outputs_env_modifications(
     finally:
         # Restore original permissions
         os.chmod(spack_env_dir, original_mode)
-
-
-def test_env_track_existing_env_fails():
-    env("create", "track_test")
-
-    with pytest.raises(spack.main.SpackCommandError):
-        env("track", "--name", "track_test", ev.environment_dir_from_name("track_test"))
-
-    assert "environment named track_test already exists" in env.output
-
-
-def test_env_track_valid(tmp_path: pathlib.Path):
-    with fs.working_dir(str(tmp_path)):
-        # create an independent environment
-        env("create", "-d", ".")
-
-        # test tracking an environment in known store
-        env("track", "--name", "test1", ".")
-
-        # test removing environment to ensure independent isn't deleted
-        env("rm", "-y", "test1")
-
-        assert os.path.isfile("spack.yaml")
-
-
-def test_env_untrack_valid(tmp_path: pathlib.Path):
-    with fs.working_dir(str(tmp_path)):
-        # create an independent environment
-        env("create", "-d", ".")
-
-        # test tracking an environment in known store
-        env("track", "--name", "test_untrack", ".")
-        env("untrack", "--yes-to-all", "test_untrack")
-
-        # check that environment was successfully untracked
-        out = env("ls")
-        assert "test_untrack" not in out
-
-
-def test_env_untrack_invalid_name():
-    # test untracking an environment that doesn't exist
-    env_name = "invalid_environment_untrack"
-
-    out = env("untrack", env_name)
-
-    assert f"Environment '{env_name}' does not exist" in out
-
-
-def test_env_untrack_when_active(tmp_path: pathlib.Path):
-    env_name = "test_untrack_active"
-
-    with fs.working_dir(str(tmp_path)):
-        # create an independent environment
-        env("create", "-d", ".")
-
-        # test tracking an environment in known store
-        env("track", "--name", env_name, ".")
-
-        active_env = ev.read(env_name)
-        with active_env:
-            output = env("untrack", "--yes-to-all", env_name, fail_on_error=False)
-            assert env.error is not None
-
-        # check that environment could not be untracked while active
-        assert f"'{env_name}' can't be untracked while activated" in output
-
-        env("untrack", "-f", env_name)
-        out = env("ls")
-        assert env_name not in out
-
-
-def test_env_untrack_managed():
-    env_name = "test_untrack_managed"
-
-    # create an managed environment
-    env("create", env_name)
-
-    with pytest.raises(spack.main.SpackCommandError):
-        env("untrack", env_name)
-
-    # check that environment could not be untracked while active
-    assert f"'{env_name}' is not a tracked env" in env.output
-
-
-@pytest.fixture()
-def installed_environment(
-    tmp_path: pathlib.Path, mock_fetch, mock_packages, mock_archive, install_mockery
-):
-    spack_yaml = tmp_path / "spack.yaml"
-
-    @contextlib.contextmanager
-    def _installed_environment(content):
-        spack_yaml.write_text(content)
-        with fs.working_dir(tmp_path):
-            env("create", "test", "./spack.yaml")
-            with ev.read("test") as current_environment:
-                current_environment.concretize()
-                current_environment.install_all(fake=True)
-                current_environment.write(regenerate=True)
-
-            with ev.read("test") as current_environment:
-                yield current_environment
-
-    return _installed_environment
-
-
-@pytest.fixture()
-def template_combinatorial_env(tmp_path: pathlib.Path):
-    """Returns a template base environment for tests. Since the environment configuration is
-    extended using str.format, we need double '{' escaping for the projections.
-    """
-    view_dir = tmp_path / "view"
-    return f"""\
-    spack:
-      definitions:
-        - packages: [mpileaks, callpath]
-        - targets: ['target=x86_64', 'target=core2']
-      specs:
-        - matrix:
-            - [$packages]
-            - [$targets]
-
-      view:
-        combinatorial:
-          root: {view_dir}
-          {{view_config}}
-          projections:
-            'all': '{{{{architecture.target}}}}/{{{{name}}}}-{{{{version}}}}'
-    """
-
-
-def test_add_requires_active_env():
-    """Test that spack add exits with code 2 when no environment is active."""
-    add("hdf5", fail_on_error=False)
-    assert add.returncode == 2
 
 
 @pytest.mark.parametrize("shell", ["sh", "csh", "fish"])
@@ -1514,7 +1514,10 @@ spack:
         assert (view_dir / ".spack" / "mpileaks").exists()
         manifest_path = pathlib.Path(test.manifest_path)
         # the mock mpileaks package sets FOOBAR in its run environment
-        assert "FOOBAR=mpileaks" in env("activate", "--sh", "test")
+        activate_output = env("activate", "--sh", "test")
+        activate_content = _get_cmds_from_script(activate_output, "sh")
+
+        assert "_spack_env_set FOOBAR mpileaks" in activate_content
 
     extra = "  - spec: callpath\n    install: false\n"
     manifest_path.write_text(manifest.format(extra=extra, view=view_dir), encoding="utf-8")
@@ -1525,7 +1528,10 @@ spack:
     assert (view_dir / ".spack" / "libelf").exists()
     assert not (view_dir / ".spack" / "callpath").exists()
     assert not (view_dir / ".spack" / "mpileaks").exists()
-    assert "FOOBAR=mpileaks" not in env("activate", "--sh", "test")
+
+    activate_output = env("activate", "--sh", "test")
+    activate_content = _get_cmds_from_script(activate_output, "sh")
+    assert "_spack_env_set FOOBAR mpileaks" not in activate_content
 
 
 @pytest.mark.parametrize("command", [("concretize",), ("env", "view", "regenerate")])
@@ -2179,7 +2185,7 @@ spack:
 
 
 def test_env_view_external_prefix(
-    tmp_path: pathlib.Path, mutable_database, mock_packages, mutable_config: Configuration
+    tmp_path: pathlib.Path, install_mockery, mock_fetch, mutable_config: Configuration
 ):
     fake_prefix = tmp_path / "a-prefix"
     fake_bin = fake_prefix / "bin"
@@ -2555,6 +2561,8 @@ def test_env_with_included_config_file_url(
 
     cfg = mutable_empty_config.get("packages")
     assert cfg["mpileaks"]["version"] == ["2.2"]
+
+    ev.deactivate()
 
 
 def test_env_with_included_config_scope(mutable_mock_env_path, packages_file):
@@ -3413,7 +3421,7 @@ def test_concretize_include_concrete_env():
         assert f.read() != lockfile_before
 
 
-def test_concretize_nested_include_concrete_envs():
+def test_concretize_nested_include_concrete_envs(monkeypatch):
     env("create", "test1")
     test1 = ev.read("test1")
     with test1:
@@ -3421,7 +3429,7 @@ def test_concretize_nested_include_concrete_envs():
     test1.concretize()
     test1.write()
 
-    os.environ["TEST1_ROOT"] = test1.path
+    monkeypatch.setenv("TEST1_ROOT", test1.path)
     env("create", "--include-concrete", "${TEST1_ROOT}", "test2")
     test2 = ev.read("test2")
     with test2:
@@ -4276,10 +4284,8 @@ spack:
 
     test_env = ev.read("test")
 
-    path_to_activate = env_script.path_to_env_script(test_env, "sh", "activate", "default")
-
-    with open(path_to_activate, encoding="utf-8") as f:
-        activate_content = f.read()
+    activate_output = env("activate", "--sh", "test")
+    activate_content = _get_cmds_from_script(activate_output, "sh")
 
     assert "_spack_env_set SPACK_ENVAR_SET_IN_ENV_LOAD True" in activate_content
     assert "_spack_env_set CONFIG_ENVAR_SET_IN_ENV_LOAD True" in activate_content
@@ -4288,8 +4294,8 @@ spack:
         with spack.util.environment.set_env(
             SPACK_ENVAR_SET_IN_ENV_LOAD="True", CONFIG_ENVAR_SET_IN_ENV_LOAD="True"
         ):
-            deactivate_content = env("deactivate", "--sh")
-            deactivate_content = _get_cmds_from_script(deactivate_content, "sh")
+            deactivate_output = env("deactivate", "--sh")
+            deactivate_content = _get_cmds_from_script(deactivate_output, "sh")
 
             assert "_spack_env_unset SPACK_ENVAR_SET_IN_ENV_LOAD" in deactivate_content
             assert "_spack_env_unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in deactivate_content
@@ -5643,6 +5649,8 @@ spack:
         cfg = mutable_empty_config.get("packages")
         assert "mpich" in cfg["all"]["providers"]["mpi"]
 
+        ev.deactivate()
+
 
 def test_relative_view_path_on_command_line_is_made_absolute(tmp_path: pathlib.Path):
     with fs.working_dir(str(tmp_path)):
@@ -5902,26 +5910,31 @@ def test_concretized_specs_and_include_concrete(mutable_config):
     # - libelf -> hash2
     # - pkg-a -> hash3
     env("create", "included-env")
-    with ev.read("included-env") as e:
-        e.add("mpileaks")
-        e.add("libelf")
-        e.add("pkg-a")
-        mutable_config.set(
-            "packages", {"mpileaks": {"require": ["@2.2"]}, "libelf": {"require": ["@0.8.12"]}}
-        )
-        included_pairs = e.concretize()
-        e.write()
+    included_config = spack.config.InternalConfigScope(
+        "test-included-config",
+        data={"packages": {"mpileaks": {"require": ["@2.2"]}, "libelf": {"require": ["@0.8.12"]}}},
+    )
+    with mutable_config.override(included_config):
+        with ev.read("included-env") as e:
+            e.add("mpileaks")
+            e.add("libelf")
+            e.add("pkg-a")
+            included_pairs = e.concretize()
+            e.write()
 
     env("create", "--include-concrete", "included-env", "main-env")
-    with ev.read("main-env") as e:
-        e.add("mpileaks")
-        e.add("libelf@0.8.12")
-        e.add("pkg-a")
-        mutable_config.set("packages", {"mpileaks": {"require": ["@2.3"]}})
-        spec_pairs = e.concretize()
-        concretized_specs = list(e.concretized_specs())
-        assert list(dedupe(spec_pairs + included_pairs)) == concretized_specs
-        assert len(concretized_specs) == 5
+    main_config = spack.config.InternalConfigScope(
+        "test-main-config", data={"packages": {"mpileaks": {"require": ["@2.3"]}}}
+    )
+    with mutable_config.override(main_config):
+        with ev.read("main-env") as e:
+            e.add("mpileaks")
+            e.add("libelf@0.8.12")
+            e.add("pkg-a")
+            spec_pairs = e.concretize()
+            concretized_specs = list(e.concretized_specs())
+            assert list(dedupe(spec_pairs + included_pairs)) == concretized_specs
+            assert len(concretized_specs) == 5
 
 
 def test_view_can_select_group_of_specs(installed_environment, tmp_path: pathlib.Path):
