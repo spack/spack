@@ -10,7 +10,7 @@ import pathlib
 import shutil
 import stat
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 
 import pytest
 
@@ -776,28 +776,24 @@ def test_temp_cwd_restores_working_dir_on_exception():
     assert os.path.realpath(os.getcwd()) == previous_dir
 
 
+@pytest.mark.not_on_windows("Windows removes read-only entries through readonly_file_handler")
+@pytest.mark.skipif(fs.getuid() == 0, reason="user is root")
 @pytest.mark.parametrize("ignore_cleanup_errors", [True, False])
-def test_temp_cwd_cleanup_args(monkeypatch, ignore_cleanup_errors):
-
-    expected_ignore_errors = False if sys.platform == "win32" else ignore_cleanup_errors
-
-    def mock_rmtree(path, **kwargs):
-        assert kwargs["ignore_errors"] is expected_ignore_errors
-
-    def mock_readonly_file_handler(ignore_errors=False):
-        # always true when called in this context on Windows
-        # should not be called on other platforms
-        assert ignore_errors is True
-        assert sys.platform == "win32"
-
-    real_rmtree = shutil.rmtree
-    monkeypatch.setattr(shutil, "rmtree", mock_rmtree)
-    monkeypatch.setattr(fs, "readonly_file_handler", mock_readonly_file_handler)
-
-    with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors):
-        pass
-    # need to restore rmtree to avoid breaking teardown
-    monkeypatch.setattr(shutil, "rmtree", real_rmtree)
+def test_temp_cwd_cleanup_errors(ignore_cleanup_errors):
+    """Tests that temp_cwd raises when it cannot remove its directory, unless told to ignore it."""
+    expect_error = suppress() if ignore_cleanup_errors else pytest.raises(PermissionError)
+    tmp_dir = None
+    try:
+        with expect_error:
+            with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors) as tmp_dir:
+                os.mkdir("locked")
+                fs.touch(os.path.join("locked", "file"))
+                os.chmod("locked", 0o500)
+    finally:
+        # mkdtemp creates the directory outside of the test's tmp_path
+        if tmp_dir is not None:
+            os.chmod(os.path.join(tmp_dir, "locked"), 0o700)
+            shutil.rmtree(tmp_dir)
 
 
 def test_temporary_dir_context_manager():
@@ -1493,3 +1489,12 @@ def test_write_tmp_and_move_permissions(tmp_path: pathlib.Path):
         assert dst.read_text() == "updated"
     finally:
         os.umask(old_umask)
+
+
+@pytest.mark.only_windows("readonly_file_handler is used only on Windows")
+@pytest.mark.parametrize("ignore_cleanup_errors", [True, False])
+def test_temp_cwd_removes_read_only_files_on_windows(ignore_cleanup_errors):
+    with fs.temp_cwd(ignore_cleanup_errors=ignore_cleanup_errors) as tmp_dir:
+        fs.touch("file")
+        os.chmod("file", stat.S_IREAD)
+    assert not os.path.exists(tmp_dir)

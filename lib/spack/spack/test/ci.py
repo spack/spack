@@ -4,7 +4,6 @@
 import io
 import os
 import pathlib
-import subprocess
 from urllib.error import HTTPError
 
 import pytest
@@ -482,15 +481,8 @@ def test_ci_process_command(repro_dir):
 
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
-def test_ci_process_command_fail(repro_dir, monkeypatch):
-    msg = "subprocess wait exception"
-
-    def _fail(self, args):
-        raise RuntimeError(msg)
-
-    monkeypatch.setattr(subprocess.Popen, "__init__", _fail)
-    with pytest.raises(RuntimeError, match=msg):
-        ci.process_command("help", [], str(repro_dir))
+def test_ci_process_command_fail(repro_dir):
+    assert ci.process_command("fail", ["false"], str(repro_dir)) == 1
 
 
 def test_ci_create_buildcache(working_env, config, monkeypatch):
