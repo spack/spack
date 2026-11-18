@@ -52,6 +52,7 @@ from urllib.request import urlopen
 import spack.builder
 import spack.config
 import spack.enums
+import spack.fetch_strategy
 import spack.package_base
 import spack.patch
 import spack.repo
@@ -61,6 +62,7 @@ import spack.util.crypto
 import spack.util.lang
 import spack.util.spack_yaml as syaml
 import spack.variant
+import spack.version
 from spack.util.string import plural
 
 #: Map an audit tag to a list of callables implementing checks

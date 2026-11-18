@@ -1473,10 +1473,7 @@ class SpackSolverSetup:
         self._effect_cache.clear()
 
     def when_version(
-            self,
-            pkg: Type[spack.package_base.PackageBase],
-            version,
-            when: spack.spec.Spec,
+        self, pkg: Type[spack.package_base.PackageBase], version, when: spack.spec.Spec
     ):
         pkg_fact = lambda f: self.gen.pkg_fact(pkg.name, f)
 

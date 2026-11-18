@@ -2953,7 +2953,6 @@ packages:
             spack.concretize.concretize_one(f"gmake commit={'a' * 40}")
             assert "Cannot use commit variant with" in e.value.message
 
-
     def test_when_versions_solver(self):
         """Tests that concretize a package that uses when= returns the highest version which
         matches the test platform
