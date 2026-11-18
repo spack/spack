@@ -30,7 +30,7 @@ def utf8_path_to_binary_regex(prefix: str) -> PatternBytes:
 
 
 def _byte_strings_to_single_binary_regex(prefixes: Iterable[bytes]) -> PatternBytes:
-    all_prefixes = b"|".join(re.escape(p) for p in prefixes)
+    all_prefixes = b"|".join(re.escape(p) for p in sorted(prefixes, key=len, reverse=True))
     return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
 
 
@@ -56,9 +56,9 @@ class PrefixReplacer:
     def __init__(self, prefix_to_prefix: Dict[bytes, bytes]) -> None:
         """
         Arguments:
-            prefix_to_prefix: An ordered mapping from prefix to prefix. The order is relevant to
-                support substring fallbacks, for example
-                ``[("/first/sub", "/x"), ("/first", "/y")]`` will ensure /first/sub is matched and
+            prefix_to_prefix: A mapping from prefix to prefix. Longer prefixes are matched first
+                to support substring fallbacks, for example
+                ``[("/first", "/y"), ("/first/sub", "/x")]`` will ensure /first/sub is matched and
                 replaced before /first.
         """
         self.prefix_to_prefix = filter_identity_mappings(prefix_to_prefix)
@@ -157,7 +157,7 @@ class BinaryFilePrefixReplacer(PrefixReplacer):
         # performance due to common prefix optimization.
         return re.compile(
             b"("
-            + b"|".join(re.escape(p) for p in binary_prefixes)
+            + b"|".join(re.escape(p) for p in sorted(binary_prefixes, key=len, reverse=True))
             + b")([^\0]{0,%d}\0)?" % suffix_safety_size
         )
 
