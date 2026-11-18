@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Schema for GPU microarchitecture definitions and compiler support",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "microarchitectures"
+  ],
+  "properties": {
+    "microarchitectures": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Za-z0-9.:+-]+$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "vendor"
+          ],
+          "properties": {
+            "from": {
+              "$comment": "Direct parents. A device at this node runs binaries built for any parent.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "vendor": {
+              "type": "string"
+            },
+            "compilers": {
+              "type": "object",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[\\w+-]+$": {
+                  "$comment": "Permit multiple entries since compilers change options across versions",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "versions",
+                      "flags"
+                    ],
+                    "properties": {
+                      "versions": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "flags": {
+                        "type": "string"
+                      },
+                      "warnings": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
