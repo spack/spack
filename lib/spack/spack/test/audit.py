@@ -86,6 +86,25 @@ def test_package_audits(packages, expected_errors, mock_packages):
             },
             "CFG-MODULES",
         ),
+        # Variants excluded for some of the installations folded in a tcl module file
+        (
+            "modules",
+            {
+                "default": {
+                    "tcl": {
+                        "variants": "all",
+                        "mpileaks +debug": {"filter": {"exclude_variants": ["fortran"]}},
+                    }
+                }
+            },
+            "CFG-MODULES",
+        ),
+        # A variant excluded from the tcl module files of a package that does not have it
+        (
+            "modules",
+            {"default": {"tcl": {"mpileaks": {"filter": {"exclude_variants": ["nonexistent"]}}}}},
+            "CFG-MODULES",
+        ),
     ],
 )
 def test_config_audits(
@@ -103,11 +122,24 @@ def test_config_audits(
         {"variants": "all", "hash_length": 0, "mpileaks": {"template": "override.txt"}},
         {"variants": "all", "hash_length": 0, "mpileaks@2.3": {"template": "override.txt"}},
         {"variants": "all", "hash_length": 0, "all": {"template": "override.txt"}},
+        # Variants excluded for a package or a package version apply to the whole module file
+        {"variants": "all", "mpileaks": {"filter": {"exclude_variants": ["fortran"]}}},
+        {"variants": "all", "mpileaks@2.3": {"filter": {"exclude_variants": ["fortran"]}}},
+        {"variants": "all", "all": {"filter": {"exclude_variants": ["fortran"]}}},
         # Installations are not folded when variants are not defined in module files
         {"mpileaks +debug": {"template": "override.txt"}},
+        {"mpileaks +debug": {"filter": {"exclude_variants": ["fortran"]}}},
+        # Spack defines the build_system variant on every package, and never defines a
+        # reserved one in module files
+        {"mpileaks": {"filter": {"exclude_variants": ["build_system", "patches"]}}},
+        # Variant names are only checked against a package
+        {"all": {"filter": {"exclude_variants": ["nonexistent"]}}},
+        {"^mpi": {"filter": {"exclude_variants": ["nonexistent"]}}},
     ],
 )
-def test_modules_audit_accepts_templates(mutable_config: Configuration, tcl_data, mock_packages):
+def test_modules_audit_accepts_file_wide_options(
+    mutable_config: Configuration, tcl_data, mock_packages
+):
     with mutable_config.override("modules", {"default": {"tcl": tcl_data}}):
         assert not spack.audit.run_check("CFG-MODULES")
 

@@ -458,6 +458,35 @@ A projection without ``{version}`` gives different versions the same name, and `
 With ``variants: all``, a module file is rendered from a single template, so set the ``template`` option for a whole package or for a package version.
 Spack reports a configuration error if the installations of a module file are configured with different templates, and ``spack audit configs`` flags a ``template`` set under any other constraint.
 
+.. rubric:: Excluding variants
+
+Variants that do not matter to users can be left out of module files with the ``exclude_variants`` option, which takes a list of variant names.
+Like a template, it shapes the whole module file: set it for a package or a package version, and ``spack audit configs`` flags it under any other constraint.
+The ``module`` command then reports an excluded variant as unknown when it is stated on the command line, and ``spack audit configs`` flags a name that is not a variant of the package.
+The ``hash`` variant is not a package variant and cannot be excluded: it tells apart the installations that only differ by excluded variants.
+
+.. code-block:: yaml
+
+   modules:
+     default:
+       tcl:
+         variants: all
+         all:
+           filter:
+             exclude_variants:
+               - build_system
+         zlib:
+           filter:
+             exclude_variants:
+               - pic
+
+``build_system`` is left out of every module file, and ``pic`` of the ``zlib`` module files too:
+
+.. code-block:: console
+
+   $ spack module tcl find zlib+shared
+   zlib/1.3.2-gcc-13.3.0+optimize+shared hash=vzg6net
+
 Default module versions
 """""""""""""""""""""""
 

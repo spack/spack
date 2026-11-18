@@ -1,0 +1,11 @@
+enable:
+  - tcl
+tcl:
+  variants: all
+  all:
+    autoload: direct
+
+  mpileaks+debug:
+    filter:
+      exclude_variants:
+        - fortran

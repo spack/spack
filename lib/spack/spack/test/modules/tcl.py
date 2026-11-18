@@ -1163,6 +1163,90 @@ class TestTcl:
         content = modulefile_content("singlevalue-variant fum=on")
         assert len([x for x in content if "    fum {on_}" in x]) == 1
 
+    def test_exclude_variants(self, modulefile_content, module_configuration, factory):
+        """Tests excluding variant definitions in module file."""
+
+        # default exclude list for "all" and specific list for some packages
+        module_configuration("exclude_variants")
+        content = modulefile_content("mpileaks +debug -shared")
+
+        # test module designation, as used by "spack module tcl find" and the module index
+        writer, _ = factory("mpileaks +debug -shared")
+        assert re.search(
+            "~opt~shared\\+static build_system=generic hash=\\w{7}$", writer.layout.use_name
+        )
+
+        # test variant definition
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set variant_names [list build_system opt shared static hash]" in x
+                ]
+            )
+            == 1
+        )
+        assert (
+            len([x for x in content if "set boolean_variants [list opt shared static]" in x]) == 1
+        )
+        assert len([x for x in content if "    debug {" in x]) == 0
+        assert len([x for x in content if "    fortran {" in x]) == 0
+        assert len([x for x in content if re.match("    {generic 0 0 1 \\w{7}}", x)]) == 1
+
+        # test dependent module designation: the dependency is pinned by its module name,
+        # so the variants excluded from its module file do not matter
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match("    depends-on mpich/3.0.4-gcc-10.2.1 hash=\\w{7}$", x)
+                ]
+            )
+            == 1
+        )
+
+        # test cascading specific definition between "all" and some packages
+        module_configuration("exclude_variants_cascading")
+        content = modulefile_content("mpileaks +debug -shared")
+
+        # test variant definition
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set variant_names [list build_system opt static hash]" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if "set boolean_variants [list opt static]" in x]) == 1
+        assert len([x for x in content if re.match("    {generic 0 1 \\w{7}}", x)]) == 1
+
+    def test_exclude_variants_load(self, install_mockery, module_configuration, module_command):
+        """Test the module tool selects an installation by its defined variants only, and
+        reports an excluded variant stated on the command line as unknown."""
+        module_configuration("exclude_variants")
+        spec = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec)
+        concrete = spack.store.STORE.db.query_one(spec)
+        module_command.env["MODULEPATH"] = writer_cls.from_spec(
+            concrete, "default"
+        ).layout.arch_dirname
+
+        status, _ = module_command("load", "mpileaks", "+static")
+        assert status
+        assert f"hash|{concrete.dag_hash(7)}|" in module_command.env["__MODULES_LMVARIANT"]
+        assert "debug|" not in module_command.env["__MODULES_LMVARIANT"]
+        status, _ = module_command("unload", "mpileaks")
+        assert status
+
+        status, stderr = module_command("load", "mpileaks", "+debug")
+        assert not status
+        assert "Unknown variant 'debug' specified" in stderr
+
     def test_no_fold_without_variants(
         self, install_mockery, module_configuration, modulefile_filename, factory, monkeypatch
     ):
@@ -1428,6 +1512,51 @@ class TestTcl:
         install_b = f"{{generic 1 0 1 1 1 {hash_b}}}\\"
         install_c = f"{{generic 1 0 0 1 1 {hash_c}}}\\"
         assert content.index(install_a) < content.index(install_b) < content.index(install_c)
+
+        # check installations only differ by their hash variant due to excluded variants
+        module_configuration("fold_variants_exclude_variants")
+        spec_a = "mpileaks@2.2 ~debug"
+        spec_b = "mpileaks@2.2 +debug"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file = modulefile_filename("tcl", spec_a)
+        content = _module_lines(module_file)
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set variant_names [list build_system opt shared static hash]" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if re.match("{generic 0 1 1 \\w{7}}\\\\$", x)]) == 2
+        assert len([x for x in content if re.match("hash {\\w{7} \\w{7}}\\\\$", x)]) == 1
+
+        # check each installation filters its variants with its own configuration rules, so
+        # the values of an installation line up with the aggregated variant names, even
+        # though the audit flags such a configuration
+        module_configuration("fold_variants_exclude_variants_spec")
+        spec_a = "mpileaks@2.1 ~debug"
+        spec_b = "mpileaks@2.1 +debug"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file = modulefile_filename("tcl", spec_a)
+        content = _module_lines(module_file)
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set variant_names [list build_system debug fortran opt shared static hash]"
+                    in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if re.match("{generic 0 0 0 1 1 \\w{7}}\\\\$", x)]) == 1
+        assert len([x for x in content if re.match("{generic 1 0 0 1 1 \\w{7}}\\\\$", x)]) == 1
 
     def test_fold_variants_pinned_dependency(
         self, install_mockery, module_configuration, modulefile_filename
