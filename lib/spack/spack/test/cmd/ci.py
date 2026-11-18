@@ -33,7 +33,7 @@ from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
 from spack.schema.database_index import schema as db_idx_schema
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
-from spack.util.filesystem import mkdirp, working_dir
+from spack.util.filesystem import working_dir
 
 config_cmd = spack.main.SpackCommand("config")
 ci_cmd = spack.main.SpackCommand("ci")
@@ -56,57 +56,6 @@ def ci_base_environment(working_env, tmp_path: pathlib.Path):
     os.environ["CI_PROJECT_DIR"] = str(tmp_path)
     os.environ["CI_PIPELINE_ID"] = "7192"
     os.environ["CI_JOB_NAME"] = "mock"
-
-
-@pytest.fixture(scope="function")
-def mock_git_repo(git, tmp_path: pathlib.Path):
-    """Create a mock git repo with two commits, the last one creating
-    a .gitlab-ci.yml"""
-
-    repo_path = str(tmp_path / "mockspackrepo")
-    mkdirp(repo_path)
-
-    with working_dir(repo_path):
-        git("init")
-
-        git("config", "--local", "user.email", "testing@spack.io")
-        git("config", "--local", "user.name", "Spack Testing")
-
-        # This path is used to satisfy git root detection and detection of environment changed
-        path_to_env = os.path.sep.join(("no", "such", "env", "path", "spack.yaml"))
-        os.makedirs(os.path.dirname(path_to_env))
-        with open(path_to_env, "w", encoding="utf-8") as f:
-            f.write(
-                """
-spack:
-    specs:
-    - a
-"""
-            )
-
-        git("add", path_to_env)
-
-        with open("README.md", "w", encoding="utf-8") as f:
-            f.write("# Introduction")
-
-        # initial commit with README
-        git("add", "README.md")
-        git("-c", "commit.gpgsign=false", "commit", "-m", "initial commit")
-
-        with open(".gitlab-ci.yml", "w", encoding="utf-8") as f:
-            f.write(
-                """
-testjob:
-    script:
-        - echo "success"
-            """
-            )
-
-        # second commit, adding a .gitlab-ci.yml
-        git("add", ".gitlab-ci.yml")
-        git("-c", "commit.gpgsign=false", "commit", "-m", "add a .gitlab-ci.yml")
-
-        yield repo_path
 
 
 @pytest.fixture()

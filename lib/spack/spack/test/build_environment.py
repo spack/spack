@@ -94,24 +94,6 @@ def ensure_env_variables(mutable_config, mock_packages, monkeypatch, working_env
     return _ensure
 
 
-@pytest.fixture
-def mock_module_cmd(monkeypatch):
-    class Logger:
-        def __init__(self, fn=None):
-            self.fn = fn
-            self.calls = []
-
-        def __call__(self, *args, **kwargs):
-            self.calls.append((args, kwargs))
-            if self.fn:
-                return self.fn(*args, **kwargs)
-
-    mock_module_cmd = Logger()
-    monkeypatch.setattr(spack.build_environment, "module", mock_module_cmd)
-    monkeypatch.setattr(spack.build_environment, "_on_cray", lambda: (True, None))
-    return mock_module_cmd
-
-
 @pytest.mark.not_on_windows("Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ["SPACK_TEST_COMMAND"] = "dump-args"
