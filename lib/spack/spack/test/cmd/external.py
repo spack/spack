@@ -19,17 +19,6 @@ from spack.util.filesystem import getuid, touch
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
 
-@pytest.fixture
-def executables_found(monkeypatch):
-    def _factory(result):
-        def _mock_search(path_hints=None):
-            return result
-
-        monkeypatch.setattr(spack.detection.path, "executables_in_path", _mock_search)
-
-    return _factory
-
-
 def define_plat_exe(exe):
     if sys.platform == "win32":
         exe += ".bat"
