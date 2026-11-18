@@ -11,7 +11,7 @@ from .core import SourceContext, fn
 from .versions import Provenance
 
 #: Language virtuals wrapped by the compiler wrapper (same ones for which a flag exists)
-COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran")
+COMPILER_WRAPPER_LANGUAGES = ("c", "cxx", "fortran", "hip-lang")
 
 
 class RuntimePropertyRecorder:

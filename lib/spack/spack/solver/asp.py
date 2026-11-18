@@ -2747,10 +2747,14 @@ class SpackSolverSetup:
             # Add a dependency on the compiler wrapper
             compiler_str = f"{compiler.name} /{compiler.dag_hash()}"
             for language in COMPILER_WRAPPER_LANGUAGES:
+                if language == "hip-lang":
+                    wrapper_dep = "compiler-wrapper@1.2.0:"
+                else:
+                    wrapper_dep = "compiler-wrapper"
                 # Using compiler.name causes a bit of duplication, but that is taken care of by
                 # clingo during grounding.
                 recorder("*").depends_on(
-                    "compiler-wrapper",
+                    wrapper_dep,
                     when=f"%[deptypes=build virtuals={language}] {compiler.name}",
                     type="build",
                     description=f"Add compiler wrapper when using {compiler.name} for {language}",
