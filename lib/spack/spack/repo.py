@@ -488,6 +488,10 @@ class FastPackageChecker(Mapping[str, float]):
 class Indexer(metaclass=abc.ABCMeta):
     """Adaptor for indexes that need to be generated when repos are updated."""
 
+    #: Version of the format of the cached index. It is part of the cache file name, so a cache
+    #: written in another format, e.g. by another version of Spack, is neither read nor replaced.
+    version = 1
+
     def __init__(self, repository):
         self.repository = repository
         self.index = None
@@ -567,6 +571,8 @@ class ProviderIndexer(Indexer):
 
 class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
+
+    version = spack.patch.PatchCache.VERSION
 
     def _create(self) -> spack.patch.PatchCache:
         return spack.patch.PatchCache(repository=self.repository)
@@ -670,10 +676,13 @@ class RepoIndex:
         """Determine which packages need an update, and update indexes. Returns true if the
         index is fresh."""
 
-        # Filename of the provider index cache (we assume they're all json)
+        # Filename of the index cache (we assume they're all json)
         from spack.spec import SPECFILE_FORMAT_VERSION
 
-        cache_filename = f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}-index.json"
+        cache_filename = (
+            f"{name}/{self.namespace}-specfile_v{SPECFILE_FORMAT_VERSION}"
+            f"-index_v{indexer.version}.json"
+        )
 
         with self.cache.read_transaction(cache_filename) as f:
             # Get the mtime of the cache if it exists, of -inf.
