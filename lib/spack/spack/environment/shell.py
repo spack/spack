@@ -3,14 +3,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import textwrap
-from typing import List, Optional
+import warnings
+from typing import List, Mapping, Optional
 
 import spack.config
 import spack.environment as ev
 import spack.repo
 import spack.schema.environment
 import spack.store
-from spack.active_environment import active_environment
+import spack.util.undo_record as undo_record
 from spack.util import tty
 from spack.util.environment import EnvironmentModifications, ShellCmdString
 from spack.util.tty.color import colorize
@@ -73,19 +74,20 @@ def _make_spack_prompt(shell: str, prompt: str) -> List[str]:
         ]
 
 
+def _short_name(env: ev.Environment) -> str:
+    if env.name == env.path:
+        return os.path.basename(env.path)
+    return env.name
+
+
 def activate_header(
     env: ev.Environment, shell: str, prompt: bool = False, view: Optional[str] = None
 ):
-    short_name = env.name
-    if short_name == env.path:
-        short_name = os.path.basename(short_name)
+    short_name = _short_name(env)
 
     # Construct the commands to run
     shell_cmd = ShellCmdString(shell)
-    cmds: List[str] = [
-        shell_cmd.set("SPACK_ENV", env.path),
-        shell_cmd.set("VIRTUAL_ENV_PROMPT", short_name),
-    ]
+    cmds: List[str] = [shell_cmd.set("SPACK_ENV", env.path)]
     if view:
         cmds.append(shell_cmd.set("SPACK_ENV_VIEW", view))
     cmds.extend(shell_cmd.alias("despacktivate", "spack env deactivate"))
@@ -97,11 +99,7 @@ def activate_header(
 
 def deactivate_header(shell):
     shell_cmd = ShellCmdString(shell)
-    cmds: List[str] = [
-        shell_cmd.unset("SPACK_ENV"),
-        shell_cmd.unset("SPACK_ENV_VIEW"),
-        shell_cmd.unset("VIRTUAL_ENV_PROMPT"),
-    ]
+    cmds: List[str] = [shell_cmd.unset("SPACK_ENV"), shell_cmd.unset("SPACK_ENV_VIEW")]
 
     if shell == "csh":
         cmds.append(
@@ -148,10 +146,33 @@ def deactivate_header(shell):
     return shell_cmd.join(cmds)
 
 
+#: Kind of the undo record unit holding the changes made by activating an environment
+_ENV_KIND = "env"
+
+
+def read_undo_record(environ: Mapping[str, str]) -> undo_record.UndoRecord:
+    """Reads the undo record of the shell. The unit of an environment that is not the active one
+    any more was undone outside the record, and is forgotten."""
+    record = undo_record.UndoRecord.from_environ(environ)
+    unit = record.find(_ENV_KIND)
+    active = environ.get(ev.spack_env_var)
+    if unit is not None and (active is None or unit.key != _environment_key(active)):
+        record.forget(unit.key)
+    return record
+
+
+def _environment_key(path: str) -> str:
+    return undo_record.unit_key(_ENV_KIND, path)
+
+
 def activate(
-    env: ev.Environment, use_env_repo=False, view: Optional[str] = "default"
-) -> EnvironmentModifications:
-    """Activate an environment and append environment modifications
+    env: ev.Environment,
+    record: undo_record.UndoRecord,
+    use_env_repo=False,
+    view: Optional[str] = "default",
+) -> None:
+    """Activates an environment, and pushes its environment modifications on the undo record of
+    the shell.
 
     To activate an environment, we add its configuration scope to the
     existing Spack configuration, and we set active to the current
@@ -159,15 +180,14 @@ def activate(
 
     Arguments:
         env: the environment to activate
+        record: undo record of the shell
         use_env_repo: use the packages exactly as they appear in the environment's repository
         view: generate commands to add runtime environment variables for named view
-
-    Returns:
-        spack.util.environment.EnvironmentModifications: Environment variables
-        modifications to activate environment."""
+    """
     ev.activate(env, use_env_repo=use_env_repo)
 
     env_mods = EnvironmentModifications()
+    env_mods.set("VIRTUAL_ENV_PROMPT", _short_name(env))
 
     #
     # NOTE in the fish-shell: Path variables are a special kind of variable
@@ -194,43 +214,25 @@ def activate(
             "    spack -e {0} concretize --force".format(env.name),
         )
 
-    return env_mods
+    record.push(
+        undo_record.Unit(_environment_key(env.path), undo_record.ops_from_modifications(env_mods))
+    )
 
 
-def deactivate() -> EnvironmentModifications:
-    """Deactivate an environment and collect corresponding environment modifications.
+def deactivate(record: undo_record.UndoRecord) -> None:
+    """Deactivate the active environment, removing its unit from the undo record of the shell.
 
-    Note: unloads the environment in its current state, not in the state it was
-        loaded in, meaning that specs that were removed from the spack environment
-        after activation are not unloaded.
-
-    Returns:
-        Environment variables modifications to activate environment.
+    An environment activated without a record (by an older Spack, or before the shell was
+    updated) cannot be undone: its changes to the shell environment are left in place, with a
+    warning.
     """
-    env_mods = EnvironmentModifications()
-    active = active_environment()
-
-    if active is None:
-        return env_mods
-
-    with active.manifest.use_config():
-        env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
-    if env_vars_yaml:
-        env_mods.extend(spack.schema.environment.parse(env_vars_yaml).reversed())
-
-    active_view = os.getenv(ev.spack_env_view_var)
-
-    if active_view and active.has_view(active_view):
-        try:
-            with spack.store.STORE.db.read_transaction():
-                active.rm_view_from_env(env_mods, active_view)
-        except (spack.repo.UnknownPackageError, spack.repo.UnknownNamespaceError) as e:
-            tty.warn(e)
-            tty.warn(
-                "Could not fully deactivate view due to missing package "
-                "or repo, shell environment may be corrupt."
-            )
+    unit = record.find(_ENV_KIND)
+    if unit is None:
+        warnings.warn(
+            "the environment was activated without an undo record, so its changes to "
+            "environment variables are left in the shell"
+        )
+    else:
+        record.remove(unit.key)
 
     ev.deactivate()
-
-    return env_mods
