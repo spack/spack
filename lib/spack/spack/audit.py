@@ -69,6 +69,9 @@ CALLBACKS: Dict[str, "AuditClass"] = {}
 #: Map a group of checks to the list of related audit tags
 GROUPS: Dict[str, List[str]] = collections.defaultdict(list)
 
+#: Packages should depend on these virtuals instead of their providers
+VIRTUALS: Set[str] = {"pkgconfig"}
+
 
 class Error:
     """Information on an error reported in a test."""
@@ -1184,7 +1187,6 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         f" in {filename}",
                     ]
                     errors.append(error_cls(summary=summary, details=details))
-                    continue
 
                 # check variants
                 dependency_variants = dep.spec.variants
@@ -1208,6 +1210,16 @@ def _issues_in_depends_on_directive(pkgs, error_cls):
                         errors.append(
                             error_cls(summary=summary, details=[error_msg, f"in {filename}"])
                         )
+
+                virtuals = set(dependency_pkg_cls.provided_virtual_names()) & VIRTUALS
+                for virtual in virtuals:
+                    summary = f"{pkg_name}: dependency on provider '{dep_name}'"
+                    details = [
+                        f"depend on '{virtual}' instead of '{dep_name}'",
+                        f"if '{dep_name}' is needed, require '%{virtual}={dep_name}'",
+                        f"in {filename}",
+                    ]
+                    errors.append(error_cls(summary=summary, details=details))
 
     return errors
 
