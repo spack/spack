@@ -18,7 +18,7 @@ from spack.vendor.typing_extensions import Protocol
 if TYPE_CHECKING:
 
     class SupportsRichComparison(Protocol):
-        """Objects that support =, !=, <, <=, >, and >=."""
+        """Objects that support ==, !=, <, <=, >, and >=."""
 
         def __eq__(self, other: Any) -> bool:
             raise NotImplementedError
@@ -38,5 +38,11 @@ if TYPE_CHECKING:
         def __ge__(self, other: Any) -> bool:
             raise NotImplementedError
 
+    class SupportsRichComparisonAndHash(SupportsRichComparison, Protocol):
+        """The above, but also implementing or inheriting `__hash__`."""
+
+        def __hash__(self) -> int:
+            raise NotImplementedError
+
 else:
-    SupportsRichComparison = object
+    SupportsRichComparison = SupportsRichComparisonAndHash = object
