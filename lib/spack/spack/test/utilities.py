@@ -6,7 +6,7 @@
 
 from typing import Dict, Hashable, List, Optional, Sequence, Tuple
 
-from spack.concretize_ui import ConcretizerUI, SolveKind
+from spack.concretize_ui import ConcretizationPhase, ConcretizerUI, SolveKind
 from spack.main import make_argument_parser
 from spack.solver.result import Result
 from spack.spec import Spec
@@ -63,6 +63,8 @@ class RecordingUI(ConcretizerUI):
         self.concretized: List[Tuple[Spec, Spec, int, float]] = []
         #: the specs of each solve that started
         self.solves: List[List[Spec]] = []
+        #: each phase the solver entered
+        self.phases: List[ConcretizationPhase] = []
         #: the ASP program of each solve that was set up
         self.programs: List[List[str]] = []
         #: (result, timer, statistics, cached) for each solve that finished
@@ -91,6 +93,9 @@ class RecordingUI(ConcretizerUI):
 
     def on_solve_started(self, specs: Sequence[Spec]) -> None:
         self.solves.append(list(specs))
+
+    def on_phase(self, phase: ConcretizationPhase) -> None:
+        self.phases.append(phase)
 
     def on_asp_program_generated(self, program: List[str]) -> None:
         self.programs.append(program)
