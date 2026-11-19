@@ -219,11 +219,18 @@ class Policy:
         )
         return entry._replace(labels=labels) if labels else None
 
-    def disallowed(self, spec: "spack.spec.Spec") -> List[Violation]:
+    def disallowed(
+        self, spec: "spack.spec.Spec", *, fixed: Optional[Set[str]] = None
+    ) -> List[Violation]:
         """Returns the list of deprecation-policy violations for a spec. External specs are
         exempted since they are not under Spack's control.
 
-        A label fixed by a patch applied to the spec is not a violation.
+        A fixed label is not a violation.
+
+        Args:
+            spec: the spec to check.
+            fixed: the labels fixed for ``spec``. Defaults to the labels fixed by the patches
+                applied to ``spec``, which an abstract spec does not have.
         """
         if spec.external:
             return []
@@ -234,7 +241,6 @@ class Policy:
             return []
 
         violations = []
-        fixed: Optional[Set[str]] = None
         for constraint, entries in pkg_cls.deprecations.items():
             if not spec.satisfies(constraint):
                 continue
