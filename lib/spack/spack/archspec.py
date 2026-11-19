@@ -48,11 +48,16 @@ def microarchitecture_flags_from_target(
         target: The target microarchitecture.
         compiler: The spec defining the compiler.
     """
-    # Try to check if the current compiler comes with a version number or has an unexpected suffix.
-    # If so, treat it as a compiler with a custom spec.
-    version_number, _ = spack.vendor.archspec.cpu.version_components(
-        compiler.version.dotted_numeric_string
-    )
+    # Check if the compiler package provides an archspec version mapping.
+    # This allows compiler packages with non-standard versioning (e.g., llvm-amdgpu
+    # uses ROCm versions but is based on specific LLVM versions) to provide the
+    # version that archspec should use for determining target support.
+    if hasattr(compiler.package, "archspec_version"):
+        version_str = compiler.package.archspec_version()
+    else:
+        version_str = compiler.version.dotted_numeric_string
+
+    version_number, _ = spack.vendor.archspec.cpu.version_components(version_str)
     try:
         return target.optimization_flags(compiler.package.archspec_name(), version_number)
     except ValueError:
