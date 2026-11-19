@@ -3,10 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import os
 import sys
 
 import spack.cmd
 import spack.cmd.common
+import spack.environment.shell
 import spack.store
 import spack.user_environment as uenv
 from spack.active_environment import active_environment
@@ -97,10 +99,9 @@ def load(parser, args):
         )
         return 1
 
+    record = spack.environment.shell.read_undo_record(os.environ)
     with spack.store.STORE.db.read_transaction():
-        env_mod = uenv.environment_modifications_for_specs(*specs)
         for spec in specs:
-            env_mod.prepend_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
-        cmds = env_mod.shell_modifications(args.shell)
+            uenv.load(record, spec)
 
-        sys.stdout.write(cmds)
+    sys.stdout.write(uenv.shell_commands(record, args.shell))

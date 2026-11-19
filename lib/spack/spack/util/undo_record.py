@@ -28,7 +28,7 @@ import re
 import sys
 import warnings
 import zlib
-from typing import Callable, Dict, List, Mapping, Optional, Set, Tuple
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
 import spack.error
 import spack.util.spack_json as sjson
@@ -313,6 +313,11 @@ class Unit:
         return self.key.split(":", 1)[0]
 
     @property
+    def name(self) -> str:
+        """The part of the key after the kind, identifying the unit among those of its kind."""
+        return self.key.split(":", 1)[1]
+
+    @property
     def is_user(self) -> bool:
         return self.kind == USER_KIND
 
@@ -507,14 +512,20 @@ class UndoRecord:
         """Returns the lowest unit of ``kind`` on the stack, or None."""
         return next((u for u in self.units if u.kind == kind), None)
 
-    def remove(self, key: str) -> None:
-        """Removes the unit with ``key`` from the stack, if any, so that its ops are undone."""
+    def remove(self, key: str) -> bool:
+        """Removes the unit with ``key`` from the stack, so that its ops are undone. Returns
+        whether there was such a unit.
+        """
+        count = len(self.units)
         self.units = [u for u in self.units if u.key != key]
+        return len(self.units) != count
 
-    def forget(self, key: str) -> None:
-        """Removes a unit that was undone outside the record. The variables keep their value: what
-        differs from the remaining units is pushed as a user unit."""
-        self.remove(key)
+    def forget(self, keys: Iterable[str]) -> None:
+        """Removes units that were undone outside the record. The variables keep their value: what
+        differs from the remaining units is pushed as a user unit.
+        """
+        forgotten = set(keys)
+        self.units = [u for u in self.units if u.key not in forgotten]
         self._fold_edits({})
 
     def push(self, unit: Unit) -> None:
@@ -600,10 +611,17 @@ class UndoRecord:
 
         return {name: value for name, value in new.items() if self.environ.get(name) != value}
 
-    def shell_commands(self, shell: str) -> str:
-        """Returns the shell code that makes the shell environment match the record. Raises
-        EnvironmentTooLargeError if the new environment would be too large to start processes."""
+    def shell_commands(
+        self, shell: str, extra: Optional[Mapping[str, Optional[str]]] = None
+    ) -> str:
+        """Returns the shell code that makes the shell environment match the record, and sets the
+        variables in ``extra`` (or unsets them, for None). Raises EnvironmentTooLargeError if the
+        new environment would be too large to start processes.
+        """
         changes = self.environment_changes()
+        for name, value in (extra or {}).items():
+            if self.environ.get(name) != value:
+                changes[name] = value
         check_environment_size(self.environ, changes)
         return shell_assignments(changes, shell)
 

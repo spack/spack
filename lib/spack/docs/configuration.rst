@@ -764,8 +764,8 @@ A handful of additional environment variables influence Spack's runtime behavior
 
 .. envvar:: SPACK_UNDO_STACK
 
-   Set by ``spack env activate``, together with ``SPACK_UNDO_BASE``, ``SPACK_UNDO_SEEN`` and variables starting with ``SPACK_UNDO_U_``, to record the changes it makes to other environment variables.
-   Read by ``spack env deactivate`` to undo those changes.
+   Set by ``spack env activate`` and ``spack load``, together with ``SPACK_UNDO_BASE``, ``SPACK_UNDO_SEEN`` and variables starting with ``SPACK_UNDO_U_``, to record the changes they make to other environment variables.
+   Read by ``spack env deactivate`` and ``spack unload`` to undo those changes.
    Unset when no change is left to undo.
 
 .. envvar:: SPACK_COLOR

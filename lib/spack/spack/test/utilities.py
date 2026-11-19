@@ -4,10 +4,13 @@
 
 """Non-fixture utilities for test code. Must be imported."""
 
-from typing import List, Tuple
+import os
+import pathlib
+from typing import Dict, List, Optional, Tuple
 
+import spack.util.environment
 from spack.concretize_ui import ConcretizerUI, SolveKind
-from spack.main import make_argument_parser
+from spack.main import SpackCommand, make_argument_parser
 from spack.spec import Spec
 
 
@@ -88,3 +91,30 @@ class UnusableGlobal:
         raise AssertionError(
             f"{self._name} was read instead of the injected context (attribute {item!r})"
         )
+
+
+#: Variables that bash sets on its own, excluded when comparing shell environments
+_SHELL_INTERNALS = ("SHLVL", "_", "PWD", "OLDPWD")
+
+
+def current_shell() -> Dict[str, str]:
+    """Returns the environment of the test process, as a shell environment to compare."""
+    return {k: v for k, v in os.environ.items() if k not in _SHELL_INTERNALS}
+
+
+def replacing_environ(shell: Dict[str, str]) -> Dict[str, Optional[str]]:
+    """Returns the arguments of ``set_env`` that make the environment equal to ``shell``."""
+    return {name: shell.get(name) for name in set(os.environ) | set(shell)}
+
+
+def shell_after(
+    shell: Dict[str, str], tmp_path: pathlib.Path, command: SpackCommand, *args: str
+) -> Dict[str, str]:
+    """Runs ``command`` with ``shell`` as the environment, evaluates its output in bash, and
+    returns the environment of bash afterwards."""
+    with spack.util.environment.set_env(**replacing_environ(shell)):
+        output = command(*args)
+    script = tmp_path / "commands.sh"
+    script.write_text(output)
+    after = spack.util.environment.environment_after_sourcing_files(str(script), env=shell)
+    return {k: v for k, v in after.items() if k not in _SHELL_INTERNALS}
