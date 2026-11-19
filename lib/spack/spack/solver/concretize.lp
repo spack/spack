@@ -374,6 +374,22 @@ version_constraint_satisfied(node(ID,Package), Constraint) :-
 
 attr("version", node(ID, Package), Version) :- choose_version(node(ID, Package), Version).
 
+% 1. unconditional versions are always defined on all nodes for a given package
+version_allowed(node(ID, Package), Version) :-
+ pkg_fact(Package, version_definition(Version)),
+ attr("node", node(ID, Package)).
+
+% 2. conditional versions are defined only on nodes which satify the condition
+version_allowed(node(ID, Package), Version) :-
+ pkg_fact(Package, version_condition(Version, ConditionID)),
+ condition_holds(ConditionID, node(ID, Package)).
+
+% 3. A conditional version can never be chosen if none of the conditions are satisfied
+:- attr("version", node(ID, Package), Version),
+ pkg_fact(Package, version_condition(Version, _)),
+ not version_allowed(node(ID, Package), Version).
+
+
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
 

@@ -18,7 +18,7 @@ pytestmark = pytest.mark.skipif(not which("cvs"), reason="requires CVS to be ins
 
 
 @pytest.mark.parametrize("type_of_test", ["default", "branch", "date"])
-def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
+def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo, set_version_def):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with
@@ -38,7 +38,7 @@ def test_fetch(type_of_test, mock_cvs_repository, config, mutable_mock_repo):
 
     # Construct the package under test
     spec = spack.concretize.concretize_one("cvs-test")
-    spec.package.versions[Version("cvs")] = test.args
+    set_version_def(Version("cvs"), test.args, spec.package)
 
     # Enter the stage directory and check some properties
     with spec.package.stage:
