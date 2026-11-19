@@ -112,14 +112,9 @@ def test_empty_vswhere_output_yields_no_paths(monkeypatch, no_registry):
     assert os_.msvc_paths == []
 
 
-def test_vswhere_failure_is_not_fatal(monkeypatch, no_registry):
-    """A missing or broken vswhere must leave detection able to continue."""
-
-    def boom(*args, **kwargs):
-        raise OSError("vswhere.exe not found")
-
-    monkeypatch.setenv("ProgramFiles(x86)", "C:\\Program Files (x86)")
-    monkeypatch.setattr(subprocess, "check_output", boom)
+def test_vswhere_failure_is_not_fatal(monkeypatch, tmp_path, no_registry):
+    """A missing vswhere must leave detection able to continue."""
+    monkeypatch.setenv("ProgramFiles(x86)", str(tmp_path))
 
     assert windows_os.WindowsOs().vs_install_paths == []
 

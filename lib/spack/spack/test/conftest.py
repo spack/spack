@@ -427,15 +427,6 @@ def record_monkeypatch_setattr():
         _pytest.monkeypatch.MonkeyPatch.setattr = saved_setattr
 
 
-def _can_access(path, perms):
-    return False
-
-
-@pytest.fixture
-def no_path_access(monkeypatch):
-    monkeypatch.setattr(os, "access", _can_access)
-
-
 #
 # Disable any active Spack environment BEFORE all tests
 #
