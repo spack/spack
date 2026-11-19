@@ -1119,6 +1119,11 @@ The environment can be configured to set, unset, prepend, or append using ``env_
       remove_path:
         PATH_LIST: "path/to/remove"
 
+These modifications are applied after those of the environment's view.
+``include`` and ``exclude`` lists of variable names filter the modifications of both: with ``include``, only the listed variables are modified, and variables listed in ``exclude`` are not modified.
+For example, ``include: [PATH]`` keeps the view from setting ``CMAKE_PREFIX_PATH``, ``PKG_CONFIG_PATH`` and other variables.
+This also applies to images created with ``spack buildcache push --tag <tag> --env-view``.
+
 .. index::
    single: view; of an environment
 

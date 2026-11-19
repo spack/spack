@@ -1260,6 +1260,8 @@ class ModuleContext(tengine.Context):
                     pass
             x.name = str(x.name).replace("-", "_")
 
+        spack.schema.environment.filter_modifications(env, self.conf.conf.get("environment", {}))
+
         return [(type(x).__name__, x) for x in env if x.name not in exclude]
 
     @tengine.context_property

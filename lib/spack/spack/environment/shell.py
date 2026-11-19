@@ -176,10 +176,6 @@ def activate(
     # become PATH variables.
     #
 
-    env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
-    if env_vars_yaml:
-        env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
-
     try:
         if view and env.has_view(view):
             with spack.store.STORE.db.read_transaction():
@@ -193,6 +189,12 @@ def activate(
             "  To remove it and resolve the issue, force concretize with the command:\n",
             "    spack -e {0} concretize --force".format(env.name),
         )
+
+    # env_vars come last, so that they override the view
+    env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
+    if env_vars_yaml:
+        env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
+        spack.schema.environment.filter_modifications(env_mods, env_vars_yaml)
 
     return env_mods
 
@@ -230,6 +232,9 @@ def deactivate() -> EnvironmentModifications:
                 "Could not fully deactivate view due to missing package "
                 "or repo, shell environment may be corrupt."
             )
+
+    if env_vars_yaml:
+        spack.schema.environment.filter_modifications(env_mods, env_vars_yaml)
 
     ev.deactivate()
 
