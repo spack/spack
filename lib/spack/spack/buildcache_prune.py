@@ -118,6 +118,21 @@ def _filter_new_specs(urls: Iterable[str], pruning_started_at: float) -> Iterato
                 yield url
 
 
+def _root_cause(e: BaseException) -> str:
+    """Describe the innermost explicitly chained cause of an exception."""
+    while e.__cause__ is not None:
+        e = e.__cause__
+    return f"{type(e).__name__}: {e}"
+
+
+def _was_deleted(url: str) -> bool:
+    """True only if the object is known to be gone; any error counts as not deleted."""
+    try:
+        return web_util.stat_url(url) is None
+    except Exception:
+        return False
+
+
 def _prune_orphans(
     mirror: Mirror,
     manifests: List[str],
@@ -151,6 +166,8 @@ def _prune_orphans(
     # we will need to know which manifest to prune.
     blob_to_manifest_mapping: Dict[str, str] = {}
 
+    deleted_manifests: List[str] = []
+
     for manifest in manifests:
         cache_entry: Optional[URLBuildcacheEntry] = None
         try:
@@ -163,11 +180,20 @@ def _prune_orphans(
                 }
             )
         except Exception as e:
-            tty.warn(f"Unable to fetch manifest {manifest} due to: {e}")
-            continue
+            if _was_deleted(manifest):
+                tty.info(f"Skipping manifest {manifest}: deleted since it was listed")
+                deleted_manifests.append(manifest)
+            else:
+                raise BuildcachePruningException(
+                    f"Unable to read manifest {manifest}: {_root_cause(e)}; "
+                    "stopped orphan pruning so its blobs are not deleted"
+                ) from e
         finally:
             if cache_entry:
                 cache_entry.destroy()
+
+    for manifest in deleted_manifests:
+        manifests.remove(manifest)
 
     # Blobs that are referenced in a manifest file (but not necessarily present in the cache)
     blob_urls_referenced_by_manifest = set(blob_to_manifest_mapping.keys())
@@ -330,33 +356,45 @@ def prune_orphan(
     total_pruned = 0
     manifests = list(manifest_to_mtime_mapping.keys())
 
-    while True:
-        # Continue pruning until no more orphaned objects are found
-        pruned = _prune_orphans(
-            mirror=mirror,
-            manifests=manifests,
-            read_fn=read_fn,
-            blobs=blob_list,
-            pruning_started_at=pruning_started_at,
-            dry_run=dry_run,
+    # With no blobs listed, every manifest would look orphaned.
+    if manifests and not blob_list:
+        raise BuildcachePruningException(
+            f"No blobs listed in {mirror.fetch_url} but {len(manifests)} manifest(s) found; "
+            "stopped orphan pruning so the manifests are not deleted"
         )
-        if pruned == 0:
-            break
-        total_pruned += pruned
 
-    if dry_run:
-        tty.info(
-            f"Would have pruned {total_pruned} orphaned objects from mirror: " + mirror.fetch_url
-        )
-    else:
-        tty.info(f"Pruned {total_pruned} orphaned objects from mirror: {mirror.fetch_url}")
-        if total_pruned > 0:
-            # If we pruned any objects, the buildcache index is likely out of date.
-            # Inform the user about this.
-            tty.info(
-                "As a consequence of pruning, the buildcache index is now likely out of date."
+    # Report what earlier passes pruned even if a later pass aborts.
+    try:
+        while True:
+            # Continue pruning until no more orphaned objects are found
+            pruned = _prune_orphans(
+                mirror=mirror,
+                manifests=manifests,
+                read_fn=read_fn,
+                blobs=blob_list,
+                pruning_started_at=pruning_started_at,
+                dry_run=dry_run,
             )
-            tty.info("Run `spack buildcache update-index` to update the index for this mirror.")
+            if pruned == 0:
+                break
+            total_pruned += pruned
+    finally:
+        if dry_run:
+            tty.info(
+                f"Would have pruned {total_pruned} orphaned objects from mirror: "
+                + mirror.fetch_url
+            )
+        else:
+            tty.info(f"Pruned {total_pruned} orphaned objects from mirror: {mirror.fetch_url}")
+            if total_pruned > 0:
+                # If we pruned any objects, the buildcache index is likely out of date.
+                # Inform the user about this.
+                tty.info(
+                    "As a consequence of pruning, the buildcache index is now likely out of date."
+                )
+                tty.info(
+                    "Run `spack buildcache update-index` to update the index for this mirror."
+                )
 
 
 def get_buildcache_normalized_time(mirror: Mirror) -> float:
@@ -409,7 +447,9 @@ def prune_buildcache(mirror: Mirror, keeplist: Optional[str] = None, dry_run: bo
     try:
         manifest_to_mtime_mapping, read_fn, blob_list = _fetch_manifests(mirror)
     except Exception as e:
-        raise BuildcachePruningException("Error getting entries from buildcache") from e
+        raise BuildcachePruningException(
+            f"Error getting entries from buildcache: {_root_cause(e)}"
+        ) from e
 
     if keeplist:
         prune_direct(
