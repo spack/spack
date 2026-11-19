@@ -23,6 +23,7 @@ import spack.mirrors.mirror
 import spack.modules
 import spack.oci.image
 import spack.oci.oci
+import spack.schema.environment
 import spack.spec
 import spack.stage
 import spack.store
@@ -605,6 +606,10 @@ def push_fn(args):
         view.regenerate(env)
         env_view_root = view.root
         env_modifications = env.add_view_to_env(EnvironmentModifications(), ev.default_view_name)
+        env_vars_yaml = spack.config.CONFIG.get("env_vars", None)
+        if env_vars_yaml:
+            env_modifications.extend(spack.schema.environment.parse(env_vars_yaml))
+            spack.schema.environment.filter_modifications(env_modifications, env_vars_yaml)
 
     with spack.binary_distribution.make_uploader(
         mirror=mirror,

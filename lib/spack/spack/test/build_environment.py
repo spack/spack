@@ -322,6 +322,28 @@ def test_external_config_env(mock_packages, mutable_config: Configuration, worki
     assert os.environ["TEST_ENV_VAR_SET"] == "yes it's set"
 
 
+def test_external_config_env_include_exclude(
+    mock_packages, mutable_config: Configuration, working_env
+):
+    environment = {"set": {"KEPT_VAR": "1", "EXCLUDED_VAR": "1"}, "exclude": ["EXCLUDED_VAR"]}
+    cmake_config = {
+        "externals": [
+            {
+                "spec": "cmake@1.0",
+                "prefix": "/fake/path",
+                "extra_attributes": {"environment": environment},
+            }
+        ]
+    }
+    mutable_config.set("packages:cmake", cmake_config)
+
+    cmake_client = spack.concretize.concretize_one("cmake-client")
+    spack.build_environment.setup_package(cmake_client.package, False)
+
+    assert os.environ["KEPT_VAR"] == "1"
+    assert "EXCLUDED_VAR" not in os.environ
+
+
 @pytest.mark.regression("9107")
 @pytest.mark.not_on_windows("Windows does not support module files")
 def test_spack_paths_before_module_paths(

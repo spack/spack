@@ -1,0 +1,12 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+    environment:
+      set:
+        FOO: 'foo'
+        BAR: 'bar'
+        BAZ: 'baz'
+      include: [FOO, BAR]
+      exclude: [BAR]
