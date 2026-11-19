@@ -319,6 +319,50 @@ def test_update_4():
     assert m.fetch_url == "https://example.com"
 
 
+@pytest.mark.parametrize(
+    "data,autopush,fail_on_error",
+    [
+        ("https://example.com", False, True),
+        ({"url": "https://example.com"}, False, True),
+        ({"url": "https://example.com", "autopush": True}, True, True),
+        ({"url": "https://example.com", "autopush": False}, False, True),
+        ({"url": "https://example.com", "autopush": {}}, False, True),
+        ({"url": "https://example.com", "autopush": {"enable": True}}, True, True),
+        ({"url": "https://example.com", "autopush": {"fail_on_error": False}}, False, False),
+        (
+            {"url": "https://example.com", "autopush": {"enable": True, "fail_on_error": False}},
+            True,
+            False,
+        ),
+    ],
+)
+def test_mirror_autopush(data, autopush, fail_on_error):
+    m = spack.mirrors.mirror.Mirror(data)
+    assert m.autopush is autopush
+    assert m.autopush_fail_on_error is fail_on_error
+
+
+def test_update_autopush_keeps_fail_on_error():
+    """Toggling autopush on a mirror with the long form keeps fail_on_error"""
+    m = spack.mirrors.mirror.Mirror(
+        {"url": "https://example.com", "autopush": {"enable": True, "fail_on_error": False}}
+    )
+    assert not m.update({"autopush": True})
+    assert m.update({"autopush": False})
+    assert m.to_dict() == {
+        "url": "https://example.com",
+        "autopush": {"enable": False, "fail_on_error": False},
+    }
+    assert not m.autopush and not m.autopush_fail_on_error
+    assert m.update({"autopush": True})
+    assert m.autopush and not m.autopush_fail_on_error
+
+    # Setting the long form replaces the existing long form
+    assert m.update({"autopush": {"enable": True}})
+    assert m.to_dict() == {"url": "https://example.com", "autopush": {"enable": True}}
+    assert m.autopush and m.autopush_fail_on_error
+
+
 @pytest.mark.parametrize("direction", ["fetch", "push"])
 def test_update_connection_params(direction, monkeypatch):
     """Test whether new connection params expand the mirror config to a dict."""
