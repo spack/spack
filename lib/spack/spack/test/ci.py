@@ -481,6 +481,7 @@ def test_ci_process_command(repro_dir):
 
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
+@pytest.mark.requires_executables("false")
 def test_ci_process_command_fail(repro_dir):
     assert ci.process_command("fail", ["false"], str(repro_dir)) == 1
 
