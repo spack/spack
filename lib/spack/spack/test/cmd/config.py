@@ -24,7 +24,7 @@ from spack.store import Store
 config = spack.main.SpackCommand("config")
 env = spack.main.SpackCommand("env")
 
-pytestmark = pytest.mark.usefixtures("mock_packages")
+pytestmark = pytest.mark.usefixtures("mock_packages", "mutable_mock_env_path")
 
 scope_path_re = r"\(([^\)]+)\)"
 
@@ -39,7 +39,7 @@ scope_path_re = r"\(([^\)]+)\)"
         (False, ["internal", "include"]),
     ],
 )
-def test_config_scopes(path, types, mutable_mock_env_path):
+def test_config_scopes(path, types):
     ev.create("test")
     scopes_cmd = ["scopes"]
     if path:
@@ -213,7 +213,7 @@ def test_config_edit(mutable_config, working_env):
     assert config("edit", "--print-file", "repos").strip() == repos_path
 
 
-def test_config_get_gets_spack_yaml(mutable_mock_env_path):
+def test_config_get_gets_spack_yaml():
     with ev.create("test") as env:
         assert "mpileaks" not in config("get")
         env.add("mpileaks")
@@ -221,13 +221,13 @@ def test_config_get_gets_spack_yaml(mutable_mock_env_path):
         assert "mpileaks" in config("get")
 
 
-def test_config_edit_edits_spack_yaml(mutable_mock_env_path):
+def test_config_edit_edits_spack_yaml():
     env = ev.create("test")
     with env:
         assert config("edit", "--print-file").strip() == env.manifest_path
 
 
-def test_config_add_with_scope_adds_to_scope(mutable_config: Configuration, mutable_mock_env_path):
+def test_config_add_with_scope_adds_to_scope(mutable_config: Configuration):
     """Test adding to non-env config scope with an active environment"""
     env = ev.create("test")
     with env:
@@ -235,7 +235,7 @@ def test_config_add_with_scope_adds_to_scope(mutable_config: Configuration, muta
     assert mutable_config.get("config:install_tree:root", scope="user") == "/usr"
 
 
-def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
+def test_config_edit_fails_correctly_with_no_env():
     output = config("edit", "--print-file", fail_on_error=False)
     assert "requires a section argument or an active environment" in output
 
@@ -575,7 +575,7 @@ def test_remove_list(mutable_empty_config):
     )
 
 
-def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
+def test_config_add_to_env(mutable_empty_config):
     env("create", "test")
     with ev.read("test"):
         config("add", "config:dirty:true")
@@ -587,9 +587,7 @@ def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
     assert expected in output
 
 
-def test_config_add_to_env_preserve_comments(
-    mutable_empty_config, mutable_mock_env_path, tmp_path: pathlib.Path
-):
+def test_config_add_to_env_preserve_comments(mutable_empty_config, tmp_path: pathlib.Path):
     filepath = str(tmp_path / "spack.yaml")
     manifest = """# comment
 spack:  # comment
@@ -615,7 +613,7 @@ spack:  # comment
     assert "dirty: true" in output
 
 
-def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
+def test_config_remove_from_env(mutable_empty_config):
     env("create", "test")
     with ev.read("test"):
         config("add", "config:dirty:true")
