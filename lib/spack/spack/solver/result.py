@@ -8,15 +8,13 @@ typed against a result without depending on how it is produced.
 """
 
 import enum
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple
 
 import spack.repo
 import spack.spec
-import spack.traverse
 from spack.util import tty
 
-from .core import NodeId, min_dupe_node
-from .error import SolverError, SpliceSerializationError
+from .core import NodeFlag, NodeId, min_dupe_node
 
 # type aliases for the data structures we get back from the solver
 SpecDict = Dict[NodeId, spack.spec.Spec]
@@ -94,84 +92,61 @@ def build_criteria_names(costs, arg_tuples):
     ]
 
 
-# We have to take some care with how we serialize a `SpecDict` fresh from a solve,
-# because it contains specs that are in between concrete and abstract. The hash is not
-# yet final, because there are spec changes yet to be made in post-processing that will
-# change the hashes. We still need an identifier for the nodes in the spec DAG, though.
-# So, we use hashes as ids during serialization, but we must clear them afterwards so
-# that they are not cached, and they can be set again when the final changes are made.
+def _encode(value: Any) -> Any:
+    """Turns a value from ``extract_args`` into JSON data."""
+    # NodeId and NodeFlag are tuples, so they are checked first
+    if isinstance(value, NodeId):
+        return {"node": [_encode(x) for x in value]}
+    if isinstance(value, NodeFlag):
+        return {"node_flag": [_encode(x) for x in value]}
+    if isinstance(value, tuple):
+        return [_encode(x) for x in value]
+    return value
 
 
-def spec_dict_to_json(spec_dict: SpecDict) -> Dict:
-    """Serialize a SpecDict to JSON, taking care to preserve node structure in serialized specs.
-
-    Note: this does not yet handle spliced specs and will raise an error if they're passed in.
-
-    Raises:
-        spack.solver.error.SpliceSerializationError: if any node in ``spec_dict`` has a
-            ``build_spec``.
-    """
-    # Specs are keyed in spec_dict by their solver-assigned NodeId, but reused concrete
-    # specs may have transitive dependencies that do not have a NodeId.
-    # Make a dictionary preserving the NodeIds from input.
-    node_id_for: Dict[int, NodeId] = {id(spec): nid for nid, spec in spec_dict.items()}
-
-    specs = list(spec_dict.values())
-
-    try:
-        # A SpecDict has one entry for each spec in a solution, but some are abstract and some
-        # are concrete. We need DAG hashes for the abstract specs to serialize them, so
-        # force-cache them, taking care to do so bottom-up, to avoid exponential recomputation.
-        # TODO: spec serialization was really designed for concrete and small abstract specs.
-        # This should really be handled by Spec, but it will take some work to adjust the format.
-        for spec in spack.traverse.traverse_nodes(specs, key=id, order="post"):
-            if spec.build_spec is not spec:
-                raise SpliceSerializationError(
-                    f"cannot serialize spliced spec {spec.name}; SpecDicts with spliced "
-                    "specs are not serializable."
-                )
-            if not spec.concrete and not spec._hash:
-                spec._hash = spec.spec_hash()
-
-        # Traverse every spec reachable from spec_dict's values, deduped by hash, and add them
-        # to the serialized entries either a) with their original NodeId, or b) with None if they
-        # don't have a NodeId. This ensures that all nodes are added and NodeIds are preserved.
-        entries = []
-        for dep in spack.traverse.traverse_nodes(specs, key=lambda s: s.dag_hash()):
-            node = dep.to_node_dict()
-            node["hash"] = dep.dag_hash()
-            entries.append((node_id_for.get(id(dep)), node))
-
-    finally:
-        # Clear hashes cached above, which must be recomputed in post-concretization
-        # They're only used here as keys for reading and writing spec DAGs.
-        for spec in spack.traverse.traverse_nodes(specs, key=id):
-            if not spec.concrete:
-                spec.clear_caches()
-
-    return {"_meta": {"spec_version": spack.spec.SpecfileLatest.SPEC_VERSION}, "specs": entries}
+def _decode(value: Any) -> Any:
+    """Inverse of ``_encode``. Raises ``ValueError`` on data ``_encode`` cannot produce."""
+    if isinstance(value, list):
+        return tuple(_decode(x) for x in value)
+    if isinstance(value, dict):
+        if "node" in value:
+            return NodeId(*_decode(value["node"]))
+        if "node_flag" in value:
+            return NodeFlag(*_decode(value["node_flag"]))
+        raise ValueError(f"Invalid answer data: {value}")
+    return value
 
 
-def spec_dict_from_json(data: Dict) -> SpecDict:
-    """Deserialize a SpecDict from JSON, taking care not to duplicate nodes."""
-    try:
-        spec_version = int(data["_meta"]["spec_version"])
-        entries = data["specs"]
-    except (KeyError, ValueError):
-        raise ValueError(f"Invalid spec dict data: {data}")
+class Answer(NamedTuple):
+    """The best model of a satisfiable solve, in the form ``SpecBuilder`` takes it."""
 
-    reader = spack.spec.specfile_reader_for_version(spec_version)
-    nodes = [node for _, node in entries]
-    specs_by_hash = spack.spec.wire_spec_nodes(nodes, "hash", reader)
+    #: cost of the model, one entry per optimization priority
+    cost: List[int]
+    #: ``(name, args)`` for each ``attr`` atom
+    attrs: List[Tuple[str, Tuple]]
+    #: arguments of each ``opt_priority`` atom
+    opt_priority: List[Tuple]
+    #: number of models clingo found
+    nmodels: int
 
-    # clear the hashes we cached on any abstract specs, so that they can be recomputed later
-    for spec in spack.traverse.traverse_nodes(list(specs_by_hash.values()), key=id):
-        if not spec.concrete:
-            spec.clear_caches()
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "cost": list(self.cost),
+            "attrs": [_encode(attr) for attr in self.attrs],
+            "opt_priority": [_encode(args) for args in self.opt_priority],
+            "nmodels": self.nmodels,
+        }
 
-    # Anonymous nodes (nid=None) are reachable transitively through named roots' edges, and
-    # are handled by wire_spec_nodes() above. Skip them here to preserve SpecDict on round-trip.
-    return {NodeId(*nid): specs_by_hash[node["hash"]] for nid, node in entries if nid is not None}
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Answer":
+        """Reads the output of ``to_dict``. Raises ``KeyError``, ``TypeError`` or ``ValueError``
+        on malformed data."""
+        return Answer(
+            cost=[int(x) for x in data["cost"]],
+            attrs=[_decode(attr) for attr in data["attrs"]],
+            opt_priority=[_decode(args) for args in data["opt_priority"]],
+            nmodels=int(data["nmodels"]),
+        )
 
 
 class Result:
@@ -179,7 +154,7 @@ class Result:
 
     def __init__(self, specs, *, repo: spack.repo.RepoPath):
         self.repo = repo
-        self.satisfiable = None
+        self.satisfiable: Optional[bool] = None
         self.optimal = None
         self.warnings = None
         self.nmodels = 0
@@ -194,23 +169,12 @@ class Result:
         self.abstract_specs = specs
 
         # possible dependencies
-        self.possible_dependencies = None
+        self.possible_dependencies: Optional[Set[str]] = None
 
         # Concrete specs
         self._concrete_specs_by_input = None
         self._concrete_specs = None
         self._unsolved_specs = None
-
-    def raise_if_unsat(self):
-        """Raise a generic internal error if the result is unsatisfiable."""
-        if self.satisfiable:
-            return
-
-        constraints = self.abstract_specs
-        if len(constraints) == 1:
-            constraints = constraints[0]
-
-        raise SolverError(constraints)
 
     @property
     def specs(self):
@@ -273,51 +237,6 @@ class Result:
                 self._concrete_specs_by_input[input_spec] = answer[node]
             else:
                 self._unsolved_specs.append((input_spec, candidate))
-
-    def to_dict(self) -> dict:
-        """Produces dict representation of Result object
-
-        Does not include anything related to unsatisfiability as we
-        are only interested in storing satisfiable results
-        """
-
-        # NOTE: _unsolved_specs, _concrete_specs_by_input, and _concrete_specs are all
-        # computed dynamically from self.answers, so they're not serialized.
-        return {
-            "criteria": self.criteria,
-            "optimal": self.optimal,
-            "warnings": self.warnings,
-            "nmodels": self.nmodels,
-            # abstract specs are not used for deserialization, but dropping them is
-            # forward-incompatible with Spack 1.2 and earlier.
-            "abstract_specs": [s.to_dict() for s in self.abstract_specs],
-            "satisfiable": self.satisfiable,
-            "answers": [
-                (opt, i, spec_dict_to_json(spec_dict)) for opt, i, spec_dict in self.answers
-            ],
-        }
-
-    @staticmethod
-    def from_dict(obj: dict, specs: List[spack.spec.Spec], *, repo: spack.repo.RepoPath):
-        """Returns Result object from compatible dictionary, for the given input specs.
-
-        The stored abstract specs are troubleshooting metadata and are deliberately not
-        deserialized: the caller's input specs are authoritative. This also keeps cache
-        entries with unreadable abstract spec data usable.
-        """
-        result = Result(specs, repo=repo)
-        result.criteria = [OptimizationCriteria(*t) for t in obj["criteria"]]
-        result.optimal = obj["optimal"]
-        result.warnings = obj["warnings"]
-        result.nmodels = obj["nmodels"]
-        result.satisfiable = obj["satisfiable"]
-        result.answers = [
-            (opt, i, spec_dict_from_json(spec_dict)) for opt, i, spec_dict in obj["answers"]
-        ]
-        # NOTE: _unsolved_specs, _concrete_specs_by_input, and _concrete_specs are all
-        # computed dynamically from self.answers, so they're not serialized.
-
-        return result
 
     def __eq__(self, other):
         eq = (
