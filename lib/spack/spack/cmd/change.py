@@ -93,7 +93,8 @@ def change(parser, args):
 
             try:
                 match_spec_str = str(match_spec) if match_spec else None
-                changed = _config_change(config_path, match_spec_str)
+                # Don't add a new requirement if nothing matched - only modify existing ones
+                changed = _config_change(config_path, match_spec_str, add_if_no_match=False)
                 config_changed = config_changed or changed
             except (ValueError, spack.error.ConfigError):
                 # Config change failed or not applicable, continue
