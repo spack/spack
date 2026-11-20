@@ -2621,6 +2621,38 @@ packages:
         # the main test is that it does not raise
         assert not spec.spliced
 
+    @pytest.mark.regression("53323")
+    @pytest.mark.parametrize("transitive", [True, False])
+    def test_explicit_splice_target_is_also_a_build_dependency(
+        self, mutable_config: Configuration, mock_packages, install_mockery, transitive
+    ):
+        """Splicing breaks the diamond: the link/run dependency of dt-diamond-right is replaced,
+        the build dependency of dt-diamond-left remains"""
+        mutable_config.set("concretizer:reuse", False)
+        original = spack.concretize.concretize_one("dt-diamond")
+        left, right = original["dt-diamond-left"], original["dt-diamond-right"]
+        # Ensure the test setup is correct
+        assert left.dependencies("dt-diamond-bottom", deptype=dt.BUILD)
+        assert not left.dependencies("dt-diamond-bottom", deptype=dt.LINK | dt.RUN)
+        assert right.dependencies("dt-diamond-bottom", deptype=dt.LINK)
+
+        replacement = spack.concretize.concretize_one("dt-diamond-bottom cflags=-O2")
+        PackageInstaller([replacement.package], fake=True).install()
+        splice_info = {
+            "target": "dt-diamond-bottom",
+            "replacement": f"/{replacement.dag_hash()}",
+            "transitive": transitive,
+        }
+        mutable_config.set("concretizer:splice", {"explicit": [splice_info]})
+
+        spec = spack.concretize.concretize_one("dt-diamond")
+
+        # dt-diamond-left still has the original as a build dependency,
+        # dt-diamond-right the replacement
+        bottom = original["dt-diamond-bottom"]
+        assert spec["dt-diamond-left"]["dt-diamond-bottom"].dag_hash() == bottom.dag_hash()
+        assert spec["dt-diamond-right"]["dt-diamond-bottom"].dag_hash() == replacement.dag_hash()
+
     @pytest.mark.db
     @pytest.mark.parametrize(
         "spec_str,mpi_name",
