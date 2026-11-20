@@ -19,7 +19,7 @@ level = "long"
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
-    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="migrate_command")
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="migrate_command", required=True)
 
     undo = sp.add_parser(
         "undo",
