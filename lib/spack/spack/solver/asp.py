@@ -92,12 +92,12 @@ from .error import (
     InvalidSpliceError,
     InvalidVersionError,
     OutputDoesNotSatisfyInputError,
-    SpliceSerializationError,
+    SolverError,
     UnsatisfiableSpecError,
 )
 from .input_analysis import create_counter, create_graph_analyzer
 from .requirements import RequirementKind, RequirementOrigin, RequirementParser, RequirementRule
-from .result import Result, SpecDict, build_criteria_names
+from .result import Answer, Result, SpecDict, build_criteria_names
 from .reuse import ReusableSpecsSelector, SpecFiltersFactory
 from .runtimes import COMPILER_WRAPPER_LANGUAGES, RuntimePropertyRecorder
 from .versions import Provenance
@@ -303,15 +303,14 @@ def _reorder_flags(flag_list: List[spack.spec.CompilerFlag]) -> List[spack.spec.
 
 
 class ConcretizationCache:
-    """Store for Spack concretization results and statistics
+    """Store for the answers and statistics of clingo solves
 
-    Serializes solver result objects and statistics to json and stores
-    at a given endpoint in a cache associated by the sha256 of the
-    asp problem and the involved control files.
+    Serializes the answer of a solve and its statistics to json, and stores them at a given
+    endpoint in a cache keyed by the hash of the asp problem and the involved control files.
     """
 
     # Used to version cache files. Bump this when the cache format changes.
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self, root: str, entry_limit: int = 1000):
         """
@@ -387,26 +386,18 @@ class ConcretizationCache:
             with gzip.open(f, "wt", encoding="utf-8", compresslevel=6) as gz:
                 json.dump(cache_dict, gz)
 
-    def store(self, problem: str, result: Result, statistics: List) -> None:
+    def store(self, problem: str, answer: Answer, statistics: Any) -> None:
         """Creates entry in concretization cache for problem if none exists,
-        storing the concretization Result object and statistics in the cache
-        as serialized json joined as a single file.
+        storing the answer of the solve and its statistics as serialized json
+        in a single file.
 
         Hash membership is computed based on the sha256 of the provided asp
         problem.
         """
         cache_path = self._cache_path_from_problem(problem)
-
-        try:
-            results_dict = result.to_dict()
-        except SpliceSerializationError:
-            # Results with spliced specs can't be serialized (yet).
-            tty.debug(f"Not caching result with spliced specs for {cache_path}")
-            return
-
         cache_dict = {
             "_meta": {"version": ConcretizationCache.VERSION},
-            "results": results_dict,
+            "answer": answer.to_dict(),
             "statistics": statistics,
         }
 
@@ -429,19 +420,9 @@ class ConcretizationCache:
         # every solve, let alone cache hits.
         self.cleanup()
 
-    def fetch(
-        self, problem: str, specs: List[spack.spec.Spec], *, repo: spack.repo.RepoPath
-    ) -> Union[Tuple[Result, Dict], Tuple[None, None]]:
-        """Returns the concretization cache result for a lookup based on the given problem.
-
-        Checks the concretization cache for the given problem, and either returns the
-        Python objects cached on disk representing the concretization results and statistics
-        or returns none if no cache entry was found.
-
-        The returned Result is associated with ``specs``, the input specs of the caller:
-        the problem hash guarantees they are equivalent to the ones the entry was stored
-        with.
-        """
+    def fetch(self, problem: str) -> Union[Tuple[Answer, Any], Tuple[None, None]]:
+        """Returns the answer and statistics cached for the given problem, or ``(None, None)``
+        if no valid entry was found."""
         cache_path = self._cache_path_from_problem(problem)
 
         try:
@@ -466,27 +447,12 @@ class ConcretizationCache:
             self._remove_entry(cache_path)
             return None, None
 
-        results = cache_content.get("results")
-        if results is None:
-            tty.debug(
-                f"ConcretizationCache.fetch(): force-removing {cache_path} because 'results' is "
-                "missing from cache dictionary."
-            )
-            self._remove_entry(cache_path)
-            return None, None
-
         try:
-            result = Result.from_dict(results, specs, repo=repo)
-        except (
-            KeyError,
-            TypeError,
-            ValueError,
-            spack.error.SpecError,
-            spack.error.SpecSyntaxError,
-        ) as e:
+            answer = Answer.from_dict(cache_content["answer"])
+        except (KeyError, TypeError, ValueError) as e:
             tty.debug(
                 f"ConcretizationCache.fetch(): force-removing {cache_path}. "
-                f"Valid JSON but spec data is malformed or incompatible: {e}"
+                f"Valid JSON but the answer is missing or malformed: {e}"
             )
             self._remove_entry(cache_path)
             return None, None
@@ -497,7 +463,7 @@ class ConcretizationCache:
             os.utime(cache_path)
         except OSError as e:
             tty.debug(f"Failed to update LRU time for {cache_path}: {e}")
-        return result, cache_content["statistics"]
+        return answer, cache_content.get("statistics")
 
 
 def _is_checksummed_git_version(v):
@@ -791,11 +757,15 @@ class PyclingoDriver:
         problem_str: str,
         control_file_paths: List[str],
         timer: spack.util.timer.Timer,
-    ) -> Result:
-        """Actually run clingo and generate a result.
+    ) -> Answer:
+        """Actually run clingo and return the best model.
 
         This is the core solve logic once the setup is done and once we know we can't
-        fetch a result from cache. See ``solve()`` for caching and setup logic.
+        fetch an answer from cache. See ``solve()`` for caching and setup logic.
+
+        Raises:
+            SolverError: if the problem is unsatisfiable
+            UnsatisfiableSpecError: if the best model has errors
         """
         # We could just take the cache_key and add it to clingo (since it is the
         # full problem representation), but we load control files separately as it
@@ -854,45 +824,42 @@ class PyclingoDriver:
             solve_result = handle.get()
         timer.stop("solve")
 
-        # once done, construct the solve result
-        result = Result(specs, repo=setup.context.repo)
-        result.satisfiable = solve_result.satisfiable
-        best = min(models) if result.satisfiable else None
+        best = min(models) if solve_result.satisfiable else None
         if best is None or extract_args(best[1], "error"):
             _raise_if_no_compiler_is_available(setup)
 
-        if not result.satisfiable:
-            return result
+        if best is None:
+            raise SolverError(specs[0] if len(specs) == 1 else specs)
 
+        min_cost, best_model = best
+        ErrorHandler(best_model, specs, setup.refused_deprecations).raise_if_errors()
+        return Answer(
+            cost=list(min_cost),
+            attrs=[(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")],
+            opt_priority=extract_args(best_model, "opt_priority"),
+            nmodels=len(models),
+        )
+
+    @staticmethod
+    def _result_from_answer(
+        answer: Answer,
+        specs: List[spack.spec.Spec],
+        setup: "SpackSolverSetup",
+        timer: spack.util.timer.Timer,
+    ) -> Result:
+        """Builds the specs and criteria of a solve from its best model."""
         timer.start("construct_specs")
         builder = SpecBuilder(
             specs, repo=setup.context.repo, hash_lookup=setup.reusable_and_possible
         )
-        min_cost, best_model = best
-
-        # first check for errors
-        error_handler = ErrorHandler(best_model, specs, setup.refused_deprecations)
-        error_handler.raise_if_errors()
-
-        # build specs from spec attributes in the model
-        spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
-        spec_dict = builder.build_specs(spec_attrs)
-
-        # add best spec to the results
-        result.answers.append((list(min_cost), 0, spec_dict))
-
-        # get optimization criteria
-        criteria_args = extract_args(best_model, "opt_priority")
-        result.criteria = build_criteria_names(min_cost, criteria_args)
-
-        # record the number of models the solver considered
-        result.nmodels = len(models)
-
-        # record the possible dependencies in the solve
+        result = Result(specs, repo=setup.context.repo)
+        result.satisfiable = True
+        # build_specs sorts its argument, so it gets a copy
+        result.answers.append((list(answer.cost), 0, builder.build_specs(list(answer.attrs))))
+        result.criteria = build_criteria_names(answer.cost, answer.opt_priority)
+        result.nmodels = answer.nmodels
         result.possible_dependencies = setup.pkgs
         timer.stop("construct_specs")
-        timer.stop()
-
         return result
 
     def solve(
@@ -973,24 +940,25 @@ class PyclingoDriver:
         control_file_paths = self._control_file_paths(control_files)
 
         # try to fetch from the cache; only compute the key if the cache is enabled
-        result = None
+        answer = None
         cache_key = None
         if cache:
             cache_key = _make_cache_key(problem_str, control_file_paths)
-            result, concretization_stats = cache.fetch(cache_key, specs, repo=setup.context.repo)
+            answer, concretization_stats = cache.fetch(cache_key)
         timer.stop("cache-check")
 
         # run the solver, delay import of clingo until after cache miss
-        if result is None:
+        if answer is None:
             self.control = control or default_clingo_control()
             tty.debug("Starting concretizer")
-            result = self._run_clingo(specs, setup, problem_str, control_file_paths, timer)
-            result.raise_if_unsat()
+            answer = self._run_clingo(specs, setup, problem_str, control_file_paths, timer)
             concretization_stats = self.control.statistics
-
-            # write result back to the cache *before* post-processing
             if cache and cache_key is not None:
-                cache.store(cache_key, result, self.control.statistics)
+                cache.store(cache_key, answer, concretization_stats)
+
+        # specs are built from the answer on every solve, so a cache hit runs the current code
+        result = self._result_from_answer(answer, specs, setup, timer)
+        timer.stop()
 
         # apply post-concretization transformations
         for _, _, spec_dict in result.answers:
@@ -3394,17 +3362,10 @@ def reorder_flags(specs: SpecDict) -> None:
 
 
 def post_process_fresh_solve(specs: SpecDict, splices: Optional[SpliceDict]) -> None:
-    """Post-processing steps that need information present from a run of clingo.
-
-    These post-steps are run after solves, but not on every cached result from the
-    concretization cache. They can only depend only on solve information (e.g., flag
-    ordering info, splice data, etc.)
-
-    Post-steps that should be run on cached concretizations as well as fresh solves go
-    in post_process_concretization_result..
+    """Post-processing steps that need information collected while building specs from the
+    solver's answer (flag ordering, splice data).
 
     This method updates the SpecDict in place.
-
     """
     # fix flags after all specs are constructed
     reorder_flags(specs)

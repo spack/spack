@@ -89,10 +89,6 @@ class InvalidSpliceError(spack.error.SpackError):
     """For cases in which the splice configuration is invalid."""
 
 
-class SpliceSerializationError(spack.error.SpackError):
-    """Attempt to serialize a SpecDict that contains spliced specs (currently unsupported)."""
-
-
 class InvalidVersionError(spack.error.SpackError):
     """Raised when a version can't be satisfied by any possible versions."""
 
