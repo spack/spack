@@ -410,7 +410,7 @@ def create_opener():
     for handler in [
         urllib.request.ProxyHandler(),
         urllib.request.UnknownHandler(),
-        urllib.request.HTTPHandler(),
+        spack.util.web.SpackHTTPHandler(),
         spack.util.web.SpackHTTPSHandler(context=spack.util.web.ssl_create_default_context()),
         spack.util.web.SpackHTTPDefaultErrorHandler(),
         urllib.request.HTTPRedirectHandler(),

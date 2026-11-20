@@ -7,10 +7,12 @@ import email.message
 import errno
 import functools
 import io
+import itertools
 import json
 import os
 import random
 import re
+import selectors
 import shutil
 import socket
 import ssl
@@ -21,11 +23,17 @@ import traceback
 import urllib.parse
 import warnings
 from html.parser import HTMLParser
-from http.client import IncompleteRead
+from http.client import HTTPConnection, HTTPSConnection, IncompleteRead
 from pathlib import Path, PurePosixPath
-from typing import IO, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
+from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 from urllib.error import HTTPError, URLError
-from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
+from urllib.request import (
+    HTTPDefaultErrorHandler,
+    HTTPHandler,
+    HTTPSHandler,
+    Request,
+    build_opener,
+)
 
 from spack.vendor.typing_extensions import ParamSpec
 
@@ -193,8 +201,149 @@ class SpackHTTPDefaultErrorHandler(HTTPDefaultErrorHandler):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
 
+#: Seconds to wait for a connection attempt before starting the next one (RFC 8305)
+CONNECTION_ATTEMPT_DELAY = 0.25
+
+_CONNECT_IN_PROGRESS = {
+    errno.EINPROGRESS,
+    errno.EWOULDBLOCK,
+    getattr(errno, "WSAEWOULDBLOCK", errno.EWOULDBLOCK),
+}
+
+
+def race_connect(
+    addrinfos: List[Tuple[Any, ...]],
+    timeout: Optional[float],
+    source_address: Optional[Tuple[str, int]] = None,
+    delay: float = CONNECTION_ATTEMPT_DELAY,
+) -> socket.socket:
+    """Returns a socket connected to the first address in ``addrinfos`` that accepts a connection.
+
+    Attempts start in order, each ``delay`` seconds after the previous one or as soon as the
+    previous one fails. Attempts in progress are not canceled when a new one starts (RFC 8305).
+
+    Args:
+        addrinfos: ``(family, type, proto, canonname, sockaddr)`` tuples, as returned by
+            :func:`socket.getaddrinfo`, in the order they are tried
+        timeout: seconds allowed for the whole connect phase, also set as the timeout of the
+            returned socket. None waits indefinitely.
+        source_address: ``(host, port)`` each socket is bound to before connecting
+        delay: seconds to wait for an attempt before starting the next one
+
+    Raises:
+        socket.timeout: if no attempt succeeds within ``timeout``
+        OSError: the error of the first attempt, if all attempts fail
+    """
+    deadline = None if timeout is None else time.monotonic() + timeout
+    remaining = list(addrinfos)
+    pending: List[socket.socket] = []
+    errors: List[OSError] = []
+    next_attempt = time.monotonic()
+    selector = selectors.DefaultSelector()
+    try:
+        while remaining or pending:
+            now = time.monotonic()
+
+            # Try a new connection if it's time for the next attempt
+            # or previous attempts all failed
+            if remaining and (not pending or now >= next_attempt):
+                family, socktype, proto, _, sockaddr = remaining.pop(0)
+                sock = socket.socket(family, socktype, proto)
+                try:
+                    sock.setblocking(False)
+                    if source_address:
+                        sock.bind(source_address)
+                    err = sock.connect_ex(sockaddr)
+                    if err != 0 and err not in _CONNECT_IN_PROGRESS:
+                        raise OSError(err, os.strerror(err))
+                except OSError as e:
+                    sock.close()
+                    errors.append(e)
+                    continue
+                selector.register(sock, selectors.EVENT_WRITE)
+                pending.append(sock)
+                next_attempt = now + delay
+
+            # Raise if we are past the deadline
+            if deadline is not None and now >= deadline:
+                raise socket.timeout("timed out")
+
+            waits = []
+            if remaining:
+                waits.append(next_attempt - now)
+            if deadline is not None:
+                waits.append(deadline - now)
+            for key, _ in selector.select(max(0.0, min(waits)) if waits else None):
+                sock = key.fileobj  # type: ignore[assignment]
+                selector.unregister(sock)
+                pending.remove(sock)
+                err = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+                if err == 0:
+                    sock.settimeout(timeout)
+                    return sock
+                sock.close()
+                errors.append(OSError(err, os.strerror(err)))
+                next_attempt = time.monotonic()
+    finally:
+        for sock in pending:
+            sock.close()
+        selector.close()
+
+    if errors:
+        raise errors[0]
+    raise OSError("getaddrinfo returned an empty list")
+
+
+def _interleave_families(addrinfos: List[Tuple[Any, ...]]) -> List[Tuple[Any, ...]]:
+    """Alternates address families, starting with the first one in ``addrinfos``."""
+    if not addrinfos:
+        return []
+    first_family = addrinfos[0][0]
+    first = [ai for ai in addrinfos if ai[0] == first_family]
+    others = [ai for ai in addrinfos if ai[0] != first_family]
+    return [ai for pair in itertools.zip_longest(first, others) for ai in pair if ai is not None]
+
+
+def create_connection(
+    address: Tuple[str, int],
+    timeout: Any = socket._GLOBAL_DEFAULT_TIMEOUT,  # type: ignore[attr-defined]
+    source_address: Optional[Tuple[str, int]] = None,
+) -> socket.socket:
+    """Same as :func:`socket.create_connection`, but races the resolved addresses."""
+    host, port = address
+    if timeout is socket._GLOBAL_DEFAULT_TIMEOUT:  # type: ignore[attr-defined]
+        timeout = socket.getdefaulttimeout()
+    addrinfos = socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)
+    return race_connect(_interleave_families(addrinfos), timeout, source_address)
+
+
+class SpackHTTPConnection(HTTPConnection):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # http.client has no public hook for the connect step
+        self._create_connection = create_connection
+
+
+class SpackHTTPSConnection(HTTPSConnection):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # http.client has no public hook for the connect step
+        self._create_connection = create_connection
+
+
+class SpackHTTPHandler(HTTPHandler):
+    """An HTTP handler that races connection attempts across the resolved addresses."""
+
+    def do_open(self, http_class, req, **http_conn_args):
+        return super().do_open(SpackHTTPConnection, req, **http_conn_args)
+
+
 class SpackHTTPSHandler(HTTPSHandler):
-    """A custom HTTPS handler that shows more detailed error messages on connection failure."""
+    """An HTTPS handler that races connection attempts across the resolved addresses, and shows
+    more detailed error messages on connection failure."""
+
+    def do_open(self, http_class, req, **http_conn_args):
+        return super().do_open(SpackHTTPSConnection, req, **http_conn_args)
 
     def https_open(self, req):
         try:
@@ -264,12 +413,20 @@ def _urlopen():
 
     # One opener with HTTPS ssl enabled
     with_ssl = build_opener(
-        s3, gcs, SpackHTTPSHandler(context=ssl_create_default_context()), error_handler
+        s3,
+        gcs,
+        SpackHTTPHandler(),
+        SpackHTTPSHandler(context=ssl_create_default_context()),
+        error_handler,
     )
 
     # One opener with HTTPS ssl disabled
     without_ssl = build_opener(
-        s3, gcs, SpackHTTPSHandler(context=ssl._create_unverified_context()), error_handler
+        s3,
+        gcs,
+        SpackHTTPHandler(),
+        SpackHTTPSHandler(context=ssl._create_unverified_context()),
+        error_handler,
     )
 
     # And dynamically dispatch based on the config:verify_ssl.
