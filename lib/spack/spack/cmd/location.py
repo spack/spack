@@ -12,6 +12,7 @@ import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage
+import spack.store
 from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 from spack.util import tty
@@ -32,10 +33,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
     directories.add_argument(
-        "-i",
-        "--install-dir",
-        action="store_true",
-        help="install prefix for spec (spec need not be installed)",
+        "-i", "--install-dir", action="store_true", help="install prefix for an installed spec"
     )
     directories.add_argument(
         "-p",
@@ -167,8 +165,17 @@ def location(parser, args):
     # install_dir command matches against installed specs.
     if args.install_dir:
         env = active_environment()
-        spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
-        print(spec.prefix)
+        hashes = env.all_hashes() if env else None
+        matching_specs = spack.store.STORE.db.query(specs[0], hashes=hashes)
+        if not matching_specs:
+            tty.die(
+                f"Spec '{specs[0]}' matches no installed packages.",
+                "To print the prefix it would be installed in, run:",
+                "spack spec --format '{prefix}' " + " ".join(args.spec),
+            )
+        if not args.find_first:
+            spack.cmd.ensure_single_spec_or_die(specs[0], matching_specs)
+        print(matching_specs[0].prefix)
         return
 
     spec = specs[0]
