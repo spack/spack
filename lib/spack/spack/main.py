@@ -987,7 +987,7 @@ def _main(argv=None):
     # We do not fully parse, we only have the spack args parsed at this point
     # Do not perform migration for non-commands (e.g. --help).
     cmd_array = args.command or []
-    if cmd_array and cmd_array[0] != "isolate":
+    if cmd_array and cmd_array[0] not in ("isolate", "migrate"):
         # Configuration is not loaded yet, but the config-free output options can already be
         # honored so that `spack -d` shows what migration is doing and `--color` applies to
         # the migration prompt
