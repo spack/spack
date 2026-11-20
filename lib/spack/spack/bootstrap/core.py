@@ -37,6 +37,7 @@ import spack.detection
 import spack.error
 import spack.installer_dispatch
 import spack.mirrors.mirror
+import spack.relocate_windows
 import spack.repo
 import spack.spec
 import spack.store
@@ -57,7 +58,7 @@ from ._common import (
     _try_import_from_store,
 )
 from .clingo import ClingoBootstrapConcretizer
-from .config import spec_for_current_python
+from .config import ensure_bootstrap_configuration, spec_for_current_python
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -507,6 +508,46 @@ def ensure_gpg_in_path_or_raise() -> spack.util.executable.Executable:
     )
 
 
+def msvc_compiler_wrapper_root_spec() -> str:
+    """Return the root spec for the MSVC compiler wrapper package"""
+    return _root_spec("compiler-wrapper@1.0")
+
+
+def ensure_msvc_compiler_wrappers_or_raise() -> spack.util.executable.Executable:
+    return ensure_executables_in_path_or_raise(
+        executables=["cl"], abstract_spec=msvc_compiler_wrapper_root_spec()
+    )
+
+
+def ensure_msvc_relocate_or_raise() -> spack.util.executable.Executable:
+    return ensure_executables_in_path_or_raise(
+        executables=["relocate.exe"], abstract_spec=msvc_compiler_wrapper_root_spec()
+    )
+
+
+def ensure_msvc_relocate_executable() -> spack.util.executable.Executable:
+    """Bootstrap the MSVC compiler wrapper if needed and return its relocate utility,
+    with the wrapper's run environment attached."""
+    with ensure_bootstrap_configuration():
+        # ensure_msvc_relocate_or_raise() may hand back a bare relocate.exe found
+        # via a PATH search, with no MSVC environment attached (see the early
+        # return in ensure_executables_in_path_or_raise). relocate.exe needs the
+        # vcvars-derived INCLUDE/LIB/PATH to find msvc utils (link.exe, lib.exe,
+        # dumpbin.exe, ...), so don't trust its return value: look up the
+        # concrete compiler-wrapper spec ourselves and always attach its
+        # environment, the same way setup_relocate_run does.
+        ensure_msvc_relocate_or_raise()
+        wrapper_spec = next(
+            iter(spack.store.STORE.db.query_local("compiler-wrapper", installed=True)), None
+        )
+        if not wrapper_spec:
+            raise RuntimeError(
+                "Failed to bootstrap the MSVC compiler wrapper: no compiler-wrapper spec "
+                "found in the bootstrap store after bootstrapping relocate.exe"
+            )
+        return spack.relocate_windows.setup_relocate_run(wrapper_spec)
+
+
 def patchelf_root_spec() -> str:
     """Return the root spec used to bootstrap patchelf"""
     # 0.13.1 is the last version not to require C++17.
@@ -592,6 +633,8 @@ def ensure_core_dependencies() -> None:
         ensure_patchelf_in_path_or_raise()
     ensure_gpg_in_path_or_raise()
     ensure_clingo_importable_or_raise()
+    if sys.platform == "win32":
+        ensure_msvc_compiler_wrappers_or_raise()
 
 
 def all_core_root_specs() -> List[str]:
