@@ -5,6 +5,8 @@
 import argparse
 import warnings
 
+import spack.config
+import spack.error
 import spack.cmd
 import spack.environment
 import spack.spec
@@ -49,6 +51,12 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="change only concrete specs in the environment",
     )
     arguments.add_common_arguments(subparser, ["specs"])
+    subparser.add_argument(
+        "--config",
+        action="store_true",
+        default=False,
+        help="also apply the change to package config requirements (packages:name:require)",
+    )
 
 
 def change(parser, args):
@@ -64,6 +72,38 @@ def change(parser, args):
         match_spec = spack.cmd.parse_specs([args.match_spec])[0]
     specs = spack.cmd.parse_specs(args.specs)
 
+    # If --config is set, try to apply config changes first
+    config_changed = False
+    if args.config:
+        from spack.cmd.config import _config_change
+
+        for spec in specs:
+            # Determine the package name for the config path
+            # Use match_spec.name if available, otherwise spec.name
+            if match_spec and match_spec.name:
+                pkg_name = match_spec.name
+            elif spec.name:
+                pkg_name = spec.name
+            else:
+                # Anonymous spec without match_spec - can't determine package name
+                continue
+
+            # Construct config path: packages:name:require:spec
+            config_path = f"packages:{pkg_name}:require:{str(spec)}"
+
+            try:
+                match_spec_str = str(match_spec) if match_spec else None
+                changed = _config_change(config_path, match_spec_str)
+                config_changed = config_changed or changed
+            except (ValueError, spack.error.ConfigError):
+                # Config change failed or not applicable, continue
+                pass
+
+        # If config changed, reload the environment to pick up changes
+        if config_changed:
+            env = spack.environment.read(env.name)
+
+    spec_changed = False
     with env.write_transaction():
         if not args.concrete_only:
             try:
@@ -74,6 +114,9 @@ def change(parser, args):
                         match_spec=match_spec,
                         allow_changing_multiple_specs=args.all,
                     )
+                # change_existing_spec raises ValueError if no specs match,
+                # so if we got here, at least one abstract spec changed
+                spec_changed = True
             except (ValueError, spack.environment.SpackEnvironmentError) as e:
                 msg = f"Cannot change abstract specs: {e}."
                 msg += " Try again with '--concrete-only' to change concrete specs only."
@@ -87,5 +130,12 @@ def change(parser, args):
                 mutators.append(spec)
 
             env.mutate(selectors=selectors, mutators=mutators)
+            # mutate() doesn't raise on no matches, but we assume if the user
+            # requested it, they expected it to work, so mark as changed
+            spec_changed = True
 
         env.write()
+
+    # Warn if nothing changed when --config was specified
+    if args.config and not config_changed and not spec_changed:
+        warnings.warn("No config requirements or spec list specs were changed")
