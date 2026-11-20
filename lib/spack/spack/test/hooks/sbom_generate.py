@@ -4,6 +4,8 @@
 
 import json
 import os
+import stat
+import sys
 
 import pytest
 
@@ -449,3 +451,24 @@ def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
     assert dep_entry["versionInfo"] == str(dep.version)
     assert dep_entry["downloadLocation"] == "https://example.com/callpath.tar.gz"
     assert dep_entry["checksums"] == [{"algorithm": "SHA256", "checksumValue": "b" * 64}]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
+@pytest.mark.parametrize("write,group_writable", [("group", True), ("user", False)])
+def test_sbom_respects_package_permissions(
+    mock_packages, install_mockery, mutable_config, write, group_writable
+):
+    """The SBOM hook runs after permissions_setters, so it must apply the
+    configured package permissions to what it writes itself."""
+    mutable_config.set("packages:all:permissions", {"read": "world", "write": write})
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+
+    old_umask = os.umask(0o022)
+    try:
+        post_install(spec)
+    finally:
+        os.umask(old_umask)
+
+    path = sbom_path(spec, "spdx-2.3")
+    for p in (path, os.path.dirname(path)):
+        assert bool(os.stat(p).st_mode & stat.S_IWGRP) is group_writable

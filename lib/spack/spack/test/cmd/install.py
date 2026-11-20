@@ -9,6 +9,7 @@ import itertools
 import os
 import pathlib
 import re
+import stat
 import sys
 import time
 
@@ -194,6 +195,33 @@ def test_install_output_on_python_error(mock_packages, mock_archive, mock_fetch,
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.name == "InstallError"
     assert 'raise InstallError("Expected failure.")' in out
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permissions")
+def test_install_metadata_respects_group_write_permissions(
+    mock_packages, mock_archive, mock_fetch, install_mockery, mutable_config, installer_variant
+):
+    """Files written into <prefix>/.spack, including those written after the
+    permissions_setters hook (SBOM, compressed build log, install times), must
+    honor ``packages:all:permissions`` regardless of the user's umask."""
+    mutable_config.set("packages:all:permissions", {"read": "world", "write": "group"})
+    old_umask = os.umask(0o022)
+    try:
+        install("trivial-install-test-package")
+    finally:
+        os.umask(old_umask)
+
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    metadata_dir = spack.store.STORE.layout.metadata_path(spec)
+    not_group_writable = []
+    for root, dirs, files in os.walk(metadata_dir):
+        for name in dirs + files:
+            path = os.path.join(root, name)
+            if not os.path.islink(path) and not os.lstat(path).st_mode & stat.S_IWGRP:
+                not_group_writable.append(os.path.relpath(path, metadata_dir))
+
+    assert os.path.isfile(spack.hooks.sbom_generate.sbom_path(spec))
+    assert not not_group_writable
 
 
 @pytest.mark.disable_clean_stage_check

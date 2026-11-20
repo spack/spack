@@ -9,6 +9,7 @@ import urllib.parse
 
 import spack.error
 import spack.store
+import spack.util.file_permissions as fp
 import spack.util.spack_json as sjson
 from spack.util import tty
 
@@ -196,6 +197,8 @@ def generate_spdx_2_3(spec):
     # Write to SBOM file
     with open(path, "w", encoding="utf-8") as f:
         sjson.dump(sbom, f)
+    # This hook runs after permissions_setters, so apply the configured permissions here
+    fp.set_permissions_by_spec(os.path.dirname(path), spec)
     tty.debug(f"[SBOM] Wrote SPDX 2.3 SBOM to {path}")
 
 
