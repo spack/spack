@@ -10,6 +10,7 @@ import sys
 import tempfile
 import textwrap
 from datetime import date
+from typing import Union
 
 import pytest
 
@@ -834,6 +835,199 @@ def test_alternate_override(monkeypatch, mutable_config: Configuration):
 
         data = mutable_config.get_config("config", name)
         assert data["debug"] is False
+
+
+@pytest.fixture(params=["directory", "single_file"])
+def section_removal_config(request, tmp_path: pathlib.Path):
+    low = spack.config.DirectoryConfigScope("low", str(tmp_path / "low"))
+    high: Union[spack.config.DirectoryConfigScope, spack.config.SingleFileScope]
+    if request.param == "directory":
+        high = spack.config.DirectoryConfigScope("high", str(tmp_path / "high"))
+    else:
+        manifest = tmp_path / "spack.yaml"
+        manifest.write_text(
+            "# manifest comment\nspack:\n  specs: []\n  view: false\n"
+            "  config:\n    dirty: true\n    build_jobs: 4\n"
+            "  # packages comment\n  packages:\n    all:\n      buildable: false\n"
+        )
+        high = spack.config.SingleFileScope(
+            "high", str(manifest), spack.schema.env.schema, yaml_path=["spack"]
+        )
+    cfg = spack.config.create_from(low, high)
+    cfg.set("config", {"dirty": False, "build_jobs": 2}, scope="low")
+    if request.param == "directory":
+        cfg.set("config", {"dirty": True, "build_jobs": 4}, scope="high")
+        cfg.set("packages", {"all": {"buildable": False}}, scope="high")
+    return cfg, low, high
+
+
+def test_remove_section(section_removal_config):
+    cfg, low, high = section_removal_config
+    low_contents = pathlib.Path(low.get_section_filename("config")).read_bytes()
+    assert cfg.get("config") == {"dirty": True, "build_jobs": 4}
+
+    cfg.remove_section("config", scope="high")
+    assert cfg.get("config") == {"dirty": False, "build_jobs": 2}
+    assert not cfg.get("config", scope="high")
+    cfg.clear_caches()
+    assert cfg.get("config") == {"dirty": False, "build_jobs": 2}
+    assert not cfg.get("config", scope="high")
+    assert cfg.get("packages", scope="high") == {"all": {"buildable": False}}
+    assert pathlib.Path(low.get_section_filename("config")).read_bytes() == low_contents
+    if isinstance(high, spack.config.SingleFileScope):
+        fresh_high = spack.config.SingleFileScope(
+            "high", high.path, spack.schema.env.schema, yaml_path=["spack"]
+        )
+        contents = pathlib.Path(high.path).read_text()
+        assert "config:" not in contents
+        assert "# manifest comment" in contents
+        assert "# packages comment" in contents
+        assert "specs: []" in contents
+        assert "view: false" in contents
+    else:
+        fresh_high = spack.config.DirectoryConfigScope("high", high.path)
+        assert not os.path.exists(high.get_section_filename("config"))
+
+    fresh = spack.config.create_from(
+        spack.config.DirectoryConfigScope("low", low.path), fresh_high
+    )
+    assert fresh.get("config") == {"dirty": False, "build_jobs": 2}
+    assert not fresh.get("config", scope="high")
+    assert fresh.get("packages", scope="high") == {"all": {"buildable": False}}
+
+    # Repeated removal is harmless, including when a section file is absent.
+    cfg.remove_section("config", scope="high")
+    assert cfg.get("config") == {"dirty": False, "build_jobs": 2}
+
+
+def test_remove_section_immutable(section_removal_config):
+    cfg, _, high = section_removal_config
+    before = pathlib.Path(high.get_section_filename("config")).read_bytes()
+    assert cfg.get("config:dirty") is True
+    high.writable = False
+    with pytest.raises(spack.error.ConfigError, match="immutable scope"):
+        cfg.remove_section("config", scope="high")
+    assert cfg.get("config:dirty") is True
+    assert pathlib.Path(high.get_section_filename("config")).read_bytes() == before
+
+
+def test_remove_section_invalid(section_removal_config):
+    cfg, _, _ = section_removal_config
+    with pytest.raises(spack.config.ConfigSectionError):
+        cfg.remove_section("not-a-section", scope="high")
+    with pytest.raises(ValueError, match="Invalid config scope"):
+        cfg.remove_section("config", scope="missing")
+
+
+def test_remove_section_internal():
+    cfg = spack.config.create_from(
+        spack.config.InternalConfigScope("low", {"config": {"dirty": False}}),
+        spack.config.InternalConfigScope("high", {"config": {"dirty": True}}),
+    )
+    assert cfg.get("config:dirty") is True
+    cfg.remove_section("config", scope="high")
+    assert cfg.get("config:dirty") is False
+
+
+@pytest.mark.parametrize("single_file", [False, True])
+def test_remove_section_missing_scope_file(tmp_path: pathlib.Path, single_file):
+    path = tmp_path / "missing"
+    scope = (
+        spack.config.SingleFileScope(
+            "test", str(path), spack.schema.env.schema, yaml_path=["spack"]
+        )
+        if single_file
+        else spack.config.DirectoryConfigScope("test", str(path))
+    )
+    cfg = spack.config.create_from(scope)
+    cfg.remove_section("config", scope="test")
+    assert not path.exists()
+    assert not cfg.get("config", scope="test")
+
+
+def test_remove_section_io_error(section_removal_config, monkeypatch):
+    cfg, _, high = section_removal_config
+    path = pathlib.Path(high.get_section_filename("config"))
+    before = path.read_bytes()
+    assert cfg.get("config:dirty") is True
+
+    def fail(*args, **kwargs):
+        raise OSError("cannot modify config")
+
+    if isinstance(high, spack.config.SingleFileScope):
+        monkeypatch.setattr(syaml, "dump_config", fail)
+    else:
+        monkeypatch.setattr(os, "unlink", fail)
+    with pytest.raises(spack.config.ConfigFileError):
+        cfg.remove_section("config", scope="high")
+    assert cfg.get("config:dirty") is True
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    "section,value",
+    [("config", "\n    dirty: true"), ("view", " false"), ("definitions", "\n  - names: [foo]")],
+)
+def test_remove_section_following_comments(tmp_path: pathlib.Path, section, value):
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        f"spack:\n  {section}:{value}\n  # unrelated packages comment\n  packages: {{}}\n"
+    )
+    scope = spack.config.SingleFileScope(
+        "test", str(manifest), spack.schema.env.schema, yaml_path=["spack"]
+    )
+    spack.config.create_from(scope).remove_section(section, scope="test")
+    assert "# unrelated packages comment" in manifest.read_text()
+    assert section not in syaml.load_config(manifest.read_text())["spack"]
+
+
+def test_remove_section_comment_ownership_and_later_write(tmp_path: pathlib.Path):
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        "spack:\n  config:\n    dirty: true # removed inline comment\n"
+        "    template_dirs:\n    - foo # removed item comment\n"
+        "  # packages first\n  # packages second\n"
+        "  packages:\n    all:\n      buildable: false # retained inline comment\n"
+    )
+    scope = spack.config.SingleFileScope(
+        "test", str(manifest), spack.schema.env.schema, yaml_path=["spack"]
+    )
+    cfg = spack.config.create_from(scope)
+    cfg.remove_section("config", scope="test")
+    cfg.remove_section("config", scope="test")
+    assert "# retained inline comment" in manifest.read_text()
+    cfg.set("packages:all:buildable", True, scope="test")
+    contents = manifest.read_text()
+    assert "removed inline comment" not in contents
+    assert "removed item comment" not in contents
+    assert contents.count("# packages first") == 1
+    assert contents.count("# packages second") == 1
+    assert contents.index("# packages first") < contents.index("# packages second")
+    assert contents.index("# packages second") < contents.index("  packages:")
+    fresh = spack.config.create_from(
+        spack.config.SingleFileScope(
+            "test", str(manifest), spack.schema.env.schema, yaml_path=["spack"]
+        )
+    )
+    assert not fresh.get("config")
+    assert fresh.get("packages:all:buildable") is True
+
+
+def test_remove_section_shared_yaml_sequence(tmp_path: pathlib.Path):
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        "spack:\n  specs: &paths\n  - zlib\n  # retained specs comment\n"
+        "  config:\n    template_dirs: *paths\n"
+        "  # packages comment\n  packages: {}\n"
+    )
+    scope = spack.config.SingleFileScope(
+        "test", str(manifest), spack.schema.env.schema, yaml_path=["spack"]
+    )
+    spack.config.create_from(scope).remove_section("config", scope="test")
+    contents = manifest.read_text()
+    assert contents.count("# retained specs comment") == 1
+    assert contents.count("# packages comment") == 1
+    assert syaml.load_config(contents)["spack"]["specs"] == ["zlib"]
 
 
 def test_immutable_scope(tmp_path: pathlib.Path):
