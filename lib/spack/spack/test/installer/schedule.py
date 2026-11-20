@@ -1109,6 +1109,26 @@ class TestScheduleBuilds:
         for _, _, lock in result.newly_installed:
             lock.release_read()
 
+    def test_installed_in_upstream_explicit_set_not_marked(
+        self, upstream_and_downstream_db: Tuple[Database, Database], mock_packages
+    ):
+        """test that we do not mark a spec explicit if it is taken from an upstream database"""
+        upstream_db, downstream_db = upstream_and_downstream_db
+        spec = self._make_spec("trivial-install-test-package")
+        with writable(upstream_db):
+            upstream_db.add(spec, explicit=False)
+        local_store = spack.store.Store(downstream_db.root, upstreams=[upstream_db])
+        assert upstream_db.layout
+        spec.set_prefix(upstream_db.layout.path_for_spec(spec))
+
+        result = _schedule(
+            [spec.dag_hash()], _FakeBuildGraph([spec]), local_store, explicit={spec.dag_hash()}
+        )
+        assert result.to_mark_explicit == []
+        assert [dag_hash for dag_hash, _, _ in result.newly_installed] == [spec.dag_hash()]
+        for _, _, lock in result.newly_installed:
+            lock.release_read()
+
     def test_missing_in_upstream_is_installed_locally(
         self, upstream_and_downstream_db: Tuple[Database, Database], mock_packages
     ):
