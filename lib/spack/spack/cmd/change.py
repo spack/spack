@@ -5,10 +5,10 @@
 import argparse
 import warnings
 
-import spack.config
-import spack.error
 import spack.cmd
+import spack.config
 import spack.environment
+import spack.error
 import spack.spec
 from spack.cmd.common import arguments
 
@@ -122,7 +122,9 @@ def _change(env, args):
                     match_spec_str = str(match_spec) if match_spec else None
                     # Only add new requirements if the spec list will NOT change
                     # (if spec list will change, only modify existing config requirements)
-                    changed = _config_change(config_path, match_spec_str, add_if_no_match=not spec_changed)
+                    changed = _config_change(
+                        config_path, match_spec_str, add_if_no_match=not spec_changed
+                    )
                     config_changed = config_changed or changed
                 except (ValueError, spack.error.ConfigError):
                     # Config change failed or not applicable, continue
@@ -146,6 +148,7 @@ def _change(env, args):
     # as well warn when we do
     if not config_changed and not spec_changed and not (args.concrete or args.concrete_only):
         warnings.warn("No config requirements or spec list specs were changed")
+
 
 def change(parser, args):
     if args.all and args.concrete_only:
