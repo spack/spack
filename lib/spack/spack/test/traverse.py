@@ -510,3 +510,45 @@ def test_mixed_depth_visitor(roots, order, include_root):
         ("D", "F"),
         ("H", "B"),
     }
+
+
+def test_traverse_build_specs():
+    """Build specs are followed at every level: b is spliced, and so are its build spec and a
+    dependency x of its build spec"""
+    specs = create_dag(
+        nodes=["a", "b", "b-build", "b-build-build", "c", "x", "x-build"],
+        edges=[("a", "b", "link"), ("b-build", "c", "link"), ("b-build", "x", "link")],
+    )
+    specs["b"].build_spec = specs["b-build"]
+    specs["b-build"].build_spec = specs["b-build-build"]
+    specs["x"].build_spec = specs["x-build"]
+    a = specs["a"]
+
+    assert [s.name for s in traverse.traverse_nodes([a])] == ["a", "b"]
+    assert [s.name for s in traverse.traverse_nodes([a], build_specs=True)] == [
+        "a",
+        "b",
+        "b-build",
+        "c",
+        "x",
+        "x-build",
+        "b-build-build",
+    ]
+    assert [
+        (e.parent.name, e.spec.name, e.depflag)
+        for e in traverse.traverse_edges([a], root=False, build_specs=True)
+    ] == [
+        ("a", "b", dt.LINK),
+        ("b", "b-build", 0),
+        ("b-build", "c", dt.LINK),
+        ("b-build", "x", dt.LINK),
+        ("x", "x-build", 0),
+        ("b-build", "b-build-build", 0),
+    ]
+
+
+def test_traverse_build_specs_parents():
+    specs = create_dag(nodes=["a", "a-build"], edges=[])
+    specs["a"].build_spec = specs["a-build"]
+    with pytest.raises(ValueError):
+        list(traverse.traverse_nodes([specs["a"]], direction="parents", build_specs=True))
