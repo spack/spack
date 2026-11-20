@@ -225,7 +225,7 @@ class CompilerPropertyDetector:
                     "cppflags",
                     "ldflags",
                 ]:
-                    current_flags = compiler_flags.get(flag_type, "").strip()
+                    current_flags = (compiler_flags.get(flag_type) or "").strip()
                     if current_flags:
                         cc_exe.add_default_arg(*current_flags.split(" "))
 

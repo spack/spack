@@ -221,6 +221,8 @@ class RuntimePropertyRecorder:
         flags = spec.extra_attributes["flags"]
         root_spec_str = f"{node_placeholder}"
         for flag_type, default_values in flags.items():
+            if default_values is None:
+                continue
             root_spec_str = f"{root_spec_str} {flag_type}='{default_values}'"
         root_spec = spack.spec.Spec(root_spec_str)
         head_clauses = self._setup.clauses.spec_clauses(
