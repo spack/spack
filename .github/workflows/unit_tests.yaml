@@ -72,7 +72,7 @@ jobs:
       run: |
           python3 -m pytest -x --verbose --dist worksteal -n4
     - uses: ./.github/actions/save-concretization-cache
-      if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+      if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
       with:
         key: ${{ steps.concretization-cache.outputs.key }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -223,7 +223,7 @@ jobs:
       run: |
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --dist worksteal -x -n4
     - uses: ./.github/actions/save-concretization-cache
-      if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+      if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
       with:
         key: ${{ steps.concretization-cache.outputs.key }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -288,7 +288,7 @@ jobs:
         python -m pytest -x --verbose --cov --cov-config=pyproject.toml
         ./share/spack/qa/validate_last_exit.ps1
     - uses: ./.github/actions/save-concretization-cache
-      if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+      if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
       with:
         key: ${{ steps.concretization-cache.outputs.key }}
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
