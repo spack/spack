@@ -353,6 +353,86 @@ def test_change_spec_with_options(environment_from_manifest):
     assert e.user_specs.install_flags == [True, False]
 
 
+def test_change_with_config_flag_modifies_both(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+):
+    """Test that --config modifies both config requirements and spec list."""
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  packages:
+    mpich:
+      require: ["@3.0.1"]
+  specs:
+  - mpich@3.0.1
+"""
+    )
+
+    mutable_config.set("config:misc_cache", str(tmp_path / "cache"))
+    with ev.Environment(tmp_path):
+        change("--config", "mpich@3.0.4")
+
+    # Reload and verify both changed
+    e = ev.Environment(tmp_path)
+    with e:
+        # Check spec list changed
+        assert len(e.user_specs) == 1
+        assert e.user_specs[0].satisfies("mpich@3.0.4")
+
+        # Check config requirement changed
+        # Note: Spec.override() adds the package name, so the config becomes "mpich@3.0.4"
+        mpich_config = spack.config.CONFIG.get("packages:mpich:require")
+        assert mpich_config == ["mpich@3.0.4"]
+
+        # Concretize to verify the config is actually in effect
+        test_spec = spack.concretize.concretize_one("mpich")
+        assert test_spec.satisfies("@3.0.4")
+
+
+def test_change_with_config_flag_config_only_succeeds(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+):
+    """Test that --config succeeds when spec is only in config, not spec list.
+
+    This tests:
+    1. NoSpecsMatchedError handling allows success when --config is used
+    2. env.write() doesn't overwrite the config change
+    """
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  packages:
+    mpich:
+      require: ["@3.0.1"]
+  specs:
+  - libelf
+"""
+    )
+
+    mutable_config.set("config:misc_cache", str(tmp_path / "cache"))
+    with ev.Environment(tmp_path):
+        # This should succeed even though mpich is not in spec list
+        change("--config", "mpich@3.0.4")
+
+    # Reload and verify config changed
+    e = ev.Environment(tmp_path)
+    with e:
+        # Spec list should be unchanged (still just libelf)
+        assert len(e.user_specs) == 1
+        assert e.user_specs[0].name == "libelf"
+
+        # Config requirement should have changed
+        # Note: Spec.override() adds the package name, so the config becomes "mpich@3.0.4"
+        mpich_config = spack.config.CONFIG.get("packages:mpich:require")
+        assert mpich_config == ["mpich@3.0.4"]
+
+        # Concretize to verify the config persisted (wasn't overwritten by env.write())
+        test_spec = spack.concretize.concretize_one("mpich")
+        assert test_spec.satisfies("@3.0.4")
+
+
 def test_env_add_virtual():
     env("create", "test")
     e = ev.read("test")

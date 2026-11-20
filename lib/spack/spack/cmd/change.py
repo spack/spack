@@ -101,7 +101,7 @@ def change(parser, args):
 
         # If config changed, reload the environment to pick up changes
         if config_changed:
-            env = spack.environment.read(env.name)
+            env = spack.environment.Environment(env.path)
 
     spec_changed = False
     with env.write_transaction():

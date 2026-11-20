@@ -521,8 +521,11 @@ def _config_change(config_path, match_spec_str=None):
 
             update_path = f"{key_path}:[{str(spec)}]"
             spack.config.CONFIG.add(update_path, scope=write_scope)
+            changed = True
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
+
+    return changed
 
 
 def config_change(args):
