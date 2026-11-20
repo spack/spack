@@ -67,6 +67,9 @@ jobs:
           PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml' || '' }}
       run: |
           python3 -m pytest -x --verbose --dist worksteal -n4
+    - name: Interrupt an install
+      run: |
+          python3 share/spack/qa/interrupt-install.py
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       if: ${{ matrix.python-version == '3.14' }}
       with:
@@ -210,6 +213,9 @@ jobs:
         COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
       run: |
         python3 -m pytest --verbose --cov --cov-config=pyproject.toml --dist worksteal -x -n4
+    - name: Interrupt an install
+      run: |
+        python3 share/spack/qa/interrupt-install.py
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-${{ matrix.os }}-python${{ matrix.python-version }}
@@ -266,6 +272,10 @@ jobs:
         COVERAGE_FILE: coverage/.coverage-windows
       run: |
         python -m pytest -x --verbose --cov --cov-config=pyproject.toml
+        ./share/spack/qa/validate_last_exit.ps1
+    - name: Interrupt an install
+      run: |
+        python share/spack/qa/interrupt-install.py
         ./share/spack/qa/validate_last_exit.ps1
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
