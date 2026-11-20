@@ -2835,23 +2835,10 @@ class Spec:
         The method :meth:`from_dict()` can be used to read back in a spec that has been converted
         to a dictionary, serialized, and read back in.
         """
-        node_list = []  # Using a list to preserve preorder traversal for hash.
-        hash_set = set()
-        for s in self.traverse(order="pre"):
-            spec_hash = s.dag_hash()
-
-            if spec_hash not in hash_set:
-                node_list.append(s.node_dict_with_hashes())
-                hash_set.add(spec_hash)
-
-            if s.build_spec is not s:
-                build_spec_list = s.build_spec.to_dict()["spec"]["nodes"]
-                for node in build_spec_list:
-                    node_hash = node["hash"]
-                    if node_hash not in hash_set:
-                        node_list.append(node)
-                        hash_set.add(node_hash)
-
+        node_list = [
+            s.node_dict_with_hashes()
+            for s in self.traverse(order="pre", key=spack.traverse.by_dag_hash, build_specs=True)
+        ]
         return {"spec": {"_meta": {"version": SPECFILE_FORMAT_VERSION}, "nodes": node_list}}
 
     def node_dict_with_hashes(self) -> Dict[str, Any]:
