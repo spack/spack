@@ -72,7 +72,7 @@ def change(parser, args):
         match_spec = spack.cmd.parse_specs([args.match_spec])[0]
     specs = spack.cmd.parse_specs(args.specs)
 
-    # Now apply spec list changes
+    # Apply speclist changes
     spec_changed = False
     with env.write_transaction():
         if not args.concrete_only:
@@ -90,7 +90,7 @@ def change(parser, args):
             except spack.environment.NoSpecsMatchedError as e:
                 # No specs matched in the spec list
                 if not args.config:
-                    # No config flag and no spec matches → real error
+                    # No config flag and no spec matches -> real error
                     msg = f"Cannot change abstract specs: {e}."
                     msg += " Try again with '--concrete-only' to change concrete specs only."
                     raise ValueError(msg) from e
@@ -106,9 +106,11 @@ def change(parser, args):
     if spec_changed:
         env = spack.environment.Environment(env.path)
 
-    # Apply config changes FIRST
+    # Apply config changes
     config_changed = False
     if args.config:
+        # NOTE: without `with env`, this fails, e.g. test_change_with_config_flag_modifies_both
+        # fails. I think this is because the config scope won't be reset without this
         with env:
             from spack.cmd.config import _config_change
 
@@ -136,9 +138,9 @@ def change(parser, args):
                     # Config change failed or not applicable, continue
                     pass
 
-            # If config changed, reload the environment to pick up changes into yaml_content
-            if config_changed:
-                env = spack.environment.Environment(env.path)
+    # If config changed, reload the environment to pick up changes into yaml_content
+    if config_changed:
+        env = spack.environment.Environment(env.path)
 
     if args.concrete or args.concrete_only:
         selectors = []
@@ -148,8 +150,6 @@ def change(parser, args):
             mutators.append(spec)
 
         env.mutate(selectors=selectors, mutators=mutators)
-
-        env.write()
 
     # There are other cases where nothing changed (e.g. if we specified --concrete but
     # none of the lockfile specs matched), but this case is easy to detect and we might
