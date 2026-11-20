@@ -32,7 +32,7 @@ from spack.version.git_ref_lookup import GitRefLookup
 
 
 @pytest.fixture()
-def setup_complex_splice(monkeypatch):
+def setup_complex_splice():
     r"""Fixture to set up splicing for two complex specs.
 
     a_red is a spec in which every node has the variant color=red
@@ -55,19 +55,7 @@ def setup_complex_splice(monkeypatch):
                g@2  e \ \
                      \| /
                      g@3
-
-    This is not intended for use in tests that use virtuals, so ``_splice_match`` is monkeypatched
-    to avoid needing package files for each spec.
     """
-
-    def splice_match(self, other, self_root, other_root):
-        return self.name == other.name
-
-    def virtuals_provided(self, root):
-        return []
-
-    monkeypatch.setattr(Spec, "_splice_match", splice_match)
-    monkeypatch.setattr(Spec, "_virtuals_provided", virtuals_provided)
 
     g1_red = Spec("pkg-g color=red")
     g1_red.versions = vn.VersionList([vn.Version("1")])
@@ -1518,17 +1506,9 @@ class TestSpecSemantics:
 
         assert spliced["pkg-d"] == a_red["pkg-d"]
         assert spliced["pkg-d"]._build_spec is None
-        # Since D had a parent changed, it has a split edge for link vs build dependent
-        # note: spliced["b"] == b_red, referenced differently to preserve logic
-        assert set(spliced["pkg-d"].dependents()) == {
-            spliced["pkg-b"],
-            spliced["pkg-c"],
-            a_red["pkg-c"],
-        }
-        assert set(spliced["pkg-d"].dependents(deptype=dt.BUILD)) == {
-            a_red["pkg-b"],
-            a_red["pkg-c"],
-        }
+        assert set(spliced["pkg-d"].dependents()) == {spliced["pkg-b"], spliced["pkg-c"]}
+        # The spliced c has no build dependencies, they live on its build spec
+        assert set(spliced["pkg-d"].dependents(deptype=dt.BUILD)) == {spliced["pkg-b"]}
 
         assert spliced["pkg-e"] == a_red["pkg-e"]
         assert spliced["pkg-e"]._build_spec is None
@@ -1549,7 +1529,6 @@ class TestSpecSemantics:
             spliced,
             spliced["pkg-c"],
             spliced["pkg-f"],
-            a_red["pkg-c"],
         }
 
         assert spliced["pkg-b"]["pkg-g"] == a_red["pkg-b"]["pkg-g"]
