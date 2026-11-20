@@ -345,7 +345,7 @@ _dest_to_fish_complete = {
     ("config", "path"): "-f -a '(__fish_spack_colon_path)'",
     ("config", "section"): "-f -a '(__fish_spack_config_sections)'",
     ("develop", "specs?"): "-f -k -a '(__fish_spack_specs_or_id)'",
-    ("diff", "specs?"): "-f -a '(__fish_spack_installed_specs)'",
+    ("diff", "before after.*"): "$__fish_spack_force_files -a '(__fish_spack_environments)'",
     ("gpg sign", "output"): "-f -a '(__fish_complete_directories)'",
     ("gpg", "keys?"): "-f -a '(__fish_spack_gpg_keys)'",
     ("graph", "specs?"): "-f -k -a '(__fish_spack_specs_or_id)'",
