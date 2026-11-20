@@ -72,52 +72,6 @@ def change(parser, args):
         match_spec = spack.cmd.parse_specs([args.match_spec])[0]
     specs = spack.cmd.parse_specs(args.specs)
 
-    # Check if spec list will change (without actually changing it yet)
-    spec_will_change = False
-    if not args.concrete_only:
-        # Check if any specs match in the spec list
-        list_to_check = env.spec_lists[args.list_name]
-        check_match_spec = match_spec or (specs[0] if specs and specs[0].name else None)
-        if check_match_spec:
-            matches = [x for x in list_to_check if x.satisfies(check_match_spec)]
-            spec_will_change = len(matches) > 0
-    elif args.concrete or args.concrete_only:
-        # Assume concrete changes will succeed
-        spec_will_change = True
-
-    # Apply config changes FIRST
-    config_changed = False
-    if args.config:
-        from spack.cmd.config import _config_change
-
-        for spec in specs:
-            # Determine the package name for the config path
-            # Use match_spec.name if available, otherwise spec.name
-            if match_spec and match_spec.name:
-                pkg_name = match_spec.name
-            elif spec.name:
-                pkg_name = spec.name
-            else:
-                # Anonymous spec without match_spec - can't determine package name
-                continue
-
-            # Construct config path: packages:name:require:spec
-            config_path = f"packages:{pkg_name}:require:{str(spec)}"
-
-            try:
-                match_spec_str = str(match_spec) if match_spec else None
-                # Only add new requirements if the spec list will NOT change
-                # (if spec list will change, only modify existing config requirements)
-                changed = _config_change(config_path, match_spec_str, add_if_no_match=not spec_will_change)
-                config_changed = config_changed or changed
-            except (ValueError, spack.error.ConfigError):
-                # Config change failed or not applicable, continue
-                pass
-
-        # If config changed, reload the environment to pick up changes into yaml_content
-        if config_changed:
-            env = spack.environment.Environment(env.path)
-
     # Now apply spec list changes
     spec_changed = False
     with env.write_transaction():
@@ -146,15 +100,54 @@ def change(parser, args):
                 msg = f"Cannot change abstract specs: {e}."
                 msg += " Try again with '--concrete-only' to change concrete specs only."
                 raise ValueError(msg) from e
+            if spec_changed:
+                env.write()
 
-        if args.concrete or args.concrete_only:
-            selectors = []
-            mutators = []
+    if spec_changed:
+        env = spack.environment.Environment(env.path)
+
+    # Apply config changes FIRST
+    config_changed = False
+    if args.config:
+        with env:
+            from spack.cmd.config import _config_change
+
             for spec in specs:
-                selectors.append(match_spec or spack.spec.Spec(spec.name))
-                mutators.append(spec)
+                # Determine the package name for the config path
+                # Use match_spec.name if available, otherwise spec.name
+                if match_spec and match_spec.name:
+                    pkg_name = match_spec.name
+                elif spec.name:
+                    pkg_name = spec.name
+                else:
+                    # Anonymous spec without match_spec - can't determine package name
+                    continue
 
-            env.mutate(selectors=selectors, mutators=mutators)
+                # Construct config path: packages:name:require:spec
+                config_path = f"packages:{pkg_name}:require:{str(spec)}"
+
+                try:
+                    match_spec_str = str(match_spec) if match_spec else None
+                    # Only add new requirements if the spec list will NOT change
+                    # (if spec list will change, only modify existing config requirements)
+                    changed = _config_change(config_path, match_spec_str, add_if_no_match=not spec_changed)
+                    config_changed = config_changed or changed
+                except (ValueError, spack.error.ConfigError):
+                    # Config change failed or not applicable, continue
+                    pass
+
+            # If config changed, reload the environment to pick up changes into yaml_content
+            if config_changed:
+                env = spack.environment.Environment(env.path)
+
+    if args.concrete or args.concrete_only:
+        selectors = []
+        mutators = []
+        for spec in specs:
+            selectors.append(match_spec or spack.spec.Spec(spec.name))
+            mutators.append(spec)
+
+        env.mutate(selectors=selectors, mutators=mutators)
 
         env.write()
 

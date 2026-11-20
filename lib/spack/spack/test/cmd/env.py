@@ -375,16 +375,18 @@ spack:
 
     # Reload and verify both changed
     e = ev.Environment(tmp_path)
+    results = list()
     with e:
         # Check spec list changed
         assert len(e.user_specs) == 1
-        assert e.user_specs[0].satisfies("mpich@3.0.4")
+        results.append(e.user_specs[0].satisfies("mpich@3.0.4"))
 
         # Check config requirement changed
         # Note: Spec.override() adds the package name, so the config becomes "mpich@3.0.4"
         mpich_config = spack.config.CONFIG.get("packages:mpich:require")
-        assert mpich_config == ["mpich@3.0.4"]
+        results.append(mpich_config == ["mpich@3.0.4"])
 
+        assert all(results)
         # Concretize to verify the config is actually in effect
         test_spec = spack.concretize.concretize_one("mpich")
         assert test_spec.satisfies("@3.0.4")
