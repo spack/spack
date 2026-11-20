@@ -328,7 +328,7 @@ def migrate(
             # modulo any specs that we failed to migrate for whatever reason. So
             # to avoid having to re-fetch all the spec files now, just mark them
             # appropriately in the existing database and push that.
-            db.mark(spec, "in_buildcache", result.success)
+            db.mark(spec, key="in_buildcache", value=result.success)
 
         if success_count > 0:
             tty.msg("Updating index and pushing keys")

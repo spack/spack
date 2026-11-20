@@ -99,7 +99,7 @@ def do_mark(specs, explicit):
     """
     with spack.store.STORE.db.write_transaction():
         for spec in specs:
-            spack.store.STORE.db.mark(spec, "explicit", explicit)
+            spack.store.STORE.db.mark(spec, key="explicit", value=explicit)
 
 
 def mark_specs(args, specs):

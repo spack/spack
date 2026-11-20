@@ -239,6 +239,59 @@ def find_compilers(path_hints: Optional[List[str]] = None) -> List[Spec]:
     return _find_compilers(path_hints, config=spack.config.CONFIG, repo=spack.repo.PATH)
 
 
+def providers(*args, concrete: bool = False) -> List[Spec]:
+    # If looking for concerete specs
+    providers: List[Spec] = []
+    # No args, no providers :)
+    if not args:
+        return providers
+
+    if concrete:
+        # Search the local STORE
+        from spack.store import STORE
+
+        for virt in args:
+            providers.extend(STORE.db.query_local(virt))
+
+        # Search configs for externals
+        # from spack.config import CONFIG
+        # pkg_config = CONFIG.get("packages")
+        # for pkg in pkg_config:
+        #     for spec in pkg:
+        #         if spec.provides(virt):
+        #             providers.append(spec)
+
+        # Search build cache
+        from tempfile import TemporaryDirectory
+
+        import spack.stage
+        from spack.binary_distribution import BINARY_INDEX
+
+        with TemporaryDirectory(dir=spack.stage.stage_root(spack.config.CONFIG)) as tmpdir:
+            db = BINARY_INDEX.db(tmpdir=tmpdir)
+            for virt in args:
+                providers.extend(db.query_local(virt))
+
+        # Search the current active environment
+        from spack.active_environment import active_environment
+
+        env = active_environment()
+        if env:
+            for spec in env.all_specs_generator():
+                if any(spec.satisfies(virt) for virt in args):
+                    providers.append(spec)
+    else:
+        # search the repo.PATH
+        import spack.repo
+
+        pindex = spack.repo.PATH.provider_index
+        for virt in args:
+            providers.extend(pindex.providers_for(virt))
+
+    print(providers)
+    return sorted(set(providers))
+
+
 #: Assigning this to :attr:`spack.package_base.PackageBase.flag_handler` means that compiler flags
 #: are passed to the build system. This can be used in any package that derives from a build system
 #: class that implements :meth:`spack.package_base.PackageBase.flags_to_build_system_args`.

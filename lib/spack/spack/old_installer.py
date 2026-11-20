@@ -375,7 +375,7 @@ def _process_external_package(pkg: "spack.package_base.PackageBase", explicit: b
         tty.debug(f"{pre} already registered in DB")
         record = spack.store.STORE.db.get_record(spec)
         if explicit and not record.explicit:
-            spack.store.STORE.db.mark(spec, "explicit", True)
+            spack.store.STORE.db.mark(spec, key="explicit", value=True)
         return False
 
     except KeyError:
@@ -1658,7 +1658,7 @@ class PackageInstaller:
 
             # Only update the explicit entry once for the explicit package
             if task.explicit and not rec.explicit:
-                spack.store.STORE.db.mark(task.pkg.spec, "explicit", True)
+                spack.store.STORE.db.mark(task.pkg.spec, key="explicit", value=True)
 
     def _cleanup_all_tasks(self) -> None:
         """Cleanup all tasks to include releasing their locks."""

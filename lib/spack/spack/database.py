@@ -156,10 +156,11 @@ def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
     function to a Spec."""
 
-    def converter(self, spec_like, *args, **kwargs):
-        if not isinstance(spec_like, spack.spec.Spec):
-            spec_like = spack.spec.Spec(spec_like)
-        return function(self, spec_like, *args, **kwargs)
+    def converter(self, *spec_like, **kwargs):
+        for i, s in enumerate(spec_like):
+            if not isinstance(s, spack.spec.Spec):
+                spec_like[i] = spack.spec.Spec(s)
+        return function(self, *spec_like, **kwargs)
 
     return converter
 
@@ -1310,7 +1311,7 @@ class Database:
         self._data[key].explicit = explicit
 
     @_autospec
-    def add(self, spec: "spack.spec.Spec", *, explicit: bool = False, allow_missing=False) -> None:
+    def add(self, *spec: "spack.spec.Spec", explicit: bool = False, allow_missing=False) -> None:
         """Add spec at path to database, locking and reading DB to sync.
 
         ``add()`` will lock and read from the DB on disk.
@@ -1319,7 +1320,8 @@ class Database:
         # TODO: ensure that spec is concrete?
         # Entire add is transactional.
         with self.write_transaction():
-            self._add(spec, explicit=explicit, allow_missing=allow_missing)
+            for s in spec:
+                self._add(s, explicit=explicit, allow_missing=allow_missing)
 
     def _get_matching_spec_key(self, spec: "spack.spec.Spec", **kwargs) -> str:
         """Get the exact spec OR get a single spec that matches."""
@@ -1429,7 +1431,9 @@ class Database:
         return rec.spec
 
     @_autospec
-    def remove(self, spec: "spack.spec.Spec") -> "spack.spec.Spec":
+    def remove(
+        self, *spec: "spack.spec.Spec"
+    ) -> Union["spack.spec.Spec", List["spack.spec.Spec"]]:
         """Removes a spec from the database.  To be called on uninstall.
 
         Reads the database, then:
@@ -1441,8 +1445,15 @@ class Database:
 
         """
         # Take a lock around the entire removal.
+        removed: List["spack.spec.Spec"] = []
         with self.write_transaction():
-            return self._remove(spec)
+            for s in spec:
+                removed.append(self._remove(s))
+
+        if len(spec) == 1:
+            return removed[0]
+        else:
+            return removed
 
     def deprecator(self, spec: "spack.spec.Spec") -> Optional["spack.spec.Spec"]:
         """Return the spec that the given spec is deprecated for, or None"""
@@ -1480,20 +1491,22 @@ class Database:
         self._data[spec_key] = spec_rec
 
     @_autospec
-    def mark(self, spec: "spack.spec.Spec", key: str, value: Any) -> None:
+    def mark(self, *spec: "spack.spec.Spec", key: str, value: Any) -> None:
         """Mark an arbitrary record on a spec."""
         with self.write_transaction():
-            return self._mark(spec, key, value)
+            for s in spec:
+                self._mark(s, key, value)
 
     def _mark(self, spec: "spack.spec.Spec", key, value) -> None:
         record = self._data[self._get_matching_spec_key(spec)]
         setattr(record, key, value)
 
     @_autospec
-    def deprecate(self, spec: "spack.spec.Spec", deprecator: "spack.spec.Spec") -> None:
+    def deprecate(self, *spec: "spack.spec.Spec", deprecator: "spack.spec.Spec") -> None:
         """Marks a spec as deprecated in favor of its deprecator"""
         with self.write_transaction():
-            return self._deprecate(spec, deprecator)
+            for s in spec:
+                return self._deprecate(s, deprecator)
 
     @_autospec
     def installed_relatives(
