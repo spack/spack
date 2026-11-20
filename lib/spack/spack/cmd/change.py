@@ -114,10 +114,19 @@ def change(parser, args):
                         match_spec=match_spec,
                         allow_changing_multiple_specs=args.all,
                     )
-                # change_existing_spec raises ValueError if no specs match,
+                # change_existing_spec raises NoSpecsMatchedError if no specs match,
                 # so if we got here, at least one abstract spec changed
                 spec_changed = True
+            except spack.environment.NoSpecsMatchedError as e:
+                # No specs matched in the spec list
+                if not args.config:
+                    # No config changes and no spec matches → real error
+                    msg = f"Cannot change abstract specs: {e}."
+                    msg += " Try again with '--concrete-only' to change concrete specs only."
+                    raise ValueError(msg) from e
+                # else: config changed, so it's OK that spec list had no matches
             except (ValueError, spack.environment.SpackEnvironmentError) as e:
+                # Other errors (multiple matches without --all, etc.) still fail
                 msg = f"Cannot change abstract specs: {e}."
                 msg += " Try again with '--concrete-only' to change concrete specs only."
                 raise ValueError(msg) from e
@@ -130,12 +139,11 @@ def change(parser, args):
                 mutators.append(spec)
 
             env.mutate(selectors=selectors, mutators=mutators)
-            # mutate() doesn't raise on no matches, but we assume if the user
-            # requested it, they expected it to work, so mark as changed
-            spec_changed = True
 
         env.write()
 
-    # Warn if nothing changed when --config was specified
-    if args.config and not config_changed and not spec_changed:
+    # There are other cases where nothing changed (e.g. if we specified --concrete but
+    # none of the lockfile specs matched), but this case is easy to detect and we might
+    # as well warn when we do
+    if not config_changed and not spec_changed and not (args.concrete or args.concrete_only):
         warnings.warn("No config requirements or spec list specs were changed")

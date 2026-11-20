@@ -1658,7 +1658,7 @@ class Environment:
 
         matches = [x for x in list_to_change if x.satisfies(match_spec)]
         if len(matches) == 0:
-            raise ValueError(
+            raise NoSpecsMatchedError(
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
             )
         elif len(matches) > 1 and not allow_changing_multiple_specs:
@@ -3961,3 +3961,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
 
 class SpackEnvironmentDevelopError(SpackEnvironmentError):
     """Class for errors in applying develop information to an environment."""
+
+
+class NoSpecsMatchedError(SpackEnvironmentError):
+    """Raised when change_existing_spec finds no matching specs."""
