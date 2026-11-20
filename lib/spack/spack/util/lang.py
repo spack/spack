@@ -1143,3 +1143,12 @@ class PriorityOrderedMapping(Mapping[KT, VT]):
         self._priorities = [(p, k) for p, k in self._priorities if k != key]
         assert len(self._data) == len(self._priorities)
         return popped_item
+
+    def copy(self) -> "PriorityOrderedMapping[KT, VT]":
+        """Returns a shallow copy of the mapping. Adding or removing keys in the copy does not
+        affect the original.
+        """
+        result: PriorityOrderedMapping[KT, VT] = PriorityOrderedMapping()
+        result._data = self._data.copy()
+        result._priorities = self._priorities.copy()
+        return result

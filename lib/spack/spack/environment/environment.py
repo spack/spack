@@ -33,6 +33,7 @@ from typing import (
 
 import spack
 import spack.active_environment
+import spack.caches
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -305,6 +306,19 @@ def deactivate():
     set_active_environment(None)
 
 
+def _environment_configuration(scope: spack.config.ConfigScope) -> spack.config.Configuration:
+    """Returns a copy of the global configuration, where ``scope`` replaces the scope of the
+    active environment, if any, and ``$env`` is the path bound to ``scope``.
+    """
+    result = spack.config.CONFIG.copy()
+    result.env_path = scope.env_path
+    active = active_environment()
+    if active is not None:
+        result.remove_scope(active.scope_name)
+    result.push_scope(scope, priority=ConfigScopePriority.ENVIRONMENT)
+    return result
+
+
 def _root(name):
     """Non-validating version of root(), to be used internally."""
     return os.path.join(env_root_path(), name)
@@ -418,9 +432,6 @@ def create_in_dir(
         init_file = read(str(init_file)).path
     initialize_environment_dir(root, envfile=init_file)
 
-    if with_view is None and keep_relative:
-        return Environment(root)
-
     try:
         manifest = EnvironmentManifestFile(root)
 
@@ -462,6 +473,11 @@ def create_in_dir(
                 # relative paths outside of env
                 _rewrite_relative_dev_paths_on_relocation(env, init_file_dir, copied_env=copied)
                 _rewrite_relative_repos_paths_on_relocation(env, init_file_dir, copied_env=copied)
+
+    # Reading an environment loads the specs of the included environments only in memory
+    if env.included_concrete_env_root_dirs and not os.path.exists(env.lock_path):
+        with env:
+            env.write()
 
     return env
 
@@ -752,7 +768,8 @@ class ViewDescriptor:
     ) -> None:
         self.base = base_path
         self.raw_root = root
-        self.root = spack.config.canonicalize_path(root, default_wd=base_path)
+        # "$env" in the root is the environment of the view
+        self.root = spack.config.canonicalize_path(root, default_wd=base_path, env_path=base_path)
         self.projections = projections or {}
         self.select = select or []
         self.exclude = exclude or []
@@ -771,7 +788,9 @@ class ViewDescriptor:
 
     def update_root(self, new_path: str) -> None:
         self.raw_root = new_path
-        self.root = spack.config.canonicalize_path(new_path, default_wd=self.base)
+        self.root = spack.config.canonicalize_path(
+            new_path, default_wd=self.base, env_path=self.base
+        )
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -1223,16 +1242,14 @@ class Environment:
         self._dev_specs = None
         #: Fingerprint of the lockfile on disk, None if there is none
         self._lockfile_fingerprint_on_disk: Optional[Tuple[Any, ...]] = None
+        #: Global configuration, with the scope and the path of this environment as the
+        #: environment scope and ``$env``
+        self._config: spack.config.Configuration
 
         # Load the manifest file contents into memory
-        self._load_manifest_file()
-
-    def _load_manifest_file(self):
-        """Instantiate and load the manifest file contents into memory."""
         with lk.ReadTransaction(self.txlock):
             self.manifest = EnvironmentManifestFile(self.path, self.name)
-            with self.manifest.use_config():
-                self._read()
+            self._read()
 
     @contextlib.contextmanager
     def config_override_for_group(self, *, group: str):
@@ -1275,11 +1292,15 @@ class Environment:
         self._repo = None
 
     def _re_read(self):
-        """Reinitialize the environment object."""
+        """Reads the manifest file and the lockfile again, discarding the state in memory."""
         self.clear()
-        self._load_manifest_file()
+        with lk.ReadTransaction(self.txlock):
+            self.manifest.reload()
+            self._read()
 
     def _read(self):
+        # Built at each read, to include the scopes pushed after the previous one (-C, -c)
+        self._config = _environment_configuration(self.manifest.env_config_scope)
         self._construct_state_from_manifest()
 
         if os.path.exists(self.lock_path):
@@ -1375,7 +1396,7 @@ class Environment:
         self.included_concrete_env_root_dirs = []
 
         for entry in includes:
-            include = spack.config.included_path(entry)
+            include = spack.config.included_path(entry, env_path=self._config.env_path)
             if isinstance(include, spack.config.GitIncludePaths):
                 # Git includes must be cloned first; paths are relative to the
                 # clone destination, not to the manifest directory.
@@ -1402,18 +1423,14 @@ class Environment:
         """Set up user specs and views from the manifest file."""
         self.views = {}
         self._sync_speclists()
-        self._process_view(spack.config.CONFIG.get("view", True))
+        self._process_view(self._config.get("view", True))
         self._process_included_lockfiles()
 
     def _sync_speclists(self):
-        self._spec_lists_parser = SpecListParser(
-            toolchains=spack.config.CONFIG.get("toolchains", {})
-        )
+        self._spec_lists_parser = SpecListParser(toolchains=self._config.get("toolchains", {}))
         self.spec_lists = {}
         self.spec_lists.update(
-            self._spec_lists_parser.parse_definitions(
-                data=spack.config.CONFIG.get("definitions", [])
-            )
+            self._spec_lists_parser.parse_definitions(data=self._config.get("definitions", []))
         )
         for group in self.manifest.groups():
             tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group", level=2)
@@ -1549,7 +1566,9 @@ class Environment:
         return self.manifest.scope_name
 
     def include_concrete_envs(self):
-        """Copy and save the included environments' specs internally."""
+        """Loads the concrete specs of the included environments into memory, without writing
+        this environment to disk.
+        """
 
         root_hash_seen = set()
         concrete_hash_seen = set()
@@ -1583,7 +1602,6 @@ class Environment:
                 self.included_concrete_spec_data[env_path][lockfile_include_key] = transitive
 
         self.unify_specs()
-        self.write()
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
@@ -2693,9 +2711,16 @@ class Environment:
                 msg += " You need to use a newer Spack version."
             raise SpackEnvironmentError(msg)
 
+        # Spec formats before v6 omit virtuals, reconstructed from this environment's repos
+        repo = None
+        if reader.SPEC_VERSION < 6:
+            repo = spack.repo.RepoPath.from_config(
+                self._config, cache=spack.caches.misc_cache(config=self._config)
+            )
+
         concretized_order = [x.hash for x in self.concretized_roots]
         first_seen, concretized_order = self._filter_specs(
-            reader, json_specs_by_hash, concretized_order
+            reader, json_specs_by_hash, concretized_order, repo=repo
         )
         for idx, spec_dag_hash in enumerate(concretized_order):
             self.concretized_roots[idx].hash = spec_dag_hash
@@ -2707,7 +2732,7 @@ class Environment:
             for env_name, roots in self.included_concretized_roots.items():
                 order = [x.hash for x in roots]
                 filtered_spec, new_order = self._filter_specs(
-                    reader, included_json_specs_by_hash, order
+                    reader, included_json_specs_by_hash, order, repo=repo
                 )
                 first_seen.update(filtered_spec)
                 for idx, spec_dag_hash in enumerate(new_order):
@@ -2716,7 +2741,15 @@ class Environment:
             for env_path, roots in self.included_concretized_roots.items():
                 self.included_specs_by_hash[env_path] = {x.hash: first_seen[x.hash] for x in roots}
 
-    def _filter_specs(self, reader, json_specs_by_hash, order_concretized):
+    def _filter_specs(
+        self, reader, json_specs_by_hash, order_concretized, *, repo: Optional[spack.repo.RepoPath]
+    ):
+        """Builds the specs of a lockfile.
+
+        Args:
+            repo: repositories used to reconstruct the virtuals that the spec format of
+                ``reader`` omits, or None if it records them
+        """
         # Track specs by their lockfile key.  Currently, spack uses the finest
         # grained hash as the lockfile key, while older formats used the build
         # hash or a previous incarnation of the DAG hash (one that did not
@@ -2751,8 +2784,8 @@ class Environment:
                 specs_by_hash[lockfile_key]._build_spec = specs_by_hash[bhash]
 
         # The DAG is wired by hand above, so reconstruct what spec formats before v6 omit
-        if reader.SPEC_VERSION < 6:
-            spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=spack.repo.PATH)
+        if repo is not None:
+            spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=repo)
 
         # Traverse the root specs one at a time in the order they appear.
         # The first time we see each DAG hash, that's the one we want to
@@ -3482,18 +3515,18 @@ def initialize_environment_dir(
 
     # TODO: make this recursive
     includes = manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
-    paths = spack.config.paths_from_includes(includes)
+    env_dir = pathlib.Path(os.path.abspath(environment_dir))
+    paths = spack.config.paths_from_includes(includes, env_path=str(env_dir))
     for path in paths:
-        if os.path.isabs(path):
+        abspath = pathlib.Path(os.path.normpath(env_dir / path))
+        try:
+            relative_path = abspath.relative_to(env_dir)
+        except ValueError:
+            tty.debug(f"Will not copy include file from outside environment: {path}")
             continue
 
-        abspath = pathlib.Path(os.path.normpath(environment_dir / path))
-        common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
-        if common_path != environment_dir:
-            tty.debug(f"Will not copy relative include file from outside environment: {path}")
-            continue
-
-        orig_abspath = os.path.normpath(envfile.parent / path)
+        # The include is copied from the same location relative to the template
+        orig_abspath = os.path.normpath(envfile.parent / relative_path)
         if os.path.isfile(orig_abspath):
             fs.touchp(abspath)
             shutil.copy(orig_abspath, abspath)
@@ -3573,10 +3606,14 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.scope_name = f"env:{self.name}"
         self.config_stage_dir = os.path.join(env_subdir_path(manifest_dir), "config")
 
-        #: Configuration scope associated with this environment. Note that this is not
-        #: invalidated by a re-read of the manifest file.
+        #: Configuration scope associated with this environment, created on first access
         self._env_config_scope: Optional[spack.config.ConfigScope] = None
+        self.reload()
 
+    def reload(self) -> None:
+        """Reads the manifest file, discarding the changes not flushed to it. The configuration
+        scope is created again, so that included files are read again.
+        """
         if not self.manifest_file.exists():
             msg = f"cannot find '{manifest_name}' in {self.manifest_dir}"
             raise SpackEnvironmentError(msg)
@@ -3584,17 +3621,15 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         with self.manifest_file.open(encoding="utf-8") as f:
             self.yaml_content = _read_yaml(f)
 
-        # Maps groups to their dependencies
-        self._groups: Dict[str, Tuple[str, ...]] = {DEFAULT_USER_SPEC_GROUP: tuple()}
-        # Raw YAML definitions of the user specs for each group
-        self._user_specs: Dict[str, List] = {DEFAULT_USER_SPEC_GROUP: []}
-        # Configuration overrides for each group
-        self._config_override: Dict[str, Any] = {DEFAULT_USER_SPEC_GROUP: None}
-        # Whether specs in each group are marked explicit
-        self._explicit: Dict[str, bool] = {DEFAULT_USER_SPEC_GROUP: True}
+        self._clear_user_specs()
         self._init_user_specs()
-
         self.changed = False
+
+        old_scope, self._env_config_scope = self._env_config_scope, None
+        # While the environment is active, the global configuration holds its scope
+        if old_scope is not None and spack.config.CONFIG.scopes.get(self.scope_name) is old_scope:
+            spack.config.CONFIG.remove_scope(self.scope_name)
+            self.prepare_config_scope()
 
     def _init_user_specs(self):
         specs_yaml = self.configuration.get(USER_SPECS_KEY, [])
@@ -3632,10 +3667,14 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     self._user_specs[group].append(item)
 
     def _clear_user_specs(self) -> None:
-        self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
-        self._groups = {DEFAULT_USER_SPEC_GROUP: tuple()}
-        self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
-        self._explicit = {DEFAULT_USER_SPEC_GROUP: True}
+        # Raw YAML definitions of the user specs for each group
+        self._user_specs: Dict[str, List] = {DEFAULT_USER_SPEC_GROUP: []}
+        # Maps groups to their dependencies
+        self._groups: Dict[str, Tuple[str, ...]] = {DEFAULT_USER_SPEC_GROUP: tuple()}
+        # Configuration overrides for each group
+        self._config_override: Dict[str, Any] = {DEFAULT_USER_SPEC_GROUP: None}
+        # Whether specs in each group are marked explicit
+        self._explicit: Dict[str, bool] = {DEFAULT_USER_SPEC_GROUP: True}
 
     def entries(self, list_name: str, *, expand: Callable[[str], Spec]) -> List[ManifestEntry]:
         """Returns the spec strings written in a list of the manifest.
@@ -3895,14 +3934,32 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def env_config_scope(self) -> spack.config.ConfigScope:
         """The configuration scope for the environment manifest"""
         if self._env_config_scope is None:
-            self._env_config_scope = spack.config.SingleFileScope(
-                self.scope_name,
-                str(self.manifest_file),
-                spack.schema.env.schema,
-                yaml_path=[TOP_LEVEL_KEY],
+            self._env_config_scope = self.config_scope(
+                self.scope_name, env_path=str(self.manifest_dir)
             )
-            ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
+
+    def config_scope(
+        self, name: str, *, env_path: Optional[str], writable: bool = True
+    ) -> spack.config.SingleFileScope:
+        """Returns a new configuration scope for the manifest file.
+
+        Args:
+            name: name of the scope
+            env_path: path used for "$env" in the include paths of the scope, or None for the
+                path of the active environment
+            writable: whether the scope can be written
+        """
+        scope = spack.config.SingleFileScope(
+            name,
+            str(self.manifest_file),
+            spack.schema.env.schema,
+            yaml_path=[TOP_LEVEL_KEY],
+            writable=writable,
+            env_path=env_path,
+        )
+        ensure_no_disallowed_env_config_mods(scope)
+        return scope
 
     def prepare_config_scope(self) -> None:
         """Add the manifest's scope to the global configuration search path."""
@@ -3913,14 +3970,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
     def deactivate_config_scope(self) -> None:
         """Remove the manifest's scope from the global config path."""
         spack.config.CONFIG.remove_scope(self.env_config_scope.name)
-
-    @contextlib.contextmanager
-    def use_config(self):
-        """Ensure only the manifest's configuration scopes are global."""
-        with no_active_environment():
-            self.prepare_config_scope()
-            yield
-            self.deactivate_config_scope()
 
 
 def environment_path_scope(name: str, path: str) -> Optional[spack.config.ConfigScope]:
@@ -3939,9 +3988,8 @@ def environment_path_scope(name: str, path: str) -> Optional[spack.config.Config
     else:
         return None
 
-    manifest.env_config_scope.name = f"{name}:{manifest.env_config_scope.name}"
-    manifest.env_config_scope.writable = False
-    return manifest.env_config_scope
+    # "$env" is the active environment, as in the other scopes given on the command line
+    return manifest.config_scope(f"{name}:{manifest.scope_name}", env_path=None, writable=False)
 
 
 class SpackEnvironmentError(spack.error.SpackError):
