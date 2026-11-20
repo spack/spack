@@ -59,14 +59,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     )
 
 
-def change(parser, args):
-    if args.all and args.concrete_only:
-        warnings.warn("'spack change --all' argument is ignored with '--concrete-only'")
-    if args.list_name != "specs" and args.concrete_only:
-        warnings.warn("'spack change --list-name' argument is ignored with '--concrete-only'")
-
-    env = spack.cmd.require_active_env(args.subparser)
-
+def _change(env, args):
     match_spec = None
     if args.match_spec:
         match_spec = spack.cmd.parse_specs([args.match_spec])[0]
@@ -74,34 +67,33 @@ def change(parser, args):
 
     # Apply speclist changes
     spec_changed = False
-    with env.write_transaction():
-        if not args.concrete_only:
-            try:
-                for spec in specs:
-                    env.change_existing_spec(
-                        spec,
-                        list_name=args.list_name,
-                        match_spec=match_spec,
-                        allow_changing_multiple_specs=args.all,
-                    )
-                # change_existing_spec raises NoSpecsMatchedError if no specs match,
-                # so if we got here, at least one abstract spec changed
-                spec_changed = True
-            except spack.environment.NoSpecsMatchedError as e:
-                # No specs matched in the spec list
-                if not args.config:
-                    # No config flag and no spec matches -> real error
-                    msg = f"Cannot change abstract specs: {e}."
-                    msg += " Try again with '--concrete-only' to change concrete specs only."
-                    raise ValueError(msg) from e
-                # else: --config flag set, so it's OK that spec list had no matches
-            except (ValueError, spack.environment.SpackEnvironmentError) as e:
-                # Other errors (multiple matches without --all, etc.) still fail
+    if not args.concrete_only:
+        try:
+            for spec in specs:
+                env.change_existing_spec(
+                    spec,
+                    list_name=args.list_name,
+                    match_spec=match_spec,
+                    allow_changing_multiple_specs=args.all,
+                )
+            # change_existing_spec raises NoSpecsMatchedError if no specs match,
+            # so if we got here, at least one abstract spec changed
+            spec_changed = True
+        except spack.environment.NoSpecsMatchedError as e:
+            # No specs matched in the spec list
+            if not args.config:
+                # No config flag and no spec matches -> real error
                 msg = f"Cannot change abstract specs: {e}."
                 msg += " Try again with '--concrete-only' to change concrete specs only."
                 raise ValueError(msg) from e
-            if spec_changed:
-                env.write()
+            # else: --config flag set, so it's OK that spec list had no matches
+        except (ValueError, spack.environment.SpackEnvironmentError) as e:
+            # Other errors (multiple matches without --all, etc.) still fail
+            msg = f"Cannot change abstract specs: {e}."
+            msg += " Try again with '--concrete-only' to change concrete specs only."
+            raise ValueError(msg) from e
+        if spec_changed:
+            env.write()
 
     if spec_changed:
         env = spack.environment.Environment(env.path)
@@ -109,8 +101,6 @@ def change(parser, args):
     # Apply config changes
     config_changed = False
     if args.config:
-        # NOTE: without `with env`, this fails, e.g. test_change_with_config_flag_modifies_both
-        # fails. I think this is because the config scope won't be reset without this
         with env:
             from spack.cmd.config import _config_change
 
@@ -156,3 +146,14 @@ def change(parser, args):
     # as well warn when we do
     if not config_changed and not spec_changed and not (args.concrete or args.concrete_only):
         warnings.warn("No config requirements or spec list specs were changed")
+
+def change(parser, args):
+    if args.all and args.concrete_only:
+        warnings.warn("'spack change --all' argument is ignored with '--concrete-only'")
+    if args.list_name != "specs" and args.concrete_only:
+        warnings.warn("'spack change --list-name' argument is ignored with '--concrete-only'")
+
+    env = spack.cmd.require_active_env(args.subparser)
+
+    with env.write_transaction():
+        _change(env, args)
