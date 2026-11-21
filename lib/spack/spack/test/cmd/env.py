@@ -392,6 +392,53 @@ spack:
         assert test_spec.satisfies("@3.0.4")
 
 
+def test_change_with_config_flag_included_file(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+):
+    """Test that --config modifies config in an included file."""
+    # Create included packages file
+    packages_file = tmp_path / "packages.yaml"
+    packages_file.write_text(
+        """\
+packages:
+  mpich:
+    require: ["@3.0.1"]
+"""
+    )
+
+    # Create spack.yaml that includes it
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  include:
+  - packages.yaml
+  specs:
+  - mpich@3.0.1
+"""
+    )
+
+    mutable_config.set("config:misc_cache", str(tmp_path / "cache"))
+    with ev.Environment(tmp_path):
+        change("--config", "mpich@3.0.4")
+
+    # Reload and verify both changed
+    e = ev.Environment(tmp_path)
+    with e:
+        # Check spec list changed in spack.yaml
+        assert len(e.user_specs) == 1
+        assert e.user_specs[0].satisfies("mpich@3.0.4")
+
+        # Check config requirement changed in included file
+        mpich_config = spack.config.CONFIG.get("packages:mpich:require")
+        assert mpich_config == ["mpich@3.0.4"]
+
+    # Verify the included file was actually modified
+    packages_content = packages_file.read_text()
+    assert "@3.0.4" in packages_content or "mpich@3.0.4" in packages_content
+    assert "@3.0.1" not in packages_content
+
+
 def test_change_with_config_flag_config_only_succeeds(
     mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
 ):
