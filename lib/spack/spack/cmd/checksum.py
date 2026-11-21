@@ -3,16 +3,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import os
 import re
 import sys
 import warnings
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import spack.config
 import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.lang
+import spack.util.parallel
 import spack.util.string
 import spack.util.web as web_util
 from spack.cmd.common import arguments
@@ -142,15 +144,16 @@ def checksum(parser, args):
     # here we check whether the crawled and computed URLs disagree, and if so, prioritize the
     # former if that URL exists (just sending a HEAD request that is).
     url_changed_for_version = set()
+    to_check = {}
     for version, url in url_dict.items():
         possible_urls = pkg.all_urls_for_version(version)
         if url not in possible_urls:
-            for possible_url in possible_urls:
-                if web_util.url_exists(possible_url):
-                    url_dict[version] = possible_url
-                    break
-            else:
-                url_changed_for_version.add(version)
+            to_check[version] = possible_urls
+    for version, existing_url in _first_existing_urls(to_check, args.jobs).items():
+        if existing_url is not None:
+            url_dict[version] = existing_url
+        else:
+            url_changed_for_version.add(version)
 
     if not url_dict:
         tty.die(f"Could not find any remote versions for {pkg.name}")
@@ -197,6 +200,30 @@ def checksum(parser, args):
         tty.msg(f"Added {num_versions_added} new versions to {pkg.name} in {path}")
         if not args.batch and sys.stdin.isatty():
             editor(path)
+
+
+def _first_existing_url(urls: List[str]) -> Optional[str]:
+    """Return the first of ``urls`` that exists, or None if none of them does."""
+    for url in urls:
+        if web_util.url_exists(url):
+            return url
+    return None
+
+
+def _first_existing_urls(
+    urls_by_version: Dict[StandardVersion, List[str]], concurrency: Optional[int] = None
+) -> Dict[StandardVersion, Optional[str]]:
+    """Run ``_first_existing_url`` for each version concurrently. Packages hosted on PyPI need
+    this for every version, so checking one version at a time can take minutes."""
+    if len(urls_by_version) <= 1:
+        return {version: _first_existing_url(urls) for version, urls in urls_by_version.items()}
+    jobs = min(concurrency or os.cpu_count() or 1, len(urls_by_version))
+    with spack.util.parallel.make_concurrent_executor(jobs) as executor:
+        futures = {
+            version: executor.submit(_first_existing_url, urls)
+            for version, urls in urls_by_version.items()
+        }
+        return {version: future.result() for version, future in futures.items()}
 
 
 def print_checksum_status(pkg: PackageBase, version_hashes: dict):
