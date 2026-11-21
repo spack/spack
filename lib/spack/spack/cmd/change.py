@@ -95,6 +95,9 @@ def _change(env, args):
         if spec_changed:
             env.write()
 
+    # Changing the environment's spec list does not change the in-memory cache of
+    # the env config from its spack.yaml: if we don't re-read this, then a
+    # future write of the env scope will include the stale speclist entries
     if spec_changed:
         env = spack.environment.Environment(env.path)
 
@@ -131,6 +134,11 @@ def _change(env, args):
                     pass
 
     # If config changed, reload the environment to pick up changes into yaml_content
+    # NOTE: this is necessary because currently the read-in env may not
+    # match the on disk config (in particular if it was the env scope that was
+    # updated). We re-read the environment so that if we write it out again
+    # (as part of env.mutate below) that it doesn't effectively discard the
+    # config changes
     if config_changed:
         env = spack.environment.Environment(env.path)
 
