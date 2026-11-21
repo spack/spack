@@ -94,12 +94,8 @@ def _change(env, args):
             raise ValueError(msg) from e
         if spec_changed:
             env.write()
-
-    # Changing the environment's spec list does not change the in-memory cache of
-    # the env config from its spack.yaml: if we don't re-read this, then a
-    # future write of the env scope will include the stale speclist entries
-    if spec_changed:
-        env = spack.environment.Environment(env.path)
+            # env.write() invalidates the manifest's config scope cache, so subsequent
+            # config operations will see the updated file content
 
     # Apply config changes
     config_changed = False

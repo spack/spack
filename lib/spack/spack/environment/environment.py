@@ -2796,6 +2796,12 @@ class Environment:
                 self.manifest.flush()
             self._lockfile_fingerprint_on_disk = None
 
+        # Invalidate the manifest's env_config_scope cache so that subsequent config operations
+        # see the updated file content rather than stale cached data
+        if hasattr(self.manifest, "_env_config_scope") and self.manifest._env_config_scope is not None:
+            self.manifest._env_config_scope._raw_data = None
+            self.manifest._env_config_scope.clear()
+
         if regenerate:
             self.regenerate_views()
 
