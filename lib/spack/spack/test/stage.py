@@ -720,30 +720,31 @@ class TestStage:
         # Cleanup
         shutil.rmtree(str(name))
 
-    def test_create_stage_root(self, tmp_path: pathlib.Path, no_path_access):
-        """Test create_stage_root permissions."""
-        test_dir = tmp_path / "path"
-        test_path = str(test_dir)
-
+    @pytest.mark.not_on_windows("Windows does not use POSIX permission bits")
+    @pytest.mark.skipif(getuid() == 0, reason="user is root")
+    def test_create_stage_root_denied(self, tmp_path: pathlib.Path, monkeypatch):
+        """Tests that a stage root created below an unreadable directory is refused."""
+        monkeypatch.setattr(spack.config, "get_user", lambda: "not-in-the-path")
+        parent = tmp_path / "parent"
+        parent.mkdir()
+        parent.chmod(0o300)
         try:
-            if getpass.getuser() in str(test_path).split(os.sep):
-                # Simply ensure directory created if tmp_path includes user
-                spack.stage.create_stage_root(test_path)
-                assert os.path.exists(test_path)
-
-                p_stat = os.stat(test_path)
-                assert p_stat.st_mode & stat.S_IRWXU == stat.S_IRWXU
-            else:
-                # Ensure an OS Error is raised on created, non-user directory
-                with pytest.raises(OSError) as exc_info:
-                    spack.stage.create_stage_root(test_path)
-
-                assert exc_info.value.errno == errno.EACCES
+            with pytest.raises(OSError, match="Access to .* is denied") as exc_info:
+                spack.stage.create_stage_root(str(parent / "stage"))
+            assert exc_info.value.errno == errno.EACCES
         finally:
-            try:
-                shutil.rmtree(test_path)
-            except OSError:
-                pass
+            parent.chmod(0o700)
+
+    @pytest.mark.not_on_windows("Windows does not use POSIX permission bits")
+    def test_create_stage_root_below_user_dir(self, tmp_path: pathlib.Path, monkeypatch):
+        """Tests that directories from the $user one on down are created user-only, while those
+        above it take the mode of their parent."""
+        monkeypatch.setattr(spack.config, "get_user", lambda: "spack-test-user")
+        tmp_path.chmod(0o755)
+        spack.stage.create_stage_root(str(tmp_path / "group" / "spack-test-user" / "stage"))
+        assert stat.S_IMODE((tmp_path / "group").stat().st_mode) == 0o755
+        for created in ("group/spack-test-user", "group/spack-test-user/stage"):
+            assert stat.S_IMODE((tmp_path / created).stat().st_mode) == 0o700
 
     def test_resolve_paths(self, monkeypatch, config):
         """Test _resolve_paths."""

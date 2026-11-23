@@ -694,7 +694,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast allow-missing base-image= t/tag= private group= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast allow-missing base-image= t/tag= env-view private group= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -722,6 +722,8 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image 
 complete -c spack -n '__fish_spack_using_command buildcache push' -l base-image -r -d 'specify the base image for the buildcache'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l tag -s t -r -f -a tag
 complete -c spack -n '__fish_spack_using_command buildcache push' -l tag -s t -r -d 'when pushing to an OCI registry, tag an image containing all root specs and their runtime dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache push' -l env-view -f -a env_view
+complete -c spack -n '__fish_spack_using_command buildcache push' -l env-view -d 'with --tag, add the default view of the active environment as a layer on top of the image, and set the image'"'"'s environment variables from it (this is the environment view, not a build cache index view)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l private -f -a private
 complete -c spack -n '__fish_spack_using_command buildcache push' -l private -d 'for a private mirror, include non-redistributable packages'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l group -r -f -a groups
@@ -730,7 +732,7 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast allow-missing base-image= t/tag= private group= j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast allow-missing base-image= t/tag= env-view private group= j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -758,6 +760,8 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l base-imag
 complete -c spack -n '__fish_spack_using_command buildcache create' -l base-image -r -d 'specify the base image for the buildcache'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l tag -s t -r -f -a tag
 complete -c spack -n '__fish_spack_using_command buildcache create' -l tag -s t -r -d 'when pushing to an OCI registry, tag an image containing all root specs and their runtime dependencies'
+complete -c spack -n '__fish_spack_using_command buildcache create' -l env-view -f -a env_view
+complete -c spack -n '__fish_spack_using_command buildcache create' -l env-view -d 'with --tag, add the default view of the active environment as a layer on top of the image, and set the image'"'"'s environment variables from it (this is the environment view, not a build cache index view)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l private -f -a private
 complete -c spack -n '__fish_spack_using_command buildcache create' -l private -d 'for a private mirror, include non-redistributable packages'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l group -r -f -a groups
