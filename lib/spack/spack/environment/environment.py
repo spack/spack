@@ -2796,12 +2796,6 @@ class Environment:
                 self.manifest.flush()
             self._lockfile_fingerprint_on_disk = None
 
-        # Invalidate the manifest's env_config_scope cache so that subsequent config operations
-        # see the updated file content rather than stale cached data
-        if hasattr(self.manifest, "_env_config_scope") and self.manifest._env_config_scope is not None:
-            self.manifest._env_config_scope._raw_data = None
-            self.manifest._env_config_scope.clear()
-
         if regenerate:
             self.regenerate_views()
 
@@ -3722,6 +3716,16 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             self._clear_user_specs()
             self._init_user_specs()
             self.changed = True
+
+            # Sync the config scope cache with yaml_content to maintain consistency
+            # between the two representations of spack.yaml
+            if hasattr(self, "_env_config_scope") and self._env_config_scope is not None:
+                if self._env_config_scope._raw_data is not None:
+                    # Config scope has been accessed and cached - update it to match yaml_content
+                    import copy
+                    self._env_config_scope._raw_data = copy.deepcopy(self.yaml_content)
+                    # Clear sections so they get repopulated from updated _raw_data on next access
+                    self._env_config_scope.sections.clear()
         if any(e.list_name != USER_SPECS_KEY for e in entries):
             self._definitions_changed()
 
