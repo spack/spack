@@ -157,14 +157,11 @@ def ty_root_spec() -> str:
 
 
 def dev_bootstrap_mirror_names() -> List[str]:
-    """Return the mirror names used for bootstrapping dev requirements. These are the binary
-    caches of the ``developer-bootstrap-*`` stacks in spack-packages, which build the versions
-    of the root specs above."""
-    return [
-        "developer-bootstrap-darwin",
-        "developer-bootstrap-x86_64_v3-linux-gnu",
-        "developer-bootstrap-aarch64-linux-gnu",
-    ]
+    """Return the mirror names used for bootstrapping dev requirements. Each is also the name of
+    a build cache index view, in the ``develop`` build cache, for one of the
+    ``developer-bootstrap-*`` stacks in spack-packages, which build the versions of the root
+    specs above."""
+    return ["developer-bootstrap-x86_64_v3-linux-gnu", "developer-bootstrap-aarch64-linux-gnu"]
 
 
 def download_and_trust_key():

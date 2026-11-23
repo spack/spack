@@ -2314,7 +2314,12 @@ def test_ci_validate_standard_versions_fetch_failure(
     spec = spack.spec.Spec("diff-test")
     pkg = mock_packages.get_pkg_class(spec.name)(spec)
 
-    assert spack.cmd.ci.validate_standard_versions(pkg, [spack.version.Version("2.1.5")]) is False
+    assert (
+        spack.cmd.ci.validate_standard_versions(
+            pkg, [spack.version.StandardVersion.from_string("2.1.5")]
+        )
+        is False
+    )
 
     out, err = capfd.readouterr()
     assert "Could not fetch diff-test@2.1.5: GET returned 503" in err

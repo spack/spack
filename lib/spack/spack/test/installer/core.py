@@ -531,7 +531,7 @@ def test_termination_signal_during_cleanup(temporary_store, mock_packages):
                 _send(signal.SIGTERM)
                 terminate()
 
-            build.terminate = signal_and_terminate
+            setattr(build, "terminate", signal_and_terminate)
             raise KeyboardInterrupt
 
     with pytest.raises(spack.error.TerminatedBySignal) as e:

@@ -499,8 +499,8 @@ def test_dev_build_writes_module_file(
     )
 
     with fs.working_dir(str(source)):
-        with open(spec.package.filename, "w", encoding="utf-8") as f:  # type: ignore
-            f.write(spec.package.original_string)  # type: ignore
+        with open(spec.package.filename, "w", encoding="utf-8") as f:
+            f.write(spec.package.original_string)
 
         dev_build("dev-build-test-install@0.0.0")
 

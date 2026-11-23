@@ -1458,9 +1458,7 @@ def add_shared_access_to_module_root(root: str) -> None:
 
 
 @contextlib.contextmanager
-def module_root_transaction(
-    root: str,
-) -> Generator[ModuleConfigurationCache, None, None]:
+def module_root_transaction(root: str) -> Generator[ModuleConfigurationCache, None, None]:
     """Holds an exclusive lock on a module root, shared by every Spack process changing the
     module files under it, and yields what the database records, as read after taking the lock.
 

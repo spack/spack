@@ -271,8 +271,11 @@ class DetectablePackageMeta(type):
             def determine_variants(cls, objs, version_str):
                 return ""
 
-            # Register the class as a detectable package
-            detectable_packages[cls.namespace].append(cls.name)
+            # Register the class as a detectable package. Read from the class, the
+            # classproperty descriptors evaluate to strings
+            namespace, pkg_name = cls.namespace, cls.name
+            assert isinstance(namespace, str) and isinstance(pkg_name, str)
+            detectable_packages[namespace].append(pkg_name)
 
             # Attach function implementations to the detectable class
             default = False

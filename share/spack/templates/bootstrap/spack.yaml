@@ -55,6 +55,7 @@ spack:
   mirrors::
 {% for mirror in bootstrap_mirrors %}
     {{mirror}}:
-      url: https://binaries.spack.io/develop/{{mirror}}
+      url: https://binaries.spack.io/develop
+      view: {{mirror}}
       signed: true
 {% endfor %}

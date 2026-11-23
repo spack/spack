@@ -384,6 +384,7 @@ def test_no_module_root_created_when_modules_are_disabled(
     root = tmp_path / "root"
     monkeypatch.setattr(spack.modules.common, "root_path", lambda *args: str(root))
     spec = spack.store.STORE.db.query_one("mpileaks ^mpich")
+    assert spec is not None
 
     with spack.modules.disable_modules():
         spack.modules.write_module_files([spec])

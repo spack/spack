@@ -52,6 +52,13 @@ def _module_lines(filename: str) -> List[str]:
         return [line.strip() for line in f.readlines() if not line.startswith("## ")]
 
 
+def _installed(query: str) -> spack.spec.Spec:
+    """Returns the only installed spec matching the query"""
+    spec = spack.store.STORE.db.query_one(query)
+    assert spec is not None
+    return spec
+
+
 def _pinned_callpath(content: List[str]) -> List[str]:
     """Returns the lines requiring callpath by its hash variant only."""
     return [x for x in content if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)]
@@ -1421,9 +1428,9 @@ class TestTcl:
             == 1
         )
         assert len([x for x in content if re.match("hash {\\w{7} \\w{7} \\w{7}}", x)]) == 1
-        hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
-        hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
-        hash_c = spack.store.STORE.db.query_one(spec_c).dag_hash(7)
+        hash_a = _installed(spec_a).dag_hash(7)
+        hash_b = _installed(spec_b).dag_hash(7)
+        hash_c = _installed(spec_c).dag_hash(7)
         install_a = f"{{generic 1 0 1 1 1 {hash_a}}}\\"
         install_b = f"{{generic 1 0 1 1 1 {hash_b}}}\\"
         install_c = f"{{generic 1 0 0 1 1 {hash_c}}}\\"
@@ -1441,7 +1448,7 @@ class TestTcl:
         content_a = _module_lines(module_file_a)
 
         # single installation of dependency: hash variant is defined with a single value
-        dep_a = spack.store.STORE.db.query_one("callpath ^mpich")
+        dep_a = _installed("callpath ^mpich")
         module_file_dep = modulefile_filename("tcl", "callpath ^mpich")
         content_dep = _module_lines(module_file_dep)
         hash_a = dep_a.dag_hash(7)
@@ -1451,13 +1458,13 @@ class TestTcl:
 
         # install a second dependency build differing only by its own dependencies
         install("--fake", "--add", "callpath@1.0 ^zmpi")
-        dep_b = spack.store.STORE.db.query_one("callpath ^zmpi")
+        dep_b = _installed("callpath ^zmpi")
         hash_b = dep_b.dag_hash(7)
         content_dep = _module_lines(module_file_dep)
         assert f"hash {{{' '.join(sorted([hash_a, hash_b]))}}}\\" in content_dep
 
         # dependent module file is unchanged when regenerated
-        writer = writer_cls.from_spec(spack.store.STORE.db.query_one(spec_a), "default", True)
+        writer = writer_cls.from_spec(_installed(spec_a), "default", True)
         writer.write(overwrite=True)
         content_a_after = _module_lines(module_file_a)
         assert content_a == content_a_after
@@ -1473,8 +1480,8 @@ class TestTcl:
         spec_b = "mpileaks@2.3 +debug ^zmpi"
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
-        concrete_a = spack.store.STORE.db.query_one(spec_a)
-        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        concrete_a = _installed(spec_a)
+        concrete_b = _installed(spec_b)
         module_command.env["MODULEPATH"] = writer_cls.from_spec(
             concrete_a, "default"
         ).layout.arch_dirname
@@ -1522,8 +1529,8 @@ class TestTcl:
         spec_b = "singlevalue-variant fum=on"
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
-        concrete_a = spack.store.STORE.db.query_one(spec_a)
-        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        concrete_a = _installed(spec_a)
+        concrete_b = _installed(spec_b)
         module_command.env["MODULEPATH"] = writer_cls.from_spec(
             concrete_a, "default"
         ).layout.arch_dirname
@@ -1562,8 +1569,8 @@ class TestTcl:
         spec_b = "mpileaks@2.3 +debug ^zmpi"
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
-        concrete_a = spack.store.STORE.db.query_one(spec_a)
-        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        concrete_a = _installed(spec_a)
+        concrete_b = _installed(spec_b)
 
         writer = writer_cls.from_spec(concrete_b, "default")
         assert writer.conf.specs_in_file == [concrete_b]
@@ -1605,8 +1612,8 @@ class TestTcl:
         spec_b = "mpileaks@2.3 +debug ^zmpi"
         install("--fake", "--add", spec_a)
         install("--fake", "--add", spec_b)
-        hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
-        hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
+        hash_a = _installed(spec_a).dag_hash(7)
+        hash_b = _installed(spec_b).dag_hash(7)
         content = _module_lines(modulefile_filename("tcl", spec_a))
         listed = [m.group(1) for x in content for m in [re.match(r"{.* (\w{7})}\\$", x)] if m]
         assert listed == [hash_b, hash_a]
@@ -1621,8 +1628,8 @@ class TestTcl:
         spec_a = "mpileaks@2.3 ~debug ^zmpi"
         spec_b = "mpileaks@2.3 +debug ^zmpi"
         install("--fake", spec_a, spec_b)
-        concrete_a = spack.store.STORE.db.query_one(spec_a)
-        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        concrete_a = _installed(spec_a)
+        concrete_b = _installed(spec_b)
 
         module_file = writer_cls.from_spec(concrete_a, "default").layout.filename
         assert module_file == writer_cls.from_spec(concrete_b, "default").layout.filename
@@ -1640,8 +1647,8 @@ class TestTcl:
         spec_a = "mpileaks@2.3 ~debug ^zmpi"
         spec_b = "mpileaks@2.3 +debug ^zmpi"
         install("--fake", spec_a, spec_b)
-        concrete_a = spack.store.STORE.db.query_one(spec_a)
-        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        concrete_a = _installed(spec_a)
+        concrete_b = _installed(spec_b)
         concrete_dep = concrete_a["callpath"]
 
         written = []
@@ -1666,7 +1673,7 @@ class TestTcl:
         default_link = os.path.join(os.path.dirname(module_file), "default")
         assert os.readlink(default_link) == module_file
 
-        removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
+        removed = [_installed(x) for x in (spec_a, spec_b)]
         for x in removed:
             spack.store.STORE.db.remove(x)
         spack.modules.remove_module_files(removed)
@@ -1689,7 +1696,7 @@ class TestTcl:
         default_link = os.path.join(os.path.dirname(module_file), "default")
         assert os.readlink(default_link) == module_file
 
-        removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
+        removed = [_installed(x) for x in (spec_a, spec_b)]
         for x in removed:
             spack.store.STORE.db.remove(x)
         spack.modules.remove_module_files(removed)
@@ -1702,7 +1709,7 @@ class TestTcl:
         """
         module_configuration("fold_variants_none")
         install("--fake", "mpileaks@2.3 ~debug ^zmpi")
-        concrete = spack.store.STORE.db.query_one("mpileaks@2.3 ~debug ^zmpi")
+        concrete = _installed("mpileaks@2.3 ~debug ^zmpi")
         module_file = writer_cls.from_spec(concrete, "default").layout.filename
         with open(module_file, "a", encoding="utf-8") as f:
             f.write("## stale content\n")
@@ -1724,7 +1731,7 @@ class TestTcl:
         spec_a = "mpileaks@2.3 ~debug ^zmpi"
         spec_b = "mpileaks@2.3 +debug ^zmpi"
         install("--fake", spec_a)
-        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_a = _installed(spec_a)
         module_file = writer_cls.from_spec(concrete_a, "default").layout.filename
         spack.package_base.PackageBase.uninstall_by_spec(concrete_a)
         assert os.path.exists(module_file)
@@ -1733,7 +1740,7 @@ class TestTcl:
             warnings.simplefilter("always")
             install("--fake", spec_b)
         assert not [w for w in recorded if "will not be overwritten" in str(w.message)]
-        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        concrete_b = _installed(spec_b)
         with open(module_file, encoding="utf-8") as f:
             content = f.read()
         assert concrete_a.dag_hash(7) not in content
@@ -1755,7 +1762,7 @@ def test_remove_module_files_skips_installed_specs(install_mockery, module_confi
     process installed again in the meantime."""
     module_configuration("fold_variants_all")
     install("--fake", "mpileaks@2.3 ~debug ^zmpi")
-    spec = spack.store.STORE.db.query_one("mpileaks@2.3 ~debug ^zmpi")
+    spec = _installed("mpileaks@2.3 ~debug ^zmpi")
     module_file = writer_cls.from_spec(spec, "default").layout.filename
     spack.modules.remove_module_files([spec])
 
