@@ -1523,12 +1523,10 @@ complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -f -
 complete -c spack -n '__fish_spack_using_command develop' -s r -l recursive -d 'traverse nodes of the graph to mark everything up to the root as a develop spec'
 
 # spack diff
-set -g __fish_spack_optspecs_spack_diff h/help s/specs json no-prune exit-code
+set -g __fish_spack_optspecs_spack_diff h/help json no-prune exit-code
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 diff' $__fish_spack_force_files -a '(__fish_spack_environments)'
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command diff' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command diff' -s s -l specs -f -a compare_specs
-complete -c spack -n '__fish_spack_using_command diff' -s s -l specs -d 'compare two specs instead of two environments'
 complete -c spack -n '__fish_spack_using_command diff' -l json -f -a dump_json
 complete -c spack -n '__fish_spack_using_command diff' -l json -d 'dump json output instead of pretty printing'
 complete -c spack -n '__fish_spack_using_command diff' -l no-prune -f -a prune

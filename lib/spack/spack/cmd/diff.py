@@ -7,7 +7,7 @@ import contextlib
 import os
 import shutil
 import tempfile
-from typing import IO, Any, Callable, Dict, List, Optional, Tuple
+from typing import IO, Any, Callable, Dict, List, NamedTuple, Optional, Tuple
 
 import spack.cmd
 import spack.config
@@ -16,6 +16,7 @@ import spack.environment as ev
 import spack.environment.environment
 import spack.error
 import spack.hash_lookup
+import spack.repo
 import spack.spec
 import spack.spec_diff
 import spack.store
@@ -38,14 +39,6 @@ EXIT_DIFFERENT = 4
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
-    specs = subparser.add_argument(
-        "-s",
-        "--specs",
-        action="store_true",
-        default=False,
-        dest="compare_specs",
-        help="compare two specs instead of two environments",
-    )
     json = subparser.add_argument(
         "--json",
         action="store_true",
@@ -71,24 +64,35 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "inputs",
         nargs=argparse.REMAINDER,
         metavar="before after",
-        help="two concrete environments, each a name, a directory, or a lockfile, or with --specs "
-        "two specs, each given by hash or matching one spec of the active environment, or else "
-        "one installed spec; the second is taken to be the later state of the first",
+        help="two concrete environments, each a name, a directory, or a lockfile, or else two "
+        "specs, each a spec file, a hash, or a spec matching one spec of the active environment "
+        "or else one installed spec; the second is taken to be the later state of the first",
     )
     # The inputs take the rest of the command line, so options written after them end up there
     subparser.set_defaults(
         option_strings={"-h", "--help"}.union(
-            *(x.option_strings for x in (specs, json, no_prune, exit_code))
+            *(x.option_strings for x in (json, no_prune, exit_code))
         )
     )
 
 
 def diff(parser, args) -> int:
+    # REMAINDER keeps a leading `--`
+    if args.inputs[:1] == ["--"]:
+        args.inputs = args.inputs[1:]
     misplaced = [x for x in args.inputs if x in args.option_strings]
     if misplaced:
-        kind = "specs" if args.compare_specs else "environments"
-        args.subparser.error(f"options must come before the two {kind}: {', '.join(misplaced)}")
-    equivalent = _diff_specs(args) if args.compare_specs else _diff_environments(args)
+        args.subparser.error(
+            f"options must come before the two environments or specs: {', '.join(misplaced)}"
+        )
+
+    with contextlib.ExitStack() as stack:
+        resolved = _resolve_inputs(stack, args.inputs)
+        environments = [x.environment for x in resolved if x.environment is not None]
+        if len(environments) == 2:
+            equivalent = _diff_environments(args, *environments)
+        else:
+            equivalent = _diff_specs(args, resolved)
     return EXIT_DIFFERENT if args.exit_code and not equivalent else 0
 
 
@@ -117,22 +121,69 @@ def _load_mapping(path: str, load: Callable[[IO[str]], Any]) -> Dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def _is_lockfile(path: str) -> bool:
-    meta = _load_mapping(path, sjson.load).get("_meta")
+def _load_input_file(path: str) -> Dict[str, Any]:
+    """The mapping a lockfile or a spec file holds, or an empty one for any other file."""
+    data = _load_mapping(path, sjson.load)
+    # Lockfiles are always JSON, spec files are JSON or YAML
+    if not data and not path.endswith(".json"):
+        data = _load_mapping(path, syaml.load)
+    return data
+
+
+def _is_lockfile(data: Dict[str, Any]) -> bool:
+    meta = data.get("_meta")
     return isinstance(meta, dict) and meta.get("file-type") == "spack-lockfile"
 
 
-def _is_specfile(path: str) -> bool:
-    load = sjson.load if path.endswith(".json") else syaml.load
-    return isinstance(_load_mapping(path, load).get("spec"), dict)
+def _is_specfile(data: Dict[str, Any]) -> bool:
+    return isinstance(data.get("spec"), dict)
 
 
 #: Extensions of the files an argument can name: lockfiles, manifests and spec files
 _FILE_EXTENSIONS = (".lock", ".json", ".yaml", ".yml")
 
 
-def _not_an_environment(argument: str, path: str) -> ev.SpackEnvironmentError:
-    """Error for an argument that is neither a file, an environment directory, nor a name."""
+#: An environment to compare, and how the JSON output identifies it
+_EnvironmentInput = Tuple[ev.Environment, Dict[str, Optional[str]]]
+
+
+class _Input(NamedTuple):
+    """One of two arguments of ``spack diff``, resolved to an environment or to a spec. The
+    environment and the spec are both None for an argument that is not a spec on its own, like
+    ``+mpi``."""
+
+    #: The environment the argument refers to
+    environment: Optional[_EnvironmentInput] = None
+    #: The spec the argument is on its own, read from a spec file or parsed
+    spec: Optional[spack.spec.Spec] = None
+    #: Why a word that also names a path is not an environment
+    path_error: Optional[ev.SpackEnvironmentError] = None
+
+
+def _is_word(argument: str) -> bool:
+    """Whether an argument is a bare word, such as a package name. A word is never refused as a
+    path, so that a file or a directory in the working directory does not hide a package."""
+    return bool(spack.environment.environment.valid_env_name(argument)) and os.sep not in argument
+
+
+def _looks_like_path(argument: str, path: str) -> bool:
+    # Substitution expands `~/x` or `$HOME`, and leaves spec syntax like `~shared` alone
+    return os.sep in argument or argument.startswith(".") or path != argument
+
+
+def _standalone_spec(argument: str) -> Optional[spack.spec.Spec]:
+    """The spec an argument is on its own, if it is one spec with a name or a hash."""
+    try:
+        specs = spack.cmd.parse_specs([argument])
+    except (spack.error.SpecSyntaxError, spack.error.SpecError):
+        return None
+    if len(specs) != 1 or not (specs[0].name or specs[0].abstract_hash):
+        return None
+    return specs[0]
+
+
+def _not_an_input(argument: str, path: str) -> ev.SpackEnvironmentError:
+    """Error for a path that is neither an environment directory, a lockfile, nor a spec file."""
     if os.path.isdir(path):
         if os.path.isfile(os.path.join(path, ev.lockfile_name)):
             lockfile = os.path.join(argument, ev.lockfile_name)
@@ -141,13 +192,19 @@ def _not_an_environment(argument: str, path: str) -> ev.SpackEnvironmentError:
             hint = f"an environment directory contains a '{ev.manifest_name}' file"
         return ev.SpackEnvironmentError(f"'{argument}' is not an environment directory", hint)
 
+    if os.path.isfile(path):
+        hint = (
+            f"pass an environment name or directory, a '{ev.lockfile_name}' file, or a spec file"
+        )
+        if os.path.basename(path) == ev.manifest_name:
+            directory = os.path.dirname(argument) or "."
+            hint = f"to compare the environment it describes, pass '{directory}'"
+        return ev.SpackEnvironmentError(f"'{argument}' is not a Spack lockfile or spec file", hint)
+
     if argument.endswith(_FILE_EXTENSIONS):
         return ev.SpackEnvironmentError(f"no such file: '{argument}'")
 
-    return ev.SpackEnvironmentError(
-        f"no environment, environment directory, or lockfile named '{argument}'",
-        "to compare two specs, use `spack diff --specs`",
-    )
+    return ev.SpackEnvironmentError(f"no such environment directory or file: '{argument}'")
 
 
 def _replace_paths(text: str, paths: Tuple[str, ...], argument: str) -> str:
@@ -156,15 +213,14 @@ def _replace_paths(text: str, paths: Tuple[str, ...], argument: str) -> str:
     return text
 
 
-def _open_environment_to_diff(
-    stack: contextlib.ExitStack, argument: str
-) -> Tuple[ev.Environment, Dict[str, Optional[str]]]:
-    """Resolve one argument to an environment, and to the identity to report for it."""
+def _resolve_input(stack: contextlib.ExitStack, argument: str) -> _Input:
+    """Resolve one argument to an environment or a spec, and raise if it is a path to neither an
+    environment nor a spec file."""
     path = spack.config.substitute_path_variables(argument)
     # Same precedence as `spack -e`, so a file in the working directory does not shadow a name
     if ev.is_env_dir(path) or ev.exists(argument):
         env = ev.environment_from_name_or_dir(argument)
-        return env, {"name": env.name, "path": env.path}
+        return _Input(environment=(env, {"name": env.name, "path": env.path}))
 
     if os.path.isfile(path):
         # A lockfile becomes a throwaway environment, deleted when the stack is closed
@@ -174,9 +230,12 @@ def _open_environment_to_diff(
         shutil.copy(path, init_file)
         try:
             env = ev.create_in_dir(os.path.join(root, "env"), init_file=init_file)
+            # Report the lockfile, not the temporary directory, as this side's identity
+            return _Input(environment=(env, {"name": None, "path": os.path.abspath(path)}))
         except ev.SpackEnvironmentError as e:
-            # Parse the file only on failure, to word the error
-            if _is_lockfile(path):
+            # Parse the file only on failure, to tell what it holds
+            data = _load_input_file(path)
+            if _is_lockfile(data):
                 # The error names the temporary copy, which is deleted before it is printed
                 copies = (os.path.join(root, "env", ev.lockfile_name), init_file)
                 long_message = e.long_message
@@ -184,44 +243,94 @@ def _open_environment_to_diff(
                     _replace_paths(e.message, copies, argument),
                     _replace_paths(long_message, copies, argument) if long_message else None,
                 ) from e
-            hint = f"pass an environment name, a directory, or a '{ev.lockfile_name}' file"
-            if _is_specfile(path):
-                hint = "to compare two spec files, use `spack diff --specs`"
-            elif os.path.basename(path) == ev.manifest_name:
-                directory = os.path.dirname(argument) or "."
-                hint = f"to compare the environment it describes, pass '{directory}'"
-            raise ev.SpackEnvironmentError(f"'{argument}' is not a Spack lockfile", hint) from e
-        # Report the lockfile, not the temporary directory, as this side's identity
-        return env, {"name": None, "path": os.path.abspath(path)}
+            if _is_specfile(data):
+                return _Input(spec=spack.spec.Spec.from_dict(data))
 
-    raise _not_an_environment(argument, path)
+    # A word never looks like a path, so a file or directory in the way does not hide a package
+    if (os.path.exists(path) and not _is_word(argument)) or argument.endswith(_FILE_EXTENSIONS):
+        raise _not_an_input(argument, path)
+    spec = _standalone_spec(argument)
+    # A missing path can still be spec syntax, like /hash or name/hash
+    if spec is None and _looks_like_path(argument, path):
+        raise _not_an_input(argument, path)
+    # Only a word reaches here if the path exists
+    path_error = _not_an_input(argument, path) if os.path.exists(path) else None
+    return _Input(spec=spec, path_error=path_error)
 
 
-def _diff_environments(args) -> bool:
-    """Compare two environments, and return whether they are equivalent."""
-    if len(args.inputs) != 2:
-        args.subparser.error("you must provide two environments to compare")
-    before, after = args.inputs
+def _names_a_package(name: str) -> bool:
+    return spack.repo.PATH.exists(name) or spack.repo.PATH.is_virtual(name)
 
-    with contextlib.ExitStack() as stack:
-        env_before, identity_before = _open_environment_to_diff(stack, before)
-        env_after, identity_after = _open_environment_to_diff(stack, after)
 
-        result = env_diff_core.diff_environments(
-            env_before, env_after, prune=args.prune, label_a=before, label_b=after
+def _mixed_inputs(environment: str, other: str, resolved_other: _Input) -> spack.error.SpackError:
+    """Error for an environment given together with an argument that is not one."""
+    if resolved_other.path_error is not None:
+        return resolved_other.path_error
+    # A bare word next to an environment can be a spec of the same package only if it is the
+    # same word, which would be an environment too
+    if _is_word(other):
+        return ev.SpackEnvironmentError(
+            f"no environment, environment directory, or lockfile named '{other}'"
         )
+    hint = None
+    if _is_word(environment) and _names_a_package(environment):
+        hint = (
+            f"'{environment}' is an environment: to compare two specs, write it so that it does "
+            "not name an environment, for instance by hash"
+        )
+    return spack.error.SpackError(
+        f"cannot compare environment '{environment}' with spec '{other}'", hint
+    )
 
-        if args.dump_json:
-            # Keys stay positional: only the pretty output assumes a direction
-            identities = {"a": identity_before, "b": identity_after}
-            print(sjson.dumps({**result.as_dict(), "environments": identities}))
-        else:
-            EnvironmentDiffRenderer(result, before, after).render()
 
-        return result.equivalent
+def _resolve_inputs(stack: contextlib.ExitStack, inputs: List[str]) -> List[_Input]:
+    """Resolve two arguments, or return an empty list for any other number of them, which can
+    still be two specs spanning several words."""
+    if len(inputs) != 2:
+        return []
+    resolved = [_resolve_input(stack, x) for x in inputs]
+    first, second = (x.environment is not None for x in resolved)
+    if first != second:
+        env_index, other_index = (0, 1) if first else (1, 0)
+        raise _mixed_inputs(inputs[env_index], inputs[other_index], resolved[other_index])
+    return resolved
 
 
-def _concrete_spec(spec: spack.spec.Spec, env: Optional[ev.Environment]) -> spack.spec.Spec:
+def _diff_environments(args, before: _EnvironmentInput, after: _EnvironmentInput) -> bool:
+    """Compare two environments, and return whether they are equivalent."""
+    env_before, identity_before = before
+    env_after, identity_after = after
+    label_before, label_after = args.inputs
+
+    result = env_diff_core.diff_environments(
+        env_before, env_after, prune=args.prune, label_a=label_before, label_b=label_after
+    )
+
+    if args.dump_json:
+        # Keys stay positional: only the pretty output assumes a direction
+        identities = {"a": identity_before, "b": identity_after}
+        print(sjson.dumps({**result.as_dict(), "environments": identities}))
+    else:
+        EnvironmentDiffRenderer(result, label_before, label_after).render()
+
+    return result.equivalent
+
+
+def _no_match_hint(argument: str, resolved: _Input) -> Optional[str]:
+    """Hint for an argument that was not an environment, and as a spec matches nothing."""
+    error = resolved.path_error
+    if error is not None:
+        return f"{error.message}: {error.long_message}" if error.long_message else error.message
+    if _is_word(argument):
+        return (
+            f"'{argument}' is not an environment, an environment directory, or a lockfile either"
+        )
+    return None
+
+
+def _concrete_spec(
+    spec: spack.spec.Spec, env: Optional[ev.Environment], *, no_match_hint: Optional[str]
+) -> spack.spec.Spec:
     """Resolve a spec argument to the single concrete spec it matches."""
     # If the spec has a hash, check it before disambiguating
     spack.hash_lookup.replace_hash(spec)
@@ -230,32 +339,29 @@ def _concrete_spec(spec: spack.spec.Spec, env: Optional[ev.Environment]) -> spac
     # In an environment, its concrete specs whether installed or not
     matches = env.all_matching_specs(spec) if env else spack.store.STORE.db.query(spec)
     if not matches:
-        # An environment argument parses as a spec, so it would be reported as not found
-        kind = _environment_kind(str(spec))
-        hint = f"'{spec}' is {kind}: to compare two environments, drop `--specs`" if kind else None
         where = f"concrete specs of environment '{env.name}'" if env else "installed packages"
-        raise spack.error.SpackError(f"Spec '{spec}' matches no {where}.", hint)
+        raise spack.error.SpackError(f"Spec '{spec}' matches no {where}.", no_match_hint)
     spack.cmd.ensure_single_spec_or_die(spec, matches)
     return matches[0]
 
 
-def _environment_kind(argument: str) -> Optional[str]:
-    """How to name what an argument refers to, if it can be compared without ``--specs``."""
-    if ev.exists(argument) or ev.is_env_dir(argument):
-        return "an environment"
-    if _is_lockfile(argument):
-        return "a lockfile"
-    return None
-
-
-def _diff_specs(args) -> bool:
+def _diff_specs(args, resolved: List[_Input]) -> bool:
     """Compare two concrete specs, and return whether they are equivalent."""
-    specs = spack.cmd.parse_specs(args.inputs)
+    # Two arguments that are specs on their own are two specs, even if the second is a /hash
+    specs = [x.spec for x in resolved if x.spec is not None]
+    hints = [_no_match_hint(*x) for x in zip(args.inputs, resolved)]
     if len(specs) != 2:
-        args.subparser.error("you must provide two specs to compare")
+        specs = spack.cmd.parse_specs(args.inputs)
+        hints = [None] * len(specs)
+    if len(specs) != 2:
+        message = "you must provide two environments or two specs to compare"
+        if len(specs) == 1 and len(args.inputs) > 1:
+            # As in other commands, `hdf5 +mpi` is one spec
+            message = f"'{' '.join(args.inputs)}' is a single spec: {message}"
+        args.subparser.error(message)
 
     env = active_environment()
-    before, after = (_concrete_spec(spec, env) for spec in specs)
+    before, after = (_concrete_spec(x, env, no_match_hint=h) for x, h in zip(specs, hints))
     result = spack.spec_diff.diff_specs(before, after, prune=args.prune)
 
     if args.dump_json:

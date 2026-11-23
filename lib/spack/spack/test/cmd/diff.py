@@ -653,7 +653,7 @@ def test_diff_reports_a_lockfile_by_the_path_it_was_given(concretized_env, tmp_p
 
 @_needs_environments
 def test_diff_mixes_an_environment_and_a_lockfile(concretized_env, tmp_path):
-    """The two sides are resolved independently, so they need not be of the same kind."""
+    """An environment can be compared with a lockfile."""
     concretized_env("test1", PINNED.format("2.3"))
     after = concretized_env("test2", PINNED.format("2.2"))
     lockfile = tmp_path / "downloaded.lock"
@@ -681,49 +681,29 @@ def test_diff_names_the_lockfile_it_refuses(concretized_env, tmp_path):
 
 
 @_needs_environments
-def test_diff_refuses_a_manifest_path(concretized_env, tmp_path):
+def test_diff_refuses_a_manifest_path(tmp_path):
     """A manifest is not a lockfile, and the error points at the directory to pass instead."""
-    concretized_env("test1", PINNED.format("2.3"))
     directory = tmp_path / "independent"
     directory.mkdir()
     manifest = directory / ev.manifest_name
     manifest.write_text(PINNED.format("2.2"))
 
-    with pytest.raises(ev.SpackEnvironmentError, match="is not a Spack lockfile") as exc:
-        diff_cmd("test1", str(manifest))
+    with pytest.raises(
+        ev.SpackEnvironmentError, match="is not a Spack lockfile or spec file"
+    ) as exc:
+        diff_cmd(str(manifest), str(manifest))
 
     assert str(directory) in str(exc.value)
 
 
 @_needs_environments
-def test_diff_refuses_a_file_that_is_not_a_lockfile(concretized_env, tmp_path):
-    """A file that does not hold a lockfile is refused."""
-    concretized_env("test1", PINNED.format("2.3"))
-    not_a_lockfile = tmp_path / "notes.txt"
-    not_a_lockfile.write_text("mpileaks@2.2\n")
+def test_diff_refuses_a_file_that_is_neither_a_lockfile_nor_a_spec_file(tmp_path):
+    """A file that holds neither a lockfile nor a spec file is refused."""
+    notes = tmp_path / "notes.txt"
+    notes.write_text("mpileaks@2.2\n")
 
-    with pytest.raises(ev.SpackEnvironmentError, match="is not a Spack lockfile"):
-        diff_cmd("test1", str(not_a_lockfile))
-
-
-def test_diff_names_the_flag_to_compare_specs():
-    """Arguments are environments by default, and the error for a spec names the flag to use."""
-    with pytest.raises(ev.SpackEnvironmentError, match="no environment") as exc:
-        diff_cmd("mpileaks", "mpileaks+debug")
-
-    assert "spack diff --specs" in exc.value.long_message
-
-
-@_needs_environments
-@pytest.mark.parametrize("arguments", [["test1"], ["test1", "test1", "test1"]])
-def test_diff_requires_two_environments(concretized_env, arguments):
-    """Comparing anything but two environments is a usage error."""
-    concretized_env("test1", PINNED.format("2.3"))
-
-    with pytest.raises(spack.main.SpackCommandError) as exc:
-        diff_cmd(*arguments)
-
-    assert exc.value.code == 2
+    with pytest.raises(ev.SpackEnvironmentError, match="is not a Spack lockfile or spec file"):
+        diff_cmd(str(notes), str(notes))
 
 
 def _install_and_find(spec: str) -> str:
@@ -737,7 +717,7 @@ def test_diff_specs_reports_a_differing_dependency(install_mockery, mock_fetch, 
     before = _install_and_find("mpileaks ^mpich@3.0.4")
     after = _install_and_find("mpileaks ^mpich@1.0")
 
-    output = diff_cmd("--specs", before, after)
+    output = diff_cmd(before, after)
 
     assert "before: mpich@3.0.4/" in output
     assert "after:  mpich@1.0/" in output
@@ -746,11 +726,11 @@ def test_diff_specs_reports_a_differing_dependency(install_mockery, mock_fetch, 
 
 
 def test_diff_specs_json(install_mockery, mock_fetch, mock_archive):
-    """`spack diff --specs --json` is versioned, and names the two specs it compared."""
+    """`spack diff --json` on two specs is versioned, and names the two specs it compared."""
     before = _install_and_find("mpileaks ^mpich@3.0.4")
     after = _install_and_find("mpileaks ^mpich@1.0")
 
-    result = sjson.load(diff_cmd("--specs", "--json", before, after))
+    result = sjson.load(diff_cmd("--json", before, after))
 
     assert result["_meta"] == {
         "file-type": "spack-spec-diff",
@@ -765,8 +745,8 @@ def test_diff_specs_reports_identical_specs(install_mockery, mock_fetch, mock_ar
     """A spec compared with itself is reported as such."""
     installed = _install_and_find("mpileaks")
 
-    assert "the two specs are identical" in diff_cmd("--specs", installed, installed)
-    assert sjson.load(diff_cmd("--specs", "--json", installed, installed))["nodes"] == []
+    assert "the two specs are identical" in diff_cmd(installed, installed)
+    assert sjson.load(diff_cmd("--json", installed, installed))["nodes"] == []
 
 
 def test_diff_specs_refuses_an_ambiguous_spec(install_mockery, mock_fetch, mock_archive):
@@ -775,7 +755,7 @@ def test_diff_specs_refuses_an_ambiguous_spec(install_mockery, mock_fetch, mock_
     second = _install_and_find("mpileaks ^mpich@1.0")
 
     with pytest.raises(spack.main.SpackCommandError) as exc:
-        diff_cmd("--specs", "mpileaks", "mpileaks")
+        diff_cmd("mpileaks", "mpileaks")
 
     assert exc.value.code == 1
     assert first[1:8] in exc.value.output and second[1:8] in exc.value.output
@@ -787,16 +767,20 @@ def test_diff_specs_refuses_specs_of_different_packages(install_mockery, mock_fe
     mpich = find_cmd("--format", "{/hash}", "mpich").strip()
 
     with pytest.raises(spec_diff.SpecDiffError, match="must be of the same package"):
-        diff_cmd("--specs", mpileaks, mpich)
+        diff_cmd(mpileaks, mpich)
 
 
-@pytest.mark.parametrize("arguments", [["mpileaks"], ["mpileaks", "+debug"]])
-def test_diff_specs_requires_two_specs(arguments):
+@pytest.mark.parametrize(
+    "arguments,single",
+    [(["mpileaks"], False), (["mpileaks"] * 3, False), (["mpileaks", "+debug"], True)],
+)
+def test_diff_specs_requires_two_specs(arguments, single):
     """Specs are counted after parsing, so a spec spanning several words counts once."""
     with pytest.raises(spack.main.SpackCommandError) as exc:
-        diff_cmd("--specs", *arguments)
+        diff_cmd(*arguments)
 
     assert exc.value.code == 2
+    assert ("'mpileaks +debug' is a single spec" in exc.value.output) is single
 
 
 def test_diff_specs_refuses_specs_without_package_hashes(tmp_path):
@@ -812,7 +796,7 @@ def test_diff_specs_refuses_specs_without_package_hashes(tmp_path):
         paths.append(str(path))
 
     with pytest.raises(spec_diff.SpecDiffError, match="did not record package hashes"):
-        diff_cmd("--specs", *paths)
+        diff_cmd(*paths)
 
 
 def test_diff_specs_lists_recipe_changes_by_package(capsys):
@@ -858,10 +842,10 @@ def test_diff_exit_code_tells_whether_specs_differ(install_mockery, mock_fetch, 
     before = _install_and_find("mpileaks ^mpich@3.0.4")
     after = _install_and_find("mpileaks ^mpich@1.0")
 
-    diff_cmd("--specs", "--exit-code", before, before)
+    diff_cmd("--exit-code", before, before)
     assert diff_cmd.returncode == 0
 
-    diff_cmd("--specs", "--exit-code", before, after, fail_on_error=False)
+    diff_cmd("--exit-code", before, after, fail_on_error=False)
     assert diff_cmd.returncode == spack.cmd.diff.EXIT_DIFFERENT
 
 
@@ -903,19 +887,17 @@ def test_diff_compares_environments_including_the_same_concrete_environment(conc
 
 
 @pytest.mark.parametrize(
-    "arguments,kind",
-    [
-        (["before", "after", "--no-prune"], "environments"),
-        (["--specs", "mpileaks", "mpileaks", "--json"], "specs"),
-    ],
+    "arguments", [["before", "after", "--no-prune"], ["mpileaks", "+debug", "mpileaks", "--json"]]
 )
-def test_diff_says_options_go_before_the_inputs(arguments, kind):
+def test_diff_says_options_go_before_the_inputs(arguments):
     """An option written after the two inputs is a usage error."""
     with pytest.raises(spack.main.SpackCommandError) as exc:
         diff_cmd(*arguments)
 
     assert exc.value.code == 2
-    assert f"options must come before the two {kind}: {arguments[-1]}" in exc.value.output
+    assert f"options must come before the two environments or specs: {arguments[-1]}" in (
+        exc.value.output
+    )
 
 
 @_needs_environments
@@ -998,10 +980,111 @@ def test_diff_specs_compares_specs_of_an_environment_that_is_not_installed(concr
     environment = concretized_env("test1", content)
 
     with environment:
-        output = diff_cmd("--specs", "mpileaks@2.3", "mpileaks@2.2")
+        output = diff_cmd("mpileaks@2.3", "mpileaks@2.2")
 
         with pytest.raises(spack.error.SpackError, match="no concrete specs of environment"):
-            diff_cmd("--specs", "mpileaks@2.3", "mpileaks@2.1")
+            diff_cmd("mpileaks@2.3", "mpileaks@2.1")
 
     assert "before: mpileaks@2.3/" in output
     assert "after:  mpileaks@2.2/" in output
+
+
+@_needs_environments
+@pytest.mark.parametrize("name,hint", [("mpileaks", True), ("test1", False)])
+def test_diff_refuses_an_environment_and_a_spec(
+    name, hint, concretized_env, install_mockery, mock_fetch, mock_archive
+):
+    """An environment cannot be compared with a spec. If the environment is named like a
+    package, the error says how to write that package as a spec."""
+    concretized_env(name, PINNED.format("2.3"))
+    installed = _install_and_find("mpileaks")
+
+    with pytest.raises(spack.error.SpackError, match=f"cannot compare environment '{name}'") as e:
+        diff_cmd(name, installed)
+
+    assert ("by hash" in (e.value.long_message or "")) is hint
+
+
+@_needs_environments
+def test_diff_names_a_mistyped_environment(concretized_env):
+    """A name that is not an environment, next to one that is, is reported as a missing
+    environment."""
+    concretized_env("test1", PINNED.format("2.3"))
+
+    with pytest.raises(ev.SpackEnvironmentError, match="no environment.*named 'tset2'"):
+        diff_cmd("test1", "tset2")
+
+
+def test_diff_says_a_missing_name_is_neither_an_environment_nor_a_spec():
+    """Two names matching neither an environment nor a spec are reported as both."""
+    with pytest.raises(spack.error.SpackError, match="matches no installed packages") as exc:
+        diff_cmd("tset1", "tset2")
+
+    assert "not an environment" in exc.value.long_message
+
+
+@pytest.mark.parametrize("missing", ["./missing", os.path.join("missing", "env", "dir")])
+def test_diff_names_a_missing_environment_directory(missing, tmp_path):
+    """A path to nothing is reported as such, instead of being parsed as specs."""
+    with fs.working_dir(str(tmp_path)):
+        with pytest.raises(ev.SpackEnvironmentError, match="no such environment directory"):
+            diff_cmd(missing, missing)
+
+
+def test_diff_reads_spec_files_named_without_a_directory(tmp_path):
+    """Spec files in the working directory are compared, even when written without ``./``."""
+    before = spack.concretize.concretize_one("mpileaks~debug")
+    after = spack.concretize.concretize_one("mpileaks+debug")
+    (tmp_path / "before.json").write_text(before.to_json())
+    (tmp_path / "after.json").write_text(after.to_json())
+
+    with fs.working_dir(str(tmp_path)):
+        output = diff_cmd("before.json", "after.json")
+
+    assert "before: mpileaks~debug/" in output
+    assert "after:  mpileaks+debug/" in output
+
+
+def test_diff_compares_a_spec_named_like_a_directory(
+    tmp_path, install_mockery, mock_fetch, mock_archive
+):
+    """A directory in the working directory does not hide the package of the same name, as with
+    the source of a package developed in an environment."""
+    _install_and_find("mpileaks")
+    (tmp_path / "mpileaks").mkdir()
+
+    with fs.working_dir(str(tmp_path)):
+        output = diff_cmd("mpileaks", "mpileaks")
+
+    assert "the two specs are identical" in output
+
+
+def test_diff_compares_a_spec_with_a_hash(install_mockery, mock_fetch, mock_archive):
+    """Two arguments that are specs on their own are two specs, also when the second is a hash
+    that would otherwise attach to the first."""
+    _install_and_find("mpileaks ^mpich@3.0.4")
+    after = _install_and_find("mpileaks ^mpich@1.0")
+
+    output = diff_cmd("mpileaks^mpich@3.0.4", after)
+
+    assert "before: mpich@3.0.4/" in output
+    assert "after:  mpich@1.0/" in output
+
+
+@_needs_environments
+@pytest.mark.parametrize("arguments", [["base", "pr"], ["test1", "base"]])
+def test_diff_points_at_the_lockfile_in_a_directory_written_as_a_word(
+    arguments, concretized_env, tmp_path
+):
+    """A word naming a directory that holds a lockfile is tried as a spec, and the error for a
+    spec that matches nothing, or for a missing environment, names the lockfile to pass."""
+    concretized_env("test1", PINNED.format("2.3"))
+    for directory in ("base", "pr"):
+        (tmp_path / directory).mkdir()
+        (tmp_path / directory / ev.lockfile_name).write_text("{}")
+
+    with fs.working_dir(str(tmp_path)):
+        with pytest.raises(spack.error.SpackError) as exc:
+            diff_cmd(*arguments)
+
+    assert f"pass '{os.path.join('base', ev.lockfile_name)}'" in exc.value.long_message
