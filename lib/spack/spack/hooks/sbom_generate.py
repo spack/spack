@@ -131,15 +131,10 @@ def generate_external_refs(spec):
 
     # E.4.3 Rules for namespace
     # Abstract specs may not have a namespace
-    namespace = ""
-    if spec.namespace:
-        x = spec.namespace.lstrip("/").rstrip("/").encode("utf-8")
-        namespace = urllib.parse.quote(x)
+    namespace = urllib.parse.quote(spec.namespace.lstrip("/").rstrip("/").encode("utf-8"))
 
     # E.4.4 Rules for name
     name = urllib.parse.quote(spec.name.encode("utf-8"))
-    if namespace:
-        name = "/" + name
 
     # E.4.5 Rules for version
     # If this is a git SHA, the PURL will be conformant but unlikely to be
@@ -158,7 +153,7 @@ def generate_external_refs(spec):
         {
             "referenceCategory": "PACKAGE-MANAGER",
             "referenceType": "purl",
-            "referenceLocator": f"{scheme}{type}/{namespace}{name}{version}{qualifier}",  # noqa: E501
+            "referenceLocator": f"{scheme}{type}/{namespace}/{name}{version}{qualifier}",  # noqa: E501
         }
     ]
 
