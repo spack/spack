@@ -91,13 +91,13 @@ class ReportData:
         self.build_records[spec.dag_hash()] = record
 
     def finish_record(
-        self, spec: spack.spec.Spec, exitcode: int, log_path: Optional[str] = None
+        self, spec: spack.spec.Spec, succeeded: bool, log_path: Optional[str] = None
     ) -> None:
         """Mark the InstallRecord for a spec as succeeded or failed."""
         record = self.build_records.get(spec.dag_hash())
         if record is None or spec.external:
             return
-        if exitcode == ExitCode.SUCCESS:
+        if succeeded:
             record.succeed(log_path)
         else:
             record.fail(
@@ -110,36 +110,47 @@ class ReportData:
     def finalize(
         self, reports: Dict[str, spack.report.RequestRecord], build_graph: BuildGraph
     ) -> None:
-        """Finalize InstallRecords and append them to RequestRecords after all builds finish.
+        """Finalize InstallRecords and append them to RequestRecords after the event loop ends.
 
         Args:
             reports: Map of root dag_hash to RequestRecord to append to.
             build_graph: The build graph containing all nodes and their states.
         """
         node_to_roots = _node_to_roots(self.roots)
+        failed = {h for h, r in self.build_records.items() if r.get("result") == "failure"}
 
         for spec in spack.traverse.traverse_nodes(self.roots):
             h = spec.dag_hash()
-            if h in self.build_records:
-                record = self.build_records[h]
-            else:
+            record = self.build_records.get(h)
+            if record is None or "result" not in record:
                 record = spack.report.InstallRecord(spec)
                 if spec.external:
                     msg = "Spec is external"
-                elif h in build_graph.pruned:
+                elif h in build_graph.done:
+                    msg = "Spec is already installed"
+                elif h not in build_graph.nodes:
                     msg = "Spec was not scheduled for installation"
-                elif h in build_graph.nodes:
+                elif _reaches_any(build_graph.parent_to_child, h, failed):
                     msg = "Dependencies failed to install"
                 else:
-                    # If not installed or failed (build_records), not statically pruned ahead of
-                    # time (build_graph.pruned), and also not scheduled (build_graph.nodes), it
-                    # means it was in pending_builds or running_builds but never started/finished.
-                    # This branch is followed on KeyboardInterrupt and --fail-fast.
                     msg = "Installation was interrupted"
                 record.skip(msg=msg)
 
             for root_hash in node_to_roots[h]:
                 reports[root_hash].append_record(record)
+
+
+def _reaches_any(parent_to_child: Dict[str, Set[str]], start: str, targets: Set[str]) -> bool:
+    """Whether a path of unfinished dependencies leads from start to one of targets."""
+    stack, seen = [start], {start}
+    while stack:
+        for child in parent_to_child.get(stack.pop(), ()):
+            if child in targets:
+                return True
+            if child not in seen:
+                seen.add(child)
+                stack.append(child)
+    return False
 
 
 class NullReportData(ReportData):
@@ -154,7 +165,7 @@ class NullReportData(ReportData):
         pass
 
     def finish_record(
-        self, spec: spack.spec.Spec, exitcode: int, log_path: Optional[str] = None
+        self, spec: spack.spec.Spec, succeeded: bool, log_path: Optional[str] = None
     ) -> None:
         pass
 
@@ -643,6 +654,12 @@ class PackageInstaller:
             if terminal is not None:
                 terminal.teardown_output()
 
+            # Reports are also written when the installation is stopped
+            try:
+                self.report_data.finalize(self.reports, build_graph=self.build_graph)
+            except Exception as e:
+                spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}")
+
             # A signal, also one received during cleanup, takes precedence over other exceptions
             if stop_signal == signal.SIGINT:
                 raise KeyboardInterrupt
@@ -652,11 +669,6 @@ class PackageInstaller:
             # Re-raise the DB exception if any.
             if db_exc is not None:
                 raise db_exc
-
-        try:
-            self.report_data.finalize(self.reports, build_graph=self.build_graph)
-        except Exception as e:
-            spack.util.tty.debug(f"[{__name__}]: Failed to finalize reports: {e}")
 
         # Clean up temp log files of successful builds now that reports have consumed them.
         if not self.keep_stage:
@@ -695,9 +707,9 @@ class PackageInstaller:
         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
         self._drain_child_output(build, selector)
         exitcode = build.close(selector)
-        self.report_data.finish_record(build.spec, exitcode, build.log_path)
 
         if exitcode == ExitCode.SUCCESS:
+            self.report_data.finish_record(build.spec, succeeded=True, log_path=build.log_path)
             # Schedule successful builds for batched database insertion. Ownership of the prefix
             # write lock moves from the finished child to the pending DB insert; it is downgraded
             # or released only after a successful db write.
@@ -717,7 +729,8 @@ class PackageInstaller:
         user_policy = self.root_policy if is_root else self.dependencies_policy
 
         if exitcode == ExitCode.STOPPED_AT_PHASE:
-            return  # the user requested early stopping; don't treat as failure
+            # the user requested early stopping; don't treat as failure
+            self.report_data.finish_record(build.spec, succeeded=True, log_path=build.log_path)
         elif exitcode == ExitCode.BUILD_CACHE_MISS and user_policy == "auto":
             # Check if we can reschedule this as a source build after a build cache miss. If so,
             # return early without recording a failure.
@@ -730,6 +743,7 @@ class PackageInstaller:
         elif not self.stopping:
             # Record a failure, unless the builds are being stopped: it may be a consequence of
             # us terminating the build.
+            self.report_data.finish_record(build.spec, succeeded=False, log_path=build.log_path)
             failures.append(build.spec)
             self.ui.on_state_changed(dag_hash, "failed")
 

@@ -11,6 +11,7 @@ import time
 
 import pytest
 
+import spack.deptypes as dt
 import spack.error
 import spack.spec
 from spack.config import Configuration
@@ -26,6 +27,7 @@ from spack.test.installer.conftest import (
     _install,
     _make_concrete,
     _record,
+    install_spec_in_db,
 )
 
 
@@ -349,6 +351,186 @@ def test_reports_collect_success_failure_and_skips(temporary_store, mock_package
     )
     assert root_record.message == "Dependencies failed to install"
     assert [r.result for r in installer.reports[other.dag_hash()].packages] == ["success"]
+
+
+def _report(installer: PackageInstaller):
+    """Map each reported package name to its result and message."""
+    return {
+        r.name: (r.result, r.get("message", ""))
+        for request in installer.reports.values()
+        for r in request.packages
+    }
+
+
+def _reporting_installer(launcher, *specs: spack.spec.Spec, **kwargs) -> PackageInstaller:
+    kwargs.setdefault("ui", RecordingUI())
+    return PackageInstaller(
+        [s.package for s in specs], explicit=True, launcher=launcher, create_reports=True, **kwargs
+    )
+
+
+def _add_binary_mirror(config: Configuration, tmp_path) -> None:
+    config.set("mirrors", {"local": {"url": (tmp_path / "mirror").as_uri(), "binary": True}})
+
+
+def _failed(name: str):
+    return ("failure", f"Installation of {name} failed; see log for details")
+
+
+INSTALLED = ("skipped", "Spec is already installed")
+INTERRUPTED = ("skipped", "Installation was interrupted")
+
+
+@pytest.mark.regression("53374")
+def test_report_cache_miss_then_installed_by_other_process(
+    temporary_store, mock_packages, mutable_config, tmp_path
+):
+    """A cache miss is not a failure when another process installs the spec before the retry."""
+    _add_binary_mirror(mutable_config, tmp_path)
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(exitcode=ExitCode.BUILD_CACHE_MISS)})
+
+    def launch(request, jobserver):
+        child = launcher(request, jobserver)
+        install_spec_in_db(spec, temporary_store)
+        return child
+
+    installer = _reporting_installer(launch, spec)
+    installer.install()
+    assert _report(installer) == {spec.name: INSTALLED}
+
+
+def test_report_installed_by_other_process(temporary_store, mock_packages):
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    installer = _reporting_installer(ScriptedLauncher({root.name: Script()}), root)
+    install_spec_in_db(dep, temporary_store)
+    installer.install()
+    assert _report(installer) == {dep.name: INSTALLED, root.name: ("success", "")}
+
+
+def test_report_installed_spec_marked_explicit(temporary_store, mock_packages):
+    spec = _make_concrete("trivial-install-test-package")
+    install_spec_in_db(spec, temporary_store)
+    installer = _reporting_installer(None, spec)
+    installer.install()
+    assert _report(installer) == {spec.name: INSTALLED}
+
+
+def test_report_build_deps_not_needed(temporary_store, mock_packages, mutable_config, tmp_path):
+    _add_binary_mirror(mutable_config, tmp_path)
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep], depflag=dt.BUILD)
+    installer = _reporting_installer(ScriptedLauncher({root.name: Script()}), root)
+    installer.install()
+    assert _report(installer) == {
+        dep.name: ("skipped", "Spec was not scheduled for installation"),
+        root.name: ("success", ""),
+    }
+
+
+def test_report_stopped_at_phase(temporary_store, mock_packages):
+    spec = _make_concrete("trivial-install-test-package")
+    launcher = ScriptedLauncher({spec.name: Script(exitcode=ExitCode.STOPPED_AT_PHASE)})
+    installer = _reporting_installer(launcher, spec)
+    installer.install()
+    assert _report(installer) == {spec.name: ("success", "")}
+
+
+@pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
+@pytest.mark.parametrize("signum", STOP_SIGNALS, ids=lambda s: s.name)
+def test_report_stop_signal(signum, temporary_store, mock_packages):
+    """Reports are written when a stop signal ends the installation."""
+    _skip_if_handled_by_test_runner()
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep])
+    launcher = ScriptedLauncher({dep.name: Script(), root.name: Script(hang=True)})
+
+    def tick():
+        if launcher.hanging and not launcher.hanging[0].terminated:
+            _send(signum)
+
+    installer = _reporting_installer(launcher, root, ui=DrivingUI(tick))
+    with pytest.raises(_stop_error(signum)):
+        installer.install()
+    assert _report(installer) == {dep.name: ("success", ""), root.name: INTERRUPTED}
+
+
+@pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root
+def test_report_fail_fast(temporary_store, mock_packages):
+    """With --fail-fast, only the build that failed is a failure: the terminated build and the
+    one that never started were interrupted."""
+    specs = [_make_concrete(n) for n in ("trivial-install-test-package", "pkg-a", "pkg-b")]
+    script = Script(exitcode=ExitCode.BUILD_ERROR, hang=True)
+    launcher = ScriptedLauncher({s.name: script for s in specs})
+
+    def tick():
+        if len(launcher.hanging) == 2:
+            launcher.hanging[0].finish()
+
+    installer = _reporting_installer(
+        launcher, *specs, ui=DrivingUI(tick), fail_fast=True, concurrent_packages=2
+    )
+    with pytest.raises(spack.error.InstallError):
+        installer.install()
+    expected = dict.fromkeys((s.name for s in specs), INTERRUPTED)
+    failed = launcher.requests[0].spec.name
+    expected[failed] = _failed(failed)
+    assert _report(installer) == expected
+
+
+@pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root
+def test_report_cache_miss_then_build_dep_fails(
+    temporary_store, mock_packages, mutable_config, tmp_path
+):
+    _add_binary_mirror(mutable_config, tmp_path)
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep], depflag=dt.BUILD)
+    launcher = ScriptedLauncher(
+        {
+            root.name: Script(exitcode=ExitCode.BUILD_CACHE_MISS),
+            dep.name: Script(exitcode=ExitCode.BUILD_ERROR),
+        }
+    )
+    installer = _reporting_installer(launcher, root)
+    with pytest.raises(spack.error.InstallError):
+        installer.install()
+    assert _report(installer) == {
+        dep.name: _failed(dep.name),
+        root.name: ("skipped", "Dependencies failed to install"),
+    }
+
+
+@pytest.mark.disable_clean_stage_check  # failed builds keep their log file in the stage root
+def test_report_cache_miss_then_fail_fast(
+    temporary_store, mock_packages, mutable_config, tmp_path
+):
+    """A spec waiting for its build deps after a cache miss was interrupted, not failed, when
+    --fail-fast stops."""
+    _add_binary_mirror(mutable_config, tmp_path)
+    failing = _make_concrete("trivial-install-test-package")
+    dep = _make_concrete("dependency-install")
+    root = _make_concrete("dependent-install", deps=[dep], depflag=dt.BUILD)
+    launcher = ScriptedLauncher(
+        {
+            root.name: Script(exitcode=ExitCode.BUILD_CACHE_MISS),
+            dep.name: Script(hang=True),
+            failing.name: Script(exitcode=ExitCode.BUILD_ERROR, hang=True),
+        }
+    )
+
+    def tick():
+        if len(launcher.hanging) == 2:  # the build dep runs after the cache miss
+            launcher.hanging[0].finish()
+
+    installer = _reporting_installer(launcher, root, failing, ui=DrivingUI(tick), fail_fast=True)
+    with pytest.raises(spack.error.InstallError):
+        installer.install()
+    assert _report(installer) == {
+        failing.name: _failed(failing.name),
+        dep.name: INTERRUPTED,
+        root.name: INTERRUPTED,
+    }
 
 
 @pytest.mark.disable_clean_stage_check  # interrupted installs keep their log files
