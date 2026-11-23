@@ -3711,30 +3711,32 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             del entry.container[entry.position]
         self._entries_changed(entries)
 
+    def _sync_config_scope_cache(self) -> None:
+        """Sync the env_config_scope cache with yaml_content to maintain consistency
+        between the two representations of spack.yaml. Called whenever yaml_content
+        is modified through manifest operations.
+        """
+        if hasattr(self, "_env_config_scope") and self._env_config_scope is not None:
+            if self._env_config_scope._raw_data is not None:
+                # Config scope has been accessed and cached - update it to match yaml_content
+                import copy
+                self._env_config_scope._raw_data = copy.deepcopy(self.yaml_content)
+                # Clear sections so they get repopulated from updated _raw_data on next access
+                self._env_config_scope.sections.clear()
+
     def _entries_changed(self, entries: List[ManifestEntry]) -> None:
         if any(e.list_name == USER_SPECS_KEY for e in entries):
             self._clear_user_specs()
             self._init_user_specs()
             self.changed = True
-
-            # Sync the config scope cache with yaml_content to maintain consistency
-            # between the two representations of spack.yaml
-            if hasattr(self, "_env_config_scope") and self._env_config_scope is not None:
-                if self._env_config_scope._raw_data is not None:
-                    # Config scope has been accessed and cached - update it to match yaml_content
-                    import copy
-                    self._env_config_scope._raw_data = copy.deepcopy(self.yaml_content)
-                    # Clear sections so they get repopulated from updated _raw_data on next access
-                    self._env_config_scope.sections.clear()
         if any(e.list_name != USER_SPECS_KEY for e in entries):
             self._definitions_changed()
 
+        self._sync_config_scope_cache()
+
     def _definitions_changed(self) -> None:
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set(
-            "definitions", self.configuration["definitions"], scope=self.scope_name
-        )
         self.changed = True
+        self._sync_config_scope_cache()
 
     def user_specs(self, *, group: Optional[str] = None) -> List:
         group = self._ensure_group_exists(group)
