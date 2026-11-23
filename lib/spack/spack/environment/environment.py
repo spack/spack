@@ -4,6 +4,7 @@
 import collections
 import collections.abc
 import contextlib
+import copy
 import errno
 import glob
 import os
@@ -3575,7 +3576,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         #: Configuration scope associated with this environment. Note that this is not
         #: invalidated by a re-read of the manifest file.
-        self._env_config_scope: Optional[spack.config.ConfigScope] = None
+        self._env_config_scope: Optional[spack.config.SingleFileScope] = None
 
         if not self.manifest_file.exists():
             msg = f"cannot find '{manifest_name}' in {self.manifest_dir}"
@@ -3719,7 +3720,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         if hasattr(self, "_env_config_scope") and self._env_config_scope is not None:
             if self._env_config_scope._raw_data is not None:
                 # Config scope has been accessed and cached - update it to match yaml_content
-                import copy
                 self._env_config_scope._raw_data = copy.deepcopy(self.yaml_content)
                 # Clear sections so they get repopulated from updated _raw_data on next access
                 self._env_config_scope.sections.clear()
@@ -3904,7 +3904,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return str(self.manifest_file)
 
     @property
-    def env_config_scope(self) -> spack.config.ConfigScope:
+    def env_config_scope(self) -> spack.config.SingleFileScope:
         """The configuration scope for the environment manifest"""
         if self._env_config_scope is None:
             self._env_config_scope = spack.config.SingleFileScope(
