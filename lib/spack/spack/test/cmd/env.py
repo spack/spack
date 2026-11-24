@@ -2228,7 +2228,7 @@ packages:
         e.write()
 
         env_mod = spack.util.environment.EnvironmentModifications()
-        e.add_view_to_env(env_mod, "default")
+        _, env_mod = e.add_view_to_env(env_mod, "default")
         env_variables: Dict[str, str] = {}
         env_mod.apply_modifications(env_variables)
         assert str(fake_bin) in env_variables["PATH"]
