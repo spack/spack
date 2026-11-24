@@ -27,7 +27,6 @@ from spack.cmd.common import arguments
 from spack.environment import depfile
 from spack.traverse import traverse_nodes
 from spack.util import string, tty
-from spack.util.environment import EnvironmentModifications
 from spack.util.filesystem import islink, symlink
 from spack.util.tty.colify import colify
 from spack.util.tty.color import cescape, colorize
@@ -356,13 +355,14 @@ def env_activate(args):
     else:
         tty.die("No such environment: '%s'" % args.env_name)
 
+    record = spack.environment.shell.read_undo_record(os.environ)
+
     # We only support one active environment at a time, so deactivate the current one.
     if active_environment() is None:
         cmds = ""
-        env_mods = EnvironmentModifications()
     else:
         cmds = spack.environment.shell.deactivate_header(shell=args.shell)
-        env_mods = spack.environment.shell.deactivate()
+        spack.environment.shell.deactivate(record)
 
     # Activate new environment
     active_env = ev.Environment(env_path)
@@ -379,8 +379,8 @@ def env_activate(args):
     cmds += spack.environment.shell.activate_header(
         env=active_env, shell=args.shell, prompt=args.prompt, view=view
     )
-    env_mods.extend(spack.environment.shell.activate(env=active_env, view=view))
-    cmds += env_mods.shell_modifications(args.shell)
+    spack.environment.shell.activate(env=active_env, record=record, view=view)
+    cmds += record.shell_commands(args.shell)
     sys.stdout.write(cmds)
 
 
@@ -441,9 +441,10 @@ def env_deactivate(args):
     if active_environment() is None:
         tty.die("No environment is currently active.")
 
+    record = spack.environment.shell.read_undo_record(os.environ)
     cmds = spack.environment.shell.deactivate_header(args.shell)
-    env_mods = spack.environment.shell.deactivate()
-    cmds += env_mods.shell_modifications(args.shell)
+    spack.environment.shell.deactivate(record)
+    cmds += record.shell_commands(args.shell)
     sys.stdout.write(cmds)
 
 

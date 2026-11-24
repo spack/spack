@@ -15,7 +15,18 @@ import shlex
 import subprocess
 import sys
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import spack.error
 from spack.util import tty
@@ -831,21 +842,12 @@ class EnvironmentModifications:
         if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
             new_env["MANPATH"] += os.pathsep
 
-        shell_cmd = ShellCmdString(shell)
-        cmds = []
-
-        for name in sorted(set(modifications)):
-            new = new_env.get(name, None)
-            old = env.get(name, None)
-            if explicit or new != old:
-                if new is None:
-                    cmds.append(shell_cmd.unset(name))
-                else:
-                    value = new_env[name]
-                    if shell not in ("bat", "pwsh"):
-                        value = shlex.quote(value)
-                    cmds.append(shell_cmd.set(name, value))
-        return shell_cmd.join(cmds)
+        values = {
+            name: new_env.get(name)
+            for name in modifications
+            if explicit or new_env.get(name) != env.get(name)
+        }
+        return shell_assignments(values, shell)
 
     @staticmethod
     def from_sourcing_file(
@@ -1047,6 +1049,23 @@ class EnvironmentModifications:
                 env.set(variable_name, value_after)
 
         return env
+
+
+def shell_assignments(values: Mapping[str, Optional[str]], shell: str = DEFAULT_SHELL) -> str:
+    """Returns shell code setting each variable to its value, or unsetting it if the value is
+    None. Variables are assigned in alphabetical order.
+    """
+    shell_cmd = ShellCmdString(shell)
+    cmds = []
+    for name in sorted(values):
+        value = values[name]
+        if value is None:
+            cmds.append(shell_cmd.unset(name))
+        else:
+            if shell not in ("bat", "pwsh"):
+                value = shlex.quote(value)
+            cmds.append(shell_cmd.set(name, value))
+    return shell_cmd.join(cmds)
 
 
 def _set_or_unset_not_first(
