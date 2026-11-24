@@ -196,6 +196,15 @@ def create_build_channels() -> BuildChannels:
     return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, control_w)
 
 
+def create_wakeup_channel() -> Tuple[Connection, Connection]:
+    """Create a non-blocking pipe: the read end is for the selector, the write end is for
+    :func:`signal.set_wakeup_fd`."""
+    r, w = Pipe(duplex=False)
+    os.set_blocking(r.fileno(), False)
+    os.set_blocking(w.fileno(), False)
+    return r, w
+
+
 class PosixTee(Tee):
     def run(self, log_r: int, log_file: io.BufferedWriter) -> None:
         """Forward log_r to log_file and parent (if echoing is enabled).

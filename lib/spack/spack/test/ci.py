@@ -4,7 +4,7 @@
 import io
 import os
 import pathlib
-import subprocess
+import sys
 from urllib.error import HTTPError
 
 import pytest
@@ -474,23 +474,14 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path):
     assert len(mpileaks_specs) == 2, e.all_specs()
 
 
-@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_process_command(repro_dir):
-    result = ci.process_command("help", commands=[], repro_dir=str(repro_dir))
-    help_sh = repro_dir / "help.sh"
-    assert help_sh.exists() and not result
+    assert ci.process_command("succeed", ["exit", "0"], str(repro_dir)) == 0
+    script = "succeed.ps1" if sys.platform == "win32" else "succeed.sh"
+    assert [p.name for p in repro_dir.iterdir()] == [script]
 
 
-@pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
-def test_ci_process_command_fail(repro_dir, monkeypatch):
-    msg = "subprocess wait exception"
-
-    def _fail(self, args):
-        raise RuntimeError(msg)
-
-    monkeypatch.setattr(subprocess.Popen, "__init__", _fail)
-    with pytest.raises(RuntimeError, match=msg):
-        ci.process_command("help", [], str(repro_dir))
+def test_ci_process_command_fail(repro_dir):
+    assert ci.process_command("fail", ["exit", "1"], str(repro_dir)) == 1
 
 
 def test_ci_create_buildcache(working_env, config, monkeypatch):

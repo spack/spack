@@ -1,0 +1,3 @@
+repo:
+  namespace: sbom_test
+  api: v2.0

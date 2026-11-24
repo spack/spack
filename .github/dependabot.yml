@@ -4,6 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "pip"
     directories:
@@ -14,3 +16,5 @@ updates:
      - "/lib/spack/docs"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7

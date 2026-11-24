@@ -57,12 +57,12 @@ SIGWINCH_EVENT = "sigwinch"
 JOBSERVER_EVENT = "jobserver"
 SIGNAL_EVENT = "signal"
 
-#: Signals on which the event loop stops and cleans up
+#: Signals on which the event loop stops the builds
 if sys.platform == "win32":
     # Windows cannot send SIGTERM to another process, it terminates the process instead
-    TERMINATION_SIGNALS = ()
+    STOP_SIGNALS = (signal.SIGINT,)
 else:
-    TERMINATION_SIGNALS = (signal.SIGTERM, signal.SIGHUP)
+    STOP_SIGNALS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
 
 
 class BuildChannels(NamedTuple):

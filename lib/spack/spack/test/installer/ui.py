@@ -1624,6 +1624,56 @@ class TestBlockedIndicator:
         assert "Waiting for other Spack install process" in fake_stdout.getvalue()
 
 
+class TestStopping:
+    """Test the status that is shown while the builds are terminating."""
+
+    def test_status_takes_the_last_line(self):
+        """The status is the last line of the overview, where it replaces the filter prompt. It
+        gives way to a new filter prompt, and is gone in the final render."""
+        tui, time_values, fake_stdout = create_tui(color=False)
+        add_mock_builds(tui, 2)
+        tui.on_input("/pkg0")
+        tui.on_stopping()
+        tui.render()
+        output = fake_stdout.getvalue()
+        assert output.endswith("Terminating builds...  Ctrl-C: kill\033[K\033[0J")
+        assert "filter>" not in output and "pkg1" in output
+
+        fake_stdout.clear()
+        time_values.append(1.0)
+        tui.on_input("/")
+        tui.render()
+        assert fake_stdout.getvalue().endswith("filter> \033[K\033[0J")
+
+        fake_stdout.clear()
+        time_values.append(2.0)
+        tui.on_input("\x1b")
+        tui.render(finalize=True)
+        assert "Terminating" not in fake_stdout.getvalue()
+
+    def test_status_fits_narrow_terminal(self):
+        tui, _, fake_stdout = create_tui(color=False, terminal_cols=30)
+        tui.on_stopping()
+        tui.render()
+        assert fake_stdout.getvalue().endswith("Terminating builds...\033[K\033[0J")
+
+    def test_returns_from_logs_to_overview(self):
+        tui, _, fake_stdout = create_tui()
+        add_mock_builds(tui, 2)
+        tui.next()
+        assert tui.overview_mode is False
+        tui.on_stopping()
+        assert tui.overview_mode is True
+        tui.render()
+        assert "Terminating builds..." in fake_stdout.getvalue()
+
+    def test_non_tty_prints_status_once(self):
+        tui, _, fake_stdout = create_tui(is_tty=False)
+        tui.on_stopping()
+        tui.render()
+        assert fake_stdout.getvalue() == "Terminating builds...\n"
+
+
 class TestLineRendering:
     """Test individual build-line components in the rendered output."""
 

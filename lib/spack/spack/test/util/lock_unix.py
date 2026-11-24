@@ -47,9 +47,6 @@ import pytest
 import spack.util.lock as lk
 from spack.util.filesystem import getuid, touch, working_dir
 
-if sys.platform != "win32":
-    import fcntl
-
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
@@ -1390,35 +1387,20 @@ def test_downgrade_write_fails(tmp_path: pathlib.Path):
         lock.release_read()
 
 
-@pytest.mark.parametrize(
-    "err_num,err_msg",
-    [
-        (errno.EACCES, "Fake EACCES error"),
-        (errno.EAGAIN, "Fake EAGAIN error"),
-        (errno.ENOENT, "Fake ENOENT error"),
-    ],
-)
-def test_poll_lock_exception(tmp_path: pathlib.Path, monkeypatch, err_num, err_msg):
-    """Test poll lock exception handling."""
-
-    def _lockf(fd, cmd, len, start, whence):
-        raise OSError(err_num, err_msg)
-
-    with working_dir(str(tmp_path)):
-        lockfile = "lockfile"
-        lock = lk.Lock(lockfile)
+@pytest.mark.skipif(getuid() == 0, reason="user is root")
+def test_poll_lock_raises_errors_other_than_contention(lock_dir, lock_path):
+    """Tests that polling raises errors that do not mean the lock is held elsewhere."""
+    touch(lock_path)
+    with read_only(lock_path):
+        lock = lk.Lock(lock_path)
         lock.acquire_read()
-
-        monkeypatch.setattr(fcntl, "lockf", _lockf)
-
-        if err_num in [errno.EAGAIN, errno.EACCES]:
-            assert not lock.backend.poll(fcntl.LOCK_EX)
-        else:
-            with pytest.raises(OSError, match=err_msg):
-                lock.backend.poll(fcntl.LOCK_EX)
-
-        monkeypatch.undo()
-        lock.release_read()
+        try:
+            # A write lock on a file opened read-only fails with EBADF
+            with pytest.raises(OSError) as exc_info:
+                lock.backend.poll(lk.LockType.WRITE)
+            assert exc_info.value.errno == errno.EBADF
+        finally:
+            lock.release_read()
 
 
 def test_upgrade_read_okay(tmp_path: pathlib.Path):
