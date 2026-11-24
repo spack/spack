@@ -558,6 +558,7 @@ def test_config_path_migration_override_key(tmp_path):
     assert migrated["config"]["misc_cache:"] == "$cache_home/$spack_instance_id/cache"
 
 
+@pytest.mark.requires_symlinks
 def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
     """Environment migration applies the path-handling scenarios.
 
@@ -585,6 +586,11 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
     external_dir = tmp_path / "external"
     external_dir.mkdir()
 
+    view_dir_real = old_env / "view_real"
+    view_dir = old_env / "view_link"
+    view_dir_real.mkdir()
+    view_dir.symlink_to(view_dir_real, target_is_directory=True)
+
     # Create spack.yaml with all path scenarios
     spack_yaml = old_env / "spack.yaml"
     spack_yaml.write_text(
@@ -602,6 +608,7 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
                         # Rule 2: Relative path inside env → keep relative
                         "local.yaml"
                     ],
+                    "view": str(view_dir)
                 }
             }
         ),
@@ -626,6 +633,9 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
 
     # Rule 2: Relative path inside env stays relative
     assert migrated["spack"]["include"][0] == "local.yaml"
+
+    # Ensure links aren't converted to their realpath
+    assert migrated["spack"]["view"] == str(staging / "view_link")
 
 
 @pytest.mark.parametrize(
