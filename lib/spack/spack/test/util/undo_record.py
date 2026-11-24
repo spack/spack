@@ -141,7 +141,7 @@ def test_forgetting_a_unit_leaves_the_shell_as_it_is():
     del elsewhere["LUA_PATH"]
 
     record = UndoRecord.from_environ(elsewhere)
-    record.forget(unit_key("env", "/env"))
+    record.forget([unit_key("env", "/env")])
     changes = record.environment_changes()
     assert all(name.startswith("SPACK_UNDO_") for name in changes)
     assert all(value is None for value in changes.values())
