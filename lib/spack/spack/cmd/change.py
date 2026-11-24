@@ -6,7 +6,6 @@ import argparse
 import warnings
 
 import spack.cmd
-import spack.config
 import spack.environment
 import spack.error
 import spack.spec
