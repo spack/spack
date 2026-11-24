@@ -3703,13 +3703,13 @@ def test_git_ref_spec_operations_are_pure(monkeypatch):
 
 
 @pytest.mark.only_windows("Windows library naming")
-def test_libs_default_handler_windows_unprefixed(mock_packages, tmp_path):
-    """On Windows, a lib-prefixed package can provide an unprefixed library."""
+def test_libs_default_handler_windows_prefix_optional(mock_packages, tmp_path):
+    """On Windows, libraries are found both with and without the lib prefix."""
     spec = spack.concretize.concretize_one("libxsmm")
     spec.architecture.platform = "windows"
     spec.set_prefix(str(tmp_path))
-    ext = "lib"
     (tmp_path / "lib").mkdir()
-    (tmp_path / "lib" / f"xsmm.{ext}").touch()
+    (tmp_path / "lib" / "libxsmm.lib").touch()
+    (tmp_path / "lib" / "xsmm.lib").touch()
 
-    assert spec["libxsmm"].libs.basenames == [f"xsmm.{ext}"]
+    assert spec["libxsmm"].libs.basenames == ["libxsmm.lib", "xsmm.lib"]
