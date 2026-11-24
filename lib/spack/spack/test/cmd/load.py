@@ -194,3 +194,18 @@ def test_unload_fails_no_shell(
 
     out = unload("mpileaks", fail_on_error=False)
     assert "To set up shell support" in out
+
+
+def test_load_adds_bin_once(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Tests that spack load puts the bin directory of the loaded package on PATH once"""
+    shell, set_command = (
+        ("--bat", r'set "PATH=(.*)"')
+        if sys.platform == "win32"
+        else ("--sh", r"export PATH=([^;]*)")
+    )
+    install("--fake", "mpileaks")
+    bin_dir = os.path.join(spack.concretize.concretize_one("mpileaks").prefix, "bin")
+
+    path = re.search(set_command, load(shell, "mpileaks"), flags=re.MULTILINE).group(1)
+
+    assert path.split(os.pathsep).count(bin_dir) == 1
