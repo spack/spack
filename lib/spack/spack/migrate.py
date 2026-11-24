@@ -1578,7 +1578,11 @@ def _migrate_environments(src_dir: str, dst_dir: str) -> Tuple[bool, List[str]]:
         # we do not currently relocate those.
         for entry in remainder:
             env_path = os.path.join(src_dir, entry)
-            if os.path.isdir(env_path):
+
+            # if the path is a symlink, do not check inside it.
+            # if it points into the env root, it will be checked when the real path is visited
+            # if it's outside the env root, migration is trivial and these things don't matter
+            if os.path.isdir(env_path) and not os.path.islink(env_path):
                 # Look for database index file anywhere under the environment directory
                 db_index = None
                 for root, _, files in os.walk(env_path):
