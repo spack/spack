@@ -290,7 +290,9 @@ def process_env_file_paths(
         if inside_env:
             # Rule 1: Path inside env - rewrite if absolute, keep relative if relative
             if os.path.isabs(original_value):
-                new_path = os.path.join(new_env_norm, rel_to_old_env)
+                # recompute relative path lexically -- avoids following symlinks
+                orig_rel_to_old_env = os.path.relpath(original_value, old_env_norm)
+                new_path = os.path.join(new_env_norm, orig_rel_to_old_env)
                 _absolutize_path_in_yaml(data, key_path, new_path)
                 modified = True
             # else: Rule 2: Relative path inside env: keep as-is
