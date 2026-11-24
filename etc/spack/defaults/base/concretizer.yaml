@@ -53,6 +53,7 @@ concretizer:
       fortran: 1
       nmake: 2
       # Regular packages
+      bazel: 2
       cmake: 2
       gmake: 2
       jom: 2
