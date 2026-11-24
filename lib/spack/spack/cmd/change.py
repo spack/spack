@@ -91,6 +91,8 @@ def _change(env, args):
             msg = f"Cannot change abstract specs: {e}."
             msg += " Try again with '--concrete-only' to change concrete specs only."
             raise ValueError(msg) from e
+        # NOTE: This is still necessary: test_change_with_config_flag_included_file
+        # fails without it
         if spec_changed:
             env.write()
             # env.write() invalidates the manifest's config scope cache, so subsequent
@@ -128,14 +130,8 @@ def _change(env, args):
                     # Config change failed or not applicable, continue
                     pass
 
-    # If config changed, reload the environment to pick up changes into yaml_content
-    # NOTE: this is necessary because currently the read-in env may not
-    # match the on disk config (in particular if it was the env scope that was
-    # updated). We re-read the environment so that if we write it out again
-    # (as part of env.mutate below) that it doesn't effectively discard the
-    # config changes
-    if config_changed:
-        env = spack.environment.Environment(env.path)
+    # env reload not required here: remaining changes will not force a
+    # write of the manifest, only the lockfile
 
     if args.concrete or args.concrete_only:
         selectors = []

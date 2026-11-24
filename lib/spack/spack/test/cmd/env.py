@@ -482,6 +482,67 @@ spack:
         assert test_spec.satisfies("@3.0.4")
 
 
+def test_change_with_config_and_concrete_flags(
+    mutable_mock_env_path,
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mutable_config,
+    temporary_store: Store,
+    install_mockery,
+    mock_fetch,
+):
+    """Test that --config with --concrete modifies both config and concrete specs.
+
+    This tests that config changes persist through env.mutate() and env.write().
+    The concern is that if config changes write to disk but not to yaml_content,
+    then env.write() from mutate() might overwrite the config changes.
+    """
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  packages:
+    mpich:
+      require: ["@3.0.1"]
+  specs:
+  - mpich@3.0.1
+"""
+    )
+
+    mutable_config.set("config:misc_cache", str(tmp_path / "cache"))
+
+    # Concretize and install the environment first
+    e = ev.Environment(tmp_path)
+    with e:
+        e.concretize()
+        e.write()
+        install("--fake")
+
+    # Now use change with both --config and --concrete
+    with ev.Environment(tmp_path):
+        change("--config", "--concrete", "mpich@3.0.4")
+
+    # Reload and verify both config and concrete specs changed
+    e = ev.Environment(tmp_path)
+    with e:
+        # Check spec list changed
+        assert len(e.user_specs) == 1
+        assert e.user_specs[0].satisfies("mpich@3.0.4")
+
+        # Check config requirement changed (and wasn't overwritten by env.write() in mutate)
+        mpich_config = spack.config.CONFIG.get("packages:mpich:require")
+        assert mpich_config == ["mpich@3.0.4"]
+
+        # Check concrete spec was mutated
+        assert len(e.concretized_roots) == 1
+        concrete_spec = e.specs_by_hash[e.concretized_roots[0].hash]
+        assert concrete_spec.satisfies("mpich@3.0.4")
+
+        # Verify config persists after concretizing a new spec
+        test_spec = spack.concretize.concretize_one("mpich")
+        assert test_spec.satisfies("@3.0.4")
+
+
 def test_env_add_virtual():
     env("create", "test")
     e = ev.read("test")
