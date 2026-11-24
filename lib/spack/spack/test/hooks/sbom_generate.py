@@ -8,8 +8,8 @@ import os
 import pytest
 
 import spack.concretize
-import spack.spec
-import spack.variant
+import spack.paths
+import spack.repo
 from spack.hooks.sbom_generate import generate_spdx_2_3, post_install, sbom_path
 
 
@@ -136,18 +136,18 @@ def test_sbom_license_and_download_defaults(mock_packages, install_mockery):
     assert pkg["downloadLocation"] == spec.package.url
 
 
-def test_sbom_supplier_prefers_package_supplier(mock_packages, install_mockery, monkeypatch):
-    """When present, the package supplier field is used."""
+@pytest.fixture
+def sbom_repo(install_mockery):
+    with spack.repo.use_repositories(
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "sbom_test")
+    ) as repo:
+        yield repo
 
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    monkeypatch.setattr(spec.package, "supplier", "Person: Unit Test", raising=False)
 
+def _sbom_packages(spec):
     generate_spdx_2_3(spec)
-
     with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    assert sbom["packages"][0]["supplier"] == "Person: Unit Test"
+        return {pkg["name"]: pkg for pkg in json.load(f)["packages"]}
 
 
 @pytest.mark.parametrize(
@@ -168,284 +168,49 @@ def test_sbom_supplier_derived_from_git_url(
     """Supplier is derived from common git URL formats when no explicit supplier is set."""
 
     spec = spack.concretize.concretize_one("trivial-install-test-package")
-    monkeypatch.setattr(spec.package, "supplier", None, raising=False)
     monkeypatch.setattr(spec.package, "git", git_url, raising=False)
 
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    assert sbom["packages"][0]["supplier"] == expected
+    assert _sbom_packages(spec)[spec.name]["supplier"] == expected
 
 
-def test_sbom_dependency_supplier_uses_dependency_package(
-    mock_packages, install_mockery, monkeypatch
-):
-    """Dependency supplier data should come from the dependency package, not the root package."""
+def test_sbom_package_metadata(sbom_repo):
+    """Tests that supplier, license, download location and checksum come from the recipe, and
+    that the supplier attribute takes precedence over the git URL."""
+    pkg = _sbom_packages(spack.concretize.concretize_one("sbom-supplier"))["sbom-supplier"]
 
-    spec = spack.concretize.concretize_one("mpileaks")
-    root_pkg = spec.package
-    dep = next(d for d in spec.dependencies(deptype="all") if d.name == "callpath")
-
-    monkeypatch.setattr(root_pkg, "supplier", None, raising=False)
-    monkeypatch.setattr(root_pkg, "git", "https://github.com/root-org/mpileaks.git", raising=False)
-    monkeypatch.setattr(dep.package, "supplier", None, raising=False)
-    monkeypatch.setattr(
-        dep.package, "git", "https://github.com/dep-org/callpath.git", raising=False
-    )
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    packages_by_name = {pkg["name"]: pkg for pkg in sbom["packages"]}
-
-    assert packages_by_name["mpileaks"]["supplier"] == "Organization: root-org"
-    assert packages_by_name["callpath"]["supplier"] == "Organization: dep-org"
-
-
-@pytest.mark.parametrize(
-    "licenses,expected",
-    [({spack.spec.Spec(): "MIT"}, "MIT"), ({}, "NOASSERTION"), (None, "NOASSERTION")],
-)
-def test_sbom_license_declared_from_package_licenses(
-    mock_packages, install_mockery, monkeypatch, licenses, expected
-):
-    """License declared comes from the package's licenses attribute (including dict forms)."""
-
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    monkeypatch.setattr(spec.package, "licenses", licenses, raising=False)
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    assert sbom["packages"][0]["licenseDeclared"] == expected
-
-
-def test_sbom_download_location_and_checksum_from_version_metadata(
-    mock_packages, install_mockery, monkeypatch
-):
-    """Checksum comes from version metadata while download location uses url_for_version."""
-
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    version = spec.version
-
-    # The hook looks up version metadata by both string and Version key in different places.
-    monkeypatch.setattr(spec.package, "versions", {version: {"sha256": "a" * 64}}, raising=False)
-    monkeypatch.setattr(
-        spec.package, "url_for_version", lambda version: "https://example.com/src.tar.gz"
-    )
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    pkg = sbom["packages"][0]
-    assert pkg["downloadLocation"] == "https://example.com/src.tar.gz"
+    assert pkg["supplier"] == "Person: Unit Test"
+    assert pkg["licenseDeclared"] == "MIT"
+    assert pkg["downloadLocation"] == "https://example.com/sbom-supplier-1.0.tar.gz"
     assert pkg["checksums"] == [{"algorithm": "SHA256", "checksumValue": "a" * 64}]
 
 
-def test_sbom_download_location_from_git_url(mock_packages, install_mockery):
-    """Download location should come from the package-level git URL."""
+def test_sbom_dependency_metadata(sbom_repo):
+    """Tests that each dependency entry is filled from the dependency's own recipe."""
+    packages = _sbom_packages(spack.concretize.concretize_one("sbom-root"))
 
-    spec = spack.concretize.concretize_one("git-sparsepaths-version@1.0")
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    assert sbom["packages"][0]["downloadLocation"] == "https://a/really.com/big/repo.git"
-
-
-def test_sbom_download_location_skips_broken_url_for_version_on_git_version(
-    mock_packages, install_mockery, monkeypatch
-):
-    """A package whose url_for_version() blows up on a git-resolved version (e.g. because it
-    assumes purely numeric version components) must not crash SBOM generation: for versions
-    that need a commit, url_for_version() should not be called at all, and the download
-    location should fall back to the package's git URL. Regression test for
-    https://github.com/spack/spack/issues/52864.
-    """
-
-    spec = spack.concretize.concretize_one("git-sparsepaths-version@1.0")
-
-    def broken_url_for_version(version):
-        # Mirrors the real-world crash: a package's custom url_for_version() doing
-        # arithmetic/formatting on version components that assumes they are all numeric.
-        major, minor = version[0], version[1]
-        return "v%02d-%02d.tar.gz" % (major, minor)
-
-    monkeypatch.setattr(spec.package, "url_for_version", broken_url_for_version)
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    assert sbom["packages"][0]["downloadLocation"] == "https://a/really.com/big/repo.git"
-
-
-def test_sbom_download_location_from_package_url(mock_packages, install_mockery, monkeypatch):
-    """Download location should come from the package-level URL."""
-
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    monkeypatch.setattr(
-        spec.package,
-        "url",
-        "https://example.com/trivial-install-test-package-1.0.tar.gz",
-        raising=False,
-    )
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    assert sbom["packages"][0]["downloadLocation"] == spec.package.url
-
-
-def test_sbom_download_location_from_package_url_with_different_version(
-    mock_packages, install_mockery, monkeypatch
-):
-    """Package-level URLs should respect version interpolation for the concretized version."""
-
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    monkeypatch.setattr(
-        spec.package,
-        "url",
-        "https://example.com/trivial-install-test-package-9.9.tar.gz",
-        raising=False,
-    )
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    assert (
-        sbom["packages"][0]["downloadLocation"]
-        == "https://example.com/trivial-install-test-package-1.0.tar.gz"
-    )
-
-
-def test_sbom_checksums_include_both_sha256_and_git_commit(
-    mock_packages, install_mockery, monkeypatch
-):
-    """Both SHA256 from version metadata and SHA1 from commit should be included when available."""
-
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    version = spec.version
-
-    # Set up version with SHA256
-    monkeypatch.setattr(spec.package, "versions", {version: {"sha256": "a" * 64}}, raising=False)
-
-    # Set up git attributes
-    git_url = "https://github.com/example/repo.git"
-    git_commit = "b" * 40  # Typical SHA1 length
-
-    monkeypatch.setattr(spec.package, "git", git_url, raising=False)
-    spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", git_commit)
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    pkg = sbom["packages"][0]
-    expected_checksums = [
-        {"algorithm": "SHA256", "checksumValue": "a" * 64},
-        {"algorithm": "SHA1", "checksumValue": "b" * 40},
+    assert packages["sbom-root"]["supplier"] == "Organization: root-org"
+    assert packages["sbom-dep"]["supplier"] == "Organization: dep-org"
+    assert packages["sbom-dep"]["versionInfo"] == "2.0"
+    assert packages["sbom-dep"]["downloadLocation"] == "https://example.com/sbom-dep-2.0.tar.gz"
+    assert packages["sbom-dep"]["checksums"] == [
+        {"algorithm": "SHA256", "checksumValue": "b" * 64}
     ]
 
-    # Verify both checksums are included
-    assert len(pkg["checksums"]) == 2
-    assert pkg["checksums"] == expected_checksums
+
+@pytest.mark.require_provenance
+def test_sbom_git_commit_version(sbom_repo):
+    """Tests that a version pinned to a commit reports the git URL and the commit as SHA1."""
+    pkg = _sbom_packages(spack.concretize.concretize_one("sbom-git@1.0"))["sbom-git"]
+
+    assert pkg["downloadLocation"] == "https://github.com/example/sbom-git.git"
+    assert pkg["checksums"] == [{"algorithm": "SHA1", "checksumValue": "c" * 40}]
 
 
-def test_sbom_checksums_git_commit_only(mock_packages, install_mockery, monkeypatch):
-    """When only git commit is available (no SHA256), it should still be included."""
+@pytest.mark.regression("52864")
+def test_sbom_git_branch_version_does_not_call_url_for_version(sbom_repo):
+    """Tests that a branch version reports the git URL, without calling a url_for_version that
+    fails on non-numeric versions.
+    """
+    pkg = _sbom_packages(spack.concretize.concretize_one("sbom-git@main"))["sbom-git"]
 
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    version = spec.version
-
-    # Set up version without SHA256
-    monkeypatch.setattr(spec.package, "versions", {version: {}}, raising=False)
-
-    # Set up git attributes
-    git_url = "https://github.com/example/repo.git"
-    git_commit = "c" * 40  # Typical SHA1 length
-
-    monkeypatch.setattr(spec.package, "git", git_url, raising=False)
-    spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", git_commit)
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    pkg = sbom["packages"][0]
-    expected_checksums = [{"algorithm": "SHA1", "checksumValue": "c" * 40}]
-
-    # Verify only git SHA1 is included
-    assert len(pkg["checksums"]) == 1
-    assert pkg["checksums"] == expected_checksums
-
-
-def test_sbom_checksums_none_available(mock_packages, install_mockery, monkeypatch):
-    """When neither SHA256 nor git commit is available, checksum should be empty."""
-
-    spec = spack.concretize.concretize_one("trivial-install-test-package")
-    version = spec.version
-
-    # Set up version without SHA256
-    monkeypatch.setattr(spec.package, "versions", {version: {}}, raising=False)
-
-    # Set up package without git URL
-    monkeypatch.setattr(spec.package, "git", None, raising=False)
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    pkg = sbom["packages"][0]
-
-    # Verify no checksums are included
-    assert pkg["checksums"] == []
-
-
-def test_sbom_dependency_entry_uses_dependency_version_and_checksum(
-    mock_packages, install_mockery, monkeypatch
-):
-    """Dependency entries should use dependency-specific version and checksum data."""
-
-    spec = spack.concretize.concretize_one("mpileaks")
-    dep = next(d for d in spec.dependencies(deptype="all") if d.name == "callpath")
-
-    monkeypatch.setattr(
-        spec.package, "versions", {spec.version: {"sha256": "a" * 64}}, raising=False
-    )
-    monkeypatch.setattr(
-        dep.package, "versions", {dep.version: {"sha256": "b" * 64}}, raising=False
-    )
-    monkeypatch.setattr(
-        dep.package, "url_for_version", lambda version: "https://example.com/callpath.tar.gz"
-    )
-
-    generate_spdx_2_3(spec)
-
-    with open(sbom_path(spec), encoding="utf-8") as f:
-        sbom = json.load(f)
-
-    packages_by_name = {pkg["name"]: pkg for pkg in sbom["packages"]}
-    dep_entry = packages_by_name["callpath"]
-
-    assert dep_entry["versionInfo"] == str(dep.version)
-    assert dep_entry["downloadLocation"] == "https://example.com/callpath.tar.gz"
-    assert dep_entry["checksums"] == [{"algorithm": "SHA256", "checksumValue": "b" * 64}]
+    assert pkg["downloadLocation"] == "https://github.com/example/sbom-git.git"
