@@ -112,11 +112,12 @@ end
 function stream_args -d "echos args as a stream"
     # return the elements of `$argv` as an array
     #  -> since we want to be able to call it as part of `set x (shift_args
-    #     $x)`, we return these one-at-a-time using echo... this means that the
+    #     $x)`, we return these one-at-a-time, newline-separated, so that the
     #     sub-command stream will correctly concatenate the output into an array
-    for elt in $argv
-        echo $elt
-    end
+    #  -> use `printf` (not `echo`): `echo` would interpret an argument like
+    #     `-e`, `-n`, or `-E` as one of its own flags and drop it (this is why
+    #     e.g. `spack cd -e default` used to fail in fish)
+    printf '%s\n' $argv
 end
 
 
@@ -133,12 +134,12 @@ function shift_args -d "simulates bash shift"
     else
         # return the next elements `$argv[2..-1]` as an array
         #  -> since we want to be able to call it as part of `set x (shift_args
-        #     $x)`, we return these one-at-a-time using echo... this means that
-        #     the sub-command stream will correctly concatenate the output into
-        #     an array
-        for elt in $argv[2..-1]
-            echo $elt
-        end
+        #     $x)`, we return these one-at-a-time, newline-separated, so that the
+        #     sub-command stream will correctly concatenate the output into an
+        #     array
+        #  -> use `printf` (not `echo`): `echo` would interpret an argument like
+        #     `-e`, `-n`, or `-E` as one of its own flags and drop it
+        printf '%s\n' $argv[2..-1]
     end
 
 end
@@ -205,7 +206,7 @@ function get_sp_flags -d "return leading flags"
         end
 
         # increment argument counter: used in place of bash's `shift` command
-        set -l i (math $i+1)
+        set i (math $i+1)
 
     end
 
@@ -226,7 +227,7 @@ function check_sp_flags -d "check spack flags for h/V flags"
     # Check if inputs contain h or V flags.
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -245,7 +246,7 @@ end
 
 
 
-function match_flag -d "checks all combinations of flags ocurring inside of a string"
+function match_flag -d "checks all combinations of flags occurring inside of a string"
 
     # Remove leading and trailing spaces -- but we need to insert a "guard" (x)
     # so that eg. `string trim -h` doesn't trigger the help string for `string trim`
@@ -266,7 +267,7 @@ function match_flag -d "checks all combinations of flags ocurring inside of a st
         return 0
     end
 
-    # end of string + leadingg space
+    # end of string + leading space
     if echo "$_a" | string match -r -q " +$_b\$"
         return 0
     end
@@ -287,7 +288,7 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
     # Check if inputs contain -h/--help, --sh, --csh, or --fish
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -335,7 +336,7 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
     # Check if inputs contain --sh, --csh, or --fish
     #
 
-    # combine argument array into single string (space seperated), to be passed
+    # combine argument array into single string (space separated), to be passed
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
@@ -455,7 +456,7 @@ function spack_runner -d "Runner function for the `spack` wrapper"
 
         # CASE: spack subcommand is `env`. Here we get the spack runtime to
         # supply the appropriate shell commands for setting the environment
-        # varibles. These commands are then run by fish (using the `capture_all`
+        # variables. These commands are then run by fish (using the `capture_all`
         # function, instead of a command substitution).
 
         case "env"
@@ -599,7 +600,7 @@ set -l stat $status
 
 
 #
-# Delete temprary global variabels allocated in `allocated_sp_shared`.
+# Delete temporary global variables allocated in `allocated_sp_shared`.
 #
 
 delete_sp_shared
@@ -643,7 +644,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to PATH)"
     #  -> Notes: [1] (cf. EOF).
     if test -d "$pa_new_path"
 
-        # combine argument array into single string (space seperated), to be
+        # combine argument array into single string (space separated), to be
         # passed to regular expression matching (`string match -r`)
         set -l _a "$pa_oldvalue"
 
@@ -716,19 +717,9 @@ set -xg _sp_shell "fish"
 
 
 
-if test -z "$SPACK_SKIP_MODULES"
+if test -z "$SPACK_SKIP_MODULES"; and begin; type -q module; or type -q use; end
     #
-    # Check whether we need environment-variables (module) <= `use` is not available
-    #
-    set -l need_module "no"
-    if not functions -q use; and not functions -q module
-        set need_module "yes"
-    end
-
-
-
-    #
-    # Make environment-modules available to shell
+    # Make shell vars available to fish
     #
     function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
 
@@ -740,34 +731,10 @@ if test -z "$SPACK_SKIP_MODULES"
         set -xg $expr_token[1] (string split ":" $expr_token[2])
     end
 
+    set -l sp_shell_vars (command spack --print-shell-vars sh)
 
-    if test "$need_module" = "yes"
-        set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
-
-        for sp_var_expr in $sp_shell_vars
-            sp_apply_shell_vars $sp_var_expr
-        end
-
-        # _sp_module_prefix is set by spack --print-sh-vars
-        if test "$_sp_module_prefix" != "not_installed"
-            set -xg MODULE_PREFIX $_sp_module_prefix
-            spack_pathadd PATH "$MODULE_PREFIX/bin"
-        end
-
-    else
-
-        set -l sp_shell_vars (command spack --print-shell-vars sh)
-
-        for sp_var_expr in $sp_shell_vars
-            sp_apply_shell_vars $sp_var_expr
-        end
-
-    end
-
-    if test "$need_module" = "yes"
-        function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
-            eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
-        end
+    for sp_var_expr in $sp_shell_vars
+        sp_apply_shell_vars $sp_var_expr
     end
 
 
@@ -783,6 +750,9 @@ if test -z "$SPACK_SKIP_MODULES"
     end
     sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 end
+
+# Add 'spacktivate' abbreviation
+alias spacktivate "spack env activate"
 
 # Add programmable tab completion for fish
 #
@@ -805,7 +775,7 @@ end
 #      prepend a non-flag character, eg: `test "x$a" = "x$b"`.
 #
 # [3]: When the test in the if statement fails, the `status` flag is set to 1.
-#      `true` here manuallt resets the value of `status` to 0. Since `set`
+#      `true` here manually resets the value of `status` to 0. Since `set`
 #      passes `status` along, we thus avoid the function returning 1 by mistake.
 
 # done: unset sentinel variable as we're no longer initializing

@@ -5,6 +5,7 @@
 
 import hashlib
 import json
+import pathlib
 import random
 import urllib.error
 import urllib.parse
@@ -14,6 +15,7 @@ from urllib.request import Request
 import pytest
 
 import spack.mirrors.mirror
+import spack.util.web
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import (
     copy_missing_layers,
@@ -27,9 +29,10 @@ from spack.oci.opener import (
     Challenge,
     RealmServiceScope,
     UsernamePassword,
+    _get_basic_challenge,
+    _get_bearer_challenge,
     credentials_from_mirrors,
     default_retry,
-    get_bearer_challenge,
     parse_www_authenticate,
 )
 from spack.test.conftest import MockHTTPResponse
@@ -37,7 +40,8 @@ from spack.test.oci.mock_registry import (
     DummyServer,
     DummyServerUrllibHandler,
     InMemoryOCIRegistry,
-    InMemoryOCIRegistryWithAuth,
+    InMemoryOCIRegistryWithBasicAuth,
+    InMemoryOCIRegistryWithBearerAuth,
     MiddlewareError,
     MockBearerTokenServer,
     create_opener,
@@ -51,7 +55,7 @@ def test_parse_www_authenticate():
     www_authenticate = 'Bearer realm="https://spack.io/authenticate",service="spack-registry",scope="repository:spack-registry:pull,push"'
     assert parse_www_authenticate(www_authenticate) == [
         Challenge(
-            "Bearer",
+            "bearer",
             [
                 ("realm", "https://spack.io/authenticate"),
                 ("service", "spack-registry"),
@@ -60,18 +64,18 @@ def test_parse_www_authenticate():
         )
     ]
 
-    assert parse_www_authenticate("Bearer") == [Challenge("Bearer")]
+    assert parse_www_authenticate("Bearer") == [Challenge("bearer")]
     assert parse_www_authenticate("MethodA, MethodB,MethodC") == [
-        Challenge("MethodA"),
-        Challenge("MethodB"),
-        Challenge("MethodC"),
+        Challenge("methoda"),
+        Challenge("methodb"),
+        Challenge("methodc"),
     ]
 
     assert parse_www_authenticate(
         'Digest realm="Digest Realm", nonce="1234567890", algorithm=MD5, qop="auth"'
     ) == [
         Challenge(
-            "Digest",
+            "digest",
             [
                 ("realm", "Digest Realm"),
                 ("nonce", "1234567890"),
@@ -84,8 +88,12 @@ def test_parse_www_authenticate():
     assert parse_www_authenticate(
         r'Newauth realm="apps", type=1, title="Login to \"apps\"", Basic realm="simple"'
     ) == [
-        Challenge("Newauth", [("realm", "apps"), ("type", "1"), ("title", 'Login to "apps"')]),
-        Challenge("Basic", [("realm", "simple")]),
+        Challenge("newauth", [("realm", "apps"), ("type", "1"), ("title", 'Login to "apps"')]),
+        Challenge("basic", [("realm", "simple")]),
+    ]
+
+    assert parse_www_authenticate(r'BASIC REALM="simple"') == [
+        Challenge("basic", [("realm", "simple")])
     ]
 
 
@@ -113,15 +121,71 @@ def test_invalid_www_authenticate(invalid_str):
         parse_www_authenticate(invalid_str)
 
 
+def test_get_basic_challenge():
+    """Test extracting Basic challenge from a list of challenges"""
+
+    # No basic challenge
+    assert (
+        _get_basic_challenge(
+            [
+                Challenge(
+                    "bearer",
+                    [
+                        ("realm", "https://spack.io/authenticate"),
+                        ("service", "spack-registry"),
+                        ("scope", "repository:spack-registry:pull,push"),
+                    ],
+                ),
+                Challenge(
+                    "digest",
+                    [
+                        ("realm", "Digest Realm"),
+                        ("nonce", "1234567890"),
+                        ("algorithm", "MD5"),
+                        ("qop", "auth"),
+                    ],
+                ),
+            ]
+        )
+        is None
+    )
+
+    # Multiple challenges, should pick the basic one and return its realm.
+    assert (
+        _get_basic_challenge(
+            [
+                Challenge(
+                    "dummy",
+                    [
+                        ("realm", "https://example.com/"),
+                        ("service", "service"),
+                        ("scope", "scope"),
+                    ],
+                ),
+                Challenge("basic", [("realm", "simple")]),
+                Challenge(
+                    "bearer",
+                    [
+                        ("realm", "https://spack.io/authenticate"),
+                        ("service", "spack-registry"),
+                        ("scope", "repository:spack-registry:pull,push"),
+                    ],
+                ),
+            ]
+        )
+        == "simple"
+    )
+
+
 def test_get_bearer_challenge():
     """Test extracting Bearer challenge from a list of challenges"""
 
     # Only an incomplete bearer challenge, missing service and scope, not usable.
     assert (
-        get_bearer_challenge(
+        _get_bearer_challenge(
             [
-                Challenge("Bearer", [("realm", "https://spack.io/authenticate")]),
-                Challenge("Basic", [("realm", "simple")]),
+                Challenge("bearer", [("realm", "https://spack.io/authenticate")]),
+                Challenge("basic", [("realm", "simple")]),
                 Challenge(
                     "Digest",
                     [
@@ -137,14 +201,14 @@ def test_get_bearer_challenge():
     )
 
     # Multiple challenges, should pick the bearer one.
-    assert get_bearer_challenge(
+    assert _get_bearer_challenge(
         [
             Challenge(
-                "Dummy",
+                "dummy",
                 [("realm", "https://example.com/"), ("service", "service"), ("scope", "scope")],
             ),
             Challenge(
-                "Bearer",
+                "bearer",
                 [
                     ("realm", "https://spack.io/authenticate"),
                     ("service", "spack-registry"),
@@ -162,16 +226,17 @@ def test_get_bearer_challenge():
     [
         ("public.example.com/spack-registry:latest", "public_token"),
         ("private.example.com/spack-registry:latest", "private_token"),
+        ("oauth.example.com/spack-registry:latest", "oauth_token"),
     ],
 )
-def test_automatic_oci_authentication(image_ref, token):
+def test_automatic_oci_bearer_authentication(image_ref: str, token: str):
     image = ImageReference.from_string(image_ref)
 
     def credentials_provider(domain: str):
         return UsernamePassword("user", "pass") if domain == "private.example.com" else None
 
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain, token=token, realm="https://auth.example.com/login"
         ),
         MockBearerTokenServer("auth.example.com"),
@@ -183,13 +248,34 @@ def test_automatic_oci_authentication(image_ref, token):
     assert opener.open(image.endpoint()).status == 200
 
 
+def test_automatic_oci_basic_authentication():
+    image = ImageReference.from_string("private.example.com/image")
+    server = InMemoryOCIRegistryWithBasicAuth(
+        image.domain, username="user", password="pass", realm="example.com"
+    )
+
+    # With correct credentials we should get a 200
+    opener_with_correct_auth = create_opener(
+        server, credentials_provider=lambda domain: UsernamePassword("user", "pass")
+    )
+    assert opener_with_correct_auth.open(image.endpoint()).status == 200
+
+    # With wrong credentials we should get a 401
+    opener_with_wrong_auth = create_opener(
+        server, credentials_provider=lambda domain: UsernamePassword("wrong", "wrong")
+    )
+    with pytest.raises(urllib.error.HTTPError) as e:
+        opener_with_wrong_auth.open(image.endpoint())
+    assert e.value.getcode() == 401
+
+
 def test_wrong_credentials():
     """Test that when wrong credentials are rejected by the auth server, we
     get a 401 error."""
     credentials_provider = lambda domain: UsernamePassword("wrong", "wrong")
     image = ImageReference.from_string("private.example.com/image")
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain, token="something", realm="https://auth.example.com/login"
         ),
         MockBearerTokenServer("auth.example.com"),
@@ -209,7 +295,7 @@ def test_wrong_bearer_token_returned_by_auth_server():
     registry, etc."""
     image = ImageReference.from_string("private.example.com/image")
     opener = create_opener(
-        InMemoryOCIRegistryWithAuth(
+        InMemoryOCIRegistryWithBearerAuth(
             image.domain,
             token="other_token_than_token_server_provides",
             realm="https://auth.example.com/login",
@@ -249,7 +335,7 @@ def test_registry_with_short_lived_bearer_tokens():
     credentials_provider = lambda domain: UsernamePassword("user", "pass")
 
     auth_server = TrivialAuthServer("auth.example.com", token="token")
-    registry_server = InMemoryOCIRegistryWithAuth(
+    registry_server = InMemoryOCIRegistryWithBearerAuth(
         image.domain, token="token", realm="https://auth.example.com/login"
     )
     urlopen = create_opener(
@@ -280,8 +366,8 @@ def test_registry_with_short_lived_bearer_tokens():
         ("GET", "/v2/"),  # 2: retry with bearer token
         ("GET", "/v2/"),  # 3: with incorrect bearer token
         ("GET", "/v2/"),  # 4: retry with new bearer token
-        ("GET", "/v2/"),  # 5: with recyled correct bearer token
-        ("GET", "/v2/"),  # 6: with recyled correct bearer token
+        ("GET", "/v2/"),  # 5: with recycled correct bearer token
+        ("GET", "/v2/"),  # 6: with recycled correct bearer token
     ]
 
 
@@ -306,8 +392,8 @@ class InMemoryRegistryWithUnsupportedAuth(InMemoryOCIRegistry):
     [
         # missing service and scope
         ('Bearer realm="https://auth.example.com/login"', "unsupported authentication scheme"),
-        # we don't do basic auth
-        ('Basic realm="https://auth.example.com/login"', "unsupported authentication scheme"),
+        # missing realm
+        ("Basic", "unsupported authentication scheme"),
         # multiple unsupported challenges
         (
             "CustomChallenge method=unsupported, OtherChallenge method=x,param=y",
@@ -338,7 +424,7 @@ def test_auth_method_we_cannot_handle_is_error(www_authenticate, error_message):
 # Parametrize over single POST vs POST + PUT.
 @pytest.mark.parametrize("client_single_request", [True, False])
 @pytest.mark.parametrize("server_single_request", [True, False])
-def test_oci_registry_upload(tmpdir, client_single_request, server_single_request):
+def test_oci_registry_upload(tmp_path: pathlib.Path, client_single_request, server_single_request):
     opener = urllib.request.OpenerDirector()
     opener.add_handler(
         DummyServerUrllibHandler().add_server(
@@ -349,11 +435,11 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     opener.add_handler(urllib.request.HTTPErrorProcessor())
 
     # Create a small blob
-    blob = tmpdir.join("blob")
-    blob.write("Hello world!")
+    blob = tmp_path / "blob"
+    blob.write_text("Hello world!")
 
     image = ImageReference.from_string("example.com/image:latest")
-    digest = Digest.from_sha256(hashlib.sha256(blob.read_binary()).hexdigest())
+    digest = Digest.from_sha256(hashlib.sha256(blob.read_bytes()).hexdigest())
 
     # Set small file size larger than the blob iff we're doing single request
     small_file_size = 1024 if client_single_request else 0
@@ -361,7 +447,7 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     # Upload once, should actually upload
     assert upload_blob(
         ref=image,
-        file=blob.strpath,
+        file=str(blob),
         digest=digest,
         small_file_size=small_file_size,
         _urlopen=opener.open,
@@ -370,7 +456,7 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     # Second time should exit as it exists
     assert not upload_blob(
         ref=image,
-        file=blob.strpath,
+        file=str(blob),
         digest=digest,
         small_file_size=small_file_size,
         _urlopen=opener.open,
@@ -379,7 +465,7 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     # Force upload should upload again
     assert upload_blob(
         ref=image,
-        file=blob.strpath,
+        file=str(blob),
         digest=digest,
         force=True,
         small_file_size=small_file_size,
@@ -387,7 +473,7 @@ def test_oci_registry_upload(tmpdir, client_single_request, server_single_reques
     )
 
 
-def test_copy_missing_layers(tmpdir, config):
+def test_copy_missing_layers(tmp_path: pathlib.Path, config):
     """Test copying layers from one registry to another.
     Creates 3 blobs, 1 config and 1 manifest in registry A
     and copies layers to registry B. Then checks that all
@@ -409,23 +495,21 @@ def test_copy_missing_layers(tmpdir, config):
     # TODO: make it a bit easier to create bunch of blobs + config + manifest?
 
     # Create a few blobs and a config file
-    blobs = [tmpdir.join(f"blob{i}") for i in range(3)]
+    blobs = [tmp_path / f"blob{i}" for i in range(3)]
 
     for i, blob in enumerate(blobs):
-        blob.write(f"Blob {i}")
+        blob.write_text(f"Blob {i}")
 
-    digests = [
-        Digest.from_sha256(hashlib.sha256(blob.read_binary()).hexdigest()) for blob in blobs
-    ]
+    digests = [Digest.from_sha256(hashlib.sha256(blob.read_bytes()).hexdigest()) for blob in blobs]
 
     config = default_config(architecture="amd64", os="linux")
-    configfile = tmpdir.join("config.json")
-    configfile.write(json.dumps(config))
-    config_digest = Digest.from_sha256(hashlib.sha256(configfile.read_binary()).hexdigest())
+    configfile = tmp_path / "config.json"
+    configfile.write_text(json.dumps(config))
+    config_digest = Digest.from_sha256(hashlib.sha256(configfile.read_bytes()).hexdigest())
 
     for blob, digest in zip(blobs, digests):
-        upload_blob(src, blob.strpath, digest, _urlopen=urlopen)
-    upload_blob(src, configfile.strpath, config_digest, _urlopen=urlopen)
+        upload_blob(src, str(blob), digest, _urlopen=urlopen)
+    upload_blob(src, str(configfile), config_digest, _urlopen=urlopen)
 
     # Then create a manifest referencing them
     manifest = default_manifest()
@@ -435,14 +519,14 @@ def test_copy_missing_layers(tmpdir, config):
             {
                 "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
                 "digest": str(digest),
-                "size": blob.size(),
+                "size": blob.stat().st_size,
             }
         )
 
     manifest["config"] = {
         "mediaType": "application/vnd.oci.image.config.v1+json",
         "digest": str(config_digest),
-        "size": configfile.size(),
+        "size": configfile.stat().st_size,
     }
 
     upload_manifest(src, manifest, _urlopen=urlopen)
@@ -453,7 +537,7 @@ def test_copy_missing_layers(tmpdir, config):
     # Check that all layers (not config) were copied and identical
     assert len(dst_registry.blobs) == len(blobs)
     for blob, digest in zip(blobs, digests):
-        assert dst_registry.blobs.get(str(digest)) == blob.read_binary()
+        assert dst_registry.blobs.get(str(digest)) == blob.read_bytes()
 
     is_upload = lambda method, path: method == "POST" and path == "/v2/image/blobs/uploads/"
     is_exists = lambda method, path: method == "HEAD" and path.startswith("/v2/image/blobs/")
@@ -475,6 +559,13 @@ def test_copy_missing_layers(tmpdir, config):
 def test_image_from_mirror():
     mirror = spack.mirrors.mirror.Mirror("oci://example.com/image")
     assert image_from_mirror(mirror) == ImageReference.from_string("example.com/image")
+
+
+def test_image_from_mirror_with_http_scheme():
+    image = image_from_mirror(spack.mirrors.mirror.Mirror({"url": "oci+http://example.com/image"}))
+    assert image.scheme == "http"
+    assert image.with_tag("latest").scheme == "http"
+    assert image.with_digest(f"sha256:{1234:064x}").scheme == "http"
 
 
 def test_image_reference_str():
@@ -504,52 +595,71 @@ def test_image_reference_invalid(image):
         ImageReference.from_string(image)
 
 
-def test_default_credentials_provider():
+def test_default_credentials_provider(monkeypatch):
     """The default credentials provider uses a collection of configured
     mirrors."""
+
+    monkeypatch.setenv("_SPACK_TEST_PASSWORD", "pass")
 
     mirrors = [
         # OCI mirror with push credentials
         spack.mirrors.mirror.Mirror(
-            {"url": "oci://a.example.com/image", "push": {"access_pair": ["user.a", "pass.a"]}}
+            {
+                "url": "oci://a.example.com/image",
+                "push": {
+                    "access_pair": {"id": "user.a", "secret_variable": "_SPACK_TEST_PASSWORD"}
+                },
+            }
         ),
         # Not an OCI mirror
         spack.mirrors.mirror.Mirror(
-            {"url": "https://b.example.com/image", "access_pair": ["user.b", "pass.b"]}
+            {
+                "url": "https://b.example.com/image",
+                "access_pair": {"id": "user.b", "secret_variable": "_SPACK_TEST_PASSWORD"},
+            }
         ),
         # No credentials
         spack.mirrors.mirror.Mirror("oci://c.example.com/image"),
         # Top-level credentials
         spack.mirrors.mirror.Mirror(
-            {"url": "oci://d.example.com/image", "access_pair": ["user.d", "pass.d"]}
+            {
+                "url": "oci://d.example.com/image",
+                "access_pair": {"id": "user.d", "secret_variable": "_SPACK_TEST_PASSWORD"},
+            }
         ),
         # Dockerhub short reference
         spack.mirrors.mirror.Mirror(
-            {"url": "oci://user/image", "access_pair": ["dockerhub_user", "dockerhub_pass"]}
+            {
+                "url": "oci://user/image",
+                "access_pair": {"id": "dockerhub_user", "secret_variable": "_SPACK_TEST_PASSWORD"},
+            }
         ),
         # Localhost (not a dockerhub short reference)
         spack.mirrors.mirror.Mirror(
-            {"url": "oci://localhost/image", "access_pair": ["user.localhost", "pass.localhost"]}
+            {
+                "url": "oci://localhost/image",
+                "access_pair": {"id": "user.localhost", "secret_variable": "_SPACK_TEST_PASSWORD"},
+            }
         ),
     ]
 
     assert credentials_from_mirrors("a.example.com", mirrors=mirrors) == UsernamePassword(
-        "user.a", "pass.a"
+        "user.a", "pass"
     )
     assert credentials_from_mirrors("b.example.com", mirrors=mirrors) is None
     assert credentials_from_mirrors("c.example.com", mirrors=mirrors) is None
     assert credentials_from_mirrors("d.example.com", mirrors=mirrors) == UsernamePassword(
-        "user.d", "pass.d"
+        "user.d", "pass"
     )
     assert credentials_from_mirrors("index.docker.io", mirrors=mirrors) == UsernamePassword(
-        "dockerhub_user", "dockerhub_pass"
+        "dockerhub_user", "pass"
     )
     assert credentials_from_mirrors("localhost", mirrors=mirrors) == UsernamePassword(
-        "user.localhost", "pass.localhost"
+        "user.localhost", "pass"
     )
 
 
-def test_manifest_index(tmpdir):
+def test_manifest_index(tmp_path: pathlib.Path):
     """Test obtaining manifest + config from a registry
     that has an index"""
     urlopen = create_opener(InMemoryOCIRegistry("registry.example.com")).open
@@ -560,18 +670,18 @@ def test_manifest_index(tmpdir):
     manifest_descriptors = []
     manifest_and_config = {}
     for arch in ("amd64", "arm64"):
-        file = tmpdir.join(f"config_{arch}.json")
+        file = tmp_path / f"config_{arch}.json"
         config = default_config(architecture=arch, os="linux")
-        file.write(json.dumps(config))
-        config_digest = Digest.from_sha256(hashlib.sha256(file.read_binary()).hexdigest())
-        assert upload_blob(img, file, config_digest, _urlopen=urlopen)
+        file.write_text(json.dumps(config))
+        config_digest = Digest.from_sha256(hashlib.sha256(file.read_bytes()).hexdigest())
+        assert upload_blob(img, str(file), config_digest, _urlopen=urlopen)
         manifest = {
             "schemaVersion": 2,
             "mediaType": "application/vnd.oci.image.manifest.v1+json",
             "config": {
                 "mediaType": "application/vnd.oci.image.config.v1+json",
                 "digest": str(config_digest),
-                "size": file.size(),
+                "size": file.stat().st_size,
             },
             "layers": [],
         }
@@ -653,14 +763,11 @@ class BrokenServer(DummyServer):
         ("https://example.com/not-found/", 3, True, 1),
     ],
 )
-def test_retry(url, max_retries, expect_failure, expect_requests):
+def test_retry(url, max_retries, expect_failure, expect_requests, mock_sleep):
     server = BrokenServer("example.com")
     urlopen = create_opener(server).open
-    sleep_time = []
-    dont_sleep = lambda t: sleep_time.append(t)  # keep track of sleep times
-
     try:
-        response = default_retry(urlopen, retries=max_retries, sleep=dont_sleep)(url)
+        response = default_retry(urlopen, spack.util.web.Retry(total=max_retries))(url)
     except urllib.error.HTTPError as e:
         if not expect_failure:
             assert False, f"Unexpected HTTPError: {e}"
@@ -670,7 +777,7 @@ def test_retry(url, max_retries, expect_failure, expect_requests):
         assert response.status == 200
 
     assert len(server.requests) == expect_requests
-    assert sleep_time == [2**i for i in range(expect_requests - 1)]
+    assert mock_sleep.times == [2**i for i in range(expect_requests - 1)]
 
 
 def test_list_tags():

@@ -1,0 +1,8 @@
+enable:
+  - tcl
+tcl:
+  all:
+    autoload: none
+    suffixes:
+      'mpich': namematch
+      '^mpich': depmatch

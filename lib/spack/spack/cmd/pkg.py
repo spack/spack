@@ -3,34 +3,34 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import itertools
 import os
 import sys
-
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.repo
 import spack.util.executable as exe
 import spack.util.package_hash as ph
 from spack.cmd.common import arguments
+from spack.util import tty
+from spack.util.tty.colify import colify
 
 description = "query packages associated with particular git revisions"
 section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="pkg_command")
 
     add_parser = sp.add_parser("add", help=pkg_add.__doc__)
     arguments.add_common_arguments(add_parser, ["packages"])
+    add_parser.set_defaults(subparser=add_parser)
 
     list_parser = sp.add_parser("list", help=pkg_list.__doc__)
     list_parser.add_argument(
         "rev", default="HEAD", nargs="?", help="revision to list packages for"
     )
+    list_parser.set_defaults(subparser=list_parser)
 
     diff_parser = sp.add_parser("diff", help=pkg_diff.__doc__)
     diff_parser.add_argument(
@@ -39,12 +39,14 @@ def setup_parser(subparser):
     diff_parser.add_argument(
         "rev2", nargs="?", default="HEAD", help="revision to compare to rev1 (default is HEAD)"
     )
+    diff_parser.set_defaults(subparser=diff_parser)
 
     add_parser = sp.add_parser("added", help=pkg_added.__doc__)
     add_parser.add_argument("rev1", nargs="?", default="HEAD^", help="revision to compare against")
     add_parser.add_argument(
         "rev2", nargs="?", default="HEAD", help="revision to compare to rev1 (default is HEAD)"
     )
+    add_parser.set_defaults(subparser=add_parser)
 
     add_parser = sp.add_parser("changed", help=pkg_changed.__doc__)
     add_parser.add_argument("rev1", nargs="?", default="HEAD^", help="revision to compare against")
@@ -58,12 +60,14 @@ def setup_parser(subparser):
         default="C",
         help="types of changes to show (A: added, R: removed, C: changed); default is 'C'",
     )
+    add_parser.set_defaults(subparser=add_parser)
 
     rm_parser = sp.add_parser("removed", help=pkg_removed.__doc__)
     rm_parser.add_argument("rev1", nargs="?", default="HEAD^", help="revision to compare against")
     rm_parser.add_argument(
         "rev2", nargs="?", default="HEAD", help="revision to compare to rev1 (default is HEAD)"
     )
+    rm_parser.set_defaults(subparser=rm_parser)
 
     # explicitly add help for `spack pkg grep` with just `--help` and NOT `-h`. This is so
     # that the very commonly used -h (no filename) argument can be passed through to grep
@@ -72,6 +76,7 @@ def setup_parser(subparser):
         "grep_args", nargs=argparse.REMAINDER, default=None, help="arguments for grep"
     )
     grep_parser.add_argument("--help", action="help", help="show this help message and exit")
+    grep_parser.set_defaults(subparser=grep_parser)
 
     source_parser = sp.add_parser("source", help=pkg_source.__doc__)
     source_parser.add_argument(
@@ -82,24 +87,26 @@ def setup_parser(subparser):
         help="dump canonical source as used by package hash",
     )
     arguments.add_common_arguments(source_parser, ["spec"])
+    source_parser.set_defaults(subparser=source_parser)
 
     hash_parser = sp.add_parser("hash", help=pkg_hash.__doc__)
     arguments.add_common_arguments(hash_parser, ["spec"])
+    hash_parser.set_defaults(subparser=hash_parser)
 
 
 def pkg_add(args):
-    """add a package to the git stage with `git add`"""
-    spack.repo.add_package_to_git_stage(args.packages)
+    """add a package to the git stage with ``git add``"""
+    spack.repo.add_package_to_git_stage(args.packages, spack.repo.builtin_repo())
 
 
 def pkg_list(args):
     """list packages associated with a particular spack git revision"""
-    colify(spack.repo.list_packages(args.rev))
+    colify(spack.repo.list_packages(args.rev, spack.repo.builtin_repo()))
 
 
 def pkg_diff(args):
     """compare packages available in two different git revisions"""
-    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2)
+    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2, spack.repo.builtin_repo())
 
     if u1:
         print("%s:" % args.rev1)
@@ -114,21 +121,23 @@ def pkg_diff(args):
 
 def pkg_removed(args):
     """show packages removed since a commit"""
-    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2)
+    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2, spack.repo.builtin_repo())
     if u1:
         colify(sorted(u1))
 
 
 def pkg_added(args):
     """show packages added since a commit"""
-    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2)
+    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2, spack.repo.builtin_repo())
     if u2:
         colify(sorted(u2))
 
 
 def pkg_changed(args):
     """show packages changed since a commit"""
-    packages = spack.repo.get_all_package_diffs(args.type, args.rev1, args.rev2)
+    packages = spack.repo.get_all_package_diffs(
+        args.type, spack.repo.builtin_repo(), args.rev1, args.rev2
+    )
 
     if packages:
         colify(sorted(packages))
@@ -138,7 +147,7 @@ def pkg_source(args):
     """dump source code for a package"""
     specs = spack.cmd.parse_specs(args.spec, concretize=False)
     if len(specs) != 1:
-        tty.die("spack pkg source requires exactly one spec")
+        args.subparser.error("requires exactly one spec")
 
     spec = specs[0]
     filename = spack.repo.PATH.filename_for_package_name(spec.name)
@@ -146,7 +155,7 @@ def pkg_source(args):
     # regular source dump -- just get the package and print its contents
     if args.canonical:
         message = "Canonical source for %s:" % filename
-        content = ph.canonical_source(spec)
+        content = ph.canonical_source(spec, repo=spack.repo.PATH)
     else:
         message = "Source for %s:" % filename
         with open(filename, encoding="utf-8") as f:
@@ -162,13 +171,14 @@ def pkg_hash(args):
     specs = spack.cmd.parse_specs(args.spec, concretize=False)
 
     for spec in specs:
-        print(ph.package_hash(spec))
+        print(ph.package_hash(spec, repo=spack.repo.PATH))
 
 
 def get_grep(required=False):
     """Get a grep command to use with ``spack pkg grep``."""
     grep = exe.which(os.environ.get("SPACK_GREP") or "grep", required=required)
-    grep.ignore_quotes = True  # allow `spack pkg grep '"quoted string"'` without warning
+    if grep:
+        grep.ignore_quotes = True  # allow `spack pkg grep '"quoted string"'` without warning
     return grep
 
 
@@ -180,21 +190,25 @@ def pkg_grep(args, unknown_args):
     if "GNU" in grep("--version", output=str):
         grep.add_default_arg("--color=auto")
 
-    # determines number of files to grep at a time
-    grouper = lambda e: e[0] // 500
+    all_paths = spack.repo.PATH.all_package_paths()
+    if not all_paths:
+        return 0  # no packages to search
+
+    # these args start every command invocation (grep arg1 arg2 ...)
+    all_prefix_args = grep.exe + args.grep_args + unknown_args
+    prefix_length = sum(spack.cmd.converted_arg_length(arg) for arg in all_prefix_args) + len(
+        all_prefix_args
+    )
 
     # set up iterator and save the first group to ensure we don't end up with a group of size 1
-    groups = itertools.groupby(enumerate(spack.repo.PATH.all_package_paths()), grouper)
-    if not groups:
-        return 0  # no packages to search
+    groups = spack.cmd.group_arguments(all_paths, prefix_length=prefix_length)
 
     # You can force GNU grep to show filenames on every line with -H, but not POSIX grep.
     # POSIX grep only shows filenames when you're grepping 2 or more files.  Since we
     # don't know which one we're running, we ensure there are always >= 2 files by
     # saving the prior group of paths and adding it to a straggling group of 1 if needed.
     # This works unless somehow there is only one package in all of Spack.
-    _, first_group = next(groups)
-    prior_paths = [path for _, path in first_group]
+    prior_paths = next(groups)
 
     # grep returns 1 for nothing found, 0 for something found, and > 1 for error
     return_code = 1
@@ -205,9 +219,7 @@ def pkg_grep(args, unknown_args):
         grep(*all_args, fail_on_error=False)
         return grep.returncode
 
-    for _, group in groups:
-        paths = [path for _, path in group]  # extract current path group
-
+    for paths in groups:
         if len(paths) == 1:
             # Only the very last group can have length 1. If it does, combine
             # it with the prior group to ensure more than one path is grepped.
@@ -249,6 +261,6 @@ def pkg(parser, args, unknown_args):
     if args.pkg_command == "grep":
         return pkg_grep(args, unknown_args)
     elif unknown_args:
-        tty.die("unrecognized arguments: %s" % " ".join(unknown_args))
+        args.subparser.error("unrecognized arguments: %s" % " ".join(unknown_args))
     else:
         return action[args.pkg_command](args)

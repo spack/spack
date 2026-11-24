@@ -1,21 +1,23 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import warnings
 
-import llnl.util.tty as tty
-import llnl.util.tty.colify
-import llnl.util.tty.color as cl
-
 import spack.audit
+import spack.caches
+import spack.config
 import spack.repo
+import spack.util.tty.colify
+import spack.util.tty.color as cl
+from spack.util import tty
 
 description = "audit configuration files, packages, etc."
-section = "system"
+section = "packaging"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Top level flags, valid for every audit class
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="subcommand")
 
@@ -59,6 +61,15 @@ def configs(parser, args):
         _process_reports(reports)
 
 
+def _ensure_repos_are_valid() -> None:
+    """Exit with an error if any configured package repository cannot be constructed."""
+    descriptors = spack.repo.RepoDescriptors.from_config(spack.config.CONFIG)
+    _, errors = descriptors.construct(cache=spack.caches.MISC_CACHE)
+    if errors:
+        details = "\n".join(f"  {path}: {error}" for path, error in errors.items())
+        tty.die(f"cannot audit packages, some repositories could not be constructed:\n{details}")
+
+
 def packages(parser, args):
     pkgs = args.name or spack.repo.PATH.all_package_names()
     reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
@@ -68,7 +79,7 @@ def packages(parser, args):
 def packages_https(parser, args):
     # Since packages takes a long time, --all is required without name
     if not args.check_all and not args.name:
-        tty.die("Please specify one or more packages to audit, or --all.")
+        args.subparser.error("please specify one or more packages to audit, or --all")
 
     pkgs = args.name or spack.repo.PATH.all_package_names()
     reports = spack.audit.run_group(args.subcommand, pkgs=pkgs)
@@ -79,7 +90,7 @@ def externals(parser, args):
     if args.list_externals:
         msg = "@*{The following packages have detection tests:}"
         tty.msg(cl.colorize(msg))
-        llnl.util.tty.colify.colify(spack.audit.packages_with_detection_tests(), indent=2)
+        spack.util.tty.colify.colify(spack.audit.packages_with_detection_tests(), indent=2)
         return
 
     pkgs = args.name or spack.repo.PATH.all_package_names()
@@ -108,6 +119,8 @@ def audit(parser, args):
         "packages-https": packages_https,
         "list": list,
     }
+    if args.subcommand not in ("configs", "list"):
+        _ensure_repos_are_valid()
     subcommands[args.subcommand](parser, args)
 
 

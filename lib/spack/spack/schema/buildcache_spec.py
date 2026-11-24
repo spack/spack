@@ -7,6 +7,7 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/buildcache_spec.py
    :lines: 15-
 """
+
 from typing import Any, Dict
 
 import spack.schema.spec
@@ -14,15 +15,7 @@ import spack.schema.spec
 properties: Dict[str, Any] = {
     # `buildinfo` is no longer needed as of Spack 0.21
     "buildinfo": {"type": "object"},
-    "spec": {
-        "type": "object",
-        "additionalProperties": True,
-        "items": spack.schema.spec.properties,
-    },
-    "binary_cache_checksum": {
-        "type": "object",
-        "properties": {"hash_algorithm": {"type": "string"}, "hash": {"type": "string"}},
-    },
+    "spec": {**spack.schema.spec.spec_node, "additionalProperties": True},
     "buildcache_layout_version": {"type": "number"},
 }
 
@@ -30,6 +23,6 @@ schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack buildcache specfile schema",
     "type": "object",
-    "additionalProperties": False,
+    "additionalProperties": True,
     "properties": properties,
 }

@@ -4,14 +4,15 @@
 
 import contextlib
 import os
+import pathlib
 import sys
 
 import pytest
 
 import spack.cmd
-import spack.config
 import spack.extensions
 import spack.main
+from spack.config import Configuration
 
 
 class Extension:
@@ -19,19 +20,21 @@ class Extension:
     directory structures with a conventional format for testing.
     """
 
-    def __init__(self, name, root):
+    def __init__(self, name, root: pathlib.Path):
         """Create a command extension.
 
         Args:
             name (str): The name of the command extension.
             root (path object): The temporary root for the command extension
-                (e.g. from tmpdir.mkdir()).
+                (e.g. from tmp_path.mkdir()).
         """
         self.name = name
         self.pname = spack.cmd.python_name(name)
         self.root = root
-        self.main = self.root.ensure(self.pname, dir=True)
-        self.cmd = self.main.ensure("cmd", dir=True)
+        self.main = self.root / self.pname
+        self.main.mkdir(parents=True, exist_ok=True)
+        self.cmd = self.main / "cmd"
+        self.cmd.mkdir(parents=True, exist_ok=True)
 
     def add_command(self, command_name, contents):
         """Add a command to this command extension.
@@ -42,19 +45,20 @@ class Extension:
                 file."""
         spack.cmd.require_cmd_name(command_name)
         python_name = spack.cmd.python_name(command_name)
-        cmd = self.cmd.ensure(python_name + ".py")
-        cmd.write(contents)
+        cmd = self.cmd / (python_name + ".py")
+        cmd.write_text(contents)
 
 
 @pytest.fixture(scope="function")
-def extension_creator(tmpdir, config):
+def extension_creator(tmp_path: pathlib.Path, config: Configuration):
     """Create a basic extension command directory structure"""
 
     @contextlib.contextmanager
     def _ce(extension_name="testcommand"):
-        root = tmpdir.mkdir("spack-" + extension_name)
+        root = tmp_path / ("spack-" + extension_name)
+        root.mkdir()
         extension = Extension(extension_name, root)
-        with spack.config.override("config:extensions", [str(extension.root)]):
+        with config.override("config:extensions", [str(extension.root)]):
             yield extension
 
     list_of_modules = list(sys.modules.keys())
@@ -90,7 +94,7 @@ def hello_world(parser, args):
 
 @pytest.fixture(scope="function")
 def hello_world_cmd(hello_world_extension):
-    """Create and return an invokable "hello-world" extension command."""
+    """Create and return an invocable "hello-world" extension command."""
     yield spack.main.SpackCommand("hello-world")
 
 
@@ -139,14 +143,13 @@ def hello(parser, args):
         hello_folks()
     elif args.subcommand == 'global':
         print(global_message)
-""".format(
-                    ext_pname=extension.pname
-                ),
+""".format(ext_pname=extension.pname),
             )
 
-            extension.main.ensure("__init__.py")
-            implementation = extension.main.ensure("implementation.py")
-            implementation.write(
+            init_file = extension.main / "__init__.py"
+            init_file.touch()
+            implementation = extension.main / "implementation.py"
+            implementation.write_text(
                 """
 def hello_world():
     print('Hello world!')
@@ -175,7 +178,7 @@ def test_multi_extension_search(hello_world_extension, extension_creator):
         assert ("Hello world") in spack.main.SpackCommand("hello-world")()
 
 
-def test_duplicate_module_load(hello_world_cmd, capsys):
+def test_duplicate_module_load(hello_world_cmd, capfd):
     """Ensure duplicate module load attempts are successful.
 
     The command module will already have been loaded once by the
@@ -185,7 +188,7 @@ def test_duplicate_module_load(hello_world_cmd, capsys):
     args = []
     hw_cmd = spack.cmd.get_command(hello_world_cmd.command_name)
     hw_cmd(parser, args)
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert captured == ("Hello world!\n", "")
 
 
@@ -225,20 +228,24 @@ def test_missing_command():
     ],
     ids=["no_stem", "vacuous", "leading_hyphen", "basic_good", "trailing_slash", "hyphenated"],
 )
-def test_extension_naming(tmpdir, extension_path, expected_exception, config):
+def test_extension_naming(
+    tmp_path: pathlib.Path, extension_path, expected_exception, config: Configuration
+):
     """Ensure that we are correctly validating configured extension paths
     for conformity with the rules: the basename should match
     ``spack-<name>``; <name> may have embedded hyphens but not begin with one.
     """
     # NOTE: if the directory is a valid extension directory name the "vacuous" test will
     # fail because it resolves to current working directory
-    with tmpdir.as_cwd():
-        with spack.config.override("config:extensions", [extension_path]):
+    import spack.util.filesystem as fs
+
+    with fs.working_dir(str(tmp_path)):
+        with config.override("config:extensions", [extension_path]):
             with pytest.raises(expected_exception):
                 spack.cmd.get_module("no-such-command")
 
 
-def test_missing_command_function(extension_creator, capsys):
+def test_missing_command_function(extension_creator, capfd):
     """Ensure we die as expected if a command module does not have the
     expected command function defined.
     """
@@ -246,11 +253,11 @@ def test_missing_command_function(extension_creator, capsys):
         extension.add_command("bad-cmd", """\ndescription = "Empty command implementation"\n""")
         with pytest.raises(SystemExit):
             spack.cmd.get_module("bad-cmd")
-        capture = capsys.readouterr()
+        capture = capfd.readouterr()
         assert "must define function 'bad_cmd'." in capture[1]
 
 
-def test_get_command_paths(config):
+def test_get_command_paths(config: Configuration):
     """Exercise the construction of extension command search paths."""
     extensions = ("extension-1", "extension-2")
     ext_paths = []
@@ -262,11 +269,11 @@ def test_get_command_paths(config):
         path = os.path.abspath(path)
         expected_cmd_paths.append(path)
 
-    with spack.config.override("config:extensions", ext_paths):
+    with config.override("config:extensions", ext_paths):
         assert spack.extensions.get_command_paths() == expected_cmd_paths
 
 
-def test_variable_in_extension_path(config, working_env):
+def test_variable_in_extension_path(config: Configuration, working_env):
     """Test variables in extension paths."""
     os.environ["_MY_VAR"] = os.path.join("my", "var")
     ext_paths = [os.path.join("~", "${_MY_VAR}", "spack-extension-1")]
@@ -275,7 +282,7 @@ def test_variable_in_extension_path(config, working_env):
     expected_ext_paths = [
         os.path.join(os.environ[home_env], os.environ["_MY_VAR"], "spack-extension-1")
     ]
-    with spack.config.override("config:extensions", ext_paths):
+    with config.override("config:extensions", ext_paths):
         assert spack.extensions.get_extension_paths() == expected_ext_paths
 
 

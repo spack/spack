@@ -10,18 +10,17 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import llnl.util.filesystem as fs
-from llnl.util.symlink import readlink
-
 import spack.config
-import spack.hash_types as ht
+import spack.package_prefs
 import spack.projections
 import spack.spec
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 from spack.error import SpackError
+from spack.util.filesystem import readlink
 
 default_projections = {
-    "all": "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+    "all": "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
 }
 
 
@@ -135,8 +134,8 @@ class DirectoryLayout:
         _check_concrete(spec)
         with open(path, "w", encoding="utf-8") as f:
             # The hash of the projection is the DAG hash which contains
-            # the full provenance, so it's availabe if we want it later
-            spec.to_json(f, hash=ht.dag_hash)
+            # the full provenance, so it's available if we want it later
+            spec.to_json(f)
 
     def write_host_environment(self, spec: "spack.spec.Spec") -> None:
         """The host environment is a json file with os, kernel, and spack
@@ -161,7 +160,7 @@ class DirectoryLayout:
                 else:
                     raise SpecReadError(f"Did not recognize spec file extension: {extension}")
         except Exception as e:
-            if spack.config.get("config:debug"):
+            if spack.config.CONFIG.get("config:debug"):
                 raise
             raise SpecReadError(f"Unable to read file: {path}", f"Cause: {e}")
 
@@ -226,18 +225,14 @@ class DirectoryLayout:
     def create_install_directory(self, spec: "spack.spec.Spec") -> None:
         _check_concrete(spec)
 
-        # Create install directory with properly configured permissions
-        # Cannot import at top of file
-        from spack.package_prefs import get_package_dir_permissions, get_package_group
-
         # Each package folder can have its own specific permissions, while
         # intermediate folders (arch/compiler) are set with access permissions
         # equivalent to the root permissions of the layout.
-        group = get_package_group(spec)
-        perms = get_package_dir_permissions(spec)
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, spec.name)
+        spack.package_prefs.warn_if_sgid_on_afs(spec.prefix, perms.dir_mode)
 
-        fs.mkdirp(spec.prefix, mode=perms, group=group, default_perms="parents")
-        fs.mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
+        fs.mkdirp(spec.prefix, mode=perms.dir_mode, group=perms.group, default_perms="parents")
+        fs.mkdirp(self.metadata_path(spec), mode=perms.dir_mode, group=perms.group)  # in prefix
 
         self.write_spec(spec, self.spec_file_path(spec))
 
@@ -284,7 +279,9 @@ class DirectoryLayout:
         Raised RemoveFailedError if something goes wrong.
         """
         path = self.path_for_spec(spec)
-        assert path.startswith(self.root)
+        assert path.startswith(self.root), (
+            "Attempted to remove dir outside Spack's install tree. PATH: {path}, ROOT: {self.root}"
+        )
 
         if deprecated:
             if os.path.exists(path):
@@ -326,8 +323,8 @@ class DirectoryLayout:
             path = os.path.dirname(path)
 
     def all_specs(self) -> List["spack.spec.Spec"]:
-        """Returns a list of all specs detected in self.root, detected by `.spack` directories.
-        Their prefix is set to the directory containing the `.spack` directory. Note that these
+        """Returns a list of all specs detected in self.root, detected by ``.spack`` directories.
+        Their prefix is set to the directory containing the ``.spack`` directory. Note that these
         specs may follow a different layout than the current layout if it was changed after
         installation."""
         return specs_from_metadata_dirs(self.root)
@@ -388,24 +385,3 @@ class InvalidDirectoryLayoutParametersError(DirectoryLayoutError):
 
     def __init__(self, message, long_msg=None):
         super().__init__(message, long_msg)
-
-
-class InvalidExtensionSpecError(DirectoryLayoutError):
-    """Raised when an extension file has a bad spec in it."""
-
-
-class ExtensionAlreadyInstalledError(DirectoryLayoutError):
-    """Raised when an extension is added to a package that already has it."""
-
-    def __init__(self, spec, ext_spec):
-        super().__init__("%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
-
-
-class ExtensionConflictError(DirectoryLayoutError):
-    """Raised when an extension is added to a package that already has it."""
-
-    def __init__(self, spec, ext_spec, conflict):
-        super().__init__(
-            "%s cannot be installed in %s because it conflicts with %s"
-            % (ext_spec.short_spec, spec.short_spec, conflict.short_spec)
-        )

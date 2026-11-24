@@ -4,14 +4,13 @@
 
 import os
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
-from llnl.util.lang import elide_list
-
 import spack.bootstrap
 import spack.config
 import spack.relocate
+from spack.util import tty
 from spack.util.elf import ElfParsingError, parse_elf
+from spack.util.filesystem import BaseDirectoryVisitor, visit_directory_tree
+from spack.util.lang import elide_list
 
 
 def is_shared_library_elf(filepath):
@@ -131,7 +130,7 @@ def find_and_patch_sonames(prefix, exclude_list, patchelf):
 
 def post_install(spec, explicit=None):
     # Skip if disabled
-    if not spack.config.get("config:shared_linking:bind", False):
+    if not spack.config.CONFIG.get("config:shared_linking:bind", False):
         return
 
     # Skip externals

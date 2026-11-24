@@ -2,20 +2,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 
 import pytest
 
-from llnl.util.filesystem import touch
-
 import spack.builder
 import spack.concretize
+import spack.error
 import spack.paths
 import spack.repo
+from spack.util.filesystem import touch
 
 
 @pytest.fixture()
 def builder_test_repository(config):
-    builder_test_path = os.path.join(spack.paths.repos_path, "builder.test")
+    builder_test_path = os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test")
     with spack.repo.use_repositories(builder_test_path) as mock_repo:
         yield mock_repo
 
@@ -76,7 +77,9 @@ def builder_test_repository(config):
 )
 @pytest.mark.usefixtures("builder_test_repository", "config")
 @pytest.mark.disable_clean_stage_check
-def test_callbacks_and_installation_procedure(spec_str, expected_values, working_env):
+def test_callbacks_and_installation_procedure(
+    spec_str, expected_values, working_env, temporary_store
+):
     """Test the correct execution of callbacks and installation procedures for packages."""
     s = spack.concretize.concretize_one(spec_str)
     builder = spack.builder.create(s.package)
@@ -111,7 +114,7 @@ def test_old_style_compatibility_with_super(spec_str, method_name, expected):
 @pytest.mark.regression("33928")
 @pytest.mark.usefixtures("builder_test_repository", "config", "working_env")
 @pytest.mark.disable_clean_stage_check
-def test_build_time_tests_are_executed_from_default_builder():
+def test_build_time_tests_are_executed_from_default_builder(temporary_store):
     s = spack.concretize.concretize_one("old-style-autotools")
     builder = spack.builder.create(s.package)
     builder.pkg.run_tests = True
@@ -152,12 +155,14 @@ def test_monkey_patching_test_log_file():
 # Windows context manager's __exit__ fails with ValueError ("I/O operation
 # on closed file").
 @pytest.mark.not_on_windows("Does not run on windows")
-def test_install_time_test_callback(tmpdir, config, mock_packages, mock_stage):
+def test_install_time_test_callback(
+    tmp_path: pathlib.Path, config, mock_packages, mock_stage, temporary_store
+):
     """Confirm able to run stand-alone test as a post-install callback."""
     s = spack.concretize.concretize_one("py-test-callback")
     builder = spack.builder.create(s.package)
     builder.pkg.run_tests = True
-    s.package.tester.test_log_file = tmpdir.join("install_test.log")
+    s.package.tester.test_log_file = str(tmp_path / "install_test.log")
     touch(s.package.tester.test_log_file)
 
     for phase_fn in builder:
@@ -178,8 +183,101 @@ def test_mixins_with_builders(working_env):
     builder = spack.builder.create(s.package)
 
     # Check that callbacks added by the mixin are in the list
-    assert any(fn.__name__ == "before_install" for _, fn in builder.run_before_callbacks)
-    assert any(fn.__name__ == "after_install" for _, fn in builder.run_after_callbacks)
+    assert any(fn.__name__ == "before_install" for _, fn in builder._run_before_callbacks)
+    assert any(fn.__name__ == "after_install" for _, fn in builder._run_after_callbacks)
 
     # Check that callback from the GenericBuilder are in the list too
-    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder.run_after_callbacks)
+    assert any(fn.__name__ == "sanity_check_prefix" for _, fn in builder._run_after_callbacks)
+
+
+def test_reading_api_v20_attributes():
+    """Tests that we can read attributes from API v2.0 builders."""
+
+    class TestBuilder(spack.builder.Builder):
+        legacy_methods = ("configure", "install")
+        legacy_attributes = ("foo", "bar")
+        legacy_long_methods = ("baz", "fee")
+
+    methods = spack.builder.package_methods(TestBuilder)
+    assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
+    long_methods = spack.builder.package_long_methods(TestBuilder)
+    assert long_methods == ("baz", "fee")
+
+
+def test_reading_api_v22_attributes():
+    """Tests that we can read attributes from API v2.2 builders."""
+
+    class TestBuilder(spack.builder.Builder):
+        package_methods = ("configure", "install")
+        package_attributes = ("foo", "bar")
+        package_long_methods = ("baz", "fee")
+
+    methods = spack.builder.package_methods(TestBuilder)
+    assert methods == ("configure", "install")
+    attributes = spack.builder.package_attributes(TestBuilder)
+    assert attributes == ("foo", "bar")
+    long_methods = spack.builder.package_long_methods(TestBuilder)
+    assert long_methods == ("baz", "fee")
+
+
+@pytest.mark.regression("51917")
+@pytest.mark.usefixtures("builder_test_repository", "config")
+def test_builder_when_inheriting_just_package(working_env):
+    """Tests that if we inherit a package from another package that has a builder defined,
+    but we don't need to modify the builder ourselves, we'll get the builder of the base
+    package class.
+    """
+    base_spec = spack.concretize.concretize_one("callbacks")
+    derived_spec = spack.concretize.concretize_one("inheritance-only-package")
+
+    base_builder = spack.builder.create(base_spec.package)
+    derived_builder = spack.builder.create(derived_spec.package)
+
+    # The derived class doesn't redefine a builder, so we should
+    # get the builder of the base class.
+    assert type(base_builder) is type(derived_builder)
+
+
+@pytest.mark.usefixtures("builder_test_repository", "config")
+def test_get_builder_class_accepts_objects_and_classes():
+    """Tests that get_builder_class works on both package objects and package classes."""
+    pkg_cls = spack.repo.PATH.get_pkg_class("callbacks")
+    builder_cls = spack.builder.get_builder_class(pkg_cls, "GenericBuilder")
+
+    # The builder is defined in the package module, so it is found from the class
+    assert builder_cls is not None
+    assert spack.repo.is_package_module(builder_cls.__module__)
+
+    # ... and an object of that class gives the same answer
+    pkg = spack.concretize.concretize_one("callbacks").package
+    assert spack.builder.get_builder_class(pkg, "GenericBuilder") is builder_cls
+
+    # Derived packages that don't redefine a builder get it from the base package module
+    derived_cls = spack.repo.PATH.get_pkg_class("inheritance-only-package")
+    assert spack.builder.get_builder_class(derived_cls, "GenericBuilder") is builder_cls
+
+    # Names that are not defined in any package module are not builders
+    assert spack.builder.get_builder_class(pkg_cls, "UnknownBuilder") is None
+
+
+def test_register_builder_rejects_duplicate_names():
+    """A build system name can be registered by only one builder class."""
+
+    @spack.builder.register_builder("test-duplicate")
+    class FirstBuilder:
+        pass
+
+    try:
+        # re-registering the same class is idempotent
+        assert spack.builder.register_builder("test-duplicate")(FirstBuilder) is FirstBuilder
+
+        with pytest.raises(spack.error.SpackError, match="already registered"):
+
+            @spack.builder.register_builder("test-duplicate")
+            class SecondBuilder:
+                pass
+
+    finally:
+        del spack.builder.BUILDER_CLS["test-duplicate"]

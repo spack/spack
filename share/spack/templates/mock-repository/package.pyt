@@ -1,3 +1,4 @@
+from ...build_systems.test_build_system import Package
 from spack.package import *
 
 class {{ cls_name }}(Package):

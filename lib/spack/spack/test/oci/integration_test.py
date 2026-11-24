@@ -6,10 +6,13 @@
 # and compression. They still use an in-memory OCI registry.
 
 import hashlib
+import io
 import json
 import os
 import pathlib
 import re
+import sys
+import tarfile
 import urllib.error
 from contextlib import contextmanager
 
@@ -17,15 +20,18 @@ import pytest
 
 import spack.binary_distribution
 import spack.database
+import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
 import spack.oci.opener
 import spack.spec
+import spack.traverse
+from spack.database import Database
 from spack.main import SpackCommand
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
 from spack.test.oci.mock_registry import DummyServer, InMemoryOCIRegistry, create_opener
-from spack.util.archive import gzip_compressed_tarfile
+from spack.util.archive import default_path_to_name, gzip_compressed_tarfile
 
 buildcache = SpackCommand("buildcache")
 mirror = SpackCommand("mirror")
@@ -41,7 +47,7 @@ def oci_servers(*servers: DummyServer):
     spack.oci.opener.urlopen = old_opener
 
 
-def test_buildcache_push_command(mutable_database):
+def test_buildcache_push_command(mutable_database: Database):
     with oci_servers(InMemoryOCIRegistry("example.com")):
         mirror("add", "oci-test", "oci://example.com/image")
 
@@ -58,10 +64,12 @@ def test_buildcache_push_command(mutable_database):
         buildcache("install", "--unsigned", "mpileaks^mpich")
 
         # Now it should be installed again
-        assert spec.installed
+        assert mutable_database.installed(spec)
 
-        # And let's check that the bin/mpileaks executable is there
-        assert os.path.exists(os.path.join(spec.prefix, "bin", "mpileaks"))
+        # And let's check that the bin/mpileaks executable is there (fake installs create
+        # executables with a .exe extension on Windows)
+        exe_suffix = ".exe" if sys.platform == "win32" else ""
+        assert os.path.exists(os.path.join(spec.prefix, "bin", f"mpileaks{exe_suffix}"))
 
 
 def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
@@ -82,7 +90,13 @@ def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
         name = ImageReference.from_string("example.com/image:full_env")
 
         with ev.read("test") as e:
-            specs = [x for x in e.all_specs() if not x.external]
+            specs = [
+                x
+                for x in spack.traverse.traverse_nodes(
+                    e.concrete_roots(), deptype=dt.LINK | dt.RUN
+                )
+                if not x.external
+            ]
 
         manifest, config = get_manifest_and_config(name)
 
@@ -99,10 +113,75 @@ def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
 
         name = ImageReference.from_string("example.com/image:single_spec")
         manifest, config = get_manifest_and_config(name)
-        assert len(manifest["layers"]) == len([x for x in libelf.traverse() if not x.external])
+        assert len(manifest["layers"]) == len(
+            [x for x in libelf.traverse(deptype=dt.LINK | dt.RUN) if not x.external]
+        )
 
 
-def test_buildcache_push_with_base_image_command(mutable_database, tmpdir):
+@pytest.mark.not_on_windows("environment views are symlink based")
+def test_buildcache_tag_env_view(install_mockery, mock_fetch, mutable_mock_env_path, tmp_path):
+    """Tests that --env-view adds the environment view as the last layer of the image, and that
+    the image's environment variables point to the view instead of to the install prefixes."""
+    view_root = str(tmp_path / "view")
+    env("create", "--with-view", view_root, "test")
+    with ev.read("test"):
+        install("--fake", "--add", "libelf")
+
+    registry = InMemoryOCIRegistry("example.com")
+
+    with oci_servers(registry):
+        mirror("add", "oci-test", "oci://example.com/image")
+
+        with ev.read("test") as e:
+            buildcache("push", "--tag", "packages", "oci-test")
+            buildcache("push", "--tag", "with_view", "--env-view", "oci-test")
+            prefix = e.concrete_roots()[0].prefix
+
+        manifest, config = get_manifest_and_config(
+            ImageReference.from_string("example.com/image:packages")
+        )
+        view_manifest, view_config = get_manifest_and_config(
+            ImageReference.from_string("example.com/image:with_view")
+        )
+
+    # The view is one extra layer on top of the package layers
+    assert view_manifest["layers"][:-1] == manifest["layers"]
+    assert view_config["rootfs"]["diff_ids"][:-1] == config["rootfs"]["diff_ids"]
+
+    # Environment variables refer to the view, not to the install prefix
+    path = next(x for x in config["config"]["Env"] if x.startswith("PATH="))
+    view_path = next(x for x in view_config["config"]["Env"] if x.startswith("PATH="))
+    assert os.path.join(prefix, "bin") in path
+    assert os.path.join(view_root, "bin") in view_path
+    assert not any(prefix in entry for entry in view_config["config"]["Env"])
+
+    # The layer contains the view at the same path as on the host, linking to the packages
+    layer = registry.blobs[view_manifest["layers"][-1]["digest"]]
+    with tarfile.open(fileobj=io.BytesIO(layer), mode="r:gz") as tar:
+        members = {m.name: m for m in tar.getmembers()}
+    name = default_path_to_name(os.path.join(view_root, "bin", "libelf"))
+    assert members[name].issym()
+    assert members[name].linkname == os.path.join(prefix, "bin", "libelf")
+
+
+@pytest.mark.parametrize(
+    "args,error",
+    [
+        (["--env-view", "oci-test"], "--env-view requires --tag"),
+        (["--tag", "x", "--env-view", "oci-test", "libelf"], "cannot be combined"),
+        (["--tag", "x", "--env-view", "oci-test"], "requires an environment with a default view"),
+    ],
+)
+def test_buildcache_env_view_usage_errors(args, error, mutable_mock_env_path):
+    mirror("add", "oci-test", "oci://example.com/image")
+    env("create", "--without-view", "test")
+    with ev.read("test"):
+        output = buildcache("push", *args, fail_on_error=False)
+    assert buildcache.returncode != 0
+    assert error in output
+
+
+def test_buildcache_push_with_base_image_command(mutable_database, tmp_path: pathlib.Path):
     """Test that we can push a package with a base image to an OCI registry.
 
     This test is a bit involved, cause we have to create a small base image."""
@@ -122,43 +201,40 @@ def test_buildcache_push_with_base_image_command(mutable_database, tmpdir):
         config, manifest = default_config(architecture="amd64", os="linux"), default_manifest()
 
         # Create a small rootfs
-        rootfs = tmpdir.join("rootfs")
-        rootfs.ensure(dir=True)
-        rootfs.join("bin").ensure(dir=True)
-        rootfs.join("bin", "sh").ensure(file=True)
+        rootfs = tmp_path / "rootfs"
+        rootfs.mkdir()
+        (rootfs / "bin").mkdir()
+        (rootfs / "bin" / "sh").touch()
 
         # Create a tarball of it.
-        tarball = tmpdir.join("base.tar.gz")
-        with gzip_compressed_tarfile(tarball) as (tar, tar_gz_checksum, tar_checksum):
-            tar.add(rootfs, arcname=".")
+        tarball = tmp_path / "base.tar.gz"
+        with gzip_compressed_tarfile(str(tarball)) as (tar, tar_gz_checksum, tar_checksum):
+            tar.add(str(rootfs), arcname=".")
 
         tar_gz_digest = Digest.from_sha256(tar_gz_checksum.hexdigest())
         tar_digest = Digest.from_sha256(tar_checksum.hexdigest())
 
         # Save the config file
         config["rootfs"]["diff_ids"] = [str(tar_digest)]
-        config_file = tmpdir.join("config.json")
-        with open(config_file, "w", encoding="utf-8") as f:
-            f.write(json.dumps(config))
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps(config), encoding="utf-8")
 
-        config_digest = Digest.from_sha256(
-            hashlib.sha256(open(config_file, "rb").read()).hexdigest()
-        )
+        config_digest = Digest.from_sha256(hashlib.sha256(config_file.read_bytes()).hexdigest())
 
         # Register the layer in the manifest
         manifest["layers"].append(
             {
                 "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
                 "digest": str(tar_gz_digest),
-                "size": tarball.size(),
+                "size": tarball.stat().st_size,
             }
         )
         manifest["config"]["digest"] = str(config_digest)
-        manifest["config"]["size"] = config_file.size()
+        manifest["config"]["size"] = config_file.stat().st_size
 
         # Upload the layer and config file
-        upload_blob(base_image, tarball, tar_gz_digest)
-        upload_blob(base_image, config_file, config_digest)
+        upload_blob(base_image, str(tarball), tar_gz_digest)
+        upload_blob(base_image, str(config_file), config_digest)
 
         # Upload the manifest
         upload_manifest(base_image, manifest)
@@ -223,7 +299,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
         (rootfs / "bin").mkdir(parents=True)
         (rootfs / "bin" / "sh").write_text("hello world")
         tarball = tmp_path / "base.tar.gz"
-        with gzip_compressed_tarfile(tarball) as (tar, tar_gz_checksum, tar_checksum):
+        with gzip_compressed_tarfile(str(tarball)) as (tar, tar_gz_checksum, tar_checksum):
             tar.add(rootfs, arcname=".")
         tar_gz_digest = Digest.from_sha256(tar_gz_checksum.hexdigest())
         tar_digest = Digest.from_sha256(tar_checksum.hexdigest())
@@ -249,7 +325,7 @@ def test_uploading_with_base_image_in_docker_image_manifest_v2_format(
             "history": [
                 {
                     "created": "2015-10-31T22:22:54.690851953Z",
-                    "created_by": "/bin/sh -c #(nop) ADD file:a3bc1e842b69636f9df5256c49c5374fb4eef1e281fe3f282c65fb853ee171c5 in /",
+                    "created_by": "/bin/sh -c #(nop) ADD file:a3bc1e842b69636f9df5256c49c5374fb4eef1e281fe3f282c65fb853ee171c5 in /",  # noqa: E501
                 }
             ],
         }

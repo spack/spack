@@ -1,0 +1,9 @@
+enable:
+  - lmod
+lmod:
+  hierarchical: false
+  all:
+    autoload: none
+  projections:
+    all: '{name}/{version}-{compiler.name}'
+    mpileaks: '{name}-mpiprojection'

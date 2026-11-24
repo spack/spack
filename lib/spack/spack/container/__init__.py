@@ -4,13 +4,14 @@
 """Package that provides functions and classes to
 generate container recipes from a Spack environment
 """
+
 import warnings
 
-import jsonschema
+import spack.vendor.jsonschema
 
 import spack.environment as ev
-import spack.schema.env as env
 import spack.util.spack_yaml as syaml
+from spack.schema import env
 
 from .writers import recipe
 
@@ -83,5 +84,5 @@ def validate(configuration_file):
         )
         warnings.warn(msg)
 
-    jsonschema.validate(config, schema=env.schema)
+    spack.vendor.jsonschema.validate(config, schema=env.schema)
     return config

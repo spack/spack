@@ -7,10 +7,9 @@ import os
 import re
 from typing import IO, Dict, List
 
-from llnl.util.filesystem import BaseDirectoryVisitor
-from llnl.util.lang import stable_partition
-
-import spack.util.elf as elf
+from spack.util import elf
+from spack.util.filesystem import BaseDirectoryVisitor
+from spack.util.lang import stable_partition
 
 #: Patterns for names of libraries that are allowed to be unresolved when *just* looking at RPATHs
 #: added by Spack. These are libraries outside of Spack's control, and assumed to be located in
@@ -111,7 +110,7 @@ class ResolveSharedElfLibDepsVisitor(BaseDirectoryVisitor):
         # We work with byte strings for paths.
         path = os.path.join(root, rel_path).encode("utf-8")
 
-        # For $ORIGIN interpolation: should not have trailing dir seperator.
+        # For $ORIGIN interpolation: should not have trailing dir separator.
         origin = os.path.dirname(path)
 
         # Retrieve the needed libs + rpaths.

@@ -3,23 +3,22 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
+import sys
 
 import pytest
 
-import llnl.util.filesystem as fs
-
-import spack.util.executable
+import spack.binary_distribution
+import spack.util.filesystem as fs
 import spack.util.gpg
 from spack.main import SpackCommand
-from spack.paths import mock_gpg_data_path, mock_gpg_keys_path
+from spack.paths import mock_gpg_keys_path
 from spack.util.executable import ProcessError
 
 #: spack command used by tests below
 gpg = SpackCommand("gpg")
 bootstrap = SpackCommand("bootstrap")
 mirror = SpackCommand("mirror")
-
-pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 # test gpg command detection
@@ -32,68 +31,57 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
         ("gpg2", "gpg (GnuPG) 2.2.19"),  # gpg2 command
     ],
 )
-def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
-    TEMPLATE = "#!/bin/sh\n" 'echo "{version}"\n'
+def test_find_gpg(cmd_name, version, tmp_path: pathlib.Path, mock_gnupghome, monkeypatch):
+    if sys.platform == "win32":
+        template, ext = "@echo {version}\n", ".bat"
+    else:
+        template, ext = '#!/bin/sh\necho "{version}"\n', ""
 
-    with tmpdir.as_cwd():
-        for fname in (cmd_name, "gpgconf"):
+    with fs.working_dir(str(tmp_path)):
+        for fname in (cmd_name + ext, "gpgconf" + ext):
             with open(fname, "w", encoding="utf-8") as f:
-                f.write(TEMPLATE.format(version=version))
+                f.write(template.format(version=version))
             fs.set_executable(fname)
 
-    monkeypatch.setenv("PATH", str(tmpdir))
+    monkeypatch.setenv("PATH", str(tmp_path))
     if version == "undetectable" or version.endswith("1.3.4"):
         with pytest.raises(spack.util.gpg.SpackGPGError):
             spack.util.gpg.init(force=True)
     else:
         spack.util.gpg.init(force=True)
         assert spack.util.gpg.GPG is not None
-        assert spack.util.gpg.GPGCONF is not None
 
 
-def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
-    monkeypatch.setenv("PATH", str(tmpdir))
+def test_no_gpg_in_path(tmp_path: pathlib.Path, mock_gnupghome, monkeypatch, mutable_config):
+    monkeypatch.setenv("PATH", str(tmp_path))
     bootstrap("disable")
     with pytest.raises(RuntimeError):
         spack.util.gpg.init(force=True)
 
 
 @pytest.mark.maybeslow
-def test_gpg(tmpdir, mutable_config, mock_gnupghome):
-    # Verify a file with an empty keyring.
-    with pytest.raises(ProcessError):
-        gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
+def test_gpg(tmp_path: pathlib.Path, mutable_config, mock_gnupghome):
+    MOCK_KEY = "B27095DEEF1787C3C8C85917DCA0241840A5DAE2"
 
     # Import the default key.
-    gpg("init", "--from", mock_gpg_keys_path)
+    gpg("init", "-y", "--from", mock_gpg_keys_path)
 
     # List the keys.
     # TODO: Test the output here.
-    gpg("list", "--trusted")
-    gpg("list", "--signing")
+    out = gpg("list", "--trusted")
+    assert out.count(MOCK_KEY) == 1
 
-    # Verify the file now that the key has been trusted.
-    gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
+    out = gpg("list", "--signing")
+    assert out.count(MOCK_KEY) == 1
 
     # Untrust the default key.
     gpg("untrust", "Spack testing")
 
-    # Now that the key is untrusted, verification should fail.
-    with pytest.raises(ProcessError):
-        gpg("verify", os.path.join(mock_gpg_data_path, "content.txt"))
-
-    # Create a file to test signing.
-    test_path = tmpdir.join("to-sign.txt")
-    with open(str(test_path), "w+", encoding="utf-8") as fout:
-        fout.write("Test content for signing.\n")
-
-    # Signing without a private key should fail.
-    with pytest.raises(RuntimeError) as exc_info:
-        gpg("sign", str(test_path))
-    assert exc_info.value.args[0] == "no signing keys are available"
+    out = gpg("list", "--trusted")
+    assert out.count(MOCK_KEY) == 0
 
     # Create a key for use in the tests.
-    keypath = tmpdir.join("testing-1.key")
+    keypath = tmp_path / "testing-1.key"
     gpg(
         "create",
         "--comment",
@@ -103,26 +91,34 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
         "Spack testing 1",
         "spack@googlegroups.com",
     )
-    keyfp = spack.util.gpg.signing_keys()[0]
+    keyfp = spack.util.gpg.signing_keys()[0].fpr
 
     # List the keys.
     # TODO: Test the output here.
-    gpg("list")
-    gpg("list", "--trusted")
-    gpg("list", "--signing")
+    out = gpg("list")
+    assert out.count(MOCK_KEY) == 0
+    assert out.count(keyfp) == 1
 
-    # Signing with the default (only) key.
-    gpg("sign", str(test_path))
+    out = gpg("list", "--trusted")
+    assert out.count(MOCK_KEY) == 0
+    assert out.count(keyfp) == 1
 
-    # Verify the file we just verified.
-    gpg("verify", str(test_path))
+    out = gpg("list", "--signing")
+    assert out.count(MOCK_KEY) == 0
+    # Once for trusted, once for signing
+    assert out.count(keyfp) == 2
 
-    # Export the key for future use.
-    export_path = tmpdir.join("export.testing.key")
+    # Export the public key for future use (keyfp).
+    export_path = tmp_path / "export.testing.key"
     gpg("export", str(export_path))
 
-    # Test exporting the private key
-    private_export_path = tmpdir.join("export-secret.testing.key")
+    # Ensure we exported the right content!
+    with open(str(export_path), "r", encoding="utf-8") as fd:
+        content = fd.read()
+    assert "BEGIN PGP PUBLIC KEY BLOCK" in content
+
+    # Export the private key
+    private_export_path = tmp_path / "export-secret.testing.key"
     gpg("export", "--secret", str(private_export_path))
 
     # Ensure we exported the right content!
@@ -130,30 +126,15 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
         content = fd.read()
     assert "BEGIN PGP PRIVATE KEY BLOCK" in content
 
-    # and for the public key
-    with open(str(export_path), "r", encoding="utf-8") as fd:
-        content = fd.read()
-    assert "BEGIN PGP PUBLIC KEY BLOCK" in content
-
     # Create a second key for use in the tests.
     gpg("create", "--comment", "Spack testing key", "Spack testing 2", "spack@googlegroups.com")
 
     # List the keys.
-    # TODO: Test the output here.
-    gpg("list", "--trusted")
-    gpg("list", "--signing")
-
-    test_path = tmpdir.join("to-sign-2.txt")
-    with open(str(test_path), "w+", encoding="utf-8") as fout:
-        fout.write("Test content for signing.\n")
-
-    # Signing with multiple signing keys is ambiguous.
-    with pytest.raises(RuntimeError) as exc_info:
-        gpg("sign", str(test_path))
-    assert exc_info.value.args[0] == "multiple signing keys are available; please choose one"
-
-    # Signing with a specified key.
-    gpg("sign", "--key", keyfp, str(test_path))
+    out = gpg("list", "--trusted")
+    # Spack testing 1 and Spack testing 2
+    assert out.count("pub ") == 2
+    out = gpg("list", "--signing")
+    assert out.count("sec ") == 2
 
     # Untrusting signing keys needs a flag.
     with pytest.raises(ProcessError):
@@ -162,33 +143,37 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
     # Untrust the key we created.
     gpg("untrust", "--signing", keyfp)
 
-    # Verification should now fail.
-    with pytest.raises(ProcessError):
-        gpg("verify", str(test_path))
+    out = gpg("list", "--signing")
+    assert out.count("sec ") == 1
+    assert out.count(keyfp) == 0
 
+    # Trust the exported public key (keyfpr)
     # Trust the exported key.
-    gpg("trust", str(export_path))
+    gpg("trust", "-y", str(export_path))
+    out = gpg("list", "--signing")
+    assert out.count("sec ") == 1
+    assert out.count("pub ") == 2
+    assert out.count(keyfp) == 1
 
-    # Verification should now succeed again.
-    gpg("verify", str(test_path))
+    relative_keys_path = spack.binary_distribution.buildcache_relative_keys_path()
 
     # Publish the keys using a directory path
-    test_path = tmpdir.join("dir_cache")
-    os.makedirs("%s" % test_path)
+    test_path = tmp_path / "dir_cache"
+    os.makedirs(f"{test_path}")
     gpg("publish", "--rebuild-index", "-d", str(test_path))
-    assert os.path.exists("%s/build_cache/_pgp/index.json" % test_path)
+    assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")
 
     # Publish the keys using a mirror url
-    test_path = tmpdir.join("url_cache")
-    os.makedirs("%s" % test_path)
-    test_url = "file://%s" % test_path
+    test_path = tmp_path / "url_cache"
+    os.makedirs(f"{test_path}")
+    test_url = test_path.as_uri()
     gpg("publish", "--rebuild-index", "--mirror-url", test_url)
-    assert os.path.exists("%s/build_cache/_pgp/index.json" % test_path)
+    assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")
 
     # Publish the keys using a mirror name
-    test_path = tmpdir.join("named_cache")
-    os.makedirs("%s" % test_path)
-    mirror_url = "file://%s" % test_path
+    test_path = tmp_path / "named_cache"
+    os.makedirs(f"{test_path}")
+    mirror_url = test_path.as_uri()
     mirror("add", "gpg", mirror_url)
     gpg("publish", "--rebuild-index", "-m", "gpg")
-    assert os.path.exists("%s/build_cache/_pgp/index.json" % test_path)
+    assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")

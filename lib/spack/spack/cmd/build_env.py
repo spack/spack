@@ -1,12 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.cmd.common.env_utility as env_utility
-from spack.context import Context
 
-description = (
-    "run a command in a spec's install environment, or dump its environment to screen or file"
-)
+from spack.cmd.common import env_utility
+from spack.enums import Context
+
+description = "dump the install environment for a spec,\nor run a command in that environment"
 section = "build"
 level = "long"
 

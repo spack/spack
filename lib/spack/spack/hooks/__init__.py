@@ -10,15 +10,12 @@ Hooks are not executed in any particular order.
 
 Currently the following hooks are supported:
 
-    * pre_install(spec)
-    * post_install(spec, explicit)
-    * pre_uninstall(spec)
-    * post_uninstall(spec)
-
-This can be used to implement support for things like module
-systems (e.g. modules, lmod, etc.) or to add other custom
-features.
+* ``pre_install(spec)``
+* ``post_install(spec, explicit)``
+* ``pre_uninstall(spec)``
+* ``post_uninstall(spec)``
 """
+
 import importlib
 import types
 from typing import List, Optional
@@ -27,7 +24,6 @@ from typing import List, Optional
 class _HookRunner:
     #: Order in which hooks are executed
     HOOK_ORDER = [
-        "spack.hooks.module_file_generation",
         "spack.hooks.licensing",
         "spack.hooks.sbang",
         "spack.hooks.windows_runtime_linkage",
@@ -36,6 +32,7 @@ class _HookRunner:
         "spack.hooks.permissions_setters",
         "spack.hooks.resolve_shared_libraries",
         # after all mutations to the install prefix, write metadata
+        "spack.hooks.sbom_generate",
         "spack.hooks.write_install_manifest",
         # after all metadata is written
         "spack.hooks.autopush",

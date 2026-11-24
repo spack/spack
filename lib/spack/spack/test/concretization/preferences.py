@@ -10,12 +10,13 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.package_prefs
+import spack.paths
 import spack.repo
-import spack.spec
 import spack.util.module_cmd
 import spack.util.spack_yaml as syaml
+from spack.config import Configuration
 from spack.error import ConfigError
-from spack.spec import CompilerSpec, Spec
+from spack.spec import Spec
 from spack.version import Version
 
 
@@ -41,7 +42,7 @@ callpath:
     write: world
 """
     )
-    spack.config.set("packages", conf, scope="concretize")
+    spack.config.CONFIG.set("packages", conf, scope="concretize")
 
     yield
 
@@ -53,7 +54,7 @@ def concretize(abstract_spec):
 def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
-    spack.config.set("packages", conf, scope="concretize")
+    spack.config.CONFIG.set("packages", conf, scope="concretize")
 
 
 def assert_variant_values(spec, **variants):
@@ -98,22 +99,22 @@ class TestConcretizePreferences:
         update_packages(package_name, "variants", variant_value)
         assert_variant_values(package_name, **expected_results)
 
+    @pytest.mark.regression("50921")
+    @pytest.mark.parametrize("config_type", ("require", "prefer"))
+    def test_preferred_commit_variant(self, config_type):
+        """Tests that we can use auto-variants in requirements and preferences."""
+        commit_value = "b" * 40
+        name = "git-ref-package"
+        value = f"commit={commit_value}"
+        update_packages(name, config_type, [value])
+        assert_variant_values(name, **{"commit": commit_value})
+
     def test_preferred_variants_from_wildcard(self):
         """
         Test that 'foo=*' concretizes to any value
         """
         update_packages("multivalue-variant", "variants", "foo=bar")
         assert_variant_values("multivalue-variant foo=*", foo=("bar",))
-
-    @pytest.mark.parametrize(
-        "compiler_str,spec_str",
-        [("gcc@=9.4.0", "mpileaks"), ("clang@=15.0.0", "mpileaks"), ("gcc@=9.4.0", "openmpi")],
-    )
-    def test_preferred_compilers(self, compiler_str, spec_str):
-        """Test preferred compilers are applied correctly"""
-        update_packages("all", "compiler", [compiler_str])
-        spec = spack.concretize.concretize_one(spec_str)
-        assert spec.compiler == CompilerSpec(compiler_str)
 
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred targets are applied correctly"""
@@ -127,12 +128,12 @@ class TestConcretizePreferences:
 
         spec = concretize("mpileaks")
         assert str(spec["mpileaks"].target) == preferred
-        assert str(spec["mpich"].target) == preferred
+        assert str(spec["mpi"].target) == preferred
 
         update_packages("all", "target", [default])
         spec = concretize("mpileaks")
         assert str(spec["mpileaks"].target) == default
-        assert str(spec["mpich"].target) == default
+        assert str(spec["mpi"].target) == default
 
     def test_preferred_versions(self):
         """Test preferred package versions are applied correctly"""
@@ -168,17 +169,22 @@ class TestConcretizePreferences:
                 {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
                 "http://www.somewhereelse.com/mpileaks-2.3.tar.gz",
             ),
-            ({}, "http://www.llnl.gov/mpileaks-2.3.tar.gz"),
+            (
+                {"url": "$SOMEPATH/mpileaks-1.0.tar.gz"},
+                "file:///some/where/else/mpileaks-2.3.tar.gz",
+            ),
+            ({}, "http://www.spack.llnl.gov/mpileaks-2.3.tar.gz"),
         ],
     )
-    def test_config_set_pkg_property_url(self, update, expected, mock_repo_path):
+    def test_config_set_pkg_property_url(self, update, expected, monkeypatch):
         """Test setting an existing attribute in the package class"""
+        monkeypatch.setenv("SOMEPATH", "file:///some/where/else")
         update_packages("mpileaks", "package_attributes", update)
-        with spack.repo.use_repositories(mock_repo_path):
+        with spack.repo.use_repositories(spack.paths.mock_packages_path):
             spec = concretize("mpileaks")
             assert spec.package.fetcher.url == expected
 
-    def test_config_set_pkg_property_new(self, mock_repo_path):
+    def test_config_set_pkg_property_new(self, mutable_config: Configuration):
         """Test that you can set arbitrary attributes on the Package class"""
         conf = syaml.load_config(
             """\
@@ -196,8 +202,8 @@ mpileaks:
     - 2
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
-        with spack.repo.use_repositories(mock_repo_path):
+        mutable_config.set("packages", conf, scope="concretize")
+        with spack.repo.use_repositories(spack.paths.mock_packages_path):
             spec = concretize("mpileaks")
             assert spec.package.v1 == 1
             assert spec.package.v2 is True
@@ -207,7 +213,7 @@ mpileaks:
             assert list(spec.package.v6) == [1, 2]
 
         update_packages("mpileaks", "package_attributes", {})
-        with spack.repo.use_repositories(mock_repo_path):
+        with spack.repo.use_repositories(spack.paths.mock_packages_path):
             spec = concretize("mpileaks")
             with pytest.raises(AttributeError):
                 spec.package.v1
@@ -256,7 +262,7 @@ mpileaks:
         spec = spack.concretize.concretize_one("develop-test2")
         assert spec.version == Version("0.2.15.develop")
 
-    def test_external_mpi(self):
+    def test_external_mpi(self, mutable_config: Configuration):
         # make sure this doesn't give us an external first.
         spec = spack.concretize.concretize_one("mpi")
         assert not spec.external and spec.package.provides("mpi")
@@ -274,13 +280,13 @@ mpich:
       prefix: /dummy/path
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
+        mutable_config.set("packages", conf, scope="concretize")
 
         # ensure that once config is in place, external is used
         spec = spack.concretize.concretize_one("mpi")
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
 
-    def test_external_module(self, monkeypatch):
+    def test_external_module(self, monkeypatch, mutable_config: Configuration):
         """Test that packages can find externals specified by module
 
         The specific code for parsing the module is tested elsewhere.
@@ -308,102 +314,11 @@ mpi:
       modules: [dummy]
 """
         )
-        spack.config.set("packages", conf, scope="concretize")
+        mutable_config.set("packages", conf, scope="concretize")
 
         # ensure that once config is in place, external is used
         spec = spack.concretize.concretize_one("mpi")
         assert spec["mpich"].external_path == os.path.sep + os.path.join("dummy", "path")
-
-    def test_buildable_false(self):
-        conf = syaml.load_config(
-            """\
-libelf:
-  buildable: false
-"""
-        )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert not spack.package_prefs.is_spec_buildable(spec)
-
-        spec = Spec("mpich")
-        assert spack.package_prefs.is_spec_buildable(spec)
-
-    def test_buildable_false_virtual(self):
-        conf = syaml.load_config(
-            """\
-mpi:
-  buildable: false
-"""
-        )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert spack.package_prefs.is_spec_buildable(spec)
-
-        spec = Spec("mpich")
-        assert not spack.package_prefs.is_spec_buildable(spec)
-
-    def test_buildable_false_all(self):
-        conf = syaml.load_config(
-            """\
-all:
-  buildable: false
-"""
-        )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert not spack.package_prefs.is_spec_buildable(spec)
-
-        spec = Spec("mpich")
-        assert not spack.package_prefs.is_spec_buildable(spec)
-
-    def test_buildable_false_all_true_package(self):
-        conf = syaml.load_config(
-            """\
-all:
-  buildable: false
-libelf:
-  buildable: true
-"""
-        )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert spack.package_prefs.is_spec_buildable(spec)
-
-        spec = Spec("mpich")
-        assert not spack.package_prefs.is_spec_buildable(spec)
-
-    def test_buildable_false_all_true_virtual(self):
-        conf = syaml.load_config(
-            """\
-all:
-  buildable: false
-mpi:
-  buildable: true
-"""
-        )
-        spack.config.set("packages", conf, scope="concretize")
-        spec = Spec("libelf")
-        assert not spack.package_prefs.is_spec_buildable(spec)
-
-        spec = Spec("mpich")
-        assert spack.package_prefs.is_spec_buildable(spec)
-
-    def test_buildable_false_virtual_true_pacakge(self):
-        conf = syaml.load_config(
-            """\
-mpi:
-  buildable: false
-mpich:
-  buildable: true
-"""
-        )
-        spack.config.set("packages", conf, scope="concretize")
-
-        spec = Spec("zmpi")
-        assert not spack.package_prefs.is_spec_buildable(spec)
-
-        spec = Spec("mpich")
-        assert spack.package_prefs.is_spec_buildable(spec)
 
     def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are
@@ -411,46 +326,30 @@ mpich:
         # Make sure we can configure readable and writable
 
         # Test inheriting from 'all'
-        spec = Spec("zmpi")
-        perms = spack.package_prefs.get_package_permissions(spec)
-        assert perms == stat.S_IRWXU | stat.S_IRWXG
-
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
-        assert dir_perms == stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID
-
-        group = spack.package_prefs.get_package_group(spec)
-        assert group == "all"
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, "zmpi")
+        assert perms.file_mode == stat.S_IRWXU | stat.S_IRWXG
+        assert perms.dir_mode == stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID
+        assert perms.group == "all"
 
     def test_config_permissions_from_package(self, configure_permissions):
         # Test overriding 'all'
-        spec = Spec("mpich")
-        perms = spack.package_prefs.get_package_permissions(spec)
-        assert perms == stat.S_IRWXU
-
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
-        assert dir_perms == stat.S_IRWXU
-
-        group = spack.package_prefs.get_package_group(spec)
-        assert group == "all"
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, "mpich")
+        assert perms.file_mode == stat.S_IRWXU
+        assert perms.dir_mode == stat.S_IRWXU
+        assert perms.group == "all"
 
     def test_config_permissions_differ_read_write(self, configure_permissions):
         # Test overriding group from 'all' and different readable/writable
-        spec = Spec("mpileaks")
-        perms = spack.package_prefs.get_package_permissions(spec)
-        assert perms == stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP
-
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        perms = spack.package_prefs.package_permissions(spack.config.CONFIG, "mpileaks")
+        assert perms.file_mode == stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP
         expected = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_ISGID
-        assert dir_perms == expected
-
-        group = spack.package_prefs.get_package_group(spec)
-        assert group == "mpileaks"
+        assert perms.dir_mode == expected
+        assert perms.group == "mpileaks"
 
     def test_config_perms_fail_write_gt_read(self, configure_permissions):
         # Test failure for writable more permissive than readable
-        spec = Spec("callpath")
         with pytest.raises(ConfigError):
-            spack.package_prefs.get_package_permissions(spec)
+            spack.package_prefs.package_permissions(spack.config.CONFIG, "callpath")
 
     @pytest.mark.regression("20040")
     def test_variant_not_flipped_to_pull_externals(self):
@@ -475,7 +374,9 @@ mpich:
         assert "version-test-dependency-preferred" not in s
 
     @pytest.mark.regression("26598")
-    def test_multivalued_variants_are_lower_priority_than_providers(self):
+    def test_multivalued_variants_are_lower_priority_than_providers(
+        self, mutable_config: Configuration
+    ):
         """Test that the rule to maximize the number of values for multivalued
         variants is considered at lower priority than selecting the default
         provider for virtual dependencies.
@@ -484,23 +385,108 @@ mpich:
         specified mpich as the default mpi provider, just because openmpi supports
         more fabrics by default.
         """
-        with spack.config.override(
+        with mutable_config.override(
             "packages:all", {"providers": {"somevirtual": ["some-virtual-preferred"]}}
         ):
             s = spack.concretize.concretize_one("somevirtual")
             assert s.name == "some-virtual-preferred"
 
     @pytest.mark.regression("26721,19736")
-    def test_sticky_variant_accounts_for_packages_yaml(self):
-        with spack.config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
+    def test_sticky_variant_accounts_for_packages_yaml(self, mutable_config: Configuration):
+        with mutable_config.override("packages:sticky-variant", {"variants": "+allow-gcc"}):
             s = spack.concretize.concretize_one("sticky-variant %gcc")
             assert s.satisfies("%gcc") and s.satisfies("+allow-gcc")
 
     @pytest.mark.regression("41134")
-    def test_default_preference_variant_different_type_does_not_error(self):
+    def test_default_preference_variant_different_type_does_not_error(
+        self, mutable_config: Configuration
+    ):
         """Tests that a different type for an existing variant in the 'all:' section of
         packages.yaml doesn't fail with an error.
         """
-        with spack.config.override("packages:all", {"variants": "+foo"}):
+        with mutable_config.override("packages:all", {"variants": "+foo"}):
             s = spack.concretize.concretize_one("pkg-a")
             assert s.satisfies("foo=bar")
+
+    def test_version_preference_cannot_generate_buildable_versions(
+        self, mutable_config: Configuration
+    ):
+        """Tests that a version preference not mentioned in package.py cannot be used in
+        a built spec.
+        """
+        mpileaks_external = syaml.load_config(
+            """
+    mpileaks:
+      # Version 0.9 is not mentioned in package.py
+      version: ["0.9"]
+      buildable: true
+      externals:
+      - spec: mpileaks@0.9 +debug
+        prefix: /path
+    """
+        )
+
+        with mutable_config.override("packages", mpileaks_external):
+            # Asking for mpileaks+debug results in the external being chosen
+            mpileaks = spack.concretize.concretize_one("mpileaks+debug")
+            assert mpileaks.external and mpileaks.satisfies("@0.9 +debug")
+
+            # Asking for ~debug results in the highest known version being chosen
+            mpileaks = spack.concretize.concretize_one("mpileaks~debug")
+            assert not mpileaks.external and mpileaks.satisfies("@2.3 ~debug")
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,expected",
+    [
+        # Only packages:all is read, even when a package is configured
+        (
+            """\
+all:
+  permissions:
+    read: group
+    write: group
+    group: all
+mpich:
+  permissions:
+    read: user
+    group: mpich
+""",
+            (stat.S_IRWXU | stat.S_IRWXG, stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID, "all"),
+        ),
+        # Nothing configured
+        ("{}", (stat.S_IRWXU, stat.S_IRWXU, "")),
+    ],
+)
+def test_package_permissions_without_package(packages_yaml, expected):
+    """Tests that a None package name reads only the permissions under packages:all."""
+    configuration = Configuration()
+    configuration.push_scope(
+        spack.config.InternalConfigScope("test", {"packages": syaml.load_config(packages_yaml)})
+    )
+    perms = spack.package_prefs.package_permissions(configuration, None)
+    assert (perms.file_mode, perms.dir_mode, perms.group) == expected
+
+
+def test_package_permissions_error_names_all():
+    """Tests that the error for write wider than read names packages:all when no package is
+    given.
+    """
+    packages_yaml = {"all": {"permissions": {"read": "user", "write": "group"}}}
+    configuration = Configuration()
+    configuration.push_scope(spack.config.InternalConfigScope("test", {"packages": packages_yaml}))
+    with pytest.raises(ConfigError, match="Violating package is all"):
+        spack.package_prefs.package_permissions(configuration, None)
+
+
+def test_target_sort_key():
+    """Tests that targets sort in the order of packages:all:target, unlisted targets last."""
+    configuration = Configuration()
+    configuration.push_scope(
+        spack.config.InternalConfigScope(
+            "test", {"packages": {"all": {"target": ["icelake", "x86_64_v3"]}}}
+        )
+    )
+    targets = [Spec(f"target={t}") for t in ("x86_64", "x86_64_v3", "icelake")]
+    targets.sort(key=spack.package_prefs.target_sort_key(configuration))
+    assert [str(s.architecture.target) for s in targets] == ["icelake", "x86_64_v3", "x86_64"]

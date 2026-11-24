@@ -193,7 +193,7 @@ function __fish_spack_gpg_keys
 end
 
 function __fish_spack_installed_compilers
-    spack compilers | grep -v '^[=-]\|^$'
+    spack compilers
 end
 
 function __fish_spack_installed_packages
@@ -242,7 +242,7 @@ function __fish_spack_providers
 end
 
 function __fish_spack_repos
-    spack repo list | awk {'printf ("%s\t%s", $1, $2)'}
+    spack repo list --names
 end
 
 function __fish_spack_scopes

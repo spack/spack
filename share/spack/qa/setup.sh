@@ -15,6 +15,9 @@ export SPACK_ROOT=$(realpath "$QA_DIR/../../..")
 # Source the setup script
 . "$SPACK_ROOT/share/spack/setup-env.sh"
 
+# Ensure that clingo is bootstrapped
+spack spec zlib > /dev/null
+
 # by default coverage is off.
 coverage=""
 coverage_run=""
@@ -30,7 +33,6 @@ if [[ "$COVERAGE" == "true" ]]; then
     bashcov=$(realpath ${QA_DIR}/bashcov)
 
     # instrument scripts requiring shell coverage
-    sed -i "s@#\!/bin/bash@#\!${bashcov}@" "$SPACK_ROOT/lib/spack/env/cc"
     if [ "$(uname -o)" != "Darwin" ]; then
         # On darwin, #! interpreters must be binaries, so no sbang for bashcov
         sed -i "s@#\!/bin/sh@#\!${bashcov}@"   "$SPACK_ROOT/bin/sbang"
@@ -109,32 +111,6 @@ check_dependencies() {
             fi
 
             exit 1
-        fi
-
-        # Flake8 and Sphinx require setuptools in order to run.
-        # Otherwise, they print out this error message:
-        #
-        #   Traceback (most recent call last):
-        #     File: "/usr/bin/flake8", line 5, in <module>
-        #       from pkg_resources import load_entry_point
-        #   ImportError: No module named pkg_resources
-        #
-        # Print a more useful error message if setuptools not found.
-        if [[ $dep == flake8 || $dep == sphinx* ]]; then
-            # Find which Python is being run
-            # Spack-installed packages have a hard-coded shebang
-            python_cmd=$(head -n 1 $(which $dep) | cut -c 3-)
-            # May not have a shebang
-            if [[ $python_cmd != *python* ]]; then
-                python_cmd=python
-            fi
-            # Check if setuptools is in the PYTHONPATH
-            if ! $python_cmd -c "import setuptools" 2> /dev/null; then
-                echo "ERROR: setuptools is required to run $dep."
-                echo "Please add it to your PYTHONPATH."
-
-                exit 1
-            fi
         fi
     done
     echo "Dependencies found."

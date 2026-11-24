@@ -7,10 +7,11 @@ import sys
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.config
+import spack.store
 import spack.util.path as sup
+from spack.config import Configuration
+from spack.util import tty
 
 #: Some lines with lots of placeholders
 padded_lines = [
@@ -30,6 +31,34 @@ fixed_lines = [
 ]
 
 
+@pytest.mark.only_windows("Windows path")
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        (r"\\?\C:\spack\opt", r"C:\spack\opt"),
+        (r"\\?\UNC\server\share\spack", r"\\server\share\spack"),
+        (r"\\?\unc\server\share\spack", r"\\server\share\spack"),
+        # drive relative path after the prefix
+        (r"\\?\C:spack\opt", r"C:spack\opt"),
+        # no drive after the prefix: removing it would break the path, so keep it
+        (
+            r"\\?\Volume{0b1f7c2e-3a4d-4e5f-8a9b-0c1d2e3f4a5b}\spack",
+            r"\\?\Volume{0b1f7c2e-3a4d-4e5f-8a9b-0c1d2e3f4a5b}\spack",
+        ),
+        (r"\\?\spack\opt", r"\\?\spack\opt"),
+        # paths without the extended-length prefix are returned unchanged
+        (r"\\server\share\spack", r"\\server\share\spack"),
+        (r"C:\spack\opt", r"C:\spack\opt"),
+        (r"C:spack\opt", r"C:spack\opt"),
+        (r"spack\opt", r"spack\opt"),
+        (r"?dir\file", r"?dir\file"),
+        ("", ""),
+    ],
+)
+def test_sanitize_win_longpath(path, expected):
+    assert sup.sanitize_win_longpath(path) == expected
+
+
 def test_sanitize_filename():
     """Test filtering illegal characters out of potential filenames"""
     sanitized = sup.sanitize_filename("""a<b>cd/?e:f"g|h*i.\0txt""")
@@ -42,80 +71,93 @@ def test_sanitize_filename():
 # This class pertains to path string padding manipulation specifically
 # which is used for binary caching. This functionality is not supported
 # on Windows as of yet.
-@pytest.mark.not_on_windows("Padding funtionality unsupported on Windows")
+@pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
+@pytest.mark.parametrize("as_bytes", [False, True])
 class TestPathPadding:
+    @pytest.fixture(autouse=True)
+    def setup(self, as_bytes: bool):
+        #: The filter function, either for bytes or str
+        self.filter = sup.padding_filter_bytes if as_bytes else sup.padding_filter
+        #: A converter of str -> bytes if we're testing the bytes filter
+        self.convert = lambda s: s.encode("ascii") if as_bytes else s
+
     @pytest.mark.parametrize("padded,fixed", zip(padded_lines, fixed_lines))
     def test_padding_substitution(self, padded, fixed):
         """Ensure that all padded lines are unpadded correctly."""
-        assert fixed == sup.padding_filter(padded)
+        assert self.convert(fixed) == self.filter(self.convert(padded))
 
     def test_no_substitution(self):
         """Ensure that a line not containing one full path placeholder
         is not modified."""
         partial = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_pla/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
-        assert sup.padding_filter(partial) == partial
+        p = self.convert(partial)
+        assert self.filter(p) is p  # Test fast-path identity
 
     def test_short_substitution(self):
         """Ensure that a single placeholder path component is replaced"""
         short = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_placeholder__/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
         short_subst = "--prefix=/Users/gamblin2/padding-log-test/opt/[padded-to-63-chars]/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
-        assert short_subst == sup.padding_filter(short)
+        assert self.convert(short_subst) == self.filter(self.convert(short))
 
     def test_partial_substitution(self):
         """Ensure that a single placeholder path component is replaced"""
         short = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_placeholder__/__spack_p/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
         short_subst = "--prefix=/Users/gamblin2/padding-log-test/opt/[padded-to-73-chars]/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
-        assert short_subst == sup.padding_filter(short)
+        assert self.convert(short_subst) == self.filter(self.convert(short))
 
     def test_longest_prefix_re(self):
         """Test that longest_prefix_re generates correct regular expressions."""
         assert "(s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re("string", capture=True)
         assert "(?:s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re("string", capture=False)
 
-    def test_output_filtering(self, capfd, install_mockery, mutable_config):
-        """Test filtering padding out of tty messages."""
-        long_path = "/" + "/".join([sup.SPACK_PATH_PADDING_CHARS] * 200)
-        padding_string = "[padded-to-%d-chars]" % len(long_path)
 
-        # test filtering when padding is enabled
-        with spack.config.override("config:install_tree", {"padded_length": 256}):
-            # tty.msg with filtering on the first argument
-            with sup.filter_padding():
-                tty.msg("here is a long path: %s/with/a/suffix" % long_path)
-            out, err = capfd.readouterr()
-            assert padding_string in out
+@pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
+def test_output_filtering(capfd, install_mockery, mutable_config: Configuration):
+    """Test filtering padding out of tty messages."""
+    long_path = "/" + "/".join([sup.SPACK_PATH_PADDING_CHARS] * 200)
+    padding_string = "[padded-to-%d-chars]" % len(long_path)
 
-            # tty.msg with filtering on a laterargument
-            with sup.filter_padding():
-                tty.msg("here is a long path:", "%s/with/a/suffix" % long_path)
-            out, err = capfd.readouterr()
-            assert padding_string in out
-
-            # tty.error with filtering on the first argument
-            with sup.filter_padding():
-                tty.error("here is a long path: %s/with/a/suffix" % long_path)
-            out, err = capfd.readouterr()
-            assert padding_string in err
-
-            # tty.error with filtering on a later argument
-            with sup.filter_padding():
-                tty.error("here is a long path:", "%s/with/a/suffix" % long_path)
-            out, err = capfd.readouterr()
-            assert padding_string in err
-
-        # test no filtering
-        tty.msg("here is a long path: %s/with/a/suffix" % long_path)
+    # test filtering when padding is enabled
+    with mutable_config.override("config:install_tree", {"padded_length": 256}):
+        # tty.msg with filtering on the first argument
+        with spack.store.filter_padding():
+            tty.msg("here is a long path: %s/with/a/suffix" % long_path)
         out, err = capfd.readouterr()
-        assert padding_string not in out
+        assert padding_string in out
 
-    def test_pad_on_path_sep_boundary(self):
-        """Ensure that padded paths do not end with path separator."""
-        pad_length = len(sup.SPACK_PATH_PADDING_CHARS)
-        padded_length = 128
-        remainder = padded_length % (pad_length + 1)
-        path = "a" * (remainder - 1)
-        result = sup.add_padding(path, padded_length)
-        assert 128 == len(result) and not result.endswith(os.path.sep)
+        # tty.msg with filtering on a laterargument
+        with spack.store.filter_padding():
+            tty.msg("here is a long path:", "%s/with/a/suffix" % long_path)
+        out, err = capfd.readouterr()
+        assert padding_string in out
+
+        # tty.error with filtering on the first argument
+        with spack.store.filter_padding():
+            tty.error("here is a long path: %s/with/a/suffix" % long_path)
+        out, err = capfd.readouterr()
+        assert padding_string in err
+
+        # tty.error with filtering on a later argument
+        with spack.store.filter_padding():
+            tty.error("here is a long path:", "%s/with/a/suffix" % long_path)
+        out, err = capfd.readouterr()
+        assert padding_string in err
+
+    # test no filtering
+    tty.msg("here is a long path: %s/with/a/suffix" % long_path)
+    out, err = capfd.readouterr()
+    assert padding_string not in out
+
+
+@pytest.mark.not_on_windows("Padding functionality unsupported on Windows")
+def test_pad_on_path_sep_boundary():
+    """Ensure that padded paths do not end with path separator."""
+    pad_length = len(sup.SPACK_PATH_PADDING_CHARS)
+    padded_length = 128
+    remainder = padded_length % (pad_length + 1)
+    path = "a" * (remainder - 1)
+    result = sup.add_padding(path, padded_length)
+    assert 128 == len(result) and not result.endswith(os.path.sep)
 
 
 @pytest.mark.parametrize("debug", [1, 2])
@@ -132,5 +174,5 @@ def test_path_debug_padded_filter(debug, monkeypatch):
     )
 
     monkeypatch.setattr(tty, "_debug", debug)
-    with spack.config.override("config:install_tree", {"padded_length": 128}):
+    with spack.config.CONFIG.override("config:install_tree", {"padded_length": 128}):
         assert expected == sup.debug_padded_filter(string)

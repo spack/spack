@@ -2,19 +2,40 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import ast
 import os
+import re
+import subprocess
+import warnings
+from typing import Dict, List, Tuple
 
 import pytest
 
-import archspec.cpu
+import spack.vendor.archspec.cpu
 
 import spack.concretize
+import spack.config
+import spack.error
+import spack.main
+import spack.modules
 import spack.modules.common
+import spack.modules.error
 import spack.modules.tcl
+import spack.package_base
+import spack.spec
+import spack.store
+import spack.util.environment
+import spack.util.executable
+import spack.version
+from spack.config import Configuration
 
 mpich_spec_string = "mpich@3.0.4"
 mpileaks_spec_string = "mpileaks"
 libdwarf_spec_string = "libdwarf target=x86_64"
+
+install = spack.main.SpackCommand("install")
+mark = spack.main.SpackCommand("mark")
+uninstall = spack.main.SpackCommand("uninstall")
 
 #: Class of the writer tested in this module
 writer_cls = spack.modules.tcl.TclModulefileWriter
@@ -25,7 +46,95 @@ pytestmark = [
 ]
 
 
-@pytest.mark.usefixtures("mutable_config", "mock_packages", "mock_module_filename")
+def _module_lines(filename: str) -> List[str]:
+    """Returns the stripped lines of a module file, without its header comments."""
+    with open(filename, encoding="utf-8") as f:
+        return [line.strip() for line in f.readlines() if not line.startswith("## ")]
+
+
+def _pinned_callpath(content: List[str]) -> List[str]:
+    """Returns the lines requiring callpath by its hash variant only."""
+    return [x for x in content if re.match("depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$", x)]
+
+
+@pytest.fixture(params=["clang@=15.0.0", "gcc@=10.2.1"])
+def compiler(request):
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        ("mpich@3.0.4", ("mpi",), True, False),
+        ("mpich@3.0.1", [], True, True),
+        ("openblas@0.2.15", ("blas",), True, False),
+        ("openblas-with-lapack@0.2.15", ("blas", "lapack"), True, False),
+        ("mpileaks@2.3", ("mpi",), True, False),
+        ("mpileaks@2.1", [], True, False),
+        ("py-extension1@2.0", ("python",), False, True),
+        ("python@3.8.0", ("python",), False, True),
+    ]
+)
+def provider(request):
+    return request.param
+
+
+class ModuleCommand:
+    """Runs the Environment Modules command against an environment it holds, and applies to
+    this environment the changes each command outputs."""
+
+    def __init__(self, modulecmd: str, env: Dict[str, str]):
+        self.modulecmd = modulecmd
+        self.env = env
+
+    def __call__(self, *args: str) -> Tuple[bool, str]:
+        """Runs a module command, returning whether it succeeded and its error output."""
+        proc = subprocess.run(
+            [self.modulecmd, "python", *args],
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
+        status = False
+        for line in proc.stdout.splitlines():
+            set_match = re.match(r"os\.environ\['(\w+)'\] = (.*)", line)
+            del_match = re.match(r"del os\.environ\['(\w+)'\]", line)
+            if set_match:
+                self.env[set_match.group(1)] = ast.literal_eval(set_match.group(2))
+            elif del_match:
+                self.env.pop(del_match.group(1), None)
+            elif line == "_mlstatus = True":
+                status = True
+        return status, proc.stderr
+
+
+@pytest.fixture()
+def module_command(tmp_path) -> ModuleCommand:
+    """Returns a runner of the Environment Modules command, with module variants enabled and
+    an environment where the test sets MODULEPATH to the module files it generates. Skips the
+    test when Environment Modules 5.1 or newer, which module variants require, is not
+    available."""
+    modulecmd = (
+        os.environ.get("MODULES_CMD") or spack.util.executable.which_string("modulecmd.tcl") or ""
+    )
+    if not os.path.isfile(modulecmd):
+        pytest.skip("requires Environment Modules")
+    version = subprocess.run(
+        [modulecmd, "python", "--version"], stderr=subprocess.PIPE, universal_newlines=True
+    ).stderr
+    match = re.search(r"Modules Release (\d+(\.\d+)+)", version)
+    if not match or spack.version.Version(match.group(1)) < spack.version.Version("5.1"):
+        pytest.skip("requires Environment Modules 5.1 or newer")
+
+    env = {
+        "PATH": os.environ.get("PATH", ""),
+        "HOME": str(tmp_path),
+        "MODULES_ADVANCED_VERSION_SPEC": "1",
+    }
+    return ModuleCommand(modulecmd, env)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages")
 class TestTcl:
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple Tcl module file."""
@@ -42,11 +151,12 @@ class TestTcl:
         content = modulefile_content(mpileaks_spec_string)
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
-        assert len([x for x in content if "depends-on " in x]) == 2
-        assert len([x for x in content if "module load " in x]) == 2
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert len([x for x in content if "        module load {*}$args" in x]) == 1
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
 
         # dtbuild1 has
         # - 1 ('run',) dependency
@@ -56,11 +166,12 @@ class TestTcl:
         content = modulefile_content("dtbuild1")
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
-        assert len([x for x in content if "depends-on " in x]) == 2
-        assert len([x for x in content if "module load " in x]) == 2
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert len([x for x in content if "        module load {*}$args" in x]) == 1
+        # depends-on command defined once and used twice
+        assert len([x for x in content if "depends-on " in x]) == 3
 
         # The configuration file sets the verbose keyword to False
         messages = [x for x in content if 'puts stderr "Autoloading' in x]
@@ -73,11 +184,12 @@ class TestTcl:
         content = modulefile_content(mpileaks_spec_string)
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
-        assert len([x for x in content if "depends-on " in x]) == 5
-        assert len([x for x in content if "module load " in x]) == 5
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert len([x for x in content if "        module load {*}$args" in x]) == 1
+        # depends-on command defined once and used 6 times
+        assert len([x for x in content if "depends-on " in x]) == 7
 
         # dtbuild1 has
         # - 1 ('run',) dependency
@@ -87,11 +199,12 @@ class TestTcl:
         content = modulefile_content("dtbuild1")
 
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 1
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 1
         )
-        assert len([x for x in content if "depends-on " in x]) == 2
-        assert len([x for x in content if "module load " in x]) == 2
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert len([x for x in content if "        module load {*}$args" in x]) == 1
+        # depends-on command defined once and used twice
+        assert len([x for x in content if "depends-on " in x]) == 3
 
     def test_prerequisites_direct(
         self, modulefile_content, module_configuration, host_architecture_str
@@ -101,7 +214,7 @@ class TestTcl:
         module_configuration("prerequisites_direct")
         content = modulefile_content(f"mpileaks target={host_architecture_str}")
 
-        assert len([x for x in content if "prereq" in x]) == 2
+        assert len([x for x in content if "prereq" in x]) == 3
 
     def test_prerequisites_all(
         self, modulefile_content, module_configuration, host_architecture_str
@@ -111,7 +224,7 @@ class TestTcl:
         module_configuration("prerequisites_all")
         content = modulefile_content(f"mpileaks target={host_architecture_str}")
 
-        assert len([x for x in content if "prereq" in x]) == 5
+        assert len([x for x in content if "prereq" in x]) == 6
 
     def test_alter_environment(self, modulefile_content, module_configuration):
         """Tests modifications to run-time environment."""
@@ -132,7 +245,6 @@ class TestTcl:
         assert len([x for x in content if "setenv FOO {foo}" in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
         assert len([x for x in content if "depends-on foo/bar" in x]) == 1
-        assert len([x for x in content if "module load foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
     def test_prepend_path_separator(self, modulefile_content, module_configuration):
@@ -141,14 +253,14 @@ class TestTcl:
         module_configuration("module_path_separator")
         content = modulefile_content("module-path-separator")
 
-        assert len([x for x in content if "append-path COLON {foo}" in x]) == 1
-        assert len([x for x in content if "prepend-path COLON {foo}" in x]) == 1
-        assert len([x for x in content if "remove-path COLON {foo}" in x]) == 1
-        assert len([x for x in content if "append-path --delim {;} SEMICOLON {bar}" in x]) == 1
-        assert len([x for x in content if "prepend-path --delim {;} SEMICOLON {bar}" in x]) == 1
-        assert len([x for x in content if "remove-path --delim {;} SEMICOLON {bar}" in x]) == 1
-        assert len([x for x in content if "append-path --delim { } SPACE {qux}" in x]) == 1
-        assert len([x for x in content if "remove-path --delim { } SPACE {qux}" in x]) == 1
+        assert len([x for x in content if "append-path -d {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "prepend-path -d {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "remove-path -d {:} COLON {foo}" in x]) == 1
+        assert len([x for x in content if "append-path -d {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "prepend-path -d {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "remove-path -d {;} SEMICOLON {bar}" in x]) == 1
+        assert len([x for x in content if "append-path -d { } SPACE {qux}" in x]) == 1
+        assert len([x for x in content if "remove-path -d { } SPACE {qux}" in x]) == 1
 
     @pytest.mark.regression("11355")
     def test_manpath_setup(self, modulefile_content, module_configuration):
@@ -162,13 +274,16 @@ class TestTcl:
 
         # manpath set by module with prepend-path
         content = modulefile_content("module-manpath-prepend")
-        assert len([x for x in content if "prepend-path MANPATH {/path/to/man}" in x]) == 1
-        assert len([x for x in content if "prepend-path MANPATH {/path/to/share/man}" in x]) == 1
+        assert len([x for x in content if "prepend-path -d {:} MANPATH {/path/to/man}" in x]) == 1
+        assert (
+            len([x for x in content if "prepend-path -d {:} MANPATH {/path/to/share/man}" in x])
+            == 1
+        )
         assert len([x for x in content if "append-path MANPATH {}" in x]) == 1
 
         # manpath set by module with append-path
         content = modulefile_content("module-manpath-append")
-        assert len([x for x in content if "append-path MANPATH {/path/to/man}" in x]) == 1
+        assert len([x for x in content if "append-path -d {:} MANPATH {/path/to/man}" in x]) == 1
         assert len([x for x in content if "append-path MANPATH {}" in x]) == 1
 
         # manpath set by module with setenv
@@ -186,7 +301,8 @@ class TestTcl:
         assert len([x for x in content if "setenv FOO {{{name}}, {name}, {{}}, {}}" in x]) == 1
 
     @pytest.mark.skipif(
-        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+        str(spack.vendor.archspec.cpu.host().family) != "x86_64",
+        reason="test data is specific for x86_64",
     )
     def test_help_message(self, modulefile_content, module_configuration):
         """Tests the generation of module help message."""
@@ -236,14 +352,16 @@ class TestTcl:
         module_configuration("exclude")
         content = modulefile_content("mpileaks ^zmpi")
 
-        assert len([x for x in content if "module load " in x]) == 1
+        # depends-on command defined once and used twice
+        assert len([x for x in content if "depends-on " in x]) == 3
 
         with pytest.raises(FileNotFoundError):
             modulefile_content(f"callpath target={host_architecture_str}")
 
         content = modulefile_content(f"zmpi target={host_architecture_str}")
 
-        assert len([x for x in content if "module load " in x]) == 1
+        # depends-on command defined once and used twice
+        assert len([x for x in content if "depends-on " in x]) == 3
 
     def test_naming_scheme_compat(self, factory, module_configuration):
         """Tests backwards compatibility for naming_scheme key"""
@@ -257,12 +375,12 @@ class TestTcl:
         projection = writer.spec.format(writer.conf.projections["all"])
         assert projection in writer.layout.use_name
 
-    def test_projections_specific(self, factory, module_configuration):
+    def test_projections_specific_non_hierarchical(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
         # This configuration has no error, so check the conflicts directives
         # are there
-        module_configuration("projections")
+        module_configuration("projections_non_hierarchical")
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory("mpileaks")
@@ -272,12 +390,12 @@ class TestTcl:
         projection = writer.spec.format(writer.conf.projections["mpileaks"])
         assert projection in writer.layout.use_name
 
-    def test_projections_all(self, factory, module_configuration):
+    def test_projections_all_non_hierarchical(self, factory, module_configuration):
         """Tests reading the correct naming scheme."""
 
         # This configuration has no error, so check the conflicts directives
         # are there
-        module_configuration("projections")
+        module_configuration("projections_non_hierarchical")
 
         # Test we read the expected configuration for the naming scheme
         writer, _ = factory("libelf")
@@ -324,17 +442,19 @@ class TestTcl:
 
         # This configuration is inconsistent, check an error is raised
         module_configuration("wrong_conflicts")
-        with pytest.raises(spack.modules.common.ModulesError):
+        with pytest.raises(spack.modules.error.ModulesError):
             modulefile_content("mpileaks")
 
-    def test_module_index(self, module_configuration, factory, tmpdir_factory):
+    def test_module_index(
+        self, module_configuration, factory, tmp_path_factory: pytest.TempPathFactory
+    ):
         module_configuration("suffix")
 
         w1, s1 = factory("mpileaks")
         w2, s2 = factory("callpath")
         w3, s3 = factory("openblas")
 
-        test_root = str(tmpdir_factory.mktemp("module-root"))
+        test_root = str(tmp_path_factory.mktemp("module-root"))
 
         spack.modules.common.generate_module_index(test_root, [w1, w2])
 
@@ -449,14 +569,14 @@ class TestTcl:
         # the tests database
         mpileaks_specs = mutable_database.query("mpileaks")
         for item in mpileaks_specs:
-            writer = writer_cls(item, "default")
+            writer = writer_cls.from_spec(item, "default")
             assert not writer.conf.excluded
 
         # callpath is a dependency of mpileaks, and has been pulled
         # in implicitly
         callpath_specs = mutable_database.query("callpath")
         for item in callpath_specs:
-            writer = writer_cls(item, "default")
+            writer = writer_cls.from_spec(item, "default")
             assert writer.conf.excluded
 
     @pytest.mark.regression("12105")
@@ -465,12 +585,12 @@ class TestTcl:
 
         # mpileaks is defined as explicit with explicit argument set on writer
         mpileaks_spec = spack.concretize.concretize_one("mpileaks")
-        writer = writer_cls(mpileaks_spec, "default", True)
+        writer = writer_cls.from_spec(mpileaks_spec, "default", True)
         assert not writer.conf.excluded
 
         # callpath is defined as implicit with explicit argument set on writer
         callpath_spec = spack.concretize.concretize_one("callpath")
-        writer = writer_cls(callpath_spec, "default", False)
+        writer = writer_cls.from_spec(callpath_spec, "default", False)
         assert writer.conf.excluded
 
     @pytest.mark.regression("9624")
@@ -481,17 +601,17 @@ class TestTcl:
 
         # Test the mpileaks that should have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich2")
-        assert len([x for x in content if "depends-on " in x]) == 2
-        assert len([x for x in content if "module load " in x]) == 2
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
 
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content("mpileaks ^mpich")
         assert (
-            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
-            == 0
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 0
         )
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 0
+        assert len([x for x in content if "        module load {*}$args" in x]) == 0
         assert len([x for x in content if "depends-on " in x]) == 0
-        assert len([x for x in content if "module load " in x]) == 0
 
     def test_modules_no_arch(self, factory, module_configuration):
         module_configuration("no_arch")
@@ -507,7 +627,7 @@ class TestTcl:
         spec = spack.concretize.concretize_one("mpileaks@2.3")
 
         # mpileaks is defined as implicit, thus hide command should appear in modulerc
-        writer = writer_cls(spec, "default", False)
+        writer = writer_cls.from_spec(spec, "default", False)
         writer.write()
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
@@ -524,7 +644,7 @@ class TestTcl:
 
         # when mpileaks becomes explicit, its file name changes (hash_length = 0), meaning an
         # extra module file is created; the old one still exists and remains hidden.
-        writer = writer_cls(spec, "default", True)
+        writer = writer_cls.from_spec(spec, "default", True)
         writer.write()
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
@@ -534,28 +654,28 @@ class TestTcl:
 
         # after removing both the implicit and explicit module, the modulerc file would be empty
         # and should be removed.
-        writer_cls(spec, "default", False).remove()
-        writer_cls(spec, "default", True).remove()
+        writer_cls.from_spec(spec, "default", False).remove_installation()
+        writer_cls.from_spec(spec, "default", True).remove_installation()
         assert not os.path.exists(writer.layout.modulerc)
         assert not os.path.exists(writer.layout.filename)
 
         # implicit module is removed
-        writer = writer_cls(spec, "default", False)
+        writer = writer_cls.from_spec(spec, "default", False)
         writer.write()
         assert os.path.exists(writer.layout.filename)
         assert os.path.exists(writer.layout.modulerc)
-        writer.remove()
+        writer.remove_installation()
         assert not os.path.exists(writer.layout.modulerc)
         assert not os.path.exists(writer.layout.filename)
 
         # three versions of mpileaks are implicit
-        writer = writer_cls(spec, "default", False)
+        writer = writer_cls.from_spec(spec, "default", False)
         writer.write(overwrite=True)
         spec_alt1 = spack.concretize.concretize_one("mpileaks@2.2")
         spec_alt2 = spack.concretize.concretize_one("mpileaks@2.1")
-        writer_alt1 = writer_cls(spec_alt1, "default", False)
+        writer_alt1 = writer_cls.from_spec(spec_alt1, "default", False)
         writer_alt1.write(overwrite=True)
-        writer_alt2 = writer_cls(spec_alt2, "default", False)
+        writer_alt2 = writer_cls.from_spec(spec_alt2, "default", False)
         writer_alt2.write(overwrite=True)
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
@@ -568,10 +688,1076 @@ class TestTcl:
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
 
         # one version is removed
-        writer_alt1.remove()
+        writer_alt1.remove_installation()
         assert os.path.exists(writer.layout.modulerc)
         with open(writer.layout.modulerc, encoding="utf-8") as f:
             content = [line.strip() for line in f.readlines()]
         assert len([x for x in content if hide_cmd == x]) == 1
         assert len([x for x in content if hide_cmd_alt1 == x]) == 0
         assert len([x for x in content if hide_cmd_alt2 == x]) == 1
+
+    @pytest.mark.regression("37788")
+    @pytest.mark.parametrize("modules_config", ["core_compilers", "core_compilers_at_equal"])
+    def test_layout_for_specs_compiled_with_core_compilers(
+        self, modules_config, module_configuration, factory
+    ):
+        """Tests that specs compiled with core compilers are in the 'Core' folder. Also tests that
+        we can use both ``compiler@version`` and ``compiler@=version`` to specify a core compiler.
+        """
+        module_configuration(modules_config)
+        module, spec = factory("libelf%clang@15.0.0")
+        assert "Core" in module.layout.available_path_parts
+
+    def test_file_layout(self, compiler, provider, factory, module_configuration):
+        """Tests the layout of files in the hierarchy is the one expected."""
+        module_configuration("complex_hierarchy")
+        spec_string, services, use_compiler, place_in_core = provider
+
+        # Non-python specs add compiler
+        factory_string = spec_string
+        if use_compiler:
+            factory_string += "%" + compiler
+
+        module, spec = factory(factory_string)
+
+        layout = module.layout
+
+        # Check that the services provided are in the hierarchy
+        for s in services:
+            assert s in layout.conf.hierarchy_tokens
+
+        # Check that the compiler part of the path has no hash and that it
+        # is transformed to r"Core" if the compiler is listed among core
+        # compilers
+        # Check that specs listed as core_specs are transformed to "Core"
+        # Check that specs with no hierarchy components are transformed to "Core"
+        if "clang@=15.0.0" in factory_string or place_in_core:
+            assert "Core" in layout.available_path_parts
+        else:
+            assert compiler.replace("@=", "/") in layout.available_path_parts
+
+        # Check that the provider part instead has always an hash even if
+        # hash has been disallowed in the configuration file
+        path_parts = layout.available_path_parts
+        service_part = spec_string.replace("@", "/")
+        service_part = "-".join([service_part, layout.spec.dag_hash(length=7)])
+
+        if "mpi" in spec:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["mpi"].format("{name}/{version}-{hash:7}")
+        elif "python" in spec:
+            # It's a user, not a provider, so create the provider string
+            service_part = layout.spec["python"].format("{name}/{version}-{hash:7}")
+        else:
+            # Only relevant for providers, not users, of virtuals
+            assert service_part in path_parts
+
+        # Check that multi-providers have repetitions in path parts
+        repetitions = len([x for x in path_parts if service_part == x])
+        if spec_string == "openblas-with-lapack@0.2.15":
+            assert repetitions == 2
+        elif spec_string == "mpileaks@2.1":
+            assert repetitions == 0
+        else:
+            assert repetitions == 1
+
+    def test_compilers_provided_different_name(
+        self, factory, module_configuration, compiler_factory, mutable_config: Configuration
+    ):
+        with mutable_config.override(
+            "packages", {"llvm": {"externals": [compiler_factory(spec="llvm@3.3 +clang")]}}
+        ):
+            module_configuration("complex_hierarchy")
+            module, spec = factory("intel-oneapi-compilers%clang@3.3")
+
+            provides = module.conf.provides
+
+            assert "compiler" in provides
+            assert provides["compiler"] == spack.spec.Spec("intel-oneapi-compilers@=3.0")
+
+    @pytest.mark.parametrize("language", ["c", "cxx", "fortran"])
+    def test_compiler_language_virtuals(self, factory, module_configuration, language):
+        """Tests all compiler virtuals for hierarchical module placement."""
+        module_configuration("complex_hierarchy")
+        module, spec = factory(f"single-language-virtual +{language} %{language}=gcc@=10.2.1")
+
+        requires = module.conf.requires
+
+        assert "gcc@=10.2.1" in requires["compiler"]
+
+    def test_no_hash(self, factory, module_configuration):
+        """Makes sure that virtual providers (in the hierarchy) always
+        include a hash. Make sure that the module file for the spec
+        does not include a hash if hash_length is 0.
+        """
+
+        module_configuration("no_hash")
+        module, spec = factory(mpileaks_spec_string)
+        path = module.layout.filename
+        mpi_spec = spec["mpi"]
+
+        mpi_element = "{0}/{1}-{2}/".format(
+            mpi_spec.name, mpi_spec.version, mpi_spec.dag_hash(length=7)
+        )
+
+        assert mpi_element in path
+
+        mpileaks_spec = spec
+        mpileaks_element = "{0}/{1}".format(mpileaks_spec.name, mpileaks_spec.version)
+
+        assert path.endswith(mpileaks_element)
+
+    def test_no_core_compilers(self, factory, module_configuration):
+        """Ensures that missing 'core_compilers' in the configuration file
+        raises the right exception.
+        """
+
+        # In this case we miss the entry completely
+        module_configuration("missing_core_compilers")
+
+        module, spec = factory(mpileaks_spec_string)
+        with pytest.raises(spack.modules.error.CoreCompilersNotFoundError):
+            module.write()
+
+        # Here we have an empty list
+        module_configuration("core_compilers_empty")
+
+        module, spec = factory(mpileaks_spec_string)
+        with pytest.raises(spack.modules.error.CoreCompilersNotFoundError):
+            module.write()
+
+    def test_guess_core_compilers(self, factory, module_configuration, monkeypatch):
+        """Check that we can guess core compilers."""
+
+        # In this case we miss the entry completely
+        module_configuration("missing_core_compilers")
+
+        # Our mock paths must be detected as system paths
+        monkeypatch.setattr(spack.util.environment, "SYSTEM_DIRS", ["/path/bin"])
+
+        # We don't want to really write into user configuration
+        # when running tests
+        def no_op_set(*args, **kwargs):
+            pass
+
+        monkeypatch.setattr(spack.config.Configuration, "set", no_op_set)
+
+        # Assert we have core compilers now
+        writer, _ = factory(mpileaks_spec_string)
+        assert writer.conf.core_compilers
+
+    @pytest.mark.parametrize(
+        "spec_str", ["mpileaks target=nocona", "mpileaks target=core2", "mpileaks target=x86_64"]
+    )
+    @pytest.mark.regression("13005")
+    def test_only_generic_microarchitectures_in_root(
+        self, spec_str, factory, module_configuration
+    ):
+        module_configuration("complex_hierarchy")
+        writer, spec = factory(spec_str)
+
+        assert str(spec.target.family) in writer.layout.arch_dirname
+        if spec.target.family != spec.target:
+            assert str(spec.target) not in writer.layout.arch_dirname
+
+    def test_projections_specific_hierarchical(self, factory, module_configuration):
+        """Tests reading the correct naming scheme in hierarchical mode."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("projections_hierarchical")
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory("mpileaks")
+        expected = {"all": "{name}/v{version}", "mpileaks": "{name}-mpiprojection"}
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections["mpileaks"])
+        assert projection in writer.layout.use_name
+
+    def test_projections_all_hierarchical(self, factory, module_configuration):
+        """Tests reading the correct naming scheme in hierarchical mode."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration("projections_hierarchical")
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory("libelf")
+        expected = {"all": "{name}/v{version}", "mpileaks": "{name}-mpiprojection"}
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections["all"])
+        assert projection in writer.layout.use_name
+
+    def test_hierarchical_conditional_modulepath_tcl_syntax(
+        self, modulefile_content, module_configuration
+    ):
+        """Tests that conditional MODULEPATH lines use Tcl variable syntax ($var)."""
+        module_configuration("complex_hierarchy")
+        # mpich provides mpi; compiled with gcc (non-core), so lapack/blas/python are missing.
+        # This produces conditional 'file join' lines that exercise manipulate_path.
+        content = modulefile_content("mpich@3.0.4 %gcc@=10.2.1")
+
+        file_join_lines = [line for line in content if "file join" in line]
+        assert file_join_lines
+
+        # Each line that mentions a missing token must use ${token_name} ${token_version}
+        for line in file_join_lines:
+            if "lapack" in line:
+                assert "${lapack_name} ${lapack_version}" in line, (
+                    f"Expected Tcl syntax '${{lapack_name}} ${{lapack_version}}' but got: {line!r}"
+                )
+
+    @pytest.mark.regression("7487")
+    def test_suffix_does_not_propagate_to_dependents(self, factory, module_configuration):
+        """A bare package-name suffix key matches only the root spec, while a '^name'
+        key matches specs that depend on that package. The two must not overlap.
+        """
+        module_configuration("suffix_propagation")
+
+        # mpileaks depends on mpich but is not mpich, so only the '^mpich' key applies
+        writer, _ = factory("mpileaks ^mpich@3.0.4")
+        assert "depmatch" in writer.layout.use_name
+        assert "namematch" not in writer.layout.use_name
+
+        # mpich itself is matched only by the bare 'mpich' key
+        writer, _ = factory("mpich@3.0.4")
+        assert "namematch" in writer.layout.use_name
+        assert "depmatch" not in writer.layout.use_name
+
+    def test_variants_none(self, modulefile_content, module_configuration):
+        """Tests variant definitions when variants mode is disabled."""
+
+        # module variants implicitly disabled
+        module_configuration("autoload_direct")
+
+        # test module file of package without variants
+        content = modulefile_content("module-long-help target=core2")
+        assert len([x for x in content if "variant " in x]) == 0
+
+        # test module file of package with variants
+        content = modulefile_content("mpileaks +debug -shared")
+        assert len([x for x in content if "variant " in x]) == 0
+
+        # module variants explicitly disabled
+        module_configuration("variants_none")
+
+        # test module file of package without variants
+        content = modulefile_content("module-long-help target=core2")
+        assert len([x for x in content if "variant " in x]) == 0
+
+        # test module file of package with variants
+        content = modulefile_content("mpileaks +debug -shared")
+        assert len([x for x in content if "variant " in x]) == 0
+
+        # test dependent module designation (no variant specifications)
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on callpath/1.0-gcc-10.2.1-\\w{7} build_system=generic", x
+                    )
+                ]
+            )
+            == 0
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on mpich/3.0.4-gcc-10.2.1-\\w{7} build_system=generic ~debug", x
+                    )
+                ]
+            )
+            == 0
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if re.match(
+                        "depends-on gcc-runtime/10.2.1-none-none-\\w{7} build_system=generic", x
+                    )
+                ]
+            )
+            == 0
+        )
+
+    def test_variants_all(self, modulefile_content, module_configuration):
+        """Tests variant definitions when variants mode is ``"all"``."""
+
+        # module variants enabled
+        module_configuration("fold_variants_all")
+
+        # test module file of package without variants
+        content = modulefile_content("module-long-help target=core2")
+        # Spack automatically defines a build_system variant, and the hash variant stands for
+        # the hash left out of the module name
+        assert len([x for x in content if "set variant_names [list build_system hash]" in x]) == 1
+        assert len([x for x in content if "set boolean_variants [list ]" in x]) == 1
+        assert len([x for x in content if "    build_system {generic}" in x]) == 1
+        assert len([x for x in content if re.match("    hash {\\w{7}}", x)]) == 1
+        assert len([x for x in content if re.match("    {generic \\w{7}}", x)]) == 1
+
+        # test module file of package with boolean variants
+        content = modulefile_content("mpileaks +debug -shared")
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set variant_names [list build_system debug fortran opt shared static hash]"
+                    in x
+                ]
+            )
+            == 1
+        )
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set boolean_variants [list debug fortran opt shared static]" in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if "    build_system {generic}" in x]) == 1
+        assert len([x for x in content if "    debug {1}" in x]) == 1
+        assert len([x for x in content if "    fortran {0}" in x]) == 1
+        assert len([x for x in content if "    opt {0}" in x]) == 1
+        assert len([x for x in content if "    shared {0}" in x]) == 1
+        assert len([x for x in content if "    static {1}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic 1 0 0 0 1 \\w{7}}", x)]) == 1
+
+        # test installation selection and variant definition code
+        assert len([x for x in content if "getvariant --return-value $name __unset__" in x]) == 1
+        assert len([x for x in content if "reportError $err_msg" in x]) == 1
+        assert len([x for x in content if "variant --default __unset__ $name" in x]) == 1
+        assert len([x for x in content if "variant --boolean --default $value $name" in x]) == 1
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "variant --default $value $name {*}$variant_values($name)" in x
+                ]
+            )
+            == 1
+        )
+
+        # test dependent module designation: the hash variant pins the dependency installation,
+        # and depends-on is redefined to handle this multi-word specification on Environment
+        # Modules < 5.7
+        assert (
+            len([x for x in content if "if {![info exists ::env(LMOD_VERSION_MAJOR)]} {" in x])
+            == 1
+        )
+        assert len([x for x in content if "    proc depends-on {args} {" in x]) == 1
+        assert (
+            len([x for x in content if "if {![llength [info commands depends-on]]} {" in x]) == 0
+        )
+        # depends-on command defined once and used 3 times
+        assert len([x for x in content if "depends-on " in x]) == 4
+        depends_on_lines = [x for x in content if x.startswith("    depends-on ")]
+        assert len(depends_on_lines) == 3
+        for pattern in (
+            "    depends-on callpath/1.0-gcc-10.2.1 hash=\\w{7}$",
+            "    depends-on mpich/3.0.4-gcc-10.2.1 hash=\\w{7}$",
+            "    depends-on gcc-runtime/10.2.1-none-none hash=\\w{7}$",
+        ):
+            assert len([x for x in depends_on_lines if re.match(pattern, x)]) == 1
+
+        # test module file of package with valued variants
+        content = modulefile_content("multivalue-variant-multi-defaults myvariant=bar")
+        assert (
+            len(
+                [x for x in content if "set variant_names [list build_system myvariant hash]" in x]
+            )
+            == 1
+        )
+        assert len([x for x in content if "set boolean_variants [list ]" in x]) == 1
+        assert len([x for x in content if "    build_system {generic}" in x]) == 1
+        assert len([x for x in content if "    myvariant {bar}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic bar \\w{7}}", x)]) == 1
+
+        # test module file of package with multi-valued variants
+        content = modulefile_content("multivalue-variant-multi-defaults")
+        assert len([x for x in content if "    myvariant {bar_baz}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic bar_baz \\w{7}}", x)]) == 1
+        content = modulefile_content("multivalue-variant-multi-defaults myvariant=baz,bar")
+        assert len([x for x in content if "    myvariant {bar_baz}" in x]) == 1
+
+    def test_variants_all_reserved(self, modulefile_content, module_configuration):
+        """Tests that variants reserved by Spack are not defined in module file."""
+
+        module_configuration("fold_variants_all")
+
+        # patches variant is set on concretized spec of package with patches
+        content = modulefile_content("patch@2.0")
+        assert len([x for x in content if "set variant_names [list build_system hash]" in x]) == 1
+        assert len([x for x in content if "variant" in x and "patches" in x]) == 0
+        assert len([x for x in content if re.match("    {generic \\w{7}}", x)]) == 1
+
+        # dev_path variant set on spec
+        content = modulefile_content("mpileaks dev_path=/some/path")
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set variant_names [list build_system debug fortran opt shared static hash]"
+                    in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if "variant" in x and "dev_path" in x]) == 0
+        assert len([x for x in content if re.match("    {generic 0 0 0 1 1 \\w{7}}", x)]) == 1
+
+    def test_variants_all_ignores_hash_length(self, factory, module_configuration, monkeypatch):
+        """Tests a non-zero hash_length is ignored, and reported once, when variants are
+        defined, as the hash variant replaces the hash in module names."""
+
+        module_configuration("variants_all_hashed_names")
+        monkeypatch.setattr(spack.modules.tcl, "_hash_length_warned", set())
+
+        with pytest.warns(UserWarning, match="'hash_length: 7' set .* is ignored") as record:
+            writer, spec = factory("mpileaks")
+        assert len(record) == 1
+        assert writer.conf.hash is None
+        assert writer.conf.folds_installations
+        assert writer.layout.use_name.startswith("mpileaks/2.3-gcc-10.2.1~")
+        assert "hash" in writer.conf.variants
+
+        # the warning is given once per process
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            writer, _ = factory("mpileaks")
+        assert writer.conf.hash is None
+
+    def test_variants_all_translated_values(self, modulefile_content, module_configuration):
+        """Tests variant values are written in the form the module command reads back once
+        loaded."""
+
+        module_configuration("fold_variants_all")
+
+        # "++" is spelled "xx", and characters the module command reserves become "_"
+        content = modulefile_content("gcc languages=c,c++,fortran")
+        assert len([x for x in content if "    languages {c_cxx_fortran}" in x]) == 1
+        content = modulefile_content("singlevalue-variant fum=charm++")
+        assert len([x for x in content if "    fum {charmxx}" in x]) == 1
+        content = modulefile_content("singlevalue-variant fum=ch3:sock")
+        assert len([x for x in content if "    fum {ch3_sock}" in x]) == 1
+        assert len([x for x in content if re.match("    {generic ch3_sock \\w{7}}", x)]) == 1
+
+        # a value the module command reads as a boolean gets a trailing "_"
+        content = modulefile_content("singlevalue-variant fum=on")
+        assert len([x for x in content if "    fum {on_}" in x]) == 1
+
+    def test_no_fold_without_variants(
+        self, install_mockery, module_configuration, modulefile_filename, factory, monkeypatch
+    ):
+        """Test that with variants disabled there is no folding, no database query, and the
+        module file is removed on uninstall."""
+        module_configuration("fold_variants_none")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filename("tcl", spec_a)
+        content_a = _module_lines(module_file_a)
+
+        # second installation maps to same module file, which is not overwritten
+        with pytest.warns(UserWarning, match="exists and will not be overwritten"):
+            install("--fake", "--add", spec_b)
+        content_b = _module_lines(module_file_a)
+        assert content_a == content_b
+
+        # other installations are not looked up in the database
+        def fail_query(*args, **kwargs):
+            raise AssertionError("database should not be queried when variants are disabled")
+
+        writer, _ = factory(spec_b)
+        with monkeypatch.context() as m:
+            m.setattr(spack.store.STORE.db, "query", fail_query)
+            assert writer.conf.other_specs_in_file == []
+            assert not writer.has_other_installations
+
+        # uninstall removes the module file as no installation is folded into it
+        uninstall("-y", spec_a)
+        assert not os.path.exists(module_file_a)
+
+    def test_no_fold_with_hash_in_module_name(
+        self, install_mockery, module_configuration, factory, monkeypatch
+    ):
+        """Test no installation lookup is made when the hash is part of the module name, as
+        installations then cannot share a module file."""
+        module_configuration("fold_variants_hash_projection")
+        install("--fake", "--add", "mpileaks@2.3 ~debug ^zmpi")
+        install("--fake", "--add", "mpileaks@2.3 +debug ^zmpi")
+
+        def fail_query(*args, **kwargs):
+            raise AssertionError("database should not be queried when hash is in module name")
+
+        writer, _ = factory("mpileaks@2.3 +debug ^zmpi")
+        with monkeypatch.context() as m:
+            m.setattr(spack.store.STORE.db, "query", fail_query)
+            assert not writer.conf.folds_installations
+            assert writer.conf.other_specs_in_file == []
+            assert not writer.has_other_installations
+
+    def test_fold_variants_with_different_templates(
+        self, install_mockery, module_configuration, factory
+    ):
+        """Test a template set for some of the installations folded in a module file is
+        reported, as the module file is rendered from one template."""
+        module_configuration("fold_variants_template")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+
+        writer, _ = factory(spec_b)
+        with pytest.raises(spack.error.ConfigError, match="different templates") as excinfo:
+            writer.write(overwrite=True)
+        assert writer.layout.filename in str(excinfo.value)
+        assert "mpileaks@2.3+debug" in str(excinfo.value)
+        assert "mpileaks@2.3~debug" in str(excinfo.value)
+        assert "uses template 'override_from_modules.txt'" in str(excinfo.value)
+        assert "uses the default template" in str(excinfo.value)
+
+    def test_fold_variants(self, install_mockery, module_configuration, modulefile_filename):
+        """Test generating and removing installations folded in same module file."""
+        module_configuration("fold_variants_all")
+        spec_o = "mpileaks@2.3 ~debug %clang@=15.0.0"
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+
+        install("--fake", "--add", spec_o)
+        module_file_o = modulefile_filename("tcl", spec_o)
+        content_o = _module_lines(module_file_o)
+        # dependency is pinned by its hash variant even if it has a single installation
+        assert len(_pinned_callpath(content_o)) == 1
+
+        # install 2 packages folded in same module file
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filename("tcl", spec_a)
+        content_a = _module_lines(module_file_a)
+        install("--fake", "--add", spec_b)
+        module_file_b = modulefile_filename("tcl", spec_b)
+        content_b = _module_lines(module_file_b)
+        assert module_file_a == module_file_b and content_a != content_b
+
+        # check module file content is coherent with folded installations
+        assert len([x for x in content_a if "if {$selected_installation eq {" in x]) == 1
+        assert len([x for x in content_a if "depends-on " in x]) == 4
+        assert len([x for x in content_a if "prepend-path -d {:} PATH " in x]) == 1
+        assert len([x for x in content_a if "setenv FOOBAR " in x]) == 1
+        assert len([x for x in content_b if "if {$selected_installation eq {" in x]) == 2
+        assert len([x for x in content_b if "depends-on " in x]) == 7
+        # check each installation pins its own dependency installation by its hash variant
+        assert len(_pinned_callpath(content_a)) == 1
+        assert len(_pinned_callpath(content_b)) == 2
+        assert len([x for x in content_b if "prepend-path -d {:} PATH " in x]) == 2
+        assert len([x for x in content_b if "setenv FOOBAR " in x]) == 2
+
+        # check other installed package is not affected by the new dependency installations
+        content_o_after = _module_lines(module_file_o)
+        assert content_o == content_o_after
+
+        # uninstall one package, module file should persist with remaining installation
+        uninstall("-y", spec_b)
+        content_c = _module_lines(module_file_a)
+        assert content_a == content_c
+
+        # uninstall second package, module file should be removed
+        # but the other module file should stay
+        uninstall("-y", spec_a)
+        assert not os.path.exists(module_file_a) and os.path.exists(module_file_o)
+
+        # test variant values are aggregated across installations, sorted by their values,
+        # and installations are listed in installation order
+        spec_a = "manyvariants@1.0.1"
+        spec_b = "manyvariants@1.0.1 ~a c=v2"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file_a = modulefile_filename("tcl", spec_a)
+        content_a = _module_lines(module_file_a)
+        variant_names = "set variant_names [list a b build_system c d hash]"
+        assert len([x for x in content_a if variant_names in x]) == 1
+        assert len([x for x in content_a if "set boolean_variants [list a b]" in x]) == 1
+        assert len([x for x in content_a if x == "a {0 1}\\"]) == 1
+        assert len([x for x in content_a if x == "b {0}\\"]) == 1
+        assert len([x for x in content_a if x == "c {v1 v2}\\"]) == 1
+        assert len([x for x in content_a if x == "d {v1}\\"]) == 1
+        install_a = [x for x in content_a if x.startswith("{1 0 generic v1 v1 ")]
+        install_b = [x for x in content_a if x.startswith("{0 0 generic v2 v1 ")]
+        assert len(install_a) == 1 and len(install_b) == 1
+        assert content_a.index(install_a[0]) < content_a.index(install_b[0])
+
+        # test valued conditional variant
+        spec_a = "forward-multi-value@1.0"
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filename("tcl", spec_a)
+        content_a = _module_lines(module_file_a)
+        assert len([x for x in content_a if x == "cuda {0}\\"]) == 1
+        assert len([x for x in content_a if "cuda_arch" in x]) == 0
+        spec_b = "forward-multi-value@1.0 +cuda"
+        install("--fake", "--add", spec_b)
+        content_b = _module_lines(module_file_a)
+        assert len([x for x in content_b if x == "cuda {0 1}\\"]) == 1
+        # neutral value stands for the conditional variant on installations not defining it
+        assert len([x for x in content_b if x == "cuda_arch {none}\\"]) == 1
+        assert len([x for x in content_b if x.startswith("{generic 0 none ")]) == 1
+        assert len([x for x in content_b if x.startswith("{generic 1 none ")]) == 1
+        spec_c = "forward-multi-value@1.0 +cuda cuda_arch=11"
+        install("--fake", "--add", spec_c)
+        content_c = _module_lines(module_file_a)
+        assert len([x for x in content_c if x == "cuda {0 1}\\"]) == 1
+        assert len([x for x in content_c if x == "cuda_arch {11 none}\\"]) == 1
+        assert len([x for x in content_c if x.startswith("{generic 1 11 ")]) == 1
+
+        # test boolean conditional variant
+        spec_a = "conditional-variant-pkg@2.0"
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filename("tcl", spec_a)
+        content_a = _module_lines(module_file_a)
+        assert len([x for x in content_a if x == "version_based {1}\\"]) == 1
+        assert len([x for x in content_a if x == "variant_based {0}\\"]) == 1
+        assert len([x for x in content_a if "two_whens" in x]) == 0
+        spec_b = "conditional-variant-pkg@2.0 ~version_based"
+        install("--fake", "--add", spec_b)
+        content_b = _module_lines(module_file_a)
+        assert len([x for x in content_b if x == "version_based {0 1}\\"]) == 1
+        assert len([x for x in content_b if x == "variant_based {0}\\"]) == 1
+        assert len([x for x in content_b if "two_whens" in x]) == 0
+        spec_c = "conditional-variant-pkg@2.0 +version_based +variant_based"
+        install("--fake", "--add", spec_c)
+        content_c = _module_lines(module_file_a)
+        assert len([x for x in content_c if x == "version_based {0 1}\\"]) == 1
+        assert len([x for x in content_c if x == "variant_based {0 1}\\"]) == 1
+        assert len([x for x in content_c if x == "two_whens {0}\\"]) == 1
+
+        # test conditional variant on dependency
+        spec_a = "conditional-variant-pkg-dependent@1.0 a=v1"
+        spec_b = "conditional-variant-pkg-dependent@1.0 a=v2"
+        spec_c = "conditional-variant-pkg-dependent@1.0 a=v3"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        install("--fake", "--add", spec_c)
+        module_file = modulefile_filename("tcl", spec_a)
+        content = _module_lines(module_file)
+        # each installation pins its own dependency installation by its hash variant only,
+        # whatever conditional variants the dependency installations define
+        pin_pattern = "depends-on conditional-variant-pkg/2.0-none-none hash=(\\w{7})$"
+        pinned_hashes = [
+            m.group(1) for x in content for m in [re.match(pin_pattern, x)] if m is not None
+        ]
+        dep_hashes = [
+            s["conditional-variant-pkg"].dag_hash(7)
+            for s in spack.store.STORE.db.query("conditional-variant-pkg-dependent@1.0")
+        ]
+        assert len(dep_hashes) == 3 and len(set(dep_hashes)) == 3
+        assert sorted(pinned_hashes) == sorted(dep_hashes)
+
+        # check module is considered explicit as soon as one install is explicit
+        module_configuration("fold_variants_hide_implicits")
+        spec_a = "manyvariants@1.0.0 +a ~b"
+        install("--fake", "--add", spec_a)
+        mark("--implicit", spec_a)
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_a), "default", False)
+        writer.write(overwrite=True)
+        assert os.path.exists(writer.layout.modulerc)
+        content = _module_lines(writer.layout.modulerc)
+        hide_implicit_rule = f"module-hide --soft --hidden-loaded {writer.layout.name}"
+        assert len([x for x in content if hide_implicit_rule == x]) == 1
+
+        spec_b = "manyvariants@1.0.0 +a +b"
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_b), "default", False)
+        writer.write()
+        assert os.path.exists(writer.layout.modulerc)
+        content = _module_lines(writer.layout.modulerc)
+        assert len([x for x in content if hide_implicit_rule == x]) == 1
+
+        spec_c = "manyvariants@1.0.0 ~a ~b"
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_c), "default", True)
+        writer.write()
+        assert not os.path.exists(writer.layout.modulerc)
+
+        install("--fake", "--add", spec_c)
+        uninstall("-y", spec_c)
+        assert os.path.exists(writer.layout.modulerc)
+        content = _module_lines(writer.layout.modulerc)
+        assert len([x for x in content if hide_implicit_rule == x]) == 1
+
+        # check hash variant is defined last for the 3 folded installations, 2 of them
+        # having the same other variants, and installations are listed in installation order
+        spec_a = "mpileaks@2.3 +debug +opt ^mpich"
+        spec_b = "mpileaks@2.3 +opt +debug ^zmpi"
+        spec_c = "mpileaks@2.3 ~opt +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        install("--fake", "--add", spec_c)
+        module_file = modulefile_filename("tcl", spec_a)
+        content = _module_lines(module_file)
+        assert (
+            len(
+                [
+                    x
+                    for x in content
+                    if "set variant_names [list build_system debug fortran opt shared static hash]"
+                    in x
+                ]
+            )
+            == 1
+        )
+        assert len([x for x in content if re.match("hash {\\w{7} \\w{7} \\w{7}}", x)]) == 1
+        hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
+        hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
+        hash_c = spack.store.STORE.db.query_one(spec_c).dag_hash(7)
+        install_a = f"{{generic 1 0 1 1 1 {hash_a}}}\\"
+        install_b = f"{{generic 1 0 1 1 1 {hash_b}}}\\"
+        install_c = f"{{generic 1 0 0 1 1 {hash_c}}}\\"
+        assert content.index(install_a) < content.index(install_b) < content.index(install_c)
+
+    def test_fold_variants_pinned_dependency(
+        self, install_mockery, module_configuration, modulefile_filename
+    ):
+        """Test module file of a dependent does not change when a second installation of its
+        dependency is folded in the same module file."""
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^mpich"
+        install("--fake", "--add", spec_a)
+        module_file_a = modulefile_filename("tcl", spec_a)
+        content_a = _module_lines(module_file_a)
+
+        # single installation of dependency: hash variant is defined with a single value
+        dep_a = spack.store.STORE.db.query_one("callpath ^mpich")
+        module_file_dep = modulefile_filename("tcl", "callpath ^mpich")
+        content_dep = _module_lines(module_file_dep)
+        hash_a = dep_a.dag_hash(7)
+        assert f"hash {{{hash_a}}}\\" in content_dep
+        depends_on_a = f"depends-on callpath/1.0-gcc-10.2.1 hash={hash_a}"
+        assert depends_on_a in content_a
+
+        # install a second dependency build differing only by its own dependencies
+        install("--fake", "--add", "callpath@1.0 ^zmpi")
+        dep_b = spack.store.STORE.db.query_one("callpath ^zmpi")
+        hash_b = dep_b.dag_hash(7)
+        content_dep = _module_lines(module_file_dep)
+        assert f"hash {{{' '.join(sorted([hash_a, hash_b]))}}}\\" in content_dep
+
+        # dependent module file is unchanged when regenerated
+        writer = writer_cls.from_spec(spack.store.STORE.db.query_one(spec_a), "default", True)
+        writer.write(overwrite=True)
+        content_a_after = _module_lines(module_file_a)
+        assert content_a == content_a_after
+
+    def test_fold_variants_load_unload(
+        self, install_mockery, module_configuration, module_command
+    ):
+        """Test the module tool loads the installation selected by the stated variants, with
+        the dependency installations pinned by their hash variant, and reverts all of it on
+        unload."""
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        module_command.env["MODULEPATH"] = writer_cls.from_spec(
+            concrete_a, "default"
+        ).layout.arch_dirname
+        initial_env = dict(module_command.env)
+
+        # stated variants select the matching installation, loaded with its dependencies
+        status, _ = module_command("load", "mpileaks", "+debug")
+        assert status
+        loaded = module_command.env["LOADEDMODULES"].split(":")
+        assert "mpileaks/2.3-gcc-10.2.1" in loaded and "callpath/1.0-gcc-10.2.1" in loaded
+        assert f"hash|{concrete_b.dag_hash(7)}|" in module_command.env["__MODULES_LMVARIANT"]
+        assert f"hash|{concrete_a.dag_hash(7)}|" not in module_command.env["__MODULES_LMVARIANT"]
+        assert module_command.env["FOOBAR"] == "mpileaks"
+        assert concrete_b.prefix.bin in module_command.env["PATH"].split(":")
+        assert concrete_a.prefix.bin not in module_command.env["PATH"].split(":")
+
+        # the variants recorded at load time select the same installation on unload, so its
+        # environment changes are reverted along with the dependencies loaded with it
+        status, _ = module_command("unload", "mpileaks")
+        assert status
+        assert module_command.env == initial_env
+
+        # a plain load selects the first installation listed, the one installed first
+        status, _ = module_command("load", "mpileaks")
+        assert status
+        assert f"hash|{concrete_a.dag_hash(7)}|" in module_command.env["__MODULES_LMVARIANT"]
+        assert concrete_a.prefix.bin in module_command.env["PATH"].split(":")
+        status, _ = module_command("unload", "mpileaks")
+        assert status
+        assert module_command.env == initial_env
+
+        # variants matching no installation abort the load and leave the environment as is
+        status, stderr = module_command("load", "mpileaks", "~shared")
+        assert not status
+        assert "Specified package is not installed" in stderr
+        assert module_command.env == initial_env
+
+    def test_fold_variants_translated_values_load_unload(
+        self, install_mockery, module_configuration, module_command
+    ):
+        """Test the module tool selects an installation by a translated variant value, and
+        reads this value back on unload."""
+        module_configuration("fold_variants_all")
+        spec_a = "singlevalue-variant fum=ch3:sock"
+        spec_b = "singlevalue-variant fum=on"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        module_command.env["MODULEPATH"] = writer_cls.from_spec(
+            concrete_a, "default"
+        ).layout.arch_dirname
+        initial_env = dict(module_command.env)
+
+        for value, concrete in (("ch3_sock", concrete_a), ("on_", concrete_b)):
+            status, stderr = module_command("load", "singlevalue-variant", f"fum={value}")
+            assert status, stderr
+            assert f"fum|{value}|" in module_command.env["__MODULES_LMVARIANT"]
+            assert f"hash|{concrete.dag_hash(7)}|" in module_command.env["__MODULES_LMVARIANT"]
+            status, stderr = module_command("unload", "singlevalue-variant")
+            assert status, stderr
+            assert module_command.env == initial_env
+
+    def test_fold_variants_explicit_from_database(self, install_mockery, module_configuration):
+        """Test the explicitness of the other folded installations is read from the database,
+        so an implicit installation written alongside an explicit one does not hide the
+        module file."""
+        module_configuration("fold_variants_hide_implicits")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        mark("--implicit", spec_a)
+        install("--fake", "--add", spec_b)
+
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec_a), "default")
+        assert not writer.conf.explicit
+        writer.write(overwrite=True)
+        assert not os.path.exists(writer.layout.modulerc)
+
+    def test_fold_variants_excluded(self, install_mockery, module_configuration):
+        """Test an installation excluded from module file generation is not folded into the
+        module file of the other installations."""
+        module_configuration("fold_variants_exclude")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+
+        writer = writer_cls.from_spec(concrete_b, "default")
+        assert writer.conf.specs_in_file == [concrete_b]
+        assert not writer.has_other_installations
+        writer.write()
+        with open(writer.layout.filename, encoding="utf-8") as f:
+            content = f.read()
+        assert concrete_b.dag_hash(7) in content
+        assert concrete_a.dag_hash(7) not in content
+
+    def test_fold_variants_defaults(
+        self, install_mockery, module_configuration, modulefile_filename
+    ):
+        """Test the default symlink follows the installations held by a folded module file."""
+        module_configuration("fold_variants_defaults")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+
+        # writing the installation that is not the default still links the module file, as
+        # it holds the default installation
+        module_file = modulefile_filename("tcl", spec_a)
+        default_link = os.path.join(os.path.dirname(module_file), "default")
+        assert os.readlink(default_link) == module_file
+
+        # the module file is no longer the default once the matching installation is removed
+        uninstall("-y", spec_b)
+        assert os.path.exists(module_file)
+        assert not os.path.lexists(default_link)
+
+    def test_fold_variants_default_listed_first(
+        self, install_mockery, module_configuration, modulefile_filename
+    ):
+        """Test the installation matching a configured default is listed first in a folded
+        module file, though it was installed last."""
+        module_configuration("fold_variants_defaults")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        hash_a = spack.store.STORE.db.query_one(spec_a).dag_hash(7)
+        hash_b = spack.store.STORE.db.query_one(spec_b).dag_hash(7)
+        content = _module_lines(modulefile_filename("tcl", spec_a))
+        listed = [m.group(1) for x in content for m in [re.match(r"{.* (\w{7})}\\$", x)] if m]
+        assert listed == [hash_b, hash_a]
+
+    def test_fold_variants_single_install_command(
+        self, install_mockery, module_configuration, installer_variant
+    ):
+        """Test the module file written by the install command holds every installation folded
+        into it when they are installed by the same command.
+        """
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", spec_a, spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+
+        module_file = writer_cls.from_spec(concrete_a, "default").layout.filename
+        assert module_file == writer_cls.from_spec(concrete_b, "default").layout.filename
+        with open(module_file, encoding="utf-8") as f:
+            content = f.read()
+        assert concrete_a.dag_hash(7) in content
+        assert concrete_b.dag_hash(7) in content
+
+    def test_fold_variants_shared_file_written_once(
+        self, install_mockery, module_configuration, monkeypatch
+    ):
+        """Test writing the module files of a batch of installations writes a module file
+        folding several of them once, and writes every other module file of the batch."""
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", spec_a, spec_b)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        concrete_dep = concrete_a["callpath"]
+
+        written = []
+        monkeypatch.setattr(
+            writer_cls, "write", lambda self, overwrite=False: written.append(self.spec)
+        )
+        spack.modules.write_module_files([concrete_a, concrete_dep, concrete_b])
+        assert written == [concrete_a, concrete_dep]
+
+    def test_fold_variants_default_link_removed_with_all_installations(
+        self, install_mockery, module_configuration, modulefile_filename
+    ):
+        """Test the default symlink is removed with a folded module file, when the installation
+        matching a default is not the first one removed.
+        """
+        module_configuration("fold_variants_defaults")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", "--add", spec_a)
+        install("--fake", "--add", spec_b)
+        module_file = modulefile_filename("tcl", spec_a)
+        default_link = os.path.join(os.path.dirname(module_file), "default")
+        assert os.readlink(default_link) == module_file
+
+        removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
+        for x in removed:
+            spack.store.STORE.db.remove(x)
+        spack.modules.remove_module_files(removed)
+        assert not os.path.exists(module_file)
+        assert not os.path.lexists(default_link)
+
+    def test_fold_variants_default_link_removed_with_default_installation(
+        self, install_mockery, module_configuration, modulefile_filename
+    ):
+        """Test the default symlink is removed when the installation matching a default is
+        removed from a folded module file after another one.
+        """
+        module_configuration("fold_variants_defaults")
+        spec_a = "mpileaks@2.3 ~debug ~opt ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        spec_c = "mpileaks@2.3 ~debug +opt ^zmpi"
+        for spec in (spec_a, spec_b, spec_c):
+            install("--fake", "--add", spec)
+        module_file = modulefile_filename("tcl", spec_a)
+        default_link = os.path.join(os.path.dirname(module_file), "default")
+        assert os.readlink(default_link) == module_file
+
+        removed = [spack.store.STORE.db.query_one(x) for x in (spec_a, spec_b)]
+        for x in removed:
+            spack.store.STORE.db.remove(x)
+        spack.modules.remove_module_files(removed)
+        assert os.path.exists(module_file)
+        assert not os.path.lexists(default_link)
+
+    def test_overwrite_rewrites_module_file(self, install_mockery, module_configuration):
+        """Test reinstalling a spec with --overwrite writes its module file again, without
+        warning, when no other installation has a module file of the same name.
+        """
+        module_configuration("fold_variants_none")
+        install("--fake", "mpileaks@2.3 ~debug ^zmpi")
+        concrete = spack.store.STORE.db.query_one("mpileaks@2.3 ~debug ^zmpi")
+        module_file = writer_cls.from_spec(concrete, "default").layout.filename
+        with open(module_file, "a", encoding="utf-8") as f:
+            f.write("## stale content\n")
+
+        with warnings.catch_warnings(record=True) as recorded:
+            warnings.simplefilter("always")
+            install("--fake", "--overwrite", "-y", "mpileaks@2.3 ~debug ^zmpi")
+        assert not [w for w in recorded if "will not be overwritten" in str(w.message)]
+        with open(module_file, encoding="utf-8") as f:
+            assert "## stale content" not in f.read()
+
+    def test_fold_variants_stale_module_file_rewritten(
+        self, install_mockery, module_configuration
+    ):
+        """Test a module file still listing an installation removed without updating module
+        files is written again for the next installation folded into it.
+        """
+        module_configuration("fold_variants_all")
+        spec_a = "mpileaks@2.3 ~debug ^zmpi"
+        spec_b = "mpileaks@2.3 +debug ^zmpi"
+        install("--fake", spec_a)
+        concrete_a = spack.store.STORE.db.query_one(spec_a)
+        module_file = writer_cls.from_spec(concrete_a, "default").layout.filename
+        spack.package_base.PackageBase.uninstall_by_spec(concrete_a)
+        assert os.path.exists(module_file)
+
+        with warnings.catch_warnings(record=True) as recorded:
+            warnings.simplefilter("always")
+            install("--fake", spec_b)
+        assert not [w for w in recorded if "will not be overwritten" in str(w.message)]
+        concrete_b = spack.store.STORE.db.query_one(spec_b)
+        with open(module_file, encoding="utf-8") as f:
+            content = f.read()
+        assert concrete_a.dag_hash(7) not in content
+        assert concrete_b.dag_hash(7) in content
+
+
+def test_write_module_files_skips_specs_not_installed(install_mockery, module_configuration):
+    """Tests that no module file is written for a spec that is not installed, e.g. one that
+    another process uninstalled in the meantime."""
+    module_configuration("fold_variants_all")
+    # This spec is not installed
+    spec = spack.concretize.concretize_one("mpileaks@2.3 ~debug ^zmpi")
+    spack.modules.write_module_files([spec])
+    assert not os.path.exists(writer_cls.from_spec(spec, "default").layout.filename)
+
+
+def test_remove_module_files_skips_installed_specs(install_mockery, module_configuration):
+    """Tests that the module file of a spec that is installed is kept, e.g. one that another
+    process installed again in the meantime."""
+    module_configuration("fold_variants_all")
+    install("--fake", "mpileaks@2.3 ~debug ^zmpi")
+    spec = spack.store.STORE.db.query_one("mpileaks@2.3 ~debug ^zmpi")
+    module_file = writer_cls.from_spec(spec, "default").layout.filename
+    spack.modules.remove_module_files([spec])
+
+    with open(module_file, encoding="utf-8") as f:
+        assert spec.dag_hash(7) in f.read()

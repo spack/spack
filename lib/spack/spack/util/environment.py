@@ -2,22 +2,31 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Set, unset or modify environment variables."""
+
 import collections
 import contextlib
 import inspect
 import json
 import os
+import pathlib
 import pickle
 import re
 import shlex
 import subprocess
 import sys
-from functools import wraps
+import warnings
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional, Tuple, Union
 
-from llnl.path import path_to_os_path, system_path_filter
-from llnl.util import tty
-from llnl.util.lang import dedupe
+import spack.error
+from spack.util import tty
+from spack.util.lang import dedupe
+from spack.util.path import path_to_os_path, system_path_filter
+
+# List is invariant, so List[str] is not a subtype of List[Union[str, pathlib.PurePath]].
+# Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exclude it
+# in the type hint. So, use an awkward union type to allow (mixed) str and PurePath items.
+ListOfPaths = Union[List[str], List[pathlib.PurePath], List[Union[str, pathlib.PurePath]]]
+
 
 if sys.platform == "win32":
     SYSTEM_PATHS = [
@@ -28,59 +37,74 @@ if sys.platform == "win32":
         "C:\\ProgramData",
     ]
     SUFFIXES = []
+    DEFAULT_SHELL = os.environ.get("SPACK_SHELL", "bat")
 else:
     SYSTEM_PATHS = ["/", "/usr", "/usr/local"]
     SUFFIXES = ["bin", "bin64", "include", "lib", "lib64"]
+    DEFAULT_SHELL = "sh"
 
 SYSTEM_DIRS = [os.path.join(p, s) for s in SUFFIXES for p in SYSTEM_PATHS] + SYSTEM_PATHS
 
-#: used in the compiler wrapper's `/usr/lib|/usr/lib64|...)` case entry
+#: used in the compiler wrapper's ``/usr/lib|/usr/lib64|...)`` case entry
 SYSTEM_DIR_CASE_ENTRY = "|".join(sorted(f'"{d}{suff}"' for d in SYSTEM_DIRS for suff in ("", "/")))
 
-_SHELL_SET_STRINGS = {
-    "sh": "export {0}={1};\n",
-    "csh": "setenv {0} {1};\n",
-    "fish": "set -gx {0} {1};\n",
-    "bat": 'set "{0}={1}"\n',
-    "pwsh": "$Env:{0}='{1}'\n",
-}
 
+class ShellCmdString:
+    """Formats commands to set or unset an environment variable for a given shell."""
 
-_SHELL_UNSET_STRINGS = {
-    "sh": "unset {0};\n",
-    "csh": "unsetenv {0};\n",
-    "fish": "set -e {0};\n",
-    "bat": 'set "{0}="\n',
-    "pwsh": "Set-Item -Path Env:{0}\n",
-}
+    _SET_STRINGS = {
+        "sh": "export {0}={1}",
+        "csh": "setenv {0} {1}",
+        "fish": "set -gx {0} {1}",
+        "bat": 'set "{0}={1}"',
+        "pwsh": "$Env:{0}='{1}'",
+    }
+
+    _UNSET_STRINGS = {
+        "sh": "unset {0}",
+        "csh": "unsetenv {0}",
+        "fish": "set -e {0}",
+        "bat": 'set "{0}="',
+        "pwsh": "Set-Item -Path Env:{0}",
+    }
+
+    #: separator used to terminate a statement and join it with the next one
+    _JOIN_STRINGS = {"sh": ";\n", "csh": ";\n", "fish": ";\n", "bat": "\n", "pwsh": "\n"}
+
+    def __init__(self, shell: str):
+        self.shell = shell
+
+    def set(self, name: str, value: str) -> str:
+        """Returns the command to set an environment variable to a value."""
+        return self._SET_STRINGS[self.shell].format(name, value)
+
+    def unset(self, name: str) -> str:
+        """Returns the command to unset an environment variable."""
+        return self._UNSET_STRINGS[self.shell].format(name)
+
+    def alias(self, name: str, code: str) -> List[str]:
+        if self.shell == "csh":
+            return [f'alias {name} "{code}"']
+        elif self.shell == "fish":
+            return [f"function {name}", code, "end"]
+        elif self.shell in ("bat", "pwsh"):
+            # Not implemented in Windows shells
+            return []
+        else:
+            # posix shell
+            return [f"alias {name}='{code}'"]
+
+    def join(self, cmds: List[str]) -> str:
+        """Joins a list of commands into a single, terminated script."""
+        cmds = cmds + [""]
+        sep = self._JOIN_STRINGS[self.shell]
+        return sep.join(cmds)
 
 
 TRACING_ENABLED = False
 
 Path = str
 ModificationList = List[Union["NameModifier", "NameValueModifier"]]
-
-
-def system_env_normalize(func):
-    """Decorator wrapping calls to system env modifications,
-    converting all env variable names to all upper case on Windows, no-op
-    on other platforms before calling env modification method.
-
-    Windows, due to a DOS holdover, treats all env variable names case
-    insensitively, however Spack's env modification class does not,
-    meaning setting `Path` and `PATH` would be distinct env operations
-    for Spack, but would cause a collision when actually performing the
-    env modification operations on the env.
-    Normalize all env names to all caps to prevent this collision from the
-    Spack side."""
-
-    @wraps(func)
-    def case_insensitive_modification(self, name: str, *args, **kwargs):
-        if sys.platform == "win32":
-            name = name.upper()
-        return func(self, name, *args, **kwargs)
-
-    return case_insensitive_modification
 
 
 def is_system_path(path: Path) -> bool:
@@ -107,7 +131,7 @@ def prune_duplicate_paths(paths: List[Path]) -> List[Path]:
 
 def get_path(name: str) -> List[Path]:
     """Given the name of an environment variable containing multiple
-    paths separated by 'os.pathsep', returns a list of the paths.
+    paths separated by :data:`os.pathsep`, returns a list of the paths.
     """
     path = os.environ.get(name, "").strip()
     if path:
@@ -116,8 +140,8 @@ def get_path(name: str) -> List[Path]:
 
 
 def env_flag(name: str) -> bool:
-    """Given the name of an environment variable, returns True if it is set to
-    'true' or to '1', False otherwise.
+    """Given the name of an environment variable, returns True if the lowercase value is set to
+    ``true`` or to ``1``, False otherwise.
     """
     if name in os.environ:
         value = os.environ[name].lower()
@@ -126,7 +150,7 @@ def env_flag(name: str) -> bool:
 
 
 def path_set(var_name: str, directories: List[Path]):
-    """Sets the variable passed as input to the `os.pathsep` joined list of directories."""
+    """Sets the variable passed as input to the :data:`os.pathsep` joined list of directories."""
     path_str = os.pathsep.join(str(dir) for dir in directories)
     os.environ[var_name] = path_str
 
@@ -177,7 +201,7 @@ def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]]
 
     Args:
         path: path of the file to write
-        environment: environment to be writte. If None os.environ is used.
+        environment: environment to be written. If None os.environ is used.
     """
     use_env = environment or os.environ
     hidden_vars = {"PS1", "PWD", "OLDPWD", "TERM_SESSION_ID"}
@@ -201,9 +225,17 @@ def pickle_environment(path: Path, environment: Optional[Dict[str, str]] = None)
 
 @contextlib.contextmanager
 def set_env(**kwargs):
-    """Temporarily sets and restores environment variables.
+    """Temporarily sets and restores environment variables. Variables can be set as keyword
+    arguments to this function.
 
-    Variables can be set as keyword arguments to this function.
+    .. note::
+
+       If the goal is to set environment variables for a subprocess, it is strongly recommended to
+       use the ``extra_env`` argument of :func:`spack.util.executable.Executable.__call__` instead
+       of this function.
+
+       This function is intended to modify the *current* process's environment (which is an unsafe
+       operation in general).
     """
     saved = {}
     for var, value in kwargs.items():
@@ -251,7 +283,7 @@ class NameModifier:
     __slots__ = ("name", "separator", "trace")
 
     def __init__(self, name: str, *, separator: str = os.pathsep, trace: Optional[Trace] = None):
-        self.name = name
+        self.name = name.upper() if sys.platform == "win32" else name
         self.separator = separator
         self.trace = trace
 
@@ -271,9 +303,9 @@ class NameValueModifier:
     __slots__ = ("name", "value", "separator", "trace")
 
     def __init__(
-        self, name: str, value: Any, *, separator: str = os.pathsep, trace: Optional[Trace] = None
+        self, name: str, value: str, *, separator: str = os.pathsep, trace: Optional[Trace] = None
     ):
-        self.name = name
+        self.name = name.upper() if sys.platform == "win32" else name
         self.value = value
         self.separator = separator
         self.trace = trace
@@ -290,6 +322,23 @@ class NameValueModifier:
     def execute(self, env: MutableMapping[str, str]):
         """Apply the modification to the mapping passed as input"""
         raise NotImplementedError("must be implemented by derived classes")
+
+
+class NamePathModifier(NameValueModifier):
+    """Base class for modifiers that modify the value of an environment variable
+    that is a path."""
+
+    __slots__ = ()
+
+    def __init__(
+        self,
+        name: str,
+        value: Union[str, pathlib.PurePath],
+        *,
+        separator: str = os.pathsep,
+        trace: Optional[Trace] = None,
+    ):
+        super().__init__(name, str(value), separator=separator, trace=trace)
 
 
 class SetEnv(NameValueModifier):
@@ -309,17 +358,17 @@ class SetEnv(NameValueModifier):
         self.raw = raw
 
     def execute(self, env: MutableMapping[str, str]):
-        tty.debug(f"SetEnv: {self.name}={str(self.value)}", level=3)
-        env[self.name] = str(self.value)
+        tty.debug(f"SetEnv: {self.name}={self.value}", level=3)
+        env[self.name] = self.value
 
 
 class AppendFlagsEnv(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
-        tty.debug(f"AppendFlagsEnv: {self.name}={str(self.value)}", level=3)
+        tty.debug(f"AppendFlagsEnv: {self.name}={self.value}", level=3)
         if self.name in env and env[self.name]:
-            env[self.name] += self.separator + str(self.value)
+            env[self.name] += self.separator + self.value
         else:
-            env[self.name] = str(self.value)
+            env[self.name] = self.value
 
 
 class UnsetEnv(NameModifier):
@@ -331,7 +380,7 @@ class UnsetEnv(NameModifier):
 
 class RemoveFlagsEnv(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
-        tty.debug(f"RemoveFlagsEnv: {self.name}-{str(self.value)}", level=3)
+        tty.debug(f"RemoveFlagsEnv: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         flags = environment_value.split(self.separator) if environment_value else []
         flags = [f for f in flags if f != self.value]
@@ -339,33 +388,68 @@ class RemoveFlagsEnv(NameValueModifier):
 
 
 class SetPath(NameValueModifier):
+    def __init__(
+        self,
+        name: str,
+        value: ListOfPaths,
+        *,
+        separator: str = os.pathsep,
+        trace: Optional[Trace] = None,
+    ):
+        super().__init__(
+            name, separator.join(str(x) for x in value), separator=separator, trace=trace
+        )
+
     def execute(self, env: MutableMapping[str, str]):
-        string_path = self.separator.join(str(item) for item in self.value)
-        tty.debug(f"SetPath: {self.name}={string_path}", level=3)
-        env[self.name] = string_path
+        tty.debug(f"SetPath: {self.name}={self.value}", level=3)
+        env[self.name] = self.value
 
 
-class AppendPath(NameValueModifier):
+class AppendPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
-        tty.debug(f"AppendPath: {self.name}+{str(self.value)}", level=3)
+        tty.debug(f"AppendPath: {self.name}+{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
         env[self.name] = self.separator.join(directories)
 
 
-class PrependPath(NameValueModifier):
+class PrependPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
-        tty.debug(f"PrependPath: {self.name}+{str(self.value)}", level=3)
+        tty.debug(f"PrependPath: {self.name}+{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator) if environment_value else []
         directories = [path_to_os_path(os.path.normpath(self.value)).pop()] + directories
         env[self.name] = self.separator.join(directories)
 
 
-class RemovePath(NameValueModifier):
+class RemoveFirstPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
-        tty.debug(f"RemovePath: {self.name}-{str(self.value)}", level=3)
+        tty.debug(f"RemoveFirstPath: {self.name}-{self.value}", level=3)
+        environment_value = env.get(self.name, "")
+        directories = environment_value.split(self.separator)
+        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        if val in directories:
+            directories.remove(val)
+        env[self.name] = self.separator.join(directories)
+
+
+class RemoveLastPath(NamePathModifier):
+    def execute(self, env: MutableMapping[str, str]):
+        tty.debug(f"RemoveLastPath: {self.name}-{self.value}", level=3)
+        environment_value = env.get(self.name, "")
+        directories = environment_value.split(self.separator)[::-1]
+        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        if val in directories:
+            directories.remove(val)
+        env[self.name] = self.separator.join(directories[::-1])
+
+
+class RemovePath(NamePathModifier):
+    def execute(self, env: MutableMapping[str, str]):
+        tty.debug(f"RemovePath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
         directories = environment_value.split(self.separator)
         directories = [
@@ -398,14 +482,68 @@ class PruneDuplicatePaths(NameModifier):
         env[self.name] = self.separator.join(directories)
 
 
+def _validate_path_value(name: str, value: Any) -> Union[str, pathlib.PurePath]:
+    """Ensure the value for an env variable is string or path"""
+    types = (str, pathlib.PurePath)
+    if isinstance(value, types):
+        return value
+    types_str = " or ".join([f"`{t.__name__}`" for t in types])
+    warnings.warn(
+        f"when setting environment variable {name}={value}: value is of type "
+        f"`{type(value).__name__}`, but {types_str} was expected. This is deprecated and will be "
+        f"an error in Spack v1.0",
+        spack.error.SpackAPIWarning,
+        stacklevel=3,
+    )
+    return str(value)
+
+
+def _validate_value(name: str, value: Any) -> str:
+    """Ensure the value for an env variable is a string"""
+    if isinstance(value, str):
+        return value
+    warnings.warn(
+        f"when setting environment variable {name}={value}: value is of type "
+        f"`{type(value).__name__}`, but `str` was expected. This is deprecated and will be an "
+        "error in Spack v1.0",
+        spack.error.SpackAPIWarning,
+        stacklevel=3,
+    )
+    return str(value)
+
+
 class EnvironmentModifications:
-    """Keeps track of requests to modify the current environment."""
+    """
+    Tracks and applies a sequence of environment variable modifications.
+
+    This class provides a high-level interface for building up a list of environment changes,
+    such as setting, unsetting, appending, prepending, or removing values from environment
+    variables. Modifications are stored and can be applied to a given environment dictionary, or
+    rendered as shell code.
+
+    Package authors typically receive an instance of this class and call :meth:`set`,
+    :meth:`unset`, :meth:`prepend_path`, :meth:`remove_path`, etc., to queue up modifications.
+    Spack runs :meth:`apply_modifications` to apply these modifications to the environment when
+    needed.
+
+    Modifications can be grouped by variable name, reversed (where possible), validated for
+    suspicious patterns, and extended from other instances. The class also supports tracing the
+    origin of modifications for debugging.
+
+    Example:
+
+        .. code-block:: python
+
+           env = EnvironmentModifications()
+           env.set("FOO", "bar")
+           env.prepend_path("PATH", "/custom/bin")
+           env.apply_modifications()  # applies changes to os.environ
+    """
 
     def __init__(
         self, other: Optional["EnvironmentModifications"] = None, traced: Union[None, bool] = None
     ):
-        """Initializes a new instance, copying commands from 'other'
-        if it is not None.
+        """Initializes a new instance, copying commands from 'other' if it is not None.
 
         Args:
             other: list of environment modifications to be extended (optional)
@@ -424,6 +562,7 @@ class EnvironmentModifications:
         return len(self.env_modifications)
 
     def extend(self, other: "EnvironmentModifications"):
+        """Extends the current instance with modifications from another instance."""
         self._check_other(other)
         self.env_modifications.extend(other.env_modifications)
 
@@ -449,8 +588,7 @@ class EnvironmentModifications:
 
         return Trace(filename=filename, lineno=lineno, context=current_context)
 
-    @system_env_normalize
-    def set(self, name: str, value: str, *, force: bool = False, raw: bool = False):
+    def set(self, name: str, value: str, *, force: bool = False, raw: bool = False) -> None:
         """Stores a request to set an environment variable.
 
         Args:
@@ -459,23 +597,23 @@ class EnvironmentModifications:
             force: if True, audit will not consider this modification a warning
             raw: if True, format of value string is skipped
         """
+        value = _validate_value(name, value)
         item = SetEnv(name, value, trace=self._trace(), force=force, raw=raw)
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def append_flags(self, name: str, value: str, sep: str = " "):
-        """Stores a request to append 'flags' to an environment variable.
+    def append_flags(self, name: str, value: str, sep: str = " ") -> None:
+        """Stores a request to append flags to an environment variable.
 
         Args:
             name: name of the environment variable
             value: flags to be appended
-            sep: separator for the flags (default: " ")
+            sep: separator for the flags (default: ``" "``)
         """
+        value = _validate_value(name, value)
         item = AppendFlagsEnv(name, value, separator=sep, trace=self._trace())
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def unset(self, name: str):
+    def unset(self, name: str) -> None:
         """Stores a request to unset an environment variable.
 
         Args:
@@ -484,87 +622,119 @@ class EnvironmentModifications:
         item = UnsetEnv(name, trace=self._trace())
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def remove_flags(self, name: str, value: str, sep: str = " "):
+    def remove_flags(self, name: str, value: str, sep: str = " ") -> None:
         """Stores a request to remove flags from an environment variable
 
         Args:
             name: name of the environment variable
             value: flags to be removed
-            sep: separator for the flags (default: " ")
+            sep: separator for the flags (default: ``" "``)
         """
+        value = _validate_value(name, value)
         item = RemoveFlagsEnv(name, value, separator=sep, trace=self._trace())
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def set_path(self, name: str, elements: List[str], separator: str = os.pathsep):
+    def set_path(self, name: str, elements: ListOfPaths, separator: str = os.pathsep) -> None:
         """Stores a request to set an environment variable to a list of paths,
         separated by a character defined in input.
 
         Args:
             name: name of the environment variable
             elements: ordered list paths
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
+        elements = [_validate_path_value(name, x) for x in elements]
         item = SetPath(name, elements, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def append_path(self, name: str, path: str, separator: str = os.pathsep):
+    def append_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
         """Stores a request to append a path to list of paths.
 
         Args:
             name: name of the environment variable
             path: path to be appended
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
+        path = _validate_path_value(name, path)
         item = AppendPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def prepend_path(self, name: str, path: str, separator: str = os.pathsep):
+    def prepend_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
         """Stores a request to prepend a path to list of paths.
 
         Args:
             name: name of the environment variable
             path: path to be prepended
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
+        path = _validate_path_value(name, path)
         item = PrependPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def remove_path(self, name: str, path: str, separator: str = os.pathsep):
+    def remove_first_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
+        """Stores a request to remove first instance of path from a list of paths.
+
+        Args:
+            name: name of the environment variable
+            path: path to be removed
+            separator: separator for the paths (default: :data:`os.pathsep`)
+        """
+        path = _validate_path_value(name, path)
+        item = RemoveFirstPath(name, path, separator=separator, trace=self._trace())
+        self.env_modifications.append(item)
+
+    def remove_last_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
+        """Stores a request to remove last instance of path from a list of paths.
+
+        Args:
+            name: name of the environment variable
+            path: path to be removed
+            separator: separator for the paths (default: :data:`os.pathsep`)
+        """
+        path = _validate_path_value(name, path)
+        item = RemoveLastPath(name, path, separator=separator, trace=self._trace())
+        self.env_modifications.append(item)
+
+    def remove_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
         """Stores a request to remove a path from a list of paths.
 
         Args:
             name: name of the environment variable
             path: path to be removed
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
+        path = _validate_path_value(name, path)
         item = RemovePath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def deprioritize_system_paths(self, name: str, separator: str = os.pathsep):
+    def deprioritize_system_paths(self, name: str, separator: str = os.pathsep) -> None:
         """Stores a request to deprioritize system paths in a path list,
         otherwise preserving the order.
 
         Args:
             name: name of the environment variable
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         item = DeprioritizeSystemPaths(name, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    @system_env_normalize
-    def prune_duplicate_paths(self, name: str, separator: str = os.pathsep):
+    def prune_duplicate_paths(self, name: str, separator: str = os.pathsep) -> None:
         """Stores a request to remove duplicates from a path list, otherwise
         preserving the order.
 
         Args:
             name: name of the environment variable
-            separator: separator for the paths (default: os.pathsep)
+            separator: separator for the paths (default: :data:`os.pathsep`)
         """
         item = PruneDuplicatePaths(name, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
@@ -585,7 +755,8 @@ class EnvironmentModifications:
         return len(old_mods) != len(new_mods)
 
     def is_unset(self, variable_name: str) -> bool:
-        """Returns True if the last modification to a variable is to unset it, False otherwise."""
+        """Returns :data:`True` if the last modification to a variable is to unset it,
+        :data:`False` otherwise."""
         modifications = self.group_by_name()
         if variable_name not in modifications:
             return False
@@ -601,10 +772,10 @@ class EnvironmentModifications:
         """Returns the EnvironmentModifications object that will reverse self
 
         Only creates reversals for additions to the environment, as reversing
-        ``unset`` and ``remove_path`` modifications is impossible.
+        :meth:`unset` and :meth:`remove_path` modifications is impossible.
 
-        Reversable operations are set(), prepend_path(), append_path(),
-        set_path(), and append_flags().
+        Reversible operations are :meth:`set`, :meth:`prepend_path`, :meth:`append_path`,
+        :meth:`set_path`, and :meth:`append_flags`.
         """
         rev = EnvironmentModifications()
 
@@ -613,9 +784,9 @@ class EnvironmentModifications:
                 tty.debug("Reversing `Set` environment operation may lose the original value")
                 rev.unset(envmod.name)
             elif isinstance(envmod, AppendPath):
-                rev.remove_path(envmod.name, envmod.value)
+                rev.remove_last_path(envmod.name, envmod.value)
             elif isinstance(envmod, PrependPath):
-                rev.remove_path(envmod.name, envmod.value)
+                rev.remove_first_path(envmod.name, envmod.value)
             elif isinstance(envmod, SetPath):
                 tty.debug("Reversing `SetPath` environment operation may lose the original value")
                 rev.unset(envmod.name)
@@ -629,10 +800,10 @@ class EnvironmentModifications:
         return rev
 
     def apply_modifications(self, env: Optional[MutableMapping[str, str]] = None):
-        """Applies the modifications and clears the list.
+        """Applies the modifications to the environment.
 
         Args:
-            env: environment to be modified. If None, os.environ will be used.
+            env: environment to be modified. If None, :obj:`os.environ` will be used.
         """
         env = os.environ if env is None else env
 
@@ -643,11 +814,11 @@ class EnvironmentModifications:
 
     def shell_modifications(
         self,
-        shell: str = "sh" if sys.platform != "win32" else os.environ.get("SPACK_SHELL", "bat"),
+        shell: str = DEFAULT_SHELL,
         explicit: bool = False,
         env: Optional[MutableMapping[str, str]] = None,
     ) -> str:
-        """Return shell code to apply the modifications and clears the list."""
+        """Return shell code to apply the modifications."""
         modifications = self.group_by_name()
 
         env = os.environ if env is None else env
@@ -660,28 +831,28 @@ class EnvironmentModifications:
         if "MANPATH" in new_env and not new_env["MANPATH"].endswith(os.pathsep):
             new_env["MANPATH"] += os.pathsep
 
-        cmds = ""
+        shell_cmd = ShellCmdString(shell)
+        cmds = []
 
         for name in sorted(set(modifications)):
             new = new_env.get(name, None)
             old = env.get(name, None)
             if explicit or new != old:
                 if new is None:
-                    cmds += _SHELL_UNSET_STRINGS[shell].format(name)
+                    cmds.append(shell_cmd.unset(name))
                 else:
                     value = new_env[name]
                     if shell not in ("bat", "pwsh"):
                         value = shlex.quote(value)
-                    cmd = _SHELL_SET_STRINGS[shell].format(name, value)
-                    cmds += cmd
-        return cmds
+                    cmds.append(shell_cmd.set(name, value))
+        return shell_cmd.join(cmds)
 
     @staticmethod
     def from_sourcing_file(
         filename: Path, *arguments: str, **kwargs: Any
     ) -> "EnvironmentModifications":
         """Returns the environment modifications that have the same effect as
-        sourcing the input file.
+        sourcing the input file in a shell.
 
         Args:
             filename: the file to be sourced
@@ -742,9 +913,20 @@ class EnvironmentModifications:
             ]
         )
 
+        before_kwargs = {**kwargs}
+        if sys.platform == "win32":
+            # Windows cannot source os.devnull, but it can echo from it
+            # so we override the "source" action in the method that
+            # extracts the env (environment_after_sourcing_files)
+            if "source_command" not in kwargs:
+                before_kwargs["source_command"] = "echo"
+
         # Compute the environments before and after sourcing
+
+        # First look at the environment after doing nothing to
+        # establish baseline
         before = sanitize(
-            environment_after_sourcing_files(os.devnull, **kwargs),
+            environment_after_sourcing_files(os.devnull, **before_kwargs),
             exclude=exclude,
             include=include,
         )
@@ -784,7 +966,7 @@ class EnvironmentModifications:
         modified_variables.sort()
 
         def return_separator_if_any(*args):
-            separators = ":", ";"
+            separators = [os.pathsep] if sys.platform == "win32" else [":", ";"]
             for separator in separators:
                 for arg in args:
                     if separator in arg:
@@ -929,19 +1111,19 @@ def inspect_path(
     ``/usr/include`` and ``/usr/lib64``. If found we want to prepend
     ``/usr/include`` to ``CPATH`` and ``/usr/lib64`` to ``MY_LIB64_PATH``.
 
-        .. code-block:: python
+    .. code-block:: python
 
-            # Set up the dictionary containing the inspection
-            inspections = {
-                'include': ['CPATH'],
-                'lib64': ['MY_LIB64_PATH']
-            }
+        # Set up the dictionary containing the inspection
+        inspections = {
+            "include": ["CPATH"],
+            "lib64": ["MY_LIB64_PATH"]
+        }
 
-            # Get back the list of command needed to modify the environment
-            env = inspect_path('/usr', inspections)
+        # Get back the list of command needed to modify the environment
+        env = inspect_path("/usr", inspections)
 
-            # Eventually execute the commands
-            env.apply_modifications()
+        # Eventually execute the commands
+        env.apply_modifications()
     """
     if exclude is None:
         exclude = lambda x: False
@@ -1022,7 +1204,7 @@ def environment_after_sourcing_files(
     if sys.platform == "win32":
         shell_cmd = kwargs.get("shell", "cmd.exe")
         shell_options = kwargs.get("shell_options", "/C")
-        suppress_output = kwargs.get("suppress_output", "")
+        suppress_output = kwargs.get("suppress_output", "> nul")
         source_command = kwargs.get("source_command", "")
     else:
         shell_cmd = kwargs.get("shell", "/bin/bash")
@@ -1034,23 +1216,37 @@ def environment_after_sourcing_files(
     def _source_single_file(file_and_args, environment):
         shell_options_list = shell_options.split()
 
+        # The command below is a single string handed to a shell, so the file to be sourced,
+        # its arguments, and the interpreter are quoted to survive word splitting. The shell
+        # operators around them (source_command, suppress_output, concatenate_on_success) are
+        # shell syntax, and must be left alone.
+        if sys.platform == "win32":
+            # cmd.exe does not follow POSIX quoting rules, so pass arguments through unchanged
+            quoted_args = [str(x) for x in file_and_args]
+            python_exe = sys.executable
+        else:
+            quoted_args = [shlex.quote(str(x)) for x in file_and_args]
+            python_exe = shlex.quote(sys.executable)
+
         source_file = [source_command]
-        source_file.extend(x for x in file_and_args)
+        source_file.extend(quoted_args)
         source_file = " ".join(source_file)
 
         dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
-        dump_environment_cmd = sys.executable + f' -E -c "{dump_cmd}"'
+        dump_environment_cmd = python_exe + f' -E -c "{dump_cmd}"'
 
         # Try to source the file
-        source_file_arguments = " ".join(
-            [source_file, suppress_output, concatenate_on_success, dump_environment_cmd]
+        source_file_arguments = (
+            f"{source_file} {suppress_output} {concatenate_on_success} {dump_environment_cmd}"
         )
 
+        # Popens argument processing can break command invocations
+        # on Windows, compose to a string to avoid said processing
+        cmd = [shell_cmd, *shell_options_list, source_file_arguments]
+        cmd = " ".join(cmd) if sys.platform == "win32" else cmd
+
         with subprocess.Popen(
-            [shell_cmd, *shell_options_list, source_file_arguments],
-            env=environment,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            cmd, env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         ) as shell:
             output, _ = shell.communicate()
 

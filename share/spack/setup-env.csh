@@ -33,14 +33,15 @@ endif
 
 # filter this script out of list of open files
 if ( $?_sp_lsof ) then
-    set _sp_source_file = `$_sp_lsof | sed -e 's/^[^/]*//' | grep "/setup-env.csh"`
+    set _sp_source_file = `$_sp_lsof | \sed -e 's/^[^/]*//' | \grep "/setup-env.csh"`
 endif
 
-# This script is in $SPACK_ROOT/share/spack; get the root with dirname
+# This script is in $SPACK_ROOT/share/spack.
+# Get the root with :h, which is like dirname but it's a csh builtin
 if ($?_sp_source_file) then
-    set _sp_share_spack = `dirname "$_sp_source_file"`
-    set _sp_share = `dirname "$_sp_share_spack"`
-    setenv SPACK_ROOT `dirname "$_sp_share"`
+    set _sp_share_spack = "$_sp_source_file:h"
+    set _sp_share = "$_sp_share_spack:h"
+    setenv SPACK_ROOT "$_sp_share:h"
 endif
 
 if (! $?SPACK_ROOT) then
@@ -73,8 +74,8 @@ _spack_pathadd PATH "$SPACK_ROOT/bin"
 eval `spack --print-shell-vars csh`
 
 # Set up module search paths in the user environment
-set tcl_roots = `echo $_sp_tcl_roots:q | sed 's/:/ /g'`
-set compatible_sys_types = `echo $_sp_compatible_sys_types:q | sed 's/:/ /g'`
+set tcl_roots = `echo $_sp_tcl_roots:q | \sed 's/:/ /g'`
+set compatible_sys_types = `echo $_sp_compatible_sys_types:q | \sed 's/:/ /g'`
 foreach tcl_root ($tcl_roots:q)
     foreach systype ($compatible_sys_types:q)
         _spack_pathadd MODULEPATH "$tcl_root/$systype"

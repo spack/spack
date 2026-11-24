@@ -1,15 +1,15 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import os
 import re
 import sys
 import urllib.parse
-from typing import List
+import warnings
+from typing import List, Optional, Tuple
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
+import spack.config
 import spack.repo
 import spack.stage
 from spack.spec import Spec
@@ -20,10 +20,12 @@ from spack.url import (
     parse_name,
     parse_version,
 )
+from spack.util import tty
 from spack.util.editor import editor
 from spack.util.executable import which
+from spack.util.filesystem import mkdirp
 from spack.util.format import get_version_lines
-from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
+from spack.util.naming import pkg_name_to_class_name, simplify_name
 
 description = "create a new package file"
 section = "packaging"
@@ -52,6 +54,8 @@ package_template = '''\
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
+{package_class_import}
+
 from spack.package import *
 
 
@@ -61,6 +65,10 @@ class {class_name}({base_class_name}):
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
 {url_def}
+
+    # FIXME: Uncomment and add the upstream supplier (organization or author).
+    # If unknown or inapplicable, remove this entire block.
+    # supplier = organization_or_author
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
@@ -85,6 +93,7 @@ class BundlePackageTemplate:
     """
 
     base_class_name = "BundlePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.bundle import BundlePackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required.
@@ -95,7 +104,7 @@ class BundlePackageTemplate:
 
     def __init__(self, name: str, versions, languages: List[str]):
         self.name = name
-        self.class_name = mod_to_class(name)
+        self.class_name = pkg_name_to_class_name(name)
         self.versions = versions
         self.languages = languages
 
@@ -114,6 +123,7 @@ class BundlePackageTemplate:
                     name=self.name,
                     class_name=self.class_name,
                     base_class_name=self.base_class_name,
+                    package_class_import=self.package_class_import,
                     url_def=self.url_def,
                     versions=self.versions,
                     dependencies="\n".join(all_deps),
@@ -126,6 +136,7 @@ class PackageTemplate(BundlePackageTemplate):
     """Provides the default values to be used for the package file template"""
 
     base_class_name = "Package"
+    package_class_import = "from spack_repo.builtin.build_systems.generic import Package"
 
     body_def = """\
     def install(self, spec, prefix):
@@ -146,6 +157,9 @@ class AutotoolsPackageTemplate(PackageTemplate):
     that *do* come with a ``configure`` script"""
 
     base_class_name = "AutotoolsPackage"
+    package_class_import = (
+        "from spack_repo.builtin.build_systems.autotools import AutotoolsPackage"
+    )
 
     body_def = """\
     def configure_args(self):
@@ -160,12 +174,16 @@ class AutoreconfPackageTemplate(PackageTemplate):
     that *do not* come with a ``configure`` script"""
 
     base_class_name = "AutotoolsPackage"
+    package_class_import = (
+        "from spack_repo.builtin.build_systems.autotools import AutotoolsPackage"
+    )
 
     dependencies = """\
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    with default_args(type="build"):
+        depends_on("autoconf")
+        depends_on("automake")
+        depends_on("libtool")
+        depends_on("m4")
 
     # FIXME: Add additional dependencies if required.
     # depends_on("foo")"""
@@ -186,6 +204,7 @@ class CargoPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for cargo-based packages"""
 
     base_class_name = "CargoPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.cargo import CargoPackage"
 
     body_def = ""
 
@@ -194,6 +213,7 @@ class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
     base_class_name = "CMakePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.cmake import CMakePackage"
 
     body_def = """\
     def cmake_args(self):
@@ -208,6 +228,7 @@ class GoPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Go-module-based packages"""
 
     base_class_name = "GoPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.go import GoPackage"
 
     body_def = ""
 
@@ -216,6 +237,7 @@ class LuaPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for LuaRocks-based packages"""
 
     base_class_name = "LuaPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.lua import LuaPackage"
 
     body_def = """\
     def luarocks_args(self):
@@ -237,6 +259,7 @@ class MesonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for meson-based packages"""
 
     base_class_name = "MesonPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.meson import MesonPackage"
 
     body_def = """\
     def meson_args(self):
@@ -249,6 +272,7 @@ class QMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for QMake-based packages"""
 
     base_class_name = "QMakePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.qmake import QMakePackage"
 
     body_def = """\
     def qmake_args(self):
@@ -261,6 +285,7 @@ class MavenPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Maven-based packages"""
 
     base_class_name = "MavenPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.maven import MavenPackage"
 
     body_def = """\
     def build(self, spec, prefix):
@@ -272,6 +297,7 @@ class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
     base_class_name = "SConsPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.scons import SConsPackage"
 
     body_def = """\
     def build_args(self, spec, prefix):
@@ -285,6 +311,7 @@ class WafPackageTemplate(PackageTemplate):
     """Provides appropriate override for Waf-based packages"""
 
     base_class_name = "WafPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.waf import WafPackage"
 
     body_def = """\
     # FIXME: Override configure_args(), build_args(),
@@ -296,7 +323,8 @@ class BazelPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add additional dependencies if required.
-    depends_on("bazel", type="build")"""
+    with default_args(type="build"):
+        depends_on("bazel")"""
 
     body_def = """\
     def install(self, spec, prefix):
@@ -305,9 +333,10 @@ class BazelPackageTemplate(PackageTemplate):
 
 
 class RacketPackageTemplate(PackageTemplate):
-    """Provides approriate overrides for Racket extensions"""
+    """Provides appropriate overrides for Racket extensions"""
 
     base_class_name = "RacketPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.racket import RacketPackage"
 
     url_line = """\
     # FIXME: set the proper location from which to fetch your package
@@ -317,8 +346,9 @@ class RacketPackageTemplate(PackageTemplate):
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the racket dependency
     # if you need specific versions. A generic racket dependency is
-    # added implicity by the RacketPackage class.
-    # depends_on("racket@8.3:", type=("build", "run"))"""
+    # added implicitly by the RacketPackage class.
+    # with default_args(type=("build", "run")):
+    #     depends_on("racket@8.3:")"""
 
     body_def = """\
     # FIXME: specify the name of the package,
@@ -345,24 +375,27 @@ class PythonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for python extensions"""
 
     base_class_name = "PythonPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.python import PythonPackage"
 
     dependencies = """\
     # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
     # or need to change the dependency type. Generic python/pip/wheel dependencies are
-    # added implicity by the PythonPackage base class.
+    # added implicitly by the PythonPackage base class.
     # depends_on("python@2.X:2.Y,3.Z:", type=("build", "run"))
     # depends_on("py-pip@X.Y:", type="build")
     # depends_on("py-wheel@X.Y:", type="build")
 
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
     # exists, use setuptools.
-    # depends_on("py-setuptools", type="build")
-    # depends_on("py-hatchling", type="build")
-    # depends_on("py-flit-core", type="build")
-    # depends_on("py-poetry-core", type="build")
+    # with default_args(type="build"):
+    #     depends_on("py-setuptools")
+    #     depends_on("py-hatchling")
+    #     depends_on("py-flit-core")
+    #     depends_on("py-poetry-core")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("py-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("py-foo")"""
 
     body_def = """\
     def config_settings(self, spec, prefix):
@@ -387,7 +420,7 @@ class PythonPackageTemplate(PackageTemplate):
         # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
 
         # PyPI URLs containing hash:
-        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file>
+        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file> # noqa: E501
         # e.g. https://pypi.io/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
@@ -432,10 +465,12 @@ class RPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for R extensions"""
 
     base_class_name = "RPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.r import RPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on("r-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("r-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -462,7 +497,7 @@ class RPackageTemplate(PackageTemplate):
         bioc = re.search(r"(?:bioconductor)[^/]+/packages" + "/([^/]+)" * 5, url)
 
         if bioc:
-            self.url_line = '    url = "{0}"\n' '    bioc = "{1}"'.format(url, r_name)
+            self.url_line = '    url = "{0}"\n    bioc = "{1}"'.format(url, r_name)
 
         super().__init__(name, url, versions, languages)
 
@@ -472,10 +507,12 @@ class PerlmakePackageTemplate(PackageTemplate):
     that come with a Makefile.PL"""
 
     base_class_name = "PerlPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.perl import PerlPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
     body_def = """\
     def configure_args(self):
@@ -502,19 +539,22 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     depends_on("perl-module-build", type="build")
 
     # FIXME: Add additional dependencies if required:
-    # depends_on("perl-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("perl-foo")"""
 
 
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
     base_class_name = "OctavePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.octave import OctavePackage"
 
     dependencies = """\
     extends("octave")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on("octave-foo", type=("build", "run"))"""
+    # with default_args(type=("build", "run")):
+    #     depends_on("octave-foo")"""
 
     def __init__(self, name, url, versions, languages: List[str]):
         # If the user provided `--name octave-splines`, don't rename it
@@ -531,13 +571,15 @@ class RubyPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Ruby packages"""
 
     base_class_name = "RubyPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.ruby import RubyPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the ruby dependency
     # if you need specific versions. A generic ruby dependency is
-    # added implicity by the RubyPackage class.
-    # depends_on("ruby@X.Y.Z:", type=("build", "run"))
-    # depends_on("ruby-foo", type=("build", "run"))"""
+    # added implicitly by the RubyPackage class.
+    # with default_args(type=("build", "run")):
+    #     depends_on("ruby@X.Y.Z:")
+    #     depends_on("ruby-foo")"""
 
     body_def = """\
     def build(self, spec, prefix):
@@ -559,6 +601,7 @@ class MakefilePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Makefile packages"""
 
     base_class_name = "MakefilePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.makefile import MakefilePackage"
 
     body_def = """\
     def edit(self, spec, prefix):
@@ -572,7 +615,8 @@ class MakefilePackageTemplate(PackageTemplate):
 class IntelPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for licensed Intel software"""
 
-    base_class_name = "IntelPackage"
+    base_class_name = "IntelOneApiPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.oneapi import IntelOneApiPackage"
 
     body_def = """\
     # FIXME: Override `setup_environment` if necessary."""
@@ -582,6 +626,7 @@ class SIPPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SIP packages."""
 
     base_class_name = "SIPPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.sip import SIPPackage"
 
     body_def = """\
     def configure_args(self, spec, prefix):
@@ -628,7 +673,7 @@ templates = {
 }
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument("url", nargs="?", help="url of package archive")
     subparser.add_argument(
         "--keep-stage",
@@ -874,29 +919,28 @@ def get_name(name, url):
 
     result = simplify_name(result)
 
-    if not valid_fully_qualified_module_name(result):
+    if not re.match(r"^[a-z0-9-]+$", result):
         tty.die("Package name can only contain a-z, 0-9, and '-'")
 
     return result
 
 
-def get_url(url):
+def get_url(url: Optional[str]) -> str:
     """Get the URL to use.
 
     Use a default URL if none is provided.
 
     Args:
-        url (str): ``url`` argument to ``spack create``
+        url: ``url`` argument to ``spack create``
 
-    Returns:
-        str: The URL of the package
+    Returns: The URL of the package
     """
 
     # Use the user-supplied URL or a default URL if none is present.
     return url or "https://www.example.com/example-1.2.3.tar.gz"
 
 
-def get_versions(args, name):
+def get_versions(args: argparse.Namespace, name: str) -> Tuple[str, BuildSystemAndLanguageGuesser]:
     """Returns a list of versions and hashes for a package.
 
     Also returns a BuildSystemAndLanguageGuesser object.
@@ -904,11 +948,10 @@ def get_versions(args, name):
     Returns default values if no URL is provided.
 
     Args:
-        args (argparse.Namespace): The arguments given to ``spack create``
-        name (str): The name of the package
+        args: The arguments given to ``spack create``
+        name: The name of the package
 
-    Returns:
-        tuple: versions and hashes, and a BuildSystemAndLanguageGuesser object
+    Returns: Tuple of versions and hashes, and a BuildSystemAndLanguageGuesser object
     """
 
     # Default version with hash
@@ -937,7 +980,9 @@ def get_versions(args, name):
         try:
             url_dict = find_versions_of_archive(args.url)
             if len(url_dict) > 1 and not args.batch and sys.stdin.isatty():
-                url_dict_filtered = spack.stage.interactive_version_filter(url_dict)
+                url_dict_filtered = spack.stage.interactive_version_filter(
+                    url_dict, config=spack.config.CONFIG
+                )
                 if url_dict_filtered is None:
                     exit(0)
                 url_dict = url_dict_filtered
@@ -951,18 +996,28 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        version_hashes = spack.stage.get_checksums_for_versions(
-            url_dict, name, first_stage_function=guesser, keep_stage=args.keep_stage
+        result = spack.stage.get_checksums_for_versions(
+            url_dict,
+            name,
+            first_stage_function=guesser,
+            keep_stage=args.keep_stage,
+            config=spack.config.CONFIG,
         )
+        for version, error in result.failures.items():
+            warnings.warn(f"Skipping {name}@{version}: {error}")
+        if not result.hashes:
+            tty.die(f"Could not fetch any versions for {name}")
 
-        versions = get_version_lines(version_hashes, url_dict)
+        versions = get_version_lines(result.hashes)
     else:
         versions = unhashed_versions
 
     return versions, guesser
 
 
-def get_build_system(template: str, url: str, guesser: BuildSystemAndLanguageGuesser) -> str:
+def get_build_system(
+    template: Optional[str], url: str, guesser: BuildSystemAndLanguageGuesser
+) -> str:
     """Determine the build system template.
 
     If a template is specified, always use that. Otherwise, if a URL
@@ -997,17 +1052,16 @@ def get_build_system(template: str, url: str, guesser: BuildSystemAndLanguageGue
     return selected_template
 
 
-def get_repository(args, name):
+def get_repository(args: argparse.Namespace, name: str) -> spack.repo.Repo:
     """Returns a Repo object that will allow us to determine the path where
     the new package file should be created.
 
     Args:
-        args (argparse.Namespace): The arguments given to ``spack create``
-        name (str): The name of the package to create
+        args: The arguments given to ``spack create``
+        name: The name of the package to create
 
     Returns:
-        spack.repo.Repo: A Repo object capable of determining the path to the
-            package file
+        A Repo object capable of determining the path to the package file
     """
     spec = Spec(name)
     # Figure out namespace for spec
@@ -1023,14 +1077,17 @@ def get_repository(args, name):
         repo = spack.repo.from_path(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die(
-                "Can't create package with namespace {0} in repo with "
-                "namespace {1}".format(spec.namespace, repo.namespace)
+                "Can't create package with namespace {0} in repo with namespace {1}".format(
+                    spec.namespace, repo.namespace
+                )
             )
     else:
         if spec.namespace:
             repo = spack.repo.PATH.get_repo(spec.namespace)
         else:
-            repo = spack.repo.PATH.first_repo()
+            _repo = spack.repo.PATH.first_repo()
+            assert _repo is not None, "No package repository found"
+            repo = _repo
 
     # Set the namespace on the spec if it's not there already
     if not spec.namespace:

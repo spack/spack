@@ -11,13 +11,13 @@ from spack.oci.image import Digest, ImageReference
     "image_ref, expected",
     [
         (
-            f"example.com:1234/a/b/c:tag@sha256:{'a'*64}",
+            f"example.com:1234/a/b/c:tag@sha256:{'a' * 64}",
             ("example.com:1234", "a/b/c", "tag", Digest.from_sha256("a" * 64)),
         ),
         ("example.com:1234/a/b/c:tag", ("example.com:1234", "a/b/c", "tag", None)),
         ("example.com:1234/a/b/c", ("example.com:1234", "a/b/c", "latest", None)),
         (
-            f"example.com:1234/a/b/c@sha256:{'a'*64}",
+            f"example.com:1234/a/b/c@sha256:{'a' * 64}",
             ("example.com:1234", "a/b/c", "latest", Digest.from_sha256("a" * 64)),
         ),
         # ipv4
@@ -45,17 +45,17 @@ def test_name_parsing(image_ref, expected):
     "image_ref",
     [
         # wrong order of tag and sha
-        f"example.com:1234/a/b/c@sha256:{'a'*64}:tag",
+        f"example.com:1234/a/b/c@sha256:{'a' * 64}:tag",
         # double tag
         "example.com:1234/a/b/c:tag:tag",
         # empty tag
         "example.com:1234/a/b/c:",
         # empty digest
         "example.com:1234/a/b/c@sha256:",
-        # unsupport digest algorithm
-        f"example.com:1234/a/b/c@sha512:{'a'*128}",
+        # unsupported digest algorithm
+        f"example.com:1234/a/b/c@sha512:{'a' * 128}",
         # invalid digest length
-        f"example.com:1234/a/b/c@sha256:{'a'*63}",
+        f"example.com:1234/a/b/c@sha256:{'a' * 63}",
         # whitespace
         "example.com:1234/a/b/c :tag",
         "example.com:1234/a/b/c: tag",
@@ -83,3 +83,17 @@ def test_digest():
     # Missing algorithm
     with pytest.raises(ValueError):
         Digest.from_string(valid_digest)
+
+
+def test_url_with_scheme():
+    """Test that scheme=http translates to http:// URLs"""
+    http = ImageReference.from_string("localhost:1234/myimage:abc", scheme="http")
+    https = ImageReference.from_string("localhost:1234/myimage:abc", scheme="https")
+    default = ImageReference.from_string("localhost:1234/myimage:abc")
+
+    assert http != https
+    assert https == default
+
+    assert http.manifest_url() == "http://localhost:1234/v2/myimage/manifests/abc"
+    assert https.manifest_url() == "https://localhost:1234/v2/myimage/manifests/abc"
+    assert default.manifest_url() == "https://localhost:1234/v2/myimage/manifests/abc"

@@ -8,27 +8,26 @@ import sys
 import spack.build_environment
 import spack.config
 import spack.spec
-import spack.util.environment as environment
 from spack import traverse
-from spack.context import Context
+from spack.enums import Context
+from spack.util import environment
 
 #: Environment variable name Spack uses to track individually loaded packages
 spack_loaded_hashes_var = "SPACK_LOADED_HASHES"
 
 
-def prefix_inspections(platform):
+def prefix_inspections(platform: str) -> dict:
     """Get list of prefix inspections for platform
 
     Arguments:
-        platform (str): the name of the platform to consider. The platform
-            determines what environment variables Spack will use for some
-            inspections.
+        platform: the name of the platform to consider. The platform determines what environment
+            variables Spack will use for some inspections.
 
     Returns:
-        A dictionary mapping subdirectory names to lists of environment
-            variables to modify with that directory if it exists.
+        A dictionary mapping subdirectory names to lists of environment variables to modify with
+        that directory if it exists.
     """
-    inspections = spack.config.get("modules:prefix_inspections")
+    inspections = spack.config.CONFIG.get("modules:prefix_inspections")
     if isinstance(inspections, dict):
         return inspections
 

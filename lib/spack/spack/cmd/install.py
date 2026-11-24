@@ -8,35 +8,35 @@ import shutil
 import sys
 from typing import List
 
-import llnl.util.filesystem as fs
-from llnl.string import plural
-from llnl.util import lang, tty
-
+import spack.binary_distribution
 import spack.cmd
-import spack.concretize
 import spack.config
 import spack.environment as ev
+import spack.installer_dispatch
+import spack.modules
 import spack.paths
-import spack.report
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.concretize_ui import TerminalUI
 from spack.error import InstallError, SpackError
-from spack.installer import PackageInstaller
+from spack.old_installer import InstallPolicy
+from spack.util import tty
+from spack.util.string import plural
 
 description = "build and install packages"
 section = "build"
 level = "short"
 
 
-# Determine value of cache flag
-def cache_opt(default_opt, use_buildcache):
-    if use_buildcache == "auto":
-        return default_opt
-    elif use_buildcache == "only":
-        return True
+def cache_opt(use_buildcache: str, default: InstallPolicy) -> InstallPolicy:
+    if use_buildcache == "only":
+        return "cache_only"
     elif use_buildcache == "never":
-        return False
+        return "source_only"
+    return default
 
 
 def install_kwargs_from_args(args):
@@ -44,6 +44,12 @@ def install_kwargs_from_args(args):
     to the package installer.
     """
     pkg_use_bc, dep_use_bc = args.use_buildcache
+    if args.cache_only:
+        default = "cache_only"
+    elif args.use_cache:
+        default = "auto"
+    else:
+        default = "source_only"
 
     return {
         "fail_fast": args.fail_fast,
@@ -52,21 +58,21 @@ def install_kwargs_from_args(args):
         "restage": not args.dont_restage,
         "install_source": args.install_source,
         "verbose": args.verbose or args.install_verbose,
+        "show_log_on_error": args.show_log_on_error,
         "fake": args.fake,
         "dirty": args.dirty,
-        "package_use_cache": cache_opt(args.use_cache, pkg_use_bc),
-        "package_cache_only": cache_opt(args.cache_only, pkg_use_bc),
-        "dependencies_use_cache": cache_opt(args.use_cache, dep_use_bc),
-        "dependencies_cache_only": cache_opt(args.cache_only, dep_use_bc),
+        "root_policy": cache_opt(pkg_use_bc, default),
+        "dependencies_policy": cache_opt(dep_use_bc, default),
         "include_build_deps": args.include_build_deps,
         "stop_at": args.until,
         "unsigned": args.unsigned,
         "install_deps": ("dependencies" in args.things_to_install),
         "install_package": ("package" in args.things_to_install),
+        "concurrent_packages": args.concurrent_packages,
     }
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--only",
         default="package,dependencies",
@@ -84,6 +90,7 @@ def setup_parser(subparser):
         default=None,
         help="phase to stop after when installing (default None)",
     )
+    arguments.add_common_arguments(subparser, ["concurrent_packages"])
     arguments.add_common_arguments(subparser, ["jobs"])
     subparser.add_argument(
         "--overwrite",
@@ -203,16 +210,6 @@ def setup_parser(subparser):
         help="(with environment) do not add spec to the environment as a root",
     )
 
-    subparser.add_argument(
-        "-f",
-        "--file",
-        action="append",
-        default=[],
-        dest="specfiles",
-        metavar="SPEC_YAML_FILE",
-        help="read specs to install from .yaml files",
-    )
-
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ["clean", "dirty"])
 
@@ -295,8 +292,8 @@ def _dump_log_on_error(e: InstallError):
             shutil.copyfileobj(log, sys.stderr)
 
 
-def _die_require_env():
-    msg = "install requires a package argument or active environment"
+def _die_require_env(parser):
+    msg = "requires a package argument or active environment"
     if "spack.yaml" in os.listdir(os.getcwd()):
         # There's a spack.yaml file in the working dir, the user may
         # have intended to use that
@@ -309,7 +306,7 @@ def _die_require_env():
             "  OR\n"
             "    spack --env . install"
         )
-    tty.die(msg)
+    parser.error(msg)
 
 
 def install(parser, args):
@@ -321,7 +318,7 @@ def install(parser, args):
         return
 
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     if args.log_file and not args.log_format:
         msg = "the '--log-format' must be specified when using '--log-file'"
@@ -329,28 +326,21 @@ def install(parser, args):
 
     arguments.sanitize_reporter_options(args)
 
-    def reporter_factory(specs):
-        if args.log_format is None:
-            return lang.nullcontext()
-
-        return spack.report.build_context_manager(
-            reporter=args.reporter(), filename=report_filename(args, specs=specs), specs=specs
-        )
-
+    reporter = args.reporter() if args.log_format else None
     install_kwargs = install_kwargs_from_args(args)
+    env = active_environment()
 
-    env = ev.active_environment()
-
-    if not env and not args.spec and not args.specfiles:
-        _die_require_env()
+    if not env and not args.spec:
+        _die_require_env(args.subparser)
 
     try:
         if env:
-            install_with_active_env(env, args, install_kwargs, reporter_factory)
+            install_with_active_env(env, args, install_kwargs, reporter)
         else:
-            install_without_active_env(args, install_kwargs, reporter_factory)
+            install_without_active_env(args, install_kwargs, reporter)
     except InstallError as e:
-        if args.show_log_on_error:
+        # The new installer dumps the logs itself; its error has no package attached.
+        if args.show_log_on_error and e.pkg is not None:
             _dump_log_on_error(e)
         raise
 
@@ -372,17 +362,21 @@ def _maybe_add_and_concretize(args, env, specs):
 
         # `spack concretize`
         tests = compute_tests_install_kwargs(env.user_specs, args.test)
-        concretized_specs = env.concretize(tests=tests)
+        concretized_specs = env.concretize(tests=tests, ui=TerminalUI())
         if concretized_specs:
             tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}")
-            ev.display_specs([concrete for _, concrete in concretized_specs])
+            spack.binary_distribution.load_buildcache_index()
+            status_fn = ev.install_status_fn(
+                env, spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+            )
+            ev.display_specs([concrete for _, concrete in concretized_specs], status_fn=status_fn)
 
         # save view regeneration for later, so that we only do it
         # once, as it can be slow.
         env.write(regenerate=False)
 
 
-def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_factory):
+def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter):
     specs = spack.cmd.parse_specs(args.spec)
 
     # The following two commands are equivalent:
@@ -393,7 +387,8 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
 
     # Now we're doing `spack install --only-concrete`.
     if args.add or not specs:
-        specs_to_install = env.concrete_roots()
+        env.warn_skipped_roots()
+        specs_to_install = env.installable_roots()
         if not specs_to_install:
             tty.msg(f"{env.name} environment has no specs to install")
             return
@@ -403,9 +398,9 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
         specs_to_install = env.all_matching_specs(*specs)
         if not specs_to_install:
             msg = (
-                "Cannot install '{0}' because no matching specs are in the current environment."
-                " You can add specs to the environment with 'spack add {0}', or as part"
-                " of the install command with 'spack install --add {0}'"
+                "Cannot install '{0}' because no matching specs are in the current environment.\n"
+                " Specs can be added to the environment with 'spack add {0}',\n"
+                " or as part of the install command with 'spack install --add {0}'"
             ).format(" ".join(args.spec))
             tty.die(msg)
 
@@ -416,8 +411,16 @@ def install_with_active_env(env: ev.Environment, args, install_kwargs, reporter_
         install_kwargs["overwrite"] = [spec.dag_hash() for spec in specs_to_install]
 
     try:
-        with reporter_factory(specs_to_install):
-            env.install_specs(specs_to_install, **install_kwargs)
+        report_file = report_filename(args, specs_to_install)
+        installer = env.create_installer(
+            specs_to_install, create_reports=reporter is not None, **install_kwargs
+        )
+        try:
+            installer.install()
+        finally:
+            spack.modules.write_module_files(installer.recorded_specs)
+            if reporter:
+                reporter.build_report(report_file, list(installer.reports.values()))
     finally:
         if env.views:
             with env.write_transaction():
@@ -441,38 +444,26 @@ def concrete_specs_from_cli(args, install_kwargs):
     return concrete_specs
 
 
-def concrete_specs_from_file(args):
-    """Return the list of concrete specs read from files."""
-    result = []
-    for file in args.specfiles:
-        with open(file, "r", encoding="utf-8") as f:
-            if file.endswith("yaml") or file.endswith("yml"):
-                s = spack.spec.Spec.from_yaml(f)
-            else:
-                s = spack.spec.Spec.from_json(f)
-
-        concretized = spack.concretize.concretize_one(s)
-        if concretized.dag_hash() != s.dag_hash():
-            msg = 'skipped invalid file "{0}". '
-            msg += "The file does not contain a concrete spec."
-            tty.warn(msg.format(file))
-            continue
-        result.append(concretized)
-    return result
-
-
-def install_without_active_env(args, install_kwargs, reporter_factory):
-    concrete_specs = concrete_specs_from_cli(args, install_kwargs) + concrete_specs_from_file(args)
+def install_without_active_env(args, install_kwargs, reporter):
+    concrete_specs = concrete_specs_from_cli(args, install_kwargs)
 
     if len(concrete_specs) == 0:
-        tty.die("The `spack install` command requires a spec to install.")
+        args.subparser.error("requires a spec")
 
-    with reporter_factory(concrete_specs):
-        if args.overwrite:
-            require_user_confirmation_for_overwrite(concrete_specs, args)
-            install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]
+    if args.overwrite:
+        require_user_confirmation_for_overwrite(concrete_specs, args)
+        install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]
 
-        installs = [s.package for s in concrete_specs]
-        install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
-        builder = PackageInstaller(installs, **install_kwargs)
-        builder.install()
+    installs = [s.package for s in concrete_specs]
+    install_kwargs["explicit"] = [s.dag_hash() for s in concrete_specs]
+
+    installer = spack.installer_dispatch.create_installer(
+        installs, create_reports=reporter is not None, **install_kwargs
+    )
+    try:
+        installer.install()
+    finally:
+        spack.modules.write_module_files(installer.recorded_specs)
+        if reporter:
+            report_file = report_filename(args, concrete_specs)
+            reporter.build_report(report_file, list(installer.reports.values()))

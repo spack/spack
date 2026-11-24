@@ -3,25 +3,29 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import io
 import json
 import os
-import sys
-from textwrap import dedent
+import pathlib
 
 import pytest
 
-import spack.cmd as cmd
+import spack.cmd
 import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
+import spack.package_base
+import spack.paths
 import spack.repo
-import spack.store
+import spack.spec
 import spack.user_environment as uenv
+from spack.database import Database
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
-from spack.test.conftest import create_test_repo
 from spack.test.utilities import SpackCommandArgs
+from spack.util.filesystem import working_dir
 from spack.util.pattern import Bunch
+from spack.version.git_ref_lookup import GitRefLookup
 
 find = SpackCommand("find")
 env = SpackCommand("env")
@@ -129,33 +133,17 @@ def test_tag2_tag3(parser, specs):
 @pytest.mark.db
 def test_namespaces_shown_correctly(args, with_namespace, database):
     """Test that --namespace(s) works. Old syntax is --namespace"""
-    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
+    assert ("builtin_mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db
 def test_find_cli_output_format(database, mock_tty_stdout):
-    # Currently logging on Windows detaches stdout
-    # from the terminal so we miss some output during tests
-    # TODO: (johnwparent): Once logging is amended on Windows,
-    # restore this test
-    out = find("zmpi")
-    if not sys.platform == "win32":
-        assert out.endswith(
-            dedent(
-                """\
-      zmpi@1.0
-      ==> 1 installed package
-      """
-            )
-        )
-    else:
-        assert out.endswith(
-            dedent(
-                """\
-      zmpi@1.0
-      """
-            )
-        )
+    assert find("zmpi").endswith(
+        """\
+zmpi@1.0
+==> 1 installed package
+"""
+    )
 
 
 def _check_json_output(spec_list):
@@ -170,7 +158,7 @@ def _check_json_output(spec_list):
 
 
 def _check_json_output_deps(spec_list):
-    assert len(spec_list) == 13
+    assert len(spec_list) == 16
 
     names = [spec["name"] for spec in spec_list]
     assert names.count("mpileaks") == 3
@@ -199,35 +187,44 @@ def test_find_json_deps(database):
 
 
 @pytest.mark.db
-def test_display_json(database, capsys):
+def test_display_json(database, capfd):
     specs = [
         spack.concretize.concretize_one(s)
         for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
-    cmd.display_specs_as_json(specs)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spack.cmd.display_specs_as_json(specs)
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output(spec_list)
 
-    cmd.display_specs_as_json(specs + specs + specs)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spack.cmd.display_specs_as_json(specs + specs + specs)
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output(spec_list)
 
 
 @pytest.mark.db
-def test_display_json_deps(database, capsys):
+def test_display_json_deps(database, capfd):
     specs = [
         spack.concretize.concretize_one(s)
         for s in ["mpileaks ^zmpi", "mpileaks ^mpich", "mpileaks ^mpich2"]
     ]
 
-    cmd.display_specs_as_json(specs, deps=True)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spack.cmd.display_specs_as_json(specs, deps=True)
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
 
-    cmd.display_specs_as_json(specs + specs + specs, deps=True)
-    spec_list = json.loads(capsys.readouterr()[0])
+    spack.cmd.display_specs_as_json(specs + specs + specs, deps=True)
+    spec_list = json.loads(capfd.readouterr()[0])
     _check_json_output_deps(spec_list)
+
+
+@pytest.mark.regression("52219")
+def test_display_abstract_hash():
+    spec = spack.spec.Spec("/foobar")
+    out = io.StringIO()
+
+    spack.cmd.display_specs([spec], output=out)  # errors on failure
+    assert "/foobar" in out.getvalue()
 
 
 @pytest.mark.db
@@ -249,11 +246,7 @@ def test_find_format(database, config):
 
     output = find("--format", "{name}-{^mpi.name}-{hash:7}", "mpileaks")
     elements = output.strip().split("\n")
-    assert set(e[:-7] for e in elements) == {
-        "mpileaks-zmpi-",
-        "mpileaks-mpich-",
-        "mpileaks-mpich2-",
-    }
+    assert {e[:-7] for e in elements} == {"mpileaks-zmpi-", "mpileaks-mpich-", "mpileaks-mpich2-"}
 
     # hashes are in base32
     for e in elements:
@@ -272,6 +265,9 @@ mpileaks-2.3
         dyninst-8.2
             libdwarf-20130729
             libelf-0.8.13
+    compiler-wrapper-1.0
+    gcc-10.2.1
+    gcc-runtime-10.2.1
     zmpi-1.0
         fake-1.0
 
@@ -282,24 +278,22 @@ mpileaks-2.3
 @pytest.mark.db
 def test_find_format_deps_paths(database, config):
     output = find("-dp", "--format", "{name}-{version}", "mpileaks", "^zmpi")
-
-    spec = spack.concretize.concretize_one("mpileaks ^zmpi")
-    prefixes = [s.prefix for s in spec.traverse()]
-
+    mpileaks = spack.concretize.concretize_one("mpileaks ^zmpi")
     assert (
         output
-        == """\
-mpileaks-2.3                   {0}
-    callpath-1.0               {1}
-        dyninst-8.2            {2}
-            libdwarf-20130729  {3}
-            libelf-0.8.13      {4}
-    zmpi-1.0                   {5}
-        fake-1.0               {6}
+        == f"""\
+mpileaks-2.3                   {mpileaks.prefix}
+    callpath-1.0               {mpileaks["callpath"].prefix}
+        dyninst-8.2            {mpileaks["dyninst"].prefix}
+            libdwarf-20130729  {mpileaks["libdwarf"].prefix}
+            libelf-0.8.13      {mpileaks["libelf"].prefix}
+    compiler-wrapper-1.0       {mpileaks["compiler-wrapper"].prefix}
+    gcc-10.2.1                 {mpileaks["gcc"].prefix}
+    gcc-runtime-10.2.1         {mpileaks["gcc-runtime"].prefix}
+    zmpi-1.0                   {mpileaks["zmpi"].prefix}
+        fake-1.0               {mpileaks["fake"].prefix}
 
-""".format(
-            *prefixes
-        )
+"""
     )
 
 
@@ -318,15 +312,8 @@ def test_find_very_long(database, config):
 
 
 @pytest.mark.db
-def test_find_show_compiler(database, config):
-    output = find("--no-groups", "--show-full-compiler", "mpileaks")
-    assert "mpileaks@2.3%gcc@10.2.1" in output
-
-
-@pytest.mark.db
-def test_find_not_found(database, config, capsys):
-    with capsys.disabled():
-        output = find("foobarbaz", fail_on_error=False)
+def test_find_not_found(database, config):
+    output = find("foobarbaz", fail_on_error=False)
     assert "No package matches the query: foobarbaz" in output
     assert find.returncode == 1
 
@@ -361,10 +348,12 @@ def test_find_prefix_in_env(
         # Would throw error on regression
 
 
-def test_find_specs_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
-    path = tmpdir.join("spack.yaml")
+def test_find_specs_include_concrete_env(
+    mutable_mock_env_path, mutable_mock_repo, tmp_path: pathlib.Path
+):
+    path = tmp_path / "spack.yaml"
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -379,7 +368,7 @@ spack:
     test1.concretize()
     test1.write()
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -399,16 +388,18 @@ spack:
     with ev.read("combined_env"):
         output = find()
 
-    assert "No root specs" in output
+    assert "no root specs" in output
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
 
 
-def test_find_specs_nested_include_concrete_env(mutable_mock_env_path, mutable_mock_repo, tmpdir):
-    path = tmpdir.join("spack.yaml")
+def test_find_specs_nested_include_concrete_env(
+    mutable_mock_env_path, mutable_mock_repo, tmp_path: pathlib.Path
+):
+    path = tmp_path / "spack.yaml"
 
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         with open(str(path), "w", encoding="utf-8") as f:
             f.write(
                 """\
@@ -434,18 +425,18 @@ spack:
     with ev.read("test3"):
         output = find()
 
-    assert "No root specs" in output
+    assert "no root specs" in output
     assert "Included specs" in output
     assert "mpileaks" in output
     assert "libelf" in output
 
 
-def test_find_loaded(database, working_env):
+def test_find_loaded(database: Database, working_env):
     output = find("--loaded", "--group")
     assert output == ""
 
     os.environ[uenv.spack_loaded_hashes_var] = os.pathsep.join(
-        [x.dag_hash() for x in spack.store.STORE.db.query()]
+        [x.dag_hash() for x in database.query()]
     )
     output = find("--loaded")
     expected = find()
@@ -453,7 +444,9 @@ def test_find_loaded(database, working_env):
 
 
 @pytest.mark.regression("37712")
-def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
+def test_environment_with_version_range_in_compiler_doesnt_fail(
+    tmp_path: pathlib.Path, mock_packages
+):
     """Tests that having an active environment with a root spec containing a compiler constrained
     by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
     when invoking "spack find".
@@ -464,93 +457,20 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
 
     with test_environment:
         output = find()
-    assert "zlib%gcc@12.1.0" in output
+    assert "zlib" in output
 
 
-_pkga = (
-    "a0",
-    """\
-from spack.package import *
-
-class A0(Package):
-    version("1.2")
-    version("1.1")
-
-    depends_on("b0")
-    depends_on("c0")
-""",
-)
-
-
-_pkgb = (
-    "b0",
-    """\
-from spack.package import *
-
-class B0(Package):
-    version("1.2")
-    version("1.1")
-""",
-)
-
-
-_pkgc = (
-    "c0",
-    """\
-from spack.package import *
-
-class C0(Package):
-    version("1.2")
-    version("1.1")
-
-    tags = ["tag0", "tag1"]
-""",
-)
-
-
-_pkgd = (
-    "d0",
-    """\
-from spack.package import *
-
-class D0(Package):
-    version("1.2")
-    version("1.1")
-
-    depends_on("c0")
-    depends_on("e0")
-""",
-)
-
-
-_pkge = (
-    "e0",
-    """\
-from spack.package import *
-
-class E0(Package):
-    tags = ["tag1", "tag2"]
-
-    version("1.2")
-    version("1.1")
-""",
-)
+#   a0  d0
+#  / \ / \
+# b0  c0  e0
 
 
 @pytest.fixture
-def _create_test_repo(tmpdir, mutable_config):
-    r"""
-      a0  d0
-     / \ / \
-    b0  c0  e0
-    """
-    yield create_test_repo(tmpdir, [_pkga, _pkgb, _pkgc, _pkgd, _pkge])
-
-
-@pytest.fixture
-def test_repo(_create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
-        yield mock_repo_path
+def test_repo(mock_stage):
+    with spack.repo.use_repositories(
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "find")
+    ) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def test_find_concretized_not_installed(
@@ -612,3 +532,77 @@ def test_find_concretized_not_installed(
         assert _nresults(_query(e, "--tag=tag0")) == (1, 0)
         assert _nresults(_query(e, "--tag=tag1")) == (1, 1)
         assert _nresults(_query(e, "--tag=tag2")) == (0, 1)
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
+def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
+    repo_path, filename, commits = mock_git_version_info
+    file_url = pathlib.Path(repo_path).as_uri()
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
+
+    install("--fake", f"git-test-commit commit={commits[0]}")
+    output = find(f"commit={commits[0]}")
+    assert "git-test-commit" in output
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
+def test_find_based_on_git_ref(monkeypatch):
+    """A bare git ref query matches the installed spec built from that ref, whatever Spack
+    version was assigned to it, without a repository lookup."""
+    monkeypatch.setattr(GitRefLookup, "get", lambda self, ref: ("1.2", 0))
+    install("--fake", "git-test-commit@git.1.x")
+    monkeypatch.setattr(
+        GitRefLookup, "get", lambda self, ref: pytest.fail(f"unexpected git ref lookup of '{ref}'")
+    )
+    assert "git.1.x=1.2" in find("git-test-commit@git.1.x")
+    assert "No package matches" in find("git-test-commit@git.main", fail_on_error=False)
+
+
+@pytest.mark.usefixtures("mock_packages")
+@pytest.mark.parametrize(
+    "spack_yaml,expected,not_expected",
+    [
+        (
+            """
+spack:
+  specs:
+  - mpileaks
+  - group: extras
+    specs:
+    - libelf
+""",
+            [
+                "2 root specs",
+                # Group names
+                "extras",
+                "default",
+                # root specs
+                "mpileaks",
+                "libelf",
+            ],
+            [],
+        ),
+        (
+            """
+spack:
+  specs:
+  - group: tools
+    specs:
+    - libelf
+""",
+            ["1 root spec", "tools", "libelf"],
+            ["1 root specs", "default"],
+        ),
+    ],
+)
+def test_find_env_with_groups(spack_yaml, expected, not_expected, tmp_path: pathlib.Path):
+    """Tests that the output of spack find contains expected matches when using an
+    environment with groups.
+    """
+    (tmp_path / "spack.yaml").write_text(spack_yaml)
+    with ev.Environment(tmp_path):
+        output = find()
+
+    assert all(x in output for x in expected)
+    assert all(x not in output for x in not_expected)

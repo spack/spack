@@ -2,17 +2,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
+import argparse
 
 import spack.cmd
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "remove specs from an environment"
 section = "environments"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-a", "--all", action="store_true", help="remove all specs from (clear) the environment"
     )
@@ -30,13 +31,13 @@ def setup_parser(subparser):
 
 
 def remove(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="remove")
+    env = spack.cmd.require_active_env(args.subparser)
 
     with env.write_transaction():
         if args.all:
             env.clear()
         else:
             for spec in spack.cmd.parse_specs(args.specs):
-                env.remove(spec, args.list_name, force=args.force)
-                tty.msg(f"{spec} has been removed from {env.manifest}")
+                for removed in env.remove(spec, args.list_name, force=args.force):
+                    tty.msg(f"{removed} has been removed from {env.manifest}")
         env.write()

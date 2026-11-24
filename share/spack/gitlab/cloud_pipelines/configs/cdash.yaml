@@ -1,6 +1,0 @@
-cdash:
-  build-group: Spack CI
-  url: https://cdash.spack.io
-  project: Spack Testing
-  site: Cloud Gitlab Infrastructure
-

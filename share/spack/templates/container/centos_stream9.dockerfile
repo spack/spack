@@ -22,7 +22,6 @@ RUN dnf update -y \
         svn \
         patch \
         python3.11 \
-        python3.11-setuptools \
         unzip \
         zstd \
  && python3.11 -m ensurepip \

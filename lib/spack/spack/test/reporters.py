@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 
 import pytest
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
 import spack.reporters.extract
+import spack.util.filesystem as fs
 from spack.install_test import TestStatus
 from spack.reporters import CDash, CDashConfiguration
+from spack.util import tty
 
 # Use a path variable to appease Spack style line length checks
 fake_install_prefix = fs.join_path(
@@ -41,9 +41,7 @@ def test_reporters_extract_basics():
 ==> [2022-02-15-18:44:21.250165] test: {0}: {1}
 ==> [2022-02-15-18:44:21.250200] '{2}'
 {3}: {0}
-""".format(
-        name, desc, fake_bin, status
-    ).splitlines()
+""".format(name, desc, fake_bin, status).splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
     assert len(parts) == 1
@@ -63,9 +61,7 @@ def test_reporters_extract_no_parts(capfd):
 ==> Testing package fake-1.0-abcdefg
 ==> [2022-02-11-17:14:38.875259] Installing {0} to {1}
 {2}
-""".format(
-        fake_install_test_root, fake_test_cache, status
-    ).splitlines()
+""".format(fake_install_test_root, fake_test_cache, status).splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
     err = capfd.readouterr()[1]
@@ -125,9 +121,7 @@ def test_reporters_extract_skipped(state):
     outputs = """
 ==> Testing package fake-1.0-abcdefg
 {0}
-""".format(
-        expected
-    ).splitlines()
+""".format(expected).splitlines()
 
     parts = spack.reporters.extract.extract_test_parts("fake", outputs)
 
@@ -157,7 +151,7 @@ fake::test_skip .. SKIPPED
     assert part["loglines"][0].startswith("SKIPPED:")
 
 
-def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
+def test_reporters_report_for_package_no_stdout(tmp_path: pathlib.Path, monkeypatch, capfd):
     class MockCDash(CDash):
         def upload(*args, **kwargs):
             # Just return (Do NOT try to upload the report to the fake site)
@@ -175,7 +169,7 @@ def test_reporters_report_for_package_no_stdout(tmpdir, monkeypatch, capfd):
 
     reporter = MockCDash(configuration=configuration)
     pkg_data = {"name": "fake-package"}
-    reporter.test_report_for_package(tmpdir.strpath, pkg_data, 0)
+    reporter.test_report_for_package(str(tmp_path), pkg_data, 0)
     err = capfd.readouterr()[1]
     assert "Skipping report for" in err
     assert "No generated output" in err

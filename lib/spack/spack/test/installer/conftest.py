@@ -1,0 +1,218 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""Shared fakes and helpers for the installer unit tests."""
+
+import json
+from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Tuple, Union
+
+import spack.deptypes as dt
+import spack.spec
+from spack.installer.base import BuildChannels, ExitCode, JobServerBase
+from spack.installer.build import BuildRequest, ChildInfo, create_build_channels
+from spack.installer.core import PackageInstaller, write_connection
+from spack.installer.ui import InstallerUI
+from spack.spec import Spec
+
+
+def create_dag(
+    nodes: List[str], edges: List[Tuple[str, str, Union[dt.DepType, Tuple[dt.DepType, ...]]]]
+) -> Dict[str, Spec]:
+    """
+    Create a DAG of concrete specs, as a mapping from package name to Spec.
+
+    Arguments:
+        nodes: list of unique package names
+        edges: list of tuples (parent, child, deptype)
+    """
+    specs = {name: Spec(name) for name in nodes}
+    for parent, child, deptypes in edges:
+        depflag = deptypes if isinstance(deptypes, dt.DepFlag) else dt.canonicalize(deptypes)
+        specs[parent].add_dependency_edge(specs[child], depflag=depflag, virtuals=())
+
+    # Mark all specs as concrete
+    for spec in specs.values():
+        spec._mark_concrete()
+
+    return specs
+
+
+class RecordingUI(InstallerUI):
+    """Frontend that records the events it receives, for testing the event loop."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.events: List[tuple] = []
+
+    def on_build_added(self, info):
+        self.events.append(("build_added", info.id, info.name))
+
+    def on_build_removed(self, build_id):
+        self.events.append(("build_removed", build_id))
+
+    def on_state_changed(self, build_id, state):
+        self.events.append(("state_changed", build_id, state))
+
+    def on_log_output(self, build_id, data):
+        self.events.append(("log_output", build_id, data))
+
+    def on_total_increased(self, count):
+        self.events.append(("total_increased", count))
+
+    def on_progress(self, build_id, current, total):
+        self.events.append(("progress", build_id, current, total))
+
+    def on_jobs_changed(self, actual, target):
+        self.events.append(("jobs_changed", actual, target))
+
+    def on_finished(self, failures):
+        self.events.append(("finished", tuple(failures)))
+
+    def on_stopping(self):
+        self.events.append(("stopping",))
+
+
+class DrivingUI(RecordingUI):
+    """Records events and runs a callback on every event-loop tick, so tests can finish hanging
+    builds from inside install()."""
+
+    def __init__(self, on_tick: Callable[[], None]) -> None:
+        super().__init__()
+        self.on_tick = on_tick
+
+    def refresh_interval(self) -> float:
+        return 0.01
+
+    def render(self, finalize: bool = False) -> None:
+        if not finalize:
+            self.on_tick()
+
+
+def send_message(conn, message: dict) -> None:
+    """Write a message to a state channel the way a build does."""
+    write_connection(conn, json.dumps(message).encode() + b"\n")
+
+
+class Script(NamedTuple):
+    """The scripted result of a single launched build."""
+
+    #: None for a build that exits without reporting an exit code.
+    exitcode: Optional[int] = ExitCode.SUCCESS
+    states: Tuple[str, ...] = ()
+    output: bytes = b""
+    #: Raw bytes written to the state channel verbatim, for protocol edge cases.
+    raw_state: bytes = b""
+    #: Keep the build running until the test calls finish() or the event loop terminates it.
+    hang: bool = False
+    #: Keep the build running when the event loop terminates it, until it is killed.
+    ignore_terminate: bool = False
+    #: The build receives Ctrl-C in the terminal too, like builds on Windows.
+    receives_interrupt: bool = False
+
+
+class FakeBuild:
+    """A ``ProcessLike`` for builds that run in-process, without forking. It stays alive until
+    finish() or terminate() is called (immediately at launch for non-hanging scripts)."""
+
+    #: There is no real process (group) to signal.
+    pid: Optional[int] = None
+
+    def __init__(
+        self, exitcode: Optional[int], channels: BuildChannels, ignore_terminate: bool
+    ) -> None:
+        self.exitcode = exitcode
+        self.finished = False
+        self.terminated = False
+        self.killed = False
+        self.ignore_terminate = ignore_terminate
+        self.channels = channels
+
+    def finish(self) -> None:
+        if not self.finished:
+            self.finished = True
+            # Report the exit code and EOF the channels, like a child that exited.
+            if self.exitcode is not None:
+                send_message(self.channels.state_w, {"exit": self.exitcode})
+            self.channels.state_w.close()
+            self.channels.output_w.close()
+
+    def terminate(self) -> None:
+        self.terminated = True
+        if not self.ignore_terminate:
+            self.exitcode = ExitCode.BUILD_ERROR
+            self.finish()
+
+    def kill(self) -> None:
+        self.killed, self.exitcode = True, ExitCode.BUILD_ERROR
+        self.finish()
+
+    def join(self, timeout: Optional[float] = None) -> None:
+        pass
+
+
+class ScriptedLauncher:
+    """Build launcher that runs builds in-process with scripted state messages, output and exit
+    code. A list of scripts is consumed one per launch, so retries (e.g. after a binary cache
+    miss) can behave differently per attempt."""
+
+    def __init__(self, scripts: Dict[str, Union[Script, List[Script]]]) -> None:
+        self.scripts = {
+            name: [s] if isinstance(s, Script) else list(s) for name, s in scripts.items()
+        }
+        self.requests: List[BuildRequest] = []
+        #: All launched builds, in launch order, for tests to inspect.
+        self.builds: List[FakeBuild] = []
+        #: The subset of launched builds that hang, for tests to finish() or inspect.
+        self.hanging: List[FakeBuild] = []
+
+    def __call__(self, request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
+        self.requests.append(request)
+        script = self.scripts[request.spec.name].pop(0)
+        channels = create_build_channels()
+        for state in script.states:
+            send_message(channels.state_w, {"state": state})
+        if script.raw_state:
+            write_connection(channels.state_w, script.raw_state)
+        if script.output:
+            write_connection(channels.output_w, script.output)
+        build = FakeBuild(script.exitcode, channels, script.ignore_terminate)
+        self.builds.append(build)
+        if script.hang:
+            # The channels stay open until the test finishes the build.
+            self.hanging.append(build)
+        else:
+            # Finishing EOFs the channels, like a child that exited.
+            build.finish()
+        return ChildInfo(
+            build,
+            request.spec,
+            channels.output_r,
+            channels.state_r,
+            channels.control_w,
+            request.log_path,
+            script.receives_interrupt,
+        )
+
+
+def _make_concrete(
+    name: str, deps: Sequence[spack.spec.Spec] = (), depflag: dt.DepFlag = dt.BUILD | dt.LINK
+) -> spack.spec.Spec:
+    spec = spack.spec.Spec(f"{name}@=1.0")
+    for dep in deps:
+        spec._add_dependency(dep, depflag=depflag, virtuals=())
+    spec._mark_concrete()
+    return spec
+
+
+def _record(store, spec: spack.spec.Spec):
+    """The spec's InstallRecord, or None if it is not in the database."""
+    return store.db.query_by_spec_hash(spec.dag_hash())[1]
+
+
+def _install(launcher, *specs: spack.spec.Spec, ui=None, **kwargs) -> RecordingUI:
+    """Install specs through the event loop with a scripted launcher; explicit by default."""
+    ui = ui or RecordingUI()
+    PackageInstaller(
+        [s.package for s in specs], explicit=True, ui=ui, launcher=launcher, **kwargs
+    ).install()
+    return ui

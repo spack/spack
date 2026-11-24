@@ -4,7 +4,8 @@
 
 import re
 
-import spack.config
+import spack.util.spack_yaml as syaml
+from spack.config import Configuration
 from spack.main import SpackCommand
 
 config_cmd = SpackCommand("config")
@@ -21,7 +22,7 @@ def check_blame(element, file_name, line=None):
     """Check that `config blame config` gets right file/line for an element.
 
     This runs `spack config blame config` and scrapes the output for a
-    particular YAML key. It thne checks that the requested file/line info
+    particular YAML key. It then checks that the requested file/line info
     is also on that line.
 
     Line is optional; if it is ``None`` we just check for the
@@ -52,11 +53,11 @@ def test_config_blame(config):
     check_blame("dirty", config_file, 15)
 
 
-def test_config_blame_with_override(config):
+def test_config_blame_with_override(config: Configuration):
     """check blame for an element from an override scope"""
     config_file = config.get_config_filename("site", "config")
 
-    with spack.config.override("config:install_tree", {"root": "foobar"}):
+    with config.override("config:install_tree", {"root": "foobar"}):
         check_blame("install_tree", "overrides")
 
         check_blame("source_cache", config_file, 11)
@@ -95,3 +96,31 @@ def test_config_blame_defaults():
                 printed_line = printed_line.lower()
 
             assert val in printed_line, filename
+
+
+def test_trailing_colon_marks_override_keys_only():
+    """Keys ending in ':' are config overrides; values ending in ':' (e.g. target ranges) are
+    kept as is."""
+    data = syaml.load_config(
+        """\
+packages::
+  all:
+    require:
+    - spec: target=x86_64_v3
+      when: "target=x86_64:"
+    - "target=:aarch64"
+    - one_of: ["target=x86_64_v2:", "target=aarch64:"]
+  "^python@3:":
+    require: "@3.11:"
+"""
+    )
+    (key,) = data.keys()
+    assert key == "packages" and key.override
+    require = data["packages"]["all"]["require"]
+    assert require[0]["when"] == "target=x86_64:"
+    assert not getattr(require[0]["when"], "override", False)
+    assert require[1] == "target=:aarch64"
+    assert require[2]["one_of"] == ["target=x86_64_v2:", "target=aarch64:"]
+    # keys containing '@' are never overrides
+    assert "^python@3:" in data["packages"]
+    assert data["packages"]["^python@3:"]["require"] == "@3.11:"

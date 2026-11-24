@@ -4,10 +4,9 @@
 
 import argparse
 import os
+import pathlib
 
 import pytest
-
-from llnl.util.filesystem import copy_tree
 
 import spack.cmd.common.arguments
 import spack.cmd.test
@@ -17,6 +16,7 @@ import spack.install_test
 import spack.paths
 from spack.install_test import TestStatus
 from spack.main import SpackCommand
+from spack.util.filesystem import copy_tree, working_dir
 
 install = SpackCommand("install")
 spack_test = SpackCommand("test")
@@ -25,7 +25,7 @@ pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 
 def test_test_package_not_installed(
-    tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery, mock_test_stage
+    mock_packages, mock_archive, mock_fetch, install_mockery, mock_test_stage
 ):
     output = spack_test("run", "libdwarf")
 
@@ -35,7 +35,7 @@ def test_test_package_not_installed(
 @pytest.mark.parametrize(
     "arguments,expected",
     [
-        (["run"], spack.config.get("config:dirty")),  # default from config file
+        (["run"], spack.config.CONFIG.get("config:dirty")),  # default from config file
         (["run", "--clean"], False),
         (["run", "--dirty"], True),
     ],
@@ -47,18 +47,15 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
-def test_test_dup_alias(
-    mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery, capfd
-):
+def test_test_dup_alias(mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery):
     """Ensure re-using an alias fails with suggestion to change."""
-    install("libdwarf")
+    install("--fake", "libdwarf")
 
     # Run the (no) tests with the alias once
     spack_test("run", "--alias", "libdwarf", "libdwarf")
 
     # Try again with the alias but don't let it fail on the error
-    with capfd.disabled():
-        out = spack_test("run", "--alias", "libdwarf", "libdwarf", fail_on_error=False)
+    out = spack_test("run", "--alias", "libdwarf", "libdwarf", fail_on_error=False)
 
     assert "already exists" in out and "Try another alias" in out
 
@@ -111,19 +108,19 @@ def test_test_output_fails(
         ("test-fail", ["not callable", "TestFailure"]),
     ],
 )
-def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
+def test_junit_output_with_failures(tmp_path: pathlib.Path, mock_test_stage, pkg_name, msgs):
     """Confirm stand-alone test failure expected outputs in JUnit reporting."""
     install(pkg_name)
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         spack_test(
             "run", "--log-format=junit", "--log-file=test.xml", pkg_name, fail_on_error=False
         )
 
-    files = tmpdir.listdir()
-    filename = tmpdir.join("test.xml")
+    files = list(tmp_path.iterdir())
+    filename = tmp_path / "test.xml"
     assert filename in files
 
-    content = filename.open().read()
+    content = filename.read_text()
 
     # Count failures and errors correctly
     assert 'tests="1"' in content
@@ -137,11 +134,16 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
 
 
 def test_cdash_output_test_error(
-    tmpdir, mock_fetch, install_mockery, mock_packages, mock_archive, mock_test_stage, capfd
+    tmp_path: pathlib.Path,
+    mock_fetch,
+    install_mockery,
+    mock_packages,
+    mock_archive,
+    mock_test_stage,
 ):
     """Confirm stand-alone test error expected outputs in CDash reporting."""
     install("test-error")
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         spack_test(
             "run",
             "--log-format=cdash",
@@ -149,23 +151,28 @@ def test_cdash_output_test_error(
             "test-error",
             fail_on_error=False,
         )
-        report_dir = tmpdir.join("cdash_reports")
-        reports = [name for name in report_dir.listdir() if str(name).endswith("Testing.xml")]
+        report_dir = tmp_path / "cdash_reports"
+        reports = [name for name in report_dir.iterdir() if str(name).endswith("Testing.xml")]
         assert len(reports) == 1
-        content = reports[0].open().read()
+        content = reports[0].read_text()
         assert "Command exited with status 1" in content
 
 
 def test_cdash_upload_clean_test(
-    tmpdir, mock_fetch, install_mockery, mock_packages, mock_archive, mock_test_stage
+    tmp_path: pathlib.Path,
+    mock_fetch,
+    install_mockery,
+    mock_packages,
+    mock_archive,
+    mock_test_stage,
 ):
     install("printing-package")
-    with tmpdir.as_cwd():
+    with working_dir(str(tmp_path)):
         spack_test("run", "--log-file=cdash_reports", "--log-format=cdash", "printing-package")
-        report_dir = tmpdir.join("cdash_reports")
-        reports = [name for name in report_dir.listdir() if str(name).endswith("Testing.xml")]
+        report_dir = tmp_path / "cdash_reports"
+        reports = [name for name in report_dir.iterdir() if str(name).endswith("Testing.xml")]
         assert len(reports) == 1
-        content = reports[0].open().read()
+        content = reports[0].read_text()
         assert "passed" in content
         assert "Running test_print" in content, "Expected first command output"
         assert "second command" in content, "Expected second command output"
@@ -173,12 +180,10 @@ def test_cdash_upload_clean_test(
         assert "<Text>" not in content
 
 
-def test_test_help_does_not_show_cdash_options(mock_test_stage, capsys):
+def test_test_help_does_not_show_cdash_options(mock_test_stage):
     """Make sure `spack test --help` does not describe CDash arguments"""
-    with pytest.raises(SystemExit):
-        spack_test("run", "--help")
-        captured = capsys.readouterr()
-        assert "CDash URL" not in captured.out
+    spack_test("run", "--help")
+    assert "CDash URL" not in spack_test.output
 
 
 def test_test_help_cdash(mock_test_stage):
@@ -190,23 +195,21 @@ def test_test_help_cdash(mock_test_stage):
 def test_test_list_all(mock_packages):
     """Confirm `spack test list --all` returns all packages with test methods"""
     pkgs = spack_test("list", "--all").strip().split()
-    assert set(pkgs) == set(
-        [
-            "fail-test-audit",
-            "fail-test-audit-deprecated",
-            "fail-test-audit-docstring",
-            "fail-test-audit-impl",
-            "mpich",
-            "perl-extension",
-            "printing-package",
-            "py-extension1",
-            "py-extension2",
-            "py-test-callback",
-            "simple-standalone-test",
-            "test-error",
-            "test-fail",
-        ]
-    )
+    assert set(pkgs) == {
+        "py-numpy",
+        "fail-test-audit",
+        "fail-test-audit-docstring",
+        "fail-test-audit-impl",
+        "mpich",
+        "perl-extension",
+        "printing-package",
+        "py-extension1",
+        "py-extension2",
+        "py-test-callback",
+        "simple-standalone-test",
+        "test-error",
+        "test-fail",
+    }
 
 
 def test_test_list(mock_packages, mock_archive, mock_fetch, install_mockery):

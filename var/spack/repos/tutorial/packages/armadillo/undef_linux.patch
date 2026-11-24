@@ -1,4 +1,0 @@
---- a/include/armadillo_bits/compiler_setup.hpp
-+++ b/include/armadillo_bits/compiler_setup.hpp
-@@ -0,0 +1 @@
-+#undef linux

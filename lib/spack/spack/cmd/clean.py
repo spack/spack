@@ -6,17 +6,15 @@ import argparse
 import os
 import shutil
 
-import llnl.util.filesystem
-import llnl.util.tty as tty
-
 import spack.caches
 import spack.cmd
 import spack.config
 import spack.stage
 import spack.store
-import spack.util.path
+import spack.util.filesystem
 from spack.cmd.common import arguments
 from spack.paths import lib_path, var_path
+from spack.util import tty
 
 description = "remove temporary build files and/or downloaded archives"
 section = "build"
@@ -24,13 +22,13 @@ level = "long"
 
 
 class AllClean(argparse.Action):
-    """Activates flags -s -d -f -m and -p simultaneously"""
+    """Activates flags -s -d -f -m -p and -b simultaneously"""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        parser.parse_args(["-sdfmp"], namespace=namespace)
+        parser.parse_args(["-sdfmpb"], namespace=namespace)
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-s", "--stage", action="store_true", help="remove all temporary build stages (default)"
     )
@@ -62,28 +60,34 @@ def setup_parser(subparser):
         help="remove software and configuration needed to bootstrap Spack",
     )
     subparser.add_argument(
-        "-a",
-        "--all",
-        action=AllClean,
-        help="equivalent to -sdfmp (does not include --bootstrap)",
-        nargs=0,
+        "-a", "--all", action=AllClean, help="equivalent to ``-sdfmpb``", nargs=0
     )
     arguments.add_common_arguments(subparser, ["specs"])
+
+
+def _skip_races(func, path, exc_info):
+    # Removed concurrently, or a symlink (rmtree checks this atomically).
+    if isinstance(exc_info[1], FileNotFoundError) or func is os.path.islink:
+        return
+    raise exc_info[1]
 
 
 def remove_python_cache():
     for directory in [lib_path, var_path]:
         for root, dirs, files in os.walk(directory):
             for f in files:
-                if f.endswith(".pyc") or f.endswith(".pyo"):
+                if f.endswith((".pyc", ".pyo")):
                     fname = os.path.join(root, f)
                     tty.debug("Removing {0}".format(fname))
-                    os.remove(fname)
-            for d in dirs:
-                if d == "__pycache__":
-                    dname = os.path.join(root, d)
-                    tty.debug("Removing {0}".format(dname))
-                    shutil.rmtree(dname)
+                    try:
+                        os.remove(fname)
+                    except FileNotFoundError:
+                        pass
+            if "__pycache__" in dirs:
+                dirs.remove("__pycache__")
+                dname = os.path.join(root, "__pycache__")
+                tty.debug("Removing {0}".format(dname))
+                shutil.rmtree(dname, onerror=_skip_races)
 
 
 def clean(parser, args):
@@ -113,11 +117,11 @@ def clean(parser, args):
 
     if args.stage:
         tty.msg("Removing all temporary build stages")
-        spack.stage.purge()
+        spack.stage.purge(config=spack.config.CONFIG)
 
     if args.downloads:
         tty.msg("Removing cached downloads")
-        spack.caches.FETCH_CACHE.destroy()
+        spack.caches.fetch_cache(spack.config.CONFIG).destroy()
 
     if args.failures:
         tty.msg("Removing install failure marks")
@@ -132,7 +136,9 @@ def clean(parser, args):
         remove_python_cache()
 
     if args.bootstrap:
-        bootstrap_prefix = spack.util.path.canonicalize_path(spack.config.get("bootstrap:root"))
+        bootstrap_prefix = spack.config.canonicalize_path(
+            spack.config.CONFIG.get("bootstrap:root")
+        )
         msg = 'Removing bootstrapped software and configuration in "{0}"'
         tty.msg(msg.format(bootstrap_prefix))
-        llnl.util.filesystem.remove_directory_contents(bootstrap_prefix)
+        spack.util.filesystem.remove_directory_contents(bootstrap_prefix)

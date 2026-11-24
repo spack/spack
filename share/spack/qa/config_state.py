@@ -6,6 +6,7 @@
 The option `config:cache` is supposed to be False, and overridden to True
 from the command line.
 """
+
 import multiprocessing as mp
 
 import spack.config

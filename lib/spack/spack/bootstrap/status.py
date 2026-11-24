@@ -2,22 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Query the status of bootstrapping on this machine"""
+
 import sys
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import spack.util.executable
 
 from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration
-from .core import clingo_root_spec, patchelf_root_spec
-from .environment import (
-    BootstrapEnvironment,
-    black_root_spec,
-    flake8_root_spec,
-    isort_root_spec,
-    mypy_root_spec,
-    pytest_root_spec,
-)
+from .core import clingo_root_spec, gnupg_root_spec, patchelf_root_spec
+from .environment import BootstrapEnvironment, mypy_root_spec, pytest_root_spec, ruff_root_spec
 
 ExecutablesType = Union[str, Sequence[str]]
 RequiredResponseType = Tuple[bool, Optional[str]]
@@ -85,15 +79,17 @@ def _core_requirements() -> List[RequiredResponseType]:
 
 
 def _buildcache_requirements() -> List[RequiredResponseType]:
-    _buildcache_exes: Dict[ExecutablesType, str] = {
-        ("gpg2", "gpg"): _missing("gpg2", "required to sign/verify buildcaches", False)
-    }
-    if sys.platform == "darwin":
-        _buildcache_exes["otool"] = _missing("otool", "required to relocate binaries")
+    # Add bootstrappable executables (these can be in PATH or bootstrapped)
+    # GPG/GPG2 - used for signing and verifying buildcaches
+    result = [
+        _required_executable(
+            ("gpg2", "gpg"),
+            gnupg_root_spec(),
+            _missing("gpg2", "required to sign/verify buildcaches", False),
+        )
+    ]
 
-    # Executables that are not bootstrapped yet
-    result = [_required_system_executable(exe, msg) for exe, msg in _buildcache_exes.items()]
-
+    # Patchelf - only needed on Linux, used for binary relocation
     if sys.platform == "linux":
         result.append(
             _required_executable(
@@ -124,20 +120,16 @@ def _development_requirements() -> List[RequiredResponseType]:
             env.load()
 
     return [
-        _required_executable(
-            "isort", isort_root_spec(), _missing("isort", "required for style checks", False)
-        ),
-        _required_executable(
-            "mypy", mypy_root_spec(), _missing("mypy", "required for style checks", False)
-        ),
-        _required_executable(
-            "flake8", flake8_root_spec(), _missing("flake8", "required for style checks", False)
-        ),
-        _required_executable(
-            "black", black_root_spec(), _missing("black", "required for code formatting", False)
-        ),
         _required_python_module(
             "pytest", pytest_root_spec(), _missing("pytest", "required to run unit-test", False)
+        ),
+        _required_executable(
+            "ruff",
+            ruff_root_spec(),
+            _missing("ruff", "required for code checking/formatting", False),
+        ),
+        _required_executable(
+            "mypy", mypy_root_spec(), _missing("mypy", "required for type checks", False)
         ),
     ]
 

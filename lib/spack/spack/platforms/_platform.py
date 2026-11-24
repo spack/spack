@@ -1,15 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import warnings
 from typing import Optional
 
-import archspec.cpu
+import spack.vendor.archspec.cpu
 
-import llnl.util.lang
+import spack.util.lang
 
 
-@llnl.util.lang.lazy_lexicographic_ordering
+@spack.util.lang.lazy_lexicographic_ordering
 class Platform:
     """Platform is an abstract class extended by subclasses.
 
@@ -28,9 +27,8 @@ class Platform:
     default: str
     default_os: str
 
-    reserved_targets = ["default_target", "frontend", "fe", "backend", "be"]
-    reserved_oss = ["default_os", "frontend", "fe", "backend", "be"]
-    deprecated_names = ["frontend", "fe", "backend", "be"]
+    reserved_targets = ["default_target"]
+    reserved_oss = ["default_os"]
 
     def __init__(self, name):
         self.targets = {}
@@ -38,29 +36,22 @@ class Platform:
         self.name = name
         self._init_targets()
 
-    def add_target(self, name: str, target: archspec.cpu.Microarchitecture) -> None:
+    def add_target(self, name: str, target: spack.vendor.archspec.cpu.Microarchitecture) -> None:
         if name in Platform.reserved_targets:
             msg = f"{name} is a spack reserved alias and cannot be the name of a target"
             raise ValueError(msg)
         self.targets[name] = target
 
     def _init_targets(self):
-        self.default = archspec.cpu.host().name
-        for name, microarchitecture in archspec.cpu.TARGETS.items():
+        self.default = spack.vendor.archspec.cpu.host().name
+        for name, microarchitecture in spack.vendor.archspec.cpu.TARGETS.items():
             self.add_target(name, microarchitecture)
 
     def target(self, name):
-        name = str(name)
-        if name in Platform.deprecated_names:
-            warnings.warn(f"target={name} is deprecated, use target={self.default} instead")
-
-        if name in Platform.reserved_targets:
-            name = self.default
-
-        return self.targets.get(name, None)
+        return self.targets.get(str(name), None)
 
     def add_operating_system(self, name, os_class):
-        if name in Platform.reserved_oss + Platform.deprecated_names:
+        if name in Platform.reserved_oss:
             msg = f"{name} is a spack reserved alias and cannot be the name of an OS"
             raise ValueError(msg)
         self.operating_sys[name] = os_class
@@ -72,18 +63,15 @@ class Platform:
         return self.operating_system(self.default_os)
 
     def operating_system(self, name):
-        if name in Platform.deprecated_names:
-            warnings.warn(f"os={name} is deprecated, use os={self.default_os} instead")
-
-        if name in Platform.reserved_oss:
-            name = self.default_os
-
         return self.operating_sys.get(name, None)
+
+    def buildable_oses(self):
+        return set(self.operating_sys.keys())
 
     def setup_platform_environment(self, pkg, env):
         """Platform-specific build environment modifications.
 
-        This method is meant toi be overridden by subclasses, when needed.
+        This method is meant to be overridden by subclasses, when needed.
         """
         pass
 

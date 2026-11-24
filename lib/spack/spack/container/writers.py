@@ -4,18 +4,20 @@
 """Writers for different kind of recipes and related
 convenience functions.
 """
+
 import copy
 import shlex
+import warnings
 from collections import namedtuple
-from typing import Optional
+from typing import Callable, Dict, Optional
 
-import jsonschema
+import spack.vendor.jsonschema
 
 import spack.environment as ev
 import spack.error
 import spack.schema.env
-import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
+from spack import tengine
 
 from .images import (
     bootstrap_template_for,
@@ -27,7 +29,7 @@ from .images import (
 )
 
 #: Caches all the writers that are currently supported
-_writer_factory = {}
+_writer_factory: Dict[str, Callable] = {}
 
 
 def writer(name):
@@ -85,7 +87,7 @@ def _stage_base_images(images_config):
     # Check the OS is mentioned in the internal data stored in a JSON file
     images_json = data()["images"]
     if not any(os_name == operating_system for os_name in images_json):
-        msg = 'invalid operating system name "{0}". ' "[Allowed values are {1}]"
+        msg = 'invalid operating system name "{0}". [Allowed values are {1}]'
         msg = msg.format(operating_system, ", ".join(data()["images"]))
         raise ValueError(msg)
 
@@ -98,7 +100,7 @@ def _stage_base_images(images_config):
         image_name, tag = build_info(operating_system, spack_version)
         build_stage = "bootstrap"
         if image_name:
-            build_stage = ":".join([image_name, tag])
+            build_stage = f"{image_name}:{tag}"
 
     # Retrieve the bootstrap stage
     bootstrap_stage = None
@@ -156,7 +158,13 @@ class PathContext(tengine.Context):
 
     @tengine.context_property
     def depfile(self):
-        return self.container_config.get("depfile", False)
+        depfile = self.container_config.get("depfile", False)
+        if depfile:
+            warnings.warn(
+                "container:depfile is deprecated and will be removed in Spack v1.4, after which "
+                "`spack install` is always used. Remove the setting to use it now."
+            )
+        return depfile
 
     @tengine.context_property
     def run(self):
@@ -196,12 +204,12 @@ class PathContext(tengine.Context):
 
         # Ensure that a few paths are where they need to be
         manifest.setdefault("config", syaml.syaml_dict())
-        manifest["config"]["install_tree"] = self.paths.store
+        manifest["config"]["install_tree"] = {"root": self.paths.store}
         manifest["view"] = self.paths.view
         manifest = {"spack": manifest}
 
         # Validate the manifest file
-        jsonschema.validate(manifest, schema=spack.schema.env.schema)
+        spack.vendor.jsonschema.validate(manifest, schema=spack.schema.env.schema)
 
         return syaml.dump(manifest, default_flow_style=False).strip()
 
@@ -243,7 +251,7 @@ class PathContext(tengine.Context):
 
         Returns:
             Enough information to know how to update the cache, install
-            a list opf packages, and clean in the end.
+            a list of packages, and clean in the end.
         """
         if not package_list:
             return package_list

@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
 import spack.cmd
 import spack.cmd.common
-import spack.environment as ev
 import spack.store
 import spack.user_environment as uenv
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 
 description = "add package to the user environment"
@@ -16,7 +17,7 @@ section = "user environment"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     """Parser is only constructed so that this prints a nice help
     message with -h."""
     arguments.add_common_arguments(subparser, ["constraint"])
@@ -70,12 +71,12 @@ def setup_parser(subparser):
         "--list",
         action="store_true",
         default=False,
-        help="show loaded packages: same as `spack find --loaded`",
+        help="show loaded packages: same as ``spack find --loaded``",
     )
 
 
 def load(parser, args):
-    env = ev.active_environment()
+    env = active_environment()
 
     if args.list:
         results = spack.cmd.filter_loaded_specs(args.specs())

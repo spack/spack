@@ -7,9 +7,9 @@ import spack.concretize
 import spack.graph
 
 
-def test_dynamic_dot_graph_mpileaks(default_mock_concretization):
+def test_dynamic_dot_graph_mpileaks(config, mock_packages):
     """Test dynamically graphing the mpileaks package."""
-    s = default_mock_concretization("mpileaks")
+    s = spack.concretize.concretize_one("mpileaks")
     stream = io.StringIO()
     spack.graph.graph_dot([s], out=stream)
     dot = stream.getvalue()
@@ -50,40 +50,66 @@ def test_ascii_graph_mpileaks(config, mock_packages, monkeypatch):
         graph_str
         == r"""o mpileaks
 |\
-| o callpath
-|/|
-o | mpich
- /
-o dyninst
-|\
-| o libdwarf
-|/
-o libelf
-"""
-        or graph_str
-        == r"""o mpileaks
-|\
-o | callpath
-|\|
-| o mpich
-|
-o dyninst
-|\
-o | libdwarf
-|/
-o libelf
-"""
-        or graph_str
-        == r"""o mpileaks
-|\
-| o callpath
-|/|
-| o dyninst
 | |\
-o | | mpich
- / /
-| o libdwarf
+| | |\
+| | | |\
+| | | | o callpath
+| |_|_|/|
+|/| |_|/|
+| |/| |/|
+| | |/|/|
+| | | | o dyninst
+| | |_|/|
+| |/| |/|
+| | |/|/|
+| | | | |\
+o | | | | | mpich
+|\| | | | |
+|\ \ \ \ \ \
+| |_|/ / / /
+|/| | | | |
+| |/ / / /
+| | | | o libdwarf
+| |_|_|/|
+|/| |_|/|
+| |/| |/|
+| | |/|/
+| | | o libelf
+| |_|/|
+|/| |/|
+| |/|/
+| o | compiler-wrapper
+|  /
+| o gcc-runtime
 |/
-o libelf
+o gcc
+"""
+        or graph_str
+        == r"""o mpileaks
+|\
+| |\
+| | |\
+| | | o callpath
+| |_|/|
+|/| |/|
+| |/|/|
+| | | o dyninst
+| | |/|
+| |/|/|
+| | | |\
+o | | | | mpich
+|\| | | |
+| |/ / /
+|/| | |
+| | | o libdwarf
+| |_|/|
+|/| |/|
+| |/|/
+| | o libelf
+| |/|
+|/|/
+| o gcc-runtime
+|/
+o gcc
 """
     )

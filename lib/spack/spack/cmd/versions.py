@@ -2,22 +2,22 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
-
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 
 import spack.repo
 import spack.spec
 from spack.cmd.common import arguments
+from spack.util import tty
+from spack.util.tty.colify import colify
 from spack.version import infinity_versions, ver
 
 description = "list available versions of a package"
-section = "packaging"
+section = "query"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     output = subparser.add_mutually_exclusive_group()
     output.add_argument(
         "-s", "--safe", action="store_true", help="only list safe versions of the package"

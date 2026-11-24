@@ -3,21 +3,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for the `spack verify` command"""
+
 import os
+import pathlib
 import platform
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.cmd.verify
 import spack.concretize
-import spack.installer
+import spack.old_installer
 import spack.store
 import spack.util.executable
+import spack.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.verify
 from spack.main import SpackCommand, SpackCommandError
+from spack.spec import Spec
 
 verify = SpackCommand("verify")
 install = SpackCommand("install")
@@ -29,54 +31,53 @@ def skip_unless_linux(f):
     )(f)
 
 
-def test_single_file_verify_cmd(tmpdir):
+def test_single_file_verify_cmd(tmp_path: pathlib.Path):
     # Test the verify command interface to verifying a single file.
-    filedir = os.path.join(str(tmpdir), "a", "b", "c", "d")
-    filepath = os.path.join(filedir, "file")
-    metadir = os.path.join(str(tmpdir), spack.store.STORE.layout.metadata_dir)
+    filedir = tmp_path / "a" / "b" / "c" / "d"
+    filepath = filedir / "file"
+    metadir = tmp_path / spack.store.STORE.layout.metadata_dir
 
-    fs.mkdirp(filedir)
-    fs.mkdirp(metadir)
+    fs.mkdirp(str(filedir))
+    fs.mkdirp(str(metadir))
 
-    with open(filepath, "w", encoding="utf-8") as f:
+    with open(str(filepath), "w", encoding="utf-8") as f:
         f.write("I'm a file")
 
-    data = spack.verify.create_manifest_entry(filepath)
+    data = spack.verify.create_manifest_entry(str(filepath))
 
-    manifest_file = os.path.join(metadir, spack.store.STORE.layout.manifest_file_name)
+    manifest_file = metadir / spack.store.STORE.layout.manifest_file_name
 
-    with open(manifest_file, "w", encoding="utf-8") as f:
-        sjson.dump({filepath: data}, f)
+    with open(str(manifest_file), "w", encoding="utf-8") as f:
+        sjson.dump({str(filepath): data}, f)
 
-    results = verify("manifest", "-f", filepath, fail_on_error=False)
-    print(results)
+    results = verify("manifest", "-f", str(filepath), fail_on_error=False)
     assert not results
 
-    os.utime(filepath, (0, 0))
-    with open(filepath, "w", encoding="utf-8") as f:
+    os.utime(str(filepath), (0, 0))
+    with open(str(filepath), "w", encoding="utf-8") as f:
         f.write("I changed.")
 
-    results = verify("manifest", "-f", filepath, fail_on_error=False)
+    results = verify("manifest", "-f", str(filepath), fail_on_error=False)
 
     expected = ["hash"]
-    mtime = os.stat(filepath).st_mtime
+    mtime = os.stat(str(filepath)).st_mtime
     if mtime != data["time"]:
         expected.append("mtime")
 
     assert results
-    assert filepath in results
+    assert str(filepath) in results
     assert all(x in results for x in expected)
 
-    results = verify("manifest", "-fj", filepath, fail_on_error=False)
+    results = verify("manifest", "-fj", str(filepath), fail_on_error=False)
     res = sjson.load(results)
     assert len(res) == 1
-    errors = res.pop(filepath)
+    errors = res.pop(str(filepath))
     assert sorted(errors) == sorted(expected)
 
 
-def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive, mock_fetch, install_mockery):
+def test_single_spec_verify_cmd(mock_packages, mock_archive, mock_fetch, install_mockery):
     # Test the verify command interface to verify a single spec
-    install("libelf")
+    install("--fake", "libelf")
     s = spack.concretize.concretize_one("libelf")
     prefix = s.prefix
     hash = s.dag_hash()
@@ -100,11 +101,10 @@ def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive, mock_fetch,
 
 @pytest.mark.requires_executables("gcc")
 @skip_unless_linux
-def test_libraries(tmp_path, install_mockery, mock_fetch):
+def test_libraries(tmp_path: pathlib.Path, install_mockery, mock_fetch):
     gcc = spack.util.executable.which("gcc", required=True)
     s = spack.concretize.concretize_one("libelf")
-    spack.installer.PackageInstaller([s.package]).install()
-    os.mkdir(s.prefix.bin)
+    spack.old_installer.PackageInstaller([s.package], fake=True).install()
 
     # There are no ELF files so the verification should pass
     verify("libraries", f"/{s.dag_hash()}")
@@ -146,3 +146,23 @@ def test_libraries(tmp_path, install_mockery, mock_fetch):
 
     # And check that we can make it pass by ignoring it.
     assert spack.cmd.verify._verify_libraries(s, ["libf.so"]) is None
+
+
+def test_verify_versions(mock_packages):
+    missing = "thisisnotapackage"
+    unknown = "deprecated-versions@=thisisnotaversion"
+    deprecated = "deprecated-versions@=1.1.0"
+    good = "deprecated-versions@=1.0.0"
+
+    strs = (missing, unknown, deprecated, good)
+
+    specs = [Spec(c) for c in strs] + [Spec(f"deprecated-client@=1.1.0^{c}") for c in strs]
+    for spec in specs:
+        spec._mark_concrete()
+
+    msg_lines = spack.cmd.verify._verify_version(specs)
+    assert "3 installed packages have unknown/deprecated" in msg_lines[0]
+    assert "thisisnotapackage" in msg_lines[1]
+    assert "Cannot load package" in msg_lines[1]
+    assert "version thisisnotaversion unknown to Spack" in msg_lines[2]
+    assert "deprecated version 1.1.0" in msg_lines[3]

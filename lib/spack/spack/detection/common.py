@@ -12,6 +12,7 @@ The update in packages.yaml can then be done using the function provided here.
 The module also contains other functions that might be useful across different
 detection mechanisms.
 """
+
 import glob
 import itertools
 import os
@@ -19,8 +20,6 @@ import pathlib
 import re
 import sys
 from typing import Dict, List, Optional, Set, Tuple, Union
-
-import llnl.util.tty
 
 import spack.config
 import spack.error
@@ -30,11 +29,12 @@ import spack.spec
 import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
+from spack.util import tty
 
 
-def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
+def _externals_in_packages_yaml(config: spack.config.Configuration) -> Set[spack.spec.Spec]:
     """Returns all the specs mentioned as externals in packages.yaml"""
-    packages_yaml = spack.config.get("packages")
+    packages_yaml = config.get("packages")
     already_defined_specs = set()
     for pkg_name, package_configuration in packages_yaml.items():
         for item in package_configuration.get("externals", []):
@@ -42,7 +42,7 @@ def _externals_in_packages_yaml() -> Set[spack.spec.Spec]:
     return already_defined_specs
 
 
-ExternalEntryType = Union[str, Dict[str, str]]
+ExternalEntryType = Union[str, List[str], Dict[str, str]]
 
 
 def _pkg_config_dict(
@@ -93,14 +93,13 @@ def _spec_is_valid(spec: spack.spec.Spec) -> bool:
     except spack.error.SpackError:
         # It is assumed here that we can at least extract the package name from the spec so we
         # can look up the implementation of determine_spec_details
-        msg = f"Constructed spec for {spec.name} does not have a string representation"
-        llnl.util.tty.warn(msg)
+        tty.warn(f"Constructed spec for {spec.name} does not have a string representation")
         return False
 
     try:
         spack.spec.Spec(str(spec))
     except spack.error.SpackError:
-        llnl.util.tty.warn(
+        tty.warn(
             "Constructed spec has a string representation but the string"
             " representation does not evaluate to a valid spec: {0}".format(str(spec))
         )
@@ -109,27 +108,26 @@ def _spec_is_valid(spec: spack.spec.Spec) -> bool:
     return True
 
 
-def path_to_dict(search_paths: List[str]):
+def path_to_dict(search_paths: List[str]) -> Dict[str, str]:
     """Return dictionary[fullpath]: basename from list of paths"""
-    path_to_lib = {}
+    path_to_lib: Dict[str, str] = {}
     # Reverse order of search directories so that a lib in the first
     # entry overrides later entries
     for search_path in reversed(search_paths):
         try:
-            with os.scandir(search_path) as entries:
-                path_to_lib.update(
-                    {entry.path: entry.name for entry in entries if entry.is_file()}
-                )
+            dir_iter = os.scandir(search_path)
         except OSError as e:
-            msg = f"cannot scan '{search_path}' for external software: {str(e)}"
-            llnl.util.tty.debug(msg)
+            tty.debug(f"cannot scan '{search_path}' for external software: {e}")
+            continue
+        with dir_iter as entries:
+            for entry in entries:
+                try:
+                    if entry.is_file():
+                        path_to_lib[entry.path] = entry.name
+                except OSError as e:
+                    tty.debug(f"cannot scan '{search_path}' for external software: {e}")
 
     return path_to_lib
-
-
-def is_executable(file_path: str) -> bool:
-    """Return True if the path passed as argument is that of an executable"""
-    return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
 
 
 def _convert_to_iterable(single_val_or_multiple):
@@ -149,6 +147,15 @@ def _convert_to_iterable(single_val_or_multiple):
         return [x]
 
 
+def prefix_before_last(path: pathlib.PurePath, names: Tuple[str, ...]) -> Optional[str]:
+    """Parent of the innermost component whose lowercased name is in names, or None."""
+    while path.name:
+        if path.name.lower() in names:
+            return str(path.parent) if path.parent.name else ""
+        path = path.parent
+    return None
+
+
 def executable_prefix(executable_dir: str) -> str:
     """Given a directory where an executable is found, guess the prefix
     (i.e. the "root" directory of that installation) and return it.
@@ -161,13 +168,8 @@ def executable_prefix(executable_dir: str) -> str:
     # prefix
     assert os.path.isdir(executable_dir)
 
-    components = executable_dir.split(os.sep)
-    # convert to lower to match Bin, BIN, bin
-    lowered_components = executable_dir.lower().split(os.sep)
-    if "bin" not in lowered_components:
-        return executable_dir
-    idx = lowered_components.index("bin")
-    return os.sep.join(components[:idx])
+    prefix = prefix_before_last(pathlib.PurePath(executable_dir), ("bin",))
+    return executable_dir if prefix is None else prefix
 
 
 def library_prefix(library_dir: str) -> str:
@@ -182,24 +184,15 @@ def library_prefix(library_dir: str) -> str:
     # to get a Spack-compatible prefix
     assert os.path.isdir(library_dir)
 
-    components = library_dir.split(os.sep)
-    # covert to lowercase to match lib, LIB, Lib, etc.
-    lowered_components = library_dir.lower().split(os.sep)
-    if "lib64" in lowered_components:
-        idx = lowered_components.index("lib64")
-        return os.sep.join(components[:idx])
-    elif "lib" in lowered_components:
-        idx = lowered_components.index("lib")
-        return os.sep.join(components[:idx])
-    elif sys.platform == "win32" and "bin" in lowered_components:
-        idx = lowered_components.index("bin")
-        return os.sep.join(components[:idx])
-    else:
-        return library_dir
+    names = ("lib", "lib64", "bin") if sys.platform == "win32" else ("lib", "lib64")
+    prefix = prefix_before_last(pathlib.PurePath(library_dir), names)
+    return library_dir if prefix is None else prefix
 
 
 def update_configuration(
     detected_packages: Dict[str, List["spack.spec.Spec"]],
+    *,
+    config: spack.config.Configuration,
     scope: Optional[str] = None,
     buildable: bool = True,
 ) -> List[spack.spec.Spec]:
@@ -207,10 +200,11 @@ def update_configuration(
 
     Args:
         detected_packages: list of specs to be added
+        config: configuration to be updated
         scope: configuration scope where to add the detected packages
         buildable: whether the detected packages are buildable or not
     """
-    predefined_external_specs = _externals_in_packages_yaml()
+    predefined_external_specs = _externals_in_packages_yaml(config)
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
         new_entries = [s for s in entries if s not in predefined_external_specs]
@@ -224,9 +218,14 @@ def update_configuration(
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
 
-    pkgs_cfg = spack.config.get("packages", scope=scope)
+    # Don't rewrite configuration if there's nothing to add
+    if not pkg_to_cfg:
+        return all_new_specs
+
+    scope = scope or config.default_modify_scope()
+    pkgs_cfg = config.get("packages", scope=scope)
     pkgs_cfg = spack.schema.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    spack.config.set("packages", pkgs_cfg, scope=scope)
+    config.set("packages", pkgs_cfg, scope=scope)
 
     return all_new_specs
 
@@ -234,7 +233,7 @@ def update_configuration(
 def set_virtuals_nonbuildable(virtuals: Set[str], scope: Optional[str] = None) -> List[str]:
     """Update packages:virtual:buildable:False for the provided virtual packages, if the property
     is not set by the user. Returns the list of virtual packages that have been updated."""
-    packages = spack.config.get("packages")
+    packages = spack.config.CONFIG.get("packages")
     new_config = {}
     for virtual in virtuals:
         # If the user has set the buildable prop do not override it
@@ -243,9 +242,9 @@ def set_virtuals_nonbuildable(virtuals: Set[str], scope: Optional[str] = None) -
         new_config[virtual] = {"buildable": False}
 
     # Update the provided scope
-    spack.config.set(
+    spack.config.CONFIG.set(
         "packages",
-        spack.schema.merge_yaml(spack.config.get("packages", scope=scope), new_config),
+        spack.schema.merge_yaml(spack.config.CONFIG.get("packages", scope=scope), new_config),
         scope=scope,
     )
 
@@ -389,7 +388,7 @@ def find_win32_additional_install_paths() -> List[str]:
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
-    # common Windows install locations as neccesary
+    # common Windows install locations as necessary
     path_ext_keys = ["I_MPI_ONEAPI_ROOT", "MSMPI_BIN", "MLAB_ROOT", "NUGET_PACKAGES"]
     user = os.environ["USERPROFILE"]
     add_path = lambda key: re.search(cuda_re, key) or key in path_ext_keys
@@ -402,7 +401,7 @@ def find_win32_additional_install_paths() -> List[str]:
     # Add search path for NuGet package manager default install location
     windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
     windows_search_ext.extend(
-        spack.config.get("config:additional_external_search_paths", default=[])
+        spack.config.CONFIG.get("config:additional_external_search_paths", default=[])
     )
     windows_search_ext.extend(spack.util.environment.get_path("PATH"))
     return windows_search_ext

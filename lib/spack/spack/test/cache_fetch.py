@@ -3,43 +3,43 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, touch
-
-import spack.config
 import spack.util.url as url_util
+from spack.config import Configuration
 from spack.fetch_strategy import CacheURLFetchStrategy, NoCacheError
-from spack.stage import Stage
+from spack.stage import stage_from_config
+from spack.util.filesystem import mkdirp
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_fetch_missing_cache(tmpdir, _fetch_method):
+def test_fetch_missing_cache(mutable_config: Configuration, tmp_path: pathlib.Path, _fetch_method):
     """Ensure raise a missing cache file."""
-    testpath = str(tmpdir)
+    testpath = str(tmp_path)
     non_existing = os.path.join(testpath, "non-existing")
-    with spack.config.override("config:url_fetch_method", _fetch_method):
+    with mutable_config.override("config:url_fetch_method", _fetch_method):
         url = url_util.path_to_file_url(non_existing)
         fetcher = CacheURLFetchStrategy(url=url)
-        with Stage(fetcher, path=testpath):
+        with stage_from_config(fetcher, path=testpath, config=mutable_config):
             with pytest.raises(NoCacheError, match=r"No cache"):
                 fetcher.fetch()
 
 
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
-def test_fetch(tmpdir, _fetch_method):
+def test_fetch(mutable_config: Configuration, tmp_path: pathlib.Path, _fetch_method):
     """Ensure a fetch after expanding is effectively a no-op."""
-    cache_dir = tmpdir.join("cache")
-    stage_dir = tmpdir.join("stage")
-    mkdirp(cache_dir)
-    mkdirp(stage_dir)
-    cache = os.path.join(cache_dir, "cache.tar.gz")
-    touch(cache)
-    url = url_util.path_to_file_url(cache)
-    with spack.config.override("config:url_fetch_method", _fetch_method):
+    cache_dir = tmp_path / "cache"
+    stage_dir = tmp_path / "stage"
+    cache_dir.mkdir()
+    stage_dir.mkdir()
+    cache = cache_dir / "cache.tar.gz"
+    cache.touch()
+    url = url_util.path_to_file_url(str(cache))
+    with mutable_config.override("config:url_fetch_method", _fetch_method):
         fetcher = CacheURLFetchStrategy(url=url)
-        with Stage(fetcher, path=str(stage_dir)) as stage:
+        with stage_from_config(fetcher, path=str(stage_dir), config=mutable_config) as stage:
             source_path = stage.source_path
             mkdirp(source_path)
             fetcher.fetch()

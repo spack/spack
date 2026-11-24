@@ -58,7 +58,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -136,7 +136,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -214,7 +214,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -268,7 +268,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -322,7 +322,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -376,7 +376,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -440,7 +440,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -511,7 +511,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -565,7 +565,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -636,7 +636,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -690,7 +690,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -753,7 +753,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -807,7 +807,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],
@@ -885,7 +885,7 @@
         "name": "apple-clang",
         "version": "13.0.0"
       },
-      "namespace": "builtin.mock",
+      "namespace": "builtin_mock",
       "parameters": {
         "cflags": [],
         "cppflags": [],

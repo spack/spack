@@ -2,17 +2,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from typing import Optional
-
-import llnl.url
-import llnl.util.symlink
-from llnl.util.filesystem import mkdirp
+from typing import TYPE_CHECKING, Optional
 
 import spack.fetch_strategy
 import spack.oci.image
 import spack.repo
-import spack.spec
+import spack.util.url
 from spack.error import MirrorError
+from spack.util.filesystem import mkdirp, symlink
+
+if TYPE_CHECKING:
+    import spack.spec
 
 
 class MirrorLayout:
@@ -40,7 +40,7 @@ class DefaultLayout(MirrorLayout):
         self.digest_path = digest_path
 
     def make_alias(self, root: str) -> None:
-        """Symlink a human readible path in our mirror to the actual storage location."""
+        """Symlink a human readable path in our mirror to the actual storage location."""
         # We already use the human-readable path as the main storage location.
         if not self.digest_path:
             return
@@ -52,7 +52,7 @@ class DefaultLayout(MirrorLayout):
 
         mkdirp(alias_dir)
         tmp = f"{alias}.tmp"
-        llnl.util.symlink.symlink(relative_dst, tmp)
+        symlink(relative_dst, tmp)
 
         try:
             os.rename(tmp, alias)
@@ -82,7 +82,7 @@ def _determine_extension(fetcher):
     if isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = llnl.url.determine_url_file_extension(fetcher.url)
+            ext = spack.util.url.determine_url_file_extension(fetcher.url)
 
             if ext:
                 # Remove any leading dots

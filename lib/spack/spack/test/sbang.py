@@ -5,8 +5,10 @@
 """\
 Test that Spack's shebang filtering works correctly.
 """
+
 import filecmp
 import os
+import pathlib
 import shutil
 import stat
 import sys
@@ -14,12 +16,12 @@ import tempfile
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.config
-import spack.hooks.sbang as sbang
 import spack.store
+import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
+from spack.hooks import sbang
+from spack.store import Store
 from spack.util.executable import which
 
 if sys.platform != "win32":
@@ -34,6 +36,9 @@ too_long = sbang.system_shebang_limit + 1
 
 short_line = "#!/this/is/short/bin/bash\n"
 long_line = "#!/this/" + ("x" * too_long) + "/is/long\n"
+
+python_line = "#!/this/" + ("x" * too_long) + "/is/python\n"
+python_encoding_line = "# coding: utf-8\n"
 
 lua_line = "#!/this/" + ("x" * too_long) + "/is/lua\n"
 lua_in_text = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
@@ -56,8 +61,8 @@ last_line = "last!\n"
 
 
 @pytest.fixture  # type: ignore[no-redef]
-def sbang_line():
-    yield "#!/bin/sh %s/bin/sbang\n" % spack.store.STORE.layout.root
+def sbang_line(temporary_store: spack.store.Store):
+    yield "#!/bin/sh %s/bin/sbang\n" % temporary_store.layout.root
 
 
 class ScriptDirectory:
@@ -89,6 +94,14 @@ class ScriptDirectory:
             f.write(long_line)
             f.write(last_line)
 
+        # python using an encoding comment
+        self.python_shebang = os.path.join(self.tempdir, "python")
+        with open(self.python_shebang, "w", encoding="utf-8") as f:
+            f.write(python_line)
+            f.write(python_encoding_line)
+            f.write(last_line)
+        self.make_executable(self.python_shebang)
+
         # Lua script with long shebang
         self.lua_shebang = os.path.join(self.tempdir, "lua")
         with open(self.lua_shebang, "w", encoding="utf-8") as f:
@@ -111,7 +124,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.luajit_shebang)
 
-        # Luajit occuring in text, not in shebang
+        # Luajit occurring in text, not in shebang
         self.luajit_textbang = os.path.join(self.tempdir, "luajit_in_text")
         with open(self.luajit_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -126,7 +139,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.node_shebang)
 
-        # Node occuring in text, not in shebang
+        # Node occurring in text, not in shebang
         self.node_textbang = os.path.join(self.tempdir, "node_in_text")
         with open(self.node_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -141,7 +154,7 @@ class ScriptDirectory:
             f.write(last_line)
         self.make_executable(self.php_shebang)
 
-        # php occuring in text, not in shebang
+        # php occurring in text, not in shebang
         self.php_textbang = os.path.join(self.tempdir, "php_in_text")
         with open(self.php_textbang, "w", encoding="utf-8") as f:
             f.write(short_line)
@@ -220,6 +233,13 @@ def test_shebang_handling(script_dir, sbang_line):
         assert f.readline() == long_line
         assert f.readline() == last_line
 
+    # Make sure this got patched and didn't move the encoding line
+    with open(script_dir.python_shebang, "r", encoding="utf-8") as f:
+        assert f.readline() == sbang_line
+        assert f.readline() == python_encoding_line
+        assert f.readline() == python_line
+        assert f.readline() == last_line
+
     # Make sure this got patched.
     with open(script_dir.lua_shebang, "r", encoding="utf-8") as f:
         assert f.readline() == sbang_line
@@ -280,11 +300,9 @@ all:
     read: world
     write: group
     group: {0}
-""".format(
-            group_name
-        )
+""".format(group_name)
     )
-    spack.config.set("packages", conf, scope="user")
+    spack.config.CONFIG.set("packages", conf, scope="user")
 
     yield
 
@@ -299,15 +317,15 @@ all:
     write: user
 """
     )
-    spack.config.set("packages", conf, scope="user")
+    spack.config.CONFIG.set("packages", conf, scope="user")
 
     yield
 
 
-def check_sbang_installation(group=False):
+def check_sbang_installation(store: spack.store.Store, group=False):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
-    assert sbang_path.startswith(spack.store.STORE.unpadded_root)
+    assert sbang_path.startswith(store.unpadded_root)
 
     assert os.path.exists(sbang_path)
     assert fs.is_exe(sbang_path)
@@ -327,39 +345,39 @@ def check_sbang_installation(group=False):
         assert mode == 0o755, "Unexpected {0}".format(oct(mode))
 
 
-def run_test_install_sbang(group):
+def run_test_install_sbang(store: spack.store.Store, group):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
-    assert sbang_path.startswith(spack.store.STORE.unpadded_root)
+    assert sbang_path.startswith(store.unpadded_root)
     assert not os.path.exists(sbang_bin_dir)
 
-    sbang.install_sbang()
-    check_sbang_installation(group)
+    store.install_sbang()
+    check_sbang_installation(store, group)
 
     # put an invalid file in for sbang
     fs.mkdirp(sbang_bin_dir)
     with open(sbang_path, "w", encoding="utf-8") as f:
         f.write("foo")
 
-    sbang.install_sbang()
-    check_sbang_installation(group)
+    store.install_sbang()
+    check_sbang_installation(store, group)
 
     # install again and make sure sbang is still fine
-    sbang.install_sbang()
-    check_sbang_installation(group)
+    store.install_sbang()
+    check_sbang_installation(store, group)
 
 
-def test_install_group_sbang(install_mockery, configure_group_perms):
-    run_test_install_sbang(True)
+def test_install_group_sbang(temporary_store: Store, install_mockery, configure_group_perms):
+    run_test_install_sbang(temporary_store, True)
 
 
-def test_install_user_sbang(install_mockery, configure_user_perms):
-    run_test_install_sbang(False)
+def test_install_user_sbang(temporary_store: Store, install_mockery, configure_user_perms):
+    run_test_install_sbang(temporary_store, False)
 
 
-def test_install_sbang_too_long(tmpdir):
-    root = str(tmpdir)
+def test_install_sbang_too_long(tmp_path: pathlib.Path):
+    root = str(tmp_path)
     num_extend = sbang.system_shebang_limit - len(root) - len("/bin/sbang")
     long_path = root
     while num_extend > 1:
@@ -376,24 +394,24 @@ def test_install_sbang_too_long(tmpdir):
     assert "cannot patch" in err
 
 
-def test_sbang_hook_skips_nonexecutable_blobs(tmpdir):
+def test_sbang_hook_skips_nonexecutable_blobs(tmp_path: pathlib.Path):
     # Write a binary blob to non-executable.sh, with a long interpreter "path"
     # consisting of invalid UTF-8. The latter is technically not really necessary for
     # the test, but binary blobs accidentally starting with b'#!' usually do not contain
     # valid UTF-8, so we also ensure that Spack does not attempt to decode as UTF-8.
     contents = b"#!" + b"\x80" * sbang.system_shebang_limit
-    file = str(tmpdir.join("non-executable.sh"))
+    file = str(tmp_path / "non-executable.sh")
     with open(file, "wb") as f:
         f.write(contents)
 
-    sbang.filter_shebangs_in_directory(str(tmpdir))
+    sbang.filter_shebangs_in_directory(str(tmp_path))
 
     # Make sure there is no sbang shebang.
     with open(file, "rb") as f:
         assert b"sbang" not in f.readline()
 
 
-def test_sbang_handles_non_utf8_files(tmpdir):
+def test_sbang_handles_non_utf8_files(tmp_path: pathlib.Path):
     # We have an executable with a copyright sign as filename
     contents = b"#!" + b"\xa9" * sbang.system_shebang_limit + b"\nand another symbol: \xa9"
 
@@ -403,7 +421,7 @@ def test_sbang_handles_non_utf8_files(tmpdir):
         contents.decode("utf-8")
 
     # Put it in an executable file
-    file = str(tmpdir.join("latin1.sh"))
+    file = str(tmp_path / "latin1.sh")
     with open(file, "wb") as f:
         f.write(contents)
 
@@ -426,9 +444,11 @@ def shebang_limits_system_8_spack_16():
     sbang.spack_shebang_limit = spack_limit
 
 
-def test_shebang_exceeds_spack_shebang_limit(shebang_limits_system_8_spack_16, tmpdir):
+def test_shebang_exceeds_spack_shebang_limit(
+    shebang_limits_system_8_spack_16, tmp_path: pathlib.Path
+):
     """Tests whether shebangs longer than Spack's limit are skipped"""
-    file = str(tmpdir.join("longer_than_spack_limit.sh"))
+    file = str(tmp_path / "longer_than_spack_limit.sh")
     with open(file, "wb") as f:
         f.write(b"#!" + b"x" * sbang.spack_shebang_limit)
 
@@ -439,8 +459,8 @@ def test_shebang_exceeds_spack_shebang_limit(shebang_limits_system_8_spack_16, t
         assert b"sbang" not in f.read()
 
 
-def test_sbang_hook_handles_non_writable_files_preserving_permissions(tmpdir):
-    path = str(tmpdir.join("file.sh"))
+def test_sbang_hook_handles_non_writable_files_preserving_permissions(tmp_path: pathlib.Path):
+    path = str(tmp_path / "file.sh")
     with open(path, "w", encoding="utf-8") as f:
         f.write(long_line)
     os.chmod(path, 0o555)

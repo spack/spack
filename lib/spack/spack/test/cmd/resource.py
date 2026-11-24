@@ -35,9 +35,8 @@ mock_hashes = (
 )
 
 
-def test_resource_list(mock_packages, capfd):
-    with capfd.disabled():
-        out = resource("list")
+def test_resource_list(mock_packages):
+    out = resource("list")
 
     for h in mock_hashes:
         assert h in out
@@ -48,36 +47,38 @@ def test_resource_list(mock_packages, capfd):
     assert "path:" in out
 
     assert (
-        os.path.join("repos", "builtin.mock", "packages", "patch-a-dependency", "libelf.patch")
+        os.path.join(
+            "spack_repo", "builtin_mock", "packages", "patch_a_dependency", "libelf.patch"
+        )
         in out
     )
-    assert "applies to: builtin.mock.libelf" in out
-    assert "patched by: builtin.mock.patch-a-dependency" in out
+    assert "applies to: builtin_mock.libelf" in out
+    assert "patched by: builtin_mock.patch-a-dependency" in out
 
 
-def test_resource_list_only_hashes(mock_packages, capfd):
-    with capfd.disabled():
-        out = resource("list", "--only-hashes")
+def test_resource_list_only_hashes(mock_packages):
+    out = resource("list", "--only-hashes")
 
     for h in mock_hashes:
         assert h in out
 
 
-def test_resource_show(mock_packages, capfd):
+def test_resource_show(mock_packages):
     test_hash = (
         "c45c1564f70def3fc1a6e22139f62cb21cd190cc3a7dbe6f4120fa59ce33dcb8"
         if sys.platform != "win32"
         else "3c5b65abcd6a3b2c714dbf7c31ff65fe3748a1adc371f030c283007ca5534f11"
     )
-    with capfd.disabled():
-        out = resource("show", test_hash)
+    out = resource("show", test_hash)
 
     assert out.startswith(test_hash)
     assert (
-        os.path.join("repos", "builtin.mock", "packages", "patch-a-dependency", "libelf.patch")
+        os.path.join(
+            "spack_repo", "builtin_mock", "packages", "patch_a_dependency", "libelf.patch"
+        )
         in out
     )
-    assert "applies to: builtin.mock.libelf" in out
-    assert "patched by: builtin.mock.patch-a-dependency" in out
+    assert "applies to: builtin_mock.libelf" in out
+    assert "patched by: builtin_mock.patch-a-dependency" in out
 
     assert len(out.strip().split("\n")) == 4

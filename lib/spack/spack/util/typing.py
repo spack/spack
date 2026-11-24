@@ -1,29 +1,42 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.: object
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""Extra support for type checking in Spack.
 
-from typing import Any
+Protocols here that have runtime overhead should be set to ``object`` when
+``TYPE_CHECKING`` is not enabled, as they can incur unreasonable runtime overheads.
 
-from typing_extensions import Protocol
+In particular, Protocols intended for use on objects that have many ``isinstance()``
+calls can be very expensive.
 
+"""
 
-class SupportsRichComparison(Protocol):
-    """Objects that support =, !=, <, <=, >, and >=."""
+from typing import TYPE_CHECKING, Any
 
-    def __eq__(self, other: Any) -> bool:
-        raise NotImplementedError
+from spack.vendor.typing_extensions import Protocol
 
-    def __ne__(self, other: Any) -> bool:
-        raise NotImplementedError
+if TYPE_CHECKING:
 
-    def __lt__(self, other: Any) -> bool:
-        raise NotImplementedError
+    class SupportsRichComparison(Protocol):
+        """Objects that support =, !=, <, <=, >, and >=."""
 
-    def __le__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __eq__(self, other: Any) -> bool:
+            raise NotImplementedError
 
-    def __gt__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __ne__(self, other: Any) -> bool:
+            raise NotImplementedError
 
-    def __ge__(self, other: Any) -> bool:
-        raise NotImplementedError
+        def __lt__(self, other: Any) -> bool:
+            raise NotImplementedError
+
+        def __le__(self, other: Any) -> bool:
+            raise NotImplementedError
+
+        def __gt__(self, other: Any) -> bool:
+            raise NotImplementedError
+
+        def __ge__(self, other: Any) -> bool:
+            raise NotImplementedError
+
+else:
+    SupportsRichComparison = object

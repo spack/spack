@@ -12,5 +12,6 @@ config:
   verify_ssl: true
   ssl_certs: $SSL_CERT_FILE
   checksum: true
+  installer: old  # many tests are based on stdout from old installer
   dirty: false
   locks: {1}

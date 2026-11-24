@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import tarfile
 
 import pytest
@@ -62,7 +63,7 @@ create = SpackCommand("create")
         (
             ["-t", "intel", "/test-intel"],
             "test-intel",
-            [r"TestIntel(IntelPackage)", r"setup_environment"],
+            [r"TestIntel(IntelOneApiPackage)", r"setup_environment"],
         ),
         (
             ["-t", "makefile", "/test-makefile"],
@@ -149,7 +150,7 @@ def test_create_template_bad_name(mock_test_repo, name, expected):
     """Test template creation with bad name options."""
     output = create("--skip-editor", "-n", name, fail_on_error=False)
     assert expected in output
-    assert create.returncode != 0
+    assert create.returncode == 1
 
 
 def test_build_system_guesser_no_stage():
@@ -161,7 +162,7 @@ def test_build_system_guesser_no_stage():
         guesser(None, "/the/url/does/not/matter")
 
 
-def test_build_system_guesser_octave(tmp_path):
+def test_build_system_guesser_octave(tmp_path: pathlib.Path):
     """
     Test build system guesser for the special case, where the same base URL
     identifies the build system rather than guessing the build system from
@@ -188,7 +189,7 @@ def test_get_name_urls(url, expected):
     assert name == expected
 
 
-def test_get_name_error(monkeypatch, capsys):
+def test_get_name_error(monkeypatch, capfd):
     """Test get_name UndetectableNameError exception path."""
 
     def _parse_name_offset(path, v):
@@ -200,11 +201,11 @@ def test_get_name_error(monkeypatch, capsys):
 
     with pytest.raises(SystemExit):
         spack.cmd.create.get_name(None, url)
-    captured = capsys.readouterr()
+    captured = capfd.readouterr()
     assert "Couldn't guess a name" in str(captured)
 
 
-def test_no_url():
+def test_no_url(mock_test_repo):
     """Test creation of package without a URL."""
     create("--skip-editor", "-n", "create-new-package")
 
@@ -219,7 +220,7 @@ def test_no_url():
         (["fst.jl", "snd.py"], []),
     ],
 )
-def test_language_and_build_system_detection(tmp_path, source_files, languages):
+def test_language_and_build_system_detection(tmp_path: pathlib.Path, source_files, languages):
     """Test that languages are detected from tarball, and the build system is guessed from the
     most top-level build system file."""
 

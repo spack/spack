@@ -1,14 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import collections
 import os
 import shutil
 import sys
 from typing import List
-
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 import spack.config
 import spack.environment as ev
@@ -17,16 +15,22 @@ import spack.schema
 import spack.schema.env
 import spack.spec
 import spack.store
+import spack.util.filesystem as fs
+import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.util import tty
 from spack.util.editor import editor
+from spack.util.tty import color
+from spack.util.tty.colify import colify_table
 
 description = "get and set configuration options"
 section = "config"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # User can only choose one
     subparser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read/modify"
@@ -42,6 +46,14 @@ def setup_parser(subparser):
         metavar="section",
         choices=spack.config.SECTION_SCHEMAS,
     )
+    get_parser.add_argument("--json", action="store_true", help="output configuration as JSON")
+    get_parser.add_argument(
+        "--group",
+        metavar="group",
+        default=None,
+        help="show configuration as seen by this environment spec group (requires active env)",
+    )
+    get_parser.set_defaults(subparser=get_parser)
 
     blame_parser = sp.add_parser(
         "blame", help="print configuration annotated with source file:line"
@@ -53,6 +65,13 @@ def setup_parser(subparser):
         metavar="section",
         choices=spack.config.SECTION_SCHEMAS,
     )
+    blame_parser.add_argument(
+        "--group",
+        metavar="group",
+        default=None,
+        help="show configuration as seen by this environment spec group (requires active env)",
+    )
+    blame_parser.set_defaults(subparser=blame_parser)
 
     edit_parser = sp.add_parser("edit", help="edit configuration file")
     edit_parser.add_argument(
@@ -65,8 +84,47 @@ def setup_parser(subparser):
     edit_parser.add_argument(
         "--print-file", action="store_true", help="print the file name that would be edited"
     )
+    edit_parser.set_defaults(subparser=edit_parser)
 
-    sp.add_parser("list", help="list configuration sections")
+    list_parser = sp.add_parser("list", help="list configuration sections")
+    list_parser.set_defaults(subparser=list_parser)
+
+    scopes_parser = sp.add_parser(
+        "scopes", help="list defined scopes in descending order of precedence"
+    )
+    scopes_parser.add_argument(
+        "-p",
+        "--paths",
+        action="store_true",
+        default=False,
+        help="show associated paths for appropriate scopes",
+    )
+    scopes_parser.add_argument(
+        "-t",
+        "--type",
+        default=["all"],
+        metavar="scope-type",
+        nargs="+",
+        choices=("all", "env", "include", "internal", "path"),
+        help="list only scopes of the specified type(s)\n\noptions: %(choices)s",
+    )
+    scopes_parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="scopes_verbose",  # spack has -v as well
+        action="store_true",
+        default=False,
+        help="show scope types and whether scopes are overridden",
+    )
+    scopes_parser.add_argument(
+        "section",
+        help="tailor scope path information to the specified section (implies ``--paths``)"
+        "\n\noptions: %(choices)s",
+        metavar="section",
+        nargs="?",
+        choices=spack.config.SECTION_SCHEMAS,
+    )
+    scopes_parser.set_defaults(subparser=scopes_parser)
 
     add_parser = sp.add_parser("add", help="add configuration parameters")
     add_parser.add_argument(
@@ -75,10 +133,12 @@ def setup_parser(subparser):
         help="colon-separated path to config that should be added, e.g. 'config:default:true'",
     )
     add_parser.add_argument("-f", "--file", help="file from which to set all config values")
+    add_parser.set_defaults(subparser=add_parser)
 
     change_parser = sp.add_parser("change", help="swap variants etc. on specs in config")
     change_parser.add_argument("path", help="colon-separated path to config section with specs")
     change_parser.add_argument("--match-spec", help="only change constraints that match this")
+    change_parser.set_defaults(subparser=change_parser)
 
     prefer_upstream_parser = sp.add_parser(
         "prefer-upstream", help="set package preferences from upstream"
@@ -90,26 +150,29 @@ def setup_parser(subparser):
         default=False,
         help="set packages preferences based on local installs, rather than upstream",
     )
+    prefer_upstream_parser.set_defaults(subparser=prefer_upstream_parser)
 
     remove_parser = sp.add_parser("remove", aliases=["rm"], help="remove configuration parameters")
     remove_parser.add_argument(
         "path",
-        help="colon-separated path to config that should be removed,"
-        " e.g. 'config:default:true'",
+        help="colon-separated path to config that should be removed, e.g. 'config:default:true'",
     )
+    remove_parser.set_defaults(subparser=remove_parser)
 
     # Make the add parser available later
-    setup_parser.add_parser = add_parser
+    setattr(setup_parser, "add_parser", add_parser)
 
     update = sp.add_parser("update", help="update configuration files to the latest format")
     arguments.add_common_arguments(update, ["yes_to_all"])
     update.add_argument("section", help="section to update")
+    update.set_defaults(subparser=update)
 
     revert = sp.add_parser(
         "revert", help="revert configuration files to their state before update"
     )
     arguments.add_common_arguments(revert, ["yes_to_all"])
     revert.add_argument("section", help="section to update")
+    revert.set_defaults(subparser=revert)
 
 
 def _get_scope_and_section(args):
@@ -120,53 +183,70 @@ def _get_scope_and_section(args):
 
     # w/no args and an active environment, point to env manifest
     if not section and not scope:
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             scope = env.scope_name
 
     # set scope defaults
     elif not scope:
-        scope = spack.config.default_modify_scope(section)
+        scope = spack.config.CONFIG.default_modify_scope(section)
 
     # special handling for commands that take value instead of section
     if path:
         section = path[: path.find(":")] if ":" in path else path
         if not scope:
-            scope = spack.config.default_modify_scope(section)
+            scope = spack.config.CONFIG.default_modify_scope(section)
 
     return scope, section
 
 
 def print_configuration(args, *, blame: bool) -> None:
+    if args.scope and args.scope not in spack.config.CONFIG.existing_scope_names():
+        args.subparser.error(f"the argument --scope={args.scope} must refer to an existing scope")
     if args.scope and args.section is None:
-        tty.die(f"the argument --scope={args.scope} requires specifying a section.")
+        args.subparser.error(f"the argument --scope={args.scope} requires specifying a section")
 
-    if args.section is not None:
-        spack.config.CONFIG.print_section(args.section, blame=blame, scope=args.scope)
+    group = getattr(args, "group", None)
+    if group is not None:
+        env = active_environment()
+        if env is None:
+            args.subparser.error("the argument --group requires an active environment")
+            return  # parser.error exits, but help mypy understand this is unreachable
+        try:
+            with env.config_override_for_group(group=group):
+                _print_configuration_helper(args, blame=blame)
+        except ValueError as e:
+            tty.die(str(e))
         return
 
-    print_flattened_configuration(blame=blame)
+    _print_configuration_helper(args, blame=blame)
 
 
-def print_flattened_configuration(*, blame: bool) -> None:
+def _print_configuration_helper(args, *, blame: bool) -> None:
+    yaml = blame or not args.json
+
+    if args.section is not None:
+        spack.config.CONFIG.print_section(args.section, yaml=yaml, blame=blame, scope=args.scope)
+        return
+
+    print_flattened_configuration(blame=blame, yaml=yaml)
+
+
+def print_flattened_configuration(*, blame: bool, yaml: bool) -> None:
     """Prints to stdout a flattened version of the configuration.
 
     Args:
         blame: if True, shows file provenance for each entry in the configuration.
     """
-    env = ev.active_environment()
-    if env is not None:
-        pristine = env.manifest.yaml_content
-        flattened = pristine.copy()
-        flattened[spack.schema.env.TOP_LEVEL_KEY] = pristine[spack.schema.env.TOP_LEVEL_KEY].copy()
-    else:
-        flattened = syaml.syaml_dict()
-        flattened[spack.schema.env.TOP_LEVEL_KEY] = syaml.syaml_dict()
+    env = active_environment()
+    manifest = env.manifest.yaml_content if env is not None else None
+    flattened = spack.config.flattened_configuration(manifest)
 
-    for config_section in spack.config.SECTION_SCHEMAS:
-        current = spack.config.get(config_section)
-        flattened[spack.schema.env.TOP_LEVEL_KEY][config_section] = current
-    syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
+    if blame or yaml:
+        syaml.dump_config(flattened, stream=sys.stdout, default_flow_style=False, blame=blame)
+    else:
+        sjson.dump(flattened, sys.stdout)
+        sys.stdout.write("\n")
 
 
 def config_get(args):
@@ -190,7 +270,16 @@ def config_edit(args):
     the active environment.
     """
     spack_env = os.environ.get(ev.spack_env_var)
-    if spack_env and not args.scope:
+    env_error = ev.environment._active_environment_error
+
+    if env_error and args.scope:
+        # Cannot use scopes beyond the environment itself with a failed environment
+        raise env_error
+    elif env_error:
+        # The rest of the config system wasn't set up fully, but spack.main was allowed
+        # to progress so the user can open the malformed environment file
+        config_file = env_error.filename
+    elif spack_env and not args.scope:
         # Don't use the scope object for envs, as `config edit` can be called
         # for a malformed environment. Use SPACK_ENV to find spack.yaml.
         config_file = ev.manifest_file(spack_env)
@@ -198,12 +287,13 @@ def config_edit(args):
         # If we aren't editing a spack.yaml file, get config path from scope.
         scope, section = _get_scope_and_section(args)
         if not scope and not section:
-            tty.die("`spack config edit` requires a section argument or an active environment.")
+            args.subparser.error("requires a section argument or an active environment")
         config_file = spack.config.CONFIG.get_config_filename(scope, section)
 
     if args.print_file:
         print(config_file)
     else:
+        fs.mkdirp(os.path.dirname(config_file))
         editor(config_file)
 
 
@@ -213,6 +303,81 @@ def config_list(args):
     Used primarily for shell tab completion scripts.
     """
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
+
+
+def _config_scope_info(args, scope, active, included):
+    result = [scope.name]  # always print the name
+
+    if args.scopes_verbose:
+        result.append(",".join(_config_basic_scope_types(scope, included)))
+        if scope.name not in active:
+            scope_status = "override"
+        elif args.section and not spack.config.CONFIG.get_config(args.section, scope=scope.name):
+            scope_status = "absent"
+        else:
+            scope_status = "active"
+        result.append(scope_status)
+
+    section_path = None
+    if args.section or args.paths:
+        if hasattr(scope, "path"):
+            section_path = scope.get_section_filename(args.section) if args.section else None
+            result.append(
+                section_path
+                if section_path and os.path.exists(section_path)
+                else f"{scope.path}{'' if os.path.isfile(scope.path) else os.sep}"
+            )
+        else:
+            result.append(" ")
+
+    if args.scopes_verbose and scope_status in ("absent", "override"):
+        result = [color.colorize(f"@#{{{elt}}}") for elt in result]
+
+    return result
+
+
+def _config_basic_scope_types(scope, included):
+    types = []
+    if isinstance(scope, spack.config.InternalConfigScope):
+        types.append("internal")
+    if hasattr(scope, "yaml_path") and scope.yaml_path == [spack.schema.env.TOP_LEVEL_KEY]:
+        types.append("env")
+    if hasattr(scope, "path"):
+        types.append("path")
+    if scope.name in included:
+        types.append("include")
+    return sorted(types)
+
+
+def config_scopes(args):
+    """List configured scopes in descending order of precedence."""
+    included = [i.name for s in spack.config.CONFIG.scopes.values() for i in s.included_scopes]
+    active = [s.name for s in spack.config.CONFIG.active_scopes]
+    scopes = [
+        s
+        for s in spack.config.CONFIG.scopes.reversed_values()
+        if (
+            "include" in args.type
+            and s.name in included
+            or any(i in ("all", *_config_basic_scope_types(s, included)) for i in args.type)
+        )
+        and (s.name in active or args.scopes_verbose)
+    ]
+
+    if scopes:
+        headers = ["Scope"]
+        if args.scopes_verbose:
+            headers += ["Type", "Status"]
+        if args.section or args.paths:
+            headers += ["Path"]
+
+        table = [_config_scope_info(args, s, active, included) for s in scopes]
+
+        # add headers if we have > 1 column
+        if len(headers) > 1:
+            table = [[color.colorize(f"@*C{{{colname}}}") for colname in headers]] + table
+
+        colify_table(table)
 
 
 def config_add(args):
@@ -227,10 +392,10 @@ def config_add(args):
     scope, section = _get_scope_and_section(args)
 
     if args.file:
-        spack.config.add_from_file(args.file, scope=scope)
+        spack.config.CONFIG.add_from_file(args.file, scope=scope)
 
     if args.path:
-        spack.config.add(args.path, scope=scope)
+        spack.config.CONFIG.add(args.path, scope=scope)
 
 
 def config_remove(args):
@@ -240,11 +405,11 @@ def config_remove(args):
     scope, _ = _get_scope_and_section(args)
 
     path, _, value = args.path.rpartition(":")
-    existing = spack.config.get(path, scope=scope)
+    existing = spack.config.CONFIG.get(path, scope=scope)
 
     if not isinstance(existing, (list, dict)):
         path, _, value = path.rpartition(":")
-        existing = spack.config.get(path, scope=scope)
+        existing = spack.config.CONFIG.get(path, scope=scope)
 
     value = syaml.load(value)
 
@@ -258,7 +423,7 @@ def config_remove(args):
         # This should be impossible to reach
         raise spack.error.ConfigError("Config has nested non-dict values")
 
-    spack.config.set(path, existing, scope)
+    spack.config.CONFIG.set(path, existing, scope)
 
 
 def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
@@ -271,7 +436,7 @@ def _can_update_config_file(scope: spack.config.ConfigScope, cfg_file):
 
 def _config_change_requires_scope(path, spec, scope, match_spec=None):
     """Return whether or not anything changed."""
-    require = spack.config.get(path, scope=scope)
+    require = spack.config.CONFIG.get(path, scope=scope)
     if not require:
         return False
 
@@ -312,7 +477,7 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
                 raise ValueError(f"Unexpected requirement: ({type(item)}) {str(item)}")
             new_require.append(item)
 
-    spack.config.set(path, new_require, scope=scope)
+    spack.config.CONFIG.set(path, new_require, scope=scope)
     return changed
 
 
@@ -334,11 +499,11 @@ def _config_change(config_path, match_spec_str=None):
         spec.name = pkg_name
 
         changed = False
-        for scope in spack.config.writable_scope_names():
+        for scope in spack.config.CONFIG.writable_scope_names():
             changed |= _config_change_requires_scope(key_path, spec, scope, match_spec=match_spec)
 
         if not changed:
-            existing_requirements = spack.config.get(key_path)
+            existing_requirements = spack.config.CONFIG.get(key_path)
             if isinstance(existing_requirements, str):
                 raise spack.error.ConfigError(
                     "'config change' needs to append a requirement,"
@@ -346,13 +511,16 @@ def _config_change(config_path, match_spec_str=None):
                 )
 
             ideal_scope_to_modify = None
-            for scope in spack.config.writable_scope_names():
-                if spack.config.get(key_path, scope=scope):
+            for scope in spack.config.CONFIG.writable_scope_names():
+                if spack.config.CONFIG.get(key_path, scope=scope):
                     ideal_scope_to_modify = scope
                     break
+            # If we find our key in a specific scope, that's the one we want
+            # to modify. Otherwise we use the default write scope.
+            write_scope = ideal_scope_to_modify or spack.config.CONFIG.default_modify_scope()
 
             update_path = f"{key_path}:[{str(spec)}]"
-            spack.config.add(update_path, scope=ideal_scope_to_modify)
+            spack.config.CONFIG.add(update_path, scope=write_scope)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
 
@@ -366,7 +534,7 @@ def config_update(args):
     spack.config.CONFIG.get_config(args.section, scope=args.scope)
     updates: List[spack.config.ConfigScope] = [
         x
-        for x in spack.config.CONFIG.format_updates[args.section]
+        for x in spack.config.CONFIG.updated_scopes_by_section[args.section]
         if not isinstance(x, spack.config.InternalConfigScope) and x.writable
     ]
 
@@ -428,13 +596,17 @@ def config_update(args):
     # Get a function to update the format
     update_fn = spack.config.ensure_latest_format_fn(args.section)
     for scope in updates:
-        data = scope.get_section(args.section).pop(args.section)
+        cfg_file = spack.config.CONFIG.get_config_filename(scope.name, args.section)
+        data = scope.get_section(args.section)
+        assert data is not None, f"Cannot find section {args.section} in {scope.name} scope"
         update_fn(data)
 
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + ".bkp"
         shutil.copy(cfg_file, bkp_file)
-        spack.config.CONFIG.update_config(args.section, data, scope=scope.name, force=True)
+        spack.config.CONFIG.update_config(
+            args.section, data[args.section], scope=scope.name, force=True
+        )
         tty.msg(f'File "{cfg_file}" update [backup={bkp_file}]')
 
 
@@ -506,7 +678,7 @@ def config_prefer_upstream(args):
 
     scope = args.scope
     if scope is None:
-        scope = spack.config.default_modify_scope("packages")
+        scope = spack.config.CONFIG.default_modify_scope("packages")
 
     all_specs = set(spack.store.STORE.db.query(installed=True))
     local_specs = set(spack.store.STORE.db.query_local(installed=True))
@@ -518,8 +690,6 @@ def config_prefer_upstream(args):
     for spec in pref_specs:
         # Collect all the upstream compilers and versions for this package.
         pkg = pkgs.get(spec.name, {"version": []})
-        all = pkgs.get("all", {"compiler": []})
-        pkgs["all"] = all
         pkgs[spec.name] = pkg
 
         # We have no existing variant if this is our first added version.
@@ -528,10 +698,6 @@ def config_prefer_upstream(args):
         version = spec.version.string
         if version not in pkg["version"]:
             pkg["version"].append(version)
-
-        compiler = str(spec.compiler)
-        if compiler not in all["compiler"]:
-            all["compiler"].append(compiler)
 
         # Get and list all the variants that differ from the default.
         variants = []
@@ -565,9 +731,9 @@ def config_prefer_upstream(args):
         )
 
     # Simply write the config to the specified file.
-    existing = spack.config.get("packages", scope=scope)
+    existing = spack.config.CONFIG.get("packages", scope=scope)
     new = spack.schema.merge_yaml(existing, pkgs)
-    spack.config.set("packages", new, scope)
+    spack.config.CONFIG.set("packages", new, scope)
     config_file = spack.config.CONFIG.get_config_filename(scope, section)
 
     tty.msg("Updated config at {0}".format(config_file))
@@ -579,6 +745,7 @@ def config(parser, args):
         "blame": config_blame,
         "edit": config_edit,
         "list": config_list,
+        "scopes": config_scopes,
         "add": config_add,
         "rm": config_remove,
         "remove": config_remove,

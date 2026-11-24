@@ -2,25 +2,26 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
-
-import llnl.util.tty as tty
 
 import spack.builder
 import spack.cmd
+import spack.config
 import spack.environment as ev
 import spack.paths
 import spack.repo
 import spack.stage
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.util import tty
 
 description = "print out locations of packages and spack directories"
-section = "basic"
+section = "query"
 level = "long"
 
 
-def setup_parser(subparser):
-    global directories
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     directories = subparser.add_mutually_exclusive_group()
 
     directories.add_argument(
@@ -43,7 +44,14 @@ def setup_parser(subparser):
         help="directory enclosing a spec's package.py file",
     )
     directories.add_argument(
-        "-P", "--packages", action="store_true", help="top-level packages directory for Spack"
+        "--repo",
+        # for backwards compatibility
+        "--packages",
+        "-P",
+        nargs="?",
+        default=False,
+        metavar="repo",
+        help="package repository root (defaults to first configured repository)",
     )
     directories.add_argument(
         "-s", "--stage-dir", action="store_true", help="stage directory for a spec"
@@ -73,6 +81,16 @@ def setup_parser(subparser):
         default=False,
         help="location of the named or current environment",
     )
+    directories.add_argument(
+        "-v",
+        "--view",
+        action="store",
+        nargs="?",
+        metavar="name",
+        dest="location_view",
+        default=False,
+        help="location of the named or active environment view",
+    )
 
     subparser.add_argument(
         "--first",
@@ -98,8 +116,8 @@ def location(parser, args):
     if args.location_env is not False:
         if args.location_env is None:
             # Get current environment path
-            spack.cmd.require_active_env("location -e")
-            path = ev.active_environment().path
+            spack.cmd.require_active_env(args.subparser)
+            path = active_environment().path
         else:
             # Get path of requested environment
             if not ev.exists(args.location_env):
@@ -108,25 +126,47 @@ def location(parser, args):
         print(path)
         return
 
-    if args.packages:
-        print(spack.repo.PATH.first_repo().root)
+    # no -v corresponds to False, -v without arg to None, -v name to the string name.
+    if args.location_view is not False:
+        env = spack.cmd.require_active_env(args.subparser)
+        view_name = args.location_view
+        if view_name is None:
+            # get active view name
+            view_name = os.getenv(ev.spack_env_view_var)
+            if view_name is None:
+                tty.die("no active view in the current environment")
+        # print the view location
+        if env.has_view(view_name):
+            print(f"{env.views[view_name].root}\n")
+        else:
+            tty.die("no such view in the current environment: '%s'" % view_name)
+        return
+
+    if args.repo is not False:
+        if args.repo is None:
+            print(spack.repo.PATH.first_repo().root)
+            return
+        try:
+            print(spack.repo.PATH.get_repo(args.repo).root)
+        except spack.repo.UnknownNamespaceError:
+            tty.die(f"no such repository: '{args.repo}'")
         return
 
     if args.stages:
-        print(spack.stage.get_stage_root())
+        print(spack.stage.stage_root(spack.config.CONFIG))
         return
 
     specs = spack.cmd.parse_specs(args.spec)
 
     if not specs:
-        tty.die("You must supply a spec.")
+        args.subparser.error("requires a spec")
 
     if len(specs) != 1:
-        tty.die("Too many specs.  Supply only one.")
+        args.subparser.error("too many specs, supply only one")
 
     # install_dir command matches against installed specs.
     if args.install_dir:
-        env = ev.active_environment()
+        env = active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env, first=args.find_first)
         print(spec.prefix)
         return

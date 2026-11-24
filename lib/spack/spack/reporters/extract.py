@@ -5,9 +5,8 @@ import re
 import xml.sax.saxutils
 from datetime import datetime
 
-import llnl.util.tty as tty
-
 from spack.install_test import TestStatus
+from spack.util import tty
 
 # The keys here represent the only recognized (ctest/cdash) status values
 completed = {

@@ -37,23 +37,26 @@ import pytest
 
 import spack.concretize
 import spack.config
+import spack.context
 import spack.environment as ev
 import spack.paths
 import spack.repo
+import spack.solver.asp
 import spack.spec
 import spack.util.spack_yaml as syaml
+from spack.concretize_ui import HeadlessUI
 
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(spack.paths.repos_path) / "flags.test"
-    with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
-        yield mock_repo_path
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "spack_repo" / "flags_test"
+    with spack.repo.use_repositories(str(repo_dir)) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def update_concretize_scope(conf_str, section):
     conf = syaml.load_config(conf_str)
-    spack.config.set(section, conf[section], scope="concretize")
+    spack.config.CONFIG.set(section, conf[section], scope="concretize")
 
 
 def test_mix_spec_and_requirements(concretize_scope, test_repo):
@@ -75,39 +78,50 @@ def test_mix_spec_and_dependent(concretize_scope, test_repo):
 
 def _compiler_cfg_one_entry_with_cflags(cflags):
     return f"""\
-compilers::
-- compiler:
-    spec: gcc@12.100.100
-    paths:
-      cc: /usr/bin/fake-gcc
-      cxx: /usr/bin/fake-g++
-      f77: null
-      fc: null
-    flags:
-      cflags: {cflags}
-    operating_system: debian6
-    modules: []
+packages:
+  gcc:
+    externals:
+    - spec: gcc@12.100.100 languages:=c,c++
+      prefix: /fake
+      extra_attributes:
+        compilers:
+          c: /fake/bin/gcc
+          cxx: /fake/bin/g++
+        flags:
+          cflags: {cflags}
 """
 
 
 def test_mix_spec_and_compiler_cfg(concretize_scope, test_repo):
     conf_str = _compiler_cfg_one_entry_with_cflags("-Wall")
-    update_concretize_scope(conf_str, "compilers")
+    update_concretize_scope(conf_str, "packages")
 
-    s1 = spack.concretize.concretize_one('y %gcc@12.100.100 cflags="-O2"')
+    s1 = spack.concretize.concretize_one('y cflags="-O2" %gcc@12.100.100')
     assert s1.satisfies('cflags="-Wall -O2"')
 
 
 def test_pkg_flags_from_compiler_and_none(concretize_scope, mock_packages):
-    conf_str = _compiler_cfg_one_entry_with_cflags("-Wall")
-    update_concretize_scope(conf_str, "compilers")
+    packages_yaml = f"""
+{_compiler_cfg_one_entry_with_cflags("-Wall")}
+  llvm:
+    externals:
+    - spec: llvm+clang@19.1.0
+      prefix: /fake
+      extra_attributes:
+        compilers:
+          c: /fake/bin/clang
+          cxx: /fake/bin/clang++
+"""
+    update_concretize_scope(packages_yaml, "packages")
 
     s1 = spack.spec.Spec("cmake%gcc@12.100.100")
-    s2 = spack.spec.Spec("cmake-client^cmake%clang")
-    concrete = dict(spack.concretize.concretize_together([(s1, None), (s2, None)]))
+    s2 = spack.spec.Spec("cmake-client^cmake%clang@19.1.0")
+    concrete = dict(
+        spack.concretize._concretize_together([(s1, None), (s2, None)], ui=HeadlessUI())
+    )
 
     assert concrete[s1].compiler_flags["cflags"] == ["-Wall"]
-    assert concrete[s2].compiler_flags["cflags"] == []
+    assert concrete[s2]["cmake"].compiler_flags["cflags"] == []
 
 
 @pytest.mark.parametrize(
@@ -135,31 +149,33 @@ def test_flag_order_and_grouping(
 
     The ordering rules are explained in ``asp.SpecBuilder.reorder_flags``.
     """
+    conf_str = """
+packages:
+"""
+    if cmp_flags:
+        conf_str = _compiler_cfg_one_entry_with_cflags(cmp_flags)
+
     if req_flags:
         conf_str = f"""\
-packages:
+{conf_str}
   y:
     require: cflags="{req_flags}"
 """
-        update_concretize_scope(conf_str, "packages")
 
-    if cmp_flags:
-        conf_str = _compiler_cfg_one_entry_with_cflags(cmp_flags)
-        update_concretize_scope(conf_str, "compilers")
+    update_concretize_scope(conf_str, "packages")
 
     compiler_spec = ""
     if cmp_flags:
         compiler_spec = "%gcc@12.100.100"
 
+    cmd_flags_str = f'cflags="{cmd_flags}"' if cmd_flags else ""
+
     if dflags:
-        spec_str = f"x+activatemultiflag {compiler_spec} ^y"
+        spec_str = f"x+activatemultiflag {compiler_spec} ^y {cmd_flags_str}"
         expected_dflags = "-d1 -d2"
     else:
-        spec_str = f"y {compiler_spec}"
+        spec_str = f"y {cmd_flags_str} {compiler_spec}"
         expected_dflags = None
-
-    if cmd_flags:
-        spec_str += f' cflags="{cmd_flags}"'
 
     root_spec = spack.concretize.concretize_one(spec_str)
     spec = root_spec["y"]
@@ -180,14 +196,10 @@ def test_two_dependents_flag_mixing(concretize_scope, test_repo):
 
 def test_propagate_and_compiler_cfg(concretize_scope, test_repo):
     conf_str = _compiler_cfg_one_entry_with_cflags("-f2")
-    update_concretize_scope(conf_str, "compilers")
+    update_concretize_scope(conf_str, "packages")
 
-    root_spec = spack.concretize.concretize_one("v %gcc@12.100.100 cflags=='-f1'")
+    root_spec = spack.concretize.concretize_one("v cflags=='-f1' %gcc@12.100.100")
     assert root_spec["y"].satisfies("cflags='-f1 -f2'")
-
-
-# Note: setting flags on a dependency overrides propagation, which
-# is tested in test/concretize.py:test_compiler_flag_propagation
 
 
 def test_propagate_and_pkg_dep(concretize_scope, test_repo):
@@ -223,13 +235,13 @@ packages:
     # the note about #37180 in concretize.lp
 
 
-def test_dev_mix_flags(tmp_path, concretize_scope, mutable_mock_env_path, test_repo):
+def test_dev_mix_flags(tmp_path: pathlib.Path, concretize_scope, mutable_mock_env_path, test_repo):
     src_dir = tmp_path / "x-src"
 
     env_content = f"""\
 spack:
   specs:
-  - y %gcc@12.100.100 cflags=='-fsanitize=address'
+  - y cflags=='-fsanitize=address' %gcc@12.100.100
   develop:
     y:
       spec: y cflags=='-fsanitize=address'
@@ -237,7 +249,7 @@ spack:
 """
 
     conf_str = _compiler_cfg_one_entry_with_cflags("-f1")
-    update_concretize_scope(conf_str, "compilers")
+    update_concretize_scope(conf_str, "packages")
 
     manifest_file = tmp_path / ev.manifest_name
     manifest_file.write_text(env_content)
@@ -246,7 +258,7 @@ spack:
         e.concretize()
     e.write()
 
-    (result,) = list(j for i, j in e.concretized_specs() if j.name == "y")
+    (result,) = [j for i, j in e.concretized_specs() if j.name == "y"]
 
     assert result["y"].satisfies("cflags='-fsanitize=address -f1'")
 
@@ -263,3 +275,90 @@ def test_diamond_dep_flag_mixing(concretize_scope, test_repo):
     spec1 = root_spec1["y"]
     assert spec1.satisfies('cflags="-c1 -c2 -d1 -d2 -e1 -e2"')
     assert spec1.compiler_flags["cflags"] == "-c1 -c2 -e1 -e2 -d1 -d2".split()
+
+
+def test_flag_injection_different_compilers(mock_packages, mutable_config):
+    """Tests that flag propagation is not activated on nodes with a compiler that is different
+    from the propagation source.
+    """
+    s = spack.concretize.concretize_one('mpileaks cflags=="-O2" %gcc ^callpath %llvm')
+    assert s.satisfies('cflags="-O2"') and s["c"].name == "gcc"
+    assert not s["callpath"].satisfies('cflags="-O2"') and s["callpath"]["c"].name == "llvm"
+
+
+@pytest.mark.regression("51209")
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        # gcc using flags compiled with another gcc not using flags
+        ("gcc@14 cflags='-O3'", ["gcc@14 cflags='-O3'", "%gcc@10"], ["%gcc cflags='-O3'"]),
+        # Parent and child, imposing different flags on gmake
+        (
+            "7zip-dependent %gmake cflags='-O2' ^7zip %gmake cflags='-g'",
+            ["%gmake cflags='-O2'", "^7zip %gmake cflags='-g'"],
+            ["%gmake cflags='-g'"],
+        ),
+    ],
+)
+def test_flags_and_duplicate_nodes(spec_str, expected, not_expected, config, mock_packages):
+    """Tests that we can concretize a spec with flags on a node that is present with duplicates
+    in the DAG. For instance, a compiler built with a previous version of itself.
+    """
+    s = spack.concretize.concretize_one(spec_str)
+    assert all(s.satisfies(x) for x in expected)
+    assert all(not s.satisfies(x) for x in not_expected)
+
+
+@pytest.mark.regression("52670")
+def test_no_flags_from_compiler_used_only_as_library(concretize_scope, mock_packages):
+    """Tests that we don't attach flags defined on a possible compiler when we have a build
+    dependency on it, but we're using it as a library.
+    """
+    packages_yaml = """
+packages:
+  gcc:
+    externals:
+    - spec: gcc@12.100.100 languages:=c,c++
+      prefix: /fake
+      extra_attributes:
+        compilers:
+          c: /fake/bin/gcc
+          cxx: /fake/bin/g++
+  llvm:
+    externals:
+    - spec: llvm@19.1.0+clang
+      prefix: /fake
+      extra_attributes:
+        compilers:
+          c: /fake/bin/clang
+          cxx: /fake/bin/clang++
+        flags:
+          cflags: -Wall
+"""
+    update_concretize_scope(packages_yaml, "packages")
+
+    s = spack.concretize.concretize_one("llvm-client %c,cxx=gcc@12.100.100")
+
+    # gcc, not llvm, compiles llvm-client, and llvm is pulled in only as a library
+    assert s["c"].name == "gcc"
+    assert s["llvm"].external and s["llvm"].satisfies("@19.1.0")
+    # the external llvm's cflags must not be injected into its dependent
+    assert s.compiler_flags["cflags"] == []
+
+
+def test_reused_spec_keeps_the_order_of_its_flags(concretize_scope, test_repo):
+    """A spec read from a specfile has flags without a source, and is reused with its flags in
+    the order it was built with.
+    """
+    built = spack.concretize.concretize_one('y cflags="-g -O2 -fPIC"')
+    reusable = spack.spec.Spec.from_dict(built.to_dict())
+    context = spack.context.default()
+    solver = spack.solver.asp.Solver(context=context)
+    setup = spack.solver.asp.SpackSolverSetup(context=context)
+    result, _, _ = solver.driver.solve(
+        setup, [spack.spec.Spec("v")], reuse=list(reusable.traverse())
+    )
+
+    (root,) = result.specs
+    assert root["y"].dag_hash() == reusable.dag_hash()
+    assert root["y"].compiler_flags["cflags"] == ["-g", "-O2", "-fPIC"]

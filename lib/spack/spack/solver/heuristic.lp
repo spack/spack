@@ -6,37 +6,41 @@
 % Heuristic to speed-up solves
 %=============================================================================
 
-#heuristic attr("node", PackageNode). [300, init]
-#heuristic attr("node", PackageNode). [  2, factor]
-#heuristic attr("node", PackageNode). [ -1, sign]
-#heuristic attr("node", node(0, Dependency)) : attr("dependency_holds", ParentNode, Dependency, Type), not virtual(Dependency). [1@2, sign]
+% Decide about DAG atoms, before trying to guess facts used only in
+% the internal representation
+#heuristic attr("virtual_node", node(X, Virtual)). [80, level]
+#heuristic attr("node", PackageNode). [80, level]
+#heuristic attr("version", node(PackageID, Package), Version). [80, level]
+#heuristic attr("variant_value", PackageNode, Variant, Value). [80, level]
+#heuristic attr("node_target", node(PackageID, Package), Target). [80, level]
+#heuristic virtual_on_edge(PackageNode, ProviderNode, Virtual, Type). [80, level]
+#heuristic build_set_id(PackageNode, ID). [80, level]
 
-#heuristic attr("virtual_node", node(X, Virtual)). [60, init]
+#heuristic attr("virtual_node", node(X, Virtual)). [600, init]
 #heuristic attr("virtual_node", node(X, Virtual)). [-1, sign]
 #heuristic attr("virtual_node", node(0, Virtual)) : node_depends_on_virtual(PackageNode, Virtual). [1@2, sign]
+#heuristic attr("virtual_node", node(0, "c")).     [1@3, sign]
+#heuristic attr("virtual_node", node(0, "cxx")).   [1@3, sign]
+#heuristic attr("virtual_node", node(0, "libc")).   [1@3, sign]
 
-#heuristic attr("depends_on", ParentNode, ChildNode, Type). [150, init]
-#heuristic attr("depends_on", ParentNode, ChildNode, Type). [4,  factor]
-#heuristic attr("depends_on", ParentNode, ChildNode, Type). [-1, sign]
-#heuristic attr("depends_on", ParentNode, node(0, Dependency), Type) : attr("dependency_holds", ParentNode, Dependency, Type), not virtual(Dependency). [1@2, sign]
-#heuristic attr("depends_on", ParentNode, ProviderNode       , Type) : node_depends_on_virtual(ParentNode, Virtual, Type), provider(ProviderNode, node(VirtualID, Virtual)). [1@2, sign]
+#heuristic attr("node", PackageNode). [300, init]
+#heuristic attr("node", PackageNode). [  4, factor]
+#heuristic attr("node", PackageNode). [ -1, sign]
+#heuristic attr("node", node(0, Dependency)) : attr("dependency_holds", ParentNode, Dependency, Type), not virtual(Dependency). [1@2, sign]
 
 #heuristic attr("version", node(PackageID, Package), Version). [30, init]
 #heuristic attr("version", node(PackageID, Package), Version). [-1, sign]
 #heuristic attr("version", node(PackageID, Package), Version) : pkg_fact(Package, version_declared(Version, 0)), attr("node", node(PackageID, Package)). [ 1@2, sign]
 
-#heuristic version_weight(node(PackageID, Package), Weight).                                          [30, init]
-#heuristic version_weight(node(PackageID, Package), Weight).                                          [-1  , sign]
-#heuristic version_weight(node(PackageID, Package), 0     ) : attr("node", node(PackageID, Package)). [ 1@2, sign]
+% Use default targets
+#heuristic attr("node_target", node(PackageID, Package), Target). [-1, sign]
+#heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target, 0), attr("node", node(PackageID, Package)). [1@2, sign]
 
 % Use default variants
 #heuristic attr("variant_value", PackageNode, Variant, Value). [30, init]
 #heuristic attr("variant_value", PackageNode, Variant, Value). [-1, sign]
 #heuristic attr("variant_value", PackageNode, Variant, Value) : variant_default_value(PackageNode, Variant, Value), attr("node", PackageNode). [1@2, sign]
 
-% Use default targets
-#heuristic attr("node_target", node(PackageID, Package), Target). [-1, sign]
-#heuristic attr("node_target", node(PackageID, Package), Target) : target_weight(Target, 0), attr("node", node(PackageID, Package)). [1@2, sign]
-
-% Use the default compilers
-#heuristic node_compiler(node(PackageID, Package), ID) : compiler_weight(ID, 0), compiler_id(ID), attr("node", node(PackageID, Package)). [30, init]
+% Prefer the first build unification set, and the first node of a virtual on edges
+#heuristic build_set_id(PackageNode, 0). [1, sign]
+#heuristic virtual_on_edge(PackageNode, ProviderNode, node(0, Virtual), Type). [1, sign]

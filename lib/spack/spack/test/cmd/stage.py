@@ -2,15 +2,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
+import pathlib
 
 import pytest
 
-import spack.config
+import spack.database
 import spack.environment as ev
 import spack.package_base
+import spack.store
 import spack.traverse
 from spack.cmd.stage import StageFilter
+from spack.config import Configuration
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 from spack.version import Version
@@ -38,8 +40,8 @@ def test_stage_spec(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def check_stage_path(monkeypatch, tmpdir):
-    expected_path = os.path.join(str(tmpdir), "x")
+def check_stage_path(monkeypatch, tmp_path: pathlib.Path):
+    expected_path = str(tmp_path / "x")
 
     def fake_stage(pkg, mirror_only=False):
         assert pkg.path == expected_path
@@ -105,7 +107,11 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     e.concretize()
 
     # list all the package names that should be staged
-    expected = set(dep.name for dep in spack.traverse.traverse_nodes(e.concrete_roots()))
+    expected, externals = set(), set()
+    for dep in spack.traverse.traverse_nodes(e.concrete_roots()):
+        expected.add(dep.name)
+        if dep.external:
+            externals.add(dep.name)
 
     # pop the package name from the list instead of actually staging
     def fake_stage(pkg, mirror_only=False):
@@ -116,18 +122,17 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     with e:
         stage()
 
-    # assert that all were staged
-    assert len(expected) == 0
+    assert expected == externals
 
 
 @pytest.mark.disable_clean_stage_check
-def test_concretizer_arguments(mock_packages, mock_fetch):
+def test_concretizer_arguments(mock_packages, mock_fetch, mutable_config: Configuration):
     """Make sure stage also has --reuse and --fresh flags."""
     stage("--reuse", "trivial-install-test-package")
-    assert spack.config.get("concretizer:reuse", None) is True
+    assert mutable_config.get("concretizer:reuse", None) is True
 
     stage("--fresh", "trivial-install-test-package")
-    assert spack.config.get("concretizer:reuse", None) is False
+    assert mutable_config.get("concretizer:reuse", None) is False
 
 
 @pytest.mark.maybeslow
@@ -151,11 +156,11 @@ def test_stage_spec_filters(
     e.concretize()
     all_specs = e.all_specs()
 
-    def is_installed(self):
-        return self.name in installed
+    def is_installed(self, spec):
+        return spec.name in installed
 
     if skip_installed:
-        monkeypatch.setattr(Spec, "installed", is_installed)
+        monkeypatch.setattr(spack.database.Database, "installed", is_installed)
 
     should_be_filtered = []
     for spec in all_specs:
@@ -166,7 +171,7 @@ def test_stage_spec_filters(
                 should_be_filtered.append(spec)
         for ins in installed:
             if skip_installed and spec.satisfies(Spec(ins)):
-                assert spec.installed
+                assert spack.store.STORE.db.installed(spec)
                 should_be_filtered.append(spec)
         for exc in exclusions:
             if spec.satisfies(Spec(exc)):
@@ -176,6 +181,6 @@ def test_stage_spec_filters(
     specs_to_stage = [s for s in all_specs if not filter(s)]
     specs_were_filtered = [skip not in specs_to_stage for skip in should_be_filtered]
 
-    assert all(
-        specs_were_filtered
-    ), f"Packages associated with bools: {[s.name for s in should_be_filtered]}"
+    assert all(specs_were_filtered), (
+        f"Packages associated with bools: {[s.name for s in should_be_filtered]}"
+    )

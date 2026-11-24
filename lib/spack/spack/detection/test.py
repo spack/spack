@@ -2,18 +2,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Create and run mock e2e tests for package detection."""
+
 import collections
 import contextlib
 import pathlib
 import tempfile
 from typing import Any, Deque, Dict, Generator, List, NamedTuple, Tuple
 
-from llnl.util import filesystem
-
 import spack.platforms
 import spack.repo
 import spack.spec
-from spack.util import spack_yaml
+from spack.util import filesystem, spack_yaml
 
 from .path import by_path
 
@@ -65,7 +64,7 @@ class Runner:
         have been detected.
         """
         with self._mock_layout() as path_hints:
-            entries = by_path([self.test.pkg_name], path_hints=path_hints)
+            entries = by_path([self.test.pkg_name], repo=self.repository, path_hints=path_hints)
             _, unqualified_name = spack.repo.partition_package_name(self.test.pkg_name)
             specs = set(entries[unqualified_name])
         return list(specs)
@@ -85,11 +84,11 @@ class Runner:
             self.tmpdir.cleanup()
 
     def _create_executable_scripts(self, mock_executables: MockExecutables) -> List[pathlib.Path]:
-        import jinja2
+        import spack.vendor.jinja2
 
         relative_paths = mock_executables.executables
         script = mock_executables.script
-        script_template = jinja2.Template("#!/bin/bash\n{{ script }}\n")
+        script_template = spack.vendor.jinja2.Template("#!/bin/bash\n{{ script }}\n")
         result = []
         for mock_exe_path in relative_paths:
             rel_path = pathlib.Path(mock_exe_path)
@@ -102,12 +101,14 @@ class Runner:
 
     @property
     def expected_specs(self) -> List[spack.spec.Spec]:
-        return [
-            spack.spec.Spec.from_detection(
+        result = []
+        for item in self.test.results:
+            spec = spack.spec.Spec.from_detection(
                 item.spec, external_path=self.tmpdir.name, extra_attributes=item.extra_attributes
             )
-            for item in self.test.results
-        ]
+            spack.spec.substitute_abstract_variants(spec, repo=self.repository)
+            result.append(spec)
+        return result
 
 
 def detection_tests(pkg_name: str, repository: spack.repo.RepoPath) -> List[Runner]:

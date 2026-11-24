@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-
-import spack.binary_distribution as bindist
+import spack.binary_distribution
+import spack.config
 import spack.mirrors.mirror
+from spack.util import tty
 
 
 def post_install(spec, explicit):
@@ -22,7 +22,15 @@ def post_install(spec, explicit):
 
     # Push the package to all autopush mirrors
     for mirror in spack.mirrors.mirror.MirrorCollection(binary=True, autopush=True).values():
-        signing_key = bindist.select_signing_key() if mirror.signed else None
-        with bindist.make_uploader(mirror=mirror, force=True, signing_key=signing_key) as uploader:
-            uploader.push_or_raise([spec])
+        if not mirror.matches_binary(spec, direction="push"):
+            tty.debug(
+                f"{spec.name}: Skipped push to '{mirror.name}' due to include/exclude filters"
+            )
+            continue
+
+        signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
+        with spack.binary_distribution.make_uploader(
+            mirror=mirror, force=True, signing_key=signing_key
+        ) as uploader:
+            uploader.push_or_raise([spec], config=spack.config.CONFIG)
         tty.msg(f"{spec.name}: Pushed to build cache: '{mirror.name}'")

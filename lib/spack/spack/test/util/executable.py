@@ -3,29 +3,28 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import pathlib
 import sys
-from pathlib import PurePath
+from typing import List
 
 import pytest
 
-import llnl.util.filesystem as fs
-
-import spack
 import spack.main
 import spack.util.executable as ex
+import spack.util.filesystem as fs
 from spack.hooks.sbang import filter_shebangs_in_directory
 
 
-def test_read_unicode(tmpdir, working_env):
-    with tmpdir.as_cwd():
+def test_read_unicode(tmp_path: pathlib.Path, working_env):
+    with fs.working_dir(str(tmp_path)):
         script_name = "print_unicode.py"
+        script_args: List[str] = []
         # read the unicode back in and see whether things work
         if sys.platform == "win32":
             script = ex.Executable("%s" % (sys.executable))
-            script_args = [script_name]
+            script_args.append(script_name)
         else:
             script = ex.Executable("./%s" % script_name)
-            script_args = []
 
         os.environ["LD_LIBRARY_PATH"] = spack.main.spack_ld_library_path
         # make a script that prints some unicode
@@ -33,9 +32,7 @@ def test_read_unicode(tmpdir, working_env):
             f.write(
                 """#!{0}
 print(u'\\xc3')
-""".format(
-                    sys.executable
-                )
+""".format(sys.executable)
             )
 
         # make it executable
@@ -45,63 +42,64 @@ print(u'\\xc3')
         assert "\xc3" == script(*script_args, output=str).strip()
 
 
-def test_which_relative_path_with_slash(tmpdir, working_env):
-    tmpdir.ensure("exe")
-    path = str(tmpdir.join("exe"))
+def test_which_relative_path_with_slash(tmp_path: pathlib.Path, working_env):
+    (tmp_path / "exe").touch()
+    path = str(tmp_path / "exe")
 
     os.environ["PATH"] = ""
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         no_exe = ex.which(".{0}exe".format(os.path.sep))
         assert no_exe is None
         if sys.platform == "win32":
             # These checks are for 'executable' files, Windows
             # determines this by file extension.
             path += ".exe"
-            tmpdir.ensure("exe.exe")
+            (tmp_path / "exe.exe").touch()
         else:
             fs.set_executable(path)
 
-        exe = ex.which(".{0}exe".format(os.path.sep))
+        exe = ex.which(".{0}exe".format(os.path.sep), required=True)
         assert exe.path == path
 
 
-def test_which_with_slash_ignores_path(tmpdir, working_env):
-    tmpdir.ensure("exe")
-    tmpdir.ensure("bin{0}exe".format(os.path.sep))
+def test_which_with_slash_ignores_path(tmp_path: pathlib.Path, working_env):
+    (tmp_path / "exe").touch()
+    (tmp_path / "bin").mkdir()
+    (tmp_path / "bin" / "exe").touch()
 
-    path = str(tmpdir.join("exe"))
-    wrong_path = str(tmpdir.join("bin", "exe"))
-    os.environ["PATH"] = str(PurePath(wrong_path).parent)
+    path = str(tmp_path / "exe")
+    wrong_path = str(tmp_path / "bin" / "exe")
+    os.environ["PATH"] = str(tmp_path / "bin")
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         if sys.platform == "win32":
             # For Windows, need to create files with .exe after any assert is none tests
-            tmpdir.ensure("exe.exe")
-            tmpdir.ensure("bin{0}exe.exe".format(os.path.sep))
+            (tmp_path / "exe.exe").touch()
+            (tmp_path / "bin" / "exe.exe").touch()
             path = path + ".exe"
             wrong_path = wrong_path + ".exe"
         else:
             fs.set_executable(path)
             fs.set_executable(wrong_path)
 
-        exe = ex.which(".{0}exe".format(os.path.sep))
+        exe = ex.which(".{0}exe".format(os.path.sep), required=True)
         assert exe.path == path
 
 
-def test_which(tmpdir, monkeypatch):
-    monkeypatch.setenv("PATH", str(tmpdir))
+def test_which(tmp_path: pathlib.Path, monkeypatch):
+    monkeypatch.setenv("PATH", str(tmp_path))
     assert ex.which("spack-test-exe") is None
 
     with pytest.raises(ex.CommandNotFoundError):
         ex.which("spack-test-exe", required=True)
 
-    path = str(tmpdir.join("spack-test-exe"))
+    path = str(tmp_path / "spack-test-exe")
 
-    with tmpdir.as_cwd():
+    with fs.working_dir(str(tmp_path)):
         if sys.platform == "win32":
             # For Windows, need to create files with .exe after any assert is none tests
-            tmpdir.ensure("spack-test-exe.exe")
+            (tmp_path / "spack-test-exe.exe").touch()
             path += ".exe"
         else:
             fs.touch("spack-test-exe")
@@ -112,9 +110,176 @@ def test_which(tmpdir, monkeypatch):
         assert exe.path == path
 
 
+@pytest.mark.not_on_windows("Executables are determined by file extension on Windows")
+def test_resolve_exe(tmp_path: pathlib.Path):
+    script = tmp_path / "script"
+    script.touch()
+
+    assert ex.resolve_exe(str(script)) is None
+
+    fs.set_executable(str(script))
+
+    assert ex.resolve_exe(str(script)) == str(script)
+    assert ex.resolve_exe(script) == str(script)
+
+    # directories and missing files are not executables
+    assert ex.resolve_exe(str(tmp_path)) is None
+    assert ex.resolve_exe(str(tmp_path / "does-not-exist")) is None
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_which_searches_pathext(tmp_path: pathlib.Path, monkeypatch):
+    """which() finds executables whose extension is omitted, in PATHEXT order."""
+    monkeypatch.setenv("PATH", str(tmp_path))
+    monkeypatch.setenv("PATHEXT", ".COM;.EXE;.BAT")
+
+    for name in ("script.bat", "prog.com", "prog.exe", "notes.txt", "extensionless"):
+        (tmp_path / name).touch()
+    script = ex.which("script")
+    bat_script = ex.which("script.bat")
+    assert script and script.path == str(tmp_path / "script.bat")
+    assert bat_script and bat_script.path == str(tmp_path / "script.bat")
+
+    # PATHEXT determines which extension wins when several are present...
+    prog = ex.which("prog")
+    assert prog and prog.path == str(tmp_path / "prog.com")
+
+    # ...unless the extension is given explicitly
+    prog_exe = ex.which("prog.exe")
+    assert prog_exe and prog_exe.path == str(tmp_path / "prog.exe")
+
+    # files that exist but have no extension in PATHEXT are not found
+    assert ex.which("notes.txt") is None
+    assert ex.which("extensionless") is None
+
+    # nor are files that don't exist, with or without an extension in PATHEXT
+    assert ex.which("missing.exe") is None
+    assert ex.which("missing") is None
+
+
+@pytest.mark.only_windows("Test is for Windows specific behavior")
+def test_windows_resolve_exe_requires_access(tmp_path: pathlib.Path, monkeypatch):
+    """A candidate the current user cannot read (and so cannot launch) is skipped, without
+    hiding the candidates after it."""
+    from spack.util.win_acl import (
+        AccessControlEntry,
+        AceType,
+        FileAccessRights,
+        SecurityDescriptor,
+    )
+
+    monkeypatch.setenv("PATHEXT", ".BAT;.EXE")
+    for name in ("script.bat", "script.exe"):
+        (tmp_path / name).touch()
+
+    unreadable = str(tmp_path / "script.bat")
+    sd = SecurityDescriptor.from_file(unreadable)
+    sd.add_ace(
+        AccessControlEntry(
+            AceType.SDDL_ACCESS_DENIED,
+            rights=FileAccessRights.FILE_READ_DATA,
+            sid=SecurityDescriptor.get_sid_for_user(),
+        ),
+        index=0,
+    )
+    sd.apply(unreadable)
+
+    assert ex.resolve_exe(str(tmp_path / "script")) == str(tmp_path / "script.exe")
+    assert ex.resolve_exe(unreadable) is None
+
+
+@pytest.fixture
+def make_script_exe(tmp_path: pathlib.Path):
+    if sys.platform == "win32":
+        pytest.skip("Can't test #!/bin/sh scripts on Windows.")
+
+    def make_script(name, contents):
+        script = tmp_path / f"{name}.sh"
+        with script.open("w", encoding="utf-8") as f:
+            f.write("#!/bin/sh\n")
+            f.write(contents)
+            f.write("\n")
+        fs.set_executable(str(script))
+
+        return ex.Executable(str(script))
+
+    return make_script
+
+
+def test_exe_fail(make_script_exe):
+    fail = make_script_exe("fail", "exit 107")
+    with pytest.raises(ex.ProcessError):
+        fail()
+    assert fail.returncode == 107
+
+
+def test_exe_success(make_script_exe):
+    succeed = make_script_exe("fail", "exit 0")
+    succeed()
+    assert succeed.returncode == 0
+
+
+def test_exe_timeout(make_script_exe):
+    timeout = make_script_exe("timeout", "sleep 100")
+    with pytest.raises(ex.ProcessError):
+        timeout(timeout=1)
+    assert timeout.returncode == 1
+
+
+def test_exe_not_exist(tmp_path: pathlib.Path):
+    fail = ex.Executable(str(tmp_path / "foo"))  # doesn't exist
+    with pytest.raises(ex.ProcessError):
+        fail()
+    assert fail.returncode == 1
+
+
 def test_construct_from_pathlib(mock_executable):
     """Tests that we can construct an executable from a pathlib.Path object"""
     expected = "Hello world!"
     path = mock_executable("hello", output=f"echo {expected}\n")
     hello = ex.Executable(path)
     assert expected in hello(output=str)
+
+
+def test_exe_disallows_str_split_as_input(mock_executable):
+    path = mock_executable("hello", output="echo hi\n")
+    hello = ex.Executable(path)
+    with pytest.raises(ValueError):
+        hello(input=str.split)
+
+
+def test_exe_disallows_callable_as_output(mock_executable):
+    path = mock_executable("hello", output="echo hi\n")
+    hello = ex.Executable(path)
+    with pytest.raises(ValueError):
+        hello(output=lambda line: line)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="pass_fds is POSIX specific")
+def test_exe_passes_only_jobserver_fds():
+    r, w = os.pipe()
+    os.set_inheritable(r, True)
+    os.set_inheritable(w, True)
+    python = ex.Executable(sys.executable)
+    check = f"import os; os.fstat({r}); os.fstat({w})"
+    try:
+        python("-c", check, error=str, fail_on_error=False)
+        assert python.returncode != 0
+        python("-c", check, extra_env={"MAKEFLAGS": f" -j4 --jobserver-auth={r},{w}"})
+    finally:
+        os.close(r)
+        os.close(w)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="jobserver fds are POSIX specific")
+def test_jobserver_fds():
+    r, w = os.pipe()
+    try:
+        makeflags = f" -j4 --jobserver-auth={r},{w}"
+        assert ex.jobserver_fds(makeflags) == (r, w)
+        # gmake 4.4 disables the jobserver for recipes that are not recursive
+        makeflags += " --jobserver-auth=-2,-2"
+        assert ex.jobserver_fds(makeflags) == ()
+    finally:
+        os.close(r)
+        os.close(w)

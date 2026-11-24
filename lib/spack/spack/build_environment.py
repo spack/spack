@@ -14,7 +14,7 @@ There are two parts to the build environment:
    This is how things are set up when install() is called.  Spack
    takes advantage of each package being in its own module by adding a
    bunch of command-like functions (like configure(), make(), etc.) in
-   the package's module scope.  Ths allows package writers to call
+   the package's module scope.  This allows package writers to call
    them all directly in Package.install() without writing 'self.'
    everywhere.  No, this isn't Pythonic.  Yes, it makes the code more
    readable and more like the shell script from which someone is
@@ -31,20 +31,23 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+
 import inspect
 import io
 import multiprocessing
 import os
-import re
-import stat
+import signal
 import sys
 import traceback
 import types
+import warnings
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
 from multiprocessing.connection import Connection
 from typing import (
+    Any,
+    BinaryIO,
     Callable,
     Dict,
     List,
@@ -58,20 +61,10 @@ from typing import (
     overload,
 )
 
-import archspec.cpu
+import spack.vendor.archspec.cpu
 
-import llnl.util.tty as tty
-from llnl.string import plural
-from llnl.util.filesystem import join_path
-from llnl.util.lang import dedupe, stable_partition
-from llnl.util.symlink import symlink
-from llnl.util.tty.color import cescape, colorize
-
-import spack.build_systems.cmake
-import spack.build_systems.meson
-import spack.build_systems.python
 import spack.builder
-import spack.compilers
+import spack.compilers.libraries
 import spack.config
 import spack.deptypes as dt
 import spack.error
@@ -79,20 +72,25 @@ import spack.multimethod
 import spack.package_base
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.schema.environment
 import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
 import spack.util.executable
-import spack.util.libc
+import spack.util.module_cmd
 from spack import traverse
-from spack.context import Context
+from spack.enums import Context
 from spack.error import InstallError, NoHeadersError, NoLibrariesError
 from spack.install_test import spack_install_test_log
+from spack.util import tty
+from spack.util.ctest_log_parser import Severity
 from spack.util.environment import (
     SYSTEM_DIR_CASE_ENTRY,
     EnvironmentModifications,
+    ModificationList,
+    PrependPath,
     env_flag,
     filter_system_paths,
     get_path,
@@ -100,8 +98,11 @@ from spack.util.environment import (
     validate,
 )
 from spack.util.executable import Executable
-from spack.util.log_parse import make_log_context, parse_log_events
-from spack.util.module_cmd import load_module
+from spack.util.filesystem import join_path, symlink
+from spack.util.lang import dedupe, stable_partition
+from spack.util.log_parse import scan_log, write_block
+from spack.util.string import plural
+from spack.util.tty.color import cescape, colorize
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -113,7 +114,7 @@ SPACK_NO_PARALLEL_MAKE = "SPACK_NO_PARALLEL_MAKE"
 # set_wrapper_variables and used to pass parameters to
 # Spack's compiler wrappers.
 #
-SPACK_ENV_PATH = "SPACK_ENV_PATH"
+SPACK_COMPILER_WRAPPER_PATH = "SPACK_COMPILER_WRAPPER_PATH"
 SPACK_MANAGED_DIRS = "SPACK_MANAGED_DIRS"
 SPACK_INCLUDE_DIRS = "SPACK_INCLUDE_DIRS"
 SPACK_LINK_DIRS = "SPACK_LINK_DIRS"
@@ -132,7 +133,7 @@ SPACK_DEBUG_LOG_DIR = "SPACK_DEBUG_LOG_DIR"
 SPACK_CCACHE_BINARY = "SPACK_CCACHE_BINARY"
 SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
 
-# Platform-specific library suffix.
+# Platform-specific library suffix (deprecated)
 if sys.platform == "darwin":
     dso_suffix = "dylib"
 elif sys.platform == "win32":
@@ -143,12 +144,32 @@ else:
 stat_suffix = "lib" if sys.platform == "win32" else "a"
 
 
+def shared_library_suffix(spec: spack.spec.Spec) -> str:
+    """Return the shared library suffix for the given spec."""
+    if spec.platform == "darwin":
+        return "dylib"
+    elif spec.platform == "windows":
+        return "dll"
+    else:
+        return "so"
+
+
+def static_library_suffix(spec: spack.spec.Spec) -> str:
+    """Return the static library suffix for the given spec."""
+    if spec.platform == "windows":
+        return "lib"
+    else:
+        return "a"
+
+
 def jobserver_enabled():
     """Returns true if a posix jobserver (make) is detected."""
     return "MAKEFLAGS" in os.environ and "--jobserver" in os.environ["MAKEFLAGS"]
 
 
-def get_effective_jobs(jobs, parallel=True, supports_jobserver=False):
+def get_effective_jobs(
+    jobs, parallel: bool = True, supports_jobserver: bool = False
+) -> Optional[int]:
     """Return the number of jobs, or None if supports_jobserver and a jobserver is detected."""
     if not parallel or jobs <= 1 or env_flag(SPACK_NO_PARALLEL_MAKE):
         return 1
@@ -180,9 +201,9 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str] = ...,
-        error: Union[Optional[TextIO], str] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: Union[Optional[BinaryIO], str] = ...,
+        error: Union[Optional[BinaryIO], str] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> None: ...
 
@@ -199,9 +220,9 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
+        input: Optional[BinaryIO] = ...,
         output: Union[Type[str], Callable] = ...,
-        error: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        error: spack.util.executable.OutType = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
 
@@ -218,8 +239,8 @@ class MakeExecutable(Executable):
         timeout: Optional[int] = ...,
         env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
         extra_env: Optional[Union[Dict[str, str], EnvironmentModifications]] = ...,
-        input: Optional[TextIO] = ...,
-        output: Union[Optional[TextIO], str, Type[str], Callable] = ...,
+        input: Optional[BinaryIO] = ...,
+        output: spack.util.executable.OutType = ...,
         error: Union[Type[str], Callable] = ...,
         _dump_env: Optional[Dict[str, str]] = ...,
     ) -> str: ...
@@ -232,14 +253,14 @@ class MakeExecutable(Executable):
         jobs_env_supports_jobserver: bool = False,
         **kwargs,
     ) -> Optional[str]:
-        """Runs this "make" executable in a subprocess.
+        """Runs this ``make`` executable in a subprocess.
 
         Args:
             parallel: if False, parallelism is disabled
             jobs_env: environment variable that will be set to the current level of parallelism
             jobs_env_supports_jobserver: whether the jobs env supports a job server
 
-        For all the other **kwargs, refer to the base class.
+        For all the other ``**kwargs``, refer to :func:`spack.util.executable.Executable.__call__`.
         """
         jobs = get_effective_jobs(
             self.jobs, parallel=parallel, supports_jobserver=self.supports_jobserver
@@ -344,6 +365,12 @@ def clean_environment():
         "FCLIBS",  # Fortran variables
         "LDFLAGS",
         "LIBS",  # linker variables
+        "CUDAFLAGS",
+        "CUDA_PATH",
+        "CUDACXX",
+        "CUDAHOSTCXX",
+        "CUDAARCHS",
+        "CUDA_NVCC_EXECUTABLE",  # CUDA variables
     ]
     for v in build_system_vars:
         env.unset(v)
@@ -354,10 +381,10 @@ def clean_environment():
     for v in mpi_vars:
         env.unset(v)
 
-    build_lang = spack.config.get("config:build_language")
+    build_lang = spack.config.CONFIG.get("config:build_language")
     if build_lang:
         # Override language-related variables. This can be used to force
-        # English compiler messages etc., which allows parse_log_events to
+        # English compiler messages etc., which allows the log parser to
         # show useful matches.
         env.set("LC_ALL", build_lang)
 
@@ -390,72 +417,16 @@ def _add_werror_handling(keep_werror, env):
     env.set("SPACK_COMPILER_FLAGS_REPLACE", " ".join(["|".join(item) for item in replace_flags]))
 
 
-def set_compiler_environment_variables(pkg, env):
+def set_wrapper_environment_variables_for_flags(pkg, env):
     assert pkg.spec.concrete
-    compiler = pkg.compiler
     spec = pkg.spec
-
-    # Make sure the executables for this compiler exist
-    compiler.verify_executables()
-
-    # Set compiler variables used by CMake and autotools
-    assert all(key in compiler.link_paths for key in ("cc", "cxx", "f77", "fc"))
-
-    # Populate an object with the list of environment modifications
-    # and return it
-    # TODO : add additional kwargs for better diagnostics, like requestor,
-    # ttyout, ttyerr, etc.
-    link_dir = spack.paths.build_env_path
-
-    # Set SPACK compiler variables so that our wrapper knows what to
-    # call.  If there is no compiler configured then use a default
-    # wrapper which will emit an error if it is used.
-    if compiler.cc:
-        env.set("SPACK_CC", compiler.cc)
-        env.set("CC", os.path.join(link_dir, compiler.link_paths["cc"]))
-    else:
-        env.set("CC", os.path.join(link_dir, "cc"))
-    if compiler.cxx:
-        env.set("SPACK_CXX", compiler.cxx)
-        env.set("CXX", os.path.join(link_dir, compiler.link_paths["cxx"]))
-    else:
-        env.set("CC", os.path.join(link_dir, "c++"))
-    if compiler.f77:
-        env.set("SPACK_F77", compiler.f77)
-        env.set("F77", os.path.join(link_dir, compiler.link_paths["f77"]))
-    else:
-        env.set("F77", os.path.join(link_dir, "f77"))
-    if compiler.fc:
-        env.set("SPACK_FC", compiler.fc)
-        env.set("FC", os.path.join(link_dir, compiler.link_paths["fc"]))
-    else:
-        env.set("FC", os.path.join(link_dir, "fc"))
-
-    # Set SPACK compiler rpath flags so that our wrapper knows what to use
-    env.set("SPACK_CC_RPATH_ARG", compiler.cc_rpath_arg)
-    env.set("SPACK_CXX_RPATH_ARG", compiler.cxx_rpath_arg)
-    env.set("SPACK_F77_RPATH_ARG", compiler.f77_rpath_arg)
-    env.set("SPACK_FC_RPATH_ARG", compiler.fc_rpath_arg)
-    env.set("SPACK_LINKER_ARG", compiler.linker_arg)
-
-    # Check whether we want to force RPATH or RUNPATH
-    if spack.config.get("config:shared_linking:type") == "rpath":
-        env.set("SPACK_DTAGS_TO_STRIP", compiler.enable_new_dtags)
-        env.set("SPACK_DTAGS_TO_ADD", compiler.disable_new_dtags)
-    else:
-        env.set("SPACK_DTAGS_TO_STRIP", compiler.disable_new_dtags)
-        env.set("SPACK_DTAGS_TO_ADD", compiler.enable_new_dtags)
 
     if pkg.keep_werror is not None:
         keep_werror = pkg.keep_werror
     else:
-        keep_werror = spack.config.get("config:flags:keep_werror")
+        keep_werror = spack.config.CONFIG.get("config:flags:keep_werror")
 
     _add_werror_handling(keep_werror, env)
-
-    # Set the target parameters that the compiler will add
-    isa_arg = optimization_flags(compiler, spec.target)
-    env.set("SPACK_TARGET_ARGS", isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
@@ -464,7 +435,7 @@ def set_compiler_environment_variables(pkg, env):
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Always convert flag_handler to function type.
-        # This avoids discrepencies in calling conventions between functions
+        # This avoids discrepancies in calling conventions between functions
         # and methods, or between bound and unbound methods in python 2.
         # We cannot effectively convert everything to a bound method, which
         # would be the simpler solution.
@@ -489,125 +460,64 @@ def set_compiler_environment_variables(pkg, env):
             # implicit variables
             env.set(flag.upper(), " ".join(f for f in env_flags[flag]))
     pkg.flags_to_build_system_args(build_system_flags)
-
-    env.set("SPACK_COMPILER_SPEC", str(spec.compiler))
-
     env.set("SPACK_SYSTEM_DIRS", SYSTEM_DIR_CASE_ENTRY)
-
-    compiler.setup_custom_environment(pkg, env)
-
     return env
 
 
 def optimization_flags(compiler, target):
-    if spack.compilers.is_mixed_toolchain(compiler):
-        msg = (
-            "microarchitecture specific optimizations are not "
-            "supported yet on mixed compiler toolchains [check"
-            f" {compiler.name}@{compiler.version} for further details]"
-        )
-        tty.debug(msg)
-        return ""
-
     # Try to check if the current compiler comes with a version number or
     # has an unexpected suffix. If so, treat it as a compiler with a
     # custom spec.
-    compiler_version = compiler.version
-    version_number, suffix = archspec.cpu.version_components(compiler.version)
-    if not version_number or suffix:
-        try:
-            compiler_version = compiler.real_version
-        except spack.util.executable.ProcessError as e:
-            # log this and just return compiler.version instead
-            tty.debug(str(e))
-
+    version_number, _ = spack.vendor.archspec.cpu.version_components(
+        compiler.version.dotted_numeric_string
+    )
     try:
-        result = target.optimization_flags(compiler.name, compiler_version.dotted_numeric_string)
-    except (ValueError, archspec.cpu.UnsupportedMicroarchitecture):
+        result = target.optimization_flags(compiler.name, version_number)
+    except (ValueError, spack.vendor.archspec.cpu.UnsupportedMicroarchitecture):
         result = ""
 
     return result
 
 
-class FilterDefaultDynamicLinkerSearchPaths:
-    """Remove rpaths to directories that are default search paths of the dynamic linker."""
+def link_dirs_of(query: spack.spec.Spec) -> List[str]:
+    """Return the library directories a build uses to link against ``query``, as returned by
+    ``spec[name]``: those of its libraries, followed by its ``lib`` and ``lib64`` subdirectories
+    that exist."""
+    link_dirs = []
+    try:
+        # Locating libraries can be time consuming, so log start and finish.
+        tty.debug(f"Collecting libraries for {query.name}")
+        link_dirs.extend(query.libs.directories)
+        tty.debug(f"Libraries for {query.name} have been collected.")
+    except NoLibrariesError:
+        tty.debug(f"No libraries found for {query.name}")
 
-    def __init__(self, dynamic_linker: Optional[str]) -> None:
-        # Identify directories by (inode, device) tuple, which handles symlinks too.
-        self.default_path_identifiers: Set[Tuple[int, int]] = set()
-        if not dynamic_linker:
-            return
-        for path in spack.util.libc.default_search_paths_from_dynamic_linker(dynamic_linker):
-            try:
-                s = os.stat(path)
-                if stat.S_ISDIR(s.st_mode):
-                    self.default_path_identifiers.add((s.st_ino, s.st_dev))
-            except OSError:
-                continue
-
-    def is_dynamic_loader_default_path(self, p: str) -> bool:
-        try:
-            s = os.stat(p)
-            return (s.st_ino, s.st_dev) in self.default_path_identifiers
-        except OSError:
-            return False
-
-    def __call__(self, dirs: List[str]) -> List[str]:
-        if not self.default_path_identifiers:
-            return dirs
-        return [p for p in dirs if not self.is_dynamic_loader_default_path(p)]
+    for default_lib_dir in ("lib", "lib64"):
+        default_lib_prefix = os.path.join(query.prefix, default_lib_dir)
+        if os.path.isdir(default_lib_prefix):
+            link_dirs.append(default_lib_prefix)
+    return link_dirs
 
 
 def set_wrapper_variables(pkg, env):
     """Set environment variables used by the Spack compiler wrapper (which have the prefix
-    `SPACK_`) and also add the compiler wrappers to PATH.
+    ``SPACK_``) and also add the compiler wrappers to PATH.
 
     This determines the injected -L/-I/-rpath options; each of these specifies a search order and
     this function computes these options in a manner that is intended to match the DAG traversal
-    order in `SetupContext`. TODO: this is not the case yet, we're using post order, SetupContext
-    is using topo order."""
-    # Set environment variables if specified for
-    # the given compiler
-    compiler = pkg.compiler
-    env.extend(spack.schema.environment.parse(compiler.environment))
-
-    if compiler.extra_rpaths:
-        extra_rpaths = ":".join(compiler.extra_rpaths)
-        env.set("SPACK_COMPILER_EXTRA_RPATHS", extra_rpaths)
-
-    # Add spack build environment path with compiler wrappers first in
-    # the path. We add the compiler wrapper path, which includes default
-    # wrappers (cc, c++, f77, f90), AND a subdirectory containing
-    # compiler-specific symlinks.  The latter ensures that builds that
-    # are sensitive to the *name* of the compiler see the right name when
-    # we're building with the wrappers.
-    #
-    # Conflicts on case-insensitive systems (like "CC" and "cc") are
-    # handled by putting one in the <build_env_path>/case-insensitive
-    # directory.  Add that to the path too.
-    env_paths = []
-    compiler_specific = os.path.join(
-        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths["cc"])
-    )
-    for item in [spack.paths.build_env_path, compiler_specific]:
-        env_paths.append(item)
-        ci = os.path.join(item, "case-insensitive")
-        if os.path.isdir(ci):
-            env_paths.append(ci)
-
-    tty.debug("Adding compiler bin/ paths: " + " ".join(env_paths))
-    for item in env_paths:
-        env.prepend_path("PATH", item)
-    env.set_path(SPACK_ENV_PATH, env_paths)
+    order in ``SetupContext``. TODO: this is not the case yet, we're using post order,
+    ``SetupContext`` is using topo order."""
+    # Set compiler flags injected from the spec
+    set_wrapper_environment_variables_for_flags(pkg, env)
 
     # Working directory for the spack command itself, for debug logs.
-    if spack.config.get("config:debug"):
+    if spack.config.CONFIG.get("config:debug"):
         env.set(SPACK_DEBUG, "TRUE")
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
     env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format("{name}-{hash:7}"))
     env.set(SPACK_DEBUG_LOG_DIR, spack.paths.spack_working_dir)
 
-    if spack.config.get("config:ccache"):
+    if spack.config.CONFIG.get("config:ccache"):
         # Enable ccache in the compiler wrapper
         env.set(SPACK_CCACHE_BINARY, spack.util.executable.which_string("ccache", required=True))
     else:
@@ -615,7 +525,7 @@ def set_wrapper_variables(pkg, env):
         env.set("CCACHE_DISABLE", "1")
 
     # Gather information about various types of dependencies
-    rpath_hashes = set(s.dag_hash() for s in get_rpath_deps(pkg))
+    rpath_hashes = {s.dag_hash() for s in get_rpath_deps(pkg)}
     link_deps = pkg.spec.traverse(root=False, order="topo", deptype=dt.LINK)
     external_link_deps, nonexternal_link_deps = stable_partition(link_deps, lambda d: d.external)
 
@@ -634,20 +544,7 @@ def set_wrapper_variables(pkg, env):
         # deps, so keying by name is wrong. In practice it is not problematic: we obtain the same
         # gcc-runtime / glibc here, and repeatedly add the same dirs that are later deduped.
         query = pkg.spec[dep.name]
-        dep_link_dirs = []
-        try:
-            # Locating libraries can be time consuming, so log start and finish.
-            tty.debug(f"Collecting libraries for {dep.name}")
-            dep_link_dirs.extend(query.libs.directories)
-            tty.debug(f"Libraries for {dep.name} have been collected.")
-        except NoLibrariesError:
-            tty.debug(f"No libraries found for {dep.name}")
-
-        for default_lib_dir in ("lib", "lib64"):
-            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-            if os.path.isdir(default_lib_prefix):
-                dep_link_dirs.append(default_lib_prefix)
-
+        dep_link_dirs = link_dirs_of(query)
         link_dirs[:0] = dep_link_dirs
         if dep.dag_hash() in rpath_hashes:
             rpath_dirs[:0] = dep_link_dirs
@@ -664,27 +561,22 @@ def set_wrapper_variables(pkg, env):
         lib_path = os.path.join(pkg.prefix, libdir)
         rpath_dirs.insert(0, lib_path)
 
-    filter_default_dynamic_linker_search_paths = FilterDefaultDynamicLinkerSearchPaths(
-        pkg.compiler.default_dynamic_linker
-    )
-
     # TODO: filter_system_paths is again wrong (and probably unnecessary due to the is_system_path
     # branch above). link_dirs should be filtered with entries from _parse_link_paths.
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
     rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
-    rpath_dirs = filter_default_dynamic_linker_search_paths(rpath_dirs)
 
-    # TODO: implicit_rpaths is prefiltered by is_system_path, that should be removed in favor of
-    # just this filter.
-    implicit_rpaths = filter_default_dynamic_linker_search_paths(pkg.compiler.implicit_rpaths())
-    if implicit_rpaths:
-        env.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
+    default_dynamic_linker_filter = spack.compilers.libraries.dynamic_linker_filter_for(
+        pkg.spec, repo=spack.repo.PATH, cache=spack.compilers.libraries.COMPILER_CACHE
+    )
+    if default_dynamic_linker_filter:
+        rpath_dirs = default_dynamic_linker_filter(rpath_dirs)
 
     # Spack managed directories include the stage, store and upstream stores. We extend this with
     # their real paths to make it more robust (e.g. /tmp vs /private/tmp on macOS).
     spack_managed_dirs: Set[str] = {
-        spack.stage.get_stage_root(),
+        spack.stage.stage_root(spack.config.CONFIG),
         spack.store.STORE.db.root,
         *(db.root for db in spack.store.STORE.db.upstream_dbs),
     }
@@ -711,45 +603,20 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
 
     jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
-    if context == Context.BUILD:
-        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     module.make = DeprecatedExecutable(pkg.name, "make", "gmake")
     module.gmake = DeprecatedExecutable(pkg.name, "gmake", "gmake")
     module.ninja = DeprecatedExecutable(pkg.name, "ninja", "ninja")
-    # TODO: johnwparent: add package or builder support to define these build tools
-    # for now there is no entrypoint for builders to define these on their
-    # own
+
     if sys.platform == "win32":
-        module.nmake = Executable("nmake")
-        module.msbuild = Executable("msbuild")
+        module.nmake = DeprecatedExecutable(pkg.name, "nmake", "msvc")
+        module.msbuild = DeprecatedExecutable(pkg.name, "msbuild", "msvc")
         # analog to configure for win32
         module.cscript = Executable("cscript")
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     module.configure = Executable("./configure")
-
-    # Put spack compiler paths in module scope. (Some packages use it
-    # in setup_run_environment etc, so don't put it context == build)
-    link_dir = spack.paths.build_env_path
-    pkg_compiler = None
-    try:
-        pkg_compiler = pkg.compiler
-    except spack.compilers.NoCompilerForSpecError as e:
-        tty.debug(f"cannot set 'spack_cc': {str(e)}")
-
-    if pkg_compiler is not None:
-        module.spack_cc = os.path.join(link_dir, pkg_compiler.link_paths["cc"])
-        module.spack_cxx = os.path.join(link_dir, pkg_compiler.link_paths["cxx"])
-        module.spack_f77 = os.path.join(link_dir, pkg_compiler.link_paths["f77"])
-        module.spack_fc = os.path.join(link_dir, pkg_compiler.link_paths["fc"])
-    else:
-        module.spack_cc = None
-        module.spack_cxx = None
-        module.spack_f77 = None
-        module.spack_fc = None
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
@@ -881,19 +748,26 @@ def get_rpath_deps(pkg: spack.package_base.PackageBase) -> List[spack.spec.Spec]
     return _get_rpath_deps_from_spec(pkg.spec, pkg.transitive_rpaths)
 
 
-def load_external_modules(pkg):
-    """Traverse a package's spec DAG and load any external modules.
+def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
+    """Obtain the ``CMAKE_PREFIX_PATH`` entries for a package, based on the
+    :attr:`~spack.package_base.PackageBase.cmake_prefix_paths` package attribute of direct
+    build/test and transitive link dependencies."""
+    edges = traverse.traverse_topo_edges_generator(
+        traverse.with_artificial_edges([pkg.spec]),
+        visitor=traverse.MixedDepthVisitor(
+            direct=dt.BUILD | dt.TEST, transitive=dt.LINK, key=traverse.by_dag_hash
+        ),
+        key=traverse.by_dag_hash,
+        root=False,
+        all_edges=False,  # cover all nodes, not all edges
+    )
+    ordered_specs = [edge.spec for edge in edges]
+    # Separate out externals so they do not shadow Spack prefixes
+    externals, spack_built = stable_partition((s for s in ordered_specs), lambda x: x.external)
 
-    Traverse a package's dependencies and load any external modules
-    associated with them.
-
-    Args:
-        pkg (spack.package_base.PackageBase): package to load deps for
-    """
-    for dep in list(pkg.spec.traverse()):
-        external_modules = dep.external_modules or []
-        for external_module in external_modules:
-            load_module(external_module)
+    return filter_system_paths(
+        path for spec in chain(spack_built, externals) for path in spec.package.cmake_prefix_paths
+    )
 
 
 def setup_package(pkg, dirty, context: Context = Context.BUILD):
@@ -916,7 +790,6 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
         context == Context.TEST and pkg.test_requires_compiler
     )
     if need_compiler:
-        set_compiler_environment_variables(pkg, env_mods)
         set_wrapper_variables(pkg, env_mods)
 
     # Platform specific setup goes before package specific setup. This is for setting
@@ -927,6 +800,26 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     tty.debug("setup_package: grabbing modifications from dependencies")
     env_mods.extend(setup_context.get_env_modifications())
     tty.debug("setup_package: collected all modifications from dependencies")
+
+    tty.debug("setup_package: adding compiler wrappers paths")
+    env_by_name = env_mods.group_by_name()
+    for x in env_by_name["SPACK_COMPILER_WRAPPER_PATH"]:
+        assert isinstance(x, PrependPath), (
+            "unexpected setting used for SPACK_COMPILER_WRAPPER_PATH"
+        )
+        env_mods.prepend_path("PATH", x.value)
+
+    # Check whether we want to force RPATH or RUNPATH
+    enable_var_name, disable_var_name = "SPACK_ENABLE_NEW_DTAGS", "SPACK_DISABLE_NEW_DTAGS"
+    if enable_var_name in env_by_name and disable_var_name in env_by_name:
+        enable_new_dtags = _extract_dtags_arg(env_by_name, var_name=enable_var_name)
+        disable_new_dtags = _extract_dtags_arg(env_by_name, var_name=disable_var_name)
+        if spack.config.CONFIG.get("config:shared_linking:type") == "rpath":
+            env_mods.set("SPACK_DTAGS_TO_STRIP", enable_new_dtags)
+            env_mods.set("SPACK_DTAGS_TO_ADD", disable_new_dtags)
+        else:
+            env_mods.set("SPACK_DTAGS_TO_STRIP", disable_new_dtags)
+            env_mods.set("SPACK_DTAGS_TO_ADD", enable_new_dtags)
 
     if context == Context.TEST:
         env_mods.prepend_path("PATH", ".")
@@ -941,12 +834,7 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
 
     # Load modules on an already clean environment, just before applying Spack's
     # own environment modifications. This ensures Spack controls CC/CXX/... variables.
-    if need_compiler:
-        tty.debug("setup_package: loading compiler modules")
-        for mod in pkg.compiler.modules:
-            load_module(mod)
-
-    load_external_modules(pkg)
+    load_external_modules(setup_context)
 
     # Make sure nothing's strange about the Spack environment.
     validate(env_mods, tty.warn)
@@ -957,11 +845,19 @@ def setup_package(pkg, dirty, context: Context = Context.BUILD):
     return env_base
 
 
+def _extract_dtags_arg(env_by_name: Dict[str, ModificationList], *, var_name: str) -> str:
+    try:
+        enable_new_dtags = env_by_name[var_name][0].value  # type: ignore[union-attr]
+    except (KeyError, IndexError, AttributeError):
+        enable_new_dtags = ""
+    return enable_new_dtags
+
+
 class EnvironmentVisitor:
     def __init__(self, *roots: spack.spec.Spec, context: Context):
         # For the roots (well, marked specs) we follow different edges
         # than for their deps, depending on the context.
-        self.root_hashes = set(s.dag_hash() for s in roots)
+        self.root_hashes = {s.dag_hash() for s in roots}
 
         if context == Context.BUILD:
             # Drop direct run deps in build context
@@ -1042,7 +938,7 @@ def effective_deptypes(
         if not parent_mode:
             continue
 
-        # Dependending on the context, include particular deps from the root.
+        # Depending on the context, include particular deps from the root.
         if UseMode.ROOT & parent_mode:
             if context == Context.BUILD:
                 if (dt.BUILD | dt.TEST) & depflag:
@@ -1106,7 +1002,7 @@ class SetupContext:
         self.external: List[Tuple[spack.spec.Spec, UseMode]]
         self.nonexternal: List[Tuple[spack.spec.Spec, UseMode]]
         # Reverse so we go from leaf to root
-        self.nodes_in_subdag = set(id(s) for s, _ in specs_with_type)
+        self.nodes_in_subdag = {id(s) for s, _ in specs_with_type}
 
         # Split into non-external and external, maintaining topo order per group.
         self.external, self.nonexternal = stable_partition(
@@ -1157,15 +1053,6 @@ class SetupContext:
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
 
-        if self.context == Context.BUILD:
-            pkg = self.specs[0].package
-            module = ModuleChangePropagator(pkg)
-            # std_cmake_args is not sufficiently static to be defined
-            # in set_package_py_globals and is deprecated so its handled
-            # here as a special case
-            module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-            module.propagate_changes_to_mro()
-
     def get_env_modifications(self) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
         Environment modifications include:
@@ -1208,7 +1095,7 @@ class SetupContext:
                     run_env_mods.extend(spack.schema.environment.parse(external_env))
 
                 if self.context == Context.BUILD:
-                    # Don't let the runtime environment of comiler like dependencies leak into the
+                    # Don't let the runtime environment of compiler like dependencies leak into the
                     # build env
                     run_env_mods.drop("CC", "CXX", "F77", "FC")
                 env.extend(run_env_mods)
@@ -1235,6 +1122,21 @@ class SetupContext:
                 env.prepend_path("PATH", bin_dir)
 
 
+def load_external_modules(context: SetupContext) -> None:
+    """Traverse a package's spec DAG and load any external modules.
+
+    Traverse a package's dependencies and load any external modules
+    associated with them.
+
+    Args:
+        context: A populated SetupContext object
+    """
+    for spec, _ in context.external:
+        external_modules = spec.external_modules or []
+        for external_module in external_modules:
+            spack.util.module_cmd.load_module(external_module)
+
+
 def _setup_pkg_and_run(
     serialized_pkg: "spack.subprocess_context.PackageInstallContext",
     function: Callable,
@@ -1243,12 +1145,14 @@ def _setup_pkg_and_run(
     input_pipe: Optional[Connection],
     jsfd1: Optional[Connection],
     jsfd2: Optional[Connection],
+    stdout_pipe: Optional[Connection] = None,
+    stderr_pipe: Optional[Connection] = None,
 ):
     """Main entry point in the child process for Spack builds.
 
     ``_setup_pkg_and_run`` is called by the child process created in
     ``start_build_process()``, and its main job is to run ``function()`` on behalf of
-    some Spack installation (see :ref:`spack.installer.PackageInstaller._install_task`).
+    some Spack installation (see :ref:`spack.old_installer.PackageInstaller._complete_task`).
 
     The child process is passed a ``write_pipe``, on which it's expected to send one of
     the following:
@@ -1278,7 +1182,8 @@ def _setup_pkg_and_run(
         input_multiprocess_fd: stdin from the parent (not passed currently on Windows)
         jsfd1: gmake Jobserver file descriptor 1.
         jsfd2: gmake Jobserver file descriptor 2.
-
+        stdout_pipe: pipe to redirect stdout to
+        stderr_pipe: pipe to redirect stderr to
     """
 
     context: str = kwargs.get("context", "build")
@@ -1290,6 +1195,13 @@ def _setup_pkg_and_run(
         # child, so we undo Python's precaution. closefd=False since Connection has ownership.
         if input_pipe is not None:
             sys.stdin = os.fdopen(input_pipe.fileno(), closefd=False)
+        if stdout_pipe is not None:
+            os.dup2(stdout_pipe.fileno(), sys.stdout.fileno())
+            stdout_pipe.close()
+        if stderr_pipe is not None:
+            os.dup2(stderr_pipe.fileno(), sys.stderr.fileno())
+            stderr_pipe.close()
+        tty.clear_isatty_cache()
 
         pkg = serialized_pkg.restore()
 
@@ -1327,17 +1239,18 @@ def _setup_pkg_and_run(
                 # 'pkg' is not defined yet
                 pass
         elif context == "test":
-            logfile = os.path.join(pkg.test_suite.stage, pkg.test_suite.test_log_name(pkg.spec))
+            logfile = os.path.join(
+                pkg.test_suite.stage,  # type: ignore[union-attr]
+                pkg.test_suite.test_log_name(pkg.spec),  # type: ignore[union-attr]
+            )
 
         error_msg = str(e)
         if isinstance(e, (spack.multimethod.NoSuchMethodError, AttributeError)):
             process = "test the installation" if context == "test" else "build from sources"
             error_msg = (
-                "The '{}' package cannot find an attribute while trying to {}. "
-                "This might be due to a change in Spack's package format "
-                "to support multiple build-systems for a single package. You can fix this "
-                "by updating the {} recipe, and you can also report the issue as a bug. "
-                "More information at https://spack.readthedocs.io/en/latest/packaging_guide.html#installation-procedure"
+                "The '{}' package cannot find an attribute while trying to {}. You can fix this "
+                "by updating the {} recipe, and you can also report the issue as a build-error or "
+                "a bug at https://github.com/spack/spack/issues"
             ).format(pkg.name, process, context)
             error_msg = colorize("@*R{{{}}}".format(error_msg))
             error_msg = "{}\n\n{}".format(str(e), error_msg)
@@ -1362,33 +1275,108 @@ def _setup_pkg_and_run(
             input_pipe.close()
 
 
-def start_build_process(pkg, function, kwargs):
+class BuildProcess:
+    """Class used to manage builds launched by Spack.
+
+    Each build is launched in its own child process, and the main Spack process
+    tracks each child with a ``BuildProcess`` object. ``BuildProcess`` is used to:
+    - Start and monitor an active child process.
+    - Clean up its processes and resources when the child process completes.
+    - Kill the child process if needed.
+
+    See also ``start_build_process()`` and ``complete_build_process()``.
+    """
+
+    def __init__(
+        self,
+        *,
+        target: Callable,
+        args: Tuple[Any, ...],
+        pkg: "spack.package_base.PackageBase",
+        read_pipe: Connection,
+        timeout: Optional[int],
+    ) -> None:
+        self.p = multiprocessing.Process(target=target, args=args)
+        self.pkg = pkg
+        self.read_pipe = read_pipe
+        self.timeout = timeout
+
+    def start(self) -> None:
+        self.p.start()
+
+    def poll(self) -> bool:
+        """Check if there is data available to receive from the read pipe."""
+        return self.read_pipe.poll()
+
+    def complete(self):
+        """Wait (if needed) for child process to complete
+        and return its exit status.
+
+        See ``complete_build_process()``.
+        """
+        return complete_build_process(self)
+
+    def is_alive(self) -> bool:
+        return self.p.is_alive()
+
+    def join(self, *, timeout: Optional[int] = None):
+        self.p.join(timeout=timeout)
+
+    def terminate(self):
+        # Opportunity for graceful termination
+        self.p.terminate()
+        self.p.join(timeout=1)
+
+        # If the process didn't gracefully terminate, forcefully kill
+        if self.p.is_alive():
+            # TODO (python 3.6 removal): use self.p.kill() instead, consider removing this class
+            assert isinstance(self.p.pid, int), f"unexpected value for PID: {self.p.pid}"
+            os.kill(self.p.pid, signal.SIGKILL)
+            self.p.join()
+
+    @property
+    def pid(self):
+        return self.p.pid
+
+    @property
+    def exitcode(self):
+        return self.p.exitcode
+
+
+def start_build_process(
+    pkg: "spack.package_base.PackageBase",
+    function: Callable,
+    kwargs: Dict[str, Any],
+    *,
+    timeout: Optional[int] = None,
+) -> BuildProcess:
     """Create a child process to do part of a spack build.
 
     Args:
-
-        pkg (spack.package_base.PackageBase): package whose environment we should set up the
+        pkg: package whose environment we should set up the
             child process for.
-        function (typing.Callable): argless function to run in the child
+        function: argless function to run in the child
             process.
+        kwargs: additional keyword arguments to pass to ``function()``
+        timeout: maximum time allowed to finish the execution of function
 
     Usage::
 
         def child_fun():
             # do stuff
-        build_env.start_build_process(pkg, child_fun)
+        process = build_env.start_build_process(pkg, child_fun)
+        complete_build_process(process)
 
     The child process is run with the build environment set up by
     spack.build_environment.  This allows package authors to have full
     control over the environment, etc. without affecting other builds
     that might be executed in the same spack call.
 
-    If something goes wrong, the child process catches the error and
-    passes it to the parent wrapped in a ChildError.  The parent is
-    expected to handle (or re-raise) the ChildError.
     """
     read_pipe, write_pipe = multiprocessing.Pipe(duplex=False)
     input_fd = None
+    stdout_fd = None
+    stderr_fd = None
     jobserver_fd1 = None
     jobserver_fd2 = None
 
@@ -1398,14 +1386,22 @@ def start_build_process(pkg, function, kwargs):
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, "fileno"):
             input_fd = Connection(os.dup(sys.stdin.fileno()))
-        mflags = os.environ.get("MAKEFLAGS", False)
-        if mflags:
-            m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
-            if m:
-                jobserver_fd1 = Connection(int(m.group(1)))
-                jobserver_fd2 = Connection(int(m.group(2)))
 
-        p = multiprocessing.Process(
+        # If our process has redirected stdout/stderr after the forkserver was started, we need to
+        # make the forked processes use the new file descriptors.
+        if multiprocessing.get_start_method() == "forkserver":
+            try:
+                stdout_fd = Connection(os.dup(sys.stdout.fileno()))
+                stderr_fd = Connection(os.dup(sys.stderr.fileno()))
+            except Exception:
+                pass
+
+        jobserver_fds = spack.util.executable.jobserver_fds(os.environ.get("MAKEFLAGS", ""))
+        if jobserver_fds:
+            jobserver_fd1 = Connection(jobserver_fds[0])
+            jobserver_fd2 = Connection(jobserver_fds[1])
+
+        p = BuildProcess(
             target=_setup_pkg_and_run,
             args=(
                 serialized_pkg,
@@ -1415,7 +1411,12 @@ def start_build_process(pkg, function, kwargs):
                 input_fd,
                 jobserver_fd1,
                 jobserver_fd2,
+                stdout_fd,
+                stderr_fd,
             ),
+            read_pipe=read_pipe,
+            timeout=timeout,
+            pkg=pkg,
         )
 
         p.start()
@@ -1434,27 +1435,45 @@ def start_build_process(pkg, function, kwargs):
         # Close the input stream in the parent process
         if input_fd is not None:
             input_fd.close()
+        if stdout_fd is not None:
+            stdout_fd.close()
+        if stderr_fd is not None:
+            stderr_fd.close()
 
-    def exitcode_msg(p):
-        typ = "exit" if p.exitcode >= 0 else "signal"
-        return f"{typ} {abs(p.exitcode)}"
+    return p
+
+
+def complete_build_process(process: BuildProcess):
+    """
+    Wait for the child process to complete and handles its exit status.
+
+    If something goes wrong, the child process catches the error and
+    passes it to the parent wrapped in a ChildError.  The parent is
+    expected to handle (or re-raise) the ChildError.
+    """
+
+    def exitcode_msg(process):
+        typ = "exit" if process.exitcode >= 0 else "signal"
+        return f"{typ} {abs(process.exitcode)}"
 
     try:
-        child_result = read_pipe.recv()
+        # Check if information from the read pipe has been received.
+        child_result = process.read_pipe.recv()
     except EOFError:
-        p.join()
-        raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(p)})")
-
-    p.join()
-
+        raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
+    finally:
+        timeout = process.timeout
+        process.join(timeout=timeout)
+        if process.is_alive():
+            warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+            process.terminate()
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):
-        # do not print
         raise child_result
 
     # let the caller know which package went wrong.
     if isinstance(child_result, InstallError):
-        child_result.pkg = pkg
+        child_result.pkg = process.pkg
 
     if isinstance(child_result, ChildError):
         # If the child process raised an error, print its output here rather
@@ -1465,13 +1484,13 @@ def start_build_process(pkg, function, kwargs):
         raise child_result
 
     # Fallback. Usually caught beforehand in EOFError above.
-    if p.exitcode != 0:
-        raise InstallError(f"The process failed unexpectedly ({exitcode_msg(p)})")
+    if process.exitcode != 0:
+        raise InstallError(f"The process failed unexpectedly ({exitcode_msg(process)})")
 
     return child_result
 
 
-CONTEXT_BASES = (spack.package_base.PackageBase, spack.builder.Builder)
+CONTEXT_BASES = (spack.package_base.PackageBase, spack.builder.BaseBuilder)
 
 
 def get_package_context(traceback, context=3):
@@ -1543,7 +1562,7 @@ def get_package_context(traceback, context=3):
 
 class ChildError(InstallError):
     """Special exception class for wrapping exceptions from child processes
-       in Spack's build environment.
+    in Spack's build environment.
 
     The main features of a ChildError are:
 
@@ -1564,11 +1583,11 @@ class ChildError(InstallError):
 
     The long_message of a ChildError displays one of two things:
 
-      1. If the original error was a ProcessError, indicating a command
-         died during the build, we'll show context from the build log.
+    1. If the original error was a ProcessError, indicating a command
+       died during the build, we'll show context from the build log.
 
-      2. If the original error was any other type of error, we'll show
-         context from the Python code.
+    2. If the original error was any other type of error, we'll show
+       context from the Python code.
 
     SpackError handles displaying the special traceback if we're in debug
     mode with spack -d.
@@ -1650,35 +1669,36 @@ def _make_child_error(msg, module, name, traceback, log, log_type, context):
     return ChildError(msg, module, name, traceback, log, log_type, context)
 
 
-def write_log_summary(out, log_type, log, last=None):
-    errors, warnings = parse_log_events(log)
-    nerr = len(errors)
-    nwar = len(warnings)
-
-    if nerr > 0:
-        if last and nerr > last:
-            errors = errors[-last:]
-            nerr = last
-
-        # If errors are found, only display errors
-        out.write("\n%s found in %s log:\n" % (plural(nerr, "error"), log_type))
-        out.write(make_log_context(errors))
-    elif nwar > 0:
-        if last and nwar > last:
-            warnings = warnings[-last:]
-            nwar = last
-
-        # If no errors are found but warnings are, display warnings
-        out.write("\n%s found in %s log:\n" % (plural(nwar, "warning"), log_type))
-        out.write(make_log_context(warnings))
+def write_log_summary(
+    out: TextIO, log_type: str, log: Union[str, TextIO, List[str]], last: Optional[int] = None
+) -> None:
+    """Print highlighted errors from a log file with surrounding context. If the log does not
+    contain errors, print warnings instead. If ``last`` is given, only show the last so many
+    excerpts from the log (which may contain more errors/warnings than ``last``)."""
+    blocks = list(scan_log(log))
+    if not blocks:
+        return
+    # If errors are found, only display blocks containing errors.
+    error_blocks = [
+        b for b in blocks if any(m.severity is Severity.ERROR for m in b.matches.values())
+    ]
+    severity = Severity.ERROR if error_blocks else Severity.WARNING
+    blocks = error_blocks or blocks
+    if last:
+        blocks = blocks[-last:]
+    num = sum(m.severity is severity for b in blocks for m in b.matches.values())
+    out.write(f"\n{plural(num, severity.name.lower())} found in {log_type} log:\n")
+    for block in blocks:
+        write_block(out, block)
 
 
 class ModuleChangePropagator:
-    """Wrapper class to accept changes to a package.py Python module, and propagate them in the
-    MRO of the package.
-
-    It is mainly used as a substitute of the ``package.py`` module, when calling the
-    "setup_dependent_package" function during build environment setup.
+    """The function :meth:`spack.package_base.PackageBase.setup_dependent_package` receives
+    an instance of this class for the ``module`` argument. It's used to set global variables in the
+    module of a package, and propagate those globals to the modules of all classes in the
+    inheritance hierarchy of the package. It's reminiscent of
+    :class:`spack.util.environment.EnvironmentModifications`, but sets Python variables instead
+    of environment variables. This class should typically not be instantiated in packages directly.
     """
 
     _PROTECTED_NAMES = ("package", "current_module", "modules_in_mro", "_set_attributes")

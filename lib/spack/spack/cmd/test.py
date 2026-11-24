@@ -10,29 +10,29 @@ import shutil
 import sys
 from collections import Counter
 
-from llnl.util import lang, tty
-from llnl.util.tty import colify
-
 import spack.cmd
 import spack.config
-import spack.environment as ev
 import spack.install_test
 import spack.repo
-import spack.report
 import spack.store
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
+from spack.util import tty
+from spack.util.tty import colify
+
+from . import doc_dedented, doc_first_line
 
 description = "run spack's tests for an install"
-section = "admin"
+section = "build"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="test_command")
 
     # Run
     run_parser = sp.add_parser(
-        "run", description=test_run.__doc__, help=spack.cmd.first_line(test_run.__doc__)
+        "run", description=doc_dedented(test_run), help=doc_first_line(test_run)
     )
 
     run_parser.add_argument(
@@ -65,6 +65,12 @@ def setup_parser(subparser):
     run_parser.add_argument(
         "--help-cdash", action="store_true", help="show usage instructions for CDash reporting"
     )
+    run_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum time (in seconds) that tests are allowed to run",
+    )
 
     cd_group = run_parser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ["clean", "dirty"])
@@ -73,7 +79,7 @@ def setup_parser(subparser):
 
     # List
     list_parser = sp.add_parser(
-        "list", description=test_list.__doc__, help=spack.cmd.first_line(test_list.__doc__)
+        "list", description=doc_dedented(test_list), help=doc_first_line(test_list)
     )
     list_parser.add_argument(
         "-a",
@@ -87,7 +93,7 @@ def setup_parser(subparser):
 
     # Find
     find_parser = sp.add_parser(
-        "find", description=test_find.__doc__, help=spack.cmd.first_line(test_find.__doc__)
+        "find", description=doc_dedented(test_find), help=doc_first_line(test_find)
     )
     find_parser.add_argument(
         "filter",
@@ -97,7 +103,7 @@ def setup_parser(subparser):
 
     # Status
     status_parser = sp.add_parser(
-        "status", description=test_status.__doc__, help=spack.cmd.first_line(test_status.__doc__)
+        "status", description=doc_dedented(test_status), help=doc_first_line(test_status)
     )
     status_parser.add_argument(
         "names", nargs=argparse.REMAINDER, help="test suites for which to print status"
@@ -105,9 +111,7 @@ def setup_parser(subparser):
 
     # Results
     results_parser = sp.add_parser(
-        "results",
-        description=test_results.__doc__,
-        help=spack.cmd.first_line(test_results.__doc__),
+        "results", description=doc_dedented(test_results), help=doc_first_line(test_results)
     )
     results_parser.add_argument(
         "-l", "--logs", action="store_true", help="print the test log for each matching package"
@@ -128,13 +132,13 @@ def setup_parser(subparser):
         "Test results will be filtered by space-"
         "separated suite name(s) and installed\nspecs when provided.  "
         "If names are provided, then only results for those test\nsuites "
-        "will be shown.  If installed specs are provided, then ony results"
+        "will be shown.  If installed specs are provided, then only results"
         "\nmatching those specs will be shown."
     )
 
     # Remove
     remove_parser = sp.add_parser(
-        "remove", description=test_remove.__doc__, help=spack.cmd.first_line(test_remove.__doc__)
+        "remove", description=doc_dedented(test_remove), help=doc_first_line(test_remove)
     )
     arguments.add_common_arguments(remove_parser, ["yes_to_all"])
     remove_parser.add_argument(
@@ -143,7 +147,8 @@ def setup_parser(subparser):
 
 
 def test_run(args):
-    """run tests for the specified installed packages
+    """\
+    run tests for the specified installed packages
 
     if no specs are listed, run tests for all packages in the current
     environment or all installed packages if there is no active environment
@@ -162,21 +167,21 @@ def test_run(args):
 
     # set config option for fail-fast
     if args.fail_fast:
-        spack.config.set("config:fail_fast", True, scope="command_line")
+        spack.config.CONFIG.set("config:fail_fast", True, scope="command_line")
 
     explicit = args.explicit or None
     explicit_str = "explicitly " if args.explicit else ""
 
     # Get specs to test
-    env = ev.active_environment()
+    env = active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
+        matching = spack.store.STORE.db.query(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
-            tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
+            tty.warn(f"No {explicit_str}installed packages match spec {spec}")
 
             # TODO: Need to write out a log message and/or CDASH Testing
             #   output that package not installed IF continue to process
@@ -192,37 +197,26 @@ def test_run(args):
     # test_stage_dir
     test_suite = spack.install_test.TestSuite(specs_to_test, args.alias)
     test_suite.ensure_stage()
-    tty.msg("Spack test %s" % test_suite.name)
+    tty.msg(f"Spack test {test_suite.name}")
 
     # Set up reporter
-    setattr(args, "package", [s.format() for s in test_suite.specs])
-    reporter = create_reporter(args, specs_to_test, test_suite) or lang.nullcontext()
-
-    with reporter:
+    reporter = args.reporter() if args.log_format else None
+    try:
         test_suite(
             remove_directory=not args.keep_stage,
             dirty=args.dirty,
             fail_first=args.fail_first,
             externals=args.externals,
+            timeout=args.timeout,
         )
+    finally:
+        if reporter:
+            report_file = report_filename(args, test_suite)
+            reporter.test_report(report_file, test_suite.reports)
 
 
 def report_filename(args, test_suite):
     return os.path.abspath(args.log_file or "test-{}".format(test_suite.name))
-
-
-def create_reporter(args, specs_to_test, test_suite):
-    if args.log_format is None:
-        return None
-
-    filename = report_filename(args, test_suite)
-    context_manager = spack.report.test_context_manager(
-        reporter=args.reporter(),
-        filename=filename,
-        specs=specs_to_test,
-        raw_logs_dir=test_suite.stage,
-    )
-    return context_manager
 
 
 def test_list(args):
@@ -248,7 +242,7 @@ def test_list(args):
 
     # TODO: This can be extended to have all of the output formatting options
     # from `spack find`.
-    env = ev.active_environment()
+    env = active_environment()
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.STORE.db.query(hashes=hashes)
@@ -260,7 +254,8 @@ def test_list(args):
 
 
 def test_find(args):  # TODO: merge with status (noargs)
-    """find tests that are running or have available results
+    """\
+    find tests that are running or have available results
 
     displays aliases for tests that have them, otherwise test suite content hashes
     """
@@ -333,9 +328,9 @@ def _report_suite_results(test_suite, args, constraints):
             for s in spack.store.STORE.db.query(spec, installed=True):
                 specs[s.dag_hash()] = s
         specs = sorted(specs.values())
-        test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs if s in specs)
+        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs if s in specs}
     else:
-        test_specs = dict((test_suite.test_pkg_id(s), s) for s in test_suite.specs)
+        test_specs = {test_suite.test_pkg_id(s): s for s in test_suite.specs}
 
     if not test_specs:
         return
@@ -411,12 +406,13 @@ def test_results(args):
 
 
 def test_remove(args):
-    """remove results from Spack test suite(s) (default all)
+    """\
+    remove results from Spack test suite(s) (default all)
 
     if no test suite is listed, remove results for all suites.
 
     removed tests can no longer be accessed for results or status, and will not
-    appear in `spack test list` results
+    appear in ``spack test list`` results
     """
     if args.names:
         test_suites = []

@@ -2,22 +2,22 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
-from llnl.string import plural
+import argparse
 
+import spack.binary_distribution
 import spack.cmd
 import spack.cmd.common.arguments
 import spack.environment as ev
+from spack.concretize_ui import TerminalUI
+from spack.util import tty
+from spack.util.string import plural
 
 description = "concretize an environment and write a lockfile"
 section = "environments"
 level = "long"
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        "-f", "--force", action="store_true", help="re-concretize even if already concretized"
-    )
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--test",
         default=None,
@@ -29,11 +29,11 @@ def setup_parser(subparser):
     )
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
-    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs"])
+    spack.cmd.common.arguments.add_common_arguments(subparser, ["jobs", "show_non_defaults"])
 
 
 def concretize(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="concretize")
+    env = spack.cmd.require_active_env(args.subparser)
 
     if args.test == "all":
         tests = True
@@ -43,11 +43,20 @@ def concretize(parser, args):
         tests = False
 
     with env.write_transaction():
-        concretized_specs = env.concretize(force=args.force, tests=tests)
+        concretized_specs = env.concretize(tests=tests, ui=TerminalUI())
         if not args.quiet:
             if concretized_specs:
                 tty.msg(f"Concretized {plural(len(concretized_specs), 'spec')}:")
-                ev.display_specs([concrete for _, concrete in concretized_specs])
+                spack.binary_distribution.load_buildcache_index()
+                status_fn = ev.install_status_fn(
+                    env, spack.cmd.buildcache_status_fn(spack.binary_distribution.BINARY_INDEX)
+                )
+                ev.display_specs(
+                    [concrete for _, concrete in concretized_specs],
+                    highlight_non_defaults=args.non_defaults,
+                    status_fn=status_fn,
+                )
             else:
                 tty.msg("No new specs to concretize.")
+            env.warn_skipped_roots()
         env.write()

@@ -8,22 +8,21 @@
   us to access file and line information later.
 
 - ``Our load methods use ``OrderedDict`` class instead of YAML's
-  default unorderd dict.
+  default unordered dict.
 
 """
+
 import ctypes
 import enum
 import functools
 import io
 import re
-from typing import IO, Any, Callable, Dict, List, Optional, Union
+from typing import IO, Any, Callable, Dict, List, Optional, Set, Union
 
-import ruamel.yaml
-from ruamel.yaml import comments, constructor, emitter, error, representer
-
-from llnl.util.tty.color import cextra, clen, colorize
+from spack.vendor.ruamel.yaml import YAML, comments, constructor, emitter, error, representer
 
 import spack.error
+from spack.util.tty.color import cextra, clen, colorize
 
 # Only export load and dump
 __all__ = ["load", "dump", "SpackYAMLError"]
@@ -63,6 +62,53 @@ def syaml_type(obj):
         if type(obj) is not bool and isinstance(obj, t):
             return syaml_t(obj) if type(obj) is not syaml_t else obj
     return obj
+
+
+class DictWithLineInfo(dict):
+    """A dictionary that preserves YAML line information."""
+
+    __slots__ = ("line_info",)
+
+    def __init__(self, *args, line_info: str = "", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.line_info = line_info
+
+
+def _represent_dict_with_line_info(dumper, data):
+    return dumper.represent_dict(data)
+
+
+def deepcopy_as_builtin(obj: Any, *, line_info: bool = False) -> Any:
+    """Deep copies a YAML object as built-in types (dict, list, str, int, ...).
+
+    Args:
+        obj: object to be copied
+        line_info: if ``True``, add line information to the copied object
+    """
+    if isinstance(obj, str):
+        return str(obj)
+    elif isinstance(obj, dict):
+        result = DictWithLineInfo()
+        result.update(
+            {
+                deepcopy_as_builtin(k): deepcopy_as_builtin(v, line_info=line_info)
+                for k, v in obj.items()
+            }
+        )
+        if line_info:
+            result.line_info = source_location(obj)
+        return result
+    elif isinstance(obj, list):
+        return [deepcopy_as_builtin(x, line_info=line_info) for x in obj]
+    elif isinstance(obj, bool):
+        return bool(obj)
+    elif isinstance(obj, int):
+        return int(obj)
+    elif isinstance(obj, float):
+        return float(obj)
+    elif obj is None:
+        return obj
+    raise ValueError(f"cannot convert {type(obj)} to built-in type")
 
 
 def markable(obj):
@@ -115,13 +161,21 @@ class OrderedLineConstructor(constructor.RoundTripConstructor):
     # and fill in with mappings later.  We preserve this behavior.
     #
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #: ids of the nodes that are keys of a mapping
+        self._key_nodes: Set[int] = set()
+
+    def construct_mapping(self, node, maptyp, deep=False):
+        self._key_nodes.update(id(key_node) for key_node, _ in node.value)
+        return super().construct_mapping(node, maptyp, deep=deep)
+
     def construct_yaml_str(self, node):
         value = super().construct_yaml_str(node)
-        # There is no specific marker to indicate that we are parsing a key,
-        # so this assumes we are talking about a Spack config override key if
-        # it ends with a ':' and does not contain a '@' (which can appear
-        # in config values that refer to Spack specs)
-        if value and value.endswith(":") and "@" not in value:
+        # Only mapping keys can be Spack config overrides (``key::``). Values are kept as is, so
+        # that e.g. the target range in ``when: "target=x86_64:"`` is not turned into an exact
+        # target. Keys containing '@' are not overrides: they can be specs with version ranges.
+        if id(node) in self._key_nodes and value and value.endswith(":") and "@" not in value:
             value = syaml_str(value[:-1])
             value.override = True
         else:
@@ -231,12 +285,14 @@ def dump(data, stream=None, default_flow_style=False):
     return handler.dump(data, stream=stream)
 
 
-def file_line(mark):
-    """Format a mark as <file>:<line> information."""
-    result = mark.name
-    if mark.line:
-        result += ":" + str(mark.line)
-    return result
+def source_location(obj) -> str:
+    """Return the source location "<file>:<line>" of a YAML object as a string."""
+    m = get_mark_from_yaml_data(obj)
+    if m is None:
+        return ""
+    if m.line is None:
+        return m.name
+    return f"{m.name}:{m.line + 1:d}"
 
 
 #: Global for interactions between LineAnnotationDumper and dump_annotated().
@@ -281,7 +337,7 @@ class LineAnnotationEmitter(emitter.Emitter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         del _ANNOTATIONS[:]
-        self.colors = "KgrbmcyGRBMCY"
+        self.colors = "grbmcyGRBMCY"
         self.filename_colors = {}
 
     def process_scalar(self):
@@ -292,7 +348,7 @@ class LineAnnotationEmitter(emitter.Emitter):
     def write_line_break(self, data=None):
         super().write_line_break(data)
         if self.saved is None:
-            _ANNOTATIONS.append(colorize("@K{---}"))
+            _ANNOTATIONS.append(colorize("@#{---}"))
             return
 
         # append annotations at the end of each line
@@ -332,7 +388,7 @@ class ConfigYAML:
     """Handles the loading and dumping of Spack's YAML files."""
 
     def __init__(self, yaml_type: YAMLType) -> None:
-        self.yaml = ruamel.yaml.YAML(typ="rt", pure=True)
+        self.yaml = YAML(typ="rt", pure=True)
         if yaml_type == YAMLType.GENERIC_YAML:
             self.yaml.Representer = SafeRepresenter
         elif yaml_type == YAMLType.ANNOTATED_SPACK_CONFIG_FILE:
@@ -342,6 +398,7 @@ class ConfigYAML:
         else:
             self.yaml.Representer = OrderedLineRepresenter
             self.yaml.Constructor = OrderedLineConstructor
+        self.yaml.Representer.add_representer(DictWithLineInfo, _represent_dict_with_line_info)
 
     def load(self, stream: IO):
         """Loads the YAML data from a stream and returns it.
@@ -360,15 +417,19 @@ class ConfigYAML:
             error_mark = e.context_mark if e.context_mark else e.problem_mark
             if error_mark:
                 line, column = error_mark.line, error_mark.column
-                msg += f": near {error_mark.name}, {str(line)}, {str(column)}"
+                filename = error_mark.name
+                msg += f": near {filename}, {str(line)}, {str(column)}"
             else:
+                filename = stream.name
                 msg += f": {stream.name}"
             msg += f": {e.problem}"
-            raise SpackYAMLError(msg, e) from e
+
+            raise SpackYAMLError(msg, e, filename) from e
 
         except Exception as e:
             msg = "cannot load Spack YAML configuration"
-            raise SpackYAMLError(msg, e) from e
+            filename = stream.name
+            raise SpackYAMLError(msg, e, filename) from e
 
     def dump(self, data, stream: Optional[IO] = None, *, transform=None) -> None:
         """Dumps the YAML data to a stream.
@@ -384,7 +445,8 @@ class ConfigYAML:
             return self.yaml.dump(data, stream=stream, transform=transform)
         except Exception as e:
             msg = "cannot dump Spack YAML configuration"
-            raise SpackYAMLError(msg, str(e)) from e
+            filename = stream.name if stream else None
+            raise SpackYAMLError(msg, str(e), filename) from e
 
     def as_string(self, data) -> str:
         """Returns a string representing the YAML data passed as input."""
@@ -493,5 +555,28 @@ def anchorify(data: Union[dict, list], identifier: Callable[[Any], str] = repr) 
 class SpackYAMLError(spack.error.SpackError):
     """Raised when there are issues with YAML parsing."""
 
-    def __init__(self, msg, yaml_error):
+    def __init__(self, msg, yaml_error, filename=None):
+        self.filename = filename
         super().__init__(msg, str(yaml_error))
+
+
+def get_mark_from_yaml_data(obj):
+    """Try to get ``spack.util.spack_yaml`` mark from YAML data.
+
+    We try the object, and if that fails we try its first member (if it's a container).
+
+    Returns:
+        mark if one is found, otherwise None.
+    """
+    # mark of object itelf
+    mark = getattr(obj, "_start_mark", None)
+    if mark:
+        return mark
+
+    # mark of first member if it is a container
+    if isinstance(obj, (list, dict)):
+        first_member = next(iter(obj), None)
+        if first_member:
+            mark = getattr(first_member, "_start_mark", None)
+
+    return mark

@@ -5,7 +5,7 @@
 import os
 import tempfile
 
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.error
 import spack.hooks
 import spack.store
@@ -16,12 +16,12 @@ def rewire(spliced_spec):
     nodes in the DAG of that spec."""
     assert spliced_spec.spliced
     for spec in spliced_spec.traverse(order="post", root=True):
-        if not spec.build_spec.installed:
+        if not spack.store.STORE.db.installed(spec.build_spec):
             # TODO: May want to change this at least for the root spec...
             # TODO: Also remember to import PackageInstaller
             # PackageInstaller([spec.build_spec.package]).install()
             raise PackageNotInstalledError(spliced_spec, spec.build_spec, spec)
-        if spec.build_spec is not spec and not spec.installed:
+        if spec.build_spec is not spec and not spack.store.STORE.db.installed(spec):
             explicit = spec is spliced_spec
             rewire_node(spec, explicit)
 
@@ -34,11 +34,11 @@ def rewire_node(spec, explicit):
 
     # Copy spec.build_spec.prefix to spec.prefix through a temporary tarball
     tarball = os.path.join(tempdir, f"{spec.dag_hash()}.tar.gz")
-    bindist.create_tarball(spec.build_spec, tarball)
+    spack.binary_distribution.create_tarball(spec.build_spec, tarball)
 
     spack.hooks.pre_install(spec)
-    bindist.extract_buildcache_tarball(tarball, destination=spec.prefix)
-    bindist.relocate_package(spec)
+    spack.binary_distribution.extract_buildcache_tarball(tarball, destination=spec.prefix)
+    spack.binary_distribution.relocate_package(spec)
 
     # run post install hooks and add to db
     spack.hooks.post_install(spec, explicit)
@@ -59,7 +59,5 @@ class PackageNotInstalledError(RewireError):
         super().__init__(
             """Rewire of {0}
             failed due to missing install of build spec {1}
-            for spec {2}""".format(
-                spliced_spec, build_spec, dep
-            )
+            for spec {2}""".format(spliced_spec, build_spec, dep)
         )

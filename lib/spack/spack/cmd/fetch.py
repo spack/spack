@@ -2,12 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
+import argparse
 
 import spack.cmd
 import spack.config
-import spack.environment as ev
+import spack.store
 import spack.traverse
+from spack.active_environment import active_environment
 from spack.cmd.common import arguments
 
 description = "fetch archives for packages"
@@ -15,7 +16,7 @@ section = "build"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["no_checksum", "specs"])
     subparser.add_argument(
         "-m",
@@ -36,7 +37,7 @@ def setup_parser(subparser):
 
 def fetch(parser, args):
     if args.no_checksum:
-        spack.config.set("config:checksum", False, scope="command_line")
+        spack.config.CONFIG.set("config:checksum", False, scope="command_line")
 
     if args.specs:
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
@@ -46,16 +47,18 @@ def fetch(parser, args):
         # fetch all uninstalled specs from it otherwise fetch all.
         # If we are also not in an environment, complain to the
         # user that we don't know what to do.
-        env = ev.active_environment()
+        env = active_environment()
         if env:
             if args.missing:
                 specs = env.uninstalled_specs()
             else:
                 specs = env.all_specs()
             if specs == []:
-                tty.die("No uninstalled specs in environment. Did you run `spack concretize` yet?")
+                args.subparser.error(
+                    "no uninstalled specs in environment. Did you run `spack concretize` yet?"
+                )
         else:
-            tty.die("fetch requires at least one spec argument")
+            args.subparser.error("requires at least one spec argument")
 
     if args.dependencies or args.missing:
         to_be_fetched = spack.traverse.traverse_nodes(specs, key=spack.traverse.by_dag_hash)
@@ -63,7 +66,7 @@ def fetch(parser, args):
         to_be_fetched = specs
 
     for spec in to_be_fetched:
-        if args.missing and spec.installed:
+        if args.missing and spack.store.STORE.db.installed(spec):
             continue
 
         pkg = spec.package

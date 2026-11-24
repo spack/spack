@@ -336,7 +336,7 @@ def parse_pt_dynamic(f: BinaryIO, elf: ElfFile) -> None:
     except OSError:
         raise ElfParsingError("Could not seek to PT_DYNAMIC entry")
 
-    # In case of broken ELF files, don't read beyond the advertized size.
+    # In case of broken ELF files, don't read beyond the advertised size.
     for _ in range(elf.pt_dynamic_p_filesz // dynamic_array_size):
         data = read_exactly(f, dynamic_array_size, "Malformed dynamic array entry")
         tag, val = unpack(dynamic_array_fmt, data)
@@ -382,9 +382,9 @@ def parse_pt_dynamic(f: BinaryIO, elf: ElfFile) -> None:
     string_table = retrieve_strtab(f, elf, elf.pt_dynamic_strtab_offset)
 
     if elf.has_needed:
-        elf.dt_needed_strs = list(
+        elf.dt_needed_strs = [
             parse_c_string(string_table, offset) for offset in elf.dt_needed_strtab_offsets
-        )
+        ]
 
     if elf.has_soname:
         elf.dt_soname_str = parse_c_string(string_table, elf.dt_soname_strtab_offset)
@@ -460,8 +460,8 @@ def parse_elf(
     dynamic_section: bool = False,
     only_header: bool = False,
 ) -> ElfFile:
-    """Given a file handle f for an ELF file opened in binary mode, return an ElfFile
-    object that is stores data about rpaths"""
+    """Given a file handle ``f`` for an ELF file opened in binary mode, return an
+    :class:`~spack.util.elf.ElfFile` object with the parsed contents."""
     try:
         return _do_parse_elf(f, interpreter, dynamic_section, only_header)
     except (DeprecationWarning, struct.error):
@@ -520,8 +520,8 @@ def _delete_dynamic_array_entry(
 
 def delete_rpath(path: str) -> None:
     """Modifies a binary to remove the rpath. It zeros out the rpath string and also drops the
-    DT_R(UN)PATH entry from the dynamic section, so it doesn't show up in 'readelf -d file', nor
-    in 'strings file'."""
+    ``DT_RPATH`` / ``DT_RUNPATH`` entry from the dynamic section, so it doesn't show up in
+    ``readelf -d file``, nor in ``strings file``."""
     with open(path, "rb+") as f:
         elf = parse_elf(f, interpreter=False, dynamic_section=True)
 
@@ -552,11 +552,6 @@ def delete_needed_from_elf(f: BinaryIO, elf: ElfFile, needed: bytes) -> None:
     )
 
 
-class CStringType:
-    PT_INTERP = 1
-    RPATH = 2
-
-
 class UpdateCStringAction:
     def __init__(self, old_value: bytes, new_value: bytes, offset: int):
         self.old_value = old_value
@@ -580,10 +575,18 @@ class UpdateCStringAction:
         f.write(b"\x00" * (len(self.old_value) - len(self.new_value)))
 
 
+#: Transformation of a list of RPATH entries
+RpathTransform = Callable[[List[bytes]], List[bytes]]
+
+
 def _get_rpath_substitution(
-    elf: ElfFile, regex: Pattern, substitutions: Dict[bytes, bytes]
+    elf: ElfFile,
+    regex: Pattern,
+    substitutions: Dict[bytes, bytes],
+    rpath_transform: Optional[RpathTransform] = None,
 ) -> Optional[UpdateCStringAction]:
-    """Make rpath substitutions in-place."""
+    """Make rpath substitutions in-place. If given, ``rpath_transform`` is applied to the RPATH
+    entries before the substitutions."""
     # If there's no RPATH, then there's no need to replace anything.
     if not elf.has_rpath:
         return None
@@ -593,12 +596,16 @@ def _get_rpath_substitution(
     # more likely that the string doesn't grow.
     rpaths = list(filter(len, elf.dt_rpath_str.split(b":")))
 
-    num_rpaths = len(rpaths)
-
-    if num_rpaths == 0:
+    if not rpaths:
         return None
 
     changed = False
+    if rpath_transform is not None:
+        transformed = rpath_transform(rpaths)
+        changed = transformed != rpaths
+        rpaths = transformed
+
+    num_rpaths = len(rpaths)
     for i in range(num_rpaths):
         old_rpath = rpaths[i]
         match = regex.match(old_rpath)
@@ -637,12 +644,13 @@ def _get_pt_interp_substitution(
 
 
 def substitute_rpath_and_pt_interp_in_place_or_raise(
-    path: str, substitutions: Dict[bytes, bytes]
+    path: str, substitutions: Dict[bytes, bytes], rpath_transform: Optional[RpathTransform] = None
 ) -> bool:
     """Returns true if the rpath and interpreter were modified, false if there was nothing to do.
     Raises ElfCStringUpdatesFailed if the ELF file cannot be updated in-place. This exception
     contains a list of actions to perform with other tools. The file is left untouched in this
-    case."""
+    case. If given, ``rpath_transform`` is applied to the RPATH entries before the substitutions.
+    """
     regex = re.compile(b"|".join(re.escape(p) for p in substitutions.keys()))
 
     try:
@@ -650,7 +658,7 @@ def substitute_rpath_and_pt_interp_in_place_or_raise(
             elf = parse_elf(f, interpreter=True, dynamic_section=True)
 
             # Get the actions to perform.
-            rpath = _get_rpath_substitution(elf, regex, substitutions)
+            rpath = _get_rpath_substitution(elf, regex, substitutions, rpath_transform)
             pt_interp = _get_pt_interp_substitution(elf, regex, substitutions)
 
             # Nothing to do.
@@ -677,7 +685,7 @@ def substitute_rpath_and_pt_interp_in_place_or_raise(
 
 
 def pt_interp(path: str) -> Optional[str]:
-    """Retrieve the interpreter of an executable at `path`."""
+    """Retrieve the interpreter of an executable at ``path``."""
     try:
         with open(path, "rb") as f:
             elf = parse_elf(f, interpreter=True)
@@ -690,9 +698,9 @@ def pt_interp(path: str) -> Optional[str]:
     return elf.pt_interp_str.decode("utf-8")
 
 
-def get_elf_compat(path):
-    """Get a triplet (EI_CLASS, EI_DATA, e_machine) from an ELF file, which can be used to see if
-    two ELF files are compatible."""
+def get_elf_compat(path: str) -> Tuple[bool, bool, int]:
+    """Get a triplet (is_64_bit, is_little_endian, e_machine) from an ELF file, which can be used
+    to see if two ELF files are compatible."""
     # On ELF platforms supporting, we try to be a bit smarter when it comes to shared
     # libraries, by dropping those that are not host compatible.
     with open(path, "rb") as f:

@@ -2,7 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import base64
 import collections
+import contextlib
 import datetime
 import email.message
 import errno
@@ -11,62 +13,91 @@ import inspect
 import io
 import itertools
 import json
+import multiprocessing
 import os
-import pathlib
 import re
 import shutil
 import stat
 import sys
+import tarfile
 import tempfile
+import textwrap
 import xml.etree.ElementTree
+from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
-import py
 import pytest
 
-import archspec.cpu
-import archspec.cpu.microarchitecture
-import archspec.cpu.schema
-
-import llnl.util.lang
-import llnl.util.lock
-import llnl.util.tty as tty
-from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, touchp, working_dir
+import spack.vendor.archspec.cpu
+import spack.vendor.archspec.cpu.microarchitecture
+import spack.vendor.archspec.cpu.schema
 
 import spack.binary_distribution
-import spack.bootstrap.core
+import spack.bootstrap
 import spack.caches
-import spack.compiler
-import spack.compilers
+import spack.compilers.config
+import spack.compilers.libraries
 import spack.concretize
 import spack.config
+import spack.database
 import spack.directives_meta
 import spack.environment as ev
 import spack.error
+import spack.extensions
+import spack.modules
 import spack.modules.common
 import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.solver.compat
+import spack.solver.reuse
 import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
+import spack.tengine
+import spack.test.concretization_cache_plugin
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
 import spack.util.gpg
+import spack.util.lang
+import spack.util.libc
+import spack.util.lock
+import spack.util.naming
 import spack.util.parallel
+import spack.util.path
 import spack.util.spack_yaml as syaml
+import spack.util.tty
+import spack.util.tty.color
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
+from spack.config import Configuration
+from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
-from spack.installer import PackageInstaller
 from spack.main import SpackCommand
+from spack.old_installer import PackageInstaller
+from spack.repo import RepoPath
+from spack.store import Store
+from spack.util import tty
+from spack.util.filesystem import copy, join_path, mkdirp, remove_linked_tree, working_dir
 from spack.util.pattern import Bunch
+from spack.util.remote_file_cache import raw_github_gitlab_url
 
 mirror_cmd = SpackCommand("mirror")
+
+
+def _recursive_chmod(path: Path, mode: int):
+    """Recursively change permissions of a directory and all its contents."""
+    path.chmod(mode)
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            os.chmod(os.path.join(root, file), mode)
+        for dir in dirs:
+            os.chmod(os.path.join(root, dir), mode)
 
 
 @pytest.fixture(autouse=True)
@@ -88,10 +119,10 @@ def ensure_configuration_fixture_run_before(request):
 @pytest.fixture(scope="session")
 def git():
     """Fixture for tests that use git."""
-    if not spack.util.git.git():
+    try:
+        return spack.util.git.git(required=True)
+    except spack.util.executable.CommandNotFoundError:
         pytest.skip("requires git to be installed")
-
-    return spack.util.git.git(required=True)
 
 
 #
@@ -112,49 +143,28 @@ def write_file(filename, contents):
         f.write(contents)
 
 
-commit_counter = 0
-
-
 @pytest.fixture
-def override_git_repos_cache_path(tmpdir):
+def override_git_repos_cache_path(tmp_path: Path):
     saved = spack.paths.user_repos_cache_path
-    tmp_path = tmpdir.mkdir("git-repo-cache-path-for-tests")
-    spack.paths.user_repos_cache_path = str(tmp_path)
+    tmp_git_path = tmp_path / "git-repo-cache-path-for-tests"
+    tmp_git_path.mkdir()
+    spack.paths.user_repos_cache_path = str(tmp_git_path)
     yield
     spack.paths.user_repos_cache_path = saved
 
 
-@pytest.fixture
-def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
-    """Create a mock git repo with known structure
-
-    The structure of commits in this repo is as follows::
-
-       | o fourth 1.x commit (1.2)
-       | o third 1.x commit
-       | |
-       o | fourth main commit (v2.0)
-       o | third main commit
-       | |
-       | o second 1.x commit (v1.1)
-       | o first 1.x commit
-       | /
-       |/
-       o second commit (v1.0)
-       o first commit
-
-    The repo consists of a single file, in which the GitVersion._ref_version representation
-    of each commit is expressed as a string.
-
-    Important attributes of the repo for test coverage are: multiple branches,
-    version tags on multiple branches, and version order is not equal to time
-    order or topological order.
-    """
-    repo_path = str(tmpdir.mkdir("git_repo"))
+@pytest.fixture(scope="session")
+def _mock_git_version_info_template(git, tmp_path_factory: pytest.TempPathFactory):
+    """Session-scoped template repo for ``mock_git_version_info``: built once per
+    process with git, then copied into a fresh directory for each test."""
+    repo_dir = tmp_path_factory.mktemp("git_version_info_template") / "git_version_info_repo"
+    repo_dir.mkdir()
+    repo_path = str(repo_dir)
     filename = "file.txt"
+    commit_counter = 0
 
     def commit(message):
-        global commit_counter
+        nonlocal commit_counter
         git(
             "commit",
             "--no-gpg-sign",
@@ -170,6 +180,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
+        git("checkout", "-b", "main")
 
         commits = []
 
@@ -177,15 +188,11 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
             return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
 
         # Add two commits on main branch
-
         # A commit without a previous version counts as "0"
         write_file(filename, "[0]")
         git("add", filename)
         commit("first commit")
         commits.append(latest_commit())
-
-        # Get name of default branch (differs by git version)
-        main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
 
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
@@ -205,7 +212,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         git("tag", "v1.1")
 
         # Add two commits and a tag on main branch
-        git("checkout", main)
+        git("checkout", "main")
         write_file(filename, "[1, 0, 'git', 1]")
         commit("third main commit")
         commits.append(latest_commit())
@@ -227,14 +234,180 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         # The commits are ordered with the last commit first in the list
         commits = list(reversed(commits))
 
+    return repo_path, filename, commits
+
+
+@pytest.fixture
+def mock_git_version_info(
+    _mock_git_version_info_template, tmp_path: Path, override_git_repos_cache_path
+):
+    """Copy of a mock git repo with known structure
+
+    The structure of commits in this repo is as follows::
+
+       | o fourth 1.x commit (1.2)
+       | o third 1.x commit
+       | |
+       o | fourth main commit (v2.0)
+       o | third main commit
+       | |
+       | o second 1.x commit (v1.1)
+       | o first 1.x commit
+       | /
+       |/
+       o second commit (v1.0)
+       o first commit
+
+    The repo consists of a single file, in which the GitVersion.std_version representation
+    of each commit is expressed as a string.
+
+    Important attributes of the repo for test coverage are: multiple branches,
+    version tags on multiple branches, and version order is not equal to time
+    order or topological order.
+    """
+    template_path, filename, commits = _mock_git_version_info_template
+    repo_path = str(tmp_path / "git_version_info_repo")
+    shutil.copytree(template_path, repo_path)
+
     # Return the git directory to install, the filename used, and the commits
     yield repo_path, filename, commits
+
+
+@pytest.fixture(scope="session")
+def _mock_git_package_changes_template(git, tmp_path_factory: pytest.TempPathFactory):
+    """Session-scoped template repo for ``mock_git_package_changes``: built once per
+    process with git, then copied into a fresh directory for each test."""
+    root = str(tmp_path_factory.mktemp("git_package_changes_template"))
+    filename = "diff_test/package.py"
+
+    repo_path, _ = spack.repo.create_repo(root, namespace="myrepo")
+    cache_dir = tmp_path_factory.mktemp("git_package_changes_template_cache")
+    repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+
+    repo = spack.repo.Repo(repo_path, cache=repo_cache)
+    commit_counter = 0
+
+    def commit(message):
+        nonlocal commit_counter
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            "-am",
+            message,
+        )
+        commit_counter += 1
+
+    def latest_commit():
+        return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
+
+    commits = []
+
+    # Create an environment and Gitlab CI config to mimic spack-packages, living
+    # alongside the packages subdirectory in the same git repo.
+    with working_dir(repo.root):
+        git("init")
+
+        git("config", "user.name", "Spack")
+        git("config", "user.email", "spack@spack.io")
+
+        env_dir = "env"
+        os.makedirs(env_dir)
+        with open(os.path.join(env_dir, "spack.yaml"), "w", encoding="utf-8") as fd:
+            fd.write("spack: {}")
+
+        ci_dir = ".ci"
+        os.makedirs(ci_dir)
+        with open(os.path.join(ci_dir, "pipeline.yml"), "w", encoding="utf-8") as fd:
+            fd.write("some_job: { script: [echo 'Hello'] }")
+
+        git("add", "env/spack.yaml")
+        git("add", ".ci/pipeline.yml")
+        commit("ci: add stack")
+        commits.append(latest_commit())
+
+    with working_dir(repo.packages_path):
+        os.makedirs(os.path.dirname(filename))
+
+        # add diff-test as a new package to the repository
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-0.txt", filename)
+        git("add", filename)
+        commit("diff-test: new package")
+        commits.append(latest_commit())
+
+        # add v2.1.5 to diff-test
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-1.txt", filename)
+        git("add", filename)
+        commit("diff-test: add v2.1.5")
+        commits.append(latest_commit())
+
+        # add v2.1.6 to diff-test
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-2.txt", filename)
+        git("add", filename)
+        commit("diff-test: add v2.1.6")
+        commits.append(latest_commit())
+
+        # add v2.1.7 and v2.1.8 to diff-test
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-3.txt", filename)
+        git("add", filename)
+        commit("diff-test: add v2.1.7 and v2.1.8")
+        commits.append(latest_commit())
+
+        # The commits are ordered with the last commit first in the list
+        commits = list(reversed(commits))
+
+    # Make filename relative to the git repo root (repo.root) and use POSIX path
+    # separators since that's what git reports.
+    filename = spack.util.path.convert_to_posix_path(
+        os.path.relpath(os.path.join(repo.packages_path, filename), repo.root)
+    )
+
+    return root, repo_path, filename, commits
+
+
+@pytest.fixture
+def mock_git_package_changes(
+    _mock_git_package_changes_template, tmp_path: Path, override_git_repos_cache_path
+):
+    """Copy of a mock git repo with known structure of package edits
+
+    The structure of commits in this repo is as follows::
+
+       o diff-test: add v2.1.7 and v2.1.8 (invalid duplicated checksum)
+       |
+       o diff-test: add v2.1.6 (from a git ref)
+       |
+       o diff-test: add v2.1.5 (from source tarball)
+       |
+       o diff-test: new package (testing multiple added versions)
+       |
+       o ci: add stack
+
+    The repo consists of a single package.py file for DiffTest, plus an
+    ``env/spack.yaml`` environment and a ``.ci/pipeline.yml`` to mimic the
+    structure of spack-packages for testing ``stack_changed``.
+
+    Important attributes of the repo for test coverage are: multiple package
+    versions are added with some coming from a tarball and some from git refs.
+    """
+    template_root, template_repo_path, filename, commits = _mock_git_package_changes_template
+    root = str(tmp_path / "myrepo")
+    shutil.copytree(template_root, root)
+    repo_path = os.path.join(root, os.path.relpath(template_repo_path, template_root))
+
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    repo = spack.repo.Repo(repo_path, cache=spack.util.file_cache.FileCache(str(cache_dir)))
+
+    # Return the repo, the filename used, and the commits
+    yield repo, filename, commits
 
 
 @pytest.fixture(autouse=True)
 def clear_recorded_monkeypatches():
     yield
-    spack.subprocess_context.clear_patches()
+    spack.subprocess_context.MONKEYPATCHES.clear()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -244,7 +417,7 @@ def record_monkeypatch_setattr():
     saved_setattr = _pytest.monkeypatch.MonkeyPatch.setattr
 
     def record_setattr(cls, target, name, value, *args, **kwargs):
-        spack.subprocess_context.append_patch((target, name, value))
+        spack.subprocess_context.MONKEYPATCHES.append((target, name))
         saved_setattr(cls, target, name, value, *args, **kwargs)
 
     _pytest.monkeypatch.MonkeyPatch.setattr = record_setattr
@@ -252,15 +425,6 @@ def record_monkeypatch_setattr():
         yield
     finally:
         _pytest.monkeypatch.MonkeyPatch.setattr = saved_setattr
-
-
-def _can_access(path, perms):
-    return False
-
-
-@pytest.fixture
-def no_path_access(monkeypatch):
-    monkeypatch.setattr(os, "access", _can_access)
 
 
 #
@@ -284,39 +448,21 @@ def clean_test_environment():
     ev.deactivate()
 
 
-def _host():
-    """Mock archspec host so there is no inconsistency on the Windows platform
-    This function cannot be local as it needs to be pickleable"""
-    return archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
-
-
-@pytest.fixture(scope="function")
-def archspec_host_is_spack_test_host(monkeypatch):
-    monkeypatch.setattr(archspec.cpu, "host", _host)
-
-
-#
-# Disable checks on compiler executable existence
-#
-@pytest.fixture(scope="function", autouse=True)
-def mock_compiler_executable_verification(request, monkeypatch):
-    """Mock the compiler executable verification to allow missing executables.
-
-    This fixture can be disabled for tests of the compiler verification
-    functionality by::
-
-        @pytest.mark.enable_compiler_verification
-
-    If a test is marked in that way this is a no-op."""
-    if "enable_compiler_verification" not in request.keywords:
-        monkeypatch.setattr(spack.compiler.Compiler, "verify_executables", _return_none)
-
-
 # Hooks to add command line options or set other custom behaviors.
 # They must be placed here to be found by pytest. See:
 #
 # https://docs.pytest.org/en/latest/writing_plugins.html
 #
+def pytest_configure(config):
+    # improve performance on macOS
+    if sys.platform == "darwin" and multiprocessing.get_start_method(allow_none=True) is None:
+        multiprocessing.set_start_method("forkserver")
+    # forkserver build subprocesses re-import this conftest, so preload it too
+    multiprocessing.set_forkserver_preload(
+        ["spack.main", "spack.package", "spack.installer", "spack.test.conftest"]
+    )
+
+
 def pytest_addoption(parser):
     group = parser.getgroup("Spack specific command line options")
     group.addoption(
@@ -339,12 +485,24 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(skip_as_slow)
 
 
+@pytest.fixture(scope="function")
+def use_concretization_cache(mock_packages, mutable_config: Configuration, tmp_path: Path):
+    """Enables the use of the concretization cache"""
+    conc_cache_dir = tmp_path / "concretization"
+
+    # ensure we have an isolated concretization cache while using fixture
+    with mutable_config.override(
+        "concretizer:concretization_cache", {"enable": True, "url": str(conc_cache_dir)}
+    ):
+        yield conc_cache_dir
+
+
 #
 # These fixtures are applied to all tests
 #
 @pytest.fixture(scope="function", autouse=True)
 def no_chdir():
-    """Ensure that no test changes Spack's working dirctory.
+    """Ensure that no test changes Spack's working directory.
 
     This prevents Spack tests (and therefore Spack commands) from
     changing the working directory and causing other tests to fail
@@ -361,52 +519,73 @@ def no_chdir():
         assert os.getcwd() == original_wd
 
 
-@pytest.fixture(scope="function", autouse=True)
-def reset_compiler_cache():
-    """Ensure that the compiler cache is not shared across Spack tests
-
-    This cache can cause later tests to fail if left in a state incompatible
-    with the new configuration. Since tests can make almost unlimited changes
-    to their setup, default to not use the compiler cache across tests."""
-    spack.compilers._compiler_cache = {}
-    yield
-    spack.compilers._compiler_cache = {}
-
-
 def onerror(func, path, error_info):
-    # Python on Windows is unable to remvove paths without
+    # Python on Windows is unable to remove paths without
     # write (IWUSR) permissions (such as those generated by Git on Windows)
     # This method changes file permissions to allow removal by Python
     os.chmod(path, stat.S_IWUSR)
     func(path)
 
 
+class MockStageRoot:
+    """Stand-in for ``spack.stage.stage_root`` returning a fixed directory.
+
+    Defined at module level so that it can be pickled into spawned build processes.
+    """
+
+    def __init__(self, path: str) -> None:
+        self.path = path
+
+    def __call__(self, config) -> str:
+        return self.path
+
+
 @pytest.fixture(scope="function", autouse=True)
-def mock_stage(tmpdir_factory, monkeypatch, request):
+def mock_stage(tmp_path_factory: pytest.TempPathFactory, monkeypatch, request):
     """Establish the temporary build_stage for the mock archive."""
-    # The approach with this autouse fixture is to set the stage root
-    # instead of using spack.config.override() to avoid configuration
+    # The approach with this autouse fixture is to replace the stage root
+    # instead of using spack.config.CONFIG.override() to avoid configuration
     # conflicts with dozens of tests that rely on other configuration
     # fixtures, such as config.
-    if "nomockstage" not in request.keywords:
-        # Set the build stage to the requested path
-        new_stage = tmpdir_factory.mktemp("mock-stage")
-        new_stage_path = str(new_stage)
 
-        # Ensure the source directory exists within the new stage path
-        source_path = os.path.join(new_stage_path, spack.stage._source_path_subdir)
-        mkdirp(source_path)
+    if "nomockstage" in request.keywords:
+        # Tests can opt-out with @pytest.mark.nomockstage
+        yield None
+        return
 
-        monkeypatch.setattr(spack.stage, "_stage_root", new_stage_path)
+    # Set the build stage to the requested path
+    new_stage = tmp_path_factory.mktemp("mock-stage")
 
-        yield new_stage_path
+    # Ensure the source directory exists within the new stage path
+    source_path = new_stage / spack.stage._source_path_subdir
+    source_path.mkdir(parents=True, exist_ok=True)
 
-        # Clean up the test stage directory
-        if os.path.isdir(new_stage_path):
-            shutil.rmtree(new_stage_path, onerror=onerror)
-    else:
-        # Must yield a path to avoid a TypeError on test teardown
-        yield str(tmpdir_factory)
+    monkeypatch.setattr(spack.stage, "stage_root", MockStageRoot(str(new_stage)))
+
+    yield str(new_stage)
+
+    # Clean up the test stage directory
+    if new_stage.is_dir():
+        shutil.rmtree(new_stage, onerror=onerror)
+
+
+@pytest.fixture(scope="session")
+def mock_stage_for_database(tmp_path_factory: pytest.TempPathFactory, monkeypatch_session):
+    """A session-scoped analog of mock_stage, so that the mock_store
+    fixture uses its own stage vs. the global stage root for spack.
+    """
+    new_stage = tmp_path_factory.mktemp("mock-stage")
+
+    source_path = new_stage / spack.stage._source_path_subdir
+    source_path.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch_session.setattr(spack.stage, "stage_root", MockStageRoot(str(new_stage)))
+
+    yield str(new_stage)
+
+    # Clean up the test stage directory
+    if new_stage.is_dir():
+        shutil.rmtree(new_stage, onerror=onerror)
 
 
 @pytest.fixture(scope="session")
@@ -452,13 +631,15 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
 
     and the associated stage files will be removed.
     """
-    stage_path = mock_stage
-
     yield
+
+    if mock_stage is None:
+        # When tests opt out with @pytest.mark.nomockstage, do not check for left-over files
+        return
 
     files_in_stage = set()
     try:
-        stage_files = os.listdir(stage_path)
+        stage_files = os.listdir(mock_stage)
         files_in_stage = set(stage_files) - ignore_stage_files
     except OSError as err:
         if err.errno == errno.ENOENT or err.errno == errno.EINVAL:
@@ -469,7 +650,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
     if "disable_clean_stage_check" in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(stage_path, f)
+            path = os.path.join(mock_stage, f)
             remove_whatever_it_is(path)
     else:
         ignore_stage_files |= files_in_stage
@@ -492,43 +673,48 @@ class MockCacheFetcher:
         return "[mock fetch cache]"
 
 
+def mock_fetch_cache_for(config) -> MockCache:
+    """Stand-in for ``spack.caches.fetch_cache``, at module level so that it can be pickled."""
+    return MockCache()
+
+
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
-    """Substitutes spack.paths.FETCH_CACHE with a mock object that does nothing
+    """Substitutes spack.caches.fetch_cache with one returning a mock object that does nothing
     and raises on fetch.
     """
-    monkeypatch.setattr(spack.caches, "FETCH_CACHE", MockCache())
+    monkeypatch.setattr(spack.caches, "fetch_cache", mock_fetch_cache_for)
 
 
 @pytest.fixture()
-def mock_binary_index(monkeypatch, tmpdir_factory):
+def mock_binary_index(monkeypatch, tmp_path_factory: pytest.TempPathFactory):
     """Changes the directory for the binary index and creates binary index for
     every test. Clears its own index when it's done.
     """
-    tmpdir = tmpdir_factory.mktemp("mock_binary_index")
-    index_path = tmpdir.join("binary_index").strpath
-    mock_index = spack.binary_distribution.BinaryCacheIndex(index_path)
+    tmpdir = tmp_path_factory.mktemp("mock_binary_index")
+    index_path = tmpdir / "binary_index"
+    mock_index = spack.binary_distribution.BinaryIndexCache(
+        str(index_path), config=spack.config.CONFIG
+    )
     monkeypatch.setattr(spack.binary_distribution, "BINARY_INDEX", mock_index)
     yield
 
 
 @pytest.fixture(autouse=True)
-def _skip_if_missing_executables(request):
+def _skip_if_missing_executables(request, monkeypatch):
     """Permits to mark tests with 'require_executables' and skip the
     tests if the executables passed as arguments are not found.
     """
-    if hasattr(request.node, "get_marker"):
-        # TODO: Remove the deprecated API as soon as we drop support for Python 2.6
-        marker = request.node.get_marker("requires_executables")
-    else:
-        marker = request.node.get_closest_marker("requires_executables")
-
+    marker = request.node.get_closest_marker("requires_executables")
     if marker:
         required_execs = marker.args
         missing_execs = [x for x in required_execs if spack.util.executable.which(x) is None]
         if missing_execs:
             msg = "could not find executables: {0}"
             pytest.skip(msg.format(", ".join(missing_execs)))
+
+        # In case we require a compiler, clear the caches used to speed-up detection
+        monkeypatch.setattr(spack.compilers.libraries.DefaultDynamicLinkerFilter, "_CACHE", {})
 
 
 @pytest.fixture(scope="session")
@@ -543,6 +729,15 @@ def _use_test_platform(test_platform):
     # a default during tests.
     with spack.platforms.use_platform(test_platform):
         yield
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _load_clingo():
+    """Bootstrap clingo before tests monkeypatch the host target."""
+    try:
+        spack.solver.compat.clingo()
+    except ImportError:
+        pass
 
 
 #
@@ -572,15 +767,36 @@ def _use_test_platform(test_platform):
 # Test-specific fixtures
 #
 @pytest.fixture(scope="session")
-def mock_repo_path():
+def mock_packages_repo():
     yield spack.repo.from_path(spack.paths.mock_packages_path)
+
+
+@pytest.fixture
+def mock_git_packages_repo(tmp_path, mock_test_cache):
+    """Factory: url -> the builtin_mock repo constructed as a git checkout of ``url``, so
+    remote_info is populated."""
+
+    def _make(url: str) -> spack.repo.Repo:
+        descriptor = spack.repo.RemoteRepoDescriptor(
+            name="builtin_mock",
+            repository=url,
+            destination=spack.paths.test_repos_path,  # dir containing spack_repo/
+            relative_paths=["spack_repo/builtin_mock"],
+            branch=None,
+            tag=None,
+            commit=None,
+            lock=spack.util.lock.Lock(str(tmp_path / "repo.lock"), enable=False),
+        )
+        repo = next(iter(descriptor.construct(cache=mock_test_cache).values()))
+        assert isinstance(repo, spack.repo.Repo), repo
+        return repo
+
+    return _make
 
 
 def _pkg_install_fn(pkg, spec, prefix):
     # sanity_check_prefix requires something in the install directory
     mkdirp(prefix.bin)
-    if not os.path.exists(spec.package.install_log_path):
-        touchp(spec.package.install_log_path)
 
 
 @pytest.fixture
@@ -589,26 +805,119 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install, request):
-    """Use the 'builtin.mock' repository instead of 'builtin'"""
+def fake_db_install(tmp_path):
+    """This fakes "enough" of the installation process to make Spack
+    think of a spec as being installed as far as the concretizer
+    and parser are concerned. It does not run any build phase defined
+    in the package, simply acting as though the installation had
+    completed successfully.
+
+    It allows doing things like
+
+    ``spack.concretize.concretize_one(f"x ^/hash-of-y")``
+
+    after doing something like ``fake_db_install(y)``
+    """
+    with spack.store.use_store(str(tmp_path)) as the_store:
+
+        def _install(a_spec):
+            the_store.db.add(a_spec)
+
+        yield _install
+
+
+@pytest.fixture(scope="function")
+def mock_packages(mock_packages_repo, mock_pkg_install, request):
+    """Use the 'builtin_mock' repository instead of 'builtin'"""
     ensure_configuration_fixture_run_before(request)
-    with spack.repo.use_repositories(mock_repo_path) as mock_repo:
+    with spack.repo.use_repositories(mock_packages_repo) as mock_repo:
         yield mock_repo
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_repo(mock_repo_path, request):
+def mutable_mock_repo(mock_packages_repo, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
     mock_repo = spack.repo.from_path(spack.paths.mock_packages_path)
-    with spack.repo.use_repositories(mock_repo) as mock_repo_path:
-        yield mock_repo_path
+    with spack.repo.use_repositories(mock_repo) as mock_packages_repo:
+        yield mock_packages_repo
+
+
+class RepoBuilder:
+    """Build a mock repository in a directory"""
+
+    _counter = 0
+
+    def __init__(self, root_directory: str) -> None:
+        RepoBuilder._counter += 1
+        namespace = f"test_namespace_{RepoBuilder._counter}"
+        repo_root = os.path.join(root_directory, namespace)
+        os.makedirs(repo_root, exist_ok=True)
+        self.template_dirs = (os.path.join(spack.paths.share_path, "templates"),)
+        self.root, self.namespace = spack.repo.create_repo(repo_root, namespace)
+        self.build_system_name = f"test_build_system_{self.namespace}"
+        self._add_build_system()
+
+    def add_package(
+        self,
+        name: str,
+        dependencies: Optional[List[Tuple[str, Optional[str], Optional[str]]]] = None,
+    ) -> None:
+        """Create a mock package in the repository, using a Jinja2 template.
+
+        Args:
+            name: name of the new package
+            dependencies: list of ("dep_spec", "dep_type", "condition") tuples.
+                Both "dep_type" and "condition" can default to ``None`` in which case
+                ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
+        """
+        dependencies = dependencies or []
+        context = {
+            "cls_name": spack.util.naming.pkg_name_to_class_name(name),
+            "dependencies": dependencies,
+        }
+        template = spack.tengine.make_environment_from_dirs(self.template_dirs).get_template(
+            "mock-repository/package.pyt"
+        )
+        package_py = self._recipe_filename(name)
+        os.makedirs(os.path.dirname(package_py), exist_ok=True)
+        with open(package_py, "w", encoding="utf-8") as f:
+            f.write(template.render(context))
+
+    def remove(self, name: str) -> None:
+        package_py = self._recipe_filename(name)
+        shutil.rmtree(os.path.dirname(package_py))
+
+    def _add_build_system(self) -> None:
+        """Add spack_repo.<namespace>.build_systems.test_build_system with
+        build_system=test_build_system_<namespace>."""
+        template = spack.tengine.make_environment_from_dirs(self.template_dirs).get_template(
+            "mock-repository/build_system.pyt"
+        )
+        text = template.render({"build_system_name": self.build_system_name})
+        build_system_py = os.path.join(self.root, "build_systems", "test_build_system.py")
+        os.makedirs(os.path.dirname(build_system_py), exist_ok=True)
+        with open(build_system_py, "w", encoding="utf-8") as f:
+            f.write(text)
+
+    def _recipe_filename(self, name: str) -> str:
+        return os.path.join(
+            self.root,
+            "packages",
+            spack.util.naming.pkg_name_to_pkg_dir(name, package_api=(2, 0)),
+            "package.py",
+        )
+
+
+@pytest.fixture
+def repo_builder(tmp_path: Path):
+    return RepoBuilder(str(tmp_path))
 
 
 @pytest.fixture()
-def mock_custom_repository(tmpdir, mutable_mock_repo):
+def mock_custom_repository(tmp_path: Path, mutable_mock_repo):
     """Create a custom repository with a single package "c" and return its path."""
-    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
+    builder = RepoBuilder(str(tmp_path))
     builder.add_package("pkg-c")
     return builder.root
 
@@ -651,27 +960,28 @@ def default_config():
 
 
 @pytest.fixture(scope="session")
-def mock_uarch_json(tmpdir_factory):
+def mock_uarch_json(tmp_path_factory: pytest.TempPathFactory):
     """Mock microarchitectures.json with test architecture descriptions."""
-    tmpdir = tmpdir_factory.mktemp("microarchitectures")
+    tmpdir = tmp_path_factory.mktemp("microarchitectures")
 
-    uarch_json = py.path.local(spack.paths.test_path).join(
-        "data", "microarchitectures", "microarchitectures.json"
+    uarch_json_source = (
+        Path(spack.paths.test_path) / "data" / "microarchitectures" / "microarchitectures.json"
     )
-    uarch_json.copy(tmpdir)
-    yield str(tmpdir.join("microarchitectures.json"))
+    uarch_json_dest = tmpdir / "microarchitectures.json"
+    shutil.copy2(uarch_json_source, uarch_json_dest)
+    yield str(uarch_json_dest)
 
 
 @pytest.fixture(scope="session")
 def mock_uarch_configuration(mock_uarch_json):
-    """Create mock dictionaries for the archspec.cpu."""
+    """Create mock dictionaries for the spack.vendor.archspec.cpu."""
 
     def load_json():
         with open(mock_uarch_json, encoding="utf-8") as f:
             return json.load(f)
 
     targets_json = load_json()
-    targets = archspec.cpu.microarchitecture._known_microarchitectures()
+    targets = spack.vendor.archspec.cpu.microarchitecture._known_microarchitectures()
 
     yield targets_json, targets
 
@@ -680,54 +990,108 @@ def mock_uarch_configuration(mock_uarch_json):
 def mock_targets(mock_uarch_configuration, monkeypatch):
     """Use this fixture to enable mock uarch targets for testing."""
     targets_json, targets = mock_uarch_configuration
-    monkeypatch.setattr(archspec.cpu.schema, "TARGETS_JSON", targets_json)
-    monkeypatch.setattr(archspec.cpu.microarchitecture, "TARGETS", targets)
+    monkeypatch.setattr(spack.vendor.archspec.cpu.schema, "TARGETS_JSON", targets_json)
+    monkeypatch.setattr(spack.vendor.archspec.cpu.microarchitecture, "TARGETS", targets)
 
 
 @pytest.fixture(scope="session")
-def configuration_dir(tmpdir_factory, linux_os):
+def configuration_dir(request, tmp_path_factory: pytest.TempPathFactory, linux_os):
     """Copies mock configuration files in a temporary directory. Returns the
     directory path.
     """
-    tmpdir = tmpdir_factory.mktemp("configurations")
-    install_tree_root = tmpdir_factory.mktemp("opt")
-    modules_root = tmpdir_factory.mktemp("share")
-    tcl_root = modules_root.ensure("modules", dir=True)
-    lmod_root = modules_root.ensure("lmod", dir=True)
+    tmp_path = tmp_path_factory.mktemp("configurations")
+    install_tree_root = tmp_path_factory.mktemp("opt")
+    modules_root = tmp_path_factory.mktemp("share")
+    tcl_root = modules_root / "modules"
+    tcl_root.mkdir()
+    lmod_root = modules_root / "lmod"
+    lmod_root.mkdir()
 
     # <test_path>/data/config has mock config yaml files in it
     # copy these to the site config.
-    test_config = pathlib.Path(spack.paths.test_path) / "data" / "config"
-    shutil.copytree(test_config, tmpdir.join("site"))
+    test_config = Path(spack.paths.test_path) / "data" / "config"
+    shutil.copytree(test_config, tmp_path / "site")
 
     # Create temporary 'defaults', 'site' and 'user' folders
-    tmpdir.ensure("user", dir=True)
+    (tmp_path / "user").mkdir()
 
-    # Fill out config.yaml, compilers.yaml and modules.yaml templates.
+    # Fill out config.yaml, packages.yaml and modules.yaml templates.
     locks = sys.platform != "win32"
-    config = tmpdir.join("site", "config.yaml")
+    config = tmp_path / "site" / "config.yaml"
     config_template = test_config / "config.yaml"
-    config.write(config_template.read_text().format(install_tree_root, locks))
+    config.write_text(config_template.read_text().format(install_tree_root, locks))
 
-    target = str(archspec.cpu.host().family)
-    compilers = tmpdir.join("site", "compilers.yaml")
-    compilers_template = test_config / "compilers.yaml"
-    compilers.write(compilers_template.read_text().format(linux_os=linux_os, target=target))
+    target = str(spack.vendor.archspec.cpu.host().family)
+    compilers = tmp_path / "site" / "packages.yaml"
+    compilers_template = test_config / "packages.yaml"
+    compilers.write_text(compilers_template.read_text().format(linux_os=linux_os, target=target))
 
-    modules = tmpdir.join("site", "modules.yaml")
+    modules = tmp_path / "site" / "modules.yaml"
     modules_template = test_config / "modules.yaml"
-    modules.write(modules_template.read_text().format(tcl_root, lmod_root))
-    yield tmpdir
+    modules.write_text(modules_template.read_text().format(tcl_root, lmod_root))
+
+    # The concretization cache is disabled unless --spack-concretization-cache=DIR is
+    # given, in which case all tests, xdist workers, and future pytest invocations share
+    # the cache in DIR. The entry limit stays above the ~1700 distinct problems of a full
+    # suite run so LRU pruning does not thrash within one invocation.
+    cache_url = spack.test.concretization_cache_plugin.cache_dir(request.config)
+    concretizer = tmp_path / "site" / "concretizer.yaml"
+    concretizer_template = test_config / "concretizer.yaml"
+    concretizer.write_text(
+        concretizer_template.read_text().format(
+            cache_enable=str(cache_url is not None).lower(),
+            cache_url=cache_url or str(tmp_path / "concretization-cache"),
+        )
+    )
+
+    for scope in ("spack", "user", "site", "system"):
+        scope_path = tmp_path / scope
+        scope_path.mkdir(exist_ok=True)
+
+    include = tmp_path / "spack" / "include.yaml"
+    # Need to use relative include paths here so it works for mutable_config fixture too
+    with include.open("w", encoding="utf-8") as f:
+        f.write(
+            textwrap.dedent(
+                """
+                include:
+                # user configuration scope
+                - name: "user"
+                  path_override_env_var: SPACK_USER_CONFIG_PATH
+                  path: ../user
+                  optional: true
+                  prefer_modify: true
+                  when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+
+                # site configuration scope
+                - name: "site"
+                  path: ../site
+                  optional: true
+
+                # system configuration scope
+                - name: "system"
+                  path_override_env_var: SPACK_SYSTEM_CONFIG_PATH
+                  path: ../system
+                  optional: true
+                  when: '"SPACK_DISABLE_LOCAL_CONFIG" not in env'
+                """
+            )
+        )
+    yield tmp_path
 
 
 def _create_mock_configuration_scopes(configuration_dir):
     """Create the configuration scopes used in `config` and `mutable_config`."""
     return [
-        spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
-        spack.config.DirectoryConfigScope("site", str(configuration_dir.join("site"))),
-        spack.config.DirectoryConfigScope("system", str(configuration_dir.join("system"))),
-        spack.config.DirectoryConfigScope("user", str(configuration_dir.join("user"))),
-        spack.config.InternalConfigScope("command_line"),
+        (
+            ConfigScopePriority.DEFAULTS,
+            spack.config.InternalConfigScope("_builtin", spack.config.CONFIG_DEFAULTS),
+        ),
+        (
+            ConfigScopePriority.CONFIG_FILES,
+            spack.config.DirectoryConfigScope("spack", str(configuration_dir / "spack")),
+        ),
+        (ConfigScopePriority.COMMAND_LINE, spack.config.InternalConfigScope("command_line")),
     ]
 
 
@@ -737,34 +1101,45 @@ def mock_configuration_scopes(configuration_dir):
     yield _create_mock_configuration_scopes(configuration_dir)
 
 
+@contextlib.contextmanager
+def _use_configuration_and_store(*scopes):
+    """Activate config scopes and reset the store so it re-derives from them."""
+    with spack.config.use_configuration(*scopes) as cfg:
+        store_token = spack.store.reinitialize()
+        try:
+            yield cfg
+        finally:
+            spack.store.restore(store_token)
+
+
 @pytest.fixture(scope="function")
 def config(mock_configuration_scopes):
     """This fixture activates/deactivates the mock configuration."""
-    with spack.config.use_configuration(*mock_configuration_scopes) as config:
+    with _use_configuration_and_store(*mock_configuration_scopes) as config:
         yield config
 
 
 @pytest.fixture(scope="function")
-def mutable_config(tmpdir_factory, configuration_dir):
+def mutable_config(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
     """Like config, but tests can modify the configuration."""
-    mutable_dir = tmpdir_factory.mktemp("mutable_config").join("tmp")
-    configuration_dir.copy(mutable_dir)
+    mutable_dir = tmp_path_factory.mktemp("mutable_config") / "tmp"
+    shutil.copytree(configuration_dir, mutable_dir)
 
     scopes = _create_mock_configuration_scopes(mutable_dir)
-    with spack.config.use_configuration(*scopes) as cfg:
+    with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
 
 
 @pytest.fixture(scope="function")
-def mutable_empty_config(tmpdir_factory, configuration_dir):
+def mutable_empty_config(tmp_path_factory: pytest.TempPathFactory, configuration_dir):
     """Empty configuration that can be modified by the tests."""
-    mutable_dir = tmpdir_factory.mktemp("mutable_config").join("tmp")
+    mutable_dir = tmp_path_factory.mktemp("mutable_config") / "tmp"
     scopes = [
-        spack.config.DirectoryConfigScope(name, str(mutable_dir.join(name)))
+        spack.config.DirectoryConfigScope(name, str(mutable_dir / name))
         for name in ["site", "system", "user"]
     ]
 
-    with spack.config.use_configuration(*scopes) as cfg:
+    with _use_configuration_and_store(*scopes) as cfg:
         yield cfg
 
 
@@ -778,52 +1153,89 @@ def monkeypatch_session():
         yield monkeypatch
 
 
-@pytest.fixture(scope="session", autouse=True)
-def mock_wsdk_externals(monkeypatch_session):
-    """Skip check for required external packages on Windows during testing
-    Note: In general this should cover this behavior for all tests,
-    however any session scoped fixture involving concretization should
-    include this fixture
-    """
-    monkeypatch_session.setattr(
-        spack.bootstrap.core, "ensure_winsdk_external_or_raise", _return_none
-    )
+@pytest.fixture(autouse=True)
+def mock_wsdk_externals(monkeypatch):
+    """Skip check for required external packages on Windows during testing."""
+    monkeypatch.setattr(spack.bootstrap, "ensure_winsdk_external_or_raise", _return_none)
 
 
 @pytest.fixture(scope="function")
-def concretize_scope(mutable_config, tmpdir):
+def concretize_scope(mutable_config: Configuration, tmp_path: Path):
     """Adds a scope for concretization preferences"""
-    tmpdir.ensure_dir("concretize")
-    mutable_config.push_scope(
-        spack.config.DirectoryConfigScope("concretize", str(tmpdir.join("concretize")))
-    )
+    concretize_dir = tmp_path / "concretize"
+    concretize_dir.mkdir()
+    with mutable_config.override(
+        spack.config.DirectoryConfigScope("concretize", str(concretize_dir))
+    ):
+        yield str(concretize_dir)
 
-    yield str(tmpdir.join("concretize"))
-
-    mutable_config.pop_scope()
     spack.repo.PATH._provider_index = None
 
 
 @pytest.fixture
-def no_compilers_yaml(mutable_config):
-    """Creates a temporary configuration without compilers.yaml"""
+def no_packages_yaml(mutable_config):
+    """Creates a temporary configuration without packages.yaml"""
     for local_config in mutable_config.scopes.values():
         if not isinstance(local_config, spack.config.DirectoryConfigScope):
             continue
-        compilers_yaml = local_config.get_section_filename("compilers")
+        compilers_yaml = local_config.get_section_filename("packages")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
+    mutable_config.clear_caches()
     return mutable_config
 
 
 @pytest.fixture()
-def mock_low_high_config(tmpdir):
+def mock_low_high_config(tmp_path: Path):
     """Mocks two configuration scopes: 'low' and 'high'."""
     scopes = [
-        spack.config.DirectoryConfigScope(name, str(tmpdir.join(name))) for name in ["low", "high"]
+        spack.config.DirectoryConfigScope(name, str(tmp_path / name)) for name in ["low", "high"]
     ]
 
     with spack.config.use_configuration(*scopes) as config:
+        yield config
+
+
+def create_config_scope(path: Path, name: str) -> spack.config.DirectoryConfigScope:
+    """helper for creating config scopes with included file/directory scopes
+    that do not have existing representation on the filesystem"""
+    base_scope_dir = path / "base"
+    config_data = syaml.syaml_dict(
+        {
+            "include": [
+                {
+                    "name": "sub_base",
+                    "path": str(path / name),
+                    "optional": True,
+                    "prefer_modify": True,
+                }
+            ]
+        }
+    )
+    base_scope_dir.mkdir()
+    with open(str(base_scope_dir / "include.yaml"), "w+", encoding="utf-8") as f:
+        syaml.dump_config(config_data, stream=f, default_flow_style=False)
+    scope = spack.config.DirectoryConfigScope("base", str(base_scope_dir))
+    return scope
+
+
+@pytest.fixture()
+def mock_missing_dir_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional directory scope
+    includes that do not have representation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub")
+
+    with spack.config.use_configuration(scope) as config:
+        yield config
+
+
+@pytest.fixture
+def mock_missing_file_include_scopes(tmp_path: Path):
+    """Mocks a config scope containing optional file scope
+    includes that do not have representation on the filesystem"""
+    scope = create_config_scope(tmp_path, "sub.yaml")
+
+    with spack.config.use_configuration(scope) as config:
         yield config
 
 
@@ -861,22 +1273,18 @@ def _populate(mock_db):
 
 
 @pytest.fixture(scope="session")
-def _store_dir_and_cache(tmpdir_factory):
-    """Returns the directory where to build the mock database and
-    where to cache it.
-    """
-    store = tmpdir_factory.mktemp("mock_store")
-    cache = tmpdir_factory.mktemp("mock_store_cache")
-    return store, cache
+def _store_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Returns the directory where to build the mock database."""
+    return tmp_path_factory.mktemp("mock_store")
 
 
 @pytest.fixture(scope="session")
 def mock_store(
-    tmpdir_factory,
-    mock_wsdk_externals,
-    mock_repo_path,
+    tmp_path_factory: pytest.TempPathFactory,
+    mock_packages_repo,
     mock_configuration_scopes,
-    _store_dir_and_cache,
+    _store_dir: Path,
+    mock_stage_for_database,
 ):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
@@ -886,81 +1294,114 @@ def mock_store(
     ``database`` fixture for that.
 
     """
-    store_path, store_cache = _store_dir_and_cache
+    store_path = _store_dir
+    _mock_wsdk_externals = spack.bootstrap.ensure_winsdk_external_or_raise
+
+    with spack.config.use_configuration(*mock_configuration_scopes):
+        with spack.store.use_store(str(store_path)) as store:
+            with spack.repo.use_repositories(mock_packages_repo):
+                try:
+                    spack.bootstrap.ensure_winsdk_external_or_raise = _return_none
+                    _populate(store.db)
+                finally:
+                    spack.bootstrap.ensure_winsdk_external_or_raise = _mock_wsdk_externals
 
     # Make the DB filesystem read-only to ensure constructors don't modify anything in it.
     # We want Spack to be able to point to a DB on a read-only filesystem easily.
-    store_path.chmod(mode=0o555, rec=1)
-
-    # If the cache does not exist populate the store and create it
-    if not os.path.exists(str(store_cache.join(".spack-db"))):
-        with spack.config.use_configuration(*mock_configuration_scopes):
-            with spack.store.use_store(str(store_path)) as store:
-                with spack.repo.use_repositories(mock_repo_path):
-                    # make the DB filesystem writable only while we populate it
-                    store_path.chmod(mode=0o755, rec=1)
-                    _populate(store.db)
-                    store_path.chmod(mode=0o555, rec=1)
-
-        store_cache.chmod(mode=0o755, rec=1)
-        copy_tree(str(store_path), str(store_cache))
-        store_cache.chmod(mode=0o555, rec=1)
+    _recursive_chmod(store_path, 0o555)
 
     yield store_path
 
+    # Restore write permissions, or pytest cannot remove the tmp dir.
+    _recursive_chmod(store_path, 0o755)
+
+
+@pytest.fixture(scope="session")
+def _mock_store_tarball(mock_store) -> bytes:
+    """Pristine copy of the mock store as an in-memory uncompressed tarball, so that
+    ``mutable_database`` can restore the store without walking or reading a source tree."""
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        tar.add(str(mock_store), arcname=".")
+    return buf.getvalue()
+
 
 @pytest.fixture(scope="function")
-def database(mock_store, mock_packages, config):
-    """This activates the mock store, packages, AND config."""
+def database_store(mock_store: Store, mock_packages, config):
+    """This activates the mock store, packages, AND config. Yields the Store."""
     with spack.store.use_store(str(mock_store)) as store:
-        yield store.db
+        yield store
         # Force reading the database again between tests
         store.db.last_seen_verifier = ""
 
 
 @pytest.fixture(scope="function")
-def database_mutable_config(mock_store, mock_packages, mutable_config, monkeypatch):
-    """This activates the mock store, packages, AND config."""
+def database(database_store: Store):
+    """This activates the mock store, packages, AND config. Yields store.db."""
+    return database_store.db
+
+
+@pytest.fixture(scope="function")
+def database_mutable_config_store(mock_store: Store, mock_packages, mutable_config, monkeypatch):
+    """Like database_store, but with a mutable config. Yields the Store."""
     with spack.store.use_store(str(mock_store)) as store:
-        yield store.db
+        yield store
         store.db.last_seen_verifier = ""
 
 
 @pytest.fixture(scope="function")
-def mutable_database(database_mutable_config, _store_dir_and_cache):
-    """Writeable version of the fixture, restored to its initial state
-    after each test.
-    """
+def database_mutable_config(database_mutable_config_store: Store):
+    """This activates the mock store, packages, AND config. Yields store.db."""
+    return database_mutable_config_store.db
+
+
+@pytest.fixture(scope="function")
+def mutable_database_store(
+    database_mutable_config_store: Store, _store_dir: Path, _mock_store_tarball: bytes
+):
+    """Writeable version of database_store, restored to its initial state after each
+    test. Yields the Store."""
     # Make the database writeable, as we are going to modify it
-    store_path, store_cache = _store_dir_and_cache
-    store_path.chmod(mode=0o755, rec=1)
+    store_path = _store_dir
+    _recursive_chmod(store_path, 0o755)
 
-    yield database_mutable_config
+    yield database_mutable_config_store
 
-    # Restore the initial state by copying the content of the cache back into
-    # the store and making the database read-only
-    store_path.remove(rec=1)
-    copy_tree(str(store_cache), str(store_path))
-    store_path.chmod(mode=0o555, rec=1)
+    # Restore the initial state from the pristine tarball; modes recorded in the tar
+    # make the database read-only again.
+    shutil.rmtree(store_path)
+    store_path.mkdir()
+    with tarfile.open(fileobj=io.BytesIO(_mock_store_tarball), mode="r") as tar:
+        tar.extraction_filter = lambda member, path: member
+        tar.extractall(str(store_path))
+
+
+@pytest.fixture(scope="function")
+def mutable_database(mutable_database_store: Store):
+    """Writeable version of the fixture, restored to its initial state
+    after each test. Yields store.db.
+    """
+    return mutable_database_store.db
 
 
 @pytest.fixture()
-def dirs_with_libfiles(tmpdir_factory):
+def dirs_with_libfiles(tmp_path_factory: pytest.TempPathFactory):
     lib_to_libfiles = {
         "libstdc++": ["libstdc++.so", "libstdc++.tbd"],
         "libgfortran": ["libgfortran.a", "libgfortran.dylib"],
         "libirc": ["libirc.a", "libirc.so"],
     }
 
-    root = tmpdir_factory.mktemp("root")
+    root = tmp_path_factory.mktemp("root")
     lib_to_dirs = {}
     i = 0
     for lib, libfiles in lib_to_libfiles.items():
         dirs = []
         for libfile in libfiles:
-            root.ensure(str(i), dir=True)
-            root.join(str(i)).ensure(libfile)
-            dirs.append(str(root.join(str(i))))
+            lib_dir = root / str(i)
+            lib_dir.mkdir()
+            (lib_dir / libfile).touch()
+            dirs.append(str(lib_dir))
             i += 1
         lib_to_dirs[lib] = dirs
 
@@ -973,80 +1414,57 @@ def _return_none(*args):
     return None
 
 
-def _compiler_output(self):
-    return ""
-
-
-def _get_real_version(self):
-    return str(self.version)
-
-
-@pytest.fixture(scope="function", autouse=True)
-def disable_compiler_execution(monkeypatch, request):
-    """Disable compiler execution to determine implicit link paths and libc flavor and version.
-    To re-enable use `@pytest.mark.enable_compiler_execution`"""
-    if "enable_compiler_execution" not in request.keywords:
-        monkeypatch.setattr(spack.compiler.Compiler, "_compile_dummy_c_source", _compiler_output)
-        monkeypatch.setattr(spack.compiler.Compiler, "get_real_version", _get_real_version)
-
-
 @pytest.fixture(autouse=True)
 def disable_compiler_output_cache(monkeypatch):
-    monkeypatch.setattr(spack.compiler, "COMPILER_CACHE", spack.compiler.CompilerCache())
+    monkeypatch.setattr(
+        spack.compilers.libraries, "COMPILER_CACHE", spack.compilers.libraries.CompilerCache()
+    )
 
 
 @pytest.fixture(scope="function")
 def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     # We use a fake package, so temporarily disable checksumming
-    with spack.config.override("config:checksum", False):
+    with spack.config.CONFIG.override("config:checksum", False):
         yield
 
     # Wipe out any cached prefix failure locks (associated with the session-scoped mock archive)
     temporary_store.failure_tracker.clear_all()
 
 
-@pytest.fixture(scope="module")
-def temporary_mirror_dir(tmpdir_factory):
-    dir = tmpdir_factory.mktemp("mirror")
-    dir.ensure("build_cache", dir=True)
-    yield str(dir)
-    dir.join("build_cache").remove()
+@pytest.fixture(scope="function")
+def temporary_mirror(mutable_config, tmp_path_factory):
+    mirror_dir = tmp_path_factory.mktemp("mirror")
+    mirror_cmd("add", "test-mirror-func", mirror_dir.as_uri())
+    yield str(mirror_dir)
+
+
+@pytest.fixture
+def bumped_db_version(
+    monkeypatch,
+) -> Tuple[spack.version.ConcreteVersion, spack.version.ConcreteVersion]:
+    """Pretend the DB format was bumped and the current index is readable without reindex.
+    Yields the (on disk, expected) versions."""
+    current = spack.database._DB_VERSION
+    next_version = spack.version.Version(f"{current[0] + 1}")
+    monkeypatch.setattr(spack.database, "_DB_VERSION", next_version)
+    monkeypatch.setattr(
+        spack.database,
+        "_REINDEX_NOT_NEEDED_ON_READ",
+        [*spack.database._REINDEX_NOT_NEEDED_ON_READ, (current, next_version)],
+    )
+    return current, next_version
 
 
 @pytest.fixture(scope="function")
-def temporary_mirror(temporary_mirror_dir):
-    mirror_url = url_util.path_to_file_url(temporary_mirror_dir)
-    mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
-    yield temporary_mirror_dir
-    mirror_cmd("rm", "--scope=site", "test-mirror-func")
-
-
-@pytest.fixture(scope="function")
-def mutable_temporary_mirror_dir(tmpdir_factory):
-    dir = tmpdir_factory.mktemp("mirror")
-    dir.ensure("build_cache", dir=True)
-    yield str(dir)
-    dir.join("build_cache").remove()
-
-
-@pytest.fixture(scope="function")
-def mutable_temporary_mirror(mutable_temporary_mirror_dir):
-    mirror_url = url_util.path_to_file_url(mutable_temporary_mirror_dir)
-    mirror_cmd("add", "--scope", "site", "test-mirror-func", mirror_url)
-    yield mutable_temporary_mirror_dir
-    mirror_cmd("rm", "--scope=site", "test-mirror-func")
-
-
-@pytest.fixture(scope="function")
-def temporary_store(tmpdir, request):
+def temporary_store(tmp_path: Path, request):
     """Hooks a temporary empty store for the test function."""
     ensure_configuration_fixture_run_before(request)
-    temporary_store_path = tmpdir.join("opt")
+    temporary_store_path = tmp_path / "opt"
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
     if temporary_store_path.exists():
-        temporary_store_path.remove()
+        shutil.rmtree(temporary_store_path)
 
 
 @pytest.fixture()
@@ -1055,6 +1473,21 @@ def mock_fetch(mock_archive, monkeypatch):
     monkeypatch.setattr(
         spack.package_base.PackageBase, "fetcher", URLFetchStrategy(url=mock_archive.url)
     )
+
+
+class MockResourceFetcherGenerator:
+    def __init__(self, url):
+        self.url = url
+
+    def _generate_fetchers(self, *args, **kwargs):
+        return [URLFetchStrategy(url=self.url)]
+
+
+@pytest.fixture()
+def mock_resource_fetch(mock_archive, monkeypatch):
+    """Fake fetcher generator that works with resource stages to redirect to a file."""
+    mfg = MockResourceFetcherGenerator(mock_archive.url)
+    monkeypatch.setattr(spack.stage.ResourceStage, "_generate_fetchers", mfg._generate_fetchers)
 
 
 class MockLayout:
@@ -1069,52 +1502,83 @@ class MockLayout:
 
 
 @pytest.fixture()
-def gen_mock_layout(tmpdir):
+def gen_mock_layout(tmp_path: Path):
     # Generate a MockLayout in a temporary directory. In general the prefixes
     # specified by MockLayout should never be written to, but this ensures
     # that even if they are, that it causes no harm
     def create_layout(root):
-        subroot = tmpdir.mkdir(root)
+        subroot = tmp_path / root
+        subroot.mkdir(parents=True, exist_ok=True)
         return MockLayout(str(subroot))
 
     yield create_layout
 
 
-class MockConfig:
-    def __init__(self, configuration, writer_key):
-        self._configuration = configuration
-        self.writer_key = writer_key
+@contextlib.contextmanager
+def writable(database):
+    """Allow a database to be written inside this context manager."""
+    old_lock, old_is_upstream = database.lock, database.is_upstream
+    db_root = Path(database.root)
 
-    def configuration(self, module_set_name):
-        return self._configuration
+    try:
+        # this is safe on all platforms during tests (tests get their own tmpdirs)
+        database.lock = spack.util.lock.Lock(str(database._lock_path), enable=False)
+        database.is_upstream = False
+        db_root.chmod(mode=0o755)
+        with database.write_transaction():
+            yield
+    finally:
+        db_root.chmod(mode=0o555)
+        database.lock = old_lock
+        database.is_upstream = old_is_upstream
 
-    def writer_configuration(self, module_set_name):
-        return self.configuration(module_set_name)[self.writer_key]
+
+@pytest.fixture()
+def upstream_and_downstream_db(tmp_path: Path, gen_mock_layout):
+    """Fixture for a pair of stores: upstream and downstream.
+
+    Upstream API prohibits writing to an upstream, so we also return a writable version
+    of the upstream DB for tests to use.
+
+    """
+    mock_db_root = tmp_path / "mock_db_root"
+    mock_db_root.mkdir()
+    mock_db_root.chmod(0o555)
+
+    upstream_db = spack.database.Database(
+        str(mock_db_root), is_upstream=True, layout=gen_mock_layout("a")
+    )
+    with writable(upstream_db):
+        upstream_db._write()
+
+    downstream_db_root = tmp_path / "mock_downstream_db_root"
+    downstream_db_root.mkdir()
+    downstream_db_root.chmod(0o755)
+
+    downstream_db = spack.database.Database(
+        str(downstream_db_root), upstream_dbs=[upstream_db], layout=gen_mock_layout("b")
+    )
+    downstream_db._write()
+
+    yield upstream_db, downstream_db
+
+    # Restore write permissions, or pytest cannot remove the tmp dir.
+    mock_db_root.chmod(0o755)
 
 
 class ConfigUpdate:
-    def __init__(self, root_for_conf, writer_mod, writer_key, monkeypatch):
+    def __init__(self, root_for_conf):
         self.root_for_conf = root_for_conf
-        self.writer_mod = writer_mod
-        self.writer_key = writer_key
-        self.monkeypatch = monkeypatch
 
     def __call__(self, filename):
         file = os.path.join(self.root_for_conf, filename + ".yaml")
         with open(file, encoding="utf-8") as f:
             config_settings = syaml.load_config(f)
-        spack.config.set("modules:default", config_settings)
-        mock_config = MockConfig(config_settings, self.writer_key)
-
-        self.monkeypatch.setattr(spack.modules.common, "configuration", mock_config.configuration)
-        self.monkeypatch.setattr(
-            self.writer_mod, "configuration", mock_config.writer_configuration
-        )
-        self.monkeypatch.setattr(self.writer_mod, "configuration_registry", {})
+        spack.config.CONFIG.set("modules:default", config_settings)
 
 
 @pytest.fixture()
-def module_configuration(monkeypatch, request, mutable_config):
+def module_configuration(request, mutable_config):
     """Reads the module configuration file from the mock ones prepared
     for tests and monkeypatches the right classes to hook it in.
     """
@@ -1129,22 +1593,51 @@ def module_configuration(monkeypatch, request, mutable_config):
 
     # ConfigUpdate, when called, will modify configuration, so we need to use
     # the mutable_config fixture
-    return ConfigUpdate(root_for_conf, writer_mod, writer_key, monkeypatch)
+    return ConfigUpdate(root_for_conf)
+
+
+@pytest.fixture()
+def modulefile_filename():
+    """Returns a function that writes the module file of a spec in the "default" module set
+    and returns its filename."""
+
+    def _impl(module_type, spec):
+        writer_cls = spack.modules.module_types[module_type]
+        writer = writer_cls.from_spec(spack.concretize.concretize_one(spec), "default")
+        writer.write()
+        return writer.layout.filename
+
+    return _impl
+
+
+@pytest.fixture()
+def tcl_module_filename(mutable_config, mock_modules_root):
+    """Enables tcl module files in the "default" module set, under a temporary root, and returns
+    a function that computes the module file name of a spec."""
+    mutable_config.set("modules:default:enable", ["tcl"])
+
+    def _impl(spec):
+        return spack.modules.TclModulefileWriter.from_spec(spec, "default").layout.filename
+
+    return _impl
 
 
 @pytest.fixture()
 def mock_gnupghome(monkeypatch):
     # GNU PGP can't handle paths longer than 108 characters (wtf!@#$) so we
-    # have to make our own tmpdir with a shorter name than pytest's.
+    # have to make our own tmp_path with a shorter name than pytest's.
     # This comes up because tmp paths on macOS are already long-ish, and
     # pytest makes them longer.
+    short_name_tmpdir = tempfile.mkdtemp()
     try:
-        spack.util.gpg.init()
+        # We must manually set gnupghome here, else tests run in parallel
+        # will all fall back to the system default location and cause
+        # failures when multiple try to init the same location concurrently
+        spack.util.gpg.init(gnupghome=short_name_tmpdir)
     except spack.util.gpg.SpackGPGError:
         if not spack.util.gpg.GPG:
             pytest.skip("This test requires gpg")
 
-    short_name_tmpdir = tempfile.mkdtemp()
     with spack.util.gpg.gnupghome_override(short_name_tmpdir):
         yield short_name_tmpdir
 
@@ -1160,21 +1653,26 @@ def mock_gnupghome(monkeypatch):
 ##########
 
 
-@pytest.fixture(scope="session", params=[(".tar.gz", "z")])
-def mock_archive(request, tmpdir_factory):
+@pytest.fixture(scope="session")
+def mock_archive(request, tmp_path_factory: pytest.TempPathFactory):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
-    tar = spack.util.executable.which("tar")
-    if not tar:
+    # Tests may override it via an indirect parametrization
+    ext, tar_flag = getattr(request, "param", (".tar.gz", "z"))
+
+    try:
+        tar = spack.util.executable.which("tar", required=True)
+    except spack.util.executable.CommandNotFoundError:
         pytest.skip("requires tar to be installed")
 
-    tmpdir = tmpdir_factory.mktemp("mock-archive-dir")
-    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
-    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    tmpdir = tmp_path_factory.mktemp("mock-archive-dir")
+    source_dir = tmpdir / spack.stage._source_path_subdir
+    source_dir.mkdir()
+    repodir = source_dir
 
     # Create the configure script
-    configure_path = str(tmpdir.join(spack.stage._source_path_subdir, "configure"))
+    configure_path = str(source_dir / "configure")
     with open(configure_path, "w", encoding="utf-8") as f:
         f.write(
             "#!/bin/sh\n"
@@ -1190,14 +1688,14 @@ def mock_archive(request, tmpdir_factory):
     os.chmod(configure_path, 0o755)
 
     # Archive it
-    with tmpdir.as_cwd():
-        archive_name = "{0}{1}".format(spack.stage._source_path_subdir, request.param[0])
-        tar("-c{0}f".format(request.param[1]), archive_name, spack.stage._source_path_subdir)
+    with working_dir(str(tmpdir)):
+        archive_name = "{0}{1}".format(spack.stage._source_path_subdir, ext)
+        tar("-c{0}f".format(tar_flag), archive_name, spack.stage._source_path_subdir)
 
     Archive = collections.namedtuple(
         "Archive", ["url", "path", "archive_file", "expanded_archive_basedir"]
     )
-    archive_file = str(tmpdir.join(archive_name))
+    archive_file = str(tmpdir / archive_name)
     url = url_util.path_to_file_url(archive_file)
 
     # Return the url
@@ -1223,21 +1721,23 @@ def _parse_cvs_date(line):
 
 
 @pytest.fixture(scope="session")
-def mock_cvs_repository(tmpdir_factory):
+def mock_cvs_repository(tmp_path_factory: pytest.TempPathFactory):
     """Creates a very simple CVS repository with two commits and a branch."""
     cvs = spack.util.executable.which("cvs", required=True)
 
-    tmpdir = tmpdir_factory.mktemp("mock-cvs-repo-dir")
-    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
-    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    tmpdir = tmp_path_factory.mktemp("mock-cvs-repo-dir")
+    source_dir = tmpdir / spack.stage._source_path_subdir
+    source_dir.mkdir()
+    repodir = source_dir
     cvsroot = str(repodir)
 
     # The CVS repository and source tree need to live in a different directories
-    sourcedirparent = tmpdir_factory.mktemp("mock-cvs-source-dir")
+    sourcedirparent = tmp_path_factory.mktemp("mock-cvs-source-dir")
     module = spack.stage._source_path_subdir
     url = cvsroot + "%module=" + module
-    sourcedirparent.ensure(module, dir=True)
-    sourcedir = sourcedirparent.join(module)
+    source_module_dir = sourcedirparent / module
+    source_module_dir.mkdir()
+    sourcedir = source_module_dir
 
     def format_date(date):
         if date is None:
@@ -1258,13 +1758,13 @@ def mock_cvs_repository(tmpdir_factory):
 
     # We use this to record the time stamps for when we create CVS revisions,
     # so that we can later check that we retrieve the proper commits when
-    # specifying a date. (CVS guarantees checking out the lastest revision
+    # specifying a date. (CVS guarantees checking out the latest revision
     # before or on the specified date). As we create each revision, we
     # separately record the time by querying CVS.
     revision_date = {}
 
     # Initialize the repository
-    with sourcedir.as_cwd():
+    with working_dir(str(sourcedir)):
         cvs("-d", cvsroot, "init")
         cvs(
             "-d",
@@ -1276,12 +1776,12 @@ def mock_cvs_repository(tmpdir_factory):
             "mockvendor",
             "mockrelease",
         )
-        with sourcedirparent.as_cwd():
+        with working_dir(str(sourcedirparent)):
             cvs("-d", cvsroot, "checkout", module)
 
         # Commit file r0
         r0_file = "r0_file"
-        sourcedir.ensure(r0_file)
+        (sourcedir / r0_file).touch()
         cvs("-d", cvsroot, "add", r0_file)
         cvs("-d", cvsroot, "commit", "-m", "revision 0", r0_file)
         output = cvs("log", "-N", r0_file, output=str)
@@ -1289,9 +1789,9 @@ def mock_cvs_repository(tmpdir_factory):
 
         # Commit file r1
         r1_file = "r1_file"
-        sourcedir.ensure(r1_file)
+        (sourcedir / r1_file).touch()
         cvs("-d", cvsroot, "add", r1_file)
-        cvs("-d", cvsroot, "commit", "-m" "revision 1", r1_file)
+        cvs("-d", cvsroot, "commit", "-m", "revision 1", r1_file)
         output = cvs("log", "-N", r0_file, output=str)
         revision_date["1.2"] = format_date(get_cvs_timestamp(output))
 
@@ -1357,7 +1857,7 @@ def mock_cvs_repository(tmpdir_factory):
 
 
 @pytest.fixture(scope="session")
-def mock_git_repository(git, tmpdir_factory):
+def mock_git_repository(git, tmp_path_factory: pytest.TempPathFactory):
     """Creates a git repository multiple commits, branches, submodules, and
     a tag. Visual representation of the commit history (starting with the
     earliest commit at c0)::
@@ -1366,9 +1866,7 @@ def mock_git_repository(git, tmpdir_factory):
         |______/_____________________/
        c0 (r0)
 
-    We used to test with 'master', but git has since developed the ability to
-    have differently named default branches, so now we query the user's config to
-    determine what the default branch should be.
+    We force the default branch to be "main" to ensure that it behaves with package class tests.
 
     There are two branches aside from 'default': 'test-branch' and 'tag-branch';
     each has one commit; the tag-branch has a tag referring to its commit
@@ -1378,26 +1876,27 @@ def mock_git_repository(git, tmpdir_factory):
     of these refers to a repository with a single commit.
 
     c0, c1, and c2 include information to define explicit versions in the
-    associated builtin.mock package 'git-test'. c3 is a commit in the
+    associated builtin_mock package 'git-test'. c3 is a commit in the
     repository but does not have an associated explicit package version.
     """
     suburls = []
     # Create two git repositories which will be used as submodules in the
     # main repository
     for submodule_count in range(2):
-        tmpdir = tmpdir_factory.mktemp("mock-git-repo-submodule-dir-{0}".format(submodule_count))
-        tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
-        repodir = tmpdir.join(spack.stage._source_path_subdir)
+        tmpdir = tmp_path_factory.mktemp("mock-git-repo-submodule-dir-{0}".format(submodule_count))
+        source_dir = tmpdir / spack.stage._source_path_subdir
+        source_dir.mkdir()
+        repodir = source_dir
         suburls.append((submodule_count, url_util.path_to_file_url(str(repodir))))
 
-        with repodir.as_cwd():
+        with working_dir(str(repodir)):
             git("init")
             git("config", "user.name", "Spack")
             git("config", "user.email", "spack@spack.io")
 
             # r0 is just the first commit
             submodule_file = "r0_file_{0}".format(submodule_count)
-            repodir.ensure(submodule_file)
+            (repodir / submodule_file).touch()
             git("add", submodule_file)
             git(
                 "-c",
@@ -1407,22 +1906,24 @@ def mock_git_repository(git, tmpdir_factory):
                 "mock-git-repo r0 {0}".format(submodule_count),
             )
 
-    tmpdir = tmpdir_factory.mktemp("mock-git-repo-dir")
-    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
-    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    tmpdir = tmp_path_factory.mktemp("mock-git-repo-dir")
+    source_dir = tmpdir / spack.stage._source_path_subdir
+    source_dir.mkdir()
+    repodir = source_dir
 
     # Create the main repository
-    with repodir.as_cwd():
+    with working_dir(str(repodir)):
         git("init")
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
+        git("checkout", "-b", "main")
         url = url_util.path_to_file_url(str(repodir))
         for number, suburl in suburls:
             git("submodule", "add", suburl, "third_party/submodule{0}".format(number))
 
         # r0 is the first commit: it consists of one file and two submodules
         r0_file = "r0_file"
-        repodir.ensure(r0_file)
+        (repodir / r0_file).touch()
         git("add", r0_file)
         git("-c", "commit.gpgsign=false", "commit", "-m", "mock-git-repo r0")
 
@@ -1436,32 +1937,33 @@ def mock_git_repository(git, tmpdir_factory):
 
         # Check out test branch and add one commit
         git("checkout", branch)
-        repodir.ensure(branch_file)
+        (repodir / branch_file).touch()
         git("add", branch_file)
-        git("-c", "commit.gpgsign=false", "commit", "-m" "r1 test branch")
+        git("-c", "commit.gpgsign=false", "commit", "-m", "r1 test branch")
 
         # Check out the tag branch, add one commit, and then add a tag for it
         git("checkout", tag_branch)
-        repodir.ensure(tag_file)
+        (repodir / tag_file).touch()
         git("add", tag_file)
-        git("-c", "commit.gpgsign=false", "commit", "-m" "tag test branch")
+        git("-c", "commit.gpgsign=false", "commit", "-m", "tag test branch")
 
         tag = "test-tag"
         git("tag", tag)
 
-        try:
-            default_branch = git("config", "--get", "init.defaultBranch", output=str).strip()
-        except Exception:
-            default_branch = "master"
+        default_branch = "main"
         git("checkout", default_branch)
 
         r2_file = "r2_file"
-        repodir.ensure(r2_file)
+        (repodir / r2_file).touch()
         git("add", r2_file)
         git("-c", "commit.gpgsign=false", "commit", "-m", "mock-git-repo r2")
 
         rev_hash = lambda x: git("rev-parse", x, output=str).strip()
         r2 = rev_hash(default_branch)
+
+        # annotated tag
+        a_tag = "annotated-tag"
+        git("tag", "-a", a_tag, "-m", "annotated tag")
 
         # Record the commit hash of the (only) commit from test-branch and
         # the file added by that commit
@@ -1478,7 +1980,9 @@ def mock_git_repository(git, tmpdir_factory):
 
         git("checkout", "-b", multiple_directories_branch)
         for f in dir_files:
-            repodir.ensure(f, file=True)
+            file_path = repodir / f
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.touch()
             git("add", f)
 
         git("-c", "commit.gpgsign=false", "commit", "-m", "many_dirs add files")
@@ -1498,7 +2002,10 @@ def mock_git_repository(git, tmpdir_factory):
             revision=tag_branch, file=tag_file, args={"git": url, "branch": tag_branch}
         ),
         "tag": Bunch(revision=tag, file=tag_file, args={"git": url, "tag": tag}),
-        "commit": Bunch(revision=r1, file=r1_file, args={"git": url, "commit": r1}),
+        "commit": Bunch(
+            revision=r1, file=r1_file, args={"git": url, "branch": branch, "commit": r1}
+        ),
+        "annotated-tag": Bunch(revision=a_tag, file=r2_file, args={"git": url, "tag": a_tag}),
         # In this case, the version() args do not include a 'git' key:
         # this is the norm for packages, so this tests how the fetching logic
         # would most-commonly assemble a Git fetcher
@@ -1524,44 +2031,46 @@ def mock_git_repository(git, tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def mock_git_test_package(mock_git_repository, mutable_mock_repo, monkeypatch):
+def mock_git_test_package(mock_git_repository, mutable_mock_repo: RepoPath, monkeypatch):
     # install a fake git version in the package class
-    pkg_class = spack.repo.PATH.get_pkg_class("git-test")
+    pkg_class = mutable_mock_repo.get_pkg_class("git-test")
     monkeypatch.delattr(pkg_class, "git")
     monkeypatch.setitem(pkg_class.versions, spack.version.Version("git"), mock_git_repository.url)
     return pkg_class
 
 
 @pytest.fixture(scope="session")
-def mock_hg_repository(tmpdir_factory):
+def mock_hg_repository(tmp_path_factory: pytest.TempPathFactory):
     """Creates a very simple hg repository with two commits."""
-    hg = spack.util.executable.which("hg")
-    if not hg:
+    try:
+        hg = spack.util.executable.which("hg", required=True)
+    except spack.util.executable.CommandNotFoundError:
         pytest.skip("requires mercurial to be installed")
 
-    tmpdir = tmpdir_factory.mktemp("mock-hg-repo-dir")
-    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
-    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    tmpdir = tmp_path_factory.mktemp("mock-hg-repo-dir")
+    source_dir = tmpdir / spack.stage._source_path_subdir
+    source_dir.mkdir()
+    repodir = source_dir
 
     get_rev = lambda: hg("id", "-i", output=str).strip()
 
     # Initialize the repository
-    with repodir.as_cwd():
+    with working_dir(str(repodir)):
         url = url_util.path_to_file_url(str(repodir))
         hg("init")
 
         # Commit file r0
         r0_file = "r0_file"
-        repodir.ensure(r0_file)
+        (repodir / r0_file).touch()
         hg("add", r0_file)
         hg("commit", "-m", "revision 0", "-u", "test")
         r0 = get_rev()
 
         # Commit file r1
         r1_file = "r1_file"
-        repodir.ensure(r1_file)
+        (repodir / r1_file).touch()
         hg("add", r1_file)
-        hg("commit", "-m" "revision 1", "-u", "test")
+        hg("commit", "-m", "revision 1", "-u", "test")
         r1 = get_rev()
 
     checks = {
@@ -1573,42 +2082,44 @@ def mock_hg_repository(tmpdir_factory):
 
 
 @pytest.fixture(scope="session")
-def mock_svn_repository(tmpdir_factory):
+def mock_svn_repository(tmp_path_factory: pytest.TempPathFactory):
     """Creates a very simple svn repository with two commits."""
-    svn = spack.util.executable.which("svn")
-    if not svn:
+    try:
+        svn = spack.util.executable.which("svn", required=True)
+        svnadmin = spack.util.executable.which("svnadmin", required=True)
+    except spack.util.executable.CommandNotFoundError:
         pytest.skip("requires svn to be installed")
 
-    svnadmin = spack.util.executable.which("svnadmin", required=True)
-
-    tmpdir = tmpdir_factory.mktemp("mock-svn-stage")
-    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
-    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    tmpdir = tmp_path_factory.mktemp("mock-svn-stage")
+    source_dir = tmpdir / spack.stage._source_path_subdir
+    source_dir.mkdir()
+    repodir = source_dir
     url = url_util.path_to_file_url(str(repodir))
 
     # Initialize the repository
-    with repodir.as_cwd():
+    with working_dir(str(repodir)):
         # NOTE: Adding --pre-1.5-compatible works for NERSC
         # Unknown if this is also an issue at other sites.
         svnadmin("create", "--pre-1.5-compatible", str(repodir))
 
         # Import a structure (first commit)
         r0_file = "r0_file"
-        tmpdir.ensure("tmp-path", r0_file)
-        tmp_path = tmpdir.join("tmp-path")
+        tmp_path = tmpdir / "tmp-path"
+        tmp_path.mkdir()
+        (tmp_path / r0_file).touch()
         svn("import", str(tmp_path), url, "-m", "Initial import r0")
-        tmp_path.remove()
+        shutil.rmtree(tmp_path, onerror=onerror)
 
         # Second commit
         r1_file = "r1_file"
         svn("checkout", url, str(tmp_path))
-        tmpdir.ensure("tmp-path", r1_file)
+        (tmp_path / r1_file).touch()
 
-        with tmp_path.as_cwd():
-            svn("add", str(tmpdir.ensure("tmp-path", r1_file)))
+        with working_dir(str(tmp_path)):
+            svn("add", str(tmp_path / r1_file))
             svn("ci", "-m", "second revision r1")
 
-        tmp_path.remove()
+        shutil.rmtree(tmp_path, onerror=onerror)
         r0 = "1"
         r1 = "2"
 
@@ -1627,7 +2138,7 @@ def mock_svn_repository(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_env_path(tmp_path, mutable_config, monkeypatch):
+def mutable_mock_env_path(tmp_path: Path, mutable_config, monkeypatch):
     """Fixture for mocking the internal spack environments directory."""
     mock_path = tmp_path / "mock-env-path"
     mutable_config.set("config:environments_root", str(mock_path))
@@ -1636,12 +2147,12 @@ def mutable_mock_env_path(tmp_path, mutable_config, monkeypatch):
 
 
 @pytest.fixture()
-def installation_dir_with_headers(tmpdir_factory):
+def installation_dir_with_headers(tmp_path_factory: pytest.TempPathFactory):
     """Mock installation tree with a few headers placed in different
     subdirectories. Shouldn't be modified by tests as it is session
     scoped.
     """
-    root = tmpdir_factory.mktemp("prefix")
+    root = tmp_path_factory.mktemp("prefix")
 
     # Create a few header files:
     #
@@ -1656,10 +2167,13 @@ def installation_dir_with_headers(tmpdir_factory):
     #         |-- subdir
     #             |-- ex2.h
     #
-    root.ensure("include", "boost", "ex3.h")
-    root.ensure("include", "ex3.h")
-    root.ensure("path", "to", "ex1.h")
-    root.ensure("path", "to", "subdir", "ex2.h")
+    (root / "include" / "boost").mkdir(parents=True)
+    (root / "include" / "boost" / "ex3.h").touch()
+    (root / "include" / "ex3.h").touch()
+    (root / "path" / "to").mkdir(parents=True)
+    (root / "path" / "to" / "ex1.h").touch()
+    (root / "path" / "to" / "subdir").mkdir()
+    (root / "path" / "to" / "subdir" / "ex2.h").touch()
 
     return root
 
@@ -1669,7 +2183,7 @@ def installation_dir_with_headers(tmpdir_factory):
 ##########
 
 
-@pytest.fixture(params=["conflict%clang+foo", "conflict-parent@0.9^conflict~foo"])
+@pytest.fixture(params=["conflict+foo%clang", "conflict-parent@0.9^conflict~foo"])
 def conflict_spec(request):
     """Specs which violate constraints specified with the "conflicts"
     directive in the "conflict" package.
@@ -1678,41 +2192,18 @@ def conflict_spec(request):
 
 
 @pytest.fixture(scope="module")
-def mock_test_repo(tmpdir_factory):
+def mock_test_repo(tmp_path_factory: pytest.TempPathFactory):
     """Create an empty repository."""
     repo_namespace = "mock_test_repo"
-    repodir = tmpdir_factory.mktemp(repo_namespace)
-    repodir.ensure(spack.repo.packages_dir_name, dir=True)
-    yaml = repodir.join("repo.yaml")
-    yaml.write(
+    repodir = tmp_path_factory.mktemp(repo_namespace)
+    packages_dir = repodir / spack.repo.packages_dir_name
+    packages_dir.mkdir()
+    yaml_path = repodir / "repo.yaml"
+    yaml_path.write_text(
         """
 repo:
     namespace: mock_test_repo
 """
-    )
-
-    with spack.repo.use_repositories(str(repodir)) as repo:
-        yield repo, repodir
-
-    shutil.rmtree(str(repodir))
-
-
-@pytest.fixture(scope="function")
-def mock_clone_repo(tmpdir_factory):
-    """Create a cloned repository."""
-    repo_namespace = "mock_clone_repo"
-    repodir = tmpdir_factory.mktemp(repo_namespace)
-    yaml = repodir.join("repo.yaml")
-    yaml.write(
-        """
-repo:
-    namespace: mock_clone_repo
-"""
-    )
-
-    shutil.copytree(
-        os.path.join(spack.paths.mock_packages_path, spack.repo.packages_dir_name),
-        os.path.join(str(repodir), spack.repo.packages_dir_name),
     )
 
     with spack.repo.use_repositories(str(repodir)) as repo:
@@ -1743,17 +2234,17 @@ def mock_directive_bundle():
 
 @pytest.fixture
 def clear_directive_functions():
-    """Clear all overidden directive functions for subsequent tests."""
+    """Clear all overridden directive functions for subsequent tests."""
     yield
 
-    # Make sure any directive functions overidden by tests are cleared before
+    # Make sure any directive functions overridden by tests are cleared before
     # proceeding with subsequent tests that may depend on the original
     # functions.
-    spack.directives_meta.DirectiveMeta._directives_to_be_executed = []
+    spack.directives_meta.DirectiveMeta._directives_to_be_executed.clear()
 
 
 @pytest.fixture
-def mock_executable(tmp_path):
+def mock_executable(tmp_path: Path):
     """Factory to create a mock executable in a temporary directory that
     output a custom string when run.
     """
@@ -1773,11 +2264,11 @@ def mock_executable(tmp_path):
 
 
 @pytest.fixture()
-def mock_test_stage(mutable_config, tmpdir):
+def mock_test_stage(mutable_config, tmp_path: Path):
     # NOTE: This fixture MUST be applied after any fixture that uses
     # the config fixture under the hood
     # No need to unset because we use mutable_config
-    tmp_stage = str(tmpdir.join("test_stage"))
+    tmp_stage = str(tmp_path / "test_stage")
     mutable_config.set("config:test_stage", tmp_stage)
 
     yield tmp_stage
@@ -1785,27 +2276,59 @@ def mock_test_stage(mutable_config, tmpdir):
 
 @pytest.fixture(autouse=True)
 def inode_cache():
-    llnl.util.lock.FILE_TRACKER.purge()
+    spack.util.lock.FILE_TRACKER.purge()
     yield
     # TODO: it is a bug when the file tracker is non-empty after a test,
     # since it means a lock was not released, or the inode was not purged
     # when acquiring the lock failed. So, we could assert that here, but
     # currently there are too many issues to fix, so look for the more
     # serious issue of having a closed file descriptor in the cache.
-    assert not any(f.fh.closed for f in llnl.util.lock.FILE_TRACKER._descriptors.values())
-    llnl.util.lock.FILE_TRACKER.purge()
+    assert not any(f.fh.closed for f in spack.util.lock.FILE_TRACKER._descriptors.values())
+    spack.util.lock.FILE_TRACKER.purge()
+
+
+@pytest.fixture(autouse=True)
+def mock_user_cache_path(tmp_path: Path, monkeypatch):
+    """Point $user_cache_path-derived locations (misc cache, BINARY_INDEX's persistent
+    index cache, etc.) at a per-test temporary directory instead of the real ~/.spack.
+
+    Without this, every test process (and, under pytest-xdist, every worker) reads and
+    writes the same real, on-disk cache concurrently, since `$user_cache_path` defaults
+    to `~/.spack` unless SPACK_USER_CACHE_PATH is set. `spack.config.replacements()`
+    resolves `$user_cache_path` lazily via `spack.paths.user_cache_path` on every
+    substitution, so patching that attribute here is picked up correctly regardless of
+    when `spack.paths` was first imported.
+    """
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path / "user_cache"))
 
 
 @pytest.fixture(autouse=True)
 def brand_new_binary_cache():
     yield
-    spack.binary_distribution.BINARY_INDEX = llnl.util.lang.Singleton(
-        spack.binary_distribution.BinaryCacheIndex
+    spack.binary_distribution.BINARY_INDEX = spack.util.lang.Singleton(
+        spack.binary_distribution._binary_index
     )
 
 
+def _trivial_content_hash(self, content=None, *, repo: spack.repo.RepoPath) -> str:
+    """Return a trivial package hash for tests to avoid expensive AST parsing."""
+    # Pad package name to consistent length and cap at 32 chars for realistic hash length
+    return base64.b32encode(f"{self.spec.name:<32}".encode()[:32]).decode().lower()
+
+
+@pytest.fixture(autouse=True)
+def mock_package_hash_for_tests(request, monkeypatch):
+    """Replace expensive package hash computation with trivial one for tests.
+    Tests can force the real package hash by using the @pytest.mark.use_package_hash marker."""
+    if "use_package_hash" in request.keywords:
+        yield
+        return
+    monkeypatch.setattr(spack.package_base.PackageBase, "content_hash", _trivial_content_hash)
+    yield
+
+
 @pytest.fixture()
-def noncyclical_dir_structure(tmpdir):
+def noncyclical_dir_structure(tmp_path: Path):
     """
     Create some non-trivial directory structure with
     symlinks to dirs and dangling symlinks, but no cycles::
@@ -1822,9 +2345,11 @@ def noncyclical_dir_structure(tmpdir):
         |   `-- file_2
         `-- file_3
     """
-    d, j = tmpdir.mkdir("nontrivial-dir"), os.path.join
+    d = tmp_path / "nontrivial-dir"
+    d.mkdir()
+    j = os.path.join
 
-    with d.as_cwd():
+    with working_dir(str(d)):
         os.mkdir(j("a"))
         os.mkdir(j("a", "d"))
         with open(j("a", "file_1"), "wb"):
@@ -1884,40 +2409,29 @@ def mock_curl_configs(mock_config_data, monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_spider_configs(mock_config_data, monkeypatch):
-    """
-    Mock retrieval of configuration file URLs from the web by grabbing
-    them from the test data configuration directory.
-    """
-    config_data_dir, config_files = mock_config_data
+def mock_fetch_url_text(mock_config_data, monkeypatch):
+    """Mock spack.util.web.fetch_url_text."""
 
-    def _spider(*args, **kwargs):
-        root_urls = args[0]
-        if not root_urls:
-            return [], set()
+    stage_dir, config_files = mock_config_data
 
-        root_urls = [root_urls] if isinstance(root_urls, str) else root_urls
+    def _fetch_text_file(url, dest_dir):
+        raw_url = raw_github_gitlab_url(url)
+        mkdirp(dest_dir)
+        basename = os.path.basename(raw_url)
+        src = join_path(stage_dir, basename)
+        dest = join_path(dest_dir, basename)
+        copy(src, dest)
+        return dest
 
-        # Any URL with an extension will be treated like a file; otherwise,
-        # it is considered a directory/folder and we'll grab all available
-        # files.
-        urls = []
-        for url in root_urls:
-            if os.path.splitext(url)[1]:
-                urls.append(url)
-            else:
-                urls.extend([os.path.join(url, f) for f in config_files])
-
-        return [], set(urls)
-
-    monkeypatch.setattr(spack.util.web, "spider", _spider)
-
-    yield
+    monkeypatch.setattr(spack.util.web, "fetch_url_text", _fetch_text_file)
 
 
 @pytest.fixture(scope="function")
 def mock_tty_stdout(monkeypatch):
+    """Make sys.stdout.isatty() return True, while forcing no color output."""
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+    with spack.util.tty.color.color_when("never"):
+        yield
 
 
 @pytest.fixture
@@ -1926,30 +2440,30 @@ def prefix_like():
 
 
 @pytest.fixture()
-def prefix_tmpdir(tmpdir, prefix_like):
-    return tmpdir.mkdir(prefix_like)
+def prefix_tmpdir(tmp_path: Path, prefix_like: str):
+    prefix_dir = tmp_path / prefix_like
+    prefix_dir.mkdir()
+    return prefix_dir
 
 
 @pytest.fixture()
-def binary_with_rpaths(prefix_tmpdir):
+def binary_with_rpaths(prefix_tmpdir: Path):
     """Factory fixture that compiles an ELF binary setting its RPATH. Relative
     paths are encoded with `$ORIGIN` prepended.
     """
 
     def _factory(rpaths, message="Hello world!", dynamic_linker="/lib64/ld-linux.so.2"):
-        source = prefix_tmpdir.join("main.c")
-        source.write(
+        source = prefix_tmpdir / "main.c"
+        source.write_text(
             """
         #include <stdio.h>
         int main(){{
             printf("{0}");
         }}
-        """.format(
-                message
-            )
+        """.format(message)
         )
-        gcc = spack.util.executable.which("gcc")
-        executable = source.dirpath("main.x")
+        gcc = spack.util.executable.which("gcc", required=True)
+        executable = source.parent / "main.x"
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
         rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
         opts = [
@@ -1964,32 +2478,6 @@ def binary_with_rpaths(prefix_tmpdir):
         return executable
 
     return _factory
-
-
-@pytest.fixture(scope="session")
-def concretized_specs_cache():
-    """Cache for mock concrete specs"""
-    return {}
-
-
-@pytest.fixture
-def default_mock_concretization(config, mock_packages, concretized_specs_cache):
-    """Return the default mock concretization of a spec literal, obtained using the mock
-    repository and the mock configuration.
-
-    This fixture is unsafe to call in a test when either the default configuration or mock
-    repository are not used or have been modified.
-    """
-
-    def _func(spec_str, tests=False):
-        key = spec_str, tests
-        if key not in concretized_specs_cache:
-            concretized_specs_cache[key] = spack.concretize.concretize_one(
-                spack.spec.Spec(spec_str), tests=tests
-            )
-        return concretized_specs_cache[key].copy()
-
-    return _func
 
 
 @pytest.fixture
@@ -2015,12 +2503,15 @@ def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
     monkeypatch.setattr(spack.config, "CONFIG", None)
     monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
-    monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
     monkeypatch.setattr(spack.store, "STORE", None)
 
 
 def pytest_runtest_setup(item):
+    # Tests redirect std fds (capfd, dup2) without going through spack code, so cached isatty()
+    # results from a previous test may be stale.
+    spack.util.tty.clear_isatty_cache()
+
     # Skip test marked "not_on_windows" if they're run on Windows
     not_on_windows_marker = item.get_closest_marker(name="not_on_windows")
     if not_on_windows_marker and sys.platform == "win32":
@@ -2032,14 +2523,12 @@ def pytest_runtest_setup(item):
         pytest.skip(*only_windows_marker.args)
 
 
-def _sequential_executor(*args, **kwargs):
-    return spack.util.parallel.SequentialExecutor()
-
-
 @pytest.fixture(autouse=True)
-def disable_parallel_buildcache_push(monkeypatch):
-    """Disable process pools in tests."""
-    monkeypatch.setattr(spack.util.parallel, "make_concurrent_executor", _sequential_executor)
+def disable_parallelism(monkeypatch, request):
+    """Disable process pools in tests. Enabled by default to avoid oversubscription when running
+    under pytest-xdist. Can be overridden with `@pytest.mark.enable_parallelism`."""
+    if "enable_parallelism" not in request.keywords:
+        monkeypatch.setattr(spack.util.parallel, "ENABLE_PARALLELISM", False)
 
 
 def _root_path(x, y, *, path):
@@ -2047,54 +2536,21 @@ def _root_path(x, y, *, path):
 
 
 @pytest.fixture
-def mock_modules_root(tmp_path, monkeypatch):
+def mock_modules_root(tmp_path: Path, monkeypatch):
     """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
     fn = functools.partial(_root_path, path=str(tmp_path))
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
-
-
-_repo_name_id = 0
-
-
-def create_test_repo(tmpdir, pkg_name_content_tuples):
-    global _repo_name_id
-
-    repo_path = str(tmpdir)
-    repo_yaml = tmpdir.join("repo.yaml")
-    with open(str(repo_yaml), "w", encoding="utf-8") as f:
-        f.write(
-            f"""\
-repo:
-  namespace: testrepo{str(_repo_name_id)}
-"""
-        )
-
-    _repo_name_id += 1
-
-    packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in pkg_name_content_tuples:
-        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
-        pkg_file = pkg_dir.join("package.py")
-        with open(str(pkg_file), "w", encoding="utf-8") as f:
-            f.write(pkg_str)
-
-    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.join("cache")))
-    return spack.repo.Repo(repo_path, cache=repo_cache)
 
 
 @pytest.fixture()
 def compiler_factory():
     """Factory for a compiler dict, taking a spec and an OS as arguments."""
 
-    def _factory(*, spec, operating_system):
+    def _factory(*, spec):
         return {
-            "compiler": {
-                "spec": spec,
-                "operating_system": operating_system,
-                "paths": {"cc": "/path/to/cc", "cxx": "/path/to/cxx", "f77": None, "fc": None},
-                "modules": [],
-                "target": str(archspec.cpu.host().family),
-            }
+            "spec": f"{spec}",
+            "prefix": "/path",
+            "extra_attributes": {"compilers": {"c": "/path/bin/cc", "cxx": "/path/bin/cxx"}},
         }
 
     return _factory
@@ -2103,31 +2559,40 @@ def compiler_factory():
 @pytest.fixture()
 def host_architecture_str():
     """Returns the broad architecture family (x86_64, aarch64, etc.)"""
-    return str(archspec.cpu.host().family)
+    return str(spack.vendor.archspec.cpu.host().family)
 
 
 def _true(x):
     return True
 
 
+def _libc_from_python(*args):
+    return spack.spec.Spec("glibc@=2.28", external_path="/some/path")
+
+
 @pytest.fixture()
 def do_not_check_runtimes_on_reuse(monkeypatch):
-    monkeypatch.setattr(spack.solver.asp, "_has_runtime_dependencies", _true)
+    monkeypatch.setattr(spack.solver.reuse, "_has_runtime_dependencies", _true)
 
 
 @pytest.fixture(autouse=True, scope="session")
 def _c_compiler_always_exists():
     fn = spack.solver.asp.c_compiler_runs
     spack.solver.asp.c_compiler_runs = _true
+    mthd = spack.compilers.libraries.CompilerPropertyDetector.default_libc
+    spack.compilers.libraries.CompilerPropertyDetector.default_libc = _libc_from_python
+    host_libc = spack.util.libc.libc_from_current_python_process
+    spack.util.libc.libc_from_current_python_process = _libc_from_python
     yield
     spack.solver.asp.c_compiler_runs = fn
+    spack.compilers.libraries.CompilerPropertyDetector.default_libc = mthd
+    spack.util.libc.libc_from_current_python_process = host_libc
 
 
 @pytest.fixture(scope="session")
-def mock_test_cache(tmp_path_factory):
+def mock_test_cache(tmp_path_factory: pytest.TempPathFactory):
     cache_dir = tmp_path_factory.mktemp("cache")
-    print(cache_dir)
-    return spack.util.file_cache.FileCache(str(cache_dir))
+    return spack.util.file_cache.FileCache(cache_dir)
 
 
 class MockHTTPResponse(io.IOBase):
@@ -2154,6 +2619,9 @@ class MockHTTPResponse(io.IOBase):
         body = io.BytesIO(json.dumps(body).encode("utf-8"))
         return cls(status, reason, headers, body)
 
+    def readable(self):
+        return True
+
     def read(self, *args, **kwargs):
         return self._body.read(*args, **kwargs)
 
@@ -2174,5 +2642,162 @@ class MockHTTPResponse(io.IOBase):
 
 
 @pytest.fixture()
-def mock_runtimes(config, mock_packages):
-    return mock_packages.packages_with_tags("runtime")
+def write_config_file(tmp_path: Path):
+    """Returns a function that writes a config file."""
+
+    def _write(config, data, scope):
+        config_dir = tmp_path / scope
+        config_dir.mkdir(parents=True, exist_ok=True)
+        config_yaml = config_dir / (config + ".yaml")
+        with config_yaml.open("w") as f:
+            syaml.dump_config(data, f)
+        return config_yaml
+
+    return _write
+
+
+@pytest.fixture()
+def wrapper_dir(install_mockery):
+    """Installs the compiler wrapper and returns the prefix where the script is installed."""
+    wrapper = spack.concretize.concretize_one("compiler-wrapper")
+    wrapper_pkg = wrapper.package
+    PackageInstaller([wrapper_pkg], explicit=True).install()
+    return wrapper_pkg.bin_dir()
+
+
+def _noop(*args, **kwargs):
+    pass
+
+
+@pytest.fixture(autouse=True)
+def no_compilers_init(monkeypatch):
+    """Disables automatic compiler initialization"""
+    monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _noop)
+
+
+@pytest.fixture(autouse=True)
+def skip_provenance_check(monkeypatch, request):
+    """Skip binary provenance check for git versions
+
+    Binary provenance checks require querying git repositories and mirrors.
+    The infrastructure for this is complex and a heavy lift for simple things like spec syntax
+    checks. This fixture defaults to skipping this check, but can be overridden with the
+    @pytest.mark.require_provenance decorator
+    """
+    if "require_provenance" not in request.keywords:
+        monkeypatch.setattr(spack.package_base.PackageBase, "_resolve_git_provenance", _noop)
+
+
+@pytest.fixture(scope="function")
+def config_two_gccs(mutable_config):
+    # Configure two gcc compilers that could be concretized to
+    extra_attributes_block = {
+        "compilers": {"c": "/path/to/gcc", "cxx": "/path/to/g++", "fortran": "/path/to/fortran"}
+    }
+    mutable_config.set(
+        "packages:gcc:externals::",
+        [
+            {
+                "spec": "gcc@12.3.1 languages=c,c++,fortran",
+                "prefix": "/path",
+                "extra_attributes": extra_attributes_block,
+            },
+            {
+                "spec": "gcc@10.3.1 languages=c,c++,fortran",
+                "prefix": "/path",
+                "extra_attributes": extra_attributes_block,
+            },
+        ],
+    )
+
+
+@pytest.fixture(scope="function")
+def mock_util_executable(monkeypatch):
+    logger = []
+    should_fail = []
+    registered_reponses = {}
+
+    def mock_call(self, *args, **kwargs):
+        cmd = self.exe + list(args)
+        str_cmd = " ".join(map(str, cmd))
+        logger.append(str_cmd)
+        for failure_key in should_fail:
+            if failure_key in str_cmd:
+                self.returncode = 1
+                if kwargs.get("fail_on_error", True):
+                    raise spack.util.executable.ProcessError(f"Failed: {str_cmd}")
+                return
+        for key, value in registered_reponses.items():
+            if key in str_cmd:
+                return value
+        self.returncode = 0
+
+    monkeypatch.setattr(spack.util.executable.Executable, "__call__", mock_call)
+    yield logger, should_fail, registered_reponses
+
+
+@pytest.fixture()
+def reset_extension_paths():
+    """Clears the cache used for entry points, both in setup and tear-down.
+    Needed if a test stresses parts related to computing paths for Spack extensions
+    """
+    spack.extensions.extension_paths_from_entry_points.cache_clear()
+    yield
+    spack.extensions.extension_paths_from_entry_points.cache_clear()
+
+
+@pytest.fixture(params=["old", "new"])
+def installer_variant(request):
+    """Parametrize a test over the old and new installer."""
+    with spack.config.CONFIG.override("config:installer", request.param):
+        yield request.param
+
+
+class FsTree:
+    class symlink:
+        def __init__(self, target):
+            self.target = target
+
+    class file:
+        def __init__(self, content: Union[bytes, str] = b""):
+            self.content = content
+
+    class dir:
+        pass
+
+    def __init__(self, base_path: Path, layout: dict):
+        for rel_path, content in layout.items():
+            p = base_path / rel_path
+            p.parent.mkdir(parents=True, exist_ok=True)
+
+            assert isinstance(content, (self.symlink, self.file, self.dir))
+
+            if isinstance(content, self.dir):
+                p.mkdir(exist_ok=True)
+            elif isinstance(content, self.symlink):
+                p.symlink_to(content.target)
+            elif isinstance(content, self.file):
+                assert isinstance(content.content, (bytes, str))
+                if isinstance(content.content, bytes):
+                    p.write_bytes(content.content)
+                elif isinstance(content.content, str):
+                    p.write_text(content.content, encoding="utf-8")
+
+
+@pytest.fixture(scope="function")
+def mock_sleep(monkeypatch):
+
+    class CallCounter:
+        def __init__(self):
+            self.times = []
+
+        def __call__(self, duration):
+            self.times.append(duration)
+
+        @property
+        def count(self):
+            return len(self.times)
+
+    _sleep = CallCounter()
+    monkeypatch.setattr(spack.util.web.Retry, "sleep", lambda self: _sleep(self.backoff()))
+    yield _sleep

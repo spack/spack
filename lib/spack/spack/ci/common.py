@@ -2,9 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
+import errno
+import glob
+import gzip
 import json
 import os
 import re
+import shutil
 import sys
 import time
 from collections import deque
@@ -13,11 +17,7 @@ from typing import Dict, Generator, List, Optional, Set, Tuple
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-
-import spack.binary_distribution as bindist
+import spack.binary_distribution
 import spack.config as cfg
 import spack.deptypes as dt
 import spack.environment as ev
@@ -25,13 +25,15 @@ import spack.error
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
-import spack.util.spack_yaml as syaml
-import spack.util.url as url_util
+import spack.util.filesystem as fs
 import spack.util.web as web_util
 from spack import traverse
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
+from spack.url_buildcache import get_url_buildcache_class
+from spack.util import compression, tty
+from spack.util.lang import memoized
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -40,22 +42,66 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 _urlopen = web_util.urlopen
 
 
-def copy_files_to_artifacts(src, artifacts_dir):
+def copy_gzipped(glob_or_path: str, dest: str) -> None:
+    """Copy all of the files in the source glob/path to the destination.
+
+    Args:
+        glob_or_path: path to file to test
+        dest: destination path to copy to
+    """
+
+    files = glob.glob(glob_or_path)
+    if not files:
+        raise OSError("No such file or directory: '{0}'".format(glob_or_path), errno.ENOENT)
+    if len(files) > 1 and not os.path.isdir(dest):
+        raise ValueError(
+            "'{0}' matches multiple files but '{1}' is not a directory".format(glob_or_path, dest)
+        )
+
+    def is_gzipped(path):
+        with open(path, "rb") as fd:
+            return compression.GZipFileType().matches_magic(fd)
+
+    for src in files:
+        if is_gzipped(src):
+            fs.copy(src, dest)
+        else:
+            # Compress and copy in one step
+            src_name = os.path.basename(src)
+            if os.path.isdir(dest):
+                zipped = os.path.join(dest, f"{src_name}.gz")
+            elif not dest.endswith(".gz"):
+                zipped = f"{dest}.gz"
+            else:
+                zipped = dest
+
+            with open(src, "rb") as fin, gzip.open(zipped, "wb") as fout:
+                shutil.copyfileobj(fin, fout)
+
+
+def copy_files_to_artifacts(
+    src: str, artifacts_dir: str, *, compress_artifacts: bool = False
+) -> None:
     """
     Copy file(s) to the given artifacts directory
 
-    Parameters:
+    Args:
         src (str): the glob-friendly path expression for the file(s) to copy
         artifacts_dir (str): the destination directory
+        compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
-        fs.copy(src, artifacts_dir)
+        if compress_artifacts:
+            copy_gzipped(src, artifacts_dir)
+        else:
+            fs.copy(src, artifacts_dir)
     except Exception as err:
-        msg = (
-            f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
-            f"exception: {str(err)}"
+        tty.warn(
+            (
+                f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
+                f"exception: {str(err)}"
+            )
         )
-        tty.warn(msg)
 
 
 def win_quote(quote_str: str) -> str:
@@ -95,67 +141,19 @@ def ensure_expected_target_path(path: str) -> str:
     return path
 
 
-def update_env_scopes(
-    env: ev.Environment,
-    cli_scopes: List[str],
-    output_file: str,
-    transform_windows_paths: bool = False,
-) -> None:
-    """Add any config scopes from cli_scopes which aren't already included in the
-    environment, by reading the yaml, adding the missing includes, and writing the
-    updated yaml back to the same location.
-    """
-    with open(env.manifest_path, "r", encoding="utf-8") as env_fd:
-        env_yaml_root = syaml.load(env_fd)
-
-    # Add config scopes to environment
-    env_includes = env_yaml_root["spack"].get("include", [])
-    include_scopes: List[str] = []
-    for scope in cli_scopes:
-        if scope not in include_scopes and scope not in env_includes:
-            include_scopes.insert(0, scope)
-    env_includes.extend(include_scopes)
-    env_yaml_root["spack"]["include"] = [
-        ensure_expected_target_path(i) if transform_windows_paths else i for i in env_includes
-    ]
-
-    with open(output_file, "w", encoding="utf-8") as fd:
-        syaml.dump_config(env_yaml_root, fd, default_flow_style=False)
-
-
 def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
     """Write out the file describing specs that should be copied"""
     buildcache_copies = {}
 
     for release_spec in specs:
         release_spec_dag_hash = release_spec.dag_hash()
-        # TODO: This assumes signed version of the spec
-        buildcache_copies[release_spec_dag_hash] = [
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-            },
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-            },
-        ]
+        cache_class = get_url_buildcache_class(
+            layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        )
+        buildcache_copies[release_spec_dag_hash] = {
+            "src": cache_class.get_manifest_url(release_spec, src_prefix),
+            "dest": cache_class.get_manifest_url(release_spec, dest_prefix),
+        }
 
     target_dir = os.path.dirname(output_file)
 
@@ -203,16 +201,14 @@ class CDashHandler:
     def build_name(self, spec: Optional[spack.spec.Spec] = None) -> Optional[str]:
         """Returns the CDash build name.
 
-        A name will be generated if the `spec` is provided,
+        A name will be generated if the ``spec`` is provided,
         otherwise, the value will be retrieved from the environment
-        through the `SPACK_CDASH_BUILD_NAME` variable.
+        through the ``SPACK_CDASH_BUILD_NAME`` variable.
 
         Returns: (str) given spec's CDash build name."""
         if spec:
-            build_name = (
-                f"{spec.name}@{spec.version}%{spec.compiler} "
-                f"hash={spec.dag_hash()} arch={spec.architecture} ({self.build_group})"
-            )
+            spec_str = spec.format("{name}{@version}{%compiler} hash={hash} arch={architecture}")
+            build_name = f"{spec_str} ({self.build_group})"
             tty.debug(f"Generated CDash build name ({build_name}) from the {spec.name}")
             return build_name
 
@@ -256,56 +252,34 @@ class CDashHandler:
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
-    def create_buildgroup(self, headers, url, group_name, group_type):
-        data = {"newbuildgroup": group_name, "project": self.project, "type": group_type}
-
-        enc_data = json.dumps(data).encode("utf-8")
-
-        request = Request(url, data=enc_data, headers=headers)
-
-        try:
-            response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
-        except OSError as e:
-            tty.warn(f"Failed to create CDash buildgroup: {e}")
-            return None
-
-        try:
-            response_json = json.loads(response_text)
-            return response_json["id"]
-        except (json.JSONDecodeError, KeyError) as e:
-            tty.warn(f"Failed to parse CDash response: {e}")
-            return None
-
-    def populate_buildgroup(self, job_names):
-        url = f"{self.url}/api/v1/buildgroup.php"
-
+    def create_buildgroup(self):
+        """Create the CDash buildgroup if it does not already exist."""
         headers = {
             "Authorization": f"Bearer {self.auth_token}",
             "Content-Type": "application/json",
         }
-
-        parent_group_id = self.create_buildgroup(headers, url, self.build_group, "Daily")
-        group_id = self.create_buildgroup(headers, url, f"Latest {self.build_group}", "Latest")
-
-        if not parent_group_id or not group_id:
-            tty.warn(f"Failed to create or retrieve buildgroups for {self.build_group}")
-            return
-
-        data = {
-            "dynamiclist": [
-                {"match": name, "parentgroupid": parent_group_id, "site": self.site}
-                for name in job_names
-            ]
-        }
-
+        data = {"newbuildgroup": self.build_group, "project": self.project, "type": "Daily"}
         enc_data = json.dumps(data).encode("utf-8")
+        request = Request(f"{self.url}/api/v1/buildgroup.php", data=enc_data, headers=headers)
 
-        request = Request(url, data=enc_data, headers=headers, method="PUT")
+        response_text = None
+        group_id = None
 
         try:
-            _urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
+            with _urlopen(request, timeout=SPACK_CDASH_TIMEOUT) as response:
+                response_text = response.read()
         except OSError as e:
-            tty.warn(f"Failed to populate CDash buildgroup: {e}")
+            tty.warn(f"Failed to create CDash buildgroup: {e}")
+
+        if response_text:
+            try:
+                response_json = json.loads(response_text)
+                group_id = response_json["id"]
+            except (json.JSONDecodeError, KeyError) as e:
+                tty.warn(f"Failed to parse CDash response: {e}")
+
+        if not group_id:
+            tty.warn(f"Failed to create or retrieve buildgroup for {self.build_group}")
 
     def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
         """Explicitly report skipping testing of a spec (e.g., it's CI
@@ -355,6 +329,7 @@ class PipelineOptions:
         untouched_pruning_dependent_depth: Optional[int] = None,
         prune_untouched: bool = False,
         prune_up_to_date: bool = True,
+        prune_unaffected: bool = True,
         prune_external: bool = True,
         stack_name: Optional[str] = None,
         pipeline_type: Optional[PipelineType] = None,
@@ -391,11 +366,13 @@ class PipelineOptions:
         self.untouched_pruning_dependent_depth = untouched_pruning_dependent_depth
         self.prune_untouched = prune_untouched
         self.prune_up_to_date = prune_up_to_date
+        self.prune_unaffected = prune_unaffected
         self.prune_external = prune_external
         self.stack_name = stack_name
         self.pipeline_type = pipeline_type
         self.require_signing = require_signing
         self.cdash_handler = cdash_handler
+        self.forward_variables: List[str] = []
 
 
 class PipelineNode:
@@ -536,7 +513,6 @@ class SpackCIConfig:
             job_vars["SPACK_JOB_SPEC_COMPILER_VERSION"] = release_spec.format("{compiler.version}")
             job_vars["SPACK_JOB_SPEC_ARCH"] = release_spec.format("{architecture}")
             job_vars["SPACK_JOB_SPEC_VARIANTS"] = release_spec.format("{variants}")
-
         return job_object
 
     def __is_named(self, section):
@@ -566,7 +542,7 @@ class SpackCIConfig:
         return jname
 
     def __apply_submapping(self, dest, spec, section):
-        """Apply submapping setion to the IR dict"""
+        """Apply submapping section to the IR dict"""
         matched = False
         only_first = section.get("match_behavior", "first") == "first"
 
@@ -576,7 +552,7 @@ class SpackCIConfig:
                 if _spec_matches(spec, match_string):
                     matched = True
                     if "build-job-remove" in match_attrs:
-                        spack.config.remove_yaml(dest, attrs["build-job-remove"])
+                        cfg.remove_yaml(dest, attrs["build-job-remove"])
                     if "build-job" in match_attrs:
                         spack.schema.merge_yaml(dest, attrs["build-job"])
                     break
@@ -593,7 +569,12 @@ class SpackCIConfig:
 
     # Generate IR from the configs
     def generate_ir(self):
-        """Generate the IR from the Spack CI configurations."""
+        """Generate the IR from the Spack CI configurations.
+
+        Generate makes use of special strings that need to be expanded by python format.
+
+            env_dir: The concrete environment directory used in downstream jobs
+        """
 
         jobs = self.ir["jobs"]
 
@@ -602,8 +583,8 @@ class SpackCIConfig:
             {
                 "build-job": {
                     "script": [
-                        "cd {env_dir}",
-                        "spack env activate --without-view .",
+                        "spack env activate --without-view {env_dir}",
+                        "spack spec /$SPACK_JOB_SPEC_DAG_HASH",
                         "spack ci rebuild",
                     ]
                 }
@@ -611,18 +592,33 @@ class SpackCIConfig:
             {"noop-job": {"script": ['echo "All specs already up to date, nothing to rebuild."']}},
         ]
 
+        pipeline_mirrors = spack.mirrors.mirror.MirrorCollection(binary=True)
+        buildcache_destination = pipeline_mirrors["buildcache-destination"]
+        update_index_extra_args = []
+        if buildcache_destination.push_view:
+            update_index_extra_args.extend(["--name", buildcache_destination.push_view])
+            option = os.environ.get("SPACK_CI_BUILDCACHE_VIEW", "append")
+            if option == "append":
+                # Running this in CI relies on a guarentee from the calling context that there is
+                # only a single writer or the build cache view doesn't require a complete view
+                # after each append.
+                tty.warn("Using --append to update buildcache-destination mirror index view")
+                update_index_extra_args.extend(["-y", "--append"])
+            elif option == "force":
+                update_index_extra_args.append("--force")
+            else:
+                raise SpackCIError(f"Unrecognized value: SPACK_CI_BUILDCACHE_VIEW={option}")
+
         # Job overrides
         overrides = [
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
-                }
-            },
-            # Cleanup script
-            {
-                "cleanup-job": {
-                    "script:": ["spack -d mirror destroy {mirror_prefix}/$CI_PIPELINE_ID"]
+                    "script:": [
+                        "spack env activate --without-view {env_dir}",
+                        "spack -v buildcache update-index --keys "
+                        + f"{' '.join(update_index_extra_args)} buildcache-destination",
+                    ]
                 }
             },
             # Add signing job tags
@@ -647,7 +643,7 @@ class SpackCIConfig:
 
                 def _apply_section(dest, src):
                     if do_remove:
-                        dest = spack.config.remove_yaml(dest, src[remove_job_name])
+                        dest = cfg.remove_yaml(dest, src[remove_job_name])
                     if do_merge:
                         dest = copy.copy(spack.schema.merge_yaml(dest, src[merge_job_name]))
 
@@ -736,8 +732,8 @@ class SpackCIConfig:
                         endpoint_url._replace(query=query).geturl(), headers=header, method="GET"
                     )
                     try:
-                        response = _urlopen(request)
-                        config = json.load(response)
+                        with _urlopen(request) as response:
+                            config = json.load(response)
                     except Exception as e:
                         # For now just ignore any errors from dynamic mapping and continue
                         # This is still experimental, and failures should not stop CI

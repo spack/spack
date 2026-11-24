@@ -399,6 +399,12 @@ echo "Testing 'despacktivate'"
 despacktivate
 is_not_set SPACK_ENV
 
+echo "Testing 'spacktivate' abbreviation"
+spacktivate spack_test_env
+is_set SPACK_ENV
+despacktivate
+is_not_set SPACK_ENV
+
 echo "Testing 'spack env activate --temp'"
 spt_succeeds spack env activate --temp
 spack env activate --temp
