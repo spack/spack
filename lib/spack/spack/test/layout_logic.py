@@ -863,11 +863,11 @@ def test_env_migration_rewrites_paths_spelled_through_a_symlinked_prefix(tmp_pat
         )
     new_envs = tmp_path / "new"
 
-    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    ok, _ = spack.migrate._migrate_environments(str(linked_envs), str(new_envs))
     assert not ok  # sib refers into own
 
     shutil.rmtree(old_envs / "sib")
-    ok, _ = spack.migrate._migrate_environments(str(old_envs), str(new_envs))
+    ok, _ = spack.migrate._migrate_environments(str(linked_envs), str(new_envs))
     assert ok
     manifest = (new_envs / "own" / "spack.yaml").read_text(encoding="utf-8")
     assert str(new_envs / "own" / "jobs.yaml") in manifest
