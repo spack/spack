@@ -319,13 +319,13 @@ def test_visual_studio_sdk_paths_need_kits_and_state_json(
 
 
 @pytest.mark.parametrize("wdk_installed", [True, False], ids=["sdk-and-wdk", "sdk-only"])
-def test_visual_studio_wdk_paths(wdk_installed, kit_root):
-    """Tests that, with ``WDKContentRoot`` unset, ``find_wdk_paths`` returns the kernel-mode
-    (km) lib directories of the Windows Kits tree, and returns nothing when the tree only
-    contains the SDK."""
+def test_windows_kit_wdk_paths(wdk_installed, kit_root):
+    """Tests that, with ``WDKContentRoot`` unset, ``find_windows_driver_development_kit_paths``
+    returns the kernel-mode (km) lib directories of the Windows Kits tree, and returns nothing
+    when the tree only contains the SDK."""
     km_dir = kit_root / "Windows Kits" / "10" / "Lib" / _SDK_VER / "km" / "x64"
     if wdk_installed:
         km_dir.mkdir(parents=True)
 
     expected = [str(km_dir)] if wdk_installed else []
-    assert win_os.VisualStudioLayout.find_wdk_paths() == expected
+    assert win_os.WindowsKitExternalPaths.find_windows_driver_development_kit_paths() == expected

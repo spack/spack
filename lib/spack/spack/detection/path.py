@@ -212,10 +212,9 @@ def libraries_in_windows_paths(path_hints: Optional[List[str]] = None) -> Dict[s
         search_paths.extend(
             winOs.WindowsKitExternalPaths.find_windows_driver_development_kit_paths()
         )
-        # SDK and WDK installed via the VS Installer may not appear in the system-wide
+        # SDKs installed via the VS Installer may not appear in the system-wide
         # registry keys queried above; probe VS instance metadata to cover that case.
         search_paths.extend(winOs.VisualStudioLayout.find_sdk_lib_paths())
-        search_paths.extend(winOs.VisualStudioLayout.find_wdk_paths())
     return path_to_dict(search_paths)
 
 

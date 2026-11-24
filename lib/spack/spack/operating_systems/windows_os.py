@@ -240,21 +240,40 @@ class WindowsKitExternalPaths:
         """Return Windows kit root, typically %programfiles%\\Windows Kits\\10|11\\"""
         if sys.platform != "win32":
             return []
-        program_files = os.environ["PROGRAMFILES(x86)"]
+        program_files = os.environ.get("PROGRAMFILES(x86)")
+        if not program_files:
+            return []
         kit_base = os.path.join(program_files, "Windows Kits", "**")
         return glob.glob(kit_base)
+
+    @staticmethod
+    def _resolve_kit_bases(kit_base: Union[Optional[str], Optional[list]]) -> List[str]:
+        """Normalize ``kit_base`` to a list of kit roots, defaulting to the system Windows Kits.
+
+        Returns an empty list, rather than raising, when no Windows Kits installation can be
+        found, so detection on a system without the Windows SDK just finds nothing here.
+        """
+        if not kit_base:
+            kit_base = WindowsKitExternalPaths.find_windows_kit_roots()
+            if not kit_base:
+                tty.debug(
+                    "No Windows Kits installation found under %ProgramFiles(x86)%. Install "
+                    "the Windows SDK (and WDK if needed) with the Visual Studio Installer or the "
+                    "standalone installers, or point Spack at a non-standard location with "
+                    "'spack external find --path'."
+                )
+                return []
+        if isinstance(kit_base, str):
+            kit_base = kit_base.split(";")
+        return kit_base
 
     @staticmethod
     def find_windows_kit_bin_paths(
         kit_base: Union[Optional[str], Optional[list]] = None,
     ) -> List[str]:
         """Returns Windows kit bin directory per version"""
-        kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
-        assert kit_base, "Unexpectedly empty value for Windows kit base path"
-        if isinstance(kit_base, str):
-            kit_base = kit_base.split(";")
         kit_paths = []
-        for kit in kit_base:
+        for kit in WindowsKitExternalPaths._resolve_kit_bases(kit_base):
             kit_bin = os.path.join(kit, "bin")
             kit_paths.extend(glob.glob(os.path.join(kit_bin, "[0-9]*", "*\\")))
         return kit_paths
@@ -264,23 +283,31 @@ class WindowsKitExternalPaths:
         kit_base: Union[Optional[str], Optional[list]] = None,
     ) -> List[str]:
         """Returns Windows kit lib directory per version"""
-        kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
-        assert kit_base, "Unexpectedly empty value for Windows kit base path"
-        if isinstance(kit_base, str):
-            kit_base = kit_base.split(";")
         kit_paths = []
-        for kit in kit_base:
+        for kit in WindowsKitExternalPaths._resolve_kit_bases(kit_base):
             kit_lib = os.path.join(kit, "Lib")
             kit_paths.extend(glob.glob(os.path.join(kit_lib, "[0-9]*", "*", "*\\")))
         return kit_paths
 
     @staticmethod
     def find_windows_driver_development_kit_paths() -> List[str]:
-        """Provides a list of all installation paths
-        for the WDK by version and architecture
+        """Return WDK lib directories by version and architecture.
+
+        Uses ``WDKContentRoot`` when set (it is set by the WDK's own environment scripts, and
+        may point at an atypical location). Otherwise scans the Windows Kits trees for
+        kernel-mode (``km``) lib directories, which distinguish the WDK from the SDK. This
+        covers both the standalone WDK and the WDK installed via the Visual Studio Installer,
+        which share the same layout.
         """
         wdk_content_root = os.getenv("WDKContentRoot")
-        return WindowsKitExternalPaths.find_windows_kit_lib_paths(wdk_content_root)
+        if wdk_content_root:
+            return WindowsKitExternalPaths.find_windows_kit_lib_paths(wdk_content_root)
+        return [
+            arch_dir
+            for kit in WindowsKitExternalPaths.find_windows_kit_roots()
+            for arch_dir in glob.glob(os.path.join(kit, "Lib", "[0-9]*", "km", "*"))
+            if os.path.isdir(arch_dir)
+        ]
 
     @staticmethod
     def find_windows_kit_reg_installed_roots_paths() -> List[str]:
@@ -301,7 +328,7 @@ class WindowsKitExternalPaths:
     @staticmethod
     def find_windows_kit_reg_sdk_paths() -> List[str]:
         sdk_paths = []
-        sdk_regex = re.compile(r"v[0-9]+.[0-9]+")
+        sdk_regex = re.compile(r"v[0-9]+\.[0-9]+")
         windows_reg = winreg.WindowsRegistryView(
             "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows",
             root_key=winreg.HKEY.HKEY_LOCAL_MACHINE,
@@ -319,8 +346,8 @@ class WindowsKitExternalPaths:
 class VisualStudioLayout:
     """Discovery of packages installed or managed by the Visual Studio Installer.
 
-    Handles all VS-managed components: CMake, Ninja, LLVM/Clang, Windows SDK,
-    and WDK installed either as VS workload components or as standalone VS installs.
+    Handles all VS-managed components: CMake, Ninja, LLVM/Clang, Windows SDK
+    installed either as VS workload components or as standalone VS installs.
     """
 
     # Release years for which the path heuristics in this class have been verified.
@@ -329,7 +356,7 @@ class VisualStudioLayout:
 
     @staticmethod
     def _vswhere_exe() -> str:
-        root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles", "")
+        root = os.environ.get("ProgramFiles(x86)") or os.environ.get("ProgramFiles") or ""
         return os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe")
 
     @staticmethod
@@ -445,24 +472,6 @@ class VisualStudioLayout:
                     if os.path.isdir(arch_dir):
                         paths.append(arch_dir)
         return paths
-
-    @staticmethod
-    def find_wdk_paths() -> List[str]:
-        """Return WDK lib directories for WDK installed via the VS Installer.
-
-        The kernel-mode (km) subdirectory distinguishes WDK libs from the SDK.
-        Falls back to scanning the Windows Kits tree when WDKContentRoot is absent.
-        """
-        wdk_root = os.environ.get("WDKContentRoot")
-        if wdk_root:
-            return WindowsKitExternalPaths.find_windows_kit_lib_paths(wdk_root)
-        program_files_x86 = os.environ.get("ProgramFiles(x86)", "")
-        kit_lib = os.path.join(program_files_x86, "Windows Kits", "10", "Lib")
-        return [
-            arch_dir
-            for arch_dir in glob.glob(os.path.join(kit_lib, "[0-9]*", "km", "*"))
-            if os.path.isdir(arch_dir)
-        ]
 
     @staticmethod
     def find_vs_managed_paths() -> List[str]:
