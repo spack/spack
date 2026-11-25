@@ -78,11 +78,8 @@ FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 #: Filename for the Spack build/install log.
 _spack_build_logfile = "spack-build-out.txt"
 
-#: Filename for the Spack build/install environment file.
-_spack_build_envfile = "spack-build-env.txt"
-
 #: Filename for the Spack build/install environment modifications file.
-_spack_build_envmodsfile = "spack-build-env-mods.txt"
+_spack_build_envfile = "spack-build-env.txt"
 
 #: Filename for the Spack configure args file.
 _spack_configure_argsfile = "spack-configure-args.txt"
@@ -1303,16 +1300,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @property
     def env_path(self):
-        """Return the build environment file path associated with staging."""
+        """Return the build environment modifications file path associated with staging."""
         return os.path.join(self.stage.path, _spack_build_envfile)
-
-    @property
-    def env_mods_path(self):
-        """
-        Return the build environment modifications file path associated with
-        staging.
-        """
-        return os.path.join(self.stage.path, _spack_build_envmodsfile)
 
     @property
     def metadata_dir(self):
