@@ -320,7 +320,8 @@ class URLBuildcacheEntry:
         elif buildcache_component == BuildcacheComponent.SPEC:
             return "*.spec.manifest.json"
         elif buildcache_component == BuildcacheComponent.INDEX:
-            return ".*index.manifest.json"
+            # Matches the root index as well as view indices (<view>/index.manifest.json)
+            return "*index.manifest.json"
         elif buildcache_component == BuildcacheComponent.KEY:
             return "*.key.manifest.json"
         elif buildcache_component == BuildcacheComponent.KEY_INDEX:

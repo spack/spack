@@ -4,7 +4,6 @@
 """Check the database is functioning properly, both in memory and in its file."""
 
 import datetime
-import functools
 import gzip
 import json
 import os
@@ -293,23 +292,6 @@ def test_recursive_upstream_dbs(
         assert db_a_from_scratch.installed_relatives(spec["z"], direction="parents") == set(
             [spec, spec["y"]]
         )
-
-
-@pytest.fixture()
-def usr_folder_exists(monkeypatch):
-    """The ``/usr`` folder is assumed to be existing in some tests. This
-    fixture makes it such that its existence is mocked, so we have no
-    requirements on the system running tests.
-    """
-    isdir = os.path.isdir
-
-    @functools.wraps(os.path.isdir)
-    def mock_isdir(path):
-        if path == "/usr":
-            return True
-        return isdir(path)
-
-    monkeypatch.setattr(os.path, "isdir", mock_isdir)
 
 
 def _print_ref_counts(db: Database):
@@ -841,11 +823,9 @@ def test_external_entries_in_db(mutable_database):
 
 
 @pytest.mark.regression("8036")
-def test_regression_issue_8036(mutable_database: Database, usr_folder_exists):
-    # The test ensures that the external package prefix is treated as
-    # existing. Even when the package prefix exists, the package should
-    # not be considered installed until it is added to the database by
-    # the installer with install().
+def test_regression_issue_8036(mutable_database: Database):
+    # The external's prefix is /usr, which exists. The package must still
+    # not be considered installed until the installer adds it to the database.
     s = spack.concretize.concretize_one("externaltool@0.9")
     assert not mutable_database.installed(s)
 

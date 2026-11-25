@@ -19,9 +19,11 @@ from typing import (
     Any,
     Callable,
     Dict,
+    FrozenSet,
     Iterable,
     List,
     Mapping,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -72,7 +74,7 @@ from spack.util.filesystem import copy_tree, islink, readlink
 from spack.util.lang import ensure_unwrapped, stable_partition
 from spack.util.link_tree import ConflictingSpecsError
 
-from .list import SpecList, SpecListError, SpecListParser
+from .list import SpecList, SpecListParser, spec_string
 
 SpecPair = Tuple[Spec, Spec]
 
@@ -968,10 +970,18 @@ class ViewDescriptor:
         return self._exclude_duplicate_runtimes(result)
 
     def regenerate(self, env: "Environment") -> None:
+        # Roots that are marked install: false, or depend on one, are not part of the view
+        installable = env.installable_roots()
         if self.groups is None:
-            concrete_roots = env.concrete_roots()
+            concrete_roots = installable
         else:
-            concrete_roots = [c for g in self.groups for _, c in env.concretized_specs_by(group=g)]
+            installable_hashes = {s.dag_hash() for s in installable}
+            concrete_roots = [
+                c
+                for g in self.groups
+                for _, c in env.concretized_specs_by(group=g)
+                if c.dag_hash() in installable_hashes
+            ]
 
         specs = self.specs_for_view(concrete_roots)
         content_hash = self.content_hash(specs)
@@ -1108,6 +1118,64 @@ class ConcretizedRootInfo:
             new=False,
             group=info_dict.get("group", DEFAULT_USER_SPEC_GROUP),
         )
+
+
+def _install_false_dependencies(
+    specs: Sequence[Spec], marked: Iterable[str]
+) -> Dict[str, List[str]]:
+    """Names of the dependencies of each spec whose hash is a root marked ``install:false``,
+    keyed by the hash of the spec. Specs without any are left out.
+
+    All specs are covered by a single post-order walk, so nodes shared between them are visited
+    once rather than once per spec."""
+    marked = frozenset(marked)
+    #: dag hash -> names of the marked roots below that node (not including the node itself)
+    below: Dict[str, FrozenSet[str]] = {}
+    for node in traverse.traverse_nodes(specs, order="post", key=traverse.by_dag_hash):
+        names: Set[str] = set()
+        for dep in node.dependencies():
+            dep_hash = dep.dag_hash()
+            names.update(below[dep_hash])
+            if dep_hash in marked:
+                names.add(dep.name)
+        below[node.dag_hash()] = frozenset(names)
+    return {h: sorted(below[h]) for h in (s.dag_hash() for s in specs) if below[h]}
+
+
+class _MarkedRoot(NamedTuple):
+    spec: Spec
+    #: The entry marked ``install: false`` that made this root not installed.
+    marked: str
+
+
+def _marked_message(root: _MarkedRoot) -> str:
+    if root.marked.startswith(("^", "%")):
+        return (
+            f"not installing {root.spec.name}: it uses {root.marked} which is marked "
+            "install: false"
+        )
+    return f"not installing {root.spec.name}: it is marked install: false"
+
+
+def _blocked_message(spec: Spec, blockers: List[str]) -> str:
+    return (
+        f"not installing {spec.name}: it depends on {', '.join(blockers)}, "
+        "which is marked install: false"
+    )
+
+
+class _RootStatus(NamedTuple):
+    """Which roots of an environment are installed, given the roots marked ``install: false``"""
+
+    #: Marked roots that are not installed, by hash. A marked root is left out if an unmarked root
+    #: concretizes to the same spec, since that spec is installed through the unmarked root.
+    marked: Dict[str, _MarkedRoot]
+    #: Roots that are not marked
+    unmarked: List[Spec]
+    #: Unmarked roots that are installed
+    installable: List[Spec]
+    #: Unmarked roots that depend on a marked root, with the names of the marked roots
+    blocked: List[Tuple[Spec, List[str]]]
 
 
 class Environment:
@@ -1543,7 +1611,7 @@ class Environment:
                     raise SpackEnvironmentError(f"no such package: {spec.name}")
 
         list_to_change = self.spec_lists[list_name]
-        existing = str(spec) in list_to_change.yaml_list
+        existing = any(spec_string(x) == str(spec) for x in list_to_change.yaml_list)
         if not existing:
             list_to_change.add(spec)
             if list_name == USER_SPECS_KEY:
@@ -1588,7 +1656,7 @@ class Environment:
                 " specify a named list that is not a matrix"
             )
 
-        matches = [(idx, x) for idx, x in enumerate(list_to_change) if x.satisfies(match_spec)]
+        matches = [x for x in list_to_change if x.satisfies(match_spec)]
         if len(matches) == 0:
             raise ValueError(
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
@@ -1596,18 +1664,36 @@ class Environment:
         elif len(matches) > 1 and not allow_changing_multiple_specs:
             raise ValueError(f"{str(match_spec)} matches multiple specs")
 
-        for idx, spec in matches:
-            override_spec = Spec.override(spec, change_spec)
-            if list_name == USER_SPECS_KEY:
-                self.manifest.override_user_spec(str(override_spec), idx=idx)
-            else:
-                self.manifest.override_definition(
-                    str(spec), override=str(override_spec), list_name=list_name
+        entries, missing = self._written_entries(list_name, matches)
+        if missing:
+            names = ", ".join(f"'{s}'" for s in missing)
+            raise SpackEnvironmentError(
+                f"cannot change {names} in '{list_name}': {self._not_written_reason()}"
+            )
+
+        replacements = []
+        for entry in entries:
+            # Changing the text as written keeps toolchain names
+            text = str(Spec.override(Spec(entry.text), change_spec))
+            expected = Spec.override(entry.spec, change_spec)
+            try:
+                expanded = self._spec_lists_parser.expand(text)
+            except spack.error.UnsatisfiableSpecError:
+                expanded = None
+            if expanded != expected:
+                raise SpackEnvironmentError(
+                    f"cannot change '{entry.text}' in '{list_name}' to '{change_spec}', since "
+                    f"its toolchain sets a different value: '{text}' expands to '{expanded}'"
                 )
+            replacements.append((entry, text))
+
+        self.manifest.replace_entries(replacements)
         self._sync_speclists()
 
-    def remove(self, query_spec, list_name=USER_SPECS_KEY, force=False):
-        """Remove specs from an environment that match a query_spec"""
+    def remove(self, query_spec, list_name=USER_SPECS_KEY, force=False) -> List[Spec]:
+        """Remove specs from an environment that match a query_spec, and return the specs whose
+        entries were removed from the manifest
+        """
         err_msg_header = (
             f"Cannot remove '{query_spec}' from '{list_name}' definition "
             f"in {self.manifest.manifest_file}"
@@ -1631,22 +1717,14 @@ class Environment:
 
         old_specs = set(self.user_specs)
 
-        # Remove specs from the appropriate spec list
-        for spec in matches:
-            if spec not in list_to_change:
-                continue
-            try:
-                list_to_change.remove(spec)
-            except SpecListError as e:
-                msg = str(e)
-                if force:
-                    msg += " It will be removed from the concrete specs."
-                tty.warn(msg)
-            else:
-                if list_name == USER_SPECS_KEY:
-                    self.manifest.remove_user_spec(str(spec))
-                else:
-                    self.manifest.remove_definition(str(spec), list_name=list_name)
+        entries, missing = self._written_entries(list_name, matches)
+        for spec in missing:
+            msg = f"'{spec}' stays in '{list_name}': {self._not_written_reason()}."
+            if force:
+                msg += " It will be removed from the concrete specs."
+            warnings.warn(msg)
+        self.manifest.remove_entries(entries)
+        removed_specs = list(dict.fromkeys(e.spec for e in entries))
 
         # Recompute "definitions" and user specs
         self._sync_speclists()
@@ -1660,6 +1738,42 @@ class Environment:
             )
             for x in removed:
                 del self.specs_by_hash[x.hash]
+
+        return removed_specs
+
+    def _written_entries(
+        self, list_name: str, specs: List[Spec]
+    ) -> Tuple[List["ManifestEntry"], List[Spec]]:
+        """Finds the entries written in the manifest for some specs of a list.
+
+        Args:
+            list_name: name of the list
+            specs: specs to look up. Those that are not in the list are ignored.
+
+        Returns:
+            A pair. The first item is the list of manifest entries equal to any of the specs. The
+            second is the list of specs that occur in the list more times than they are written in
+            the manifest, because the other occurrences come from a reference, a matrix, or an
+            included file.
+        """
+        wanted = set(specs)
+        in_list = collections.Counter(s for s in self.spec_lists[list_name] if s in wanted)
+        if not in_list:
+            return [], []
+        entries = [
+            e
+            for e in self.manifest.entries(list_name, expand=self._spec_lists_parser.expand)
+            if e.spec in in_list
+        ]
+        written = collections.Counter(e.spec for e in entries)
+        missing = [s for s, count in in_list.items() if written[s] < count]
+        return entries, missing
+
+    def _not_written_reason(self) -> str:
+        return (
+            "some occurrences come from a reference, a matrix, or an included file, "
+            f"instead of being written in {self.manifest_path}"
+        )
 
     def is_develop(self, spec):
         """Returns true when the spec is built from local sources"""
@@ -1973,7 +2087,7 @@ class Environment:
             # default view if they are installed.
             with spack.store.STORE.db.read_transaction():
                 for view_name, view in self.views.items():
-                    for spec in self.concrete_roots():
+                    for spec in self.installable_roots():
                         if spec in view and spec.package and spack.store.STORE.db.installed(spec):
                             msg = '{0} in view "{1}"'
                             tty.debug(msg.format(spec.name, view_name))
@@ -1991,7 +2105,7 @@ class Environment:
         try:
             with spack.store.STORE.db.read_transaction():
                 installed_roots = [
-                    s for s in self.concrete_roots() if spack.store.STORE.db.installed(s)
+                    s for s in self.installable_roots() if spack.store.STORE.db.installed(s)
                 ]
             mods = uenv.environment_modifications_for_specs(*installed_roots, view=view)
         except Exception as e:
@@ -2123,14 +2237,44 @@ class Environment:
         """
         self.install_specs(None, **install_args)
 
+    def warn_skipped_roots(self) -> None:
+        """Warns about all roots that are not installed because of ``install: false``:
+        marked roots and dependencies."""
+        self._warn_skipped(self._root_status())
+
+    @staticmethod
+    def _warn_skipped(status: _RootStatus) -> None:
+        for root in status.marked.values():
+            tty.warn(_marked_message(root))
+        for spec, blockers in status.blocked:
+            tty.warn(_blocked_message(spec, blockers))
+
     def create_installer(self, specs: Optional[List[Spec]] = None, **install_args):
         """Returns an installer for the given specs of this environment, or for all its roots.
 
         Args:
-            specs: specs to install, by default the concrete roots
+            specs: specs to install, by default the installable roots. Specs that are marked
+                ``install: false``, or depend on a root that is, are skipped with a warning.
             install_args: keyword arguments of ``spack.installer_dispatch.create_installer``
         """
-        specs = specs if specs is not None else self.concrete_roots()
+        status = self._root_status()
+        if specs is None:
+            self._warn_skipped(status)
+            specs = status.installable
+        else:
+            installable_specs = []
+            candidates = [s for s in specs if s.dag_hash() not in status.marked]
+            all_blockers = _install_false_dependencies(candidates, status.marked)
+            for spec in specs:
+                if spec.dag_hash() in status.marked:
+                    tty.warn(_marked_message(status.marked[spec.dag_hash()]))
+                    continue
+                blockers = all_blockers.get(spec.dag_hash())
+                if blockers:
+                    tty.warn(_blocked_message(spec, blockers))
+                else:
+                    installable_specs.append(spec)
+            specs = installable_specs
 
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
@@ -2217,6 +2361,78 @@ class Environment:
         """Same as concretized_specs, except it returns the list of concrete
         roots *without* associated user spec"""
         return [root for _, root in self.concretized_specs()]
+
+    def _marked_roots(self) -> List[Tuple[ConcretizedRootInfo, str]]:
+        """Roots that are not installed because of ``install: false``, each with the entry that
+        is marked"""
+        marked: Dict[Tuple[str, Spec], str] = {}
+        for group in self.manifest.groups():
+            speclist = self.spec_lists.get(self._user_specs_key(group=group))
+            if speclist is None:  # e.g. while the user specs are being removed
+                continue
+            marked.update(
+                ((group, spec), by) for spec, by in zip(speclist.specs, speclist.marked) if by
+            )
+        return [
+            (x, marked[(x.group, x.root)])
+            for x in self.concretized_roots
+            if (x.group, x.root) in marked
+        ]
+
+    def _root_status(self) -> _RootStatus:
+        marked_roots = self._marked_roots()
+        marked_keys = {(x.group, x.root) for x, _ in marked_roots}
+        unmarked = [
+            self.specs_by_hash[x.hash]
+            for x in self.concretized_roots
+            if (x.group, x.root) not in marked_keys
+        ]
+        unmarked.extend(
+            concrete
+            for included_env in self.included_concretized_roots
+            for _, concrete in self.concretized_specs_from_included_environment(included_env)
+        )
+        # dedupe by hash, user spellings for the same concrete spec can differ between envs
+        unmarked = list({s.dag_hash(): s for s in unmarked}.values())
+
+        unmarked_hashes = {s.dag_hash() for s in unmarked}
+        marked = {
+            x.hash: _MarkedRoot(self.specs_by_hash[x.hash], by)
+            for x, by in marked_roots
+            if x.hash not in unmarked_hashes
+        }
+
+        # for envs without marked roots, skip walking each root's deps
+        if not marked:
+            return _RootStatus(marked, unmarked, unmarked, [])
+
+        installable, blocked = [], []
+        all_blockers = _install_false_dependencies(unmarked, marked)
+        for spec in unmarked:
+            blockers = all_blockers.get(spec.dag_hash())
+            if blockers:
+                blocked.append((spec, blockers))
+            else:
+                installable.append(spec)
+        return _RootStatus(marked, unmarked, installable, blocked)
+
+    def installable_roots(self) -> List[Spec]:
+        """Same as concrete_roots(), but excludes roots marked ``install: false``, and
+        dependent roots."""
+        return self._root_status().installable
+
+    def not_installable_hashes(self) -> Set[str]:
+        """Hashes of the specs that are not installed because of ``install: false``. This covers
+        marked roots, dependent roots, and dependencies not needed by an installed root."""
+        status = self._root_status()
+        # if no marked roots, don't traverse the env
+        if not status.marked:
+            return set()
+        everything = traverse.traverse_nodes(
+            [*status.unmarked, *(r.spec for r in status.marked.values())], key=traverse.by_dag_hash
+        )
+        needed = traverse.traverse_nodes(status.installable, key=traverse.by_dag_hash)
+        return {s.dag_hash() for s in everything} - {s.dag_hash() for s in needed}
 
     def concretized_specs_by(self, *, group: str) -> Iterable[Tuple[Spec, Spec]]:
         """Generates all the (abstract, concrete) spec pairs for a given group"""
@@ -3015,6 +3231,36 @@ def _equiv_dict(first, second):
     return same_values and same_keys_with_same_overrides
 
 
+#: Statuses of specs that are not installed, shown as [x] when ``install: false`` skips the spec
+_NOT_PRESENT = (
+    spack.spec.InstallStatus.absent,
+    spack.spec.InstallStatus.missing,
+    spack.spec.InstallStatus.buildcache,
+)
+
+
+def install_status_fn(
+    env: Optional[Environment],
+    status_fn: Optional[Callable[[Spec], spack.spec.InstallStatus]] = None,
+) -> Callable[[Spec], spack.spec.InstallStatus]:
+    """Status for specs that aren't installed because of ``install:false`` in ``env``."""
+    base = status_fn if status_fn is not None else spack.store.STORE.db.install_status
+    if env is None:
+        return base
+
+    not_installable = env.not_installable_hashes()
+    if not not_installable:
+        return base
+
+    def _status_fn(spec: Spec) -> spack.spec.InstallStatus:
+        status = base(spec)
+        if status in _NOT_PRESENT and spec.dag_hash() in not_installable:
+            return spack.spec.InstallStatus.not_installable
+        return status
+
+    return _status_fn
+
+
 def display_specs(
     specs: List[spack.spec.Spec],
     *,
@@ -3035,7 +3281,7 @@ def display_specs(
         format=spack.spec.DISPLAY_FORMAT,
         hashes=True,
         hashlen=7,
-        status_fn=status_fn if status_fn is not None else spack.store.STORE.db.install_status,
+        status_fn=install_status_fn(active_environment(), status_fn),
         version_style_fn=(
             spack.package_base.non_preferred_version if highlight_non_defaults else None
         ),
@@ -3264,6 +3510,22 @@ def initialize_environment_dir(
         shutil.copytree(orig_abspath, abspath, symlinks=True)
 
 
+class ManifestEntry(NamedTuple):
+    """A spec string written in a list of the manifest file, either on its own or as the ``spec``
+    attribute of an entry with options"""
+
+    #: ``specs`` for the default group, otherwise the name of a definition
+    list_name: str
+    #: YAML list that holds the string
+    container: List[Any]
+    #: Position of the string in ``container``
+    position: int
+    #: The string, as written in the manifest
+    text: str
+    #: The string parsed into a spec, with toolchains expanded
+    spec: Spec
+
+
 class EnvironmentManifestFile(collections.abc.Mapping):
     """Manages the in-memory representation of a manifest file, and its synchronization
     with the actual manifest on disk.
@@ -3366,6 +3628,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
                     )
                 elif "specs" in item:
                     self._user_specs[group].extend(item["specs"])
+                elif "spec" in item:
+                    self._user_specs[group].append(item)
 
     def _clear_user_specs(self) -> None:
         self._user_specs = {DEFAULT_USER_SPEC_GROUP: []}
@@ -3373,28 +3637,94 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self._config_override = {DEFAULT_USER_SPEC_GROUP: None}
         self._explicit = {DEFAULT_USER_SPEC_GROUP: True}
 
-    def _all_matches(self, user_spec: str) -> List[str]:
-        """Maps the input string to the first equivalent user spec in the manifest,
-        and returns it.
+    def entries(self, list_name: str, *, expand: Callable[[str], Spec]) -> List[ManifestEntry]:
+        """Returns the spec strings written in a list of the manifest.
+
+        The strings are taken from:
+
+        * ``specs``: the default group, i.e. the top-level strings, and the strings of entries
+          whose ``group`` is missing or is the default one
+        * any other name: the definitions with that name whose ``when`` condition holds
+
+        References (``$name``) and matrices are skipped. Any edit of the manifest invalidates the
+        entries returned.
 
         Args:
-            user_spec: user spec to be found
-
-        Raises:
-            ValueError: if no equivalent match is found
+            list_name: ``specs``, or the name of a definition
+            expand: parses a string into the spec stored in each entry
         """
-        toolchains = spack.config.CONFIG.get("toolchains", {})
-        wanted = spack.spec.parse(user_spec, toolchains=toolchains)
-        result = [
-            yaml_spec_str
-            for yaml_spec_str in self.configuration["specs"]
-            if spack.spec.parse(yaml_spec_str, toolchains=toolchains) == wanted
+        if list_name == USER_SPECS_KEY:
+            containers = self._default_group_lists()
+        else:
+            containers = [item[list_name] for item in self._active_definitions(list_name)]
+
+        result = []
+        for container in containers:
+            for idx, item in enumerate(container):
+                text = spec_string(item)
+                if text is not None and not text.startswith("$"):
+                    result.append(ManifestEntry(list_name, container, idx, text, expand(text)))
+        return result
+
+    def _default_group_lists(self) -> List[List[Any]]:
+        """Returns the YAML lists holding the specs of the default group"""
+        specs_yaml = self.configuration.get(USER_SPECS_KEY, [])
+        result = [specs_yaml]
+        for item in specs_yaml:
+            if not isinstance(item, dict) or "specs" not in item:
+                continue
+            if item.get("group", DEFAULT_USER_SPEC_GROUP) == DEFAULT_USER_SPEC_GROUP:
+                result.append(item["specs"])
+        return result
+
+    def _active_definitions(self, list_name: str) -> List[Dict[str, Any]]:
+        """Returns the definitions named ``list_name`` whose ``when`` condition holds"""
+        return [
+            item
+            for item in self.configuration.get("definitions", [])
+            if [x for x in item if x != "when"] == [list_name]
+            and spack.spec.eval_conditional(item.get("when", "True"))
         ]
 
-        if not result:
-            raise ValueError(f"cannot find a spec equivalent to {user_spec}")
+    def replace_entries(self, replacements: List[Tuple[ManifestEntry, str]]) -> None:
+        """Replaces the text of each entry with the one paired to it.
 
-        return result
+        Args:
+            replacements: entries, each paired with its new text
+        """
+        for entry, text in replacements:
+            item = entry.container[entry.position]
+            if isinstance(item, dict):  # spec entry with options, which are kept
+                item["spec"] = text
+            else:
+                entry.container[entry.position] = text
+        self._entries_changed([entry for entry, _ in replacements])
+
+    def remove_entries(self, entries: List[ManifestEntry]) -> None:
+        """Removes the entries passed as input from the manifest.
+
+        Args:
+            entries: distinct entries to be removed
+        """
+        # Delete from the highest position down, so the positions of the others stay valid
+        for entry in sorted(entries, key=lambda e: e.position, reverse=True):
+            del entry.container[entry.position]
+        self._entries_changed(entries)
+
+    def _entries_changed(self, entries: List[ManifestEntry]) -> None:
+        if any(e.list_name == USER_SPECS_KEY for e in entries):
+            self._clear_user_specs()
+            self._init_user_specs()
+            self.changed = True
+        if any(e.list_name != USER_SPECS_KEY for e in entries):
+            self._definitions_changed()
+
+    def _definitions_changed(self) -> None:
+        # "definitions" can be remote, so we need to update the global config too
+        spack.config.CONFIG.set(
+            "definitions", self.configuration["definitions"], scope=self.scope_name
+        )
+        self.changed = True
 
     def user_specs(self, *, group: Optional[str] = None) -> List:
         group = self._ensure_group_exists(group)
@@ -3473,47 +3803,10 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         return group_entry
 
-    def remove_user_spec(self, user_spec: str) -> None:
-        """Removes the user spec passed as input from the default list of root specs
-
-        Args:
-            user_spec: user spec to be removed
-
-        Raises:
-            SpackEnvironmentError: when the user spec is not in the list
-        """
-        try:
-            for key in self._all_matches(user_spec):
-                self.configuration["specs"].remove(key)
-                self._user_specs[DEFAULT_USER_SPEC_GROUP].remove(key)
-        except ValueError as e:
-            msg = f"cannot remove {user_spec} from {self}, no such spec exists"
-            raise SpackEnvironmentError(msg) from e
-        self.changed = True
-
     def clear(self) -> None:
         """Clear all user specs from the list of root specs"""
         self.configuration["specs"] = []
         self._clear_user_specs()
-        self.changed = True
-
-    def override_user_spec(self, user_spec: str, idx: int) -> None:
-        """Overrides the user spec at index idx with the one passed as input.
-
-        Args:
-            user_spec: new user spec
-            idx: index of the spec to be overridden
-
-        Raises:
-            SpackEnvironmentError: when the user spec cannot be overridden
-        """
-        try:
-            self.configuration["specs"][idx] = user_spec
-            self._clear_user_specs()
-            self._init_user_specs()
-        except ValueError as e:
-            msg = f"cannot override {user_spec} from {self}"
-            raise SpackEnvironmentError(msg) from e
         self.changed = True
 
     def set_include_concrete(self, include_concrete: List[str]) -> None:
@@ -3535,89 +3828,14 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Raises:
             SpackEnvironmentError: is no valid definition exists already
         """
-        defs = self.configuration.get("definitions", [])
-        msg = f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
+        active = self._active_definitions(list_name)
+        if not active:
+            raise SpackEnvironmentError(
+                f"cannot add {user_spec} to the '{list_name}' definition, no valid list exists"
+            )
 
-        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
-            item[list_name].append(user_spec)
-            break
-
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
-        self.changed = True
-
-    def remove_definition(self, user_spec: str, list_name: str) -> None:
-        """Removes a user spec from an active definition that matches the name passed as argument.
-
-        Args:
-            user_spec: user spec to be removed
-            list_name: name of the definition where to remove the spec from
-
-        Raises:
-            SpackEnvironmentError: if the user spec cannot be removed from the list,
-                or the list does not exist
-        """
-        defs = self.configuration.get("definitions", [])
-        msg = f"cannot remove {user_spec} from the '{list_name}' definition, no valid list exists"
-
-        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
-            try:
-                item[list_name].remove(user_spec)
-                break
-            except ValueError:
-                pass
-
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
-        self.changed = True
-
-    def override_definition(self, user_spec: str, *, override: str, list_name: str) -> None:
-        """Overrides a user spec from an active definition that matches the name passed
-        as argument.
-
-        Args:
-            user_spec: user spec to be overridden
-            override: new spec to be used
-            list_name: name of the definition where to override the spec
-
-        Raises:
-            SpackEnvironmentError: if the user spec cannot be overridden
-        """
-        defs = self.configuration.get("definitions", [])
-        msg = f"cannot override {user_spec} with {override} in the '{list_name}' definition"
-
-        for idx, item in self._iterate_on_definitions(defs, list_name=list_name, err_msg=msg):
-            try:
-                sub_index = item[list_name].index(user_spec)
-                item[list_name][sub_index] = override
-                break
-            except ValueError:
-                pass
-
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
-        self.changed = True
-
-    def _iterate_on_definitions(self, definitions, *, list_name, err_msg):
-        """Iterates on definitions, returning the active ones matching a given name."""
-
-        def extract_name(_item):
-            names = [x for x in _item if x != "when"]
-            assert len(names) == 1, f"more than one name in {_item}"
-            return names[0]
-
-        for idx, item in enumerate(definitions):
-            name = extract_name(item)
-            if name != list_name:
-                continue
-
-            condition_str = item.get("when", "True")
-            if not spack.spec.eval_conditional(condition_str):
-                continue
-
-            yield idx, item
-        else:
-            raise SpackEnvironmentError(err_msg)
+        active[0][list_name].append(user_spec)
+        self._definitions_changed()
 
     def set_default_view(self, view: Union[bool, str, pathlib.Path, Dict[str, str]]) -> None:
         """Sets the default view root in the manifest to the value passed as input.

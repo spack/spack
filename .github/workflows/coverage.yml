@@ -2,6 +2,9 @@ name: coverage
 
 on:
   workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: false
 
 # Default permissions for this workflow are restrictive; individual jobs can overwrite if they need additional access.
 permissions:

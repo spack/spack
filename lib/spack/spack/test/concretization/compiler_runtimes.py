@@ -230,3 +230,37 @@ def test_multiple_intel_oneapi_compilers_versions(mutable_config, runtime_repo):
     pkga_v2 = spack.concretize.concretize_one("pkg-a %c,cxx=intel-oneapi-compilers@2.0")
     assert pkga_v2.satisfies("%intel-oneapi-runtime@2.0")
     assert pkga_v2["intel-oneapi-runtime"].satisfies("%gcc-runtime@10.2.1"), pkga_v2.tree()
+
+
+@pytest.mark.regression("51599")
+def test_reused_compiler_older_than_its_own_runtime(runtime_repo, mutable_config):
+    """Tests that a compiler built by a newer version of itself can be reused to build a package.
+
+    The reused compiler depends on the runtime of the newer compiler, while the package it builds
+    links to the runtime of the older compiler.
+    """
+    root, reused_gcc = _concretize_with_reuse(
+        root_str="pkg-b %gcc@9.4.1", reused_str="gcc@9.4.1 languages=c,c++ %gcc@10.2.1"
+    )
+
+    assert root["gcc"].dag_hash() == reused_gcc.dag_hash()
+    assert root["gcc"]["gcc-runtime"].satisfies("@10.2.1")
+    assert root.dependencies("gcc-runtime")[0].satisfies("@9.4.1")
+
+
+def test_build_dependency_can_use_a_newer_compiler(runtime_repo):
+    """Tests that a build-only dependency can be compiled with a newer compiler than its
+    dependent, since it does not link the runtime of its dependent.
+    """
+    root = spack.concretize.concretize_one("pkg-c %gcc@9.4.0 ^pkg-b %gcc@10.2.1")
+
+    assert root.satisfies("%gcc@9.4.0")
+    assert root["pkg-b"].satisfies("%gcc@10.2.1")
+
+
+def test_link_dependency_cannot_use_a_newer_compiler(runtime_repo):
+    """Tests that a link dependency cannot be compiled with a newer compiler than its dependent,
+    since it would need a newer runtime than the one its dependent links.
+    """
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        spack.concretize.concretize_one("pkg-a %gcc@9.4.0 ^pkg-b %gcc@10.2.1")

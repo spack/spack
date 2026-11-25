@@ -6,11 +6,13 @@
 # and compression. They still use an in-memory OCI registry.
 
 import hashlib
+import io
 import json
 import os
 import pathlib
 import re
 import sys
+import tarfile
 import urllib.error
 from contextlib import contextmanager
 
@@ -29,7 +31,7 @@ from spack.main import SpackCommand
 from spack.oci.image import Digest, ImageReference, default_config, default_manifest
 from spack.oci.oci import blob_exists, get_manifest_and_config, upload_blob, upload_manifest
 from spack.test.oci.mock_registry import DummyServer, InMemoryOCIRegistry, create_opener
-from spack.util.archive import gzip_compressed_tarfile
+from spack.util.archive import default_path_to_name, gzip_compressed_tarfile
 
 buildcache = SpackCommand("buildcache")
 mirror = SpackCommand("mirror")
@@ -114,6 +116,69 @@ def test_buildcache_tag(install_mockery, mock_fetch, mutable_mock_env_path):
         assert len(manifest["layers"]) == len(
             [x for x in libelf.traverse(deptype=dt.LINK | dt.RUN) if not x.external]
         )
+
+
+@pytest.mark.not_on_windows("environment views are symlink based")
+def test_buildcache_tag_env_view(install_mockery, mock_fetch, mutable_mock_env_path, tmp_path):
+    """Tests that --env-view adds the environment view as the last layer of the image, and that
+    the image's environment variables point to the view instead of to the install prefixes."""
+    view_root = str(tmp_path / "view")
+    env("create", "--with-view", view_root, "test")
+    with ev.read("test"):
+        install("--fake", "--add", "libelf")
+
+    registry = InMemoryOCIRegistry("example.com")
+
+    with oci_servers(registry):
+        mirror("add", "oci-test", "oci://example.com/image")
+
+        with ev.read("test") as e:
+            buildcache("push", "--tag", "packages", "oci-test")
+            buildcache("push", "--tag", "with_view", "--env-view", "oci-test")
+            prefix = e.concrete_roots()[0].prefix
+
+        manifest, config = get_manifest_and_config(
+            ImageReference.from_string("example.com/image:packages")
+        )
+        view_manifest, view_config = get_manifest_and_config(
+            ImageReference.from_string("example.com/image:with_view")
+        )
+
+    # The view is one extra layer on top of the package layers
+    assert view_manifest["layers"][:-1] == manifest["layers"]
+    assert view_config["rootfs"]["diff_ids"][:-1] == config["rootfs"]["diff_ids"]
+
+    # Environment variables refer to the view, not to the install prefix
+    path = next(x for x in config["config"]["Env"] if x.startswith("PATH="))
+    view_path = next(x for x in view_config["config"]["Env"] if x.startswith("PATH="))
+    assert os.path.join(prefix, "bin") in path
+    assert os.path.join(view_root, "bin") in view_path
+    assert not any(prefix in entry for entry in view_config["config"]["Env"])
+
+    # The layer contains the view at the same path as on the host, linking to the packages
+    layer = registry.blobs[view_manifest["layers"][-1]["digest"]]
+    with tarfile.open(fileobj=io.BytesIO(layer), mode="r:gz") as tar:
+        members = {m.name: m for m in tar.getmembers()}
+    name = default_path_to_name(os.path.join(view_root, "bin", "libelf"))
+    assert members[name].issym()
+    assert members[name].linkname == os.path.join(prefix, "bin", "libelf")
+
+
+@pytest.mark.parametrize(
+    "args,error",
+    [
+        (["--env-view", "oci-test"], "--env-view requires --tag"),
+        (["--tag", "x", "--env-view", "oci-test", "libelf"], "cannot be combined"),
+        (["--tag", "x", "--env-view", "oci-test"], "requires an environment with a default view"),
+    ],
+)
+def test_buildcache_env_view_usage_errors(args, error, mutable_mock_env_path):
+    mirror("add", "oci-test", "oci://example.com/image")
+    env("create", "--without-view", "test")
+    with ev.read("test"):
+        output = buildcache("push", *args, fail_on_error=False)
+    assert buildcache.returncode != 0
+    assert error in output
 
 
 def test_buildcache_push_with_base_image_command(mutable_database, tmp_path: pathlib.Path):

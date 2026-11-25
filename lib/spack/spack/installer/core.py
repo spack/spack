@@ -8,13 +8,14 @@ commands, and flushes finished builds to the database. See :mod:`spack.installer
 overall design."""
 
 import json
+import math
 import os
 import selectors
 import signal
 import sys
 import tempfile
 import time
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Set, Union
 
 import spack.binary_distribution
 import spack.config
@@ -33,12 +34,15 @@ import spack.util.tty
 from spack.installer.base import (
     JOBSERVER_EVENT,
     OUTPUT_BUFFER_SIZE,
+    SIGNAL_EVENT,
     SIGWINCH_EVENT,
     STDIN_EVENT,
+    STOP_SIGNALS,
     BaseTerminalState,
     ExitCode,
     FdInfo,
     InstallPolicy,
+    IpcChannel,
     JobServerBase,
 )
 from spack.installer.build import BuildRequest, ChildInfo, start_build
@@ -54,17 +58,21 @@ from spack.installer.ui import BuildInfo, InstallerUI, SetEcho, TerminalUI
 if sys.platform == "win32":
     from spack.installer.base import NoopJobServer as JobServer
     from spack.installer.windows import WindowsTerminalState as TerminalState
-    from spack.installer.windows import read_connection, write_connection
+    from spack.installer.windows import create_wakeup_channel, read_connection, write_connection
 else:
     from spack.installer.posix import PosixJobServer as JobServer
     from spack.installer.posix import PosixTerminalState as TerminalState
-    from spack.installer.posix import read_connection, write_connection
+    from spack.installer.posix import create_wakeup_channel, read_connection, write_connection
 
 if TYPE_CHECKING:
     import spack.package_base
 
 #: How often to flush completed builds to the database
 DATABASE_WRITE_INTERVAL = 5.0
+
+#: How often Ctrl-C is left to the event loop, which terminates the builds, or kills them if they
+#: were told to terminate before. Any further Ctrl-C raises KeyboardInterrupt.
+MAX_INTERRUPTS = 2
 
 
 class ReportData:
@@ -156,6 +164,63 @@ class NullReportData(ReportData):
         pass
 
 
+class SignalEvents:
+    """Turns signals that still have their default handler into event loop events, so that they
+    never interrupt its bookkeeping. The wakeup fd receives one byte per signal, its number, and
+    wakes up select(). Other signals with Python handlers write to it too."""
+
+    def __init__(self, signals: Iterable[signal.Signals]) -> None:
+        self.old_handlers = {}
+        for sig in signals:
+            handler = signal.getsignal(sig)
+            if handler is signal.SIG_DFL or handler is signal.default_int_handler:
+                self.old_handlers[sig] = handler
+        self.reader: Optional[IpcChannel] = None
+        self.writer: Optional[IpcChannel] = None
+        self.old_wakeup_fd = -1
+        self.interrupts = 0
+
+    def setup(self, selector: selectors.BaseSelector) -> None:
+        if not self.old_handlers:
+            return
+        # Set the wakeup fd before the handlers, so that every handled signal wakes up select()
+        self.reader, self.writer = create_wakeup_channel()
+        selector.register(self.reader, selectors.EVENT_READ, SIGNAL_EVENT)
+        self.old_wakeup_fd = signal.set_wakeup_fd(self.writer.fileno())
+        for sig in self.old_handlers:
+            signal.signal(sig, self._handle)
+
+    def _handle(self, signum: int, frame: object) -> None:
+        # The C handler has already written the signal number to the wakeup fd. The event loop
+        # acts on the first MAX_INTERRUPTS of Ctrl-C; one more means that it does not respond.
+        if signum == signal.SIGINT:
+            self.interrupts += 1
+            if self.interrupts > MAX_INTERRUPTS:
+                raise KeyboardInterrupt
+
+    def read(self) -> bytes:
+        """Return the numbers of the signals received since the last read."""
+        assert self.reader is not None
+        try:
+            return read_connection(self.reader, 65536)
+        except BlockingIOError:
+            return b""
+
+    def teardown(self, signals: Iterable[int]) -> int:
+        """Restore the handlers and close the wakeup channel. Return the first of ``signals``
+        received since the last read, or 0."""
+        for sig, handler in self.old_handlers.items():
+            signal.signal(sig, handler)
+        if self.reader is None or self.writer is None:
+            return 0
+        # Read and close the channel only after it is no longer the wakeup fd
+        signal.set_wakeup_fd(self.old_wakeup_fd)
+        received = self.read()
+        self.reader.close()
+        self.writer.close()
+        return next((s for s in received if s in signals), 0)
+
+
 def _signal_children(running_builds: Dict[str, ChildInfo], sig: signal.Signals) -> None:
     """Send a signal to the process group of each running build."""
     for child in running_builds.values():
@@ -200,6 +265,7 @@ class PackageInstaller:
         ui: Optional[InstallerUI] = None,
         launcher: Callable[[BuildRequest, JobServerBase], ChildInfo] = start_build,
         store: Optional[spack.store.Store] = None,
+        terminate_timeout: float = 30.0,
     ) -> None:
         assert install_package or install_deps, "Must install package, dependencies or both"
 
@@ -300,6 +366,11 @@ class PackageInstaller:
 
         self.next_database_write = 0.0
 
+        #: Whether the running builds were asked to terminate; no further builds are started
+        self.stopping = False
+        #: How long builds get to terminate before they are killed
+        self.terminate_timeout = terminate_timeout
+
         #: Specs added to the database by ``install()``, also when it raises
         self.recorded_specs: List[spack.spec.Spec] = []
 
@@ -348,7 +419,16 @@ class PackageInstaller:
         failures: List[spack.spec.Spec] = []
         finished_builds: List[str] = []
 
+        signal_events = SignalEvents(STOP_SIGNALS)
+        stop_signals: List[int] = []
+        #: The first signal that stopped the builds, which install() ends with
+        stop_signal = 0
+        #: When the builds that were asked to terminate get killed
+        kill_time = math.inf
+
         try:
+            signal_events.setup(selector)
+
             # Try to schedule builds immediately. The first job does not require a token.
             blocked = False
             if self.pending_builds:
@@ -388,9 +468,12 @@ class PackageInstaller:
                 wake_interval = terminal.wake_interval() if terminal is not None else None
                 if wake_interval is not None:
                     timeout = min(timeout, wake_interval)
+                if self.stopping:
+                    timeout = min(timeout, max(0.0, kill_time - time.monotonic()))
                 events = selector.select(timeout=timeout)
 
                 finished_builds.clear()
+                stop_signals.clear()
 
                 # The transition "suspended to foreground/background" is handled in the signal
                 # handler, but there's no SIGCONT event in the transition of background to
@@ -416,6 +499,8 @@ class PackageInstaller:
                         assert terminal is not None
                         terminal.drain_sigwinch()
                         self.ui.on_resize()
+                    elif data == SIGNAL_EVENT:
+                        stop_signals.extend(s for s in signal_events.read() if s in STOP_SIGNALS)
                     elif data == JOBSERVER_EVENT and not jobserver.has_target_parallelism():
                         jobserver.maybe_discard_tokens()
                         self.ui.on_jobs_changed(jobserver.num_jobs, jobserver.target_jobs)
@@ -426,13 +511,33 @@ class PackageInstaller:
                         build_id, current_time, jobserver, selector, failures, database_actions
                     )
 
-                if failures and self.fail_fast:
-                    # Terminate other builds to actually fail fast. We continue in the event loop
-                    # waiting for child processes to finish, which may take a little while.
+                for signum in stop_signals:
+                    # Ctrl-C after the builds were told to terminate kills them without waiting
+                    if (stop_signal or self.stopping) and signum == signal.SIGINT:
+                        kill_time = current_time
+                    stop_signal = stop_signal or signum
+
+                if not self.stopping and (stop_signal or failures and self.fail_fast):
+                    # Terminate the running builds on a signal, or to actually fail fast. We
+                    # continue in the event loop until they have exited, which may take a little
+                    # while, and write the finished builds to the database in the meantime.
+                    self.stopping = True
+                    kill_time = min(kill_time, current_time + self.terminate_timeout)
+                    self.next_database_write = current_time
                     for child in self.running_builds.values():
-                        child.proc.terminate()
+                        # A build that received the Ctrl-C too cleans up, unless it is terminated
+                        if stop_signal != signal.SIGINT or not child.receives_interrupt:
+                            child.proc.terminate()
+                    if self.running_builds:
+                        self.ui.on_stopping()
+
+                if self.stopping:
+                    # Builds that finish successfully still enqueue their dependents
                     self.pending_builds.clear()
                     self.pending_expansions.clear()
+                    if current_time >= kill_time:
+                        self._kill_builds(self.running_builds)
+                        kill_time = math.inf
 
                 if stdin_ready and terminal is not None:
                     self.ui.on_input(terminal.read_input())
@@ -466,6 +571,23 @@ class PackageInstaller:
             if terminal is not None:
                 terminal.teardown_input()
 
+            # Send SIGTERM to running builds and release their jobserver tokens; this is a no-op in
+            # the successful case. It does not wait: builds are joined after the DB flush.
+            for child in self.running_builds.values():
+                try:
+                    child.proc.terminate()
+                except Exception:
+                    pass
+                try:
+                    jobserver.release()
+                except Exception:
+                    pass
+
+            # An exception between SIGCONT and on_resume after Ctrl-Z leaves the builds stopped,
+            # and stopped builds do not handle the SIGTERM above until they are continued.
+            if sys.platform != "win32":
+                _signal_children(self.running_builds, signal.SIGCONT)
+
             # Flush any not-yet-written successful builds to the DB; save the exception on error
             # to be re-raised after best-effort cleanup.
             db_exc = None
@@ -479,22 +601,10 @@ class PackageInstaller:
                 except Exception as e:
                     db_exc = e
 
-            # Send SIGTERM to running builds and release their jobserver tokens; this is a no-op in
-            # the successful case.
-            for child in self.running_builds.values():
-                try:
-                    child.proc.terminate()
-                except Exception:
-                    pass
-                try:
-                    jobserver.release()
-                except Exception:
-                    pass
-
             # Wait for the builds to exit, kill those that do not, and reap them all.
             try:
-                for build_id in self._wait_for_exit(timeout=30):
-                    self.running_builds[build_id].proc.kill()
+                stuck = self._wait_for_exit(timeout=self.terminate_timeout)
+                self._kill_builds({b: self.running_builds[b] for b in stuck})
                 for child in self.running_builds.values():
                     child.proc.join()
             except Exception:
@@ -525,11 +635,19 @@ class PackageInstaller:
                 jobserver.close()
             except Exception:
                 pass
+            late_signal = signal_events.teardown(STOP_SIGNALS)
+            stop_signal = stop_signal or late_signal
 
             # Restore output settings. On Linux this is a no-op. On Windows this disables
             # VT100 processing and must happen after the final render.
             if terminal is not None:
                 terminal.teardown_output()
+
+            # A signal, also one received during cleanup, takes precedence over other exceptions
+            if stop_signal == signal.SIGINT:
+                raise KeyboardInterrupt
+            elif stop_signal:
+                raise spack.error.TerminatedBySignal(stop_signal)
 
             # Re-raise the DB exception if any.
             if db_exc is not None:
@@ -609,9 +727,9 @@ class PackageInstaller:
                 self.pending_expansions.append(dag_hash)
             else:
                 self.pending_builds.append(dag_hash)
-        elif not failures or not self.fail_fast:
-            # Record a failure. In fail-fast mode, only record the first failure; subsequent
-            # failures may be a consequence of us terminating other builds.
+        elif not self.stopping:
+            # Record a failure, unless the builds are being stopped: it may be a consequence of
+            # us terminating the build.
             failures.append(build.spec)
             self.ui.on_state_changed(dag_hash, "failed")
 
@@ -843,6 +961,15 @@ class PackageInstaller:
             write_connection(child.control_w_conn, b"1" if echo else b"0")
         except OSError:
             pass
+
+    def _kill_builds(self, builds: Dict[str, ChildInfo]) -> None:
+        """Kill builds that did not exit after they were asked to terminate."""
+        # First kill the process group: the children of a build could otherwise keep writing to
+        # the prefix after its lock is released.
+        if sys.platform != "win32":
+            _signal_children(builds, signal.SIGKILL)
+        for child in builds.values():
+            child.proc.kill()
 
     def _wait_for_exit(self, timeout: float) -> List[str]:
         """Process output and state of the running builds until their state channels reach EOF.

@@ -17,7 +17,7 @@ import enum
 import functools
 import io
 import re
-from typing import IO, Any, Callable, Dict, List, Optional, Union
+from typing import IO, Any, Callable, Dict, List, Optional, Set, Union
 
 from spack.vendor.ruamel.yaml import YAML, comments, constructor, emitter, error, representer
 
@@ -161,13 +161,21 @@ class OrderedLineConstructor(constructor.RoundTripConstructor):
     # and fill in with mappings later.  We preserve this behavior.
     #
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        #: ids of the nodes that are keys of a mapping
+        self._key_nodes: Set[int] = set()
+
+    def construct_mapping(self, node, maptyp, deep=False):
+        self._key_nodes.update(id(key_node) for key_node, _ in node.value)
+        return super().construct_mapping(node, maptyp, deep=deep)
+
     def construct_yaml_str(self, node):
         value = super().construct_yaml_str(node)
-        # There is no specific marker to indicate that we are parsing a key,
-        # so this assumes we are talking about a Spack config override key if
-        # it ends with a ':' and does not contain a '@' (which can appear
-        # in config values that refer to Spack specs)
-        if value and value.endswith(":") and "@" not in value:
+        # Only mapping keys can be Spack config overrides (``key::``). Values are kept as is, so
+        # that e.g. the target range in ``when: "target=x86_64:"`` is not turned into an exact
+        # target. Keys containing '@' are not overrides: they can be specs with version ranges.
+        if id(node) in self._key_nodes and value and value.endswith(":") and "@" not in value:
             value = syaml_str(value[:-1])
             value.override = True
         else:

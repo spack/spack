@@ -89,7 +89,10 @@ class PosixTerminalState(BaseTerminalState):
     def teardown_input(self) -> None:
         """Restore terminal settings and signal handlers, close pipes."""
         with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
+            try:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_stdin_settings)
+            except termios.error as e:
+                spack.util.tty.debug(f"Failed to restore terminal settings: {e}")
 
         for sig, old in ((signal.SIGTSTP, self.old_sigtstp), (signal.SIGWINCH, self.old_sigwinch)):
             if old is not None:
@@ -191,6 +194,15 @@ def create_build_channels() -> BuildChannels:
     os.set_blocking(output_r.fileno(), False)
     os.set_blocking(state_r.fileno(), False)
     return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, control_w)
+
+
+def create_wakeup_channel() -> Tuple[Connection, Connection]:
+    """Create a non-blocking pipe: the read end is for the selector, the write end is for
+    :func:`signal.set_wakeup_fd`."""
+    r, w = Pipe(duplex=False)
+    os.set_blocking(r.fileno(), False)
+    os.set_blocking(w.fileno(), False)
+    return r, w
 
 
 class PosixTee(Tee):

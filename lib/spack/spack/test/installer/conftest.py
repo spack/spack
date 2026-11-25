@@ -68,6 +68,9 @@ class RecordingUI(InstallerUI):
     def on_finished(self, failures):
         self.events.append(("finished", tuple(failures)))
 
+    def on_stopping(self):
+        self.events.append(("stopping",))
+
 
 class DrivingUI(RecordingUI):
     """Records events and runs a callback on every event-loop tick, so tests can finish hanging
@@ -101,6 +104,10 @@ class Script(NamedTuple):
     raw_state: bytes = b""
     #: Keep the build running until the test calls finish() or the event loop terminates it.
     hang: bool = False
+    #: Keep the build running when the event loop terminates it, until it is killed.
+    ignore_terminate: bool = False
+    #: The build receives Ctrl-C in the terminal too, like builds on Windows.
+    receives_interrupt: bool = False
 
 
 class FakeBuild:
@@ -110,10 +117,14 @@ class FakeBuild:
     #: There is no real process (group) to signal.
     pid: Optional[int] = None
 
-    def __init__(self, exitcode: Optional[int], channels: BuildChannels) -> None:
+    def __init__(
+        self, exitcode: Optional[int], channels: BuildChannels, ignore_terminate: bool
+    ) -> None:
         self.exitcode = exitcode
         self.finished = False
         self.terminated = False
+        self.killed = False
+        self.ignore_terminate = ignore_terminate
         self.channels = channels
 
     def finish(self) -> None:
@@ -126,10 +137,14 @@ class FakeBuild:
             self.channels.output_w.close()
 
     def terminate(self) -> None:
-        self.terminated, self.exitcode = True, ExitCode.BUILD_ERROR
-        self.finish()
+        self.terminated = True
+        if not self.ignore_terminate:
+            self.exitcode = ExitCode.BUILD_ERROR
+            self.finish()
 
-    kill = terminate
+    def kill(self) -> None:
+        self.killed, self.exitcode = True, ExitCode.BUILD_ERROR
+        self.finish()
 
     def join(self, timeout: Optional[float] = None) -> None:
         pass
@@ -160,7 +175,7 @@ class ScriptedLauncher:
             write_connection(channels.state_w, script.raw_state)
         if script.output:
             write_connection(channels.output_w, script.output)
-        build = FakeBuild(script.exitcode, channels)
+        build = FakeBuild(script.exitcode, channels, script.ignore_terminate)
         self.builds.append(build)
         if script.hang:
             # The channels stay open until the test finishes the build.
@@ -175,6 +190,7 @@ class ScriptedLauncher:
             channels.state_r,
             channels.control_w,
             request.log_path,
+            script.receives_interrupt,
         )
 
 

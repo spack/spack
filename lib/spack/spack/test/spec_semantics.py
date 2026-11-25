@@ -2461,7 +2461,7 @@ def test_incomparable_target_bounds_meet_as_a_union_of_ranges(mock_packages):
     forward, backward = lhs.copy(), rhs.copy()
     forward.constrain(rhs)
     backward.constrain(lhs)
-    assert str(forward.architecture.target) == "ampere1:,neoverse_v3ae:"
+    assert str(forward.architecture.target) == "ampere1:,neoverse_v3:"
     assert forward.to_dict() == backward.to_dict()
 
     # the most extreme case in the target graph: armv8.3a and cortex_a72 have four minimal

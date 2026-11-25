@@ -311,17 +311,14 @@ class Microarchitecture:
         for compiler_entry in compiler_info:
             if satisfies_constraint(compiler_entry, version):
                 flags_fmt = compiler_entry["flags"]
-                # If there's no field name, use the name of the
-                # micro-architecture
-                compiler_entry.setdefault("name", self.name)
 
                 # Check if we need to emit a warning
                 warning_message = compiler_entry.get("warnings", None)
                 if warning_message:
                     warnings.warn(warning_message)
 
-                flags = flags_fmt.format(**compiler_entry)
-                return flags
+                # If there's no field name, use the name of the micro-architecture
+                return flags_fmt.format(**{"name": self.name, **compiler_entry})
 
         msg = "cannot produce optimized binary for micro-architecture '{0}' with {1}@{2}"
         if compiler_info:

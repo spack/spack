@@ -21,7 +21,7 @@ import socket
 import threading
 import time
 from ctypes import wintypes
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
 from spack.installer.base import (
     OUTPUT_BUFFER_SIZE,
@@ -182,6 +182,15 @@ def create_build_channels() -> BuildChannels:
     output_r.setblocking(False)
     state_r.setblocking(False)
     return BuildChannels(state_r, state_w, output_r, output_w, control_r, control_w, None)
+
+
+def create_wakeup_channel() -> Tuple[socket.socket, socket.socket]:
+    """Create a non-blocking socket pair: the read end is for the selector, the write end is for
+    :func:`signal.set_wakeup_fd`."""
+    r, w = socket.socketpair()
+    r.setblocking(False)
+    w.setblocking(False)
+    return r, w
 
 
 class WindowsTee(Tee):

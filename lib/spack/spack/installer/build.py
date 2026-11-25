@@ -37,7 +37,6 @@ import spack.sandbox
 import spack.spec
 import spack.store
 import spack.url_buildcache
-import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
 import spack.util.timer
@@ -96,6 +95,7 @@ class ChildInfo:
         "state_r_conn",
         "control_w_conn",
         "log_path",
+        "receives_interrupt",
         "prefix_lock",
         "state_buffer",
         "exit_code",
@@ -109,6 +109,7 @@ class ChildInfo:
         state_r_conn: IpcChannel,
         control_w_conn: IpcChannel,
         log_path: str,
+        receives_interrupt: bool,
     ) -> None:
         self.proc = proc
         self.spec = spec
@@ -116,6 +117,8 @@ class ChildInfo:
         self.state_r_conn = state_r_conn
         self.control_w_conn = control_w_conn
         self.log_path = log_path
+        #: Whether Ctrl-C in the terminal reaches the build too, so that it stops by itself
+        self.receives_interrupt = receives_interrupt
         self.prefix_lock: Optional[spack.util.lock.Lock] = None
         # Buffer for partially received state data from this child. Kept as raw bytes and split on
         # b"\n": the newline byte cannot occur inside a multi-byte UTF-8 sequence, so framing is
@@ -469,6 +472,11 @@ def worker_function(
         # Reset SIGTSTP to default in case the parent had a custom handler.
         signal.signal(signal.SIGTSTP, signal.SIG_DFL)
 
+        # Detach from the event loop's wakeup fd and its Ctrl-C handler, which fork inherits
+        signal.set_wakeup_fd(-1)
+        if signal.getsignal(signal.SIGINT) is not signal.SIG_IGN:
+            signal.signal(signal.SIGINT, signal.default_int_handler)
+
         # Under forkserver/spawn Python drops CLOEXEC. We don't want to expose these fds to the
         # build. Notably the state fd should be closed, since its EOF signals to the parent process
         # that the build has finished, and that should not be delayed by daemons that keep the fd
@@ -477,14 +485,15 @@ def worker_function(
             if channel is not None:
                 os.set_inheritable(channel.fileno(), False)
 
-    def handle_sigterm(signum, frame):
-        # This SIGTERM handler forwards the signal to child processes (cmake, make, etc). We wait
+    def raise_after_children_exit(signum, frame):
+        # This handler sends the SIGTERM signal to child processes (cmake, make, etc). We wait
         # for all child processes to exit before raising KeyboardInterrupt. This ensures all
         # __exit__ and finally blocks run after the child processes have stopped, meaning that we
         # get to clean up the prefix without risking that the child process writes to it
         # afterwards.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         if sys.platform != "win32":
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
             os.killpg(0, signal.SIGTERM)
             try:
                 while True:
@@ -494,7 +503,12 @@ def worker_function(
 
         raise KeyboardInterrupt("Installation interrupted")
 
-    signal.signal(signal.SIGTERM, handle_sigterm)
+    signal.signal(signal.SIGTERM, raise_after_children_exit)
+
+    # For SIGHUP we respect SIG_IGN (e.g. nohup). The value SIG_IGN is inherited in all
+    # multiprocessing start methods.
+    if sys.platform != "win32" and signal.getsignal(signal.SIGHUP) is not signal.SIG_IGN:
+        signal.signal(signal.SIGHUP, raise_after_children_exit)
 
     makeflags.apply(os.environ)
 
@@ -566,8 +580,8 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
     Errors are suppressed to avoid failing the build over metadata archiving."""
 
     try:
-        if os.path.lexists(pkg.env_mods_path):
-            shutil.copy2(pkg.env_mods_path, pkg.install_env_path)
+        if os.path.lexists(pkg.env_path):
+            shutil.copy2(pkg.env_path, pkg.install_env_path)
     except OSError as e:
         spack.util.tty.debug(e)
     try:
@@ -743,9 +757,7 @@ def _install(
             stage.destroy()
         stage.create()
 
-        # Write build environment and env-mods to stage
-        spack.util.environment.dump_environment(pkg.env_path)
-        with open(pkg.env_mods_path, "w", encoding="utf-8") as f:
+        with open(pkg.env_path, "w", encoding="utf-8") as f:
             f.write(env_mods.shell_modifications(explicit=True, env=unmodified_env))
 
         # Try to snapshot configure/cmake args before phases run
@@ -765,7 +777,7 @@ def _install(
             os.unlink(pkg.log_path)
         except OSError:
             pass
-        os.symlink(request.log_path, pkg.log_path)
+        fs.symlink(request.log_path, pkg.log_path)
 
         send_state("staging", state_stream)
 
@@ -861,7 +873,14 @@ def start_build(request: BuildRequest, jobserver: JobServerBase) -> ChildInfo:
     channels.close_child_ends()
 
     return ChildInfo(
-        proc, spec, channels.output_r, channels.state_r, channels.control_w, request.log_path
+        proc,
+        spec,
+        channels.output_r,
+        channels.state_r,
+        channels.control_w,
+        request.log_path,
+        # Windows has no process groups to shield the build from Ctrl-C in the console
+        receives_interrupt=sys.platform == "win32",
     )
 
 

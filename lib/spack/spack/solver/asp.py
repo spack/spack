@@ -546,8 +546,8 @@ class ErrorHandler:
         spec_str = spack.deprecation.deprecated_spec_str(pkg, constraint)
         attributes = spack.deprecation.deprecation_attributes_str(refused)
         text = (
-            f"'{spec_str}': deprecated spec ({attributes}) is not allowed by "
-            f"'packages:{pkg}:deprecation:allow'"
+            f"'{spec_str}': deprecated spec is not allowed ({attributes}).\n        You can use "
+            f"the 'packages:{pkg}:deprecation:allow' configuration key to make an exception."
         )
         return f"{text}; {entry.msg}" if entry.msg else text
 

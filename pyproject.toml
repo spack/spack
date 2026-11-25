@@ -247,6 +247,8 @@ substitute = [
   { match = "from jsonschema", replace = "from spack.vendor.jsonschema" },
 ]
 drop = [
+  # package metadata written by pip install
+  "*.dist-info",
   # contains unnecessary scripts
   "bin/",
   # interpreter and OS specific msgpack libs

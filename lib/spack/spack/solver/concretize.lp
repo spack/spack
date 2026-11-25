@@ -1853,16 +1853,24 @@ error(100, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Sour
 % Compiler constraints
 %----
 
-% If a node is built, impose constraints on the compiler coming from dependents
-attr("node_version_satisfies", node(Y, Compiler), VersionRange) :-
-   propagate(node(X, Package), node_version_satisfies(Compiler, VersionRange)),
+% If a node is built, its compiler must satisfy the version bounds propagated by its dependents.
+% The weight is lower than that of other version errors, so that the bound is reported as the
+% cause when breaking it makes the problem satisfiable.
+error(10, "a package that links or runs {0} requires it to be compiled with {1}@{2}", Package, Compiler, VersionRange) :-
+   propagate(node(X, Package), node_version_satisfies(Compiler, VersionRange), _),
    attr("depends_on", node(X, Package), node(Y, Compiler), "build"),
+   not version_constraint_satisfied(node(Y, Compiler), VersionRange),
    not runtime(Package).
 
-attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
-   attr("node", node(X, Runtime)),
+% A concrete node constrains only the runtimes in its own unification set
+runtime_bound_in_set(SetID, Runtime, VersionRange) :-
    attr("compatible_runtime", PackageNode, Runtime, VersionRange),
-   concrete(PackageNode).
+   concrete(PackageNode),
+   unification_set(SetID, PackageNode).
+
+attr("node_version_satisfies", node(X, Runtime), VersionRange) :-
+   runtime_bound_in_set(SetID, Runtime, VersionRange),
+   unification_set(SetID, node(X, Runtime)).
 
 % If a compiler package is depended on with type link, it imposes its link dependencies
 compiler_imposes_link_deps(Child, Hash) :-

@@ -148,6 +148,10 @@ class InstallerUI:
     def on_blocked_changed(self, blocked: bool) -> None:
         """Whether all pending builds are blocked by another Spack process."""
 
+    def on_stopping(self) -> None:
+        """The running builds were asked to terminate, after a signal or a failure in fail-fast
+        mode. The next Ctrl-C kills them."""
+
     def on_input(self, chars: str) -> None:
         """Keyboard input received (only called for interactive frontends)."""
 
@@ -212,6 +216,7 @@ class TerminalUI(InstallerUI):
         self.actual_jobs: int = 0
         self.target_jobs: int = 0
         self.blocked: bool = False
+        self.stopping: bool = False
 
         self.stdout = stdout
         self.stderr = stderr if stderr is not None else sys.stderr
@@ -396,6 +401,18 @@ class TerminalUI(InstallerUI):
             return
         self.blocked = blocked
         self.dirty = True
+
+    def on_stopping(self) -> None:
+        """Return to the overview, whose last line says that the builds are terminating."""
+        self.stopping = True
+        if not self.overview_mode:
+            self.toggle()
+        self.search_mode = False
+        self.search_term = ""
+        self.dirty = True
+        if not self.is_tty and not self.headless:
+            self.stdout.write("Terminating builds...\n")
+            self.stdout.flush()
 
     def _update_terminal_title(self, clear: bool = False) -> None:
         if not self.term_title or self.headless:
@@ -584,8 +601,14 @@ class TerminalUI(InstallerUI):
             self._render_build(build, buffer, max_width, now=now)
             self._println(buffer)
 
+        # The last line, which does not end in a newline, is for the filter prompt or the status
         if self.search_mode:
             buffer.write(f"filter> {self.search_term}\033[K")
+        elif self.stopping and not finalize:
+            status = f"Terminating builds...  {self.color.CYAN}Ctrl-C{self.color.RESET}: kill"
+            if coloring.clen(status) >= max_width:
+                status = "Terminating builds..."
+            buffer.write(f"{status}\033[K")
 
         # Clear any remaining lines from previous display
         buffer.write("\033[0J")
