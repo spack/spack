@@ -22,9 +22,9 @@ def get_activate_commands(
             or plain shell commands (export, setenv, etc.)
 
     Returns:
-        A tuple of (prefix_cmds, cmds) where:
-            - prefix_cmds: Shell commands for prefix inspections
-            - cmds: Shell commands for setting SPACK_ENV, SPACK_ENV_VIEW, and spec modifications
+        ``(prefix_cmds, cmds)``, where ``prefix_cmds`` is the shell commands for prefix
+            inspections, and ``cmds`` is the shell commands for setting ``SPACK_ENV``,
+            ``SPACK_ENV_VIEW``, and spec-specific modification.
     """
     with env.manifest.use_config():
         prefix_mods, env_mods = spack.environment.shell.activate(env=env, view=view)
@@ -54,9 +54,9 @@ def get_deactivate_commands(
             or plain shell commands (unset, unsetenv, etc.)
 
     Returns:
-        A tuple of (prefix_cmds, cmds) where:
-            - prefix_cmds: Shell commands to reverse prefix inspections
-            - cmds: Shell commands to unset SPACK_ENV, SPACK_ENV_VIEW, and reverse spec mods
+        ``(prefix_cmds, cmds)``, where ``prefix_cmds`` is the shell commands to reverse prefix
+            inspections, and ``cmds`` is the shell commands for un-setting ``SPACK_ENV`` and
+            ``SPACK_ENV_VIEW``, and reversing spec-specific modification.
     """
     prefix_mods, env_mods = spack.environment.shell.deactivate(env, view)
 
