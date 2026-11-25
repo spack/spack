@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+import re
 import stat
 import sys
 
@@ -675,7 +676,7 @@ def test_unload_fresh_bypasses_cached_repo(
 
     assert unset_hash in output
 
-    
+
 def test_load_adds_bin_once(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Tests that spack load puts the bin directory of the loaded package on PATH once"""
     shell, set_command = (
