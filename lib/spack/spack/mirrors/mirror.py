@@ -21,6 +21,7 @@ from typing import (
 import spack.config
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
+import spack.util.dotenv as Dotenv
 from spack.error import MirrorError
 from spack.oci.image import is_oci_url
 
@@ -397,7 +398,13 @@ class Mirror:
 
         profile = self.get_profile(direction)
         if profile:
-            creddict["profile"] = profile
+            # The profile can either point to a dotenv file with credentials
+            # or to a named profile (AWS)
+            if os.path.exists(profile):
+                # Load the dotenv into the environment
+                Dotenv(profile, expand=True).load(override=True)
+            else:
+                creddict["profile"] = profile
 
         return creddict
 
