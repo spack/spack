@@ -4068,10 +4068,93 @@
       },
       "cpupart": "0xac4"
     },
-    "neoverse_v3ae": {
+    "neoverse_v3": {
       "from": [
         "neoverse_v2",
+        "neoverse_n2",
         "armv9.2a"
+      ],
+      "vendor": "ARM",
+      "features": [
+        "aes",
+        "afp",
+        "asimd",
+        "asimddp",
+        "asimdfhm",
+        "asimdhp",
+        "asimdrdm",
+        "atomics",
+        "bf16",
+        "bti",
+        "cpuid",
+        "crc32",
+        "dcpodp",
+        "dcpop",
+        "dgh",
+        "dit",
+        "ecv",
+        "evtstrm",
+        "fcma",
+        "flagm",
+        "flagm2",
+        "fp",
+        "fphp",
+        "frint",
+        "i8mm",
+        "ilrcpc",
+        "jscvt",
+        "lrcpc",
+        "paca",
+        "pacg",
+        "pmull",
+        "sb",
+        "sha1",
+        "sha2",
+        "sha3",
+        "sha512",
+        "sve",
+        "sve2",
+        "sveaes",
+        "svebf16",
+        "svebitperm",
+        "svei8mm",
+        "svepmull",
+        "svesha3",
+        "uscat",
+        "wfxt"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "14.3:",
+            "flags": "-mcpu=neoverse-v3"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "19.0:",
+            "flags": "-mcpu=neoverse-v3"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "24.10:",
+            "flags": "-mcpu=neoverse-v3"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "26.9:",
+            "name": "neoverse-v3",
+            "flags": "-tp {name}"
+          }
+        ]
+      },
+      "cpupart": "0xd84"
+    },
+    "neoverse_v3ae": {
+      "from": [
+        "neoverse_v3"
       ],
       "vendor": "ARM",
       "features": [
@@ -4128,7 +4211,7 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "15.0:",
+            "versions": "14.3:",
             "flags": "-mcpu=neoverse-v3ae"
           }
         ],
@@ -4136,6 +4219,19 @@
           {
             "versions": "19.0:",
             "flags": "-mcpu=neoverse-v3ae"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "24.10:",
+            "flags": "-mcpu=neoverse-v3ae"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "26.5:",
+            "name": "neoverse-v3ae",
+            "flags": "-tp {name}"
           }
         ]
       },
@@ -4538,7 +4634,7 @@
         "gcc": [
           {
             "versions": "14.1:",
-            "flags": "-march=armv9.2-a+sme2 -fno-tree-vectorize -fno-tree-slp-vectorize -mtune=generic"
+            "flags": "-march=armv9.2-a+nosve -mtune=generic"
           }
         ],
         "clang": [
