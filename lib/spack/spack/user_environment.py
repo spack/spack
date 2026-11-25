@@ -85,6 +85,7 @@ def prefix_inspections_environment_modifications(
     specs: List[spack.spec.Spec], topo_ordered: Optional[List] = None
 ):
     """Generate environment modifications based on prefix inspections.
+
     Args:
         specs: List of specs to generate modifications for
         topo_ordered: Optional pre-computed topologically ordered list of specs.
@@ -118,6 +119,7 @@ def spec_environment_modifications(
     topo_ordered: Optional[List] = None,
 ):
     """Generate environment modifications from specs' package.py setup methods.
+
     Args:
         specs: List of specs to generate modifications for
         view: Optional view to apply projections from
@@ -125,6 +127,7 @@ def spec_environment_modifications(
         repo: Optional cached repository to use
         topo_ordered: Optional pre-computed topologically ordered list of specs.
             If not provided, will be computed from specs.
+
     Returns:
         EnvironmentModifications object containing all spec modifications
     """
