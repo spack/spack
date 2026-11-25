@@ -604,7 +604,9 @@ def push_fn(args):
         view = env.default_view
         view.regenerate(env)
         env_view_root = view.root
-        _, env_modifications = env.add_view_to_env(EnvironmentModifications(), ev.default_view_name)
+        _, env_modifications = env.add_view_to_env(
+            EnvironmentModifications(), ev.default_view_name
+        )
 
     with spack.binary_distribution.make_uploader(
         mirror=mirror,
