@@ -63,7 +63,7 @@ from spack import binary_distribution
 from spack.installer.build import _do_fake_install, _write_timer_json, dump_packages
 from spack.url_buildcache import BuildcacheEntryError
 from spack.util import timer, tty
-from spack.util.environment import EnvironmentModifications, dump_environment
+from spack.util.environment import EnvironmentModifications
 from spack.util.lang import pretty_seconds
 from spack.util.string import ordinal
 from spack.util.tty.color import colorize
@@ -555,7 +555,7 @@ def log(pkg: "spack.package_base.PackageBase") -> None:
     archive_install_logs(pkg, os.path.dirname(packages_dir))
 
     # Archive the environment modifications for the build.
-    fs.install(pkg.env_mods_path, pkg.install_env_path)
+    fs.install(pkg.env_path, pkg.install_env_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
@@ -2623,12 +2623,7 @@ class BuildProcessInstaller:
 
         # Do the real install in the source directory.
         with fs.working_dir(pkg.stage.source_path):
-            # Save the build environment in a file before building.
-            dump_environment(pkg.env_path)
-
-            # Save just the changes to the environment.  This file can be
-            # safely installed, since it does not contain secret variables.
-            with open(pkg.env_mods_path, "w", encoding="utf-8") as env_mods_file:
+            with open(pkg.env_path, "w", encoding="utf-8") as env_mods_file:
                 mods = self.env_mods.shell_modifications(explicit=True, env=self.unmodified_env)
                 env_mods_file.write(mods)
 

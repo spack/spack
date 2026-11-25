@@ -37,7 +37,6 @@ import spack.sandbox
 import spack.spec
 import spack.store
 import spack.url_buildcache
-import spack.util.environment
 import spack.util.filesystem as fs
 import spack.util.lock
 import spack.util.timer
@@ -581,8 +580,8 @@ def _archive_build_metadata(pkg: "spack.package_base.PackageBase") -> None:
     Errors are suppressed to avoid failing the build over metadata archiving."""
 
     try:
-        if os.path.lexists(pkg.env_mods_path):
-            shutil.copy2(pkg.env_mods_path, pkg.install_env_path)
+        if os.path.lexists(pkg.env_path):
+            shutil.copy2(pkg.env_path, pkg.install_env_path)
     except OSError as e:
         spack.util.tty.debug(e)
     try:
@@ -758,9 +757,7 @@ def _install(
             stage.destroy()
         stage.create()
 
-        # Write build environment and env-mods to stage
-        spack.util.environment.dump_environment(pkg.env_path)
-        with open(pkg.env_mods_path, "w", encoding="utf-8") as f:
+        with open(pkg.env_path, "w", encoding="utf-8") as f:
             f.write(env_mods.shell_modifications(explicit=True, env=unmodified_env))
 
         # Try to snapshot configure/cmake args before phases run
