@@ -8,12 +8,15 @@ import sys
 from typing import Tuple
 
 import spack.bootstrap.config
+import spack.caches
 import spack.config
 import spack.repo
 import spack.store
 import spack.user_environment as uenv
+import spack.util.file_cache
 import spack.util.filesystem as fs
 import spack.util.tty as tty
+from spack.util.hash import b32_hash
 
 
 def _get_shell_script_path(spec, shell: str, load: bool) -> str:
@@ -60,17 +63,24 @@ def path_to_unload_shell_script(spec, shell: str) -> str:
 
 
 def make_repo_path(root):
-    """Make a RepoPath from the repo subdirectories in an environment.
+    """Make a RepoPath from the repos archived under ``root``.
+
+    Archived repos share namespaces with configured repos but contain only a subset of their
+    packages, so their indexes are cached separately to avoid clobbering the global ones.
 
     Args:
-        root: the root of the environment
+        root: directory containing the archived repos
     """
     if not os.path.isdir(root):
         return None
-    repos = (
-        spack.repo.from_path(os.path.dirname(p))
-        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
+    cache = spack.util.file_cache.FileCache(
+        spack.caches.MISC_CACHE.root / "archived_repos" / b32_hash(root),
+        enable_lock=spack.config.CONFIG.get("config:locks", True),
     )
+    repos = [
+        spack.repo.Repo(os.path.dirname(p), cache=cache)
+        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
+    ]
     return spack.repo.RepoPath(*repos) if repos else None
 
 
