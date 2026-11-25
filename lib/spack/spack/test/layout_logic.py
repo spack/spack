@@ -608,7 +608,7 @@ def test_env_path_migration_applies_all_path_rewrite_rules(tmp_path):
                         # Rule 2: Relative path inside env → keep relative
                         "local.yaml"
                     ],
-                    "view": str(view_dir)
+                    "view": str(view_dir),
                 }
             }
         ),
