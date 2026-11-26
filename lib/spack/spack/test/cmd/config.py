@@ -6,6 +6,7 @@ import os
 import pathlib
 import re
 import shutil
+from typing import Union
 
 import pytest
 
@@ -16,6 +17,7 @@ import spack.database
 import spack.environment as ev
 import spack.main
 import spack.schema.config
+import spack.schema.env
 import spack.util.filesystem as fs
 import spack.util.spack_yaml as syaml
 from spack.config import Configuration
@@ -503,6 +505,43 @@ def test_config_add_invalid_file_fails(tmp_path: pathlib.Path):
 
     with pytest.raises((spack.config.ConfigFormatError)):
         config("add", "-f", file)
+
+
+@pytest.mark.parametrize("subcommand", ["remove", "rm"])
+@pytest.mark.parametrize("single_file", [False, True])
+def test_config_remove_section(tmp_path: pathlib.Path, monkeypatch, subcommand, single_file):
+    low = spack.config.DirectoryConfigScope("low", str(tmp_path / "low"))
+    high: Union[spack.config.DirectoryConfigScope, spack.config.SingleFileScope]
+    if single_file:
+        high = spack.config.SingleFileScope(
+            "high", str(tmp_path / "spack.yaml"), spack.schema.env.schema, yaml_path=["spack"]
+        )
+    else:
+        high = spack.config.DirectoryConfigScope("high", str(tmp_path / "high"))
+    cfg = spack.config.create_from(low, high)
+    cfg.set("config", {"dirty": False, "build_jobs": 2}, scope="low")
+    cfg.set("config", {"dirty": True, "build_jobs": 4}, scope="high")
+    cfg.set("packages", {"all": {"buildable": False}}, scope="high")
+    monkeypatch.setattr(spack.config, "CONFIG", cfg)
+    assert cfg.get("config:build_jobs") == 4
+
+    config("--scope", "high", subcommand, "config")
+    cfg.clear_caches()
+    assert cfg.get("config") == {"dirty": False, "build_jobs": 2}
+    assert not cfg.get("config", scope="high")
+    assert cfg.get("packages", scope="high") == {"all": {"buildable": False}}
+    fresh_high = (
+        spack.config.SingleFileScope(
+            "high", high.path, spack.schema.env.schema, yaml_path=["spack"]
+        )
+        if single_file
+        else spack.config.DirectoryConfigScope("high", high.path)
+    )
+    fresh = spack.config.create_from(
+        spack.config.DirectoryConfigScope("low", low.path), fresh_high
+    )
+    assert fresh.get("config") == {"dirty": False, "build_jobs": 2}
+    assert not fresh.get("config", scope="high")
 
 
 def test_config_remove_value(mutable_empty_config):
