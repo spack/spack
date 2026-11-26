@@ -5,6 +5,7 @@
 import argparse
 import os
 import pathlib
+import xml.etree.ElementTree as ET
 
 import pytest
 
@@ -104,8 +105,8 @@ def test_test_output_fails(
 @pytest.mark.parametrize(
     "pkg_name,msgs",
     [
-        ("test-error", ["exited with status 1", "TestFailure"]),
-        ("test-fail", ["not callable", "TestFailure"]),
+        ("test-error", ["exited with status 1", "FAILED: TestError::test_false"]),
+        ("test-fail", ["not callable", "FAILED: TestFail::test_fails"]),
     ],
 )
 def test_junit_output_with_failures(tmp_path: pathlib.Path, mock_test_stage, pkg_name, msgs):
@@ -131,6 +132,43 @@ def test_junit_output_with_failures(tmp_path: pathlib.Path, mock_test_stage, pkg
     assert "<system-out>" in content
     for msg in msgs:
         assert msg in content
+
+
+@pytest.mark.usefixtures("mock_packages", "mock_archive", "mock_fetch", "install_mockery")
+def test_junit_output_testcase_per_test_part(tmp_path: pathlib.Path, mock_test_stage):
+    """Confirm JUnit reporting has one test case per stand-alone test part."""
+    install("simple-standalone-test@1.0", "test-fail")
+    with working_dir(str(tmp_path)):
+        spack_test(
+            "run",
+            "--log-format=junit",
+            "--log-file=test.xml",
+            "simple-standalone-test",
+            "test-fail",
+            fail_on_error=False,
+        )
+
+    suites = {suite.get("name"): suite for suite in ET.parse(tmp_path / "test.xml").getroot()}
+
+    suite = suites["simple-standalone-test"]
+    assert (suite.get("tests"), suite.get("failures"), suite.get("errors")) == ("2", "0", "0")
+    echo, skip = suite.findall("testcase")
+    assert (echo.get("classname"), echo.get("name")) == ("simple-standalone-test", "test_echo")
+    assert echo.find("skipped") is None and echo.find("failure") is None
+    echo_out = echo.findtext("system-out", "")
+    assert "testing echo" in echo_out and "test_skip" not in echo_out
+    assert (skip.get("classname"), skip.get("name")) == ("simple-standalone-test", "test_skip")
+    assert skip.find("skipped") is not None
+    assert "This test is not available from v1.0 on" in skip.findtext("system-out", "")
+
+    suite = suites["test-fail"]
+    assert (suite.get("tests"), suite.get("failures"), suite.get("errors")) == ("1", "1", "0")
+    (fails,) = suite.findall("testcase")
+    assert fails.get("name") == "test_fails"
+    failure = fails.find("failure")
+    assert failure is not None
+    assert failure.get("message", "").startswith("FAILED: TestFail::test_fails:")
+    assert "'NoneType' object is not callable" in (failure.text or "")
 
 
 def test_cdash_output_test_error(
