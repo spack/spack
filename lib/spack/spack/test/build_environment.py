@@ -94,24 +94,6 @@ def ensure_env_variables(mutable_config, mock_packages, monkeypatch, working_env
     return _ensure
 
 
-@pytest.fixture
-def mock_module_cmd(monkeypatch):
-    class Logger:
-        def __init__(self, fn=None):
-            self.fn = fn
-            self.calls = []
-
-        def __call__(self, *args, **kwargs):
-            self.calls.append((args, kwargs))
-            if self.fn:
-                return self.fn(*args, **kwargs)
-
-    mock_module_cmd = Logger()
-    monkeypatch.setattr(spack.build_environment, "module", mock_module_cmd)
-    monkeypatch.setattr(spack.build_environment, "_on_cray", lambda: (True, None))
-    return mock_module_cmd
-
-
 @pytest.mark.not_on_windows("Static to Shared not supported on Win (yet)")
 def test_static_to_shared_library(build_environment):
     os.environ["SPACK_TEST_COMMAND"] = "dump-args"
@@ -449,44 +431,39 @@ def test_wrapper_variables(
         delattr(dep_pkg, "libs")
 
 
+@pytest.mark.not_on_windows("Windows doesn't support the compiler wrapper")
 def test_external_prefixes_last(
-    mutable_config: Configuration, mock_packages, working_env, monkeypatch
+    install_mockery, mutable_config: Configuration, working_env, tmp_path: pathlib.Path
 ):
-    # Sanity check: under normal circumstances paths associated with
-    # dt-diamond-left would appear first. We'll mark it as external in
-    # the test to check if the associated paths are placed last.
-    assert "dt-diamond-left" < "dt-diamond-right"
-
-    cfg_data = syaml.load_config(
-        """\
-dt-diamond-left:
-  externals:
-  - spec: dt-diamond-left@1.0
-    prefix: /fake/path1
-  buildable: false
-"""
+    """Tests that the library directories of externals are passed in SPACK_LINK_DIRS, which the
+    compiler wrapper puts after SPACK_STORE_LINK_DIRS, where those of store dependencies go."""
+    external_prefix = tmp_path / "external"
+    mutable_config.set(
+        "packages",
+        {
+            "dt-diamond-left": {
+                "externals": [{"spec": "dt-diamond-left@1.0", "prefix": str(external_prefix)}],
+                "buildable": False,
+            }
+        },
     )
-    mutable_config.set("packages", cfg_data)
     top = spack.concretize.concretize_one("dt-diamond")
-
-    def _trust_me_its_a_dir(path):
-        return True
-
-    monkeypatch.setattr(os.path, "isdir", _trust_me_its_a_dir)
+    store_deps = [top["dt-diamond-right"], top["dt-diamond-bottom"]]
+    for prefix in [external_prefix] + [pathlib.Path(s.prefix) for s in store_deps]:
+        (prefix / "lib").mkdir(parents=True)
+    (external_prefix / "lib64").mkdir()
 
     env_mods = EnvironmentModifications()
     spack.build_environment.set_wrapper_variables(top.package, env_mods)
-
     env_mods.apply_modifications()
-    link_dir_var = os.environ["SPACK_LINK_DIRS"]
-    link_dirs = link_dir_var.split(":")
-    external_lib_paths = set(
-        [os.path.normpath("/fake/path1/lib"), os.path.normpath("/fake/path1/lib64")]
-    )
-    # The external lib paths should be the last two entries of the list and
-    # should not appear anywhere before the last two entries
-    assert {os.path.normpath(x) for x in link_dirs[-2:]} == external_lib_paths
-    assert not ({os.path.normpath(x) for x in link_dirs[:-2]} & external_lib_paths)
+
+    assert os.environ["SPACK_LINK_DIRS"].split(":") == [
+        str(external_prefix / "lib"),
+        str(external_prefix / "lib64"),
+    ]
+    assert set(os.environ["SPACK_STORE_LINK_DIRS"].split(":")) == {
+        os.path.join(s.prefix, "lib") for s in store_deps
+    }
 
 
 def test_parallel_false_is_not_propagating(config, mock_packages):

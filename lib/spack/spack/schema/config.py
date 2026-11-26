@@ -239,8 +239,9 @@ properties: Dict[str, Any] = {
                 "additionalProperties": False,
                 "properties": {
                     "enable": {
-                        "type": "boolean",
-                        "description": "Enable or disable the build sandbox.",
+                        "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["auto"]}],
+                        "description": "Enable or disable the build sandbox. With auto, the "
+                        "sandbox is used when the kernel supports it.",
                     },
                     "allow_network": {
                         "type": "boolean",

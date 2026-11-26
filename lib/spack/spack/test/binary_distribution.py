@@ -224,6 +224,7 @@ def test_built_spec_cache(install_mockery, tmp_path: pathlib.Path):
         assert results[0].url == url_util.path_to_file_url(str(tmp_path))
 
 
+@pytest.mark.usefixtures("config")
 def test_download_tarball_reports_signature_verification_failure(
     monkeypatch, mock_packages, capfd
 ):

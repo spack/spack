@@ -33,7 +33,7 @@ from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
 from spack.schema.database_index import schema as db_idx_schema
 from spack.test.conftest import MockHTTPResponse, RepoBuilder
-from spack.util.filesystem import mkdirp, working_dir
+from spack.util.filesystem import working_dir
 
 config_cmd = spack.main.SpackCommand("config")
 ci_cmd = spack.main.SpackCommand("ci")
@@ -56,57 +56,6 @@ def ci_base_environment(working_env, tmp_path: pathlib.Path):
     os.environ["CI_PROJECT_DIR"] = str(tmp_path)
     os.environ["CI_PIPELINE_ID"] = "7192"
     os.environ["CI_JOB_NAME"] = "mock"
-
-
-@pytest.fixture(scope="function")
-def mock_git_repo(git, tmp_path: pathlib.Path):
-    """Create a mock git repo with two commits, the last one creating
-    a .gitlab-ci.yml"""
-
-    repo_path = str(tmp_path / "mockspackrepo")
-    mkdirp(repo_path)
-
-    with working_dir(repo_path):
-        git("init")
-
-        git("config", "--local", "user.email", "testing@spack.io")
-        git("config", "--local", "user.name", "Spack Testing")
-
-        # This path is used to satisfy git root detection and detection of environment changed
-        path_to_env = os.path.sep.join(("no", "such", "env", "path", "spack.yaml"))
-        os.makedirs(os.path.dirname(path_to_env))
-        with open(path_to_env, "w", encoding="utf-8") as f:
-            f.write(
-                """
-spack:
-    specs:
-    - a
-"""
-            )
-
-        git("add", path_to_env)
-
-        with open("README.md", "w", encoding="utf-8") as f:
-            f.write("# Introduction")
-
-        # initial commit with README
-        git("add", "README.md")
-        git("-c", "commit.gpgsign=false", "commit", "-m", "initial commit")
-
-        with open(".gitlab-ci.yml", "w", encoding="utf-8") as f:
-            f.write(
-                """
-testjob:
-    script:
-        - echo "success"
-            """
-            )
-
-        # second commit, adding a .gitlab-ci.yml
-        git("add", ".gitlab-ci.yml")
-        git("-c", "commit.gpgsign=false", "commit", "-m", "add a .gitlab-ci.yml")
-
-        yield repo_path
 
 
 @pytest.fixture()
@@ -422,6 +371,28 @@ spack:
 
     assert "dependent-install" in found
     assert "dependency-install" in found
+
+
+def test_ci_generate_skips_install_false(ci_generate_test, tmp_path: pathlib.Path):
+    """Roots marked install: false get no build jobs"""
+    _, outputfile, _ = ci_generate_test(
+        f"""\
+spack:
+  specs:
+    - dependency-install
+    - spec: dependent-install
+      install: false
+  mirrors:
+    buildcache-destination: {tmp_path / "ci-mirror"}
+  ci:
+    pipeline-gen:
+    - build-job:
+        tags: [donotcare]
+"""
+    )
+    jobs = syaml.load(outputfile.read_text())
+    assert any("dependency-install" in job for job in jobs)
+    assert not any("dependent-install" in job for job in jobs)
 
 
 def test_ci_generate_for_pr_pipeline(ci_generate_test, tmp_path: pathlib.Path, monkeypatch):
@@ -2049,7 +2020,8 @@ def fetch_versions_match(monkeypatch):
 
     def get_checksums_for_versions(url_by_version, package_name, **kwargs):
         pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
-        return {v: pkg_cls.versions[v]["sha256"] for v in url_by_version}
+        hashes = {v: pkg_cls.versions[v]["sha256"] for v in url_by_version}
+        return spack.stage.ChecksumResult(hashes=hashes, failures={})
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
 
@@ -2059,10 +2031,11 @@ def fetch_versions_invalid(monkeypatch):
     """Fake *invalid* checksums returned from downloaded tarballs."""
 
     def get_checksums_for_versions(url_by_version, package_name, **kwargs):
-        return {
+        hashes = {
             v: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
             for v in url_by_version
         }
+        return spack.stage.ChecksumResult(hashes=hashes, failures={})
 
     monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
 
@@ -2326,3 +2299,22 @@ def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_
 
         out = ci_cmd("verify-versions", commits[-2], commits[-3])
         assert "Skipping manual download package: diff-test" in out
+
+
+def test_ci_validate_standard_versions_fetch_failure(
+    capfd, mock_packages, fetch_url_exists, monkeypatch
+):
+    """Tests that a version whose archive cannot be fetched fails validation."""
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        failures = {v: "GET returned 503" for v in url_by_version}
+        return spack.stage.ChecksumResult(hashes={}, failures=failures)
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+    spec = spack.spec.Spec("diff-test")
+    pkg = mock_packages.get_pkg_class(spec.name)(spec)
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, [spack.version.Version("2.1.5")]) is False
+
+    out, err = capfd.readouterr()
+    assert "Could not fetch diff-test@2.1.5: GET returned 503" in err

@@ -65,19 +65,29 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["specs"])
 
 
+def _skip_races(func, path, exc_info):
+    # Removed concurrently, or a symlink (rmtree checks this atomically).
+    if isinstance(exc_info[1], FileNotFoundError) or func is os.path.islink:
+        return
+    raise exc_info[1]
+
+
 def remove_python_cache():
     for directory in [lib_path, var_path]:
         for root, dirs, files in os.walk(directory):
             for f in files:
-                if f.endswith(".pyc") or f.endswith(".pyo"):
+                if f.endswith((".pyc", ".pyo")):
                     fname = os.path.join(root, f)
                     tty.debug("Removing {0}".format(fname))
-                    os.remove(fname)
-            for d in dirs:
-                if d == "__pycache__":
-                    dname = os.path.join(root, d)
-                    tty.debug("Removing {0}".format(dname))
-                    shutil.rmtree(dname)
+                    try:
+                        os.remove(fname)
+                    except FileNotFoundError:
+                        pass
+            if "__pycache__" in dirs:
+                dirs.remove("__pycache__")
+                dname = os.path.join(root, "__pycache__")
+                tty.debug("Removing {0}".format(dname))
+                shutil.rmtree(dname, onerror=_skip_races)
 
 
 def clean(parser, args):

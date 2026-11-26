@@ -175,6 +175,7 @@ config:
   # This feature is only available on Linux kernels with Landlock support, and
   # only works with the new installer.
   sandbox:
+    # true, false, or auto (use the sandbox if the kernel supports it).
     enable: false
     # Allow TCP network access during the build phase.
     allow_network: true

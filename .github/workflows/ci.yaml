@@ -68,18 +68,15 @@ jobs:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
-    secrets: inherit
 
   unit-tests:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
-    secrets: inherit
 
   prechecks:
     needs: [ changes ]
     uses: ./.github/workflows/prechecks.yml
-    secrets: inherit
     with:
       with_coverage: ${{ needs.changes.outputs.core }}
       with_packages: ${{ needs.changes.outputs.packages }}
@@ -87,6 +84,10 @@ jobs:
   import-check:
     needs: [ changes ]
     uses: ./.github/workflows/import-check.yaml
+
+  symlink-check:
+    needs: [ changes ]
+    uses: ./.github/workflows/symlink-check.yaml
 
   all-prechecks:
     needs: [ prechecks ]
@@ -104,7 +105,8 @@ jobs:
     needs: [ unit-tests, prechecks ]
     if: ${{ needs.changes.outputs.core }}
     uses: ./.github/workflows/coverage.yml
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   all:
     needs: [ unit-tests, coverage, bootstrap ]

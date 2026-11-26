@@ -331,7 +331,7 @@ def _config_scope_info(args, scope, active, included):
             result.append(" ")
 
     if args.scopes_verbose and scope_status in ("absent", "override"):
-        result = [color.colorize(f"@k{{{elt}}}") for elt in result]
+        result = [color.colorize(f"@#{{{elt}}}") for elt in result]
 
     return result
 

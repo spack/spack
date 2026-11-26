@@ -7,6 +7,7 @@
 import collections
 import errno
 import getpass
+import hashlib
 import os
 import pathlib
 import shutil
@@ -30,6 +31,7 @@ from spack.stage import (
     stage_from_config,
 )
 from spack.util.filesystem import getuid, mkdirp, partition_path, readlink, touch, working_dir
+from spack.version import StandardVersion
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -718,30 +720,31 @@ class TestStage:
         # Cleanup
         shutil.rmtree(str(name))
 
-    def test_create_stage_root(self, tmp_path: pathlib.Path, no_path_access):
-        """Test create_stage_root permissions."""
-        test_dir = tmp_path / "path"
-        test_path = str(test_dir)
-
+    @pytest.mark.not_on_windows("Windows does not use POSIX permission bits")
+    @pytest.mark.skipif(getuid() == 0, reason="user is root")
+    def test_create_stage_root_denied(self, tmp_path: pathlib.Path, monkeypatch):
+        """Tests that a stage root created below an unreadable directory is refused."""
+        monkeypatch.setattr(spack.config, "get_user", lambda: "not-in-the-path")
+        parent = tmp_path / "parent"
+        parent.mkdir()
+        parent.chmod(0o300)
         try:
-            if getpass.getuser() in str(test_path).split(os.sep):
-                # Simply ensure directory created if tmp_path includes user
-                spack.stage.create_stage_root(test_path)
-                assert os.path.exists(test_path)
-
-                p_stat = os.stat(test_path)
-                assert p_stat.st_mode & stat.S_IRWXU == stat.S_IRWXU
-            else:
-                # Ensure an OS Error is raised on created, non-user directory
-                with pytest.raises(OSError) as exc_info:
-                    spack.stage.create_stage_root(test_path)
-
-                assert exc_info.value.errno == errno.EACCES
+            with pytest.raises(OSError, match="Access to .* is denied") as exc_info:
+                spack.stage.create_stage_root(str(parent / "stage"))
+            assert exc_info.value.errno == errno.EACCES
         finally:
-            try:
-                shutil.rmtree(test_path)
-            except OSError:
-                pass
+            parent.chmod(0o700)
+
+    @pytest.mark.not_on_windows("Windows does not use POSIX permission bits")
+    def test_create_stage_root_below_user_dir(self, tmp_path: pathlib.Path, monkeypatch):
+        """Tests that directories from the $user one on down are created user-only, while those
+        above it take the mode of their parent."""
+        monkeypatch.setattr(spack.config, "get_user", lambda: "spack-test-user")
+        tmp_path.chmod(0o755)
+        spack.stage.create_stage_root(str(tmp_path / "group" / "spack-test-user" / "stage"))
+        assert stat.S_IMODE((tmp_path / "group").stat().st_mode) == 0o755
+        for created in ("group/spack-test-user", "group/spack-test-user/stage"):
+            assert stat.S_IMODE((tmp_path / created).stat().st_mode) == 0o700
 
     def test_resolve_paths(self, monkeypatch, config):
         """Test _resolve_paths."""
@@ -977,3 +980,34 @@ def test_override_keep_in_composite_stage(config):
     assert not stage_1.keep
     assert not stage_2.keep
     assert not stage_3.keep
+
+
+@pytest.mark.disable_clean_stage_check
+def test_get_checksums_for_versions_reports_failures(tmp_path: pathlib.Path, config):
+    """Tests that a version whose archive cannot be fetched is returned as a failure, and the other
+    versions are still checksummed.
+    """
+    archive = tmp_path / "pkg-1.0.tar.gz"
+    archive.write_bytes(b"pkg 1.0")
+    v1, v2 = StandardVersion.from_string("1.0"), StandardVersion.from_string("1.1")
+    url_by_version = {
+        v1: url_util.path_to_file_url(str(archive)),
+        v2: url_util.path_to_file_url(str(tmp_path / "pkg-1.1.tar.gz")),
+    }
+
+    result = spack.stage.get_checksums_for_versions(url_by_version, "pkg", config=config)
+
+    assert result.hashes == {v1: hashlib.sha256(b"pkg 1.0").hexdigest()}
+    assert list(result.failures) == [v2]
+
+
+@pytest.mark.disable_clean_stage_check
+def test_get_checksums_for_versions_all_fail(tmp_path: pathlib.Path, config):
+    """Tests that the function returns when no archive can be fetched."""
+    v1 = StandardVersion.from_string("1.0")
+    url_by_version = {v1: url_util.path_to_file_url(str(tmp_path / "pkg-1.0.tar.gz"))}
+
+    result = spack.stage.get_checksums_for_versions(url_by_version, "pkg", config=config)
+
+    assert result.hashes == {}
+    assert list(result.failures) == [v1]

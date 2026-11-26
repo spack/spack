@@ -216,6 +216,17 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
             ["fortan", "cxxxx", "zlib %c,cxxxx,fortan=gcc"],
             id="two_unknown_virtuals_on_edge",
         ),
+        # libdwarf links libelf, so libelf cannot be compiled with a newer gcc than libdwarf.
+        # The error must name the bound, the dependency violating it, and the dependent.
+        pytest.param(
+            "libdwarf %gcc@9.4.0 ^libelf %gcc@10.2.1",
+            [
+                "a package that links or runs libelf requires it to be compiled with gcc@:9.4.0",
+                "libdwarf is compiled with gcc@9.4.0, and links or runs libelf, which is "
+                "compiled with gcc@10.2.1",
+            ],
+            id="propagated_compiler_version_bound",
+        ),
     ],
 )
 def test_input_spec_driven_errors(

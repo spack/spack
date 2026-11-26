@@ -22,7 +22,9 @@ runs:
       python-version: ${{ inputs.python-version }}
   - name: Install Python packages
     shell: bash
-    run: pip install --upgrade pip ${{ inputs.pip-install }}
+    env:
+      PIP_INSTALL: ${{ inputs.pip-install }}
+    run: pip install --upgrade pip $PIP_INSTALL
   - name: Setup git configuration
     shell: bash
     run: |
@@ -31,10 +33,12 @@ runs:
         . .github/workflows/bin/setup_git.sh
   - name: Configure bootstrapping
     shell: bash
+    env:
+      BOOTSTRAP: ${{ inputs.bootstrap }}
     run: |
         . share/spack/setup-env.sh
         spack bootstrap disable spack-install
-        if [ "${{ inputs.bootstrap }}" = "now" ]; then
+        if [ "$BOOTSTRAP" = "now" ]; then
             spack bootstrap now
         else
             spack bootstrap disable github-actions-v0.6

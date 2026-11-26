@@ -36,7 +36,6 @@ import inspect
 import io
 import multiprocessing
 import os
-import re
 import signal
 import sys
 import traceback
@@ -1009,7 +1008,12 @@ class SetupContext:
         self.external, self.nonexternal = stable_partition(
             reversed(specs_with_type), lambda t: t[0].external
         )
-        self.should_be_runnable = UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME_EXECUTABLE
+        # PATH entries of the run environment come from modules:prefix_inspections
+        self.should_prepend_bin_dirs = (
+            UseMode(0)
+            if context == Context.RUN
+            else UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME_EXECUTABLE
+        )
         self.should_setup_run_env = (
             UseMode.BUILDTIME_DIRECT | UseMode.RUNTIME | UseMode.RUNTIME_EXECUTABLE
         )
@@ -1017,8 +1021,9 @@ class SetupContext:
         self.should_setup_build_env = UseMode.ROOT if context == Context.BUILD else UseMode(0)
 
         if context == Context.RUN or context == Context.TEST:
-            self.should_be_runnable |= UseMode.ROOT
             self.should_setup_run_env |= UseMode.ROOT
+        if context == Context.TEST:
+            self.should_prepend_bin_dirs |= UseMode.ROOT
 
         # Everything that calls setup_run_environment and setup_dependent_* needs globals set.
         self.should_set_package_py_globals = (
@@ -1081,8 +1086,8 @@ class SetupContext:
             if self.should_setup_build_env & flag:
                 spack.builder.create(pkg).setup_build_environment(env)
 
-            if self.should_be_runnable & flag:
-                self._make_runnable(dspec, env)
+            if self.should_prepend_bin_dirs & flag:
+                self._prepend_bin_dirs(dspec, env)
 
             if self.should_setup_run_env & flag:
                 run_env_mods = EnvironmentModifications()
@@ -1113,7 +1118,7 @@ class SetupContext:
             if os.path.isdir(pcdir):
                 env.prepend_path("PKG_CONFIG_PATH", pcdir)
 
-    def _make_runnable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
+    def _prepend_bin_dirs(self, dep: spack.spec.Spec, env: EnvironmentModifications):
         if is_system_path(dep.prefix):
             return
 
@@ -1397,12 +1402,10 @@ def start_build_process(
             except Exception:
                 pass
 
-        mflags = os.environ.get("MAKEFLAGS")
-        if mflags is not None:
-            m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
-            if m:
-                jobserver_fd1 = Connection(int(m.group(1)))
-                jobserver_fd2 = Connection(int(m.group(2)))
+        jobserver_fds = spack.util.executable.jobserver_fds(os.environ.get("MAKEFLAGS", ""))
+        if jobserver_fds:
+            jobserver_fd1 = Connection(jobserver_fds[0])
+            jobserver_fd2 = Connection(jobserver_fds[1])
 
         p = BuildProcess(
             target=_setup_pkg_and_run,

@@ -9,7 +9,7 @@ import copy
 import shlex
 import warnings
 from collections import namedtuple
-from typing import Optional
+from typing import Callable, Dict, Optional
 
 import spack.vendor.jsonschema
 
@@ -29,7 +29,7 @@ from .images import (
 )
 
 #: Caches all the writers that are currently supported
-_writer_factory = {}
+_writer_factory: Dict[str, Callable] = {}
 
 
 def writer(name):

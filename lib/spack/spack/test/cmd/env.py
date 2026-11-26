@@ -72,6 +72,7 @@ concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
 uninstall = SpackCommand("uninstall")
 find = SpackCommand("find")
+spec = SpackCommand("spec")
 develop = SpackCommand("develop")
 module = SpackCommand("module")
 
@@ -298,6 +299,58 @@ def test_change_multiple_matches():
 
     assert all(x.intersects("%gcc") for x in e.user_specs if x.name == "mpileaks")
     assert any(x.intersects("%clang") for x in e.user_specs if x.name == "libelf")
+
+
+INSTALL_FALSE_ENV = """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+
+
+#: mpileaks depends on callpath, which is marked, so mpileaks is not installed either
+MARKED_CALLPATH_ENV = """\
+spack:
+  specs:
+  - mpileaks
+  - libelf
+  - spec: callpath
+    install: false
+"""
+
+
+def test_add_existing_spec_with_options(environment_from_manifest):
+    """Adding a spec that is already listed as a spec: entry does not duplicate it."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        add("cmake")
+
+    e = ev.read("test")
+    assert [s.name for s in e.user_specs] == ["mpileaks", "cmake"]
+    assert e.user_specs.install_flags == [True, False]
+
+
+def test_remove_spec_with_options(environment_from_manifest):
+    """A spec: entry can be removed like a plain spec."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        remove("cmake")
+
+    e = ev.read("test")
+    assert [s.name for s in e.user_specs] == ["mpileaks"]
+
+
+def test_change_spec_with_options(environment_from_manifest):
+    """Changing a spec: entry keeps its options."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        change("cmake@3.30")
+
+    e = ev.read("test")
+    assert e.user_specs[1] == Spec("cmake@3.30")
+    assert e.user_specs.install_flags == [True, False]
 
 
 def test_env_add_virtual():
@@ -612,6 +665,308 @@ def test_env_roots_marked_explicit(
     assert len(explicit) == 2
 
 
+def test_env_root_marked_install_false(
+    installed_environment, temporary_store: Store, tmp_path: pathlib.Path
+):
+    """A root spec with install: false is a root for unification, but can't be installed."""
+    with installed_environment(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+    ) as test:
+        # still a concrete root of the environment, just not an installable one
+        assert {s.name for s in test.concrete_roots()} == {"mpileaks", "cmake"}
+        assert {s.name for s in test.installable_roots()} == {"mpileaks"}
+
+        assert temporary_store.db.query("mpileaks")
+        assert not temporary_store.db.query("cmake")
+
+
+def test_env_install_false_on_duplicate(environment_from_manifest):
+    """A flag inside a definition skips the spec in every group using it, and a group can't undo
+    it. A group can skip a spec from a definition or a matrix by listing it again with
+    install: false."""
+    e = environment_from_manifest(
+        """\
+spack:
+  definitions:
+  - tools:
+    - cmake
+    - spec: zlib
+      install: false
+  specs:
+  - group: apps
+    specs:
+    - matrix:
+      - [mpileaks]
+      - [+debug, ~debug]
+    - spec: mpileaks+debug
+      install: false
+    - $tools
+    - spec: cmake
+      install: false
+  - group: extra
+    specs:
+    - $tools
+    - zlib
+"""
+    )
+    with e:
+        e.concretize()
+
+    installable = e.installable_roots()
+    assert sorted(s.name for s in installable) == ["cmake", "mpileaks"]
+    assert not any(s.satisfies("+debug") for s in installable if s.name == "mpileaks")
+
+
+def test_env_install_false_in_group(environment_from_manifest):
+    """install: false works with spec groups."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - group: apps
+    specs:
+    - mpileaks
+    - spec: cmake
+      install: false
+"""
+    )
+    with e:
+        e.concretize()
+
+    assert {s.name for s in e.concrete_roots()} == {"mpileaks", "cmake"}
+    assert {s.name for s in e.installable_roots()} == {"mpileaks"}
+
+
+def test_env_install_false_skips_dependents(installed_environment, temporary_store: Store, capfd):
+    """Roots that depend on a root with install: false are not installable."""
+    with installed_environment(MARKED_CALLPATH_ENV) as test:
+        assert {s.name for s in test.concrete_roots()} == {"mpileaks", "libelf", "callpath"}
+        assert {s.name for s in test.installable_roots()} == {"libelf"}
+
+        assert temporary_store.db.query("libelf")
+        assert not temporary_store.db.query("callpath")
+        assert not temporary_store.db.query("mpileaks")
+        warning = "not installing mpileaks: it depends on callpath, which is marked install: false"
+        assert warning in capfd.readouterr()[1]
+
+
+def test_install_cmd_warns_about_blocked_roots(
+    environment_from_manifest, mock_fetch, mock_packages, mock_archive, install_mockery
+):
+    """`spack install` warns about roots skipped because they are marked install: false, or depend
+    on a root that is"""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        e.concretize()
+        e.write()
+        output = install("--fake")
+
+    warning = "not installing mpileaks: it depends on callpath, which is marked install: false"
+    assert warning in output
+    assert "not installing callpath: it is marked install: false" in output
+    assert output.count("not installing callpath") == 1
+
+
+def test_env_install_false_marks_blocked_dependencies(environment_from_manifest, mock_packages):
+    """Dependencies that are only needed by roots which are not installed are also not installable,
+    while dependencies shared with an installable root are."""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        e.concretize()
+
+    hashes = e.not_installable_hashes()
+    not_installable = {
+        s.name for r in e.concrete_roots() for s in r.traverse() if s.dag_hash() in hashes
+    }
+    # roots that are marked or blocked, and dependencies only they need
+    assert {"mpileaks", "callpath", "dyninst", "mpich"} <= not_installable
+    # libelf is a root that gets installed, and the others depend on it
+    assert "libelf" not in not_installable
+
+
+def test_env_install_false_status_spec(environment_from_manifest, mock_packages):
+    """spack spec -I shows specs that are not installed because of install: false as [x]"""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        output = spec("-I")
+
+    marked = [line for line in output.splitlines() if line.startswith("[x]")]
+    # roots that are marked or blocked, and dependencies only they need
+    for name in ("mpileaks", "callpath", "dyninst", "mpich"):
+        assert any(f"{name}@" in line for line in marked)
+    # libelf is a root that gets installed, and the others depend on it
+    assert not any("libelf@" in line for line in marked)
+
+
+def test_install_cmd_does_not_install_marked_root_by_name(
+    environment_from_manifest, mock_fetch, mock_packages, mock_archive, install_mockery
+):
+    """Naming a root marked install: false on the command line does not install it"""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        e.concretize()
+        e.write()
+        output = install("--fake", "callpath")
+
+    assert "not installing callpath: it is marked install: false" in output
+    assert not spack.store.STORE.db.query("callpath")
+
+
+def test_env_install_false_shared_concrete_spec(environment_from_manifest):
+    """A root marked install: false that concretizes to the same spec as an unmarked root is
+    installed, so it does not block its dependents."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - callpath@1.0
+  - spec: callpath
+    install: false
+"""
+    )
+    with e:
+        e.concretize()
+
+    assert sorted(s.name for s in e.installable_roots()) == ["callpath", "mpileaks"]
+    assert not e.not_installable_hashes()
+
+
+def test_env_install_false_installed_roots_not_in_view(
+    installed_environment, tmp_path: pathlib.Path
+):
+    """Roots that are marked install: false, or blocked by one, are left out of the view and of
+    the activation environment, even when they are already installed."""
+    view_dir = tmp_path / "view"
+    manifest = """\
+spack:
+  specs:
+  - mpileaks
+  - libelf
+{extra}  view: {view}
+"""
+    with installed_environment(manifest.format(extra="", view=view_dir)) as test:
+        assert (view_dir / ".spack" / "callpath").exists()
+        assert (view_dir / ".spack" / "mpileaks").exists()
+        manifest_path = pathlib.Path(test.manifest_path)
+        # the mock mpileaks package sets FOOBAR in its run environment
+        assert "FOOBAR=mpileaks" in env("activate", "--sh", "test")
+
+    extra = "  - spec: callpath\n    install: false\n"
+    manifest_path.write_text(manifest.format(extra=extra, view=view_dir), encoding="utf-8")
+    with ev.Environment(manifest_path.parent) as test:
+        test.concretize()
+        test.write(regenerate=True)
+
+    assert (view_dir / ".spack" / "libelf").exists()
+    assert not (view_dir / ".spack" / "callpath").exists()
+    assert not (view_dir / ".spack" / "mpileaks").exists()
+    assert "FOOBAR=mpileaks" not in env("activate", "--sh", "test")
+
+
+@pytest.mark.parametrize("command", [("concretize",), ("env", "view", "regenerate")])
+def test_commands_warn_about_skipped_roots(environment_from_manifest, mock_packages, command):
+    """`spack concretize` and `spack env view regenerate` warn about roots that are not installed
+    because they are marked install: false, or depend on such a root"""
+    e = environment_from_manifest(MARKED_CALLPATH_ENV)
+    with e:
+        e.concretize()
+        e.write()
+        output = SpackCommand(command[0])(*command[1:])
+
+    assert "not installing callpath: it is marked install: false" in output
+    blocked = "not installing mpileaks: it depends on callpath, which is marked install: false"
+    assert blocked in output
+    assert "not installing libelf" not in output
+
+
+def test_env_install_false_in_matrix(environment_from_manifest, mock_packages):
+    """A definition entry marked install: false keeps the flag when expanded in a matrix"""
+    e = environment_from_manifest(
+        """\
+spack:
+  definitions:
+  - apps: [{spec: callpath, install: false}, libelf]
+  specs:
+  - matrix:
+    - [$apps]
+    - ['target=x86_64']
+"""
+    )
+    with e:
+        e.concretize()
+
+    assert [s.name for s in e.concrete_roots()] == ["callpath", "libelf"]
+    assert [s.name for s in e.installable_roots()] == ["libelf"]
+    assert e.not_installable_hashes() >= {
+        s.dag_hash() for s in e.concrete_roots() if s.name == "callpath"
+    }
+
+
+@pytest.mark.parametrize("also_root", [False, True])
+def test_env_install_false_dependency_sigil_in_matrix(
+    environment_from_manifest, mock_packages, capfd, also_root
+):
+    """A matrix row that uses an entry marked install: false as a dependency constraint (^ sigil)
+    is not installed, whether or not the entry is also a root of the environment."""
+    e = environment_from_manifest(
+        f"""\
+spack:
+  definitions:
+  - deps: [{{spec: callpath, install: false}}]
+  specs:
+  {"- $deps" if also_root else ""}
+  - matrix:
+    - [mpileaks]
+    - [$^deps]
+"""
+    )
+    with e:
+        e.concretize()
+        e.warn_skipped_roots()
+
+    assert e.installable_roots() == []
+    err = capfd.readouterr()[1]
+    assert "not installing mpileaks: it uses ^callpath which is marked install: false" in err
+    assert ("not installing callpath: it is marked install: false" in err) == also_root
+
+
+def test_env_install_false_needs_no_concretization(environment_from_manifest):
+    """install: false is read from spack.yaml at install time, so it needs no concretization."""
+    e = environment_from_manifest(
+        """\
+spack:
+  specs:
+  - mpileaks
+  - cmake
+"""
+    )
+    with e:
+        e.concretize()
+        e.write()
+
+    with open(e.manifest_path, "w", encoding="utf-8") as f:
+        f.write(
+            """\
+spack:
+  specs:
+  - mpileaks
+  - spec: cmake
+    install: false
+"""
+        )
+
+    e = ev.read("test")
+    assert {s.name for s in e.concrete_roots()} == {"mpileaks", "cmake"}
+    assert {s.name for s in e.installable_roots()} == {"mpileaks"}
+
+
 def test_env_modifications_error_on_activate(
     install_mockery, mock_fetch, monkeypatch, capfd, mock_packages: RepoPath
 ):
@@ -737,6 +1092,15 @@ def test_remove_before_concretize(mutable_config):
         e.remove("mpileaks")
         e.concretize()
         assert not e.concretized_roots
+
+
+def test_remove_spec_with_toolchain(tmp_path: pathlib.Path):
+    """Manifest entries are toolchain-expanded like the spec on the command line before matching"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text("spack:\n  toolchains:\n    tc: '%c=gcc'\n  specs: [mpileaks %tc]\n")
+    with ev.Environment(tmp_path):
+        remove("mpileaks %tc")
+    assert "mpileaks" not in manifest.read_text()
 
 
 def test_remove_command():
@@ -1734,6 +2098,16 @@ spack:
     - libdwarf
 """,
         ),
+        (
+            spack.config.ConfigFormatError,
+            "is not valid under any of the given schemas",
+            """\
+spack:
+  specs:
+  - spec: mpileaks
+    bad: true
+""",
+        ),
     ],
 )
 def test_bad_env_yaml_create_fails(
@@ -1805,6 +2179,44 @@ def test_env_loads(install_mockery, mock_fetch, mock_modules_root):
     with open(loads_file, encoding="utf-8") as f:
         contents = f.read()
         assert "module load mpileaks" in contents
+
+
+@pytest.mark.parametrize("args", [[], ["-r"]])
+def test_env_loads_skips_install_false(
+    args, environment_from_manifest, install_mockery, mock_fetch, mock_modules_root
+):
+    """Roots marked install: false have no module, and are skipped by spack env loads."""
+    e = environment_from_manifest(INSTALL_FALSE_ENV)
+    with e:
+        concretize()
+        install("--fake")
+        module("tcl", "refresh", "-y")
+        env("loads", *args)
+
+    with open(os.path.join(e.path, "loads"), encoding="utf-8") as f:
+        contents = f.read()
+    assert "module load mpileaks" in contents
+    assert "cmake" not in contents
+
+
+@pytest.mark.parametrize("args", [[], ["-r"]])
+def test_env_loads_included_root_not_duplicated(
+    args, mutable_mock_env_path, install_mockery, mock_fetch, mock_modules_root
+):
+    """A root shared with an included environment, and its dependencies, are listed once."""
+    _, _, combined = setup_combined_multiple_env()
+    with combined:
+        combined.add("libelf")  # also a root of the included test2 environment
+        combined.concretize()
+        combined.write()
+        install("--fake")
+        module("tcl", "refresh", "-y")
+        env("loads", *args)
+
+    with open(os.path.join(combined.path, "loads"), encoding="utf-8") as f:
+        loads = [line for line in f.read().splitlines() if line.startswith("module load")]
+    assert len(loads) == len(set(loads))
+    assert any("libelf" in line for line in loads)
 
 
 @pytest.mark.disable_clean_stage_check
@@ -3676,8 +4088,8 @@ spack:
     assert spec.prefix not in contents
 
 
-def test_modules_exist_after_env_install(installed_environment):
-    with installed_environment(
+def test_modules_exist_after_env_install(environment_from_manifest, install_mockery, mock_fetch):
+    environment_from_manifest(
         """
 spack:
   specs:
@@ -3693,7 +4105,9 @@ spack:
       roots:
         tcl: without_view
 """
-    ) as e:
+    )
+    with ev.read("test") as e:
+        install("--fake")
         specs = e.all_specs()
         for module_set in ("uses_view", "without_view"):
             modules = glob.glob(f"{e.path}/{module_set}/**/*/*")
@@ -5094,7 +5508,8 @@ def test_exists_consistent_with_all_environment_names(
 
 def test_concretization_reports_groups(environment_from_manifest):
     """Tests that each group of user specs is reported to the frontend."""
-    e = environment_from_manifest("""
+    e = environment_from_manifest(
+        """
 spack:
   specs:
   - libelf
@@ -5104,7 +5519,8 @@ spack:
   - group: apps2
     specs:
     - pkg-b
-""")
+"""
+    )
     ui = RecordingUI()
     with e:
         e.concretize(ui=ui)
@@ -5123,14 +5539,16 @@ def test_concretization_reports_a_group_with_nothing_to_do(environment_from_mani
     """Tests that re-concretizing an environment still reports each group, including the ones
     that are solved already.
     """
-    e = environment_from_manifest("""
+    e = environment_from_manifest(
+        """
 spack:
   specs:
   - libelf
   - group: apps1
     specs:
     - pkg-a
-""")
+"""
+    )
     with e:
         e.concretize()
         e.write()
@@ -5168,3 +5586,127 @@ def test_reported_total_ignores_specs_that_were_kept(unify, mutable_config, mock
     assert total == 1
     assert [count for _, _, count, _ in ui.concretized] == [1]
     assert [abstract.name for abstract, _, _, _ in ui.concretized] == ["mpileaks"]
+
+
+def _read_manifest(manifest: pathlib.Path) -> Dict[str, Any]:
+    return spack.util.spack_yaml.load(manifest.read_text())["spack"]
+
+
+@pytest.mark.parametrize(
+    "content,args,key,expected",
+    [
+        # A group listed before the spec to change
+        (
+            "spack: {specs: [{group: tools, specs: [libelf]}, mpileaks]}",
+            ["mpileaks@2.2"],
+            "specs",
+            [{"group": "tools", "specs": ["libelf"]}, "mpileaks@2.2"],
+        ),
+        # A default group entry written as a dictionary
+        (
+            "spack: {specs: [{specs: [mpileaks]}, libelf]}",
+            ["mpileaks@2.2"],
+            "specs",
+            [{"specs": ["mpileaks@2.2"]}, "libelf"],
+        ),
+        # A reference listed before the spec to change
+        (
+            "spack: {definitions: [{base: [libelf, libdwarf]}], specs: [$base, mpileaks]}",
+            ["mpileaks@2.2"],
+            "specs",
+            ["$base", "mpileaks@2.2"],
+        ),
+        # A toolchain in the spec to change
+        (
+            "spack: {toolchains: {tc: '%c=gcc'}, specs: [mpileaks %tc]}",
+            ["mpileaks@2.2"],
+            "specs",
+            ["mpileaks@2.2 %tc"],
+        ),
+        # A definition entry written in a non-canonical form
+        (
+            "spack: {definitions: [{mylist: ['mpileaks +shared']}], specs: [$mylist]}",
+            ["-l", "mylist", "mpileaks@2.2"],
+            "definitions",
+            [{"mylist": ["mpileaks@2.2+shared"]}],
+        ),
+    ],
+)
+def test_change_edits_the_written_entry(tmp_path: pathlib.Path, content, args, key, expected):
+    """Tests that 'spack change' edits the entry written in the manifest, and leaves the other
+    entries as they are.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(content)
+    with ev.Environment(tmp_path):
+        change(*args)
+    assert _read_manifest(manifest)[key] == expected
+
+
+@pytest.mark.parametrize(
+    "content,args",
+    [
+        # The spec comes only from a reference
+        ("spack: {definitions: [{base: [mpileaks, libelf]}], specs: [$base]}", ["mpileaks@2.2"]),
+        # The spec is both written and pulled in through a reference
+        (
+            "spack: {definitions: [{base: [mpileaks]}], specs: [$base, mpileaks@2.1]}",
+            ["-a", "mpileaks@2.2"],
+        ),
+        # The toolchain sets the attribute to be changed
+        (
+            "spack: {toolchains: {tc: 'cflags=-O3 %c=gcc'}, specs: [mpileaks %tc]}",
+            ["mpileaks cflags=-O2"],
+        ),
+    ],
+)
+def test_change_refuses_entries_it_cannot_edit(tmp_path: pathlib.Path, content, args):
+    """Tests that 'spack change' fails, and leaves the manifest as it is, when the result would not
+    be the requested change.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(content)
+    with ev.Environment(tmp_path):
+        with pytest.raises(ValueError, match="Cannot change abstract specs"):
+            change(*args)
+    assert manifest.read_text() == content
+
+
+@pytest.mark.parametrize(
+    "content,expected",
+    [
+        (
+            "spack: {specs: [{group: tools, specs: [libelf]}, mpileaks]}",
+            [{"group": "tools", "specs": ["libelf"]}],
+        ),
+        (
+            "spack: {definitions: [{base: [libelf, libdwarf]}], specs: [$base, mpileaks]}",
+            ["$base"],
+        ),
+    ],
+)
+def test_remove_next_to_groups_and_references(tmp_path: pathlib.Path, content, expected):
+    """Tests that 'spack remove' removes the written entry when the default list also holds a
+    group or a reference.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(content)
+    with ev.Environment(tmp_path):
+        remove("mpileaks")
+    assert _read_manifest(manifest)["specs"] == expected
+
+
+def test_remove_reports_only_the_specs_it_removed(tmp_path: pathlib.Path):
+    """Tests that 'spack remove' reports as removed only the specs written in the manifest, and
+    warns about the others.
+    """
+    (tmp_path / "spack.yaml").write_text(
+        "spack: {definitions: [{base: [libelf]}], specs: [$base, mpileaks]}"
+    )
+    with ev.Environment(tmp_path):
+        with pytest.warns(UserWarning, match="'libelf' stays in 'specs'"):
+            output = remove("libelf")
+        assert "has been removed" not in output
+
+        output = remove("mpileaks")
+        assert "mpileaks has been removed" in output

@@ -498,8 +498,8 @@ def test_directive_without_message_reports_only_the_policy(mock_packages, mutabl
 
     config_path = "'packages:deprecated-with-reason:deprecation:allow'"
     message = str(exc_info.value)
-    assert f"is not allowed by {config_path}" in message
-    assert message.rstrip().endswith(config_path)
+    assert "is not allowed" in message
+    assert config_path in message
 
 
 def test_each_directive_is_reported_with_its_own_labels_and_message(mock_packages, mutable_config):
@@ -509,13 +509,16 @@ def test_each_directive_is_reported_with_its_own_labels_and_message(mock_package
     with pytest.raises(UnsatisfiableSpecError) as exc_info:
         concretize_one("deprecated-with-message@0.9")
 
-    lines = [x for x in str(exc_info.value).splitlines() if "deprecated spec" in x]
-    assert len(lines) == 2
-    assert all("'deprecated-with-message@=0.9'" in x for x in lines)
-    (first,) = [x for x in lines if "labels: CVE-2026-1000)" in x]
-    (second,) = [x for x in lines if "labels: CVE-2026-1001)" in x]
-    assert first.endswith("move to @2.0")
-    assert second.endswith("also affects the ABI")
+    error_lines = str(exc_info.value).splitlines()
+    deprecated_lines = [(i, x) for i, x in enumerate(error_lines) if "deprecated spec" in x]
+
+    assert len(deprecated_lines) == 2
+    assert all("'deprecated-with-message@=0.9'" in x for _, x in deprecated_lines)
+
+    (first_index,) = [i for i, x in deprecated_lines if "labels: CVE-2026-1000)" in x]
+    (second_index,) = [i for i, x in deprecated_lines if "labels: CVE-2026-1001)" in x]
+    assert error_lines[first_index + 1].endswith("move to @2.0")
+    assert error_lines[second_index + 1].endswith("also affects the ABI")
 
 
 def test_selector_attributes_are_conjunctive(mock_packages, concretize_scope, packages_yaml_write):

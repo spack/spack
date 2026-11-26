@@ -16,7 +16,9 @@ import tempfile
 from typing import List, Tuple
 
 import spack.concretize
+import spack.error
 import spack.sandbox
+import spack.spec
 import spack.store
 from spack.installer.build import _enable_sandbox
 
@@ -121,6 +123,8 @@ def test_landlock_sandbox_network_args():
 
 
 class MockSandbox(spack.sandbox.Sandbox):
+    supports_network_blocking = True
+
     def __init__(self):
         self.read_calls: List[Tuple[pathlib.Path, pathlib.Path]] = []
         self.write_calls: List[Tuple[pathlib.Path, pathlib.Path]] = []
@@ -193,6 +197,32 @@ def test_enable_sandbox_paths(
     assert pathlib.Path(tempfile.gettempdir()).resolve() in allow_write_resolved
 
     assert mock_sandbox.apply_calls == [False]
+
+
+def test_enable_sandbox_unsupported(monkeypatch, capfd):
+    """Test that only enable: true fails when the kernel does not support the sandbox, and that
+    enable: auto reports building without it."""
+
+    def unsupported():
+        raise spack.sandbox.SandboxError("unsupported")
+
+    monkeypatch.setattr(spack.sandbox, "get_sandbox", unsupported)
+    _enable_sandbox({"enable": "auto"}, spack.spec.Spec(), "")
+    assert "Building without sandbox: unsupported" in capfd.readouterr().out
+    with pytest.raises(spack.error.InstallError, match="unsupported"):
+        _enable_sandbox({"enable": True}, spack.spec.Spec(), "")
+
+
+@pytest.mark.parametrize("supported", [True, False])
+def test_enable_sandbox_auto_network(supported, config, mock_packages, monkeypatch, capfd):
+    """Test that enable: auto blocks network access only when the sandbox supports it."""
+    mock_sandbox = MockSandbox()
+    mock_sandbox.supports_network_blocking = supported
+    monkeypatch.setattr(spack.sandbox, "get_sandbox", lambda: mock_sandbox)
+    spec = spack.concretize.concretize_one("trivial-install-test-package")
+    _enable_sandbox({"enable": "auto", "allow_network": False}, spec, "")
+    assert mock_sandbox.apply_calls == [supported]
+    assert ("Building without network sandbox" in capfd.readouterr().out) is not supported
 
 
 def test_sandbox_network_blocking_requires_abi_v4():

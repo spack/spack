@@ -2669,6 +2669,88 @@
         ]
       }
     },
+    "zen6": {
+      "from": [
+        "zen5"
+      ],
+      "vendor": "AuthenticAMD",
+      "features": [
+        "abm",
+        "aes",
+        "avx",
+        "avx2",
+        "avx512_bf16",
+        "avx512_bitalg",
+        "avx512_fp16",
+        "avx512bw",
+        "avx512cd",
+        "avx512dq",
+        "avx512f",
+        "avx512ifma",
+        "avx512vbmi",
+        "avx512_vbmi2",
+        "avx512vl",
+        "avx512_vnni",
+        "avx512_vp2intersect",
+        "avx512_vpopcntdq",
+        "avx_vnni",
+        "bmi1",
+        "bmi2",
+        "clflushopt",
+        "clwb",
+        "clzero",
+        "cx16",
+        "f16c",
+        "flush_l1d",
+        "fma",
+        "fsgsbase",
+        "gfni",
+        "mmx",
+        "movbe",
+        "movdir64b",
+        "lahf_lm",
+        "movdiri",
+        "pclmulqdq",
+        "popcnt",
+        "pku",
+        "rdseed",
+        "sse",
+        "sse2",
+        "sse4_1",
+        "sse4_2",
+        "sse4a",
+        "ssse3",
+        "tsc_adjust",
+        "vaes",
+        "vpclmulqdq",
+        "xsave",
+        "xsavec",
+        "xsaveopt"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "16.1:",
+            "name": "znver6",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "aocc": [
+          {
+            "versions": "6.0:",
+            "name": "znver6",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "23.1:",
+            "name": "znver6",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
     "ppc64": {
       "from": [],
       "vendor": "generic",
@@ -3986,10 +4068,93 @@
       },
       "cpupart": "0xac4"
     },
-    "neoverse_v3ae": {
+    "neoverse_v3": {
       "from": [
         "neoverse_v2",
+        "neoverse_n2",
         "armv9.2a"
+      ],
+      "vendor": "ARM",
+      "features": [
+        "aes",
+        "afp",
+        "asimd",
+        "asimddp",
+        "asimdfhm",
+        "asimdhp",
+        "asimdrdm",
+        "atomics",
+        "bf16",
+        "bti",
+        "cpuid",
+        "crc32",
+        "dcpodp",
+        "dcpop",
+        "dgh",
+        "dit",
+        "ecv",
+        "evtstrm",
+        "fcma",
+        "flagm",
+        "flagm2",
+        "fp",
+        "fphp",
+        "frint",
+        "i8mm",
+        "ilrcpc",
+        "jscvt",
+        "lrcpc",
+        "paca",
+        "pacg",
+        "pmull",
+        "sb",
+        "sha1",
+        "sha2",
+        "sha3",
+        "sha512",
+        "sve",
+        "sve2",
+        "sveaes",
+        "svebf16",
+        "svebitperm",
+        "svei8mm",
+        "svepmull",
+        "svesha3",
+        "uscat",
+        "wfxt"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "14.3:",
+            "flags": "-mcpu=neoverse-v3"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "19.0:",
+            "flags": "-mcpu=neoverse-v3"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "24.10:",
+            "flags": "-mcpu=neoverse-v3"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "26.9:",
+            "name": "neoverse-v3",
+            "flags": "-tp {name}"
+          }
+        ]
+      },
+      "cpupart": "0xd84"
+    },
+    "neoverse_v3ae": {
+      "from": [
+        "neoverse_v3"
       ],
       "vendor": "ARM",
       "features": [
@@ -4046,7 +4211,7 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "15.0:",
+            "versions": "14.3:",
             "flags": "-mcpu=neoverse-v3ae"
           }
         ],
@@ -4055,9 +4220,120 @@
             "versions": "19.0:",
             "flags": "-mcpu=neoverse-v3ae"
           }
+        ],
+        "arm": [
+          {
+            "versions": "24.10:",
+            "flags": "-mcpu=neoverse-v3ae"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "26.5:",
+            "name": "neoverse-v3ae",
+            "flags": "-tp {name}"
+          }
         ]
       },
       "cpupart": "0xd83"
+    },
+    "olympus": {
+      "from": [
+        "armv9.2a"
+      ],
+      "vendor": "Nvidia",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "sm3",
+        "sm4",
+        "asimddp",
+        "sha512",
+        "sve",
+        "asimdfhm",
+        "dit",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "ssbs",
+        "sb",
+        "paca",
+        "pacg",
+        "dcpodp",
+        "sve2",
+        "sveaes",
+        "svepmull",
+        "svebitperm",
+        "svesha3",
+        "svesm4",
+        "flagm2",
+        "frint",
+        "svei8mm",
+        "svebf16",
+        "i8mm",
+        "bf16",
+        "dgh",
+        "rng",
+        "bti",
+        "ecv",
+        "afp",
+        "wfxt",
+        "fpmr",
+        "lut",
+        "faminmax",
+        "f8cvt",
+        "f8fma",
+        "f8dp4",
+        "f8dp2",
+        "f8e4m3",
+        "f8e5m2",
+        "ls64"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "13:15.0",
+            "flags": "-march=armv9.2-a -mtune=generic"
+          },
+          {
+            "versions": "15.1:",
+            "flags": "-mcpu=olympus"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "14:21.0",
+            "flags": "-march=armv9.2-a -mtune=generic"
+          },
+          {
+            "versions": "21.1:",
+            "flags": "-mcpu=olympus"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "26.9:",
+            "flags": "-tp olympus"
+          }
+        ]
+      },
+      "cpupart": "0x010"
     },
     "m1": {
       "from": [
@@ -4358,7 +4634,7 @@
         "gcc": [
           {
             "versions": "14.1:",
-            "flags": "-march=armv9.2-a+sme2 -fno-tree-vectorize -fno-tree-slp-vectorize -mtune=generic"
+            "flags": "-march=armv9.2-a+nosve -mtune=generic"
           }
         ],
         "clang": [
