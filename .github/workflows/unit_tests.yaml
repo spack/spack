@@ -66,7 +66,8 @@ jobs:
           COVERAGE_FILE: coverage/.coverage-${{ matrix.os }}-python${{ matrix.python-version }}
           PYTEST_ADDOPTS: ${{ matrix.python-version == '3.14' && '--cov --cov-config=pyproject.toml' || '' }}
       run: |
-          python3 -m pytest -x --verbose --dist worksteal -n4
+          # No --verbose on 3.7: with xdist < 3.6 it can make xdist run tests outside the main thread
+          python3 -m pytest -x ${{ matrix.python-version != '3.7' && '--verbose' || '' }} --dist worksteal -n4
     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       if: ${{ matrix.python-version == '3.14' }}
       with:
