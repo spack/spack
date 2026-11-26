@@ -667,6 +667,34 @@ def test_ci_rebuild_mock_failure_to_push(
         assert e.value.code == FAILED_CREATE_BUILDCACHE_CODE
 
 
+@pytest.mark.parametrize("push", [True, False])
+def test_ci_rebuild_push(
+    tmp_path: pathlib.Path,
+    working_env,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_gnupghome,
+    mock_fetch,
+    mock_binary_index,
+    ci_base_environment,
+    monkeypatch,
+    push,
+):
+    pkg_name = "trivial-install-test-package"
+    rebuild_env = create_rebuild_env(tmp_path, pkg_name)
+
+    # install in-process; the subprocess `spack install` the job runs becomes a no-op
+    monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "true")
+
+    with working_dir(rebuild_env.env_dir):
+        activate_rebuild_env(tmp_path, pkg_name, rebuild_env)
+        install_cmd("--no-add", f"/{rebuild_env.root_spec_dag_hash}")
+
+        ci_cmd("rebuild", "--push" if push else "--no-push")
+
+    assert rebuild_env.mirror_dir.exists() == push
+
+
 def test_ci_require_signing(
     tmp_path: pathlib.Path,
     working_env,
