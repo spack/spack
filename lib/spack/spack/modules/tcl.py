@@ -217,7 +217,7 @@ class TclConfiguration(BaseConfiguration):
         spec_list = (spec_list | {self.spec}) - self.removed_specs
 
         # Sorted as the module file selects the first installation matching a request
-        confs_in_file = []
+        confs_in_file: List[TclConfiguration] = []
         for spec in spec_list:
             conf = cast(TclConfiguration, self.sibling_configuration(spec))
             if conf.excluded:

@@ -152,8 +152,9 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
     prefix: Optional[pathlib.Path] = None
     for _, desc in descriptors.items():
         # Handle the remote case, whose destination is by definition the git root
-        if hasattr(desc, "destination"):
-            repo_dest = pathlib.Path(desc.destination)
+        destination = getattr(desc, "destination", None)
+        if destination is not None:
+            repo_dest = pathlib.Path(destination)
             if (repo_dest / ".git").exists():
                 prefix = repo_dest
 
@@ -161,8 +162,9 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
                     return prefix
 
         # Handle the local repository case, making sure it's a spack repository.
-        if hasattr(desc, "path"):
-            repo_path = pathlib.Path(desc.path)
+        desc_path = getattr(desc, "path", None)
+        if desc_path is not None:
+            repo_path = pathlib.Path(desc_path)
             if "spack_repo" in repo_path.parts:
                 prefix = git_prefix(repo_path)
 
@@ -177,7 +179,7 @@ def git_supports_unshallow() -> bool:
     return "--unshallow" in output
 
 
-def ensure_full_history(prefix: str, path: str) -> None:
+def ensure_full_history(prefix: Union[str, pathlib.Path], path: str) -> None:
     """Ensure the git repository at the prefix has its full history.
 
     Args:
@@ -246,6 +248,9 @@ def blame(parser, args):
         # path's prefix instead to ensure working under the proper git
         # repository.
         prefix = path_prefix
+
+    if prefix is None:
+        tty.die(f"'{args.package_or_file}' is not within a git repository")
 
     # Make sure we can get the full/known blame even when the repository
     # is remote.

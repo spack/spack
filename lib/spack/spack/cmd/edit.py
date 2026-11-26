@@ -163,6 +163,8 @@ def edit(parser, args):
         repo = spack.repo.from_path(args.repo)
     # default_repo used when no name provided
     default_repo = repo or spack.repo.PATH.first_repo()
+    if default_repo is None:
+        tty.die("no package repositories are configured")
 
     if args.path == "BUILD_SYSTEM":
         if names:

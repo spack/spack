@@ -116,8 +116,7 @@ def location(parser, args):
     if args.location_env is not False:
         if args.location_env is None:
             # Get current environment path
-            spack.cmd.require_active_env(args.subparser)
-            path = active_environment().path
+            path = spack.cmd.require_active_env(args.subparser).path
         else:
             # Get path of requested environment
             if not ev.exists(args.location_env):
@@ -144,7 +143,10 @@ def location(parser, args):
 
     if args.repo is not False:
         if args.repo is None:
-            print(spack.repo.PATH.first_repo().root)
+            first_repo = spack.repo.PATH.first_repo()
+            if first_repo is None:
+                tty.die("no package repositories are configured")
+            print(first_repo.root)
             return
         try:
             print(spack.repo.PATH.get_repo(args.repo).root)
@@ -189,10 +191,11 @@ def location(parser, args):
 
     if args.build_dir:
         # Out of source builds have build_directory defined
-        if hasattr(builder, "build_directory"):
+        build_directory = getattr(builder, "build_directory", None)
+        if build_directory is not None:
             # build_directory can be either absolute or relative to the stage path
             # in either case os.path.join makes it absolute
-            print(os.path.normpath(os.path.join(pkg.stage.path, builder.build_directory)))
+            print(os.path.normpath(os.path.join(pkg.stage.path, build_directory)))
             return
 
         # Otherwise assume in-source builds

@@ -4,14 +4,17 @@
 """Query the status of bootstrapping on this machine"""
 
 import sys
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, Union
 
 import spack.util.executable
 
 from ._common import _executables_in_store, _python_import, _try_import_from_store
 from .config import ensure_bootstrap_configuration
 from .core import clingo_root_spec, gnupg_root_spec, patchelf_root_spec
-from .environment import BootstrapEnvironment, mypy_root_spec, pytest_root_spec, ruff_root_spec
+from .environment import BootstrapEnvironment, pytest_root_spec, ruff_root_spec, ty_root_spec
+
+if TYPE_CHECKING:
+    import spack.spec
 
 ExecutablesType = Union[str, Sequence[str]]
 RequiredResponseType = Tuple[bool, Optional[str]]
@@ -129,7 +132,7 @@ def _development_requirements() -> List[RequiredResponseType]:
             _missing("ruff", "required for code checking/formatting", False),
         ),
         _required_executable(
-            "mypy", mypy_root_spec(), _missing("mypy", "required for type checks", False)
+            "ty", ty_root_spec(), _missing("ty", "required for type checks", False)
         ),
     ]
 

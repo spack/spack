@@ -992,7 +992,7 @@ spack:
     assert "SPACK_VERSION" in global_vars
     assert global_vars["SPACK_VERSION"] == "0.20.0.test0 (blah)"
     assert "SPACK_CHECKOUT_VERSION" in global_vars
-    assert global_vars["SPACK_CHECKOUT_VERSION"] == git_version or "v0.20.0.test0"
+    assert global_vars["SPACK_CHECKOUT_VERSION"] in (git_version, "v0.20.0.test0")
 
     for ci_key in yaml_contents.keys():
         if ci_key.startswith("pkg-a"):
@@ -2046,7 +2046,7 @@ def test_ci_validate_standard_versions_valid(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = mock_packages.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list)
 
@@ -2061,7 +2061,7 @@ def test_ci_validate_standard_versions_invalid(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = mock_packages.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
 
@@ -2076,7 +2076,7 @@ def test_ci_validate_standard_versions_invalid_url(
 ):
     spec = spack.spec.Spec("diff-test")
     pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
-    version_list = [spack.version.Version(v) for v in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
 
@@ -2093,7 +2093,7 @@ def test_ci_validate_standard_versions_invalid_both(
     spec = spack.spec.Spec("diff-test")
     pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
     versions = ["2.1.4", "2.1.5"]
-    version_list = [spack.version.Version(v) for v in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v in versions]
 
     assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
 
@@ -2109,7 +2109,7 @@ def test_ci_validate_git_versions_valid(
     spec = spack.spec.Spec("diff-test")
     pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
-    version_list = [spack.version.Version(v) for v, _ in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
@@ -2133,7 +2133,7 @@ def test_ci_validate_git_versions_bad_tag(
     spec = spack.spec.Spec("diff-test")
     pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
-    version_list = [spack.version.Version(v) for v, _ in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
@@ -2157,7 +2157,7 @@ def test_ci_validate_git_versions_invalid(
     spec = spack.spec.Spec("diff-test")
     pkg_class = mock_packages.get_pkg_class(spec.name)
     pkg = pkg_class(spec)
-    version_list = [spack.version.Version(v) for v, _ in versions]
+    version_list = [spack.version.StandardVersion.from_string(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
@@ -2314,7 +2314,12 @@ def test_ci_validate_standard_versions_fetch_failure(
     spec = spack.spec.Spec("diff-test")
     pkg = mock_packages.get_pkg_class(spec.name)(spec)
 
-    assert spack.cmd.ci.validate_standard_versions(pkg, [spack.version.Version("2.1.5")]) is False
+    assert (
+        spack.cmd.ci.validate_standard_versions(
+            pkg, [spack.version.StandardVersion.from_string("2.1.5")]
+        )
+        is False
+    )
 
     out, err = capfd.readouterr()
     assert "Could not fetch diff-test@2.1.5: GET returned 503" in err

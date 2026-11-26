@@ -15,6 +15,7 @@ import tempfile
 from typing import (
     TYPE_CHECKING,
     Callable,
+    Collection,
     Dict,
     Generator,
     Iterable,
@@ -232,7 +233,7 @@ class AbstractStage(abc.ABC):
         # TODO: temporary stage area in the stage root.
         self.name = name
         if name is None:
-            self.name = stage_prefix + next(tempfile._get_candidate_names())  # type: ignore[attr-defined]
+            self.name = stage_prefix + next(tempfile._get_candidate_names())  # ty: ignore[unresolved-attribute]
 
         # Use the provided path or construct an optionally named stage path.
         if path is not None:
@@ -690,6 +691,9 @@ class Stage(AbstractStage):
             self.fetcher.check()
 
     def cache_local(self):
+        if self.mirror_layout is None:
+            tty.debug(f"Not caching {self.name}: it has no mirror layout")
+            return
         self.download_cache.store(self.fetcher, self.mirror_layout.path)
 
     def cache_mirror(
@@ -1155,7 +1159,7 @@ def purge(*, config: spack.config.Configuration):
 
 def interactive_version_filter(
     url_dict: Dict[StandardVersion, str],
-    known_versions: Iterable[StandardVersion] = (),
+    known_versions: Collection[StandardVersion] = (),
     *,
     initial_verion_filter: Optional[VersionList] = None,
     url_changes: Set[StandardVersion] = set(),

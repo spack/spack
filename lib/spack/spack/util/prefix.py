@@ -50,7 +50,8 @@ class Prefix(str):
         """
         return Prefix(os.path.join(self, name))
 
-    def join(self, string: str) -> "Prefix":  # type: ignore[override]
+    # intentionally replaces str.join with path joining (public package API)
+    def join(self, string: str) -> "Prefix":  # ty: ignore[invalid-method-override]
         """Concatenate a string to a prefix.
 
         Useful for strings that are not valid variable names. This includes strings containing

@@ -9,7 +9,7 @@ import shutil
 import sys
 import textwrap
 from argparse import Namespace
-from typing import Any, Callable, Dict, Iterable, List, Optional, TextIO, Tuple
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, TextIO, Tuple, TypeVar
 
 import spack.builder
 import spack.cmd
@@ -27,7 +27,6 @@ from spack.package_base import PackageBase
 from spack.util import tty
 from spack.util.tty import color
 from spack.util.tty.colify import colify
-from spack.util.typing import SupportsRichComparison
 
 description = "get detailed information on a particular package"
 section = "query"
@@ -41,7 +40,11 @@ plain_format = "@."
 MIN_VALUES_WIDTH = 30
 
 
-class Formatter:
+#: Type of the elements a ``Formatter`` formats
+T = TypeVar("T")
+
+
+class Formatter(Generic[T]):
     """Generic formatter for elements displayed by `spack info`.
 
     Elements have four parts: name, values, when condition, and description. They can
@@ -69,13 +72,15 @@ class Formatter:
 
     """
 
-    def format_name(self, element: Any) -> str:
-        return str(element)
+    # parameters are positional-only (``__`` prefix) so subclasses can name them freely
 
-    def format_values(self, element: Any) -> str:
+    def format_name(self, __element: T) -> str:
+        return str(__element)
+
+    def format_values(self, __element: T) -> str:
         return ""
 
-    def format_description(self, element: Any) -> str:
+    def format_description(self, __element: T) -> str:
         return ""
 
 
@@ -147,7 +152,7 @@ def format_deptype(depflag: int) -> str:
     )
 
 
-class DependencyFormatter(Formatter):
+class DependencyFormatter(Formatter[spack.dependency.Dependency]):
     def format_name(self, dep: spack.dependency.Dependency) -> str:
         return dep.spec.clong_spec
 
@@ -475,12 +480,13 @@ def print_by_name(
 
     indent = 4
 
-    def unconditional_first(definition: Any) -> SupportsRichComparison:
+    def unconditional_first(definition: Any) -> Any:
         spec = getattr(definition, "spec", None)
         if spec:
             return (spec != spack.spec.Spec(spec.name), spec)
         else:
-            return getattr(definition, "name", None)  # type: ignore[return-value]
+            # plain values (e.g. license strings) have no name and sort together
+            return getattr(definition, "name", None)
 
     for subkey in spack.package_base._subkeys(when_indexed_dictionary):
         for when, definition in sorted(
@@ -524,7 +530,7 @@ def print_definitions(
         print_grouped_by_when(pkg, header, when_indexed_dictionary, formatter)
 
 
-class VariantFormatter(Formatter):
+class VariantFormatter(Formatter[spack.variant.Variant]):
     def format_name(self, variant: spack.variant.Variant) -> str:
         return color.colorize(
             f"@c{{{variant.name}}} @C{{[{_fmt_variant_value(variant.default)}]}}"

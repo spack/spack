@@ -257,4 +257,4 @@ def test_spack_schemas_are_valid():
 
 def test_env_schema_update_wrong_type():
     """Confirm passing the wrong type to env.update() results in no changes."""
-    assert not spack.schema.env.update(["a/b"])
+    assert not spack.schema.env.update(["a/b"])  # ty: ignore[invalid-argument-type]

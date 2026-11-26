@@ -489,4 +489,4 @@ def test_target_sort_key():
     )
     targets = [Spec(f"target={t}") for t in ("x86_64", "x86_64_v3", "icelake")]
     targets.sort(key=spack.package_prefs.target_sort_key(configuration))
-    assert [str(s.architecture.target) for s in targets] == ["icelake", "x86_64_v3", "x86_64"]
+    assert [str(s.target) for s in targets] == ["icelake", "x86_64_v3", "x86_64"]

@@ -9,6 +9,7 @@ import pytest
 import spack.main
 import spack.modules
 import spack.modules.tcl
+import spack.spec
 import spack.store
 import spack.util.tty
 
@@ -19,6 +20,13 @@ module = spack.main.SpackCommand("module")
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
 writer_cls = spack.modules.tcl.TclModulefileWriter
+
+
+def _installed(query: str) -> spack.spec.Spec:
+    """Returns the only installed spec matching the query"""
+    spec = spack.store.STORE.db.query_one(query)
+    assert spec is not None
+    return spec
 
 
 @pytest.mark.db
@@ -80,8 +88,8 @@ def test_rm_fold_variants(install_mockery, module_configuration, modulefile_file
     # remove one installation from a module file holding two of them
     install("--fake", "--add", spec_b)
     module("tcl", "refresh", "-y", "--delete-tree")
-    concrete_a = spack.store.STORE.db.query_one(spec_a)
-    concrete_b = spack.store.STORE.db.query_one(spec_b)
+    concrete_a = _installed(spec_a)
+    concrete_b = _installed(spec_b)
     module("tcl", "rm", "-y", spec_b)
     assert os.path.exists(module_file)
     assert _folded_hashes(module_file, concrete_a, concrete_b) == [True, False]
@@ -102,8 +110,8 @@ def test_rm_prompt_lists_kept_installations(
     install("--fake", "--add", spec_a)
     install("--fake", "--add", spec_b)
     module_file = modulefile_filename("tcl", spec_a)
-    concrete_a = spack.store.STORE.db.query_one(spec_a)
-    concrete_b = spack.store.STORE.db.query_one(spec_b)
+    concrete_a = _installed(spec_a)
+    concrete_b = _installed(spec_b)
 
     monkeypatch.setattr(spack.util.tty, "get_yes_or_no", lambda *args, **kwargs: False)
     out = module("tcl", "rm", spec_b, fail_on_error=False)
@@ -141,7 +149,7 @@ def test_refresh_prompt_lists_folded_installations(
     spec_b = "mpileaks@2.3 +debug ^zmpi"
     install("--fake", "--add", spec_a)
     install("--fake", "--add", spec_b)
-    concrete_a = spack.store.STORE.db.query_one(spec_a)
+    concrete_a = _installed(spec_a)
 
     monkeypatch.setattr(spack.util.tty, "get_yes_or_no", lambda *args, **kwargs: False)
     out = module("tcl", "refresh", spec_b, fail_on_error=False)
@@ -280,8 +288,8 @@ def test_uninstall_folded_installation_with_exclude_implicits(
     mutable_config.set("modules:default:tcl:exclude_implicits", True)
     install("--fake", "--add", "mpileaks@2.3 ~debug ^zmpi")
     install("--fake", "--add", "mpileaks@2.3 +debug ^zmpi")
-    kept = spack.store.STORE.db.query_one("mpileaks@2.3 ~debug ^zmpi")
-    removed = spack.store.STORE.db.query_one("mpileaks@2.3 +debug ^zmpi")
+    kept = _installed("mpileaks@2.3 ~debug ^zmpi")
+    removed = _installed("mpileaks@2.3 +debug ^zmpi")
     module_file = writer_cls.from_spec(kept, "default").layout.filename
     assert _folded_hashes(module_file, kept, removed) == [True, True]
 
@@ -328,7 +336,7 @@ def test_module_file_written_when_first_installation_of_batch_is_excluded(
     )
     for abstract_spec in abstract_specs:
         install("--fake", "--add", abstract_spec)
-    excluded, first, second = [spack.store.STORE.db.query_one(x) for x in abstract_specs]
+    excluded, first, second = [_installed(x) for x in abstract_specs]
     module_file = writer_cls.from_spec(first, "default").layout.filename
     os.remove(module_file)
 
@@ -364,7 +372,7 @@ def test_loads_keeps_active_the_first_installation_of_the_file(
     module_configuration("fold_variants_all")
     for variant in installation_order:
         install("--fake", "--add", f"mpileaks@2.3 {variant} ^zmpi")
-    listed_first = spack.store.STORE.db.query_one(f"mpileaks@2.3 {installation_order[0]} ^zmpi")
+    listed_first = _installed(f"mpileaks@2.3 {installation_order[0]} ^zmpi")
 
     out = module("tcl", "loads", "mpileaks@2.3 ^zmpi")
     (active_line,) = [line for line in out.splitlines() if line.startswith("module load")]
@@ -388,5 +396,5 @@ def test_refresh_writes_specs_installed_at_the_prompt(
     monkeypatch.setattr(spack.util.tty, "get_yes_or_no", install_and_proceed)
     module("tcl", "refresh")
 
-    spec = spack.store.STORE.db.query_one("mpileaks@2.3 +debug ^zmpi")
+    spec = _installed("mpileaks@2.3 +debug ^zmpi")
     assert os.path.exists(writer_cls.from_spec(spec, "default").layout.filename)

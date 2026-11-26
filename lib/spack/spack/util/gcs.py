@@ -72,7 +72,8 @@ class GCSBucket:
         tty.debug("    name: {0}".format(self.name))
         tty.debug("    prefix: {0}".format(self.prefix))
 
-    def exists(self):
+    def _existing_bucket(self):
+        """The bucket, looked up on first use; exits if the lookup fails."""
         from google.cloud.exceptions import NotFound
 
         if not self.bucket:
@@ -81,21 +82,22 @@ class GCSBucket:
             except NotFound as ex:
                 tty.error("{0}, Failed check for bucket existence".format(ex))
                 sys.exit(1)
-        return self.bucket is not None
+        return self.bucket
+
+    def exists(self):
+        return self._existing_bucket() is not None
 
     def create(self):
         if not self.bucket:
             self.bucket = self.client.create_bucket(self.name)
 
     def get_blob(self, blob_path):
-        if self.exists():
-            return self.bucket.get_blob(blob_path)
-        return None
+        bucket = self._existing_bucket()
+        return bucket.get_blob(blob_path) if bucket is not None else None
 
     def blob(self, blob_path):
-        if self.exists():
-            return self.bucket.blob(blob_path)
-        return None
+        bucket = self._existing_bucket()
+        return bucket.blob(blob_path) if bucket is not None else None
 
     def get_all_blobs(self, recursive: bool = True, relative: bool = True) -> List[str]:
         """Get a list of all blobs
@@ -112,8 +114,9 @@ class GCSBucket:
 
         blob_list: List[str] = []
 
-        if self.exists():
-            all_blobs = self.bucket.list_blobs(prefix=self.prefix)
+        bucket = self._existing_bucket()
+        if bucket is not None:
+            all_blobs = bucket.list_blobs(prefix=self.prefix)
 
             base_dirs = len(self.prefix.split("/")) + 1
 

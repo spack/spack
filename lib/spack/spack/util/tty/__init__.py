@@ -11,13 +11,13 @@ import textwrap
 import traceback
 from datetime import datetime
 from types import TracebackType
-from typing import IO, Callable, Iterator, NoReturn, Optional, Type, Union
+from typing import IO, Callable, Generator, NoReturn, Optional, Type, Union
 
 from .color import cescape, clen, cprint, cwrite
 from .color import clear_isatty_cache as clear_isatty_cache
 
 # Globals
-_debug = 0
+_debug: int = 0
 _verbose = False
 _stacktrace = False
 _timestamp = False
@@ -84,7 +84,7 @@ def error_enabled() -> bool:
 
 
 @contextlib.contextmanager
-def output_filter(filter_fn: Callable[[str], str]) -> Iterator[None]:
+def output_filter(filter_fn: Callable[[str], str]) -> Generator[None, None, None]:
     """Context manager that applies a filter to all output."""
     global _output_filter
     saved_filter = _output_filter

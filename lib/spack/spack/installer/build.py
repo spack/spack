@@ -155,8 +155,10 @@ class ChildInfo:
         self.state_r_conn.close()
         self.control_w_conn.close()
         self.proc.join()
-        if hasattr(self.proc, "close"):  # No known equivalent in Python 3.6
-            self.proc.close()
+        # close() is optional on ProcessLike (and not available in Python 3.6)
+        close = getattr(self.proc, "close", None)
+        if close is not None:
+            close()
         return ExitCode.BUILD_ERROR if self.exit_code is None else self.exit_code
 
 

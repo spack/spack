@@ -78,8 +78,7 @@ class WindowsOs(OperatingSystem):
 
         def get_vs_component_paths(component: str) -> List[str]:
             try:
-                extra_args = {"encoding": "mbcs", "errors": "strict"}
-                paths = subprocess.check_output(  # type: ignore[call-overload] # novermin
+                paths = subprocess.check_output(  # novermin
                     [
                         os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
                         "-prerelease",
@@ -90,7 +89,8 @@ class WindowsOs(OperatingSystem):
                         "-products",
                         "*",
                     ],
-                    **extra_args,
+                    encoding="mbcs",
+                    errors="strict",
                 )
             except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
                 return []

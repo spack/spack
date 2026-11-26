@@ -75,6 +75,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     overload,
 )
@@ -1567,7 +1568,7 @@ def tree(
     show_types: bool = False,
     depth_first: bool = False,
     recurse_dependencies: bool = True,
-    status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+    status_fn: Optional[Callable[["Spec"], Union[InstallStatus, bool]]] = None,
     prefix: Optional[Callable[["Spec"], str]] = None,
     key: Callable[["Spec"], Any] = id,
     version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
@@ -1630,7 +1631,7 @@ def tree(
 
         if status_fn:
             status = status_fn(node)
-            if status in list(InstallStatus):
+            if isinstance(status, InstallStatus):
                 out += clr.colorize(status.value, color=color)
             elif status:
                 out += clr.colorize("@g{[+]}  ", color=color)
@@ -1895,7 +1896,7 @@ def _edge_is_redundant(edge: DependencySpec, given: DependencySpec) -> bool:
 
 
 @lang.lazy_lexicographic_ordering(set_hash=False)
-class Spec:
+class Spec(lang.Ordered):
     compiler = DeprecatedCompilerSpec()
 
     if TYPE_CHECKING:
@@ -1904,6 +1905,10 @@ class Spec:
         def __le__(self, other: Any) -> bool: ...
         def __gt__(self, other: Any) -> bool: ...
         def __ge__(self, other: Any) -> bool: ...
+
+        #: set on externals read from a Cray manifest, and recorded as the origin of their
+        #: database record (read with ``getattr``, so it is unset on other specs)
+        origin: str
 
     @staticmethod
     def default_arch():
@@ -1990,6 +1995,8 @@ class Spec:
 
     @property
     def external_path(self):
+        if self._external_path is None:
+            return None
         return spack.util.path.path_to_os_path(self._external_path)[0]
 
     @external_path.setter
@@ -2730,22 +2737,20 @@ class Spec:
             dependencies = []
             for name, edges_for_name in sorted(deps.items()):
                 for dspec in edges_for_name:
-                    dep_attrs: Dict[str, Any] = {
-                        "name": name,
-                        "hash": dspec.spec.dag_hash(),
-                        "parameters": {
-                            "deptypes": dt.flag_to_tuple(dspec.depflag),
-                            "virtuals": dspec.virtuals,
-                        },
+                    parameters: Dict[str, Any] = {
+                        "deptypes": dt.flag_to_tuple(dspec.depflag),
+                        "virtuals": dspec.virtuals,
                     }
                     if dspec.direct:
-                        dep_attrs["parameters"]["direct"] = True
+                        parameters["direct"] = True
                     if not self._concrete:
                         if dspec.when != EMPTY_SPEC:
-                            dep_attrs["parameters"]["when"] = str(dspec.when)
+                            parameters["when"] = str(dspec.when)
                         if dspec.propagation != PropagationPolicy.NONE:
-                            dep_attrs["parameters"]["propagation"] = dspec.propagation.name
-                    dependencies.append(dep_attrs)
+                            parameters["propagation"] = dspec.propagation.name
+                    dependencies.append(
+                        {"name": name, "hash": dspec.spec.dag_hash(), "parameters": parameters}
+                    )
 
             d["dependencies"] = dependencies
 
@@ -2754,9 +2759,12 @@ class Spec:
             d["build_spec"] = {"name": self.build_spec.name, "hash": self.build_spec.dag_hash()}
 
         # Annotations
-        d["annotations"] = {"original_specfile_version": self.annotations.original_spec_format}
+        annotations: Dict[str, Any] = {
+            "original_specfile_version": self.annotations.original_spec_format
+        }
         if self.annotations.original_spec_format < 5:
-            d["annotations"]["compiler"] = str(self.annotations.compiler_node_attribute)
+            annotations["compiler"] = str(self.annotations.compiler_node_attribute)
+        d["annotations"] = annotations
 
         return d
 
@@ -3617,7 +3625,7 @@ class Spec:
         changed |= self.propagated_variants.constrain(other.propagated_variants)
         return changed
 
-    @property  # type: ignore[misc] # decorated prop not supported in mypy
+    @property
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.
 
@@ -3982,14 +3990,12 @@ class Spec:
         # need for the complexity here. It was not clear at the time of writing that how
         # much optimization was possible in `spack.traverse`.
 
-        sorted_l1_edges = None
+        sorted_l1_edges: List[DependencySpec] = []
         edge_list = None
-        node_ids = None
 
         def nodes():
             nonlocal sorted_l1_edges
             nonlocal edge_list
-            nonlocal node_ids
 
             # Level 0: root node
             yield self._cmp_node  # always yield the root (this node)
@@ -4015,7 +4021,7 @@ class Spec:
 
             # the node_ids dict generates consistent ids based on BFS traversal order
             # these are used to identify edges later
-            node_ids = collections.defaultdict(lambda: len(node_ids))
+            node_ids: Dict[int, int] = collections.defaultdict(lambda: len(node_ids))
             node_ids[id(self)]  # self is 0
             for spec in l1_specs:
                 node_ids[id(spec)]  # l1 starts at 1
@@ -4603,7 +4609,7 @@ class Spec:
         show_types: bool = False,
         depth_first: bool = False,
         recurse_dependencies: bool = True,
-        status_fn: Optional[Callable[["Spec"], InstallStatus]] = None,
+        status_fn: Optional[Callable[["Spec"], Union[InstallStatus, bool]]] = None,
         prefix: Optional[Callable[["Spec"], str]] = None,
         key=id,
         version_style_fn: Optional[Callable[["Spec"], spack.enums.PartStyle]] = None,
@@ -4665,15 +4671,21 @@ class Spec:
 
     @property
     def platform(self):
-        return self.architecture.platform
+        arch = self.architecture
+        assert arch is not None
+        return arch.platform
 
     @property
     def os(self):
-        return self.architecture.os
+        arch = self.architecture
+        assert arch is not None
+        return arch.os
 
     @property
     def target(self):
-        return self.architecture.target
+        arch = self.architecture
+        assert arch is not None
+        return arch.target
 
     @property
     def build_spec(self):
@@ -5354,7 +5366,10 @@ class DepSpecComponents(NamedTuple):
 _SPECFILE_READERS: Dict[int, Type["SpecfileReaderBase"]] = {}
 
 
-def register_reader(cls: Type["SpecfileReaderBase"]) -> Type["SpecfileReaderBase"]:
+SpecfileReaderT = TypeVar("SpecfileReaderT", bound=Type["SpecfileReaderBase"])
+
+
+def register_reader(cls: SpecfileReaderT) -> SpecfileReaderT:
     """Register a SpecfileReaderBase subclass under its SPEC_VERSION."""
     if "SPEC_VERSION" not in cls.__dict__:
         raise TypeError(f"{cls.__name__} must define SPEC_VERSION to be registered")
@@ -5378,6 +5393,10 @@ class SpecfileReaderBase(abc.ABC):
     def extract_build_spec_info_from_node_dict(
         cls, node, hash_type="hash"
     ) -> Tuple[str, str, str]: ...
+
+    @classmethod
+    @abc.abstractmethod
+    def name_and_data(cls, node) -> Tuple[Any, Dict[str, Any]]: ...
 
     @classmethod
     def from_node_dict(cls, node):
@@ -5792,7 +5811,7 @@ class LazySpecCache(collections.defaultdict):
         super().__init__(Spec)
 
     def __missing__(self, key):
-        value = self.default_factory(key)
+        value = Spec(key)
         self[key] = value
         return value
 
@@ -5938,7 +5957,7 @@ def _inject_patches_variant(root: Spec, *, repo: spack.repo.RepoPath) -> None:
         )
         variant.set(*(p.sha256 for p in patches))
         # FIXME: Monkey patches variant to store patches order
-        ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches if p.ordering_key]
+        ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches]
         ordered_hashes.sort()
         tty.debug(
             f"Ordered hashes [{spec.name}]: "

@@ -176,6 +176,9 @@ def _spec_str_fix_handler(path: str, line: int, col: int, old: str, new: str):
 def _spec_str_ast(path: str, tree: ast.AST, handler: SpecStrHandler) -> None:
     """Walk the AST of a Python file and apply handler to formatted spec strings."""
     for node in ast.walk(tree):
+        # string literals are expressions, which carry source positions
+        if not isinstance(node, ast.expr):
+            continue
         if sys.version_info >= (3, 8):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 current_str = node.value

@@ -5,36 +5,35 @@
 standard library
 """
 
-from typing import List, Optional, Sequence
+from typing import Iterable, List, Optional
 
 
-def comma_list(sequence: Sequence[str], article: str = "") -> str:
-    if type(sequence) is not list:
-        sequence = list(sequence)
+def comma_list(sequence: Iterable[str], article: str = "") -> str:
+    items = list(sequence)
 
-    if not sequence:
+    if not items:
         return ""
-    if len(sequence) == 1:
-        return sequence[0]
+    if len(items) == 1:
+        return items[0]
 
-    out = ", ".join(str(s) for s in sequence[:-1])
-    if len(sequence) != 2:
+    out = ", ".join(str(s) for s in items[:-1])
+    if len(items) != 2:
         out += ","  # oxford comma
     out += " "
     if article:
         out += article + " "
-    out += str(sequence[-1])
+    out += str(items[-1])
     return out
 
 
-def comma_or(sequence: Sequence[str]) -> str:
+def comma_or(sequence: Iterable[str]) -> str:
     """Return a string with all the elements of the input joined by comma, but the last
     one (which is joined by ``"or"``).
     """
     return comma_list(sequence, "or")
 
 
-def comma_and(sequence: List[str]) -> str:
+def comma_and(sequence: Iterable[str]) -> str:
     """Return a string with all the elements of the input joined by comma, but the last
     one (which is joined by ``"and"``).
     """
@@ -55,7 +54,7 @@ def ordinal(number: int) -> str:
     return f"{number}{suffix}"
 
 
-def quote(sequence: List[str], q: str = "'") -> List[str]:
+def quote(sequence: Iterable[str], q: str = "'") -> List[str]:
     """Quotes each item in the input list with the quote character passed as second argument."""
     return [f"{q}{e}{q}" for e in sequence]
 

@@ -153,7 +153,7 @@ common_props = {
     },
 }
 
-tcl_configuration = {
+tcl_configuration: Dict[str, Any] = {
     "type": "object",
     "default": {},
     "description": "Configuration for Tcl module files compatible with Environment Modules and "

@@ -12,7 +12,7 @@ Every test asserts two properties:
 
 import pathlib
 from io import StringIO
-from typing import List
+from typing import List, Optional, Tuple
 
 import pytest
 
@@ -113,7 +113,7 @@ def test_virtual_constrained_beyond_versions_error(spec, mock_packages, mutable_
 
 def test_internal_error_handling_formatting(tmp_path: pathlib.Path):
     log = StringIO()
-    input_to_output = [
+    input_to_output: List[Tuple[spack.spec.Spec, Optional[spack.spec.Spec]]] = [
         (spack.spec.Spec("foo+x"), spack.spec.Spec("foo@=1.0~x")),
         (spack.spec.Spec("bar+y"), spack.spec.Spec("x@=1.0~y")),
         (spack.spec.Spec("baz+z"), None),

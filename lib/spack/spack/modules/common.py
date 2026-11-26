@@ -30,7 +30,7 @@ from typing import (
     ClassVar,
     Dict,
     FrozenSet,
-    Iterator,
+    Generator,
     List,
     NamedTuple,
     Optional,
@@ -1458,7 +1458,7 @@ def add_shared_access_to_module_root(root: str) -> None:
 
 
 @contextlib.contextmanager
-def module_root_transaction(root: str) -> Iterator[ModuleConfigurationCache]:
+def module_root_transaction(root: str) -> Generator[ModuleConfigurationCache, None, None]:
     """Holds an exclusive lock on a module root, shared by every Spack process changing the
     module files under it, and yields what the database records, as read after taking the lock.
 
@@ -1725,7 +1725,7 @@ class BaseModuleFileWriter:
 
 
 @contextlib.contextmanager
-def disable_modules() -> Iterator[None]:
+def disable_modules() -> Generator[None, None, None]:
     """Disable the generation of modulefiles within the context manager."""
     data: Dict[str, object] = {"modules:": {"default": {"enable": []}}}
     disable_scope = spack.config.InternalConfigScope("disable_modules", data=data)
