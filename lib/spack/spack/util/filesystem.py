@@ -621,7 +621,10 @@ def set_install_permissions(path):
         sd.apply(path)
         return
     if os.path.isdir(path):
-        os.chmod(path, 0o755)
+        # Keep setgid of the directory to avoid changing default group owner
+        # for subdirectories. Help with quotas.
+        path_setgid = os.stat(path).st_mode & stat.S_ISGID
+        os.chmod(path, 0o755 | path_setgid)
     else:
         os.chmod(path, 0o644)
 
