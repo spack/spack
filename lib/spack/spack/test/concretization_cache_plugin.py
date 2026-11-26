@@ -11,11 +11,11 @@ that was already solved -- earlier in the run, by another xdist worker, or in a 
 pytest invocation -- skips clingo entirely. The solver dominates test suite CPU time and
 roughly half of its problems are repeats, so a warm cache cuts wall time substantially.
 
-Entries are keyed by the entire solver input (the ASP problem plus the .lp control
-files), so changes to packages, configuration, or the concretizer miss the cache instead
-of returning stale results: one directory can safely be shared across branches,
-worktrees, and CI runs. Hit/miss statistics are printed at the end of the run. Works
-serially and under pytest-xdist.
+Entries hold the solver's answer, keyed by the entire solver input (the ASP problem plus
+the .lp control files). Changes to packages, configuration, or the .lp files miss the
+cache, and specs are built from the answer on every hit with the code being tested, so
+one directory can be shared across branches, worktrees, and CI runs. Hit/miss statistics
+are printed at the end of the run. Works serially and under pytest-xdist.
 """
 
 import functools

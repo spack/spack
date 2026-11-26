@@ -1,0 +1,28 @@
+name: Restore the concretization cache
+description: Restore the test concretization cache saved by the last develop run of the same job
+
+inputs:
+  id:
+    description: Distinguishes matrix entries of the same job, e.g. runner image and Python version
+    required: true
+
+outputs:
+  key:
+    description: Key to pass to save-concretization-cache
+    value: ${{ steps.restore.outputs.cache-primary-key }}
+
+runs:
+  using: composite
+  steps:
+  # The key changes with the clingo version: the bootstrap metadata fixes it on ubuntu and
+  # macOS, and unit_tests.yaml pins it on Windows.
+  - id: restore
+    uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+    with:
+      path: ${{ runner.temp }}/spack-concretization-cache
+      key: concretization-${{ github.job }}-${{ inputs.id }}-${{ hashFiles('share/spack/bootstrap/**', '.github/workflows/unit_tests.yaml') }}-${{ github.run_id }}
+      restore-keys: concretization-${{ github.job }}-${{ inputs.id }}-${{ hashFiles('share/spack/bootstrap/**', '.github/workflows/unit_tests.yaml') }}-
+  # save-concretization-cache keeps only the entries read or written after this marker
+  - name: Mark the start of the run
+    shell: bash
+    run: touch "$RUNNER_TEMP/spack-concretization-cache-start"

@@ -1,0 +1,24 @@
+name: Save the concretization cache
+description: Save the entries of the test concretization cache that this run used
+
+inputs:
+  key:
+    description: The key output of restore-concretization-cache
+    required: true
+
+runs:
+  using: composite
+  steps:
+  # A cache hit updates the mtime of its entry, so entries not newer than the marker were
+  # restored and never used. Saving only the used entries keeps the cache from growing.
+  - name: Drop entries this run did not use
+    shell: bash
+    run: |
+      if [ -d "$RUNNER_TEMP/spack-concretization-cache" ]; then
+        find "$RUNNER_TEMP/spack-concretization-cache" -type f \
+          ! -newer "$RUNNER_TEMP/spack-concretization-cache-start" -delete
+      fi
+  - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+    with:
+      path: ${{ runner.temp }}/spack-concretization-cache
+      key: ${{ inputs.key }}
