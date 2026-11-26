@@ -1051,9 +1051,9 @@ complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'st
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -f -a timeout
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -d 'maximum time (in seconds) that tests are allowed to run'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l push -f -a push_to_cache
-complete -c spack -n '__fish_spack_using_command ci rebuild' -l push -d 'Skip the push to cache step.'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l push -d 'Push the binary to the buildcache-destination. (default)'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-push -f -a push_to_cache
-complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-push -d 'Skip the push to cache step.'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l no-push -d 'Do not push the binary to the buildcache-destination.'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
