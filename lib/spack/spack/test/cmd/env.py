@@ -3648,6 +3648,48 @@ spack:
             assert "unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
 
 
+def test_envvar_filter_in_activate(tmp_path: pathlib.Path, mock_packages, install_mockery):
+    """Tests that env_vars come after the view on activation, and that include and exclude
+    filter the modifications of both on activation and deactivation."""
+    spack_yaml = tmp_path / "spack.yaml"
+    spack_yaml.write_text(
+        """
+spack:
+  specs:
+    - cmake%gcc
+  env_vars:
+    prepend_path:
+      PATH: /first/in/path
+    set:
+      KEPT_VAR: "True"
+      EXCLUDED_VAR: "True"
+      NOT_INCLUDED_VAR: "True"
+    include: [PATH, KEPT_VAR, EXCLUDED_VAR]
+    exclude: [EXCLUDED_VAR]
+"""
+    )
+
+    env("create", "test", str(spack_yaml))
+    with ev.read("test"):
+        install("--fake")
+
+    test_env = ev.read("test")
+    output = env("activate", "--sh", "test")
+
+    assert "PATH=/first/in/path:" in output
+    assert "KEPT_VAR=True" in output
+    assert "EXCLUDED_VAR" not in output
+    assert "NOT_INCLUDED_VAR" not in output
+    assert "CMAKE_PREFIX_PATH" not in output
+
+    with test_env:
+        with spack.util.environment.set_env(KEPT_VAR="True"):
+            output = env("deactivate", "--sh")
+            assert "unset KEPT_VAR" in output
+            assert "EXCLUDED_VAR" not in output
+            assert "CMAKE_PREFIX_PATH" not in output
+
+
 def test_stack_view_no_activate_without_default(
     installed_environment, template_combinatorial_env, tmp_path: pathlib.Path
 ):

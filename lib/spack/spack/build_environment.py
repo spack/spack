@@ -1099,6 +1099,7 @@ class SetupContext:
                 external_env = (dspec.extra_attributes or {}).get("environment", {})
                 if external_env:
                     run_env_mods.extend(spack.schema.environment.parse(external_env))
+                    spack.schema.environment.filter_modifications(run_env_mods, external_env)
 
                 if self.context == Context.BUILD:
                     # Don't let the runtime environment of compiler like dependencies leak into the

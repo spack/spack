@@ -247,6 +247,16 @@ class TestTcl:
         assert len([x for x in content if "depends-on foo/bar" in x]) == 1
         assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
 
+    def test_environment_include_exclude(self, modulefile_content, module_configuration):
+        """Tests that include and exclude filter all modifications of a module file."""
+
+        module_configuration("environment_include_exclude")
+        content = modulefile_content("mpileaks")
+
+        assert len([x for x in content if "setenv FOO {foo}" in x]) == 1
+        assert not [x for x in content if "BAR" in x or "BAZ" in x]
+        assert not [x for x in content if "CMAKE_PREFIX_PATH" in x]
+
     def test_prepend_path_separator(self, modulefile_content, module_configuration):
         """Tests that we can use custom delimiters to manipulate path lists."""
 

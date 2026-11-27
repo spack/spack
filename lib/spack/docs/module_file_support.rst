@@ -654,6 +654,9 @@ Each rule selects a set of packages and applies the corresponding modifications:
 
 The ``all`` block is always evaluated first regardless of where it appears in the file.
 All other rules are evaluated top to bottom.
+
+``environment`` also accepts ``include`` and ``exclude`` lists of variable names.
+They filter all modifications of a module file, including those from prefix inspections and packages: with ``include``, only the listed variables are modified, and variables listed in ``exclude`` are not modified.
 As general advice, set only the variables a package actually needs: unexpected interactions with other tools are hard to debug.
 
 .. _override-api-calls-in-package-py:
