@@ -3700,3 +3700,16 @@ def test_git_ref_spec_operations_are_pure(monkeypatch):
         assert str(spec) == spec_str
         assert spec.copy() == spec == Spec.from_dict(spec.to_dict())
         assert hash(spec) == hash(Spec(spec_str))
+
+
+@pytest.mark.only_windows("Windows library naming")
+def test_libs_default_handler_windows_prefix_optional(mock_packages, tmp_path):
+    """On Windows, libraries are found both with and without the lib prefix."""
+    spec = spack.concretize.concretize_one("libxsmm")
+    spec.architecture.platform = "windows"
+    spec.set_prefix(str(tmp_path))
+    (tmp_path / "lib").mkdir()
+    (tmp_path / "lib" / "libxsmm.lib").touch()
+    (tmp_path / "lib" / "xsmm.lib").touch()
+
+    assert spec["libxsmm"].libs.basenames == ["libxsmm.lib", "xsmm.lib"]

@@ -1378,7 +1378,8 @@ def _libs_default_handler(spec: "Spec"):
 
     Tries to search for ``lib{spec.name}`` recursively starting from
     ``spec.package.home``. If ``spec.name`` starts with ``lib``, searches for
-    ``{spec.name}`` instead.
+    ``{spec.name}`` instead. On Windows, the name without the ``lib`` prefix is
+    searched for as well.
 
     Parameters:
         spec: spec that is being queried
@@ -1403,9 +1404,12 @@ def _libs_default_handler(spec: "Spec"):
     name = spec.name.replace("-", "?")
     home = getattr(spec.package, "home")
 
-    # Avoid double 'lib' for packages whose names already start with lib
-    if not name.startswith("lib") and not spec.satisfies("platform=windows"):
-        name = "lib" + name
+    # Windows has no conventional naming scheme, so .lib names are a
+    # mix of lib<name> and <name>, search both on Windows
+    stem = name[3:] if name.startswith("lib") else name
+    names = ["lib" + stem]
+    if spec.satisfies("platform=windows"):
+        names.append(stem)
 
     # If '+shared' search only for shared library; if '~shared' search only for
     # static library; otherwise, first search for shared and then for static.
@@ -1414,9 +1418,7 @@ def _libs_default_handler(spec: "Spec"):
     )
 
     for shared in search_shared:
-        # Since we are searching for link libraries, on Windows search only for
-        # ".Lib" extensions by default as those represent import libraries for implicit links.
-        libs = fs.find_libraries(name, home, shared=shared, recursive=True, runtime=False)
+        libs = fs.find_libraries(names, home, shared=shared, recursive=True, runtime=False)
         if libs:
             return libs
 
