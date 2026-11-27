@@ -15,6 +15,7 @@ import spack.config
 import spack.fetch_strategy
 import spack.mirrors.mirror
 import spack.mirrors.utils
+import spack.oci.image
 import spack.repo
 import spack.spec
 import spack.stage
@@ -326,6 +327,8 @@ def _configure_access_pair(args, id_tok, id_variable_tok, secret_variable_tok, d
 
 def mirror_add(args):
     """add a mirror to Spack"""
+    if args.signed is None and spack.oci.image.is_oci_url(args.url):
+        args.signed = False  # signing is not supported for OCI build caches
     if (
         args.s3_access_key_id
         or args.s3_access_key_id_variable
