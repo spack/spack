@@ -48,6 +48,7 @@ line is a spec for a particular installation of the mpileaks package.
 """
 
 import abc
+import bisect
 import collections
 import enum
 import itertools
@@ -1289,12 +1290,26 @@ EdgeMap = Dict[str, List[DependencySpec]]
 
 
 def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
-    if key in edge_map:
-        lst = edge_map[key]
-        lst.append(edge)
-        lst.sort()
-    else:
+    """Inserts ``edge`` in ``edge_map[key]``, which must already be sorted."""
+    lst = edge_map.get(key)
+    if lst is None:
         edge_map[key] = [edge]
+    else:
+        bisect.insort(lst, edge)
+
+
+def _append_edge_to_map(
+    edge_map: EdgeMap, key: str, edge: DependencySpec, unsorted: List[List[DependencySpec]]
+) -> None:
+    """Appends ``edge`` to ``edge_map[key]``. A list that reaches two edges is added to
+    ``unsorted``, and the caller must sort it once all edges are added."""
+    lst = edge_map.get(key)
+    if lst is None:
+        edge_map[key] = [edge]
+    else:
+        lst.append(edge)
+        if len(lst) == 2:
+            unsorted.append(lst)
 
 
 def _select_edges(
@@ -3732,6 +3747,8 @@ class Spec:
             return id(spec)
 
         new_specs = {spid(other): self}
+        # Lists with more than one edge, sorted once every copied child has its dependencies
+        unsorted: List[List[DependencySpec]] = []
         for edge in other.traverse_edges(cover="edges", root=False):
             if edge.depflag and not depflag & edge.depflag:
                 continue
@@ -3755,8 +3772,11 @@ class Spec:
                 when=edge.when,
             )
             # Don't use add_dependency_edge here, copy edges verbatim
-            _add_edge_to_map(new_parent._dependencies, new_child.name, new_edge)
-            _add_edge_to_map(new_child._dependents, new_parent.name, new_edge)
+            _append_edge_to_map(new_parent._dependencies, new_child.name, new_edge, unsorted)
+            _append_edge_to_map(new_child._dependents, new_parent.name, new_edge, unsorted)
+
+        for edges in unsorted:
+            edges.sort()
 
     def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):
         """Make a copy of this spec.
@@ -5523,6 +5543,8 @@ def wire_spec_nodes(
     """
     # Pass 1: Create a single lookup dictionary by hash
     specs_by_hash = {node[hash_type]: reader.from_node_dict(node) for node in nodes}
+    # Lists with more than one edge, sorted once every child has its dependencies
+    unsorted: List[List[DependencySpec]] = []
 
     # Pass 2: Finish construction of all DAG edges (including build specs)
     for node in nodes:
@@ -5544,8 +5566,8 @@ def wire_spec_nodes(
                 when=Spec(dep.when) if dep.when else EMPTY_SPEC,
                 propagation=PropagationPolicy[dep.propagation],
             )
-            _add_edge_to_map(node_spec._dependencies, edge.spec.name, edge)
-            _add_edge_to_map(edge.spec._dependents, edge.parent.name, edge)
+            _append_edge_to_map(node_spec._dependencies, edge.spec.name, edge, unsorted)
+            _append_edge_to_map(edge.spec._dependents, edge.parent.name, edge, unsorted)
 
         if "build_spec" in node.keys():
             bname, bhash, _ = reader.extract_build_spec_info_from_node_dict(
@@ -5557,6 +5579,9 @@ def wire_spec_nodes(
                     f"node '{node['name']}' references missing build_spec hash {bname}/{bhash}"
                 )
             node_spec._build_spec = build_spec
+
+    for edges in unsorted:
+        edges.sort()
 
     if reader.SPEC_VERSION < 6:
         spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=spack.repo.PATH)

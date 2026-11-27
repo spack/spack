@@ -1215,3 +1215,11 @@ def test_constraining_and_intersecting_concrete_dep_of_abstract_root(mock_packag
     assert abstract.constrain(compatible) is False
     with pytest.raises(spack.error.UnsatisfiableSpecError):
         abstract.constrain(conflicting)
+
+
+def test_copy_keeps_the_order_of_parallel_edges_whose_children_have_dependencies(mock_packages):
+    """Copying a spec with parallel edges to pkg-b, whose children have dependencies of their
+    own, prints the same spec as the original.
+    """
+    original = Spec("pkg-a ^pkg-b %pkg-c@2 ^pkg-b %pkg-c@1 ^pkg-b@3")
+    assert str(original.copy()) == str(original)
