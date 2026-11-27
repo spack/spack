@@ -68,6 +68,7 @@ from spack.test.utilities import RecordingUI, UnusableGlobal
 from spack.util.filesystem import getuid
 from spack.version import Version, VersionList, ver
 from spack.version.git_ref_lookup import GitRefLookup
+from spack.version_def import VersionDefinition
 
 
 def check_spec(abstract, concrete):
@@ -2952,6 +2953,15 @@ packages:
             spack.concretize.concretize_one(f"gmake commit={'a' * 40}")
             assert "Cannot use commit variant with" in e.value.message
 
+    def test_when_versions_solver(self):
+        """Tests that concretize a package that uses when= returns the highest version which
+        matches the test platform
+        """
+        spec = check_concretize("when-versions")
+        assert spec.satisfies("@2.5.5")
+        with pytest.raises(spack.error.UnsatisfiableSpecError):
+            spack.concretize.concretize_one("when-versions@1.0")
+
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -3348,16 +3358,16 @@ def test_reusable_externals_different_spec(mock_packages, tmp_path: pathlib.Path
 
 def test_concretization_version_order():
     versions = [
-        (Version("develop"), {}),
-        (Version("1.0"), {}),
-        (Version("2.0"), {"deprecated": True}),
-        (Version("1.1"), {}),
-        (Version("1.1alpha1"), {}),
-        (Version("0.9"), {"preferred": True}),
+        VersionDefinition(Version("develop"), 1, {}),
+        VersionDefinition(Version("1.0"), 2, {}),
+        VersionDefinition(Version("2.0"), 3, {"deprecated": True}),
+        VersionDefinition(Version("1.1"), 4, {}),
+        VersionDefinition(Version("1.1alpha1"), 5, {}),
+        VersionDefinition(Version("0.9"), 6, {"preferred": True}),
     ]
     result = [
-        v
-        for v, _ in sorted(
+        vdef.version
+        for vdef in sorted(
             versions, key=spack.package_base.concretization_version_order, reverse=True
         )
     ]
