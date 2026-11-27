@@ -257,7 +257,7 @@ def test_style(ruff_package, tmp_path: pathlib.Path):
         # specific file that isn't changed
         output = style("--tool", "ruff-check", __file__, fail_on_error=False)
         assert relative not in output
-        assert __file__ in output
+        assert os.path.relpath(__file__) in output
         assert "spack style checks were clean" in output
 
     # root-relative paths
