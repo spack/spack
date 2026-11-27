@@ -950,7 +950,7 @@ complete -c spack -n '__fish_spack_using_command cd' -l first -f -a find_first
 complete -c spack -n '__fish_spack_using_command cd' -l first -d 'use the first match if multiple packages match the spec'
 
 # spack change
-set -g __fish_spack_optspecs_spack_change h/help l/list-name= match-spec= a/all c/concrete C/concrete-only
+set -g __fish_spack_optspecs_spack_change h/help l/list-name= match-spec= a/all c/concrete C/concrete-only remove-variant=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 change' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command change' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command change' -s h -l help -d 'show this help message and exit'
@@ -964,6 +964,8 @@ complete -c spack -n '__fish_spack_using_command change' -s c -l concrete -f -a 
 complete -c spack -n '__fish_spack_using_command change' -s c -l concrete -d 'change concrete specs in the environment'
 complete -c spack -n '__fish_spack_using_command change' -s C -l concrete-only -f -a concrete_only
 complete -c spack -n '__fish_spack_using_command change' -s C -l concrete-only -d 'change only concrete specs in the environment'
+complete -c spack -n '__fish_spack_using_command change' -l remove-variant -r -f -a remove_variants
+complete -c spack -n '__fish_spack_using_command change' -l remove-variant -r -d 'remove a variant from matching concrete specs (requires '"'"'--concrete'"'"' or '"'"'--concrete-only'"'"', may be used multiple times)'
 
 # spack checksum
 set -g __fish_spack_optspecs_spack_checksum h/help keep-stage b/batch l/latest p/preferred a/add-to-package verify j/jobs=
