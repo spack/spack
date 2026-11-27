@@ -7,6 +7,7 @@ import re
 import pytest
 
 from spack.main import SpackCommand
+from spack.util.tty.colify import colified
 from spack.util.tty.color import color_when
 
 dependencies = SpackCommand("dependencies")
@@ -49,6 +50,12 @@ def test_direct_dependencies(cli_args, expected, mock_packages):
     assert expected == result
 
 
+def test_format_requires_installed(mock_packages):
+    dependencies("--format", "{name}", "mpileaks", fail_on_error=False)
+    assert dependencies.returncode == 2
+    assert "--format requires --installed" in dependencies.output
+
+
 @pytest.mark.db
 def test_direct_installed_dependencies(mock_packages, database):
     with color_when(False):
@@ -75,3 +82,53 @@ def test_transitive_installed_dependencies(mock_packages, database):
     expected = {s.dag_hash(7) for s in root.traverse(root=False)}
 
     assert expected == hashes
+
+
+@pytest.mark.db
+def test_format_installed_dependencies(mock_packages, database):
+    root = database.query_one("mpileaks ^mpich")
+    out = dependencies("--installed", "--format", "{name}", "mpileaks^mpich")
+    assert set(out.splitlines()) == {s.name for s in root.dependencies()}
+    assert "Dependencies of" not in out
+
+    out = dependencies("--installed", "--format", "/{hash}", "mpileaks^mpich")
+    assert set(out.splitlines()) == {"/" + s.dag_hash() for s in root.dependencies()}
+
+    out = dependencies("--installed", "--transitive", "--format", "/{hash}", "mpileaks^mpich")
+    assert set(out.splitlines()) == {"/" + s.dag_hash() for s in root.traverse(root=False)}
+    assert all(line.startswith("/") for line in out.splitlines())
+
+
+@pytest.mark.db
+def test_format_installed_dependencies_tty(mock_packages, database, mock_tty_stdout, monkeypatch):
+    monkeypatch.setenv("COLIFY_SIZE", "24x80")
+    root = database.query_one("mpileaks ^mpich")
+    out = dependencies("--installed", "--format", "{name}", "mpileaks^mpich")
+    names = [s.name for s in sorted(root.dependencies())]
+    assert out == colified(names, tty=True, console_cols=80)
+    assert "Dependencies of" not in out
+
+
+@pytest.mark.db
+def test_format_empty_installed_dependencies(mock_packages, database):
+    leaf = next(s for s in database.query() if not database.installed_relatives(s, "children"))
+    out = dependencies("--installed", "--format", "{name}", leaf.format("{name}{/hash}"))
+    assert out.strip() == "No dependencies"
+
+
+@pytest.mark.db
+def test_empty_format_installed_dependencies(mock_packages, database):
+    # An empty format string is valid and produces one blank line per result.
+    root = database.query_one("mpileaks ^mpich")
+    out = dependencies("--installed", "--format=", "mpileaks^mpich")
+    assert out.splitlines() == [""] * len(root.dependencies())
+
+
+@pytest.mark.db
+def test_empty_format_installed_dependencies_tty(
+    mock_packages, database, mock_tty_stdout, monkeypatch
+):
+    monkeypatch.setenv("COLIFY_SIZE", "24x80")
+    root = database.query_one("mpileaks ^mpich")
+    out = dependencies("--installed", "--format=", "mpileaks^mpich")
+    assert out.splitlines() == [""] * len(root.dependencies())
