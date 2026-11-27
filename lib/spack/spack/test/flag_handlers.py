@@ -144,3 +144,30 @@ class TestFlagHandlers:
 
         assert not s.compiler_flags["cflags"]
         assert os.environ["SPACK_CFLAGS"] == "-foo"
+
+    def test_hipflags_inject(self, temp_env):
+        """Test that hipflags are properly injected into SPACK_HIPFLAGS"""
+        s = spack.concretize.concretize_one("mpileaks hipflags=--amdgpu-target=gfx90a")
+        s.package.flag_handler = inject_flags
+        spack.build_environment.setup_package(s.package, False)
+        assert os.environ["SPACK_HIPFLAGS"] == "--amdgpu-target=gfx90a"
+        assert "HIPFLAGS" not in os.environ
+
+    def test_hipflags_env(self, temp_env):
+        """Test that hipflags can be set as environment flags"""
+        s = spack.concretize.concretize_one("mpileaks hipflags=--amdgpu-target=gfx90a")
+        s.package.flag_handler = env_flags
+        spack.build_environment.setup_package(s.package, False)
+        # Note: CMake packages that enable the HIP language will understand HIPFLAGS, but
+        # setting HIPFLAGS doesn't mean anything to Autotools-based build systems
+        # (whereas setting CFLAGS would)
+        assert os.environ["HIPFLAGS"] == "--amdgpu-target=gfx90a"
+        assert "SPACK_HIPFLAGS" not in os.environ
+
+    def test_hipflags_missing_tolerates_old_specs(self, temp_env):
+        """Test backward compatibility: specs without hipflags don't cause errors"""
+        s = spack.concretize.concretize_one("mpileaks")
+        s.package.flag_handler = inject_flags
+        # This should not raise KeyError even though hipflags is not in spec.compiler_flags
+        spack.build_environment.setup_package(s.package, False)
+        assert "SPACK_HIPFLAGS" not in os.environ

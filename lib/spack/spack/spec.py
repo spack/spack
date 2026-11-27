@@ -1144,7 +1144,15 @@ class CompilerFlag(str):
         return CompilerFlag(d["value"], propagate=d.get("propagate", False))
 
 
-_valid_compiler_flags = ("cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags")
+_valid_compiler_flags = (
+    "cflags",
+    "cxxflags",
+    "fflags",
+    "ldflags",
+    "ldlibs",
+    "cppflags",
+    "hipflags",
+)
 
 
 # typing.Dict bases are slow at runtime on Python 3.6
