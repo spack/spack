@@ -297,6 +297,72 @@ def test_checksum_versions(mock_packages: RepoPath, can_fetch_versions, monkeypa
     assert "version(" in output
 
 
+@pytest.fixture
+def received_by_get_checksums(monkeypatch, can_fetch_versions):
+    """Records the arguments passed to get_checksums_for_versions, with two URLs per version."""
+    urls = [
+        "https://mirror1.example.com/zlib-1.2.11.tar.gz",
+        "https://mirror2.example.com/zlib-1.2.11.tar.gz",
+    ]
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "all_urls_for_version", lambda pkg, version: urls
+    )
+    received = {"urls": urls}
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        received.update(url_by_version=url_by_version, fallback_urls=kwargs["fallback_urls"])
+        hashes = {
+            v: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+            for v in url_by_version
+        }
+        return spack.stage.ChecksumResult(hashes=hashes, failures={})
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+    return received
+
+
+def test_checksum_fallback_urls(mock_packages, received_by_get_checksums):
+    """Tests that the other URLs of a version are passed on, to be tried if the download fails."""
+    urls = received_by_get_checksums["urls"]
+    spack_checksum("zlib", "1.2.11")
+
+    assert received_by_get_checksums["url_by_version"] == {Version("1.2.11"): urls[0]}
+    assert received_by_get_checksums["fallback_urls"] == {Version("1.2.11"): [urls[1]]}
+
+
+def test_checksum_fallback_urls_crawled(mock_packages, received_by_get_checksums, monkeypatch):
+    """Tests that a crawled URL that is one of the package's URLs gets the others as fallback."""
+    urls = received_by_get_checksums["urls"]
+    monkeypatch.setattr(
+        spack.package_base.PackageBase,
+        "fetch_remote_versions",
+        lambda pkg, concurrency: {Version("1.2.11"): urls[1]},
+    )
+    spack_checksum("zlib")
+
+    assert received_by_get_checksums["url_by_version"] == {Version("1.2.11"): urls[1]}
+    assert received_by_get_checksums["fallback_urls"] == {Version("1.2.11"): [urls[0]]}
+
+
+def test_checksum_no_fallback_urls_for_other_archive(
+    mock_packages, received_by_get_checksums, monkeypatch
+):
+    """Tests that a crawled URL that is not one of the package's URLs gets no fallback, since
+    the package's URLs may point to a different archive.
+    """
+    crawled_url = "https://www.example.com/releases/zlib-1.2.11.tar.gz"
+    monkeypatch.setattr(
+        spack.package_base.PackageBase,
+        "fetch_remote_versions",
+        lambda pkg, concurrency: {Version("1.2.11"): crawled_url},
+    )
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url, curl=None: False)
+    spack_checksum("zlib")
+
+    assert received_by_get_checksums["url_by_version"] == {Version("1.2.11"): crawled_url}
+    assert received_by_get_checksums["fallback_urls"] == {}
+
+
 def test_checksum_missing_version(mock_packages, cannot_fetch_versions):
     output = spack_checksum("preferred-test", "99.99.99", fail_on_error=False)
     assert "Could not find any remote versions" in output

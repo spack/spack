@@ -168,11 +168,21 @@ def checksum(parser, args):
     else:
         tty.info(f"Found {spack.util.string.plural(len(url_dict), 'version')} of {pkg.name}")
 
+    # If the download fails, try the package's other URLs for that version, e.g. other GNU
+    # mirrors. Skip versions whose crawled URL is not one of them, since the other URLs may
+    # point to a different archive.
+    fallback_urls = {
+        version: [u for u in pkg.all_urls_for_version(version) if u != url]
+        for version, url in url_dict.items()
+        if version not in url_changed_for_version
+    }
+
     result = spack.stage.get_checksums_for_versions(
         url_dict,
         pkg.name,
         keep_stage=args.keep_stage,
         fetch_options=pkg.fetch_options,
+        fallback_urls=fallback_urls,
         config=spack.config.CONFIG,
     )
     for version, error in result.failures.items():
