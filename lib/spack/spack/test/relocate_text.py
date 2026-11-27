@@ -36,9 +36,8 @@ def test_utf8_paths_to_single_binary_regex():
 
 
 def test_ordered_replacement():
-    # This tests whether binary text replacement respects order, so that
-    # a long package prefix is replaced before a shorter sub-prefix like
-    # the root of the spack store (as a fallback).
+    # This tests whether binary text replacement replaces a long package prefix
+    # before a shorter sub-prefix like the root of the spack store (as a fallback).
     def replace_and_expect(prefix_map, before, after=None, suffix_safety_size=7):
         f = io.BytesIO(before)
         relocater = relocate_text.BinaryFilePrefixReplacer(
@@ -70,25 +69,25 @@ def test_ordered_replacement():
         suffix_safety_size=7,
     )
 
-    # Testing the order of operations (not null terminated, long enough common suffix)
+    # The order of the mapping is irrelevant (not null terminated, long enough common suffix)
     replace_and_expect(
         [
             (b"/old-spack/opt", b"/s/spack/opt"),
             (b"/old-spack/opt/specific-package", b"/first/specific-package"),
         ],
         b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
-        b"Binary with ///s/spack/opt/specific-package and ///s/spack/opt",
+        b"Binary with /////////first/specific-package and ///s/spack/opt",
         suffix_safety_size=7,
     )
 
-    # Testing the order of operations (null terminated, long enough common suffix)
+    # The order of the mapping is irrelevant (null terminated, long enough common suffix)
     replace_and_expect(
         [
             (b"/old-spack/opt", b"/s/spack/opt"),
             (b"/old-spack/opt/specific-package", b"/first/specific-package"),
         ],
         b"Binary with /old-spack/opt/specific-package\0 and /old-spack/opt\0",
-        b"Binary with ///s/spack/opt/specific-package\0 and ///s/spack/opt\0",
+        b"Binary with /////////first/specific-package\0 and ///s/spack/opt\0",
         suffix_safety_size=7,
     )
 
@@ -211,7 +210,7 @@ def test_inplace_text_replacement():
             (b"/replace/in/order", b"/first"),
         ],
         b"/replace/in/order/x /replace/in/y /replace/z",
-        b"/third/in/order/x /third/in/y /third/z",
+        b"/first/x /second/y /third/z",
     )
 
     replace_and_expect(
