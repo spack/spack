@@ -120,6 +120,9 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
     # to have it in the configuration).
     config_yaml = spack.config.CONFIG.get("config")
     config_yaml.pop("install_tree", None)
+    config_yaml["misc_cache"] = spack.config.canonicalize_path(
+        os.path.join(root_path(), "cache")
+    )
     return {
         "bootstrap": spack.config.CONFIG.get("bootstrap"),
         "config": config_yaml,
