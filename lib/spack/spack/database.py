@@ -798,7 +798,7 @@ class Database:
         """Returns the edges from the spec of ``hash_key`` to the specs of the other records it
         depends on, without adding them to either spec. A dependency listed more than once gives
         one edge, with the dependency types and virtuals of all entries."""
-        edges: Dict[int, spack.spec.DependencySpec] = {}
+        edges: Dict[str, spack.spec.DependencySpec] = {}
         spec = data[hash_key].spec
         spec_node_dict = installs[hash_key]["spec"]
         if "name" not in spec_node_dict:
@@ -824,9 +824,9 @@ class Database:
                     continue
 
                 depflag = dt.canonicalize(dep.deptypes)
-                edge = edges.get(id(child))
+                edge = edges.get(dep.hash)
                 if edge is None:
-                    edges[id(child)] = spack.spec.DependencySpec(
+                    edges[dep.hash] = spack.spec.DependencySpec(
                         spec, child, depflag=depflag, virtuals=dep.virtuals, direct=dep.direct
                     )
                 else:
