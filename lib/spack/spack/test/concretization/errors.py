@@ -164,6 +164,13 @@ def assert_actionable_error(exc_info, *required_part: str) -> None:
             ["quantum-espresso", "nonexistent", "No such variant"],
             id="variant_undefined",
         ),
+        # The variant exists only when @2.0:, but the user pinned @1.0. The error must name the
+        # variant and its condition, instead of saying it cannot pick a version.
+        pytest.param(
+            "conditional-variant-pkg@1.0+version_based",
+            ["Cannot set variant 'version_based' for 'conditional-variant-pkg@1.0'", "when @2.0:"],
+            id="conditional_variant_unsatisfied",
+        ),
         # quantum-espresso has only version 1.0; @:0.1 cannot be satisfied.
         pytest.param(
             "quantum-espresso@:0.1",
