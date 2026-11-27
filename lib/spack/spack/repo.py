@@ -1763,7 +1763,9 @@ class RepoDescriptor:
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         return None
 
-    def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
+    def update(
+        self, git: MaybeExecutable = None, remote: str = "origin", force_discard: bool = False
+    ) -> None:
         return None
 
     def construct(
@@ -1839,6 +1841,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
         update: bool = False,
         remote: str = "origin",
         depth: Optional[int] = None,
+        force_discard: bool = False,
     ) -> None:
         with self.write_transaction:
             try:
@@ -1911,8 +1914,13 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             remote = output.strip()
                         except spack.util.executable.ProcessError:
                             pass
+
                         spack.util.git.pull_checkout_branch(
-                            self.branch, remote=remote, depth=depth, git_exe=git
+                            self.branch,
+                            remote=remote,
+                            depth=depth,
+                            git_exe=git,
+                            force_discard=force_discard,
                         )
 
             except spack.util.executable.ProcessError:
@@ -1921,11 +1929,14 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
             self.read_index_file()
 
-    def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
+    def update(
+        self, git: MaybeExecutable = None, remote: str = "origin", force_discard: bool = False
+    ) -> None:
+
         if git is None:
             raise RepoError("Git executable not found")
 
-        self._clone_or_pull(git, update=True, remote=remote)
+        self._clone_or_pull(git, update=True, remote=remote, force_discard=force_discard)
 
         if self.error:
             raise RepoError(self.error)
