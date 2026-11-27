@@ -66,6 +66,11 @@ class TestCompilerPropertyDetector:
         # Test without flags
         assert detector._compile_dummy_c_source() == without_flag_output
 
+        # Empty flags from configuration are parsed as None and must be ignored
+        mock_gcc.extra_attributes.setdefault("flags", {})
+        monkeypatch.setitem(mock_gcc.extra_attributes["flags"], flagname, None)
+        assert detector._compile_dummy_c_source() == without_flag_output
+
         # Set flags and test
         if flagname:
             mock_gcc.extra_attributes.setdefault("flags", {})
