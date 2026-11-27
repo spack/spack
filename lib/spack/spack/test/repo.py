@@ -1,17 +1,20 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import json
 import os
 import pathlib
 
 import pytest
 
 import spack.environment
+import spack.main
 import spack.package_base
 import spack.paths
 import spack.repo
 import spack.schema.repos
 import spack.spec
+import spack.store
 import spack.util.executable
 import spack.util.file_cache
 import spack.util.lock
@@ -1060,3 +1063,76 @@ def test_provided_specs_intersects_matching_clauses():
         spack.spec.Spec("blas"),
         spack.spec.Spec("mpi@2:3"),
     )
+
+
+def _rewrite_as_lockfile_v7(lockfile: pathlib.Path) -> None:
+    """Rewrites a lockfile as Spack 1.2 writes it: format v7, with no provided virtuals."""
+    data = json.loads(lockfile.read_text())
+    data["_meta"]["lockfile-version"] = 7
+    for node in data["concrete_specs"].values():
+        node.pop("provided_virtuals", None)
+    lockfile.write_text(json.dumps(data))
+
+
+def test_install_env_with_project_repo_and_lockfile_from_spack_1_2(
+    tmp_path: pathlib.Path,
+    repo_builder: RepoBuilder,
+    mutable_config: Configuration,
+    temporary_store,
+    monkeypatch,
+):
+    """Tests that a user whose spack.yaml declares a project repository, and whose spack.lock
+    was written by Spack 1.2, can install the environment with ``spack -e <env> install``.
+    """
+    repo_builder.add_package("project-app")
+    env_dir = tmp_path / "project"
+    env_dir.mkdir()
+    (env_dir / "spack.yaml").write_text(
+        f"spack: {{repos: {{{repo_builder.namespace}: {repo_builder.root}}}, "
+        "specs: [project-app], view: false}"
+    )
+    with spack.environment.Environment(env_dir) as env:
+        env.concretize()
+        env.write()
+    _rewrite_as_lockfile_v7(env_dir / "spack.lock")
+
+    # As in a new process, the package repositories are created from configuration on first use
+    monkeypatch.setattr(
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(mutable_config))
+    )
+    spack.main._main(["-e", str(env_dir), "install", "--fake"])
+
+    assert spack.store.STORE.db.query("project-app")
+
+
+def test_concretize_env_including_lockfile_of_env_with_project_repo(
+    tmp_path: pathlib.Path,
+    repo_builder: RepoBuilder,
+    mutable_config: Configuration,
+    temporary_store,
+    monkeypatch,
+):
+    """Tests that a user can concretize, with ``spack -e <env> concretize``, a new environment
+    that includes the lockfile of an installed environment whose specs come from a project
+    repository declared in both spack.yaml files.
+    """
+    repo_builder.add_package("project-app")
+    repos = f"repos: {{{repo_builder.namespace}: {repo_builder.root}}}"
+    team, dev = tmp_path / "team", tmp_path / "dev"
+    team.mkdir()
+    dev.mkdir()
+    (team / "spack.yaml").write_text(f"spack: {{{repos}, specs: [project-app], view: false}}")
+    (dev / "spack.yaml").write_text(f"spack: {{{repos}, include: [{team}/spack.lock]}}")
+    with spack.environment.Environment(team) as env:
+        env.concretize()
+        env.write()
+        env.install_all(fake=True)
+
+    # As in a new process, the package repositories are created from configuration on first use
+    monkeypatch.setattr(
+        spack.repo, "PATH", Singleton(lambda: spack.repo.create_and_enable(mutable_config))
+    )
+    spack.main._main(["-e", str(dev), "concretize"])
+
+    view_root = pathlib.Path(spack.environment.Environment(dev).default_view.root)
+    assert (view_root / ".spack" / "project-app").is_dir()

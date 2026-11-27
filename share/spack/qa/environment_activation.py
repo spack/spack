@@ -3,8 +3,9 @@ from spack.active_environment import active_environment
 
 KEY = "concretizer:unify"
 
+env = active_environment()
 before = spack.config.CONFIG.get(KEY)
-with active_environment().manifest.use_config():
+with env.write_transaction():
     within = spack.config.CONFIG.get(KEY)
 after = spack.config.CONFIG.get(KEY)
 
