@@ -51,7 +51,6 @@ import spack.deptypes as dt
 import spack.environment
 import spack.error
 import spack.package_prefs
-import spack.paths
 import spack.projections as proj
 import spack.repo
 import spack.schema
@@ -277,10 +276,15 @@ def root_path(module_type: str, module_set: str) -> str:
         module_type: module type to be used
         module_set: name of the set of module configs to use
     """
-    dir_name = "modules" if module_type == "tcl" else module_type
-    fallback = os.path.join(spack.paths.share_path, dir_name)
     configured = spack.config.CONFIG.get(f"modules:{module_set}:roots", {})
-    return spack.config.canonicalize_path(configured.get(module_type, fallback))
+    root = configured.get(module_type)
+    if not root:
+        raise ModulesError(
+            f"No root configured for {module_type} modules in module set "
+            f"'{module_set}'. Set modules:{module_set}:roots:{module_type} "
+            "in your configuration."
+        )
+    return spack.config.canonicalize_path(root)
 
 
 def generate_module_index(

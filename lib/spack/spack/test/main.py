@@ -358,3 +358,18 @@ def test_env_substitution_via_main_entrypoint(
 
     assert mutable_config.env_path == env.path
     assert spack.config.substitute_path_variables("$env/foo") == f"{env.path}/foo"
+
+
+def test_show_backtrace_falls_back_to_argv_when_config_is_broken(monkeypatch):
+    """An error escaping ``_main`` must not raise a second time from ``main``'s own handler
+    when the configuration cannot be built (e.g. the user scope path is a file)."""
+
+    class Broken:
+        def get(self, *args, **kwargs):
+            raise RuntimeError("config cannot be built")
+
+    monkeypatch.setattr(spack.config, "CONFIG", Broken())
+    monkeypatch.setattr(spack.error, "SHOW_BACKTRACE", False)
+    assert spack.main._show_backtrace(["find"]) is False
+    assert spack.main._show_backtrace(["-d", "find"]) is True
+    assert spack.main._show_backtrace(["--debug", "find"]) is True

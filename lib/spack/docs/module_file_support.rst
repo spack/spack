@@ -28,19 +28,34 @@ Quick start
 
 Spack can generate both Tcl and Lua module files, either when packages are installed or at user's request through a command.
 
-If you're using the default configuration values, you can start by generating Tcl module files for all currently installed packages:
+.. note::
+
+   Before generating module files, you must configure a module root directory.
+   For example, add to your ``~/.config/spack/modules.yaml``:
+
+   .. code-block:: yaml
+
+      modules:
+        default:
+          roots:
+            tcl: $data_home/modules
+
+Once configured, you can start by generating Tcl module files for all currently installed packages:
 
 .. code-block:: console
 
    $ spack module tcl refresh
 
-To generate Lua module files simply use the ``spack module lmod`` command instead of ``spack module tcl``.
+To generate Lua module files simply use the ``spack module lmod`` command instead of ``spack module tcl``, and configure a ``lmod`` root alongside or instead of ``tcl`` in your modules configuration.
 
-Once module files are in place, add the Tcl module directory generated above to your module path:
+Once module files are in place, add the Tcl module directory to your module path:
 
 .. code-block:: console
 
-   $ module use $SPACK_ROOT/share/spack/modules/$(spack arch)
+   $ module use ~/.local/share/spack/modules/$(spack arch)
+
+Spack's shell integration (``setup-env.sh`` and friends) does this for you when it is sourced: it adds the configured ``tcl`` root of the ``default`` module set, for each compatible architecture, to ``MODULEPATH``.
+When no root is configured, it adds nothing.
 
 You can now browse and load the available modules:
 
@@ -48,7 +63,7 @@ You can now browse and load the available modules:
 
    $ module avail
 
-   ------------------------------------------------------------ <spack-root>/share/spack/modules/linux-ubuntu24.04-skylake ------------------------------------------------------------
+   ------------------------------------------------------------ ~/.local/share/spack/modules/linux-ubuntu24.04-skylake ------------------------------------------------------------
    bison/3.8.2-gcc-13.3.0-hs4pc4c                        flex/2.6.3-gcc-13.3.0-jz6pfzf            libevent/2.1.12-gcc-13.3.0-5k3sh64    openmpi/5.0.10-gcc-13.3.0-fjv7c7n
    ca-certificates-mozilla/2026-03-19-none-none-som6bt4  gcc-runtime/13.3.0-none-none-5opaxqi     libpciaccess/0.17-gcc-13.3.0-rcke4u2  openssh/10.3p1-gcc-13.3.0-bwrgshz
    cmake/3.31.11-gcc-13.3.0-g2bzgpi                      gromacs/2026.1-gcc-13.3.0-lyxhacq        libxcrypt/4.5.2-gcc-13.3.0-2snor6m    openssl/3.6.1-gcc-13.3.0-fhuz67z
@@ -71,15 +86,20 @@ The table below summarizes the essential information associated with the differe
 | Language | Default           | Module variant | Default root directory  | Default template file                            | Compatible tools     |
 |          | hierarchical mode | support        |                         |                                                  |                      |
 +==========+===================+================+=========================+==================================================+======================+
-| ``Tcl``  | non-hierarchical  | Environment    | ``share/spack/modules`` | ``share/spack/templates/modules/modulefile.tcl`` | Environment Modules, |
+| ``Tcl``  | non-hierarchical  | Environment    | *none configured*       | ``share/spack/templates/modules/modulefile.tcl`` | Environment Modules, |
 |          |                   | Modules >= 5.1 |                         |                                                  | Lmod (with default   |
 |          |                   |                |                         |                                                  | options)             |
 +----------+-------------------+----------------+-------------------------+--------------------------------------------------+----------------------+
-| ``Lua``  | hierarchical      | no             | ``share/spack/lmod``    | ``share/spack/templates/modules/modulefile.lua`` | Lmod                 |
+| ``Lua``  | hierarchical      | no             | *none configured*       | ``share/spack/templates/modules/modulefile.lua`` | Lmod                 |
 +----------+-------------------+----------------+-------------------------+--------------------------------------------------+----------------------+
 
 Tcl module files generated with default options can be evaluated by both Environment Modules and Lmod.
 Options relying on features that only Environment Modules provides, such as :ref:`module variants <module-variants>`, are disabled by default, and their documentation states the minimum Environment Modules version they require.
+
+.. note::
+
+   Module root directories must be explicitly configured before generating module files.
+   Spack no longer provides default module root locations.
 
 .. _flat-vs-hierarchical:
 
@@ -156,15 +176,15 @@ You can configure the behavior of either module system separately, under a key c
 
    modules:
      default:
-       tcl:
-         # contains environment modules specific customizations
-       lmod:
-         # contains lmod specific customizations
+       # Environment Modules-specific customizations
+       tcl: {}
+       # Lmod-specific customizations
+       lmod: {}
 
 In general, the configuration options that you can use in ``modules.yaml`` will either change the layout of the module files on the filesystem, or they will affect their content.
 For the latter point it is possible to use :ref:`spec patterns <sec-specs>` to fine-tune the set of packages on which the modifications should be applied.
 
-The default module root can be overridden for any module set by changing the ``roots`` key of the configuration.
+The module root is set for each module set with the ``roots`` key of the configuration.
 For example, to install ``tcl`` modules to a custom path:
 
 .. code-block:: yaml

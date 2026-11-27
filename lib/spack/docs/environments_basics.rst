@@ -31,7 +31,7 @@ This places you "inside" the environment, so all subsequent Spack commands apply
 .. code-block:: console
 
    $ spack env create myenv
-   ==> Created environment myenv in /path/to/spack/var/spack/environments/myenv
+   ==> Created environment myenv in ~/.local/share/spack/environments/myenv
    $ spack env activate myenv
 
 Here, *myenv* is the name of our new environment.
@@ -115,7 +115,7 @@ You can verify the installation:
 .. code-block:: console
 
    $ which python3
-   /path/to/spack/var/spack/environments/myenv/.spack-env/view/bin/python3
+   ~/.local/share/spack/environments/myenv/.spack-env/view/bin/python3
 
 When you are finished working in the environment, you can deactivate it:
 

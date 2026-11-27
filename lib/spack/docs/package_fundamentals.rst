@@ -384,18 +384,18 @@ This could be for a number of reasons:
 To install these packages, one must create a mirror and manually add the tarballs in question to it (see :ref:`mirrors`):
 
 #. Create a directory for the mirror.
-   You can create this directory anywhere you like, it does not have to be inside ``~/.spack``:
+   You can create this directory anywhere you like:
 
    .. code-block:: console
 
-       $ mkdir ~/.spack/manual_mirror
+       $ mkdir ~/manual_mirror
 
-#. Register the mirror with Spack by creating ``~/.spack/mirrors.yaml``:
+#. Register the mirror with Spack by creating ``~/.config/spack/mirrors.yaml``:
 
    .. code-block:: yaml
 
        mirrors:
-         manual: file://~/.spack/manual_mirror
+         manual: file://~/manual_mirror
 
 #. Put your tarballs in it.
    Tarballs should be named ``<package>/<package>-<version>.tar.gz``.
