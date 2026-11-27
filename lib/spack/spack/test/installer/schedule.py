@@ -28,19 +28,11 @@ from spack.test.installer.conftest import (
     _make_concrete,
     _record,
     create_dag,
+    install_spec_in_db,
 )
 
 if sys.platform != "win32":
     from spack.installer.posix import PosixJobServer
-
-
-def install_spec_in_db(spec: Spec, store: Store):
-    """Helper to install a spec in the database for testing."""
-    prefix = store.layout.path_for_spec(spec)
-    spec.set_prefix(prefix)
-    # Use the layout to create a proper installation directory structure
-    store.layout.create_install_directory(spec)
-    store.db.add(spec, explicit=False)
 
 
 @pytest.fixture

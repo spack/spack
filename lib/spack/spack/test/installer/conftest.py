@@ -13,6 +13,7 @@ from spack.installer.build import BuildRequest, ChildInfo, create_build_channels
 from spack.installer.core import PackageInstaller, write_connection
 from spack.installer.ui import InstallerUI
 from spack.spec import Spec
+from spack.store import Store
 
 
 def create_dag(
@@ -207,6 +208,15 @@ def _make_concrete(
 def _record(store, spec: spack.spec.Spec):
     """The spec's InstallRecord, or None if it is not in the database."""
     return store.db.query_by_spec_hash(spec.dag_hash())[1]
+
+
+def install_spec_in_db(spec: Spec, store: Store):
+    """Helper to install a spec in the database for testing."""
+    prefix = store.layout.path_for_spec(spec)
+    spec.set_prefix(prefix)
+    # Use the layout to create a proper installation directory structure
+    store.layout.create_install_directory(spec)
+    store.db.add(spec, explicit=False)
 
 
 def _install(launcher, *specs: spack.spec.Spec, ui=None, **kwargs) -> RecordingUI:
