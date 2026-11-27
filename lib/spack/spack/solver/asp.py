@@ -2203,12 +2203,20 @@ class SpackSolverSetup:
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
             try:
-                archspec_name = self.context.repo.get(compiler).archspec_name()
+                compiler_pkg = self.context.repo.get(compiler)
+                archspec_name = compiler_pkg.archspec_name()
+                # Check if the compiler package provides an archspec version mapping
+                if hasattr(compiler_pkg, "archspec_version"):
+                    archspec_version_str = compiler_pkg.archspec_version()
+                    archspec_version = vn.Version(archspec_version_str)
+                else:
+                    archspec_version = compiler.version
             except spack.repo.UnknownEntityError:
                 # Reusable compilers may come from a repo that is no longer configured
                 archspec_name = compiler.name
+                archspec_version = compiler.version
             supported, unsupported = self._supported_targets(
-                archspec_name, compiler.version, candidate_targets
+                archspec_name, archspec_version, candidate_targets
             )
 
             for target in supported:
@@ -2747,10 +2755,14 @@ class SpackSolverSetup:
             # Add a dependency on the compiler wrapper
             compiler_str = f"{compiler.name} /{compiler.dag_hash()}"
             for language in COMPILER_WRAPPER_LANGUAGES:
+                if language == "hip-lang":
+                    wrapper_dep = "compiler-wrapper@1.2.0:"
+                else:
+                    wrapper_dep = "compiler-wrapper"
                 # Using compiler.name causes a bit of duplication, but that is taken care of by
                 # clingo during grounding.
                 recorder("*").depends_on(
-                    "compiler-wrapper",
+                    wrapper_dep,
                     when=f"%[deptypes=build virtuals={language}] {compiler.name}",
                     type="build",
                     description=f"Add compiler wrapper when using {compiler.name} for {language}",
