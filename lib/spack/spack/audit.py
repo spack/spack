@@ -344,9 +344,9 @@ def _ensure_no_folders_without_package_py(error_cls):
 
 
 @config_modules
-def _ensure_templates_apply_to_folded_installations(error_cls):
+def _ensure_file_wide_options_apply_to_folded_installations(error_cls):
     """With variants defined in tcl module files, the installations of a package version share
-    one module file, so a template must be set for them all"""
+    one module file, so the options that shape the whole file must be set for them all"""
     errors = []
     modules_yaml = spack.config.CONFIG.get_config("modules")
     # The keys that are not options of the tcl section are spec constraints
@@ -358,20 +358,63 @@ def _ensure_templates_apply_to_folded_installations(error_cls):
         if tcl_yaml.get("variants", "none") == "none":
             continue
         for constraint, rules in tcl_yaml.items():
-            if constraint in option_keys or "template" not in rules:
+            if constraint in option_keys:
                 continue
             # Installations of different versions never share a module file, so a constraint
             # on the package name and version applies to the whole module file
             if spack.spec.constrains_only_name_and_versions(spack.spec.Spec(constraint)):
                 continue
-            summary = (
-                f"Setting a template for '{constraint}' in the tcl configuration of the "
-                f"'{set_name}' module set, while 'variants: {tcl_yaml['variants']}' folds "
-                "the installations of a package version into one module file. Set the "
-                "template for the package or package version instead"
-            )
-            errors.append(_make_config_error(rules, summary, error_cls=error_cls))
+            for option, what in _file_wide_options(rules):
+                summary = (
+                    f"{what} for '{constraint}' in the tcl configuration of the '{set_name}' "
+                    f"module set, while 'variants: {tcl_yaml['variants']}' folds the "
+                    "installations of a package version into one module file. Set "
+                    f"'{option}' for the package or package version instead"
+                )
+                errors.append(_make_config_error(rules, summary, error_cls=error_cls))
     return errors
+
+
+@config_modules
+def _ensure_excluded_variants_exist(error_cls):
+    """The variants excluded from the tcl module files of a package must be variants of it"""
+    errors = []
+    modules_yaml = spack.config.CONFIG.get_config("modules")
+    option_keys = spack.schema.modules.tcl_configuration["properties"]
+    for set_name, module_set in modules_yaml.items():
+        if set_name == "prefix_inspections":
+            continue
+        for constraint, rules in module_set.get("tcl", {}).items():
+            if constraint in option_keys:
+                continue
+            excluded = rules.get("filter", {}).get("exclude_variants", [])
+            if not excluded:
+                continue
+            pkg_name = spack.spec.Spec(constraint).name
+            if not pkg_name or not spack.repo.PATH.exists(pkg_name):
+                continue
+            variant_names = spack.repo.PATH.get_pkg_class(pkg_name).variant_names()
+            for name in excluded:
+                # Variants reserved by Spack are never defined, so excluding them is harmless
+                if name in variant_names or name in spack.variant.RESERVED_NAMES:
+                    continue
+                summary = (
+                    f"Excluding the non-existing variant '{name}' of the '{pkg_name}' package "
+                    f"for '{constraint}' in the tcl configuration of the '{set_name}' module set"
+                )
+                errors.append(_make_config_error(rules, summary, error_cls=error_cls))
+    return errors
+
+
+def _file_wide_options(rules) -> List[Tuple[str, str]]:
+    """Returns the options of a tcl configuration rule that apply to a whole module file, as
+    pairs of the option name and a description of what the rule does with it"""
+    options = []
+    if "template" in rules:
+        options.append(("template", "Setting a template"))
+    if rules.get("filter", {}).get("exclude_variants"):
+        options.append(("exclude_variants", "Excluding variants"))
+    return options
 
 
 def _make_config_error(config_data, summary, error_cls):
