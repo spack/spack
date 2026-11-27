@@ -779,60 +779,73 @@ def prevalidate_variant_value(
             constraint on the spec.
 
     Return:
-        list of variant definitions that will accept the given value. List will be empty
-        only if the variant is a reserved variant.
+        list of variant definitions that will accept the given value. Empty if the variant is
+        reserved, or if no definition intersects ``spec`` and ``strict`` is False.
     """
-    # do not validate non-user variants
-    if variant.name in RESERVED_NAMES:
+    definitions = definitions_to_validate(pkg_cls, variant.name)
+    if not definitions:
         return []
 
-    # raise if there is no definition at all
-    if not pkg_cls.has_variant(variant.name):
-        raise UnknownVariantError(f"No such variant '{variant.name}' in package {pkg_cls.name}")
+    possible_definitions = [
+        pkg_variant_def
+        for when, pkg_variant_def in definitions
+        if not spec or spec.intersects(when)
+    ]
 
-    # do as much prevalidation as we can -- check only those
-    # variants whose when constraint intersects this spec
-    errors = []
-    possible_definitions = []
-    valid_definitions = []
-
-    for when, pkg_variant_def in pkg_cls.variant_definitions(variant.name):
-        if spec and not spec.intersects(when):
-            continue
-        possible_definitions.append(pkg_variant_def)
-
-        try:
-            pkg_variant_def.validate_or_raise(variant, pkg_cls.name)
-            valid_definitions.append(pkg_variant_def)
-        except spack.error.SpecError as e:
-            errors.append(e)
-
-    # value is valid for at least one definition -- return them all
-    if valid_definitions:
-        return valid_definitions
-
-    # no when spec intersected, so no possible definition for the variant in this configuration
+    # audits are strict, other specs may describe configurations the package does not define
     if strict and not possible_definitions:
         when_clause = f" when {spec}" if spec else ""
         raise InvalidVariantValueError(
             f"variant '{variant.name}' does not exist for '{pkg_cls.name}'{when_clause}"
         )
 
-    # There are only no errors if we're not strict and there are no possible_definitions.
-    # We are strict for audits but not for specs on the CLI or elsewhere. Being strict
-    # in these cases would violate our rule of being able to *talk* about any configuration,
-    # regardless of what the package.py currently says.
-    if not errors:
+    return accepting_definitions(pkg_cls.name, variant, possible_definitions)
+
+
+def definitions_to_validate(
+    pkg_cls: "Type[spack.package_base.PackageBase]", variant_name: str
+) -> List[Tuple["spack.spec.Spec", Variant]]:
+    """Return the (when, definition) pairs to validate values of a variant against, empty for
+    reserved variants.
+
+    Raises:
+        UnknownVariantError: if the package does not define the variant
+    """
+    if variant_name in RESERVED_NAMES:
         return []
 
-    # if there is just one error, raise the specific error
-    if len(errors) == 1:
-        raise errors[0]
+    if not pkg_cls.has_variant(variant_name):
+        raise UnknownVariantError(f"No such variant '{variant_name}' in package {pkg_cls.name}")
 
-    # otherwise combine all the errors and raise them together
-    raise InvalidVariantValueError(
-        "multiple variant issues:", "\n".join(e.message for e in errors)
-    )
+    return pkg_cls.variant_definitions(variant_name)
+
+
+def accepting_definitions(
+    pkg_name: str, variant: VariantValue, definitions: Iterable[Variant]
+) -> List[Variant]:
+    """Return the definitions that accept the values of ``variant``, none if ``definitions`` is
+    empty.
+
+    Raises:
+        spack.error.SpecError: if ``definitions`` is not empty and none accepts the values
+    """
+    errors, valid_definitions = [], []
+
+    for pkg_variant_def in definitions:
+        try:
+            pkg_variant_def.validate_or_raise(variant, pkg_name)
+            valid_definitions.append(pkg_variant_def)
+        except spack.error.SpecError as e:
+            errors.append(e)
+
+    if errors and not valid_definitions:
+        if len(errors) == 1:
+            raise errors[0]
+        raise InvalidVariantValueError(
+            "multiple variant issues:", "\n".join(e.message for e in errors)
+        )
+
+    return valid_definitions
 
 
 class ConditionalVariantValues(lang.TypedMutableSequence):
