@@ -11,6 +11,7 @@ import spack.cmd.checksum
 import spack.concretize
 import spack.error
 import spack.package_base
+import spack.spec
 import spack.stage
 import spack.util.web
 from spack.main import SpackCommand
@@ -295,6 +296,44 @@ def test_checksum_versions(mock_packages: RepoPath, can_fetch_versions, monkeypa
     output = spack_checksum("zlib", *versions)
     assert "Found 3 versions" in output
     assert "version(" in output
+
+
+def test_checksum_prefers_package_url_if_it_exists(mock_packages, monkeypatch, no_add):
+    """When a crawled URL is not one of the package's URLs, the package's URL is used if it
+    exists, and the crawled URL is kept otherwise. This is checked for every version."""
+    pkg_cls = mock_packages.get_pkg_class("zlib")
+    crawled = {
+        Version(v): f"https://crawled.example.com/zlib-{v}.tar.gz#sha256=0" for v in ("1.0", "2.0")
+    }
+    package_url = pkg_cls(spack.spec.Spec("zlib")).all_urls_for_version(Version("1.0"))[0]
+    received = {}
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        received.update(url_by_version)
+        hashes = {v: "a" * 64 for v in url_by_version}
+        return spack.stage.ChecksumResult(hashes=hashes, failures={})
+
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "fetch_remote_versions", lambda pkg, concurrency: crawled
+    )
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url, curl=None: url == package_url)
+
+    spack_checksum("--batch", "zlib")
+    assert received == {Version("1.0"): package_url, Version("2.0"): crawled[Version("2.0")]}
+
+
+def test_first_existing_url(monkeypatch):
+    monkeypatch.setattr(spack.util.web, "url_exists", lambda url, curl=None: url != "a")
+    assert spack.cmd.checksum._first_existing_url(["a", "b", "c"]) == "b"
+    assert spack.cmd.checksum._first_existing_url(["a"]) is None
+    urls_by_version = {Version("1"): ["a", "b"], Version("2"): ["a"], Version("3"): ["c"]}
+    assert spack.cmd.checksum._first_existing_urls(urls_by_version, 2) == {
+        Version("1"): "b",
+        Version("2"): None,
+        Version("3"): "c",
+    }
+    assert spack.cmd.checksum._first_existing_urls({}) == {}
 
 
 def test_checksum_missing_version(mock_packages, cannot_fetch_versions):
