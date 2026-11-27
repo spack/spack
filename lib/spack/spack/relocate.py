@@ -2,11 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import io
 import itertools
 import os
 import re
 import sys
-from typing import Dict, Iterable, List, Optional
+from typing import IO, Dict, Iterable, List, Optional
 
 import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
@@ -320,12 +321,50 @@ def is_elf_magic(magic: bytes) -> bool:
     return magic.startswith(b"\x7fELF")
 
 
-def is_binary(filename: str) -> bool:
-    """Returns true iff a file is likely binary"""
-    with open(filename, "rb") as f:
-        magic = f.read(8)
+class FileTypes:
+    BINARY = 0
+    TEXT = 1
+    UNKNOWN = 2
 
-    return is_macho_magic(magic) or is_elf_magic(magic)
+
+NOT_ISO8859_1_TEXT = re.compile(b"[\x00\x7f-\x9f]")
+
+
+def file_type(f: IO[bytes]) -> int:
+    try:
+        # first check if this is an ELF or mach-o binary.
+        magic = f.read(8)
+        if len(magic) < 8:
+            return FileTypes.UNKNOWN
+        elif is_elf_magic(magic) or is_macho_magic(magic):
+            return FileTypes.BINARY
+
+        f.seek(0)
+
+        # Then try utf-8, which has a fast exponential decay in false positive rate with file size.
+        # Use chunked reads for fast early exit.
+        f_txt = io.TextIOWrapper(f, encoding="utf-8", errors="strict")
+        try:
+            while f_txt.read(1024):
+                pass
+            return FileTypes.TEXT
+        except UnicodeError:
+            f_txt.seek(0)
+            pass
+        finally:
+            f_txt.detach()
+        # Finally try iso-8859-1 heuristically. In Python, all possible 256 byte values are valid.
+        # We classify it as text if it does not contain any control characters / null bytes.
+        data = f.read(1024)
+        while data:
+            if NOT_ISO8859_1_TEXT.search(data):
+                break
+            data = f.read(1024)
+        else:
+            return FileTypes.TEXT
+        return FileTypes.UNKNOWN
+    finally:
+        f.seek(0)
 
 
 # Memoize this due to repeated calls to libraries in the same directory.
