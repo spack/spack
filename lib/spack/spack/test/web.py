@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import email.message
+import io
 import os
 import pathlib
 import pickle
@@ -12,7 +13,7 @@ import types
 import urllib.error
 import urllib.request
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 
@@ -20,6 +21,7 @@ import spack.error
 import spack.mirrors.mirror
 import spack.paths
 import spack.url
+import spack.util.gcs
 import spack.util.parallel
 import spack.util.s3
 import spack.util.url as url_util
@@ -27,6 +29,7 @@ import spack.util.web
 from spack.config import Configuration
 from spack.util import tty
 from spack.util.filesystem import working_dir
+from spack.util.lang import nullcontext
 from spack.version import Version
 
 
@@ -118,6 +121,137 @@ class MockS3Client:
         raise self.ClientError
 
 
+class MockGCSAPICallError(Exception):
+    """Mock of google.api_core.exceptions.GoogleAPICallError"""
+
+    def __init__(self, code: Optional[int] = 404, message: str = "mock GCS error"):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.response = None
+
+
+class MockGCSBlob:
+    def __init__(self, name: str, *, _mock_bucket=None):
+        self.name = name
+        self._bucket = _mock_bucket
+
+        self.fail_delete_blob = False
+        # This should never be allowed to happen, the underlying blob
+        # should only be obtained from the client->bucket->blob call path.
+        assert self._bucket is not None
+
+        self.content_type = "application/octet-stream"
+        self.content_encoding = "utf-8"
+        self.content_language = "en"
+        self.md5_hash = "46d3ac3c89cc4cbab61d46d07ae08412"
+        self.size = 100
+        self.time_created = datetime.fromtimestamp(0.0)
+
+    def exists(self) -> bool:
+        if self.name == "subdirectory/actually-missing-file":
+            return False
+        return self._bucket is not None and self._bucket.get_blob(self.name) is not None
+
+    def delete(self):
+        if self.fail_delete_blob:
+            raise MockGCSAPICallError(code=403)
+
+        if self._bucket and self.name in self._bucket._blobs:
+            self._bucket._blobs.pop(self.name)
+        else:
+            raise MockGCSAPICallError(code=404)
+
+    def open(self, mode: str):
+        if "b" in mode:
+            return io.BytesIO(b"stream of bytes")
+        else:
+            return io.TextIOWrapper("stream of text")
+
+    def upload_from_filename(self, local_file_path: str):
+        if self._bucket:
+            self._bucket.blob(self.name)
+
+
+class MockGCSBucket:
+    def __init__(self, name: str, *, exists: bool = True):
+        self.name = name
+        self._exists = exists
+        self._blobs: Dict[str, MockGCSBlob] = {}
+
+        self.fail_list_blobs = False
+        self.fail_list_blobs_code: Optional[int] = 403
+        self.fail_delete_blobs: List[str] = []
+
+    def blob(self, blob_path: str) -> MockGCSBlob:
+        if blob_path in self._blobs:
+            return self._blobs[blob_path]
+        return MockGCSBlob(blob_path, _mock_bucket=self)
+
+    def get_blob(self, blob_path: str) -> Optional[MockGCSBlob]:
+        return self._blobs.get(blob_path, None)
+
+    def list_blobs(self, prefix: Optional[str] = None) -> List[MockGCSBlob]:
+        if not self._exists:
+            raise MockGCSAPICallError(code=404)
+        if self.fail_list_blobs:
+            raise MockGCSAPICallError(code=self.fail_list_blobs_code)
+
+        return [b for b in self._blobs.values() if not prefix or b.name.startswith(prefix)]
+
+    def exists(self):
+        return self._exists
+
+    def _add(self, blob: MockGCSBlob):
+        if blob.name in self.fail_delete_blobs:
+            blob.fail_delete_blob = True
+        self._blobs[blob.name] = blob
+
+
+class MockGCSClient:
+    """Mock GCS client with canned responses."""
+
+    def __init__(self):
+        self._bucket = {}
+
+        self.GoogleAPICallError = MockGCSAPICallError
+        self.GoogleAPIError = MockGCSAPICallError
+
+        self.fail_list_blobs = False
+        self.fail_list_blobs_code: Optional[int] = 403
+        self.fail_delete_blobs: List[str] = []
+
+    def create_bucket(self, name: str) -> MockGCSBucket:
+        """Create and return a bucket."""
+        if name not in self._bucket:
+            bucket = MockGCSBucket(name)
+            bucket.fail_delete_blobs = self.fail_delete_blobs
+            bucket.fail_list_blobs = self.fail_list_blobs
+            bucket.fail_list_blobs_code = self.fail_list_blobs_code
+
+            bucket._add(MockGCSBlob("prefix/keytwo", _mock_bucket=bucket))
+            bucket._add(MockGCSBlob("prefix/keythree", _mock_bucket=bucket))
+            bucket._add(MockGCSBlob("prefix/nested/keyfour", _mock_bucket=bucket))
+            blob = MockGCSBlob("subdirectory/my-file", _mock_bucket=bucket)
+            blob.size = 0
+            blob.time_created = datetime.fromtimestamp(1360799444.0)
+            bucket._add(blob)
+
+            self._bucket[name] = bucket
+
+        return self._bucket[name]
+
+    def bucket(self, name: str) -> MockGCSBucket:
+        """Return a bucket handle, which may refer to a bucket that does not exist."""
+        if name == "my-bucket":
+            self.create_bucket(name)
+        return self._bucket.get(name) or MockGCSBucket(name, exists=False)
+
+    def batch(self):
+        """Dummy context for batch mode."""
+        return nullcontext()
+
+
 @pytest.fixture
 def mock_s3_client(monkeypatch):
     client = MockS3Client("s3://my-bucket/")
@@ -128,6 +262,21 @@ def mock_s3_client(monkeypatch):
         return client, url
 
     monkeypatch.setattr(spack.util.s3, "_get_s3_session", get_s3_session)
+
+    return client
+
+
+@pytest.fixture
+def mock_gcs_client(monkeypatch):
+    client = MockGCSClient()
+
+    def _get_gcs_client():
+        return client
+
+    monkeypatch.setattr(spack.util.gcs, "gcs_client", _get_gcs_client)
+    # Reset the global cache
+    monkeypatch.setattr(spack.util.gcs, "GCS_CLIENT_CACHE", None)
+    monkeypatch.setattr(spack.util.gcs, "GCS_BUCKET_CACHE", {})
 
     return client
 
@@ -617,18 +766,163 @@ def fake_boto3(monkeypatch):
 def test_get_s3_session_normalizes_method_and_returns_parsed_url(monkeypatch, fake_boto3):
     """Verify that "GET" and "HEAD" are treated as "fetch", and everything else
     is treated as "push"."""
-    monkeypatch.setattr(spack.util.s3, "s3_client_cache", {})
+    monkeypatch.setattr(spack.util.s3, "S3_CLIENT_CACHE", {})
 
     fetch_client, parsed_url = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="GET")
     assert parsed_url.geturl() == "s3://my-bucket/prefix"
-    assert (None, "fetch") in spack.util.s3.s3_client_cache
+    assert (None, "fetch") in spack.util.s3.S3_CLIENT_CACHE
 
     head_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="head")
     assert head_client is fetch_client
 
     push_client, _ = spack.util.s3._get_s3_session("s3://my-bucket/prefix", method="anything-else")
-    assert (None, "push") in spack.util.s3.s3_client_cache
+    assert (None, "push") in spack.util.s3.S3_CLIENT_CACHE
     assert push_client is not fetch_client
+
+
+def test_remove_gcs_url(mock_gcs_client):
+    face_gcs_url = "gs://my-bucket/prefix"
+
+    mock_gcs_client.fail_delete_blobs = ["prefix/keytwo"]
+
+    with pytest.raises(urllib.error.HTTPError) as e:
+        spack.util.web.remove_url(face_gcs_url, recursive=True)
+    assert e.value.code == 403
+
+
+def test_remove_gcs_url_non_recursive(mock_gcs_client):
+    root_gcs_url = "gs://my-bucket/prefix/"
+    face_gcs_url = "gs://my-bucket/prefix/keytwo"
+
+    initial_listing = set(spack.util.web.list_url(root_gcs_url, recursive=False))
+    spack.util.web.remove_url(face_gcs_url, recursive=False)
+    post_removed_listing = set(spack.util.web.list_url(root_gcs_url, recursive=False))
+
+    assert initial_listing - post_removed_listing == {"keytwo"}
+
+
+def test_list_gcs_url_wraps_client_error(mock_gcs_client):
+    """Verify that list_url normalizes ClientError to OSError."""
+
+    mock_gcs_client.fail_list_blobs = True
+    with pytest.raises(OSError):
+        spack.util.web.list_url("gs://my-bucket/prefix/", recursive=True)
+
+
+def test_list_gcs_url_skips_directory_marker_keys(mock_gcs_client):
+    """Verify that a key which exactly matches the specified prefix
+    is skipped instead of getting listed as an empty relative path."""
+
+    listing = spack.util.web.list_url("gs://my-bucket/prefix", recursive=False)
+    assert len(listing) == 2
+    assert all(p in listing for p in ["keytwo", "keythree"])
+
+    listing = spack.util.web.list_url("gs://my-bucket/prefix", recursive=True)
+    assert len(listing) == 3
+    assert all(p in listing for p in ["keytwo", "keythree", "nested/keyfour"])
+
+
+def test_list_gcs_url_at_bucket_root(mock_gcs_client):
+    """Verify that a mirror with no sub-path (e.g. s3://my-bucket) gets listed with an
+    empty Prefix (not "/")."""
+
+    listing = spack.util.web.list_url("gs://my-bucket", recursive=True)
+    assert len(listing) == 4
+    assert all(
+        p in listing
+        for p in [
+            "prefix/keytwo",
+            "prefix/keythree",
+            "prefix/nested/keyfour",
+            "subdirectory/my-file",
+        ]
+    )
+
+
+def test_stat_gcs_url(mock_gcs_client):
+    face_gcs_url = "gs://my-bucket/subdirectory/my-file"
+    size, mtime = spack.util.web.stat_url(face_gcs_url)
+    assert 0 == size
+    assert 1360799444.0 == mtime
+
+    face_gcs_url = "gs://my-bucket/subdirectory/my-notfound-file"
+    assert spack.util.web.stat_url(face_gcs_url) is None
+
+
+def test_stat_gcs_url_returns_none_for_404(mock_gcs_client):
+    face_gcs_url = "gs://my-bucket/subdirectory/actually-missing-file"
+    assert spack.util.web.stat_url(face_gcs_url) is None
+
+
+def test_gcs_open(mock_gcs_client):
+    req = urllib.request.Request("gs://my-bucket/subdirectory/my-file")
+    response = spack.util.gcs.gcs_open(req)
+    assert response.read() == b"stream of bytes"
+
+
+def test_gcs_open_missing_blob_is_404(mock_gcs_client):
+    url = "gs://my-bucket/subdirectory/actually-missing-file"
+    with pytest.raises(urllib.error.HTTPError) as e:
+        spack.util.gcs.gcs_open(urllib.request.Request(url))
+    assert e.value.code == 404
+    assert e.value.filename == url
+
+
+@pytest.mark.parametrize("code,transient", [(503, True), (429, True), (403, False)])
+def test_gcs_api_call_error_to_http_error(mock_gcs_client, code, transient):
+    """Verify GCS API errors are translated to HTTPError with the GCS status code"""
+    mock_gcs_client.fail_list_blobs = True
+    mock_gcs_client.fail_list_blobs_code = code
+
+    url = urllib.parse.urlparse("gs://my-bucket/prefix/")
+    with pytest.raises(urllib.error.HTTPError) as e:
+        spack.util.gcs.GCSBucket(url).get_all_blobs()
+    assert e.value.code == code
+    assert spack.util.web.is_transient_error(e.value) is transient
+
+
+def test_gcs_bucket_exists(mock_gcs_client):
+    assert spack.util.gcs.GCSBucket(urllib.parse.urlparse("gs://my-bucket")).exists()
+    assert not spack.util.gcs.GCSBucket(urllib.parse.urlparse("gs://missing-bucket")).exists()
+
+
+def test_gcs_upload_creates_missing_bucket(mock_gcs_client, tmp_path):
+    local_file = tmp_path / "file"
+    local_file.write_text("data")
+
+    blob = spack.util.gcs.GCSBlob(urllib.parse.urlparse("gs://new-bucket/file"))
+    assert not blob.bucket.exists()
+    blob.upload_to_blob(str(local_file))
+    assert blob.bucket.exists()
+    assert "new-bucket" in mock_gcs_client._bucket
+
+
+def test_list_gcs_url_missing_bucket_is_404(mock_gcs_client):
+    with pytest.raises(urllib.error.HTTPError) as e:
+        spack.util.web.list_url("gs://missing-bucket/prefix", recursive=True)
+    assert e.value.code == 404
+
+
+def test_stat_gcs_url_missing_bucket(mock_gcs_client):
+    assert spack.util.web.stat_url("gs://missing-bucket/file") is None
+
+
+def test_gcs_api_call_error_without_code_to_url_error(mock_gcs_client):
+    mock_gcs_client.fail_list_blobs = True
+    mock_gcs_client.fail_list_blobs_code = None
+
+    url = urllib.parse.urlparse("gs://my-bucket/prefix/")
+    with pytest.raises(urllib.error.URLError) as e:
+        spack.util.gcs.GCSBucket(url).get_all_blobs()
+    assert not isinstance(e.value, urllib.error.HTTPError)
+
+
+def test_gcs_url_exists(mock_gcs_client):
+    face_gcs_url_exists = "gs://my-bucket/subdirectory/my-file"
+    assert spack.util.web.url_exists(face_gcs_url_exists)
+
+    face_gcs_url_does_not_exist = "gs://my-bucket/subdirectory/my-notfound-file"
+    assert not spack.util.web.url_exists(face_gcs_url_does_not_exist)
 
 
 def test_detailed_http_error_pickle(tmp_path: pathlib.Path):
