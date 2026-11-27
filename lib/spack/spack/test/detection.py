@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import json
 import pathlib
 import sys
 
@@ -10,6 +11,7 @@ import pytest
 import spack.detection
 import spack.detection.common
 import spack.detection.path
+import spack.operating_systems.windows_os as win_os
 import spack.repo
 import spack.spec
 from spack.config import Configuration
@@ -179,3 +181,151 @@ def test_detect_specs_validates_variants_with_injected_repo(tmp_path, monkeypatc
     assert len(detected) == 1
     assert detected[0].external_path == str(prefixes["valid"] / "bin")
     assert detected[0].satisfies("languages=c,c++")
+
+
+#: Windows SDK version used to build the mock Windows Kits and Visual Studio layouts below. The
+#: value is arbitrary, the only requirement is it has the ``10.x.y.z`` format
+#: of the SDK versions as recorded by the real Visual Studio Installer.
+_SDK_VER = "10.0.22621.0"
+
+#: Environment variables read by ``VisualStudioLayout``
+_VS_LAYOUT_ENV_VARS = ("ProgramFiles(x86)", "ProgramData", "WDKContentRoot")
+
+#: Location of the CMake and Ninja components within a Visual Studio installation
+_VS_CMAKE_EXTENSION = pathlib.Path("Common7", "IDE", "CommonExtensions", "Microsoft", "CMake")
+
+
+@pytest.fixture()
+def clean_vs_env(monkeypatch):
+    """Unset the environment variables read by ``VisualStudioLayout``, so tests only see the
+    mock layouts they set up, and never a Visual Studio installation on the host."""
+    for var in _VS_LAYOUT_ENV_VARS:
+        monkeypatch.delenv(var, raising=False)
+
+
+@pytest.fixture()
+def vs_root(tmp_path, monkeypatch, clean_vs_env):
+    """Minimal moc Visual Studio installation tree with the CMake and Ninja components
+    Patched to appear as the only Visual Studio install on the system"""
+    root = tmp_path / "VS2022"
+    (root / _VS_CMAKE_EXTENSION / "CMake" / "bin").mkdir(parents=True)
+    (root / _VS_CMAKE_EXTENSION / "Ninja").mkdir(parents=True)
+    monkeypatch.setattr(win_os.VisualStudioLayout, "find_vs_install_paths", lambda: [str(root)])
+    return root
+
+
+@pytest.fixture()
+def kit_root(tmp_path, monkeypatch, clean_vs_env):
+    """Minimal Windows Kits 10 tree with the SDK bin and lib directories, under a
+    mock ``ProgramFiles(x86)`` directory."""
+    pf86 = tmp_path / "ProgramFiles86"
+    kit = pf86 / "Windows Kits" / "10"
+    for arch in ("x64", "x86"):
+        (kit / "bin" / _SDK_VER / arch).mkdir(parents=True)
+    for api in ("um", "ucrt"):
+        (kit / "Lib" / _SDK_VER / api / "x64").mkdir(parents=True)
+    monkeypatch.setenv("ProgramFiles(x86)", str(pf86))
+    return pf86
+
+
+@pytest.fixture()
+def vs_state_json(tmp_path, monkeypatch, vs_root):
+    """Mock ``ProgramData`` directory with the instance ``state.json`` of ``vs_root``.
+
+    The Visual Studio Installer writes a ``state.json`` file per Visual Studio instance under
+    ``%ProgramData%/Microsoft/VisualStudio/Packages/_Instances``. It lists the packages
+    installed in that instance, including the Windows SDK, which is how ``VisualStudioLayout``
+    finds out which SDK versions in the Windows Kits tree were installed by Visual Studio.
+    """
+    programdata = tmp_path / "ProgramData"
+    instance_dir = (
+        programdata / "Microsoft" / "VisualStudio" / "Packages" / "_Instances" / "ABCDEF"
+    )
+    instance_dir.mkdir(parents=True)
+    state = {
+        "installationPath": str(vs_root),
+        "packages": [
+            {"id": "Microsoft.Windows.SDK.CPP", "version": _SDK_VER},
+            {"id": "Microsoft.Windows.UniversalCRT.Tools.x64", "version": _SDK_VER},
+        ],
+    }
+    (instance_dir / "state.json").write_text(json.dumps(state), encoding="utf-8")
+    monkeypatch.setenv("ProgramData", str(programdata))
+    return programdata
+
+
+@pytest.mark.parametrize(
+    "find_paths,relative_path",
+    [
+        ("find_cmake_paths", _VS_CMAKE_EXTENSION / "CMake" / "bin"),
+        ("find_ninja_paths", _VS_CMAKE_EXTENSION / "Ninja"),
+    ],
+    ids=["cmake", "ninja"],
+)
+def test_visual_studio_bundled_tool_paths(find_paths, relative_path, vs_root):
+    """Tests that the CMake and Ninja finders return the location of each tool within the
+    Visual Studio installation."""
+    paths = getattr(win_os.VisualStudioLayout, find_paths)()
+    assert paths == [str(vs_root / relative_path)]
+
+
+@pytest.mark.parametrize(
+    "llvm_bin_dirs",
+    [
+        # Current layout, with one bin directory per architecture
+        [("x64", "bin"), ("ARM64", "bin")],
+        # Older layout, without architecture subdirectories
+        [("bin",)],
+        # LLVM component not installed
+        [],
+    ],
+    ids=["per-arch-layout", "flat-layout", "not-installed"],
+)
+def test_visual_studio_llvm_paths(llvm_bin_dirs, vs_root):
+    """Tests that ``find_llvm_paths`` returns exactly the LLVM bin directories present in the
+    Visual Studio installation, for both the per-architecture and the flat layout, and returns
+    nothing when LLVM is not installed."""
+    llvm_root = vs_root / "VC" / "Tools" / "Llvm"
+    expected = []
+    for parts in llvm_bin_dirs:
+        bin_dir = llvm_root.joinpath(*parts)
+        bin_dir.mkdir(parents=True)
+        expected.append(str(bin_dir))
+
+    assert win_os.VisualStudioLayout.find_llvm_paths() == expected
+
+
+def test_visual_studio_sdk_paths(vs_root, kit_root, vs_state_json):
+    """Tests that the SDK bin and lib finders return the Windows Kits directories of the SDK
+    version listed in the Visual Studio instance state.json."""
+    kit = kit_root / "Windows Kits" / "10"
+    expected_bin = {str(kit / "bin" / _SDK_VER / arch) for arch in ("x64", "x86")}
+    expected_lib = {str(kit / "Lib" / _SDK_VER / api / "x64") for api in ("um", "ucrt")}
+
+    assert set(win_os.VisualStudioLayout.find_sdk_bin_paths()) == expected_bin
+    assert set(win_os.VisualStudioLayout.find_sdk_lib_paths()) == expected_lib
+
+
+@pytest.mark.parametrize("unset_var", ["ProgramFiles(x86)", "ProgramData"])
+def test_visual_studio_sdk_paths_need_kits_and_state_json(
+    unset_var, vs_root, kit_root, vs_state_json, monkeypatch
+):
+    """Tests that the SDK bin and lib finders return nothing when either the Windows Kits tree
+    (``ProgramFiles(x86)``) or the Visual Studio instance state.json (``ProgramData``) cannot
+    be located."""
+    monkeypatch.delenv(unset_var)
+    assert win_os.VisualStudioLayout.find_sdk_bin_paths() == []
+    assert win_os.VisualStudioLayout.find_sdk_lib_paths() == []
+
+
+@pytest.mark.parametrize("wdk_installed", [True, False], ids=["sdk-and-wdk", "sdk-only"])
+def test_windows_kit_wdk_paths(wdk_installed, kit_root):
+    """Tests that, with ``WDKContentRoot`` unset, ``find_windows_driver_development_kit_paths``
+    returns the kernel-mode (km) lib directories of the Windows Kits tree, and returns nothing
+    when the tree only contains the SDK."""
+    km_dir = kit_root / "Windows Kits" / "10" / "Lib" / _SDK_VER / "km" / "x64"
+    if wdk_installed:
+        km_dir.mkdir(parents=True)
+
+    expected = [str(km_dir)] if wdk_installed else []
+    assert win_os.WindowsKitExternalPaths.find_windows_driver_development_kit_paths() == expected
