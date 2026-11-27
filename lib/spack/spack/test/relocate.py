@@ -259,3 +259,38 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # (this is a corner case for GCC installation)
     (root, filename) = make_object_file()
     assert not fixup_rpath(root, filename)
+
+
+def test_expand_macos_firmlink_prefixes():
+    # Test standard prefix expansion
+    p2p = {
+        "/opt/spack/opt/pkg": "/new/pkg",
+        "/opt/spack": "/new/root",
+    }
+    expanded = spack.relocate.expand_macos_firmlink_prefixes(p2p)
+    assert expanded["/opt/spack/opt/pkg"] == "/new/pkg"
+    assert expanded["/System/Volumes/Data/opt/spack/opt/pkg"] == "/new/pkg"
+    assert expanded["/opt/spack"] == "/new/root"
+    assert expanded["/System/Volumes/Data/opt/spack"] == "/new/root"
+
+    # Test reverse: /System/Volumes/Data prefix expands to stripped prefix
+    p2p_reverse = {
+        "/System/Volumes/Data/cvmfs/pkg": "/opt/pkg",
+    }
+    expanded_rev = spack.relocate.expand_macos_firmlink_prefixes(p2p_reverse)
+    assert expanded_rev["/System/Volumes/Data/cvmfs/pkg"] == "/opt/pkg"
+    assert expanded_rev["/cvmfs/pkg"] == "/opt/pkg"
+
+    # Test that existing explicit mappings are not overwritten
+    p2p_explicit = {
+        "/cvmfs/pkg": "/opt/pkg1",
+        "/System/Volumes/Data/cvmfs/pkg": "/opt/pkg2",
+    }
+    expanded_exp = spack.relocate.expand_macos_firmlink_prefixes(p2p_explicit)
+    assert expanded_exp["/cvmfs/pkg"] == "/opt/pkg1"
+    assert expanded_exp["/System/Volumes/Data/cvmfs/pkg"] == "/opt/pkg2"
+
+    # Test that root / and empty string do not generate invalid keys
+    p2p_root = {"/": "/new", "": "/new"}
+    expanded_root = spack.relocate.expand_macos_firmlink_prefixes(p2p_root)
+    assert list(expanded_root.keys()) == ["/", ""]
