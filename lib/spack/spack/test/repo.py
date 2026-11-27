@@ -382,6 +382,21 @@ class TestRepo:
             assert "mpich2" in r1 and "mpich2" not in r2
             assert r2.issubset(r1)
 
+    def test_patch_index_ignores_unversioned_cache(self, tmp_path: pathlib.Path):
+        """A patch index cached before the index format was versioned is not read: it keys
+        dependency patches by the fullname they resolve to."""
+        cache = spack.util.file_cache.FileCache(str(tmp_path))
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=cache)
+        specfile_version = spack.spec.SPECFILE_FORMAT_VERSION
+        unversioned = (
+            tmp_path / "patches" / f"{repo.namespace}-specfile_v{specfile_version}-index.json"
+        )
+        unversioned.parent.mkdir()
+        unversioned.write_text('{"patches": {}}', encoding="utf-8")
+
+        assert repo.get_patch_index().index
+        assert unversioned.read_text(encoding="utf-8") == '{"patches": {}}'
+
 
 @pytest.mark.usefixtures("nullify_globals")
 class TestRepoPath:
