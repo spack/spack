@@ -1,0 +1,66 @@
+name: integration tests
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+
+concurrency:
+  group: intergrations-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: integration-build-${{ matrix.sys.os }}
+    runs-on: ${{ matrix.sys.os }}
+    strategy:
+      matrix:
+        sys:
+        - { os: windows-latest, shell: 'powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}' }
+        - { os: ubuntu-latest, shell: 'bash -c "source ./share/spack/setup-env.sh && source {0}"' }
+        - { os: macos-latest, shell: 'bash -c "source ./share/spack/setup-env.sh && source {0}"' }
+        - { os: macos-15-intel, shell: 'bash -c "source ./share/spack/setup-env.sh && source {0}"' }
+      fail-fast: true
+    defaults:
+      run:
+        shell: ${{ matrix.sys.shell }}
+    steps:
+      - name: Fetch Spack
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+            fetch-depth: 1
+      - name: Fetch Builtin repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+            fetch-depth: 1
+            repository: spack/spack-packages
+            path: spackages
+      - name: Add builtin with shallow clone
+        run: |
+          spack repo add --scope=spack ${{ github.workspace }}/spackages/repos/spack_repo/builtin
+      - name: "Add Integration test repo"
+        run: |
+          spack repo add --name integration_test ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test
+      - name: "Install Clingo Win"
+        if: ${{ matrix.sys.os == 'windows-latest' }} 
+        run: |
+          pip install --upgrade pip clingo pywin32
+      - name: "Spack install"
+        id: install
+        run: |
+          spack env activate ${{ github.workspace }}/var/spack/test_repos/spack_repo/integration_test/integration_env
+          spack python share/spack/qa/develop_env_specs.py integration_test
+          spack compiler find
+          spack external find cmake ninja
+          spack concretize -U
+          spack -dv install --test root
+      - name: "Determine failure stage"
+        if: always() && (steps.install.outcome == 'failure')
+        run: |
+          echo "FAILURE_STAGE=$(bin/spack location -S)" >> $GITHUB_ENV
+      - name: "Collect failure artifacts"
+        if: always() && (steps.install.outcome == 'failure')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: "broken-${{ matrix.sys.os }}-stage"
+          path: $FAILURE_STAGE
