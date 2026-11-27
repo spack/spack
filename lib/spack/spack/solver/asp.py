@@ -3510,7 +3510,9 @@ def execute_explicit_splices(
                 # The first iteration, we need to replace the abstract hash
                 if not replacement.concrete:
                     spack.hash_lookup.replace_hash(replacement, context=context)
-                current_spec = current_spec.splice(replacement, transitive)
+                current_spec = current_spec.splice(
+                    replacement, transitive, target=spack.spec.Spec(target)
+                )
         new_key = NodeId(id=key.id, pkg=current_spec.name)
         new_specs[new_key] = current_spec
 
