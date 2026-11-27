@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 import textwrap
-from typing import Callable, Container, Generator, List, Optional, Sequence, Union
+from typing import Callable, Container, Generator, List, Optional, Sequence, Tuple, Union
 
 import spack.concretize
 import spack.config
@@ -25,6 +25,7 @@ import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.util.string
+import spack.version
 from spack import traverse
 from spack.active_environment import active_environment
 from spack.concretize_ui import ConcretizerUI, TerminalUI
@@ -356,6 +357,13 @@ def display_specs_as_json(specs, deps=False):
     sjson.dump(records, sys.stdout)
 
 
+def display_sort_key(spec: spack.spec.Spec) -> Tuple[str, str, spack.version.VersionList, str]:
+    """Returns the key to sort specs for display: name, namespace and versions, then the DAG hash
+    of concrete specs, or the string of abstract ones, to break ties."""
+    tie_breaker = spec.dag_hash() if spec.concrete else str(spec)
+    return (spec.name or "", spec.namespace or "", spec.versions, tie_breaker)
+
+
 def iter_groups(specs, indent, all_headers):
     """Break a list of specs into groups indexed by arch/compilers."""
     # Make a dict with specs keyed by architecture and compilers.
@@ -389,7 +397,7 @@ def iter_groups(specs, indent, all_headers):
             tty.hline(colorize(header), char="-")
 
         specs = index[(architecture, compilers)]
-        specs.sort()
+        specs.sort(key=display_sort_key)
         yield specs
 
 
@@ -532,7 +540,7 @@ def display_specs(specs, args=None, **kwargs):
         for specs in iter_groups(specs, indent, all_headers):
             output.write(format_list(specs))
     else:
-        out = format_list(sorted(specs))
+        out = format_list(sorted(specs, key=display_sort_key))
 
     output.write(out)
     output.flush()
