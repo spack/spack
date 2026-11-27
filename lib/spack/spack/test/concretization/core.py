@@ -686,7 +686,7 @@ spack:
         """Test a package with multiple virtual dependencies."""
         spack.concretize.concretize_one("hypre")
 
-    def test_concretize_two_virtuals_with_one_bound(self, mutable_mock_repo):
+    def test_concretize_two_virtuals_with_one_bound(self):
         """Test a package with multiple virtual dependencies and one preset."""
         spack.concretize.concretize_one("hypre ^openblas")
 
