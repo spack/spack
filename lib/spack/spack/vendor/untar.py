@@ -8,7 +8,7 @@ permissions.
 
 import contextlib
 import errno
-import gzip
+import importlib
 import os
 import stat
 import sys
@@ -17,7 +17,9 @@ from typing import IO, Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple
 
 if sys.platform == "win32":
     import _winapi
+    import ctypes
     import msvcrt
+    from ctypes.wintypes import HANDLE, LPWSTR, ULONG, USHORT
 
     _GENERIC_READ = 0x80000000
     _GENERIC_WRITE = 0x40000000
@@ -28,9 +30,85 @@ if sys.platform == "win32":
     _FILE_ATTRIBUTE_READONLY = 0x1
     _FILE_ATTRIBUTE_NORMAL = 0x80
     _FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+    _kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    _ntdll = ctypes.WinDLL("ntdll")
 
-__version__ = "0.5.0"
-__all__ = ["Error", "Member", "TarReader", "extract"]
+    class _UnicodeString(ctypes.Structure):
+        _fields_ = [("Length", USHORT), ("MaximumLength", USHORT), ("Buffer", LPWSTR)]
+
+    class _ObjectAttributes(ctypes.Structure):
+        _fields_ = [
+            ("Length", ULONG),
+            ("RootDirectory", HANDLE),
+            ("ObjectName", ctypes.POINTER(_UnicodeString)),
+            ("Attributes", ULONG),
+            ("Security", ctypes.c_void_p * 2),
+        ]
+
+    def _open(path: str, access: int, flags: int, share: int = 3) -> int:
+        """Open what is at ``path``, sharing reads and writes unless told otherwise."""
+        return _winapi.CreateFile(path, access, share, 0, _OPEN_EXISTING, flags, 0)
+
+    def _fd(handle: int) -> int:
+        """Wrap ``handle`` in a file descriptor, which owns it from then on."""
+        try:
+            return msvcrt.open_osfhandle(handle, os.O_NOINHERIT)
+        except BaseException:
+            _winapi.CloseHandle(handle)
+            raise
+
+    def _is_plain_dir(handle: int) -> bool:
+        """Whether ``handle`` is open on a directory without a reparse point, which a junction
+        and a symlink have. This asks what is open, not what a path leads to by now."""
+        info = (ULONG * 2)()  # FILE_ATTRIBUTE_TAG_INFO, which is information class 9
+        if not _kernel32.GetFileInformationByHandleEx(HANDLE(handle), 9, info, 8):
+            raise ctypes.WinError(ctypes.get_last_error())
+        links = stat.FILE_ATTRIBUTE_DIRECTORY | stat.FILE_ATTRIBUTE_REPARSE_POINT
+        return info[0] & links == stat.FILE_ATTRIBUTE_DIRECTORY
+
+    def _keeper(handle: int) -> int:
+        """Create the keeper of the directory that ``handle`` is open on: a file that is not
+        shared, so that nobody else can open it to remove it, and that is deleted when its
+        handle is closed. Its name is resolved from ``handle``, which the system refuses in a
+        directory that was made a junction, where a path would lead to the junction's target."""
+        name = _UnicodeString(len(_KEEPER) * 2, len(_KEEPER) * 2, _KEEPER)
+        # Names are case-insensitive (0x40)
+        attributes = _ObjectAttributes(
+            ctypes.sizeof(_ObjectAttributes), handle, ctypes.pointer(name), 0x40
+        )
+        keeper, status = HANDLE(), (ctypes.c_void_p * 2)()
+        # With DELETE access (0x10000): a new (2) file (0x40), deleted on close (0x1000)
+        error = _ntdll.NtCreateFile(
+            *(ctypes.byref(keeper), 0x10000, ctypes.byref(attributes), status, None),
+            *(_FILE_ATTRIBUTE_NORMAL, 0, 2, 0x40 | 0x1000, None, 0),
+        )
+        if error < 0:
+            raise ctypes.WinError(_ntdll.RtlNtStatusToDosError(error))
+        return keeper.value or 0
+
+    def _final_path(handle: int, path: str) -> str:
+        """The extended-length path of what ``handle`` is open on, with the junctions, symlinks
+        and substituted drives on the way to it resolved; ``path`` on a volume that cannot tell,
+        such as a RAM disk without a mount point."""
+        buffer = ctypes.create_unicode_buffer(32768)
+        found = _kernel32.GetFinalPathNameByHandleW(HANDLE(handle), buffer, 32768, 0)
+        return buffer.value if found else path
+
+    def _resolve_dest(dest: str) -> str:
+        """Resolve the links on the way to ``dest`` once, into an extended-length path, which
+        has no length limit and is not interpreted further."""
+        if not dest.startswith("\\\\?\\"):
+            # A UNC path takes another prefix: \\?\UNC\server\share
+            dest = "\\\\?\\" + ("UNC" + dest[1:] if dest.startswith("\\\\") else dest)
+        handle = _open(dest, 0, _FILE_FLAG_BACKUP_SEMANTICS, 7)
+        try:
+            return _final_path(handle, dest)
+        finally:
+            _winapi.CloseHandle(handle)
+
+
+__version__ = "1.0.0"
+__all__ = ["Error", "Member", "TarReader", "UnsupportedCompression", "extract"]
 
 REGTYPE = b"0"
 AREGTYPE = b"\0"
@@ -79,14 +157,19 @@ _POSIX_MAGICS = (b"ustar\x0000", b"ustar\0\0\0")
 _V7_MAGIC = bytes(8)
 _OTHER_MAGICS = (b"ustar  \0", _V7_MAGIC)
 _MAX_OPEN_DIRS = 64
+# The name of the keepers of this process on Windows: no archive can name a member like it.
+_KEEPER = f".untar-{os.urandom(8).hex()}"
 # Limit directory nesting depth; deep paths degrade to quadratic creation time on macOS.
 _MAX_DEPTH = 1024
 _DRIVES = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-_BadGzipFile = getattr(gzip, "BadGzipFile", OSError)
 
 
 class Error(ValueError):
     """The archive is invalid or cannot be extracted safely."""
+
+
+class UnsupportedCompression(Error):
+    """The archive is compressed in a format that this Python cannot decompress."""
 
 
 class Member:
@@ -503,32 +586,101 @@ class _Prepend:
         return data
 
 
-class _Gzip:
-    """A gzip stream wrapper that translates decompression errors into ``untar.Error``."""
+class _Inflate:
+    """zlib's gzip decompressor, with the interface of the decompressors of bz2 and lzma."""
 
-    def __init__(self, stream: _Prepend) -> None:
-        self.gzip = gzip.GzipFile(fileobj=stream, mode="rb")  # type: ignore[call-overload]
+    def __init__(self) -> None:
+        self.inflate = zlib.decompressobj(31)
+        self.needs_input = True
 
-    def read(self, size: int = -1) -> bytes:
+    def decompress(self, data: bytes, size: int) -> bytes:
+        out = self.inflate.decompress(self.inflate.unconsumed_tail + data, size)
+        self.needs_input = not self.inflate.unconsumed_tail and len(out) < size
+        return out
+
+    @property
+    def eof(self) -> bool:
+        return self.inflate.eof
+
+    @property
+    def unused_data(self) -> bytes:
+        return self.inflate.unused_data
+
+
+def _decompressor(format: str) -> Tuple[Any, Any]:
+    """The decompressor of a format, and what it raises for invalid data. Its module is
+    imported here, as not every Python has it: zstd is in the standard library since 3.14."""
+    if format == "gzip":
+        return _Inflate, zlib.error
+    if format == "bzip2":
+        import bz2
+
+        return bz2.BZ2Decompressor, OSError
+    if format == "xz":
+        import lzma
+
+        return lzma.LZMADecompressor, lzma.LZMAError
+    zstd: Any = importlib.import_module("compression.zstd")
+    return zstd.ZstdDecompressor, zstd.ZstdError
+
+
+class _Decompress:
+    """A gzip, bzip2, xz or zstd stream wrapper. It reads one or more compressed streams, and
+    refuses anything after them but zeros."""
+
+    def __init__(self, stream: _Prepend, format: str) -> None:
+        self.stream = stream
+        self.format = format
         try:
-            return self.gzip.read(size)
-        except EOFError:
-            raise Error("Archive is truncated") from None
-        except (zlib.error, _BadGzipFile) as e:
-            raise Error(f"Archive is not valid gzip: {e}") from e
+            self.new, self.errors = _decompressor(format)
+        except ImportError:
+            raise UnsupportedCompression(
+                f"Archive is compressed with {format}, which this Python does not support"
+            ) from None
+        self.decompressor = self.new()
+
+    def read(self, size: int) -> bytes:
+        while True:
+            d, data = self.decompressor, b""
+            if d.eof:
+                data = d.unused_data.lstrip(b"\0")
+                while not data:
+                    data = self.stream.read(_BUF)
+                    if not data:
+                        return b""
+                    data = data.lstrip(b"\0")
+                d = self.decompressor = self.new()
+            elif d.needs_input:
+                data = self.stream.read(_BUF)
+                if not data:
+                    raise Error("Archive is truncated")
+            try:
+                out = d.decompress(data, size)
+            except self.errors as e:
+                raise Error(f"Archive is not valid {self.format}: {e}") from e
+            if out:
+                return out
 
 
 @contextlib.contextmanager
 def _open_archive(
     src: Union[str, "os.PathLike[str]", IO[bytes]],
 ) -> Iterator[IO[bytes]]:
-    """Open a file path or binary stream, transparently decompressing gzip if detected."""
+    """Open a file path or binary stream, decompressing it if its first bytes say so."""
     file = open(src, "rb") if isinstance(src, (str, os.PathLike)) else None  # noqa: SIM115
     try:
         stream = file or src
-        magic = _fill(stream, 2)  # type: ignore[arg-type]
-        head = _Prepend(magic, stream)  # type: ignore[arg-type]
-        yield _Gzip(head) if magic == b"\x1f\x8b" else head  # type: ignore
+        magic = _fill(stream, 10)  # type: ignore[arg-type]
+        head: Any = _Prepend(magic, stream)  # type: ignore[arg-type]
+        if magic.startswith(b"\x1f\x8b"):
+            head = _Decompress(head, "gzip")
+        elif magic.startswith(b"BZh") and magic[4:10] in (b"1AY&SY", b"\x17rE8P\x90"):
+            head = _Decompress(head, "bzip2")
+        elif magic.startswith(b"\xfd7zXZ\0"):
+            head = _Decompress(head, "xz")
+        elif magic.startswith(b"\x28\xb5\x2f\xfd"):
+            head = _Decompress(head, "zstd")
+        yield head
     finally:
         if file is not None:
             file.close()
@@ -595,6 +747,8 @@ _DIR_FD = all(
 )
 _O_NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 _O_BINARY = getattr(os, "O_BINARY", 0)
+# Without blocking, should the entry be a FIFO by now.
+_SOURCE_FLAGS = os.O_RDONLY | _O_NOFOLLOW | _O_BINARY | getattr(os, "O_NONBLOCK", 0)
 _DEST_FLAGS = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
 _DIR_FLAGS = _DEST_FLAGS | _O_NOFOLLOW
 _FILE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_EXCL | _O_NOFOLLOW | _O_BINARY
@@ -612,23 +766,36 @@ def _create(path: str, dir_fd: Optional[int], mode: int) -> int:
         handle = _winapi.CreateFile(
             path, _GENERIC_WRITE, _FILE_SHARE_READ_WRITE, 0, _CREATE_NEW, flags, 0
         )
-        try:
-            return msvcrt.open_osfhandle(handle, os.O_NOINHERIT)
-        except BaseException:
-            _winapi.CloseHandle(handle)
-            raise
+        return _fd(handle)
     return os.open(path, _FILE_FLAGS, mode, dir_fd=dir_fd)
 
 
+def _open_file(path: str, dir_fd: Optional[int]) -> Tuple[int, int]:
+    """Open an extracted file for reading, and return it with its mode. What was opened is
+    checked: a symlink that has taken its place since is not followed, and a FIFO not waited
+    for."""
+    if sys.platform == "win32":
+        fd = _fd(_open(path, _GENERIC_READ, _FILE_FLAG_OPEN_REPARSE_POINT))
+    else:
+        fd = os.open(path, _SOURCE_FLAGS, dir_fd=dir_fd)
+    s = os.fstat(fd)
+    link = getattr(s, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+    if link or not stat.S_ISREG(s.st_mode):
+        os.close(fd)
+        raise Error(f"{path} changed while it was extracted")
+    return fd, stat.S_IMODE(s.st_mode)
+
+
 class _Pinned(str):
-    """A directory path on Windows paired with an open handle that omits FILE_SHARE_DELETE,
-    preventing the directory and its ancestors from being renamed, deleted, or replaced with a
-    junction or symlink while open."""
+    """A directory path on Windows with two open handles. The one on the directory omits
+    FILE_SHARE_DELETE, so that neither the directory nor its ancestors can be renamed or
+    deleted. The other is on its keeper, a file in it that nobody else can open or remove, and
+    that is deleted when the handle is closed: a directory that is not empty cannot be made a
+    junction or a symlink. Together they keep the path leading to the same directory for as long
+    as it is open."""
 
     handle: int
-
-
-_SetFileTime: Any = None
+    keeper: int
 
 
 def _set_mtime(fd: int, mtime: float) -> None:
@@ -638,15 +805,10 @@ def _set_mtime(fd: int, mtime: float) -> None:
     else:
         # Windows os.utime does not accept file descriptors; call SetFileTime on the OS handle
         # (in 100 ns intervals since 1601-01-01).
-        import ctypes
-
-        global _SetFileTime
-        if _SetFileTime is None:
-            _SetFileTime = ctypes.WinDLL("kernel32", use_last_error=True).SetFileTime
-            _SetFileTime.argtypes = (ctypes.c_void_p,) * 4
         t = ctypes.c_uint64(int((mtime + 11644473600) * 10**7))
         handle = msvcrt.get_osfhandle(fd)
-        if not _SetFileTime(handle, None, ctypes.byref(t), ctypes.byref(t)):
+        times = (None, ctypes.byref(t), ctypes.byref(t))
+        if not _kernel32.SetFileTime(HANDLE(handle), *times):
             raise ctypes.WinError(ctypes.get_last_error())
 
 
@@ -672,29 +834,21 @@ def _open_dir(parent: Dir, name: str) -> Dir:
                 ) from e
             raise
     path = os.path.join(parent, name)
-    d = path
     if sys.platform == "win32":
-        d = _Pinned(path)
-        d.handle = _winapi.CreateFile(
-            path,
-            _GENERIC_READ,
-            _FILE_SHARE_READ_WRITE,
-            0,
-            _OPEN_EXISTING,
-            _FILE_FLAG_BACKUP_SEMANTICS | _FILE_FLAG_OPEN_REPARSE_POINT,
-            0,
-        )
-    # Verify after pinning that the entry is a real directory and not a reparse point (junction).
-    try:
-        s = os.lstat(path)
-        if not stat.S_ISDIR(s.st_mode) or getattr(s, "st_file_attributes", 0) & (
-            stat.FILE_ATTRIBUTE_REPARSE_POINT
-        ):
-            raise Error(f"Archive writes through {name}, which is not a directory")
-    except BaseException:
-        _close(d)
-        raise
-    return d
+        flags = _FILE_FLAG_BACKUP_SEMANTICS | _FILE_FLAG_OPEN_REPARSE_POINT
+        handle = _open(path, _GENERIC_READ, flags)
+        try:
+            if not _is_plain_dir(handle):
+                raise Error(f"Archive writes through {name}, which is not a directory")
+            d = _Pinned(path)
+            d.handle, d.keeper = handle, _keeper(handle)
+        except BaseException:
+            _winapi.CloseHandle(handle)
+            raise
+        return d
+    if not stat.S_ISDIR(os.lstat(path).st_mode):
+        raise Error(f"Archive writes through {name}, which is not a directory")
+    return path
 
 
 def _lstat(parent: Dir, name: str) -> Optional[os.stat_result]:
@@ -709,6 +863,7 @@ def _close(d: Dir) -> None:
     if isinstance(d, int):
         os.close(d)
     elif sys.platform == "win32" and isinstance(d, _Pinned):
+        _winapi.CloseHandle(d.keeper)
         _winapi.CloseHandle(d.handle)
 
 
@@ -724,7 +879,7 @@ def _rmdir(parent: Dir, name: str) -> bool:
 def _remove_files(d: Dir) -> List[str]:
     """Unlink all non-directory entries in ``d`` and return the names of its subdirectories."""
     subdirs = []
-    for name in os.listdir(d):
+    for name in [name for name in os.listdir(d) if name != _KEEPER]:
         path, dir_fd = _at(d, name)
         with contextlib.suppress(OSError):
             s = os.stat(path, dir_fd=dir_fd, follow_symlinks=False)
@@ -778,17 +933,22 @@ class _Extractor:
         self.links: Dict[Tuple[str, ...], Tuple[str, ...]] = {}
         # Paths of copied symlinks; no subsequent member may be extracted at or beneath them.
         self.copies: Set[Tuple[str, ...]] = set()
+        # Symlinks on Windows that do not lead to a directory yet, as (path, target).
+        self.dangling: List[Tuple[List[str], str]] = []
         self.names: List[str] = []
         self.dirs: List[Dir] = []
+        # The name up to its last slash of the regular file that was extracted last, and the
+        # directory it is in, for as long as the next member can go there without navigating.
+        self.dirname: Optional[str] = None
+        self.parent: Dir = -1
 
         if isinstance(dest, int):
             self.dest: Dir = os.dup(dest)
         else:
             os.makedirs(dest, exist_ok=True)
-            # Resolve symlinks and junctions on the destination path once up front.
-            dest = os.path.realpath(dest) if _WINDOWS else os.path.abspath(dest)
-            if _WINDOWS and not dest.startswith("\\\\?\\"):
-                dest = "\\\\?\\" + dest
+            dest = os.path.abspath(dest)
+            if sys.platform == "win32":
+                dest = _resolve_dest(dest)
             self.dest = os.open(dest, _DEST_FLAGS) if _DIR_FD else dest
         while True:
             tmp_name = f".untar-{os.urandom(4).hex()}"
@@ -799,14 +959,17 @@ class _Extractor:
             except FileExistsError:
                 pass
         self.tmp_name = tmp_name
-        self.tmp = _open_dir(self.dest, tmp_name)
-        if _WINDOWS:
+        try:
+            self.tmp = _open_dir(self.dest, tmp_name)
+        except (Error, OSError):
+            _rmdir(self.dest, tmp_name)
+            raise
+        if sys.platform == "win32" and isinstance(self.tmp, _Pinned):
             # Verify that no ancestor of dest was swapped for a junction or symlink before tmp was
-            # pinned.
-            path, _ = _at(self.dest, tmp_name)
-            if os.path.normcase(os.path.realpath(path)) != os.path.normcase(path):
-                _close(self.tmp)
-                _rmdir(self.dest, tmp_name)
+            # pinned: the open tmp is where the path that it was created by leads.
+            path = os.path.normcase(self.tmp)
+            if os.path.normcase(_final_path(self.tmp.handle, path)) != path:
+                self.close()
                 raise Error(f"Destination {dest} changed while it was opened")
 
         # Probe the destination filesystem once to see whether umask, default ACLs, or setgid
@@ -833,7 +996,7 @@ class _Extractor:
         for d in self.dirs:
             _close(d)
         with contextlib.suppress(OSError):
-            if os.listdir(self.tmp):
+            if set(os.listdir(self.tmp)) - {_KEEPER}:
                 self._remove_tmp()
         _close(self.tmp)
         _rmdir(self.dest, self.tmp_name)
@@ -862,7 +1025,8 @@ class _Extractor:
                         todo.append(str(i))
                 finally:
                     _close(d)
-                _rmdir(self.tmp, name)
+            # Also what could not be opened: a junction is removed, not what it leads to.
+            _rmdir(self.tmp, name)
 
     def _attrs(self, d: Dir, mode: int, chmod: bool) -> None:
         if isinstance(d, str):
@@ -955,6 +1119,20 @@ class _Extractor:
             self.descending = member.isdir()
 
     def add(self, member: Member, reader: TarReader) -> None:
+        dirname, _, leaf = member.name.rpartition("/")
+        mode = self.file_mode if member.mode & 0o100 else self.file_mode & ~0o111
+        if (
+            dirname == self.dirname
+            and member.isreg()
+            and leaf not in ("", ".", "..", self.marker_name)
+        ):
+            # Most members are regular files next to the one before them. All of the name but
+            # its last component was checked with that file, whose directory is still open and
+            # is below the root already. The last component is created in that directory by
+            # descriptor, so it cannot lead elsewhere.
+            self._file(self.parent, leaf, mode, reader.chunks(_BUF))
+            return
+        self.dirname = None
         parts = _parts(member.name)
         self._track(member, parts)
         if not parts:
@@ -978,13 +1156,21 @@ class _Extractor:
             except FileExistsError:
                 self._dir(parts)
         elif member.isreg():
-            mode = self.file_mode if member.mode & 0o100 else self.file_mode & ~0o111
             self._file(parent, parts[-1], mode, reader.chunks(_BUF))
+            # Not at the top, where the last component is all of the name and can be a drive.
+            # Not after a symlink was copied either: a member is refused in the place of one
+            # that is yet to be copied, where nothing exists so far.
+            if dirname and isinstance(parent, int) and not self.copies:
+                self.dirname, self.parent = dirname, parent
         elif member.issym():
             if not member.linkname:
                 raise Error(f"Archive contains symlink {member.name} without a target")
+            # A symlink on Windows is one to a file or one to a directory from its creation, and
+            # the separators in its target are backslashes: any other symlink leads nowhere.
+            to_dir = _WINDOWS and self._leads_to_dir(parts, member.linkname)
+            link = member.linkname.replace("/", os.sep)
             try:
-                os.symlink(member.linkname, path, dir_fd=dir_fd)
+                os.symlink(link, path, to_dir, dir_fd=dir_fd)
             except OSError as e:
                 if not _unsupported(e):
                     raise
@@ -1001,6 +1187,8 @@ class _Extractor:
                 if not self._copy(target, parts):
                     self.links[key] = tuple(target)
                 return
+            if _WINDOWS and not to_dir:
+                self.dangling.append((parts, member.linkname))
             if self.chown:
                 os.chown(path, -1, self.gid, dir_fd=dir_fd, follow_symlinks=False)  # type: ignore
         elif member.islnk():
@@ -1019,6 +1207,30 @@ class _Extractor:
             raise Error(
                 f"Archive contains {member.name} of unsupported type {member.type!r}"
             )
+
+    def _leads_to_dir(self, parts: List[str], linkname: str) -> bool:
+        """Whether the symlink ``parts`` to ``linkname`` leads to a directory in the archive."""
+        target = _resolve(parts, linkname)
+        return target is not None and os.path.isdir(
+            os.path.join(str(self.tmp), *target)
+        )
+
+    def _retarget(self) -> None:
+        """Make the symlinks that lead to a directory extracted after them symlinks to a
+        directory. One may lead there through another that is made anew, so repeat for as long
+        as that helps, and for as many symlinks as Windows follows on one path."""
+        for _ in range(32):
+            rest = []
+            for parts, linkname in self.dangling:
+                if self._leads_to_dir(parts, linkname):
+                    path, _ = _at(self._dir(parts[:-1]), parts[-1])
+                    os.unlink(path)
+                    os.symlink(linkname.replace("/", os.sep), path, True)
+                else:
+                    rest.append((parts, linkname))
+            if len(rest) == len(self.dangling):
+                break
+            self.dangling = rest
 
     def _open_existing(self, parts: List[str]) -> Tuple[Dir, List[Dir]]:
         """Open existing directory ``tmp/parts`` from the deepest open ancestor on the stack."""
@@ -1083,10 +1295,11 @@ class _Extractor:
                         raise
             if not stat.S_ISREG(s.st_mode):
                 return False
-            src = os.open(path, os.O_RDONLY | _O_BINARY, dir_fd=dir_fd)
+            # The entry may have been swapped since lstat: copy what is opened, and its mode.
+            src, mode = _open_file(path, dir_fd)
             try:
                 chunks = iter(lambda: os.read(src, _CHUNK), b"")
-                self._file(parent, dest[-1], stat.S_IMODE(s.st_mode), chunks)
+                self._file(parent, dest[-1], mode, chunks)
             finally:
                 os.close(src)
             return True
@@ -1118,8 +1331,9 @@ class _Extractor:
                         f"{'/'.join(target)}, which is not extracted"
                     )
 
+        self._retarget()
         src = self._dir(root)
-        names = os.listdir(src)
+        names = [name for name in os.listdir(src) if name != _KEEPER]
         for name in names:
             if _lstat(self.dest, name) is not None:
                 raise Error(f"{name} exists in the destination")
@@ -1159,10 +1373,11 @@ def extract(
     Where links cannot be created, the file that a link points to is copied instead. A symlink
     that cannot be copied (one to a directory, or to a target outside the archive) is an error.
 
-    Raises ``untar.Error`` for an archive that is invalid or unsafe, and ``OSError`` for an
-    operation that the operating system refuses: notably ``FileExistsError`` for a name that
-    occurs twice in the archive, since entries are never replaced. Catch
-    ``(untar.Error, OSError)`` to handle every rejected archive, as the command line does.
+    Raises ``untar.Error`` for an archive that is invalid or unsafe, its subclass
+    ``untar.UnsupportedCompression`` for one that this Python cannot decompress, and ``OSError`` for
+    an operation that the operating system refuses: notably ``FileExistsError`` for a name that
+    occurs twice in the archive, since entries are never replaced. Catch ``(untar.Error, OSError)``
+    to handle every rejected archive, as the command line does.
     """
     if isinstance(dest, int) and not _DIR_FD:
         raise ValueError("dest cannot be a file descriptor on this platform")
@@ -1187,7 +1402,7 @@ def _main(argv: Optional[List[str]] = None) -> int:
 
     parser = argparse.ArgumentParser(
         prog="python -m untar",
-        description="Extract a tar archive, optionally gzip compressed, into a directory.",
+        description="Extract a tar archive, optionally compressed, into a directory.",
     )
     parser.add_argument("archive", help="the archive, or - to read standard input")
     parser.add_argument(
