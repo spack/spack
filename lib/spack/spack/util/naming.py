@@ -98,17 +98,21 @@ class NamingSchemeV2(NamingScheme):
         return dirname.lstrip("_").replace("_", "-")
 
     def pkg_name_to_pkg_dir(self, name: str) -> str:
+        if not name:
+            return name
         name = name.replace("-", "_")
         if name[0].isdigit() or name in RESERVED_NAMES_ONLY_LOWERCASE:
             name = f"_{name}"
         return name
 
     def valid_module_name(self, mod_name: str) -> bool:
-        if not _VALID_MODULE_RE_V2.match(mod_name) or "__" in mod_name:
+        if not mod_name or not _VALID_MODULE_RE_V2.match(mod_name) or "__" in mod_name:
             return False
         elif mod_name.startswith("_"):
             # it can only start with an underscore if followed by digit or reserved name
-            return mod_name[1:] in RESERVED_NAMES_ONLY_LOWERCASE or mod_name[1].isdigit()
+            return mod_name[1:] in RESERVED_NAMES_ONLY_LOWERCASE or (
+                len(mod_name) > 1 and mod_name[1].isdigit()
+            )
         else:
             return mod_name not in RESERVED_NAMES_ONLY_LOWERCASE
 
