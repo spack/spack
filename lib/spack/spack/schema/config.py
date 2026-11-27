@@ -187,6 +187,10 @@ properties: Dict[str, Any] = {
                 "description": "When true, Spack's compiler wrapper will use ccache when "
                 "compiling C and C++",
             },
+            "debug_info": {
+                "type": "boolean",
+                "description": "Inject -g and -ffile-prefix-map flags at compile time",
+            },
             "db_lock_timeout": {
                 "type": "integer",
                 "minimum": 1,
