@@ -10,6 +10,7 @@ import pytest
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
+import spack.environment as ev
 import spack.repo
 import spack.spec
 from spack.old_installer import PackageInstaller
@@ -336,3 +337,28 @@ def test_spliced_spec_keeps_package_hash(install_specs, mutable_config):
     spack.repo.freeze_provided_virtuals([recomputed], repo=spack.repo.PATH)
     spack.spec.assign_hashes([recomputed], repo=spack.repo.PATH)
     assert recomputed.dag_hash() == spliced.dag_hash()
+
+
+def test_env_lockfile_with_nested_build_specs(install_specs, mutable_config, tmp_path):
+    """Tests that an environment can be read back when a build spec is itself spliced"""
+    h1, _, _ = install_specs(
+        "splice-h@1.0.0+compat ^splice-z@1.0.0+compat",
+        "splice-z@1.0.1+compat",
+        "splice-z@1.0.2+compat",
+    )
+    mutable_config.set("packages", _make_specs_non_buildable(["splice-h"]))
+    _enable_splicing()
+    (hs,) = install_specs("splice-h@1.0.0+compat ^splice-z@1.0.1+compat")
+    assert hs.build_spec.dag_hash() == h1.dag_hash()
+
+    # Splice into hs rather than h1
+    mutable_config.set("concretizer:reuse", {"exclude": ["splice-h ^splice-z@1.0.0"]})
+    env = ev.create_in_dir(tmp_path)
+    with env:
+        env.add("splice-h ^splice-z@1.0.2")
+        env.concretize()
+        env.write()
+
+    (root,) = ev.Environment(tmp_path).specs_by_hash.values()
+    assert root.build_spec.dag_hash() == hs.dag_hash()
+    assert root.build_spec.build_spec.dag_hash() == h1.dag_hash()
