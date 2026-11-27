@@ -4,6 +4,7 @@
 import collections
 import collections.abc
 import contextlib
+import copy
 import errno
 import glob
 import os
@@ -1658,7 +1659,7 @@ class Environment:
 
         matches = [x for x in list_to_change if x.satisfies(match_spec)]
         if len(matches) == 0:
-            raise ValueError(
+            raise NoSpecsMatchedError(
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
             )
         elif len(matches) > 1 and not allow_changing_multiple_specs:
@@ -3575,7 +3576,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
 
         #: Configuration scope associated with this environment. Note that this is not
         #: invalidated by a re-read of the manifest file.
-        self._env_config_scope: Optional[spack.config.ConfigScope] = None
+        self._env_config_scope: Optional[spack.config.SingleFileScope] = None
 
         if not self.manifest_file.exists():
             msg = f"cannot find '{manifest_name}' in {self.manifest_dir}"
@@ -3711,6 +3712,18 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             del entry.container[entry.position]
         self._entries_changed(entries)
 
+    def _sync_config_scope_cache(self) -> None:
+        """Sync the env_config_scope cache with yaml_content to maintain consistency
+        between the two representations of spack.yaml. Called whenever yaml_content
+        is modified through manifest operations.
+        """
+        if hasattr(self, "_env_config_scope") and self._env_config_scope is not None:
+            if self._env_config_scope._raw_data is not None:
+                # Config scope has been accessed and cached - update it to match yaml_content
+                self._env_config_scope._raw_data = copy.deepcopy(self.yaml_content)
+                # Clear sections so they get repopulated from updated _raw_data on next access
+                self._env_config_scope.sections.clear()
+
     def _entries_changed(self, entries: List[ManifestEntry]) -> None:
         if any(e.list_name == USER_SPECS_KEY for e in entries):
             self._clear_user_specs()
@@ -3719,12 +3732,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         if any(e.list_name != USER_SPECS_KEY for e in entries):
             self._definitions_changed()
 
+        self._sync_config_scope_cache()
+
     def _definitions_changed(self) -> None:
-        # "definitions" can be remote, so we need to update the global config too
-        spack.config.CONFIG.set(
-            "definitions", self.configuration["definitions"], scope=self.scope_name
-        )
         self.changed = True
+        self._sync_config_scope_cache()
 
     def user_specs(self, *, group: Optional[str] = None) -> List:
         group = self._ensure_group_exists(group)
@@ -3892,7 +3904,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return str(self.manifest_file)
 
     @property
-    def env_config_scope(self) -> spack.config.ConfigScope:
+    def env_config_scope(self) -> spack.config.SingleFileScope:
         """The configuration scope for the environment manifest"""
         if self._env_config_scope is None:
             self._env_config_scope = spack.config.SingleFileScope(
@@ -3961,3 +3973,7 @@ class SpackEnvironmentConfigError(SpackEnvironmentError):
 
 class SpackEnvironmentDevelopError(SpackEnvironmentError):
     """Class for errors in applying develop information to an environment."""
+
+
+class NoSpecsMatchedError(SpackEnvironmentError):
+    """Raised when change_existing_spec finds no matching specs."""

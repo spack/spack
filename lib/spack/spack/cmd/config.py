@@ -481,7 +481,18 @@ def _config_change_requires_scope(path, spec, scope, match_spec=None):
     return changed
 
 
-def _config_change(config_path, match_spec_str=None):
+def _config_change(config_path, match_spec_str=None, add_if_no_match=True):
+    """Change config requirements, optionally adding a new requirement if nothing matched.
+
+    Args:
+        config_path: Colon-separated config path (e.g., "packages:mpich:require:@4.0")
+        match_spec_str: Optional spec to match against when changing requirements
+        add_if_no_match: If True (default), add a new requirement when nothing matched.
+                        If False, only modify existing requirements that match.
+
+    Returns:
+        bool: True if any config changed, False otherwise
+    """
     all_components = spack.config.process_config_path(config_path)
     key_components = all_components[:-1]
     key_path = ":".join(key_components)
@@ -502,7 +513,7 @@ def _config_change(config_path, match_spec_str=None):
         for scope in spack.config.CONFIG.writable_scope_names():
             changed |= _config_change_requires_scope(key_path, spec, scope, match_spec=match_spec)
 
-        if not changed:
+        if not changed and add_if_no_match:
             existing_requirements = spack.config.CONFIG.get(key_path)
             if isinstance(existing_requirements, str):
                 raise spack.error.ConfigError(
@@ -521,8 +532,11 @@ def _config_change(config_path, match_spec_str=None):
 
             update_path = f"{key_path}:[{str(spec)}]"
             spack.config.CONFIG.add(update_path, scope=write_scope)
+            changed = True
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
+
+    return changed
 
 
 def config_change(args):

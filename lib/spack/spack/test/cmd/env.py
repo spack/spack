@@ -353,6 +353,206 @@ def test_change_spec_with_options(environment_from_manifest):
     assert e.user_specs.install_flags == [True, False]
 
 
+def test_change_with_config_flag_modifies_both(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+):
+    """Test that --config modifies both config requirements and spec list."""
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  packages:
+    mpich:
+      require: ["@3.0.1"]
+  specs:
+  - mpich@3.0.1
+"""
+    )
+
+    mutable_config.set("config:misc_cache", str(tmp_path / "cache"))
+    with ev.Environment(tmp_path):
+        change("--config", "mpich@3.0.4")
+
+    # Reload and verify both changed
+    e = ev.Environment(tmp_path)
+    results = list()
+    with e:
+        # Check spec list changed
+        assert len(e.user_specs) == 1
+        results.append(e.user_specs[0].satisfies("mpich@3.0.4"))
+
+        # Check config requirement changed
+        # Note: Spec.override() adds the package name, so the config becomes "mpich@3.0.4"
+        mpich_config = spack.config.CONFIG.get("packages:mpich:require")
+        results.append(mpich_config == ["mpich@3.0.4"])
+
+        assert all(results)
+        # Concretize to verify the config is actually in effect
+        test_spec = spack.concretize.concretize_one("mpich")
+        assert test_spec.satisfies("@3.0.4")
+
+
+def test_change_with_config_flag_included_file(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+):
+    """Test that --config modifies config in an included file."""
+    # Create included packages file
+    packages_file = tmp_path / "packages.yaml"
+    packages_file.write_text(
+        """\
+packages:
+  mpich:
+    require: ["@3.0.1"]
+"""
+    )
+
+    # Create spack.yaml that includes it
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  include:
+  - packages.yaml
+  specs:
+  - mpich@3.0.1
+"""
+    )
+
+    mutable_config.set("config:misc_cache", str(tmp_path / "cache"))
+    with ev.Environment(tmp_path):
+        change("--config", "mpich@3.0.4")
+
+    # Reload and verify both changed
+    e = ev.Environment(tmp_path)
+    with e:
+        # Check spec list changed in spack.yaml
+        assert len(e.user_specs) == 1
+        assert e.user_specs[0].satisfies("mpich@3.0.4")
+
+        # Check config requirement changed in included file
+        mpich_config = spack.config.CONFIG.get("packages:mpich:require")
+        assert mpich_config == ["mpich@3.0.4"]
+
+    # Verify the included file was actually modified
+    packages_content = packages_file.read_text()
+    assert "@3.0.4" in packages_content or "mpich@3.0.4" in packages_content
+    assert "@3.0.1" not in packages_content
+
+
+def test_change_with_config_flag_config_only_succeeds(
+    mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mutable_config
+):
+    """Test that --config succeeds when spec is only in config, not spec list.
+
+    This tests:
+    1. NoSpecsMatchedError handling allows success when --config is used
+    2. env.write() doesn't overwrite the config change
+    """
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  packages:
+    mpich:
+      require: ["@3.0.1"]
+  specs:
+  - libelf
+"""
+    )
+
+    mutable_config.set("config:misc_cache", str(tmp_path / "cache"))
+    with ev.Environment(tmp_path):
+        # This should succeed even though mpich is not in spec list
+        change("--config", "mpich@3.0.4")
+
+    # Reload and verify config changed
+    e = ev.Environment(tmp_path)
+    with e:
+        # Spec list should be unchanged (still just libelf)
+        assert len(e.user_specs) == 1
+        assert e.user_specs[0].name == "libelf"
+
+        # Config requirement should have changed
+        # Note: Spec.override() adds the package name, so the config becomes "mpich@3.0.4"
+        mpich_config = spack.config.CONFIG.get("packages:mpich:require")
+        assert mpich_config == ["mpich@3.0.4"]
+
+        # Concretize to verify the config persisted (wasn't overwritten by env.write())
+        test_spec = spack.concretize.concretize_one("mpich")
+        assert test_spec.satisfies("@3.0.4")
+
+
+def test_change_with_config_and_concrete_flags(
+    mutable_mock_env_path,
+    tmp_path: pathlib.Path,
+    mock_packages,
+    mutable_config,
+    temporary_store: Store,
+    install_mockery,
+    mock_fetch,
+):
+    """Test that --config with --concrete modifies both config and concrete specs.
+
+    This tests that config changes persist through env.mutate() and env.write().
+    Tests both version changes and variant changes.
+    """
+    spack_yaml = tmp_path / ev.manifest_name
+    spack_yaml.write_text(
+        """\
+spack:
+  packages:
+    mpich:
+      require: ["@3.0.1"]
+    cmake-client:
+      require: ["+truthy"]
+  specs:
+  - mpich@3.0.1
+  - cmake-client@1.0+truthy
+"""
+    )
+
+    mutable_config.set("config:misc_cache", str(tmp_path / "cache"))
+
+    # Concretize and install the environment first
+    e = ev.Environment(tmp_path)
+    with e:
+        e.concretize()
+        e.write()
+        install("--fake")
+
+    # Now use change with both --config and --concrete for version and variant changes
+    with ev.Environment(tmp_path):
+        change("--config", "--concrete", "mpich@3.0.4")
+        change("--config", "--concrete", "cmake-client@1.0~truthy")
+
+    # Reload and verify both config and concrete specs changed
+    e = ev.Environment(tmp_path)
+    with e:
+        # Check spec list changed for both
+        assert len(e.user_specs) == 2
+        assert any(s.satisfies("mpich@3.0.4") for s in e.user_specs)
+        assert any(s.satisfies("cmake-client@1.0~truthy") for s in e.user_specs)
+
+        # Check config requirements changed (and weren't overwritten by env.write() in mutate)
+        mpich_config = spack.config.CONFIG.get("packages:mpich:require")
+        assert mpich_config == ["mpich@3.0.4"]
+        client_config = spack.config.CONFIG.get("packages:cmake-client:require")
+        assert client_config == ["cmake-client@1.0~truthy"]
+
+        # Check concrete specs were mutated
+        assert len(e.concretized_roots) == 2
+        mpich_spec = next(s for s in e.specs_by_hash.values() if s.name == "mpich")
+        assert mpich_spec.satisfies("mpich@3.0.4")
+        client_spec = next(s for s in e.specs_by_hash.values() if s.name == "cmake-client")
+        assert client_spec.satisfies("cmake-client@1.0~truthy")
+
+        # Verify config persists after concretizing new specs
+        test_mpich = spack.concretize.concretize_one("mpich")
+        assert test_mpich.satisfies("@3.0.4")
+        test_client = spack.concretize.concretize_one("cmake-client")
+        assert test_client.satisfies("~truthy")
+
+
 def test_env_add_virtual():
     env("create", "test")
     e = ev.read("test")
