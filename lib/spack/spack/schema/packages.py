@@ -136,27 +136,34 @@ requirements = {
 }
 
 prefer_and_conflict = {
-    "type": "array",
-    "items": {
-        "oneOf": [
-            {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "spec": {"type": "string", "description": "Spec constraint to apply"},
-                    "message": {
-                        "type": "string",
-                        "description": "Custom message explaining the constraint",
+    "oneOf": [
+        {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "spec": {"type": "string", "description": "Spec constraint to apply"},
+                            "message": {
+                                "type": "string",
+                                "description": "Custom message explaining the constraint",
+                            },
+                            "when": {
+                                "type": "string",
+                                "description": "Conditional spec that triggers this constraint",
+                            },
+                        },
                     },
-                    "when": {
-                        "type": "string",
-                        "description": "Conditional spec that triggers this constraint",
-                    },
-                },
+                    {"type": "string"},
+                ]
             },
-            {"type": "string"},
-        ]
-    },
+        },
+        # A single constraint. Since it is not a list, it replaces any list from lower
+        # priority configuration scopes instead of being merged with it.
+        {"type": "string"},
+    ]
 }
 
 package_attributes = {
