@@ -6241,3 +6241,84 @@ def test_reused_spec_keeps_provider_with_another_provider_as_root(
         [(Spec(spec_str), None), (Spec("zmpi"), None)]
     )
     assert mpileaks.satisfies(f"mpileaks/{installed.dag_hash()}")
+
+
+@pytest.mark.parametrize(
+    "pkg,request_",
+    [
+        ("openblas", "%c"),
+        ("openblas", "%c=gcc"),
+        ("callpath", "%c,cxx=gcc"),
+        # Control: not a virtual request, works with and without the fix
+        ("openblas", "%gcc"),
+    ],
+)
+def test_reuse_spec_when_compiler_requested_through_a_virtual(
+    pkg, request_, mutable_config: Configuration, mock_packages
+):
+    """A reused spec only keeps its compiler as a build-only dependency. Requests like ``%c`` or
+    ``%c=gcc`` must still be satisfied by it, instead of failing with
+    "<pkg> cannot have a dependency on c" when the package cannot be rebuilt."""
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@15.1 languages='c,c++,fortran'"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          c: /path1/bin/gcc
+          cxx: /path1/bin/g++
+          fortran: /path1/bin/gfortran
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Concretize with the package buildable, so that it can serve as a reusable spec
+    reusable = spack.concretize.concretize_one(f"{pkg} %gcc")
+    reusable_specs = list(reusable.traverse(root=True))
+
+    # Now the package cannot be rebuilt: the only way to satisfy the request is to reuse it
+    mutable_config.set(f"packages:{pkg}:buildable", False)
+    with mutable_config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
+        result, _, _ = solver.driver.solve(
+            setup, [Spec(f"{pkg} {request_}")], reuse=reusable_specs
+        )
+
+    assert len(result.specs) == 1
+    assert result.specs[0].dag_hash() == reusable.dag_hash()
+
+
+@pytest.mark.parametrize("pkg,request_", [("openblas", "%cxx"), ("callpath", "%fortran")])
+def test_reuse_spec_rejects_virtual_it_does_not_use(
+    pkg, request_, mutable_config: Configuration, mock_packages
+):
+    """Counting the build-only virtuals of reused specs must not accept virtuals that the
+    reused spec does not depend on."""
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  gcc:
+    externals:
+    - spec: "gcc@15.1 languages='c,c++,fortran'"
+      prefix: /path1
+      extra_attributes:
+        compilers:
+          c: /path1/bin/gcc
+          cxx: /path1/bin/g++
+          fortran: /path1/bin/gfortran
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    reusable = spack.concretize.concretize_one(f"{pkg} %gcc")
+    mutable_config.set(f"packages:{pkg}:buildable", False)
+    with mutable_config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver(context=spack.context.default())
+        setup = spack.solver.asp.SpackSolverSetup(context=spack.context.default())
+        with pytest.raises(spack.error.UnsatisfiableSpecError):
+            solver.driver.solve(
+                setup, [Spec(f"{pkg} {request_}")], reuse=list(reusable.traverse(root=True))
+            )
