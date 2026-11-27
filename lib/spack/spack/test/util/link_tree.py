@@ -8,7 +8,6 @@ import sys
 
 import pytest
 
-import spack.util.filesystem
 from spack.test.conftest import FsTree
 from spack.util.filesystem import (
     islink,
@@ -20,6 +19,9 @@ from spack.util.filesystem import (
     working_dir,
 )
 from spack.util.link_tree import DestinationMergeVisitor, LinkTree, MultiPrefixMerger
+
+if sys.platform == "win32":
+    from spack.util import win_links
 
 
 @pytest.fixture
@@ -48,12 +50,10 @@ def check_file_link(filename: str, expected_target: str, supports_symlink: bool)
 @pytest.mark.parametrize("supports_symlink", [True, False] if sys.platform == "win32" else [True])
 def test_merge_to_new_directory(stage: str, monkeypatch, supports_symlink: bool):
     if sys.platform == "win32":
-        if supports_symlink and not spack.util.filesystem._windows_can_symlink():
+        if supports_symlink and not win_links.can_symlink():
             pytest.skip("Test requires symlink privileges")
 
-        monkeypatch.setattr(
-            spack.util.filesystem, "_windows_can_symlink", lambda: supports_symlink
-        )
+        monkeypatch.setattr(win_links, "can_symlink", lambda: supports_symlink)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
 
@@ -86,12 +86,10 @@ def test_merge_to_new_directory(stage: str, monkeypatch, supports_symlink: bool)
 @pytest.mark.parametrize("supports_symlink", [True, False] if sys.platform == "win32" else [True])
 def test_merge_to_new_directory_relative(stage: str, monkeypatch, supports_symlink: bool):
     if sys.platform == "win32":
-        if supports_symlink and not spack.util.filesystem._windows_can_symlink():
+        if supports_symlink and not win_links.can_symlink():
             pytest.skip("Test requires symlink privileges")
 
-        monkeypatch.setattr(
-            spack.util.filesystem, "_windows_can_symlink", lambda: supports_symlink
-        )
+        monkeypatch.setattr(win_links, "can_symlink", lambda: supports_symlink)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
     with working_dir(stage):
@@ -124,12 +122,10 @@ def test_merge_to_new_directory_relative(stage: str, monkeypatch, supports_symli
 @pytest.mark.parametrize("supports_symlink", [True, False] if sys.platform == "win32" else [True])
 def test_merge_to_existing_directory(stage: str, monkeypatch, supports_symlink: bool):
     if sys.platform == "win32":
-        if supports_symlink and not spack.util.filesystem._windows_can_symlink():
+        if supports_symlink and not win_links.can_symlink():
             pytest.skip("Test requires symlink privileges")
 
-        monkeypatch.setattr(
-            spack.util.filesystem, "_windows_can_symlink", lambda: supports_symlink
-        )
+        monkeypatch.setattr(win_links, "can_symlink", lambda: supports_symlink)
 
     link_tree = LinkTree(os.path.join(stage, "source"))
 
