@@ -357,7 +357,11 @@ To reduce the likelihood of this happening, it is highly recommended to add padd
    config:
      install_tree:
        root: /opt/spack
-       padded_length: 128
+       padded_length: 256
+
+A padded length of at least 256 is recommended because GCC on x86_64 can inline copies of string literals of up to 255 bytes as stores of vector constants.
+A path in such a literal is split into chunks, and Spack cannot relocate it.
+Spack's compiler wrapper passes ``-mstore-max=128`` (``-mmove-max=128`` as of GCC 16) to keep this limit at 255 bytes, which would otherwise be 511 bytes with AVX2 and 1023 bytes with AVX-512.
 
 
 .. index:: autopush
