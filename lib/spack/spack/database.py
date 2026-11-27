@@ -788,15 +788,17 @@ class Database:
             assert build_spec is not None, f"build_spec with hash {bhash} not found in database"
             spec._build_spec = build_spec.spec
 
-    def _assign_dependencies(
+    def _dependency_edges(
         self,
         spec_reader: Type["spack.spec.SpecfileReaderBase"],
         hash_key: str,
         installs: dict,
         data: Dict[str, InstallRecord],
-    ):
-        # Add dependencies from other records in the install DB to
-        # form a full spec.
+    ) -> List["spack.spec.DependencySpec"]:
+        """Returns the edges from the spec of ``hash_key`` to the specs of the other records it
+        depends on, without adding them to either spec. A dependency listed more than once gives
+        one edge, with the dependency types and virtuals of all entries."""
+        edges: Dict[int, spack.spec.DependencySpec] = {}
         spec = data[hash_key].spec
         spec_node_dict = installs[hash_key]["spec"]
         if "name" not in spec_node_dict:
@@ -821,12 +823,16 @@ class Database:
                     )
                     continue
 
-                spec._add_dependency(
-                    child,
-                    depflag=dt.canonicalize(dep.deptypes),
-                    virtuals=dep.virtuals,
-                    direct=dep.direct,
-                )
+                depflag = dt.canonicalize(dep.deptypes)
+                edge = edges.get(id(child))
+                if edge is None:
+                    edges[id(child)] = spack.spec.DependencySpec(
+                        spec, child, depflag=depflag, virtuals=dep.virtuals, direct=dep.direct
+                    )
+                else:
+                    edge.update_deptypes(depflag=depflag)
+                    edge.update_virtuals(virtuals=dep.virtuals)
+        return list(edges.values())
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
         """Fill database from file, do not maintain old data.
@@ -908,14 +914,16 @@ class Database:
                 raise invalid_record(hash_key, e) from e
 
         # Pass 2: Assign dependencies once all specs are created.
+        edges: List[spack.spec.DependencySpec] = []
         for hash_key in data:
             try:
                 self._assign_build_spec(spec_reader, hash_key, installs, data)
-                self._assign_dependencies(spec_reader, hash_key, installs, data)
+                edges.extend(self._dependency_edges(spec_reader, hash_key, installs, data))
             except MissingDependenciesError:
                 raise
             except Exception as e:
                 raise invalid_record(hash_key, e) from e
+        spack.spec.wire_edges(edges)
 
         # Pass 3: Mark all specs concrete.  Specs representing real
         # installations must be explicitly marked.

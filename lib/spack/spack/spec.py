@@ -1298,20 +1298,6 @@ def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
         bisect.insort(lst, edge)
 
 
-def _append_edge_to_map(
-    edge_map: EdgeMap, key: str, edge: DependencySpec, unsorted: List[List[DependencySpec]]
-) -> None:
-    """Appends ``edge`` to ``edge_map[key]``. A list that reaches two edges is added to
-    ``unsorted``, and the caller must sort it once all edges are added."""
-    lst = edge_map.get(key)
-    if lst is None:
-        edge_map[key] = [edge]
-    else:
-        lst.append(edge)
-        if len(lst) == 2:
-            unsorted.append(lst)
-
-
 def _select_edges(
     edge_map: EdgeMap,
     *,
@@ -3747,8 +3733,7 @@ class Spec:
             return id(spec)
 
         new_specs = {spid(other): self}
-        # Lists with more than one edge, sorted once every copied child has its dependencies
-        unsorted: List[List[DependencySpec]] = []
+        new_edges: List[DependencySpec] = []
         for edge in other.traverse_edges(cover="edges", root=False):
             if edge.depflag and not depflag & edge.depflag:
                 continue
@@ -3762,21 +3747,20 @@ class Spec:
             edge_propagation = edge.propagation if propagation is None else propagation
             new_parent = new_specs[spid(edge.parent)]
             new_child = new_specs[spid(edge.spec)]
-            new_edge = DependencySpec(
-                new_parent,
-                new_child,
-                depflag=edge.depflag,
-                virtuals=edge.virtuals,
-                propagation=edge_propagation,
-                direct=edge.direct,
-                when=edge.when,
+            new_edges.append(
+                DependencySpec(
+                    new_parent,
+                    new_child,
+                    depflag=edge.depflag,
+                    virtuals=edge.virtuals,
+                    propagation=edge_propagation,
+                    direct=edge.direct,
+                    when=edge.when,
+                )
             )
-            # Don't use add_dependency_edge here, copy edges verbatim
-            _append_edge_to_map(new_parent._dependencies, new_child.name, new_edge, unsorted)
-            _append_edge_to_map(new_child._dependents, new_parent.name, new_edge, unsorted)
 
-        for edges in unsorted:
-            edges.sort()
+        # Don't use add_dependency_edge here, copy edges verbatim
+        wire_edges(new_edges)
 
     def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):
         """Make a copy of this spec.
@@ -5543,8 +5527,7 @@ def wire_spec_nodes(
     """
     # Pass 1: Create a single lookup dictionary by hash
     specs_by_hash = {node[hash_type]: reader.from_node_dict(node) for node in nodes}
-    # Lists with more than one edge, sorted once every child has its dependencies
-    unsorted: List[List[DependencySpec]] = []
+    edges: List[DependencySpec] = []
 
     # Pass 2: Finish construction of all DAG edges (including build specs)
     for node in nodes:
@@ -5556,18 +5539,17 @@ def wire_spec_nodes(
                 raise MissingSpecHashError(
                     f"node '{node['name']}' references missing dep hash {dep.name}/{dep.hash}"
                 )
-            # Add edges exactly as they are stored
-            edge = DependencySpec(
-                node_spec,
-                dep_spec,
-                depflag=dt.canonicalize(dep.deptypes),
-                virtuals=dep.virtuals,
-                direct=dep.direct,
-                when=Spec(dep.when) if dep.when else EMPTY_SPEC,
-                propagation=PropagationPolicy[dep.propagation],
+            edges.append(
+                DependencySpec(
+                    node_spec,
+                    dep_spec,
+                    depflag=dt.canonicalize(dep.deptypes),
+                    virtuals=dep.virtuals,
+                    direct=dep.direct,
+                    when=Spec(dep.when) if dep.when else EMPTY_SPEC,
+                    propagation=PropagationPolicy[dep.propagation],
+                )
             )
-            _append_edge_to_map(node_spec._dependencies, edge.spec.name, edge, unsorted)
-            _append_edge_to_map(edge.spec._dependents, edge.parent.name, edge, unsorted)
 
         if "build_spec" in node.keys():
             bname, bhash, _ = reader.extract_build_spec_info_from_node_dict(
@@ -5580,13 +5562,39 @@ def wire_spec_nodes(
                 )
             node_spec._build_spec = build_spec
 
-    for edges in unsorted:
-        edges.sort()
+    # Add edges exactly as they are stored
+    wire_edges(edges)
 
     if reader.SPEC_VERSION < 6:
         spack.repo.reconstruct_virtuals(specs_by_hash.values(), repo=spack.repo.PATH)
 
     return specs_by_hash
+
+
+def wire_edges(edges: Iterable[DependencySpec]) -> None:
+    """Adds each edge, as is, to the dependencies of its parent and to the dependents of its
+    child. Edge lists are sorted after all edges are added, so ``edges`` may connect specs whose
+    own dependencies are not added yet.
+    """
+    # Lists with more than one edge, by id
+    unsorted: Dict[int, List[DependencySpec]] = {}
+    for edge in edges:
+        dependencies = edge.parent._dependencies.get(edge.spec.name)
+        if dependencies is None:
+            edge.parent._dependencies[edge.spec.name] = [edge]
+        else:
+            dependencies.append(edge)
+            unsorted[id(dependencies)] = dependencies
+
+        dependents = edge.spec._dependents.get(edge.parent.name)
+        if dependents is None:
+            edge.spec._dependents[edge.parent.name] = [edge]
+        else:
+            dependents.append(edge)
+            unsorted[id(dependents)] = dependents
+
+    for edge_list in unsorted.values():
+        edge_list.sort()
 
 
 @register_reader
