@@ -83,7 +83,7 @@ from spack.package_completions import (
 )
 from spack.package_test import compare_output, compare_output_file, compile_c_and_execute
 from spack.paths import spack_script
-from spack.phase_callbacks import run_after, run_before
+from spack.phase_callbacks import run_after, run_after_dependent, run_before, run_before_dependent
 from spack.platforms import host as host_platform
 from spack.spec import Spec
 from spack.url import substitute_version as substitute_version_in_url
@@ -373,7 +373,9 @@ api: Dict[str, Tuple[str, ...]] = {
         "resource",
         "rmtree",
         "run_after",
+        "run_after_dependent",
         "run_before",
+        "run_before_dependent",
         "set_executable",
         "set_install_permissions",
         "symlink",
@@ -543,7 +545,9 @@ __all__ = [
     "resource",
     "rmtree",
     "run_after",
+    "run_after_dependent",
     "run_before",
+    "run_before_dependent",
     "set_executable",
     "set_install_permissions",
     "symlink",
