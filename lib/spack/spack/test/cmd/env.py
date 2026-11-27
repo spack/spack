@@ -1239,18 +1239,19 @@ def test_env_status_broken_view(
     install_mockery,
     tmp_path: pathlib.Path,
 ):
-    with ev.create_in_dir(tmp_path):
+    env_dir = tmp_path / "env"
+    with ev.create_in_dir(env_dir):
         install("--add", "--fake", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and warns the user
     with spack.repo.use_repositories(mock_custom_repository):
-        with ev.Environment(tmp_path):
+        with ev.Environment(env_dir):
             output = env("status")
             assert "includes out of date packages or repos" in output
 
     # Test that the warning goes away when it's fixed
-    with ev.Environment(tmp_path):
+    with ev.Environment(env_dir):
         output = env("status")
         assert "includes out of date packages or repos" not in output
 
@@ -4519,7 +4520,7 @@ def test_read_v1_lock_creates_backup(tmp_path: pathlib.Path):
     test_lockfile_path.parent.mkdir(parents=True, exist_ok=False)
     shutil.copy(v1_lockfile_path, test_lockfile_path)
 
-    e = ev.create_in_dir(tmp_path, init_file=test_lockfile_path)
+    e = ev.create_in_dir(tmp_path / "env", init_file=test_lockfile_path)
     assert os.path.exists(e._lock_backup_v1_path)
     assert filecmp.cmp(e._lock_backup_v1_path, v1_lockfile_path)
 
@@ -4764,7 +4765,7 @@ def test_depfile_phony_convenience_targets(
     """Check whether convenience targets "install/%" and "install-deps/%" are created for
     each package if "--make-prefix" is absent."""
     make = Executable("make")
-    with fs.working_dir(str(tmp_path)):
+    with fs.working_dir(str(tmp_path / "env"), create=True):
         with ev.create_in_dir("."):
             add("dttop")
             concretize()
@@ -5458,8 +5459,8 @@ spack:
 
 @pytest.mark.regression("52247")
 def test_create_with_orphaned_directory(mutable_mock_env_path: pathlib.Path):
-    """Tests that an orphaned environment directory (directory exists, no spack.yaml) must not
-    prevent 'spack env create' from creating a new environment with that name.
+    """Tests that an orphaned environment directory (directory exists, no spack.yaml) is removed
+    by 'spack env remove', so that 'spack env create' can create a new environment with that name.
     """
     orphaned = mutable_mock_env_path / "test1"
     orphaned_subdir = orphaned / ".spack-env"
@@ -5468,7 +5469,12 @@ def test_create_with_orphaned_directory(mutable_mock_env_path: pathlib.Path):
     # The orphaned directory must not be seen as an existing environment
     assert not ev.exists("test1")
 
-    # Creating an environment over an orphaned directory must succeed
+    with pytest.raises(ev.SpackEnvironmentError, match="spack env remove test1"):
+        env("create", "test1")
+
+    env("remove", "-y", "test1")
+    assert not orphaned.exists()
+
     env("create", "test1")
 
     assert ev.exists("test1")
@@ -5710,3 +5716,77 @@ def test_remove_reports_only_the_specs_it_removed(tmp_path: pathlib.Path):
 
         output = remove("mpileaks")
         assert "mpileaks has been removed" in output
+
+
+@pytest.mark.parametrize(
+    "contents",
+    [
+        # Invalid under the schema
+        "spack:\n  specs: [libelf]\n  view: 3\n",
+        # Invalid YAML
+        "spack:\n  specs: [libelf\n",
+    ],
+)
+def test_create_in_empty_directory_from_invalid_manifest(tmp_path: pathlib.Path, contents):
+    """Tests that a failed 'spack env create -d .' in an existing empty directory leaves the
+    directory in place and empty.
+    """
+    manifest = tmp_path / ev.manifest_name
+    manifest.write_text(contents)
+    project = tmp_path / "project"
+    project.mkdir()
+
+    with fs.working_dir(str(project)):
+        with pytest.raises(spack.error.SpackError):
+            env("create", "-d", ".", str(manifest))
+
+    assert project.is_dir()
+    assert os.listdir(project) == []
+
+
+def test_create_in_non_empty_directory_fails(tmp_path: pathlib.Path):
+    """Tests that 'spack env create -d .' refuses a non-empty directory and leaves it unchanged."""
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    (project / "README.md").write_text("notes")
+
+    with fs.working_dir(str(project)):
+        with pytest.raises(ev.SpackEnvironmentError, match="not an empty directory"):
+            env("create", "-d", ".")
+
+    assert sorted(os.listdir(project)) == ["README.md", "src"]
+
+
+def test_create_with_empty_orphaned_directory(mutable_mock_env_path: pathlib.Path):
+    """Tests that 'spack env create' creates an environment in an empty orphaned directory."""
+    (mutable_mock_env_path / "test1").mkdir(parents=True)
+
+    env("create", "test1")
+
+    assert ev.exists("test1")
+
+
+@pytest.mark.parametrize(
+    "existing,target",
+    [
+        # the target directory would contain an existing environment
+        ("grp/inner", "grp"),
+        # the target directory is inside an existing environment
+        ("grp", "grp/src"),
+    ],
+)
+def test_remove_does_not_delete_directories_related_to_environments(
+    mutable_mock_env_path: pathlib.Path, existing, target
+):
+    """Tests that 'spack env remove' does not delete a managed directory without a spack.yaml,
+    when that directory contains or is inside an environment.
+    """
+    ev.create(existing)
+    target_dir = mutable_mock_env_path / target
+    target_dir.mkdir(parents=True, exist_ok=True)
+    (target_dir / "file").write_text("")
+
+    env("remove", "-y", target)
+
+    assert (target_dir / "file").exists()
+    assert ev.exists(existing)

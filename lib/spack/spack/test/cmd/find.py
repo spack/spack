@@ -451,7 +451,7 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(
     by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
     when invoking "spack find".
     """
-    test_environment = ev.create_in_dir(tmp_path)
+    test_environment = ev.create_in_dir(tmp_path / "env")
     test_environment.add("zlib %gcc@12.1.0")
     test_environment.write()
 

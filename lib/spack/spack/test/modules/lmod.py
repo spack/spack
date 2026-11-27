@@ -465,7 +465,7 @@ class TestLmod:
         install_mockery,
         mock_fetch,
     ):
-        with ev.create_in_dir(str(tmp_path), with_view=True) as e:
+        with ev.create_in_dir(str(tmp_path / "env"), with_view=True) as e:
             module_configuration("with_view")
             install("--fake", "--add", "cmake")
 

@@ -532,9 +532,10 @@ def _env_untrack_or_remove(
     all_env_names = set(ev.all_environment_names())
     known_env_names = set(env_names).intersection(all_env_names)
     unknown_env_names = set(env_names) - known_env_names
+    orphaned_names = {n for n in unknown_env_names if remove and ev.is_orphaned(n)}
 
     # print error for unknown environments
-    for env_name in unknown_env_names:
+    for env_name in unknown_env_names - orphaned_names:
         tty.error(f"Environment '{env_name}' does not exist")
 
     # if only unlinking is allowed, remove all environments
@@ -567,9 +568,10 @@ def _env_untrack_or_remove(
 
     # ask the user if they really want to remove the known environments
     # force should do the same as yes to all here following the semantics of rm
-    if not (yes_to_all or force) and (envs_to_remove or bad_env_names_to_remove):
-        environments = string.plural(len(env_names_to_remove), "environment", show_n=False)
-        envs = string.comma_and(list(env_names_to_remove))
+    if not (yes_to_all or force) and (envs_to_remove or bad_env_names_to_remove or orphaned_names):
+        names = env_names_to_remove | orphaned_names
+        environments = string.plural(len(names), "environment", show_n=False)
+        envs = string.comma_and(list(names))
         answer = tty.get_yes_or_no(
             f"Really {'remove' if remove else 'untrack'} {environments} {envs}?", default=False
         )
@@ -608,6 +610,10 @@ def _env_untrack_or_remove(
         )
         tty.msg(f"Successfully removed environment '{bad_env_name}'")
         removed_env_names.append(bad_env_name)
+
+    for orphaned_name in orphaned_names:
+        shutil.rmtree(ev.root(orphaned_name))
+        tty.msg(f"Successfully removed orphaned directory of environment '{orphaned_name}'")
 
     # Following the design of linux rm we should exit with a status of 1
     # anytime we cannot delete every environment the user asks for.
