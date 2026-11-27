@@ -5,6 +5,7 @@
 import spack.binary_distribution
 import spack.config
 import spack.mirrors.mirror
+import spack.notary
 from spack.util import tty
 
 
@@ -28,9 +29,9 @@ def post_install(spec, explicit):
             )
             continue
 
-        signing_key = spack.binary_distribution.select_signing_key() if mirror.signed else None
+        notary = spack.notary.select_notary(mirror) if mirror.signed else None
         with spack.binary_distribution.make_uploader(
-            mirror=mirror, force=True, signing_key=signing_key
+            mirror=mirror, force=True, notary=notary
         ) as uploader:
             uploader.push_or_raise([spec], config=spack.config.CONFIG)
         tty.msg(f"{spec.name}: Pushed to build cache: '{mirror.name}'")
