@@ -91,3 +91,84 @@ def test_add_none_multiple(trie):
 
     assert not trie.is_prefix("foo.bar.baz")
     assert not trie.has_value("foo.bar.baz")
+
+
+@pytest.mark.parametrize(
+    ("name", "simplified"),
+    (
+        ("simple", "simple"),
+        ("with-hyphen", "with-hyphen"),
+        ("with_underscore", "with-underscore"),
+        ("MixEdCAsE", "mixedcase"),
+        ("0", "0"),
+        ("plus+", "plus-plus"),
+        ("tinkle++", "tinklepp"),
+        ("-leading-dash", "leading-dash"),
+        ("_leading_underscore", "leading-underscore"),
+        ("__leading_underscore", "leading-underscore"),
+        ("_0leading_underscore_num", "0leading-underscore-num"),
+        ("l_intel_download", "intel-download"),
+        ("luapkg", "lua-pkg"),
+        ("b++pkg", "bpp-pkg"),
+        ("bpppkg", "bpp-pkg"),
+    ),
+)
+def test_naming_simplify_name(name, simplified):
+    assert spack.util.naming.simplify_name(name) == simplified
+
+
+def test_naming_simplify_name_bad_char():
+    name = "mm"
+    # Assert the test base name good and already simplified
+    assert spack.util.naming.is_valid_name(name)
+    assert spack.util.naming.simplify_name(name) == name
+
+    for bad_char in (
+        "!",
+        "#",
+        "$",
+        "'",
+        "(",
+        ")",
+        "*",
+        ",",
+        "/",
+        ":",
+        ";",
+        "<",
+        "=",
+        ">",
+        "?",
+        "?",
+        "@",
+        '"',
+        "\\",
+        "^",
+        "`",
+        "{",
+        "|",
+        "}",
+        "~",
+    ):
+        # Bad character prefix
+        bad_name = bad_char + name
+        simplified_bad_name = spack.util.naming.simplify_name(bad_name)
+        assert not spack.util.naming.is_valid_name(bad_name)
+        assert simplified_bad_name == bad_name
+
+        # Bad character suffix
+        bad_name = bad_char + name
+        simplified_bad_name = spack.util.naming.simplify_name(bad_name)
+        assert not spack.util.naming.is_valid_name(bad_name)
+        assert simplified_bad_name == bad_name
+
+        # Bad character in the middle
+        bad_name = name[:1] + bad_char + name[1:]
+        simplified_bad_name = spack.util.naming.simplify_name(bad_name)
+        assert not spack.util.naming.is_valid_name(bad_name)
+        assert simplified_bad_name == bad_name
+
+
+def test_naming_simplify_name_empty_string():
+    assert not spack.util.naming.is_valid_name("")
+    assert not spack.util.naming.is_valid_name(spack.util.naming.simplify_name(""))
