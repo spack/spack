@@ -75,6 +75,8 @@ Package repositories allow you to:
 
 Packages in a separate repository can also *depend on* built-in Spack packages, allowing you to leverage existing recipes without re-implementing them.
 
+.. _package-names:
+
 Package Names
 ^^^^^^^^^^^^^
 
@@ -286,6 +288,9 @@ For example, the built-in repository (from ``spack/spack-packages``) has its nam
    repo:
      namespace: builtin
      api: v2.0 # Or newer
+
+Namespaces follow the same rules as :ref:`package names <package-names>`, except that each period-separated component must be a valid Python module name.
+This means namespaces cannot contain hyphens or start with a digit.
 
 Spack records the repository namespace of each installed package.
 For example, if you install the ``mpich`` package from the ``builtin`` repo, Spack records its fully qualified name as ``builtin.mpich``.
