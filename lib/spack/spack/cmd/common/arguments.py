@@ -91,6 +91,8 @@ class ConstraintAction(argparse.Action):
                 # This is fast for already-concrete specs
                 specs[s.dag_hash()] = s
 
+        if not kwargs.get("sort", True):
+            return list(specs.values())
         return sorted(specs.values())
 
 

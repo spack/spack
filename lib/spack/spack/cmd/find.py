@@ -343,6 +343,8 @@ def _find_query(
     args: argparse.Namespace, env: Optional[ev.Environment]
 ) -> Tuple[List[spack.spec.Spec], List[spack.spec.Spec]]:
     q_args = query_arguments(args)
+    # Results are sorted for display, with a cheaper key than the full Spec ordering
+    q_args["sort"] = False
     concretized_but_not_installed = []
     if args.show_configured_externals:
         results = spack.solver.reuse.reusable_external_specs(spack.context.default())
@@ -421,7 +423,7 @@ def find(parser, args):
 
     # Display the result
     if args.json:
-        cmd.display_specs_as_json(results, deps=args.deps)
+        cmd.display_specs_as_json(sorted(results, key=cmd.display_sort_key), deps=args.deps)
     else:
         decorator = make_env_decorator(env) if env else lambda s, f: f
 
