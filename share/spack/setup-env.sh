@@ -44,6 +44,13 @@ if [ -n "${_sp_initializing:-}" ]; then
 fi
 export _sp_initializing=true
 
+_spack_cmd_shell_wrapper() {
+  if [ $(declare -F _spack_cmd_wrapper_$1) ]; then
+    _spack_cmd_wrapper_$1 "$@"
+  else
+    command $_spack_cmd "$@"
+  fi
+}
 
 _spack_shell_wrapper() {
     # Store DYLD_* variables from spack shell function
@@ -189,7 +196,9 @@ _spack_shell_wrapper() {
             fi
             ;;
         *)
-            command spack $_sp_flags $_sp_subcommand "$@"
+            # Define _spack_cmd as spack and the main command flags
+            _spack_cmd="spack $_sp_flags"
+            _spack_cmd_shell_wrapper $_sp_subcommand "$@"
             ;;
     esac
 }
