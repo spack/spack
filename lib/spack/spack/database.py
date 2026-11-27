@@ -1073,6 +1073,8 @@ class Database:
                     "but was not found on the file system. It is now marked as missing."
                 )
 
+        edges: List[spack.spec.DependencySpec] = []
+
         def create_edge(edge: spack.spec.DependencySpec, is_upstream: bool):
             if not edge.parent:
                 return
@@ -1082,17 +1084,23 @@ class Database:
                 assert upstream and child_record, "Internal error: upstream spec not found"
             else:
                 child_record = self._data[edge.spec.dag_hash()]
-            parent_record.spec._add_dependency(
-                child_record.spec, depflag=edge.depflag, virtuals=edge.virtuals
+            edges.append(
+                spack.spec.DependencySpec(
+                    parent_record.spec,
+                    child_record.spec,
+                    depflag=edge.depflag,
+                    virtuals=edge.virtuals,
+                )
             )
 
-        # Then store edges
+        # Then store edges: each node expands its dependencies once, so no edge needs merging
         tr.traverse_breadth_first_with_visitor(
             known_specs,
             tr.CoverEdgesVisitor(
                 NoUpstreamVisitor(upstream_hashes, create_edge), key=tr.by_dag_hash
             ),
         )
+        spack.spec.wire_edges(edges)
 
         # Finally update the ref counts
         for record in self._data.values():

@@ -48,7 +48,6 @@ line is a spec for a particular installation of the mpileaks package.
 """
 
 import abc
-import bisect
 import collections
 import enum
 import itertools
@@ -1290,12 +1289,12 @@ EdgeMap = Dict[str, List[DependencySpec]]
 
 
 def _add_edge_to_map(edge_map: EdgeMap, key: str, edge: DependencySpec) -> None:
-    """Inserts ``edge`` in ``edge_map[key]``, which must already be sorted."""
-    lst = edge_map.get(key)
-    if lst is None:
-        edge_map[key] = [edge]
+    if key in edge_map:
+        lst = edge_map[key]
+        lst.append(edge)
+        lst.sort()
     else:
-        bisect.insort(lst, edge)
+        edge_map[key] = [edge]
 
 
 def _select_edges(
