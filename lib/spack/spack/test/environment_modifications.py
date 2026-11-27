@@ -587,3 +587,31 @@ def test_sourcing_file_with_spaces(tmp_path):
 
     assert env["FROM_SPACED_PATH"] == "yes"
     assert env["FROM_SPACED_ARG"] == "arg with space"
+
+
+@pytest.mark.parametrize(
+    "before,after",
+    [
+        # The script prepends an entry that is already there
+        (["vendor", "a", "b"], ["vendor", "vendor", "a", "b"]),
+        # The script moves an entry to the front
+        (["a", "vendor", "b"], ["vendor", "a", "b"]),
+        # The script inserts an entry between two existing ones
+        (["a", "b"], ["a", "vendor", "b"]),
+        # The script replaces the whole value
+        (["a", "b"], ["vendor", "x"]),
+        # The script removes an entry written with a trailing separator
+        (["a", "b" + os.sep], ["a"]),
+    ],
+)
+def test_from_environment_diff_reproduces_script(before, after):
+    """Tests that the modifications computed from sourcing a vendor script, applied to the value
+    before sourcing, give the value the script produced, instead of a value containing the
+    previous one twice.
+    """
+    expected = make_pathlist(after)
+    env = {"PATH_LIST": make_pathlist(before)}
+    EnvironmentModifications.from_environment_diff(
+        env, {"PATH_LIST": expected}
+    ).apply_modifications(env)
+    assert env["PATH_LIST"] == expected

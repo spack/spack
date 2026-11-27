@@ -5,6 +5,7 @@
 
 import collections
 import contextlib
+import difflib
 import inspect
 import json
 import os
@@ -447,17 +448,16 @@ class RemoveLastPath(NamePathModifier):
         env[self.name] = self.separator.join(directories[::-1])
 
 
+def _normalize_path(path: str) -> str:
+    return path_to_os_path(os.path.normpath(path)).pop()
+
+
 class RemovePath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{self.value}", level=3)
-        environment_value = env.get(self.name, "")
-        directories = environment_value.split(self.separator)
-        directories = [
-            path_to_os_path(os.path.normpath(x)).pop()
-            for x in directories
-            if x != path_to_os_path(os.path.normpath(self.value)).pop()
-        ]
-        env[self.name] = self.separator.join(directories)
+        value = _normalize_path(self.value)
+        directories = map(_normalize_path, env.get(self.name, "").split(self.separator))
+        env[self.name] = self.separator.join(x for x in directories if x != value)
 
 
 class DeprioritizeSystemPaths(NameModifier):
@@ -1006,47 +1006,48 @@ class EnvironmentModifications:
                     before_list = list(dedupe(before_list))
                     after_list = list(dedupe(after_list))
                     # The reassembled cleaned entries
-                    value_before = sep.join(before_list)
                     value_after = sep.join(after_list)
 
-                # Paths that have been removed
-                remove_list = [ii for ii in before_list if ii not in after_list]
-                # Check that nothing has been added in the middle of
-                # before_list
-                remaining_list = [ii for ii in before_list if ii in after_list]
-                try:
-                    start = after_list.index(remaining_list[0])
-                    end = after_list.index(remaining_list[-1])
-                    search = sep.join(after_list[start : end + 1])
-                except IndexError:
-                    env.prepend_path(variable_name, value_after)
-                    continue
-
-                if search not in value_before:
-                    # We just need to set the variable to the new value
+                path_mods = _path_modifications(variable_name, before_list, after_list, sep)
+                if path_mods is None:
                     env.prepend_path(variable_name, value_after)
                 else:
-                    try:
-                        prepend_list = after_list[:start]
-                        prepend_list.reverse()  # Preserve order after prepend
-                    except KeyError:
-                        prepend_list = []
-                    try:
-                        append_list = after_list[end + 1 :]
-                    except KeyError:
-                        append_list = []
-
-                    for item in remove_list:
-                        env.remove_path(variable_name, item)
-                    for item in append_list:
-                        env.append_path(variable_name, item)
-                    for item in prepend_list:
-                        env.prepend_path(variable_name, item)
+                    env.extend(path_mods)
             else:
                 # We just need to set the variable to the new value
                 env.set(variable_name, value_after)
 
         return env
+
+
+def _path_modifications(
+    name: str, before: List[str], after: List[str], separator: str
+) -> Optional[EnvironmentModifications]:
+    """Returns the modifications turning ``before`` into ``after`` around their longest common
+    run of entries, or None if they cannot do it exactly.
+    """
+    before_keys = [_normalize_path(x) for x in before]
+    after_keys = [_normalize_path(x) for x in after]
+    start, after_start, size = difflib.SequenceMatcher(
+        None, before_keys, after_keys, autojunk=False
+    ).find_longest_match(0, len(before), 0, len(after))
+    if size == 0:
+        # Nothing is kept: every entry of after is added in front
+        after_start = len(after)
+    end, after_end = start + size, after_start + size
+
+    # RemovePath removes every copy of an entry, including those in the kept run
+    if not set(before_keys[start:end]).isdisjoint(before_keys[:start] + before_keys[end:]):
+        return None
+
+    mods = EnvironmentModifications()
+    for entry in dedupe(before[:start] + before[end:], key=_normalize_path):
+        mods.remove_path(name, entry, separator=separator)
+    for entry in after[after_end:]:
+        mods.append_path(name, entry, separator=separator)
+    for entry in reversed(after[:after_start]):
+        mods.prepend_path(name, entry, separator=separator)
+    return mods
 
 
 def _set_or_unset_not_first(
