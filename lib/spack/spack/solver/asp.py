@@ -2407,17 +2407,15 @@ class SpackSolverSetup:
             for pred in self.clauses.spec_clauses(spec, body=True, required_from=None):
                 self.gen.fact(fn.hash_attr(h, *pred.args))
             self.gen.newline()
-            # Declare as possible parts of specs that are not in package.py
-            # - Add versions to possible versions
-            # - Add OS to possible OS's
 
-            for dep in spec.traverse():
-                provenance = Provenance.INSTALLED
-                if isinstance(dep.version, vn.GitVersion):
-                    provenance = Provenance.INSTALLED_GIT_VERSION
+        # The container holds each node of the explicit DAGs once: declare its version and OS
+        for spec in self.reusable_and_possible.values():
+            provenance = Provenance.INSTALLED
+            if isinstance(spec.version, vn.GitVersion):
+                provenance = Provenance.INSTALLED_GIT_VERSION
 
-                self.possible_versions[dep.name][dep.version].append(provenance)
-                self.possible_oses.add(dep.os)
+            self.possible_versions[spec.name][spec.version].append(provenance)
+            self.possible_oses.add(spec.os)
 
     def define_concrete_input_specs(self, specs: tuple, possible: set):
         # any concrete specs in the input spec list
