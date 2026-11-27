@@ -47,6 +47,7 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
+@pytest.mark.child_coverage
 def test_test_dup_alias(mock_test_stage, mock_packages, mock_archive, mock_fetch, install_mockery):
     """Ensure re-using an alias fails with suggestion to change."""
     install("--fake", "libdwarf")
