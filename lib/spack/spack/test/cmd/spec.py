@@ -456,3 +456,32 @@ def test_concretizing_single_spec_announces_no_group(unify, mutable_config):
 
     assert "Starting concretization" not in output
     assert "group of specs" not in output
+
+
+def test_spliced_spec_status_with_installed_build_spec(mutable_database):
+    """Tests that a spliced spec whose build spec is installed is marked [s]."""
+    build_spec = mutable_database.query_one("mpileaks ^mpich")
+    spliced = build_spec.splice(mutable_database.query_one("mpich2"), transitive=True)
+    assert not spliced.installed
+
+    assert mutable_database.install_status(spliced) == spack.spec.InstallStatus.spliced
+    status_fn = spack.cmd.buildcache_status_fn(set())
+    assert status_fn(spliced) == spack.spec.InstallStatus.spliced
+
+
+def test_spliced_spec_status_with_build_spec_not_installed(
+    temporary_store: Store, install_mockery, mock_packages
+):
+    """Tests that a spliced spec whose build spec is not installed is marked [S], or [s] if its
+    build spec is in a buildcache.
+    """
+    build_spec = spack.concretize.concretize_one("splice-t")
+    spliced = build_spec.splice(spack.concretize.concretize_one("splice-h+foo"))
+
+    status = temporary_store.db.install_status(spliced)
+    assert status == spack.spec.InstallStatus.spliced_from_source
+    status_fn = spack.cmd.buildcache_status_fn(set())
+    assert status_fn(spliced) == spack.spec.InstallStatus.spliced_from_source
+
+    status_fn = spack.cmd.buildcache_status_fn({build_spec.dag_hash()})
+    assert status_fn(spliced) == spack.spec.InstallStatus.spliced
