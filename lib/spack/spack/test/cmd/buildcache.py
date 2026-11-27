@@ -94,6 +94,27 @@ def test_buildcache_list_allarch(database, mock_get_specs_multiarch):
     assert output.count("mpileaks") == 2
 
 
+@pytest.mark.db
+def test_buildcache_list_other_os(database, monkeypatch):
+    """Specs built on another OS of the host platform, for an older target of the host family,
+    are listed, since outside Windows compatibility is not determined by the OS name, and binaries
+    for a target run on its descendants."""
+    specs = [spec.copy() for spec in database.query_local()]
+    host = spack.spec.ArchSpec.default_arch()
+    for spec in specs:
+        if spec.name == "mpileaks":
+            spec.architecture = spack.spec.ArchSpec(
+                (host.platform, "redhat6", str(host.target.family))
+            )
+            break
+
+    monkeypatch.setattr(
+        spack.binary_distribution, "update_cache_and_get_specs", lambda *args, **kwargs: specs
+    )
+    output = buildcache("list")
+    assert output.count("mpileaks") == 3
+
+
 def tests_buildcache_create_env(
     install_mockery, mock_fetch, tmp_path: pathlib.Path, mutable_mock_env_path
 ):
