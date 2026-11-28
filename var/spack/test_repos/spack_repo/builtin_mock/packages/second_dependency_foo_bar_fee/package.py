@@ -15,7 +15,7 @@ class SecondDependencyFooBarFee(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/second-dependency-foo-bar-fee-1.0.tar.gz"
 
-    version("1.0", md5="2101234567890abcdefg1234567890abc")
+    version("1.0", md5="2101234567890abcdef1234567890abc")
 
     variant("foo", default=True, description="")
     variant("bar", default=False, description="")

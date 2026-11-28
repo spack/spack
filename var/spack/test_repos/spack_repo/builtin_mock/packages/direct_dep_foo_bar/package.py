@@ -15,7 +15,7 @@ class DirectDepFooBar(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/direct-dep-foo-bar-1.0.tar.gz"
 
-    version("1.0", md5="567890abcdefg12345678900987654321")
+    version("1.0", md5="567890abcdef12345678900987654321")
 
     variant("foo", default=True, description="")
     variant("bar", default=False, description="")
