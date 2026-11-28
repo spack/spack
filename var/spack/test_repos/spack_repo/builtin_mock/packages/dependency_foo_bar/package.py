@@ -15,7 +15,7 @@ class DependencyFooBar(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/dependency-foo-bar-1.0.tar.gz"
 
-    version("1.0", md5="1234567890abcdefg1234567890098765")
+    version("1.0", md5="1234567890abcdef1234567890098765")
 
     variant("foo", default=True, description="")
     variant("bar", default=False, description="")

@@ -282,6 +282,15 @@ def test_unknown_hash(checksum_type):
         crypto.Checker("a")
 
 
+@pytest.mark.parametrize("length", [33, 41, 57, 65, 97, 129])
+def test_odd_length_digest_is_rejected(length):
+    """An odd number of hex characters is a typo, not a digest of the next-smaller size."""
+    with pytest.raises(ValueError, match="Spack knows no hash algorithm"):
+        crypto.hash_algo_for_digest("a" * length)
+    with pytest.raises(ValueError):
+        crypto.Checker("a" * length)
+
+
 @pytest.mark.skipif(which("curl") is None, reason="Urllib does not have built-in status bar")
 def test_url_with_status_bar(
     mutable_config: Configuration, tmp_path: pathlib.Path, mock_archive, monkeypatch, capfd

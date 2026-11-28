@@ -68,7 +68,8 @@ def hash_fun_for_algo(algo: str) -> HashFactory:
 
 def hash_algo_for_digest(hexdigest: str) -> str:
     """Gets name of the hash algorithm for a hex digest."""
-    algo = _size_to_hash.get(len(hexdigest) // 2)
+    # An odd number of hex characters cannot encode a whole number of bytes.
+    algo = _size_to_hash.get(len(hexdigest) // 2) if len(hexdigest) % 2 == 0 else None
     if algo is None:
         raise ValueError(f"Spack knows no hash algorithm for this digest: {hexdigest}")
     return algo
